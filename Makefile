@@ -40,7 +40,7 @@ docker-build-backend: ## build backend docker image from Dockerfile
 	docker build -t $(DOCKER_IMG_BACKEND) .
 
 docker-run-backend: ## run backend docker container
-	docker run -p 8080:8080 $(DOCKER_IMG_BACKEND)
+	docker run --name $(DOCKER_IMG_BACKEND) -p 8080:8080 $(DOCKER_IMG_BACKEND)
 
 
 
@@ -63,10 +63,10 @@ run-frontend: ## run frontend
 DOCKER_IMG_FRONTEND = imdb-frontend
 
 docker-build-frontend: ## build frontend docker image from Dockerfile
-	docker build -t $(DOCKER_IMG_FRONTEND) .
+	cd ./frontend; docker build -t $(DOCKER_IMG_FRONTEND) .
 
 docker-run-frontend: ## run frontend docker container
-	docker run -p 3000:3000 $(DOCKER_IMG_FRONTEND)
+	docker run --name $(DOCKER_IMG_FRONTEND) -p 3000:3000 $(DOCKER_IMG_FRONTEND)
 
 
 
