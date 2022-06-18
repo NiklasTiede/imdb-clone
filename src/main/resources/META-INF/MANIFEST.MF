@@ -1,0 +1,4 @@
+
+Manifest-Version: 1.0
+Start-Class: com.example.demo.ImdbApplication
+Main-Class: com.example.demo.ImdbApplication

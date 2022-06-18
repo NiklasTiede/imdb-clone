@@ -1,0 +1,93 @@
+plugins {
+	id 'org.springframework.boot' version '2.5.3'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+
+	id "com.diffplug.spotless" version "6.7.2"
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+compileJava {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+	mavenCentral()
+}
+
+compileJava.dependsOn 'spotlessApply'
+
+spotless {
+	java {
+		target 'src/main/java/**/*.java'
+		targetExclude "build/**", "frontend/**"
+		importOrder()
+		removeUnusedImports()
+		trimTrailingWhitespace()
+		googleJavaFormat()
+	}
+}
+
+dependencies {
+	developmentOnly group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.6.2'
+	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.6.2'
+
+	// use print in tests easily!
+	testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
+
+	// currently cannot be updated (to v2.1.212) without throwing exception!
+//	runtimeOnly group: 'com.h2database', name: 'h2', version: '1.4.200'
+
+	// docker pull mysql
+	implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.29'
+
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.7.0'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.7.0'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '2.7.0'
+
+	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+	testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+
+	implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
+
+	testImplementation 'org.awaitility:awaitility:4.2.0'
+
+
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.13.1'
+	implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.13.1'
+
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: '2.7.0'
+	implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+
+	// contains micrometer (v1.7.2), to export data to time-series databases (like prometheus)
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '2.7.0'
+	implementation group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.7.2'
+	// http://localhost:8080/actuator
+
+
+	// elastic client, index, query, sort, aggregate - https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/searching.html
+	implementation group: 'co.elastic.clients', name: 'elasticsearch-java', version: '8.2.2'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.3'
+	implementation group: 'jakarta.json', name: 'jakarta.json-api', version: '2.1.0'
+
+
+	// spotless
+	implementation group: 'com.diffplug.spotless', name: 'spotless-plugin-gradle', version: '6.7.2'
+
+
+
+
+	//	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '2.5.6'
+	//	implementation group: 'org.springframework', name: 'spring-webmvc', version: '5.3.9'
+	//	implementation group: 'org.springframework.security', name: 'spring-security-web', version: '5.5.2'
+	//	implementation group: 'com.auth0', name: 'java-jwt', version: '3.18.2'
+	//	testImplementation group: 'org.springframework.security', name: 'spring-security-test', version: '5.5.1'
+	//  implementation group: 'org.springframework.security', name: 'spring-security-config', version: '5.5.2'  // causes problems
+}
+
+test {
+	useJUnitPlatform()
+}

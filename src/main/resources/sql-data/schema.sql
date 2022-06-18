@@ -1,0 +1,27 @@
+--
+-- DROP TABLE IF EXISTS "USER";
+-- DROP TABLE IF EXISTS "MOVIE";
+--
+-- create table "USER" (
+--     ID int primary key,
+--     USERNAME varchar(255) UNIQUE,
+--     PASSWORD varchar(255),
+--     EMAIL varchar(255) UNIQUE,
+--     BIO text,
+--     FIRST_NAME varchar(255),
+--     LAST_NAME varchar(255),
+--     PHONE varchar(255)
+-- );
+--
+-- create table "MOVIE" (
+--     ID int primary key,
+--     TITLE varchar(255) UNIQUE,
+--     YEAR varchar(255)
+-- );
+--
+-- create table "USER_RATING" (
+--     ID int primary key,
+--     RATING int,
+--     MOVIE_ID int,
+--     USER_ID int
+-- );
