@@ -18,18 +18,18 @@ At first, we will pull and run a MySQL db image.
 ❯ docker run --name imdb-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secret -e MYSQL_DATABASE=moviesdb -d mysql:latest
 ```
 
-Next, we have to import some processed movie data into our running db-container using `./data/processed_dataset_100_with_index.csv`. 
+Next, we have to import some processed movie data into our running db-container using `./data/movieset_100_indexed.csv`. 
 I use DBeaver to connect to the database and use its import functionality. 
 
-next build up backend, then frontend
+Now we can run our backend.
 
 ```bash
 ❯ gradle bootRun
 ```
 
-if you check for https `http://localhost:8080/movies` then you will a list of our previously imported movie data.
+If we add `http://localhost:8080/movies` to the browser a list of our previously imported movie data should be shown.
 
-lastly we build up the frontend
+Lastly, we build up the frontend and serve it to `http://localhost:3000/`.
 
 ```bash
 ❯ cd ./frontend
@@ -37,5 +37,5 @@ lastly we build up the frontend
 ❯ npm run start
 ```
 
-I added a `Makefile` as a little cheat sheet to refresh our memory.
-
+I also added a `Makefile` as a little cheat sheet to refresh our memory for all the important commands 
+we use during development.
