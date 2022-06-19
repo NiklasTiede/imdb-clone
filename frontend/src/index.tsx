@@ -21,7 +21,7 @@ import Notes from './components/notes';
 import {Provider} from 'react-redux';
 import {store} from './redux/store';
 import MovieDetails from './components/moviedetails';
-// import PrimarySearchAppBar from "./components/primarysearchAppbar";
+import MovieData from './data.json';
 
 const rootElement = document.getElementById("root");
 render(
@@ -31,7 +31,7 @@ render(
             <Route path="/" element={<App />} />
             <Route path="login" element={<Login />} />
             <Route path="registration" element={<Registration />} />
-            <Route path="moviesearch" element={<MovieSearch />} />
+            <Route path="moviesearch" element={<MovieSearch data={MovieData} />} />
             <Route path="userprofile" element={<UserProfile />} />
             <Route path="navbar" element={<Navbar />} />
             <Route path="movielist" element={<MovieList />} />

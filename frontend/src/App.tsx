@@ -11,6 +11,7 @@ const useStyles = makeStyles({
     },
     home: {
         margin: '30px',
+        backgroundImage: 'linear-gradient(90deg, #14ebff, #11fab4)'
     },
     navbar: {
         borderBottom: "solid 1px",
@@ -38,7 +39,6 @@ export default function App() {
               <Link to="/greetings">Greetings</Link> |{" "}
               <Link to="/notes">Notes</Link> |{" "}
               <Link to="/moviedetails">Movie Details</Link> |{" "}
-              {/*<Link to="/primarysearchappbar">PrimarySearchAppBar</Link> |{" "}*/}
               <Link to="/searchbarlist">SearchBarList</Link>
           </nav>
       </div>
