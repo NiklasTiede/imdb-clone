@@ -4,75 +4,38 @@
 This webapp persists Movie data and presents them the user by searching.
 
 ## Techstack
-- Java jdk17 / Typescript
-- spring boot / React
-- MySQL DB
+- Languages: Java JDK17 / Typescript
+- Frameworks: Spring Boot / React
+- Database: MySQL
 
-## How to run this project
+## How to Run this Project from Source
 
-To set up the project we have to run the database and run 
+To set up the project we have to install the database, build up the backend and the frontend.
+At first, we will pull and run a MySQL db image.
 
 ```bash
-❯ docker pull 
-
-
+❯ docker pull mysql
+❯ docker run --name imdb-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secret -e MYSQL_DATABASE=moviesdb -d mysql:latest
 ```
 
-# short-term goals
-- [ ] add MySQL DB, connect, fill with data
-- [ ] play with docker/docker-compose
-- [ ] run elasticsearch, index data, query and aggregate
-- [ ] more complex data, also querying, aggregation
+Next, we have to import some processed movie data into our running db-container using `./data/processed_dataset_100_with_index.csv`. 
+I use DBeaver to connect to the database and use its import functionality. 
 
+next build up backend, then frontend
 
-# Todo
-- crud app
-- well written exceptions
-- permissions for different roles (admin, users)
-- one-to-many relationships (entity-models)
-- infra: mongo db/mySQL, sql scripts for creating tables and 
-- inserting data (maybe python script for data-population)
-- running DB locally, but also add docker image for db/backend/frontend (conn to DBeaver)
-- create logic-layer (controller, logic, entity)
-- generate swagger UI, generate typescript client
-- connect JMS
-- add logs, prometheus, grafana, graylog
-- add timestamps
-- validation, regex patterns
-- build library on my own and use them on my project
-- writing different tests (end-to-end etc.)
-- sending emails to confirm registration
-- how to handle pictures, pdfs data etc.
-- how to work with DTO's
-- using elasticsearch
-- let run on server/url and use jenkins pipeline to build project
-- react/redux/rematch frontend
-- migrate from H2 to PSQL or MySQL
-- password encryption, api keys
-- builder pattern: querybuilder, logging,
-- JPA, custom SQL queries
+```bash
+❯ gradle bootRun
+```
 
-# Endpoints
+if you check for https `http://localhost:8080/movies` then you will a list of our previously imported movie data.
 
-### GET
-single user - PathVariable
-- by ID
-- by username/email
+lastly we build up the frontend
 
-list of similar users, paginated/all - RequestParam
-- by username - 
-- by email
+```bash
+❯ cd ./frontend
+❯ run build:moviesGen
+❯ npm run start
+```
 
-### POST - requestbody
-- register new user
-- add list of users
+I added a `Makefile` as a little cheat sheet to refresh our memory.
 
-### PUT
-- update user (profile changes)
-
-### PATCH
-- update parts of the user (worth t use with big entities)
-
-### DELETE
-- delete user by ID
-- delete by username/email

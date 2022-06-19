@@ -1,4 +1,6 @@
 
+todo.txt
+
 # generated typescript clients
 /frontend/src/client/**/generator-output/
 
