@@ -1,9 +1,10 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.MovieDto;
+import com.example.demo.entity.Movie;
 import com.example.demo.exceptions.NotFoundException;
-import com.example.demo.model.Movie;
 import com.example.demo.repository.MovieRepository;
-import java.util.ArrayList;
+import com.example.demo.service.MovieService;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,35 +16,30 @@ import org.springframework.web.bind.annotation.*;
 public class MovieController {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MovieController.class);
+  private final MovieRepository movieRepository;
+  private final MovieService movieService;
 
-  final MovieRepository movieRepository;
-
-  public MovieController(MovieRepository movieRepository) {
+  public MovieController(MovieRepository movieRepository, MovieService movieService) {
     this.movieRepository = movieRepository;
+    this.movieService = movieService;
   }
 
   @GetMapping("/movies")
-  public ResponseEntity<List<Movie>> findAllMovies() {
+  public ResponseEntity<List<MovieDto>> findAllMovies() {
     try {
-      List<Movie> movies = new ArrayList<>(movieRepository.findAll());
-      return new ResponseEntity<>(movies, HttpStatus.OK);
+      List<MovieDto> moviesResponse = movieService.getMovies();
+      return new ResponseEntity<>(moviesResponse, HttpStatus.OK);
     } catch (Exception e) {
-      LOGGER.error("Exception was thrown!");
+      LOGGER.error("Movies could not be retrieved from DB");
       return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   @GetMapping("/movie/{movieId}")
-  public ResponseEntity<Movie> findMovieById(@PathVariable int movieId) {
+  public ResponseEntity<MovieDto> findMovieById(@PathVariable Integer movieId) {
     try {
-      Movie movie =
-          movieRepository
-              .findById(movieId)
-              .orElseThrow(
-                  () ->
-                      new NotFoundException(
-                          "Movie with MovieId [" + movieId + "] not found in database."));
-      return new ResponseEntity<>(movie, HttpStatus.OK);
+      MovieDto movieResponse = movieService.findMovieById(movieId);
+      return new ResponseEntity<>(movieResponse, HttpStatus.OK);
     } catch (Exception e) {
       return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -72,44 +68,44 @@ public class MovieController {
   }
 
   // PUT
-  //    @PutMapping("/movie/{movieId}")
-  //    public ResponseEntity<String> updateMovieData(@PathVariable Movie movie) {
-  //
-  //        movie.update(movie.getTitle(), movie.getYear());
-  //        movieRepository.save(movie);
-  //
-  //        return movieRepository.find
-  //
-  //        return articleRepository
-  //                .findBySlug(slug)
-  //                .map(
-  //                        movie -> {
-  //                            articleCommandService.updateArticle(movie, updateArticleParam);
-  //                            return ResponseEntity.ok(
-  //                                    articleResponse(articleQueryService.findBySlug(slug,
-  // user).get()));
-  //                        })
-  //                .orElseThrow(ResourceNotFoundException::new);
-  //
-  //
-  //        try {
-  //            Movie movie =  movieRepository
-  //                    .findById(movieId)
-  //                    .orElseThrow(() -> new NotFoundException("Movie with MovieId [" + movieId
-  // +
-  // "] not found in database."));
-  //            System.out.println(movie);
-  //            movieRepository.delete(movie);
-  //
-  //            // unpack
-  //
-  //            movieRepository.save(movie);
-  //            return new ResponseEntity<>("the movie '" + movie.getTitle() + "' was deleted
-  // successfully.", HttpStatus.OK);
-  //        } catch (Exception e) {
-  //            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-  //        }
-  //    }
+//      @PutMapping("/movie/{movieId}")
+//      public ResponseEntity<String> updateMovieData(@PathVariable Movie movie) {
+//
+//          movie.update(movie.getTitle(), movie.getYear());
+//          movieRepository.save(movie);
+//
+//          return movieRepository.find
+//
+//          return articleRepository
+//                  .findBySlug(slug)
+//                  .map(
+//                          movie -> {
+//                              articleCommandService.updateArticle(movie, updateArticleParam);
+//                              return ResponseEntity.ok(
+//                                      articleResponse(articleQueryService.findBySlug(slug,
+//   user).get()));
+//                          })
+//                  .orElseThrow(ResourceNotFoundException::new);
+//
+//
+//          try {
+//              Movie movie =  movieRepository
+//                      .findById(movieId)
+//                      .orElseThrow(() -> new NotFoundException("Movie with MovieId [" + movieId
+//   +
+//   "] not found in database."));
+//              System.out.println(movie);
+//              movieRepository.delete(movie);
+//
+//              // unpack
+//
+//              movieRepository.save(movie);
+//              return new ResponseEntity<>("the movie '" + movie.getTitle() + "' was deleted
+//   successfully.", HttpStatus.OK);
+//          } catch (Exception e) {
+//              return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+//          }
+//      }
 
   // POST
 
