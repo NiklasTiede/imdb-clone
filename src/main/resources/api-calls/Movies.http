@@ -8,15 +8,15 @@ GET localhost:8080/movie/1
 Content-Type: application/json
 
 ### Retrieve a movie by its exact name (case-insensitive)
-GET localhost:8080/movieExactSearch?title=It
+GET localhost:8080/movieExactSearch?title=The Five Heartbeats
 Content-Type: application/json
 
 ### Retrieve a list of movies by its name (case-insensitive, substring search) -> LIKE query
-GET localhost:8080/movieSubstringSearch?title=one
+GET localhost:8080/movieSubstringSearch?title=ea
 Content-Type: application/json
 
 ### Retrieve a list of movies by its name (case-insensitive, similarity search, which algorithm?) -> MySQL Full-Text Search
-GET localhost:8080/movieSimiliaritySearch?title=It
+GET localhost:8080/movieSimiliaritySearch?title=ea
 Content-Type: application/json
 
 ### lists of movies, pagination and
