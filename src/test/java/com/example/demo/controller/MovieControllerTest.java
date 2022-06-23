@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.AbstractTest;
-import com.example.demo.model.Movie;
+import com.example.demo.entity.Movie;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
