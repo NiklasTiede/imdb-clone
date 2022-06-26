@@ -1,5 +1,6 @@
 
 todo.txt
+/data/imdb-dataset/title.basics.tsv.gz
 
 # generated typescript clients
 /frontend/src/client/**/generator-output/
