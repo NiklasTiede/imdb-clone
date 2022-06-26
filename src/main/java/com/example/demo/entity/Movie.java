@@ -1,4 +1,4 @@
-package com.example.demo.model;
+package com.example.demo.entity;
 
 import java.util.List;
 import javax.persistence.*;
@@ -8,7 +8,7 @@ public class Movie {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+  private Integer id;
 
   private String title;
   private String year;
@@ -75,6 +75,7 @@ public class Movie {
         + '}';
   }
 
+  // should I update like this or differently?
   public void update(String title, String year) {
     if (title != null) {
       this.title = title;
@@ -82,6 +83,12 @@ public class Movie {
     if (year != null) {
       this.year = year;
       //            this.updatedAt = new DateTime();
+    }
+  }
+
+  public void update(String title) {
+    if (title != null) {
+      this.title = title;
     }
   }
 }

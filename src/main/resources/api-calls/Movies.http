@@ -1,28 +1,31 @@
 
 ### Retrieve all movies
-GET localhost:8080/movies
+GET localhost:8080/movie/all
 Content-Type: application/json
 
 ### Retrieve a movie by its ID
 GET localhost:8080/movie/1
 Content-Type: application/json
 
-### Retrieve a movie by its exact name (case-insensitive)
-GET localhost:8080/movieExactSearch?title=The Five Heartbeats
-Content-Type: application/json
-
 ### Retrieve a list of movies by its name (case-insensitive, substring search) -> LIKE query
-GET localhost:8080/movieSubstringSearch?title=ea
+GET localhost:8080/movie/search-title/en
 Content-Type: application/json
 
-### Retrieve a list of movies by its name (case-insensitive, similarity search, which algorithm?) -> MySQL Full-Text Search
-GET localhost:8080/movieSimiliaritySearch?title=ea
+###
+POST localhost:8080/movie/add
 Content-Type: application/json
 
-### lists of movies, pagination and
+//{
+//  "title": "It",
+//  "year": 2017
+//}
 
-### POST
-### PUT       change property of a row
+{
+  "title": "The Conjuring",
+  "year": 2013
+}
+
+### PUT       change property of a row/field
 
 ### Delete a movie by its ID
 DELETE localhost:8080/movie/3
