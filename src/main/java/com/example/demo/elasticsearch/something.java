@@ -26,6 +26,17 @@ public class something {
 
   private ElasticsearchClient connectES() throws IOException {
 
+    // docker pull elasticsearch:8.2.2
+    // sudo sysctl -w vm.max_map_count=262144
+
+    // docker run --name es01 --net elastic -p 9200:9200 -p 9300:9300 -it elasticsearch:8.2.2
+
+    // idea: run kibana as well and then start all of it!
+
+    // I need probably 64gb for my server to run all ofd this stuff. minimum 32gb, maybe 64
+
+    // es consumes 10gb RAM minimum and is 1.23gb big!
+
     // build up connection
     RestClient restClient = RestClient.builder(new HttpHost("localhost", 9200)).build();
 
