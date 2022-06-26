@@ -33,7 +33,7 @@ public class UserController {
   }
 
   @GetMapping("/user/{id}")
-  public ResponseEntity<User> getUserById(@PathVariable(value = "id") int id) {
+  public ResponseEntity<User> getUserById(@PathVariable(value = "id") Integer id) {
     User user =
         userRepository
             .findById(id)

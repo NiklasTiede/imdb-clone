@@ -28,7 +28,7 @@ public class RestControllerExceptionHandler extends ResponseEntityExceptionHandl
       NotFoundException ex, WebRequest request) {
     ApiError apiError =
         new ApiError("Resource was not found.", request.getDescription(false), ex.getMessage());
-    LOGGER.info(
+    LOGGER.error(
         "Resource was not found for '{}', returning error message: '{}'",
         request.getDescription(false),
         ex.getMessage());
@@ -41,7 +41,7 @@ public class RestControllerExceptionHandler extends ResponseEntityExceptionHandl
     ApiError apiError =
         new ApiError(
             "Resource was not posted correct.", request.getDescription(false), ex.getMessage());
-    LOGGER.info(
+    LOGGER.error(
         "Resource was not posted correctly for '{}', returning error message: '{}'",
         request.getDescription(false),
         ex.getMessage());
@@ -68,7 +68,7 @@ public class RestControllerExceptionHandler extends ResponseEntityExceptionHandl
     ApiError apiError =
         new ApiError(
             "Input Validation failed.", request.getDescription(false), validationErrorsString);
-    LOGGER.info(
+    LOGGER.error(
         "Input validation failed for '{}', returning error message: '{}'",
         request.getDescription(false),
         validationErrorsString);
