@@ -1,5 +1,5 @@
 import {Button, makeStyles, TextField} from "@material-ui/core";
-import React from 'react';
+import React, {useState} from 'react';
 
 import SearchIcon from '@mui/icons-material/Search';
 
@@ -18,49 +18,44 @@ const useStyles = makeStyles({
         marginLeft: '20px',
     },
     dataResult: {},
-
-
-
-
 })
+
+
+
 
 export default function MovieSearch(data: any) {
 
-    // Should I create a page (MovieSearchPage) component and add each component into it?
-    // searchbar with proposals
-    // list of movies
-
-
     const classes = useStyles()
+
+
+
+
+    const [filteredData, setFilteredData] = useState([]);
+    const [wordEntered, setWordEntered] = useState("");
+
+    const [query, setQuery] = useState("")
 
     return (
         <div className={classes.movieSearch}>
 
-                <div className={classes.searchInputs}>
+            <form action="/moviesearch/" method="get">
 
-                    <input type={"text"} placeholder={"Some text"} />
+                <TextField
+                    type="text"
+                    id="header-search"
+                    placeholder="Search Movies"
+                    name="s"
+                    onChange={event => console.log(event.target.value)}  //  setQuery(event.target.value)
+                />
 
-                    <div className={classes.searchIcon}>
+                <button type="submit">Search</button>
 
-                        <SearchIcon />
-
-                    </div>
-
-                </div>
-
-
-                <div className={classes.dataResult}>
-
-                    {/*{data.map((value: string, key: string) => {*/}
-                    {/*    */}
-                    {/*})}*/}
-
-                </div>
+            </form>
 
 
-            {/*<h1>Movie Search</h1>*/}
-            {/*<TextField id="standard-basic" label="Search" variant="standard" />*/}
-            {/*<Button variant="text">Go!</Button>*/}
+            <h1>Movie Search</h1>
+            <TextField id="standard-basic" label="Search" variant="standard" onChange={event => console.log(event.target.value)}/>
+            <Button variant="text">Go!</Button>
 
 
         </div>
