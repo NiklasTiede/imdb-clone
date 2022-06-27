@@ -1,5 +1,9 @@
 package com.example.demo.entity;
 
+import com.example.demo.enums.MovieGenreEnum;
+import com.example.demo.enums.MovieTypeEnum;
+
+import java.util.Date;
 import java.util.List;
 import javax.persistence.*;
 
@@ -10,8 +14,23 @@ public class Movie {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
+
   private String title;
   private String year;
+
+  private String primaryTitle;
+  private String originalTitle;
+  private Date startYear;
+
+
+  private String tconst;
+  private Date mofidiedAt;
+  private Date createdAt;
+  private MovieGenreEnum movieGenreEnum;
+  private MovieTypeEnum movieTypeEnum;
+
+
+
 
   @OneToMany(
       cascade = CascadeType.ALL,
