@@ -14,8 +14,7 @@ public enum MovieTypeEnum {
   private int id;
   private String name;
 
-  MovieTypeEnum(int i, String movie) {
-  }
+  MovieTypeEnum(int i, String movie) {}
 
   public int getId() {
     return id;

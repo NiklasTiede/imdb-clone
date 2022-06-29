@@ -1,7 +1,8 @@
 package com.example.demo.enums;
 
-import java.util.EnumSet;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public enum MovieGenreEnum {
   HORROR(1 << 1, "Horror"),
@@ -65,12 +66,8 @@ public enum MovieGenreEnum {
   }
 
   public static Set<MovieGenreEnum> bitValueToEnum(Long bitValue) {
-    EnumSet<MovieGenreEnum> ret = EnumSet.noneOf(MovieGenreEnum.class);
-    for (MovieGenreEnum e : MovieGenreEnum.values()) {
-      if ((bitValue & e.getId()) != 0) {
-        ret.add(e);
-      }
-    }
-    return ret;
+    return Arrays.stream(MovieGenreEnum.values())
+        .filter(singleEnum -> (bitValue & singleEnum.getId()) != 0)
+        .collect(Collectors.toSet());
   }
 }
