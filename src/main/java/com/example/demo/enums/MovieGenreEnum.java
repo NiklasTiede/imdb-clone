@@ -1,33 +1,76 @@
 package com.example.demo.enums;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 public enum MovieGenreEnum {
-  HORROR(1, "Horror"),
-  MYSTERY(2, "Mystery"),
-  THRILLER(3, "Thriller"),
-  CRIME(4, "Crime"),
-  WESTERN(5, "Western"),
-  WAR(6, "War"),
-  ACTION(7, "Action"),
-  ADVENTURE(8, "Adventure"),
-  FAMILY(9, "Family"),
-  COMEDY(10, "Comedy"),
-  ANIMATION(11, "Animation"),
-  FANTASY(12, "Fantasy"),
-  SCI_FI(13, "Sci-Fi"),
-  DRAMA(14, "Drama"),
-  ROMANCE(15, "Romance"),
-  SPORT(16, "Sport"),
-  HISTORY(17, "History"),
-  BIOGRAPHY(18, "Biography"),
-  MUSIC(19, "Music"),
-  DOCUMENTARY(20, "Documentary"),
-  SHORT(21, "Short"),
-  NEWS(22, "News");
+  HORROR(1 << 1, "Horror"),
+  MYSTERY(1 << 2, "Mystery"),
+  THRILLER(1 << 3, "Thriller"),
+  CRIME(1 << 4, "Crime"),
+  WESTERN(1 << 5, "Western"),
+  WAR(1 << 6, "War"),
+  ACTION(1 << 7, "Action"),
+  ADVENTURE(1 << 8, "Adventure"),
+  FAMILY(1 << 9, "Family"),
+  COMEDY(1 << 10, "Comedy"),
+  ANIMATION(1 << 11, "Animation"),
+  FANTASY(1 << 12, "Fantasy"),
+  SCI_FI(1 << 13, "Sci-Fi"),
+  DRAMA(1 << 14, "Drama"),
+  ROMANCE(1 << 15, "Romance"),
+  SPORT(1 << 16, "Sport"),
+  HISTORY(1 << 17, "History"),
+  BIOGRAPHY(1 << 18, "Biography"),
+  MUSIC(1 << 19, "Music"),
+  MUSICAL(1 << 20, "Adult"),
+  DOCUMENTARY(1 << 21, "Documentary"),
+  NEWS(1 << 22, "News"),
+  ADULT(1 << 23, "Adult"),
+  REALITY_TV(1 << 24, "Reality TV"),
+  TALK_SHOW(1 << 25, "Talk Show"),
+  GAME_SHOW(1 << 26, "Game Show"),
+  SHORT(1 << 27, "Short");
+
+  private int id;
+  private String name;
 
   MovieGenreEnum(int id, String name) {
+    this.id = id;
+    this.name = name;
   }
 
-  MovieGenreEnum() {
+  public int getId() {
+    return id;
   }
 
+  public void setId(int id) {
+    this.id = id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public static Long fromBitValue(Set<MovieGenreEnum> movieGenreEnumSet) {
+    long bitValue = 1L;
+    for (MovieGenreEnum e : movieGenreEnumSet) {
+      bitValue |= e.getId();
+    }
+    return bitValue;
+  }
+
+  public static Set<MovieGenreEnum> bitValueToEnum(Long bitValue) {
+    EnumSet<MovieGenreEnum> ret = EnumSet.noneOf(MovieGenreEnum.class);
+    for (MovieGenreEnum e : MovieGenreEnum.values()) {
+      if ((bitValue & e.getId()) != 0) {
+        ret.add(e);
+      }
+    }
+    return ret;
+  }
 }

@@ -1,9 +1,10 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.Todo;
+import com.example.demo.enums.MovieGenreEnum;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,21 @@ public class AnotherController {
   @GetMapping("/simple")
   public ResponseEntity<String> simple() {
     String answer = "answer";
-    logger.log(Level.INFO, "Something is logged", 3);
-    logger.info("Something is logged");
+
+    Set<MovieGenreEnum> enums =
+        Set.of(
+            MovieGenreEnum.ACTION,
+            MovieGenreEnum.ANIMATION,
+            MovieGenreEnum.WESTERN,
+            MovieGenreEnum.CRIME,
+            MovieGenreEnum.MUSIC);
+    Long bitValue = MovieGenreEnum.fromBitValue(enums);
+    System.out.println(bitValue);
+
+    Set<MovieGenreEnum> enumSet = MovieGenreEnum.bitValueToEnum(bitValue);
+    System.out.println(enumSet);
+    logger.info("...calculated!");
+
     return new ResponseEntity<>(answer, HttpStatus.OK);
   }
 
