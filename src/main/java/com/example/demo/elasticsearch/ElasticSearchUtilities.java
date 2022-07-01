@@ -20,9 +20,9 @@ import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class something {
+public class ElasticSearchUtilities {
 
-  private static final Logger logger = LoggerFactory.getLogger(something.class);
+  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchUtilities.class);
 
   private ElasticsearchClient connectES() throws IOException {
 

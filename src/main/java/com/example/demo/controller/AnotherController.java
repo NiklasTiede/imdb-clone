@@ -32,7 +32,7 @@ public class AnotherController {
             MovieGenreEnum.WESTERN,
             MovieGenreEnum.CRIME,
             MovieGenreEnum.MUSIC);
-    Long bitValue = MovieGenreEnum.fromBitValue(enums);
+    Long bitValue = MovieGenreEnum.enumToBitValue(enums);
     System.out.println(bitValue);
 
     Set<MovieGenreEnum> enumSet = MovieGenreEnum.bitValueToEnum(bitValue);

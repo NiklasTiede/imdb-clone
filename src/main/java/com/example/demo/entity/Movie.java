@@ -2,18 +2,17 @@ package com.example.demo.entity;
 
 import com.example.demo.enums.MovieGenreEnum;
 import com.example.demo.enums.MovieTypeEnum;
-
 import java.util.Date;
 import java.util.List;
 import javax.persistence.*;
 
 @Entity
+@Table(name = "MOVIES")
 public class Movie {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
-
 
   private String title;
   private String year;
@@ -22,15 +21,11 @@ public class Movie {
   private String originalTitle;
   private Date startYear;
 
-
   private String tconst;
   private Date mofidiedAt;
   private Date createdAt;
   private MovieGenreEnum movieGenreEnum;
   private MovieTypeEnum movieTypeEnum;
-
-
-
 
   @OneToMany(
       cascade = CascadeType.ALL,

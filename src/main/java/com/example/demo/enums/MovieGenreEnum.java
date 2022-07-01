@@ -57,7 +57,7 @@ public enum MovieGenreEnum {
     this.name = name;
   }
 
-  public static Long fromBitValue(Set<MovieGenreEnum> movieGenreEnumSet) {
+  public static Long enumToBitValue(Set<MovieGenreEnum> movieGenreEnumSet) {
     long bitValue = 1L;
     for (MovieGenreEnum e : movieGenreEnumSet) {
       bitValue |= e.getId();

@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: fikrecrm-001
+      author: niklas.tiede
+      comment: MOVIES creation
+      preConditions:
+        - onFail: MARK_RAN
+          not:
+            - tableExists:
+                tableName: MOVIES
+      changes:
+        - createTable:
+            tableName: MOVIES
+            columns:
+              - column:
+                  name: ID
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: NAME
+                  type: varchar(100)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: NAME
+                  type : varchar(255)
+                  constraints:
+                    nullable: False
+              - column:
+                  name: NAME
+                  type: varchar(255)
+                  constraints:
+                    nullable: False
+              - column:
+                  name: NAME
+                  type: varchar(255)
+                  constraints:
+                    nullable: False
+              - column:
+                  name: NAME
+                  type: varchar(255)
+                  constraints:
+                    nullable: False
+              - column:
+                  name: NAME
+                  type: varchar(255)
+                  constraints:
+                    nullable: False
+              - column:
+                  name: NAME
+                  type: varchar(255)
+                  constraints:
+                    nullable: False
+              - column:
+                  name: NAME
+                  type: varchar(255)
+                  constraints:
+                    nullable: False

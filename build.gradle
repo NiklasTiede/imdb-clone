@@ -81,6 +81,7 @@ dependencies {
 
 	// safely evolve DB schema
 	// https://www.baeldung.com/liquibase-refactor-schema-of-java-app
+	// https://www.youtube.com/watch?v=xjXHecGOy84
 	// implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.12.0'
 
 	// log4j core

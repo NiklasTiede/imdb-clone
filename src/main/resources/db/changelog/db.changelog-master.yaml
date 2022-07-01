@@ -1,0 +1,3 @@
+databaseChangeLog:
+  - include:
+      file: classpath:dbchangelog/db.changelog-001-Movies.yaml
