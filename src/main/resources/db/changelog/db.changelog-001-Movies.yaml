@@ -90,3 +90,15 @@ databaseChangeLog:
                   type: int
                   constraints:
                     nullable: true
+        - createIndex:
+            indexName: CORE_APPLICATION_CORE_APPLICATION_ID_IDX
+            tableName: CORE_APPLICATION
+            columns:
+              - column:
+                  name: CORE_APPLICATION_ID
+        - createIndex:
+            indexName: CORE_APPLICATION_ABORT_ID_IDX
+            tableName: CORE_APPLICATION
+            columns:
+              - column:
+                  name: ABORT_ID

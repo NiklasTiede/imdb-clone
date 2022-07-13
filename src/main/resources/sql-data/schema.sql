@@ -38,3 +38,15 @@ CREATE TABLE MOVIE (
 --     MOVIE_ID int,
 --     USER_ID int
 -- );
+
+
+-- man kann auch beim create table indexieren!
+CREATE TABLE `person_skill` (
+    `person_id` BIGINT(20) NOT NULL,
+    `skill_id` BIGINT(20) NOT NULL,
+    PRIMARY KEY (`person_id`, `skill_id`),
+    INDEX `skill_fk_idx` (`skill_id` ASC),
+    CONSTRAINT `person_fk` FOREIGN KEY (`person_id`) REFERENCES `person` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `skill_fk` FOREIGN KEY (`skill_id`) REFERENCES `skill` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
