@@ -42,7 +42,8 @@ public class MovieService {
   }
 
   public List<MovieDto> findMovieByTitle(String title) throws NotFoundException {
-    List<Movie> movies = movieRepository.findByTitleContaining(title);
+    //    List<Movie> movies = movieRepository.findByTitleContaining(title);
+    List<Movie> movies = movieRepository.findByPrimaryTitleContaining(title);
     if (movies.isEmpty()) {
       throw new NotFoundException("Movie with title [" + title + "] not found in database.");
     }
@@ -55,7 +56,7 @@ public class MovieService {
     movie.setId(0); // to autoincrement new id
     movieRepository.save(movie);
     log.info("Movie was saved: " + movie);
-    return "the movie '" + movie.getTitle() + "' was saved successfully.";
+    return "the movie '" + movie.getOriginalTitle() + "' was saved successfully.";
   }
 
   public String deleteMovie(Integer movieId) {
@@ -67,7 +68,7 @@ public class MovieService {
                     new NotFoundException(
                         "Movie with MovieId [" + movieId + "] not found in database."));
     movieRepository.delete(movie);
-    return "the movie '" + movie.getTitle() + "' was deleted successfully.";
+    return "the movie '" + movie.getPrimaryTitle() + "' was deleted successfully.";
   }
 
   private MovieDto convertToDto(Movie movie) {

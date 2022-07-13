@@ -26,12 +26,7 @@ public class AnotherController {
     String answer = "answer";
 
     Set<MovieGenreEnum> enums =
-        Set.of(
-            MovieGenreEnum.ACTION,
-            MovieGenreEnum.ANIMATION,
-            MovieGenreEnum.WESTERN,
-            MovieGenreEnum.CRIME,
-            MovieGenreEnum.MUSIC);
+        Set.of(MovieGenreEnum.ACTION, MovieGenreEnum.ANIMATION, MovieGenreEnum.ADVENTURE);
     Long bitValue = MovieGenreEnum.enumToBitValue(enums);
     System.out.println(bitValue);
 

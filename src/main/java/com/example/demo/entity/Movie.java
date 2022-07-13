@@ -1,31 +1,30 @@
 package com.example.demo.entity;
 
-import com.example.demo.enums.MovieGenreEnum;
 import com.example.demo.enums.MovieTypeEnum;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "MOVIES")
+@Table(name = "MOVIE")
 public class Movie {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+  private int id;
 
-  private String title;
-  private String year;
+  //  private String title;
+  //  private String year;
 
   private String primaryTitle;
   private String originalTitle;
-  private Date startYear;
-
-  private String tconst;
+  private Integer startYear;
   private Date mofidiedAt;
   private Date createdAt;
-  private MovieGenreEnum movieGenreEnum;
+  private Integer movieGenreEnum; // convert multiple values into bit values!
   private MovieTypeEnum movieTypeEnum;
+  private Float imdbRating;
+  private Integer imdbRatingsCount;
 
   @OneToMany(
       cascade = CascadeType.ALL,
@@ -44,11 +43,6 @@ public class Movie {
 
   public Movie() {}
 
-  public Movie(String title, String year) {
-    this.title = title;
-    this.year = year;
-  }
-
   public int getId() {
     return id;
   }
@@ -57,52 +51,137 @@ public class Movie {
     this.id = id;
   }
 
-  public String getTitle() {
-    return title;
+  public String getPrimaryTitle() {
+    return primaryTitle;
   }
 
-  public void setTitle(String title) {
-    this.title = title;
+  public void setPrimaryTitle(String primaryTitle) {
+    this.primaryTitle = primaryTitle;
   }
 
-  public String getYear() {
-    return year;
+  public String getOriginalTitle() {
+    return originalTitle;
   }
 
-  public void setYear(String year) {
-    this.year = year;
+  public void setOriginalTitle(String originalTitle) {
+    this.originalTitle = originalTitle;
   }
 
-  @Override
-  public String toString() {
-    return "Movie{"
-        + "id="
-        + id
-        + ", title='"
-        + title
-        + '\''
-        + ", year='"
-        + year
-        + '\''
-        + ", userratings="
-        + ratings
-        + '}';
+  public Integer getStartYear() {
+    return startYear;
   }
 
-  // should I update like this or differently?
-  public void update(String title, String year) {
-    if (title != null) {
-      this.title = title;
-    }
-    if (year != null) {
-      this.year = year;
-      //            this.updatedAt = new DateTime();
-    }
+  public void setStartYear(Integer startYear) {
+    this.startYear = startYear;
   }
 
-  public void update(String title) {
-    if (title != null) {
-      this.title = title;
-    }
+  public Date getMofidiedAt() {
+    return mofidiedAt;
   }
+
+  public void setMofidiedAt(Date mofidiedAt) {
+    this.mofidiedAt = mofidiedAt;
+  }
+
+  public Date getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(Date createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public Integer getMovieGenreEnum() {
+    return movieGenreEnum;
+  }
+
+  public void setMovieGenreEnum(Integer movieGenreEnum) {
+    this.movieGenreEnum = movieGenreEnum;
+  }
+
+  public MovieTypeEnum getMovieTypeEnum() {
+    return movieTypeEnum;
+  }
+
+  public void setMovieTypeEnum(MovieTypeEnum movieTypeEnum) {
+    this.movieTypeEnum = movieTypeEnum;
+  }
+
+  public Float getImdbRating() {
+    return imdbRating;
+  }
+
+  public void setImdbRating(Float imdbRating) {
+    this.imdbRating = imdbRating;
+  }
+
+  public Integer getImdbRatingsCount() {
+    return imdbRatingsCount;
+  }
+
+  public void setImdbRatingsCount(Integer imdbRatingsCount) {
+    this.imdbRatingsCount = imdbRatingsCount;
+  }
+
+  //  public Movie(String title, String year) {
+  //    this.title = title;
+  //    this.year = year;
+  //  }
+  //
+  //  public int getId() {
+  //    return id;
+  //  }
+  //
+  //  public void setId(int id) {
+  //    this.id = id;
+  //  }
+  //
+  //  public String getTitle() {
+  //    return title;
+  //  }
+  //
+  //  public void setTitle(String title) {
+  //    this.title = title;
+  //  }
+  //
+  //  public String getYear() {
+  //    return year;
+  //  }
+  //
+  //  public void setYear(String year) {
+  //    this.year = year;
+  //  }
+  //
+  //  @Override
+  //  public String toString() {
+  //    return "Movie{"
+  //        + "id="
+  //        + id
+  //        + ", title='"
+  //        + title
+  //        + '\''
+  //        + ", year='"
+  //        + year
+  //        + '\''
+  //        + ", userratings="
+  //        + ratings
+  //        + '}';
+  //  }
+  //
+  //  // should I update like this or differently?
+  //  public void update(String title, String year) {
+  //    if (title != null) {
+  //      this.title = title;
+  //    }
+  //    if (year != null) {
+  //      this.year = year;
+  //      //            this.updatedAt = new DateTime();
+  //    }
+  //  }
+  //
+  //  public void update(String title) {
+  //    if (title != null) {
+  //      this.title = title;
+  //    }
+  //  }
 }

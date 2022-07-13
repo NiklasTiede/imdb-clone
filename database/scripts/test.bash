@@ -1,0 +1,9 @@
+
+echo ${PWD}/test.bash
+
+
+
+
+
+
+

@@ -8,8 +8,10 @@ public enum MovieTypeEnum {
   TV_EPISODE(5, "TV Episode"),
   TV_MINI_SERIES(6, "TV Mini Series"),
   TV_SPECIAL(7, "TV Movie"),
-  VIDEO_GAME(8, "Video Game"),
-  ;
+  TV_SERIES(8, "TV Series"),
+  TV_SHORT(9, "TV Short"),
+  TV_PILOT(10, "TV Pilot"),
+  VIDEO_GAME(11, "Video Game");
 
   private int id;
   private String name;

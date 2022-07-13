@@ -2,15 +2,15 @@ databaseChangeLog:
   - changeSet:
       id: fikrecrm-001
       author: niklas.tiede
-      comment: MOVIES creation
+      comment: MOVIE creation
       preConditions:
         - onFail: MARK_RAN
           not:
             - tableExists:
-                tableName: MOVIES
+                tableName: KABOOM
       changes:
         - createTable:
-            tableName: MOVIES
+            tableName: MOVIE
             columns:
               - column:
                   name: ID
@@ -20,42 +20,73 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: NAME
-                  type: varchar(100)
+                  name: PRIMARY_TITLE
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ORIGINAL_TITLE
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: START_YEAR
+                  type: year
                   constraints:
                     nullable: true
               - column:
-                  name: NAME
-                  type : varchar(255)
+                  name: END_YEAR
+                  type: year
                   constraints:
-                    nullable: False
+                    nullable: true
               - column:
-                  name: NAME
-                  type: varchar(255)
+                  name: RUNTIME_MINUTES
+                  type: int
                   constraints:
-                    nullable: False
+                    nullable: true
               - column:
-                  name: NAME
-                  type: varchar(255)
+                  name: MODIFIED_AT
+                  type: timestamp
                   constraints:
-                    nullable: False
+                    nullable: true
               - column:
-                  name: NAME
-                  type: varchar(255)
+                  name: CREATED_AT
+                  type: timestamp
+                  defaultValueDate: CURRENT_TIMESTAMP
                   constraints:
-                    nullable: False
+                    nullable: false
               - column:
-                  name: NAME
-                  type: varchar(255)
+                  name: MOVIE_GENRE
+                  type: int
                   constraints:
-                    nullable: False
+                    nullable: true
               - column:
-                  name: NAME
-                  type: varchar(255)
+                  name: MOVIE_TYPE
+                  type: int
                   constraints:
-                    nullable: False
+                    nullable: true
               - column:
-                  name: NAME
-                  type: varchar(255)
+                  name: IMDB_RATING
+                  type: float
                   constraints:
-                    nullable: False
+                    nullable: true
+              - column:
+                  name: IMDB_RATING_COUNT
+                  type: int
+                  constraints:
+                    nullable: true
+              - column:
+                  name: IS_ADULT
+                  type: boolean
+                  constraints:
+                    nullable: true
+              - column:
+                  name: RATING
+                  type: float
+                  constraints:
+                    nullable: true
+              - column:
+                  name: RATING_COUNT
+                  type: int
+                  constraints:
+                    nullable: true

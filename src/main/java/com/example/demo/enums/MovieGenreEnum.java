@@ -31,7 +31,8 @@ public enum MovieGenreEnum {
   REALITY_TV(1 << 24, "Reality TV"),
   TALK_SHOW(1 << 25, "Talk Show"),
   GAME_SHOW(1 << 26, "Game Show"),
-  SHORT(1 << 27, "Short");
+  FILM_NOIR(1 << 27, "Film Noir"),
+  SHORT(1 << 28, "Short");
 
   private int id;
   private String name;
