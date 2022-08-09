@@ -12,6 +12,7 @@ import springfox.documentation.swagger.web.DocExpansion;
 import springfox.documentation.swagger.web.UiConfiguration;
 import springfox.documentation.swagger.web.UiConfigurationBuilder;
 
+// springfox is deprecated, replace by springdocs!
 @Configuration
 public class SpringFoxConfig {
 

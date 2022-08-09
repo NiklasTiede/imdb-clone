@@ -29,7 +29,7 @@ public class MovieController {
   }
 
   @GetMapping("/{movieId}")
-  public ResponseEntity<MovieDto> findMovieById(@PathVariable Integer movieId) {
+  public ResponseEntity<MovieDto> findMovieById(@PathVariable Long movieId) {
     MovieDto movieResponse = movieService.findMovieById(movieId);
     return new ResponseEntity<>(movieResponse, HttpStatus.OK);
   }
@@ -49,7 +49,7 @@ public class MovieController {
   // endpoint for PUT, updating a movie
 
   @DeleteMapping("/{movieId}")
-  public ResponseEntity<String> deleteMovieById(@PathVariable int movieId) {
+  public ResponseEntity<String> deleteMovieById(@PathVariable Long movieId) {
     String movieResponse = movieService.deleteMovie(movieId);
     return new ResponseEntity<>(movieResponse, HttpStatus.OK);
   }

@@ -32,29 +32,34 @@ spotless {
 }
 
 dependencies {
+	// spring-boot-starter
 	developmentOnly group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.6.2'
 	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.6.2'
-
-	// use print in tests easily!
-	testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
-
-	// currently cannot be updated (to v2.1.212) without throwing exception!
-	// runtimeOnly group: 'com.h2database', name: 'h2', version: '1.4.200'
-
-	// docker pull mysql
-	implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.29'
-
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.7.0'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.7.0'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '2.7.0'
 
-	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
 
+
+	// use print in tests easily!
+	testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
+	testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+
+
+	// currently cannot be updated (to v2.1.212) without throwing exception!
+	// runtimeOnly group: 'com.h2database', name: 'h2', version: '1.4.200'
+
+	// mysql client
+	implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.29'
+
+
+	//  swagger UI
 	implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
 
 	testImplementation 'org.awaitility:awaitility:4.2.0'
 
 
+	// serialization/ deserialization
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.13.1'
 	implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.13.1'
 
@@ -76,20 +81,26 @@ dependencies {
 	// spotless
 	implementation group: 'com.diffplug.spotless', name: 'spotless-plugin-gradle', version: '6.7.2'
 
-	// convert entity to dtos
+	// convert entity to DTOs
 	implementation group: 'org.modelmapper', name: 'modelmapper', version: '3.1.0'
 
 	// safely evolve DB schema
 	// https://www.baeldung.com/liquibase-refactor-schema-of-java-app
 	// https://www.youtube.com/watch?v=xjXHecGOy84
-	implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.12.0'
+//	implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.12.0'
 
 	// log4j core
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.2'
 
-	// testing deps
-	testImplementation group: 'junit', name: 'junit', version: '4.13.2'
 
+
+	// mapstruct + records to map entities to DTOs!
+	implementation group: 'org.mapstruct', name: 'mapstruct', version: '1.5.2.Final'
+	annotationProcessor group: 'org.mapstruct', name: 'mapstruct-processor', version: '1.5.2.Final'
+
+
+	// security
+	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
 	//	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '2.5.6'
 	//	implementation group: 'org.springframework', name: 'spring-webmvc', version: '5.3.9'
 	//	implementation group: 'org.springframework.security', name: 'spring-security-web', version: '5.5.2'

@@ -1,36 +1,51 @@
 package com.example.demo.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.math.BigDecimal;
+import java.time.Instant;
 import javax.persistence.*;
 
 @Entity
+@Table(name = "rating")
 public class Rating {
+  @EmbeddedId private RatingId id;
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private int id;
+  @Column(name = "rating", nullable = false, precision = 2, scale = 1)
+  private BigDecimal rating;
 
-  private int rating; // 1 - 5
+  private Instant createdAt;
 
-  @JsonIgnore
-  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @ManyToOne
+  @MapsId("movieId")
   @JoinColumn(name = "movie_id")
   private Movie movie;
 
-  //    @OneToOne
-  //    private Movie movie;
+  @ManyToOne
+  @MapsId("accountId")
+  @JoinColumn(name = "account_id")
+  private Account account;
 
-  @JsonIgnore
-  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", referencedColumnName = "id")
-  private User user;
-
-  public User getUser() {
-    return user;
+  public RatingId getId() {
+    return id;
   }
 
-  public void setUser(User user) {
-    this.user = user;
+  public void setId(RatingId id) {
+    this.id = id;
+  }
+
+  public BigDecimal getRating() {
+    return rating;
+  }
+
+  public void setRating(BigDecimal rating) {
+    this.rating = rating;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(Instant createdAt) {
+    this.createdAt = createdAt;
   }
 
   public Movie getMovie() {
@@ -41,25 +56,11 @@ public class Rating {
     this.movie = movie;
   }
 
-  public Rating() {}
-
-  public Rating(int rating) {
-    this.rating = rating;
+  public Account getAccount() {
+    return account;
   }
 
-  public int getId() {
-    return id;
-  }
-
-  public void setId(int id) {
-    this.id = id;
-  }
-
-  public int getRating() {
-    return rating;
-  }
-
-  public void setRating(int rating) {
-    this.rating = rating;
+  public void setAccount(Account account) {
+    this.account = account;
   }
 }

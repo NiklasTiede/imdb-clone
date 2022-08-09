@@ -29,7 +29,7 @@ public class MovieService {
     return movies.stream().map(this::convertToDto).collect(Collectors.toList());
   }
 
-  public MovieDto findMovieById(Integer movieId) {
+  public MovieDto findMovieById(Long movieId) {
     Movie movie =
         movieRepository
             .findById(movieId)
@@ -53,13 +53,13 @@ public class MovieService {
 
   public String saveMovie(MovieDto movieDto) {
     Movie movie = convertToEntity(movieDto);
-    movie.setId(0); // to autoincrement new id
+    movie.setId(0L); // to autoincrement new id
     movieRepository.save(movie);
     log.info("Movie was saved: " + movie);
     return "the movie '" + movie.getOriginalTitle() + "' was saved successfully.";
   }
 
-  public String deleteMovie(Integer movieId) {
+  public String deleteMovie(Long movieId) {
     Movie movie =
         movieRepository
             .findById(movieId)

@@ -1,120 +1,185 @@
 package com.example.demo.entity;
 
-import com.example.demo.enums.attributeconverter.MovieGenreConverterImpl;
 import com.example.demo.enums.MovieGenreEnum;
 import com.example.demo.enums.MovieTypeEnum;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "MOVIES")
 public class Movie {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
-
-
-  // measure length of strings in notebook over dataset, to adjust varchar length
-  private String title;
-  private String year;
+  private Long id;
 
   private String primaryTitle;
   private String originalTitle;
-  private Date startYear;
-
-  private String tconst;
-
-  // check if date is converted accurately
-  private Date mofidiedAt;
+  private Integer startYear;
+  private Integer endYear;
+  private Integer runtimeMinutes;
+  private Date modifiedAt;
   private Date createdAt;
 
-  // TODO: test and check if my customer AttributeConverter works! check if the Convert annotation is really needed, or if it is doen automatically
-  // advantage: this conversion also works in JPQL statements (handwritten queries in repository)
-  @Convert(converter = MovieGenreConverterImpl.class)
-  private MovieGenreEnum movieGenreEnum;
+  @SuppressWarnings("JpaAttributeTypeInspection")
+  private Set<MovieGenreEnum> movieGenre;
 
-  // check if numbers are mapped to enum
-  // maybe enums implement somethign identifiable/enumwithId with makes the conversion magic! xxxEnum implements Identifiable<Integer>
-  private MovieTypeEnum movieTypeEnum;
+  private MovieTypeEnum movieType;
+  private Float imdbRating;
+  private Integer imdbRatingCount;
+  private Boolean adult;
+  private Float rating;
+  private Integer ratingCount;
 
-  @OneToMany(
-      cascade = CascadeType.ALL,
-      mappedBy = "movie",
-      fetch = FetchType.EAGER) // otherwise I cannot search for movies with LIKE
-  private List<Rating> ratings;
+  @OneToMany(mappedBy = "movie")
+  private Collection<Comment> movieComments;
 
-  //    @JsonManagedReference
-  public List<Rating> getRatings() {
-    return ratings;
-  }
+  @OneToMany(mappedBy = "movie")
+  private Collection<Watchlist> watchedMovies;
 
-  public void setRatings(List<Rating> ratings) {
-    this.ratings = ratings;
-  }
+  @OneToMany(mappedBy = "rating")
+  private Collection<Rating> ratings;
 
-  public Movie() {}
-
-  public Movie(String title, String year) {
-    this.title = title;
-    this.year = year;
-  }
-
-  public int getId() {
+  public Long getId() {
     return id;
   }
 
-  public void setId(int id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
-  public String getTitle() {
-    return title;
+  public String getPrimaryTitle() {
+    return primaryTitle;
   }
 
-  public void setTitle(String title) {
-    this.title = title;
+  public void setPrimaryTitle(String primaryTitle) {
+    this.primaryTitle = primaryTitle;
   }
 
-  public String getYear() {
-    return year;
+  public String getOriginalTitle() {
+    return originalTitle;
   }
 
-  public void setYear(String year) {
-    this.year = year;
+  public void setOriginalTitle(String originalTitle) {
+    this.originalTitle = originalTitle;
   }
 
-  @Override
-  public String toString() {
-    return "Movie{"
-        + "id="
-        + id
-        + ", title='"
-        + title
-        + '\''
-        + ", year='"
-        + year
-        + '\''
-        + ", userratings="
-        + ratings
-        + '}';
+  public Integer getStartYear() {
+    return startYear;
   }
 
-  // should I update like this or differently?
-  public void update(String title, String year) {
-    if (title != null) {
-      this.title = title;
-    }
-    if (year != null) {
-      this.year = year;
-      //            this.updatedAt = new DateTime();
-    }
+  public void setStartYear(Integer startYear) {
+    this.startYear = startYear;
   }
 
-  public void update(String title) {
-    if (title != null) {
-      this.title = title;
-    }
+  public Integer getEndYear() {
+    return endYear;
+  }
+
+  public void setEndYear(Integer endYear) {
+    this.endYear = endYear;
+  }
+
+  public Integer getRuntimeMinutes() {
+    return runtimeMinutes;
+  }
+
+  public void setRuntimeMinutes(Integer runtimeMinutes) {
+    this.runtimeMinutes = runtimeMinutes;
+  }
+
+  public Date getModifiedAt() {
+    return modifiedAt;
+  }
+
+  public void setModifiedAt(Date modifiedAt) {
+    this.modifiedAt = modifiedAt;
+  }
+
+  public Date getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(Date createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public Set<MovieGenreEnum> getMovieGenre() {
+    return movieGenre;
+  }
+
+  public void setMovieGenre(Set<MovieGenreEnum> movieGenre) {
+    this.movieGenre = movieGenre;
+  }
+
+  public MovieTypeEnum getMovieType() {
+    return movieType;
+  }
+
+  public void setMovieType(MovieTypeEnum movieType) {
+    this.movieType = movieType;
+  }
+
+  public Float getImdbRating() {
+    return imdbRating;
+  }
+
+  public void setImdbRating(Float imdbRating) {
+    this.imdbRating = imdbRating;
+  }
+
+  public Integer getImdbRatingCount() {
+    return imdbRatingCount;
+  }
+
+  public void setImdbRatingCount(Integer imdbRatingCount) {
+    this.imdbRatingCount = imdbRatingCount;
+  }
+
+  public Boolean getAdult() {
+    return adult;
+  }
+
+  public void setAdult(Boolean adult) {
+    this.adult = adult;
+  }
+
+  public Float getRating() {
+    return rating;
+  }
+
+  public void setRating(Float rating) {
+    this.rating = rating;
+  }
+
+  public Integer getRatingCount() {
+    return ratingCount;
+  }
+
+  public void setRatingCount(Integer ratingCount) {
+    this.ratingCount = ratingCount;
+  }
+
+  public Collection<Comment> getMovieComments() {
+    return movieComments;
+  }
+
+  public void setMovieComments(Collection<Comment> movieComments) {
+    this.movieComments = movieComments;
+  }
+
+  public Collection<Watchlist> getWatchedMovies() {
+    return watchedMovies;
+  }
+
+  public void setWatchedMovies(Collection<Watchlist> watchedMovies) {
+    this.watchedMovies = watchedMovies;
+  }
+
+  public Collection<Rating> getRatings() {
+    return ratings;
+  }
+
+  public void setRatings(Collection<Rating> ratings) {
+    this.ratings = ratings;
   }
 }

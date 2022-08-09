@@ -1,0 +1,66 @@
+@startuml
+
+skinparam linetype polyline
+skinparam linetype ortho
+
+hide circle
+class Movie {
+  - id \t\t\t\t long
+  - primaryTitle \t\t String
+  - originalTitle \t\t String
+  - startYear \t\t int
+  - endYear \t\t int
+  - runtimeMinutes \t int
+  - modifiedAt \t\t Date
+  - createdAt \t\t Date
+  - genre \t\t\t MovieGenreEnum
+  - movieType \t\t MovieTypeEnum
+  - adult \t\t\t boolean
+  - imdbRating \t\t float
+  - imdbRatingCount int
+  - rating \t\t\t float
+  - ratingCount \t\t int
+}
+
+class Account {
+  - id \t\t\t long
+  - username \t String
+  - email \t\t String
+  - password \t String
+  - firstName \t String
+  - lastName \t String
+  - bio \t\t\t String
+  - phone \t\t String
+  - birthday \t\t Date
+  - modifiedAt \t Date
+  - createdAt \t Date
+}
+
+class Rating {
+  - movieId \t\t long
+  - accountId \t long
+  - rating \t\t float
+}
+
+class Comment {
+  - id \t\t\t long
+  - body \t\t String
+  - createdAt \t Date
+  - modifiedAt \t Date
+  - accountId \t long
+  - movieId \t\t long
+}
+
+class Watchlist {
+  - createdAt \t Date
+  - accountId \t long
+  - movieId \t\t long
+}
+
+Account ||-down-|{ Rating
+Account ||-left-|{ Watchlist
+Account ||-right-|{ Comment
+Movie ||-down-|{ Comment
+Movie ||-up-|{ Watchlist
+
+@enduml

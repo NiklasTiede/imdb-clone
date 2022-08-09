@@ -1,11 +1,10 @@
 package com.example.demo.enums.attributeconverter;
 
+import com.example.demo.enums.MovieGenreEnum;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.persistence.Converter;
-
-import com.example.demo.enums.MovieGenreEnum;
 
 @Converter(autoApply = true)
 public class MovieGenreConverterImpl implements MovieGenreConverter<Set<MovieGenreEnum>, Long> {
