@@ -31,37 +31,11 @@ public class AnotherController {
     this.movieMapper = movieMapper;
   }
 
-  // ------------- GET ----------------
-
   @GetMapping("/simple")
-  public ResponseEntity<String> simple() {
-    String answer = "answer";
-
-    Movie movie =
-        movieRepository
-            .findById(1457767L)
-            .orElseThrow(() -> new NotFoundException("Movie not found in database."));
-
-    System.out.println("--- start ---");
-    System.out.println("PrimaryTitle: " + movie.getPrimaryTitle());
-    System.out.println("CreatedAt: " + movie.getCreatedAt());
-    System.out.println("MovieType: " + movie.getMovieType());
-    System.out.println("MovieGenre: " + movie.getMovieGenre());
-    System.out.println("adult: " + movie.getAdult());
-    System.out.println("ImdbRatingCount: " + movie.getImdbRatingCount());
-    System.out.println("RuntimeMinutes: " + movie.getRuntimeMinutes());
-    System.out.println("OriginalTitle: " + movie.getOriginalTitle());
-    System.out.println("Rating: " + movie.getRating());
-    //    System.out.println("EndYear: " + movie.getEndYear());
-    //    System.out.println("StartYear: " + movie.getStartYear());
-    System.out.println("ModifiedAt: " + movie.getModifiedAt());
-    System.out.println("--- end ---");
-
-    Movie movie3 = movieRepository.findById(1457767L).get();
-    MovieRecord movieRecord = movieMapper.entityToDTO(movie3);
-    System.out.println(movieRecord);
-
-    return new ResponseEntity<>(answer, HttpStatus.OK);
+  public ResponseEntity<MovieRecord> simple() {
+    Movie movie = movieRepository.findById(1457767L).get();
+    MovieRecord movieRecord = movieMapper.entityToDTO(movie);
+    return new ResponseEntity<>(movieRecord, HttpStatus.OK);
   }
 
   @GetMapping("/todo/{id}")

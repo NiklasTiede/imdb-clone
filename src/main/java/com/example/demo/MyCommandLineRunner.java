@@ -16,7 +16,7 @@ public class MyCommandLineRunner implements CommandLineRunner {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MyCommandLineRunner.class);
 
-  @Autowired private MovieDao movieDao;
+  @Autowired private MovieSearchDao movieDao;
 
   @Autowired private MovieRepository movieRepository;
 
@@ -45,14 +45,8 @@ public class MyCommandLineRunner implements CommandLineRunner {
     System.out.println(movieRecord);
 
     long startTime = System.currentTimeMillis();
-    //        List<Movie> movies = movieRepository.findMoviesByPrimaryTitleContaining("The
-    // Conjuring");
-
-    List<Movie> movies = movieDao.findSomeMovies("The Conjuring");
-
-    //    List<Movie> movies = movieRepository.searchByTitleLike2();
+    List<Movie> movies = movieDao.findByPrimaryTitleStartsWith("The Conjuring");
     System.out.println(movies.size());
-
     long stopTime = System.currentTimeMillis();
     long elapsedTime = stopTime - startTime;
     System.out.println("elapsedTime (ms): " + elapsedTime);
@@ -62,9 +56,8 @@ public class MyCommandLineRunner implements CommandLineRunner {
     System.out.println(account.getFirstName());
     System.out.println(account.getModifiedAt());
 
-    List<Account> accs = accountRepository.findByEmailStartingWith("niklas");
-    System.out.println(accs.size());
-    System.out.println(accs.get(0).getEmail());
+    Account userAcc = accountRepository.findByEmail("schnuggi@yahoo.de");
+    System.out.println(userAcc.getEmail());
 
     // ratings
     List<Rating> rating = ratingRepository.findAll();

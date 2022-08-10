@@ -1,4 +1,4 @@
-package com.example.demo.response;
+package com.example.demo.authentication.request.response;
 
 import com.example.demo.dto.MovieDto;
 import java.util.HashMap;
