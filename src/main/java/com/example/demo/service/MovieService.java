@@ -23,12 +23,6 @@ public class MovieService {
     this.modelMapper = modelMapper;
   }
 
-  public List<MovieDto> findAllMovies() {
-    List<Movie> movies = movieRepository.findAll();
-    log.info("Movie data were retrieved: " + movies.subList(0, 3));
-    return movies.stream().map(this::convertToDto).collect(Collectors.toList());
-  }
-
   public MovieDto findMovieById(Long movieId) {
     Movie movie =
         movieRepository

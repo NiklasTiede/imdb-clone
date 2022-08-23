@@ -6,9 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import org.springframework.stereotype.Repository;
 
-/**
- * LIKE queries with 9 mio Movie-table are not working with JpaRepository
- */
+/** LIKE queries with 9 mio Movie-table are not working with JpaRepository */
 @Repository
 public class MovieSearchDao {
 

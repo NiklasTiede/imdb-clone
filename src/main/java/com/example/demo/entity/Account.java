@@ -1,10 +1,18 @@
 package com.example.demo.entity;
 
+import com.example.demo.entity.role.Role;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
+@Table(
+    uniqueConstraints = {
+      @UniqueConstraint(columnNames = {"username"}),
+      @UniqueConstraint(columnNames = {"email"})
+    })
 public class Account {
 
   @Id
@@ -22,6 +30,9 @@ public class Account {
   private Date createdAt;
   private Date modifiedAt;
 
+  @ManyToMany(fetch = FetchType.EAGER)
+  private Collection<Role> roles = new ArrayList<>();
+
   //  @OneToMany(mappedBy = "account")
   //  private Collection<Watchlist> watchedMovies;
 
@@ -34,6 +45,24 @@ public class Account {
   // comment
 
   //  public Account() {}
+
+  public Account() {}
+
+  public Account(String username, String email, String password, Collection<Role> roles) {
+    this.username = username;
+    this.email = email;
+    this.password = password;
+    this.roles = roles;
+  }
+
+  public Account(
+      String firstName, String lastName, String username, String email, String password) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.username = username;
+    this.email = email;
+    this.password = password;
+  }
 
   public Long getId() {
     return id;
@@ -109,5 +138,13 @@ public class Account {
 
   public Date getModifiedAt() {
     return modifiedAt;
+  }
+
+  public Collection<Role> getRoles() {
+    return roles;
+  }
+
+  public void setRoles(Collection<Role> roles) {
+    this.roles = roles;
   }
 }

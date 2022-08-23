@@ -4,7 +4,6 @@ import com.example.demo.dto.MovieRecord;
 import com.example.demo.dto.Todo;
 import com.example.demo.dto.mapper.MovieMapper;
 import com.example.demo.entity.Movie;
-import com.example.demo.exceptions.NotFoundException;
 import com.example.demo.repository.MovieRepository;
 import java.util.HashMap;
 import java.util.Map;

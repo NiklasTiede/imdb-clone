@@ -35,9 +35,9 @@ dependencies {
 	// spring-boot-starter
 	developmentOnly group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.6.2'
 	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.6.2'
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.7.0'
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.7.0'
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '2.7.0'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.7.3'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.7.3'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '2.7.3'
 
 
 
@@ -99,8 +99,19 @@ dependencies {
 	annotationProcessor group: 'org.mapstruct', name: 'mapstruct-processor', version: '1.5.2.Final'
 
 
-	// security
-	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+	// security, JWT
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
+	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
+
+
+
+	implementation group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.5.2.RELEASE'
+	implementation group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.1.1.RELEASE'
+	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
+
+
 	//	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '2.5.6'
 	//	implementation group: 'org.springframework', name: 'spring-webmvc', version: '5.3.9'
 	//	implementation group: 'org.springframework.security', name: 'spring-security-web', version: '5.5.2'
