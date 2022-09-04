@@ -28,30 +28,9 @@ All steps are verifiable through a [jupyter notebook](data-processing/process_mo
 
 ## Create Database Tables
 - execute 'create table'-statements from `src/main/resources/sql-data/schema.sql`
-- add test data by executing `src/main/resources/sql-data/testdata.sql`
+- add test data by executing `src/main/resources/sql-data/test-data.sql`
 
 ## Load Data into Database
 - copy processed dataset into /tmp/ folder
-- load data using `load-testdata.sql` file (executed with DBeaver)
+- load data using `load-data.sql` file (executed with DBeaver)
 -[ ] write bash script for loading data into MySQL DB
-
-
-    ```plantuml format="png" classes="uml myDiagram" alt="My super diagram placeholder" title="My super diagram" width="300px" height="300px"
-      Goofy ->  MickeyMouse: calls
-      Goofy <-- MickeyMouse: responds
-    ```
-
-Syntax:
-
-```markdown
-::uml:: [format="png|svg|txt"] [classes="class1 class2 ..."] [alt="text for alt"] [title="Text for title"] [width="300px"] [height="300px"]
-  PlantUML script diagram
-::end-uml::
-```
-
-```shell
-
-```
-
-
-

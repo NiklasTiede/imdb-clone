@@ -1,5 +1,6 @@
 @startuml
 
+
 skinparam linetype polyline
 skinparam linetype ortho
 
@@ -11,8 +12,8 @@ class Movie {
   - startYear \t\t int
   - endYear \t\t int
   - runtimeMinutes \t int
-  - modifiedAt \t\t Date
-  - createdAt \t\t Date
+  - modifiedAtInUtc \t Instant
+  - createdAtInUtc \t Instant
   - genre \t\t\t MovieGenreEnum
   - movieType \t\t MovieTypeEnum
   - adult \t\t\t boolean
@@ -23,17 +24,17 @@ class Movie {
 }
 
 class Account {
-  - id \t\t\t long
-  - username \t String
-  - email \t\t String
-  - password \t String
-  - firstName \t String
-  - lastName \t String
-  - bio \t\t\t String
-  - phone \t\t String
-  - birthday \t\t Date
-  - modifiedAt \t Date
-  - createdAt \t Date
+  - id \t\t\t\t long
+  - username \t\t String
+  - email \t\t\t String
+  - password \t\t String
+  - firstName \t\t String
+  - lastName \t\t String
+  - bio \t\t\t\t String
+  - phone \t\t\t String
+  - birthday \t\t\t Date
+  - modifiedAtInUtc \t Instant
+  - createdAtInUtc \t Instant
 }
 
 class Rating {
@@ -43,23 +44,48 @@ class Rating {
 }
 
 class Comment {
-  - id \t\t\t long
-  - body \t\t String
-  - createdAt \t Date
-  - modifiedAt \t Date
+  - id \t\t\t\t long
+  - body \t\t\t String
+  - createdAtInUtc \t Instant
+  - modifiedAtInUtc \t Instant
+  - accountId \t\t long
+  - movieId \t\t\t long
+}
+
+class Watchlist {
+  - createdAtInUtc \t Instant
   - accountId \t long
   - movieId \t\t long
 }
 
-class Watchlist {
-  - createdAt \t Date
-  - accountId \t long
-  - movieId \t\t long
+class Role {
+  - id \t\t long
+  - name \t RoleNameEnum
+}
+
+class Account_Roles {
+  - accountId \t\t long
+  - roleId \t\t\t long
+  - createdAtInUtc \t Instant
+  - modifiedAtInUtc \t Instant
+}
+
+
+class VerificationToken {
+  - id \t\t\t\t\t long
+  - verificationType \t\t VerTypeEnum
+  - token \t\t\t\t String
+  - expiryDateInUtc \t\t Instant
+  - confirmedAtInUtc \t Instant
+  - accountId \t\t\t long
 }
 
 Account ||-down-|{ Rating
 Account ||-left-|{ Watchlist
 Account ||-right-|{ Comment
+Account ||-right-|{ Account_Roles
+Role ||-right-|{ Account_Roles
+Account ||-right-|{ VerificationToken
 Movie ||-down-|{ Comment
 Movie ||-up-|{ Watchlist
 
