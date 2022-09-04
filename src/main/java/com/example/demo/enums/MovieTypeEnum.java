@@ -1,5 +1,6 @@
 package com.example.demo.enums;
 
+// remove id/name and reimport data into table (change from int in db to string, enumarted.string!
 public enum MovieTypeEnum {
   SHORT(1, "Short"),
   MOVIE(2, "Movie"),

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CustomUserDetailsServiceImpl implements UserDetailsService, CustomUserDetailsService {
+
   @Autowired private AccountRepository accountRepository;
 
   @Override
@@ -38,7 +39,6 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService, CustomU
             .orElseThrow(
                 () ->
                     new UsernameNotFoundException(String.format("User not found with id: %s", id)));
-
     return UserPrincipal.create(account);
   }
 }

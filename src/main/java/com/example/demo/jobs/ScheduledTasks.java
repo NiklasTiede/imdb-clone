@@ -18,4 +18,9 @@ public class ScheduledTasks {
   public void reportCurrentTime() {
     log.info("The time is now {}", dateFormat.format(new Date()));
   }
+
+  // clean job for 4 week old verification tokens
+
+  // updating movies ratings if movies were rated
+
 }

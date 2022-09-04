@@ -1,6 +1,6 @@
-package com.example.demo.dto.mapper;
+package com.example.demo.Payload.mapper;
 
-import com.example.demo.dto.MovieRecord;
+import com.example.demo.Payload.MovieRecord;
 import com.example.demo.entity.Movie;
 import java.util.List;
 import org.mapstruct.Mapper;

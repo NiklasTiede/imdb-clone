@@ -6,8 +6,8 @@ create table movie (
     start_year int,
     end_year int,
     runtime_minutes int,
-    created_at timestamp default current_timestamp,
-    modified_at timestamp default current_timestamp on update current_timestamp,
+    created_at_in_utc timestamp default (utc_timestamp),
+    modified_at_in_utc timestamp default (utc_timestamp),
     movie_genre int,
     movie_type int,
     imdb_rating float,
@@ -37,7 +37,7 @@ alter table IMDBCLONE.movie drop index movie_title_ft_idx;
 -- example query:
 SELECT * FROM IMDBCLONE.movie m WHERE MATCH(m.primary_title) AGAINST('Conjuring' IN NATURAL LANGUAGE MODE) ORDER BY m.imdb_rating_count DESC;
 
- create table account (
+create table account (
     id bigint AUTO_INCREMENT,
     username varchar(255) unique not null,
     email varchar(255) unique not null,
@@ -47,21 +47,23 @@ SELECT * FROM IMDBCLONE.movie m WHERE MATCH(m.primary_title) AGAINST('Conjuring'
     bio text,
     phone varchar(20),
     birthday timestamp,
-    created_at timestamp default current_timestamp,
-    modified_at timestamp default current_timestamp ON UPDATE current_timestamp,
+    created_at_in_utc timestamp default (utc_timestamp),
+    modified_at_in_utc timestamp,
+    locked boolean not null,
+    enabled boolean not null,
     primary key (id)
- );
+);
 
  create table rating (
     rating decimal(2,1) not null,
-    created_at timestamp default current_timestamp,
+    created_at_in_utc timestamp default (utc_timestamp),
     movie_id bigint,
     account_id bigint,
     primary key (movie_id, account_id)
- );
+);
 
 create table watchlist (
-    created_at timestamp default current_timestamp,
+    created_at_in_utc timestamp default (utc_timestamp),
     movie_id bigint,
     account_id bigint,
     primary key (movie_id, account_id)
@@ -70,9 +72,44 @@ create table watchlist (
 create table comment (
     id bigint AUTO_INCREMENT,
     message text,
-    created_at timestamp default current_timestamp,
-    modified_at timestamp default current_timestamp on update current_timestamp,
+    created_at_in_utc timestamp default (utc_timestamp),
+    modified_at_in_utc timestamp default (utc_timestamp),
     movie_id bigint not null,
     account_id bigint not null,
     primary key (id)
+);
+
+create table verification_token (
+    id bigint AUTO_INCREMENT,
+    verification_type varchar(100) not null,
+    token varchar(36) not null,
+    expiry_date_in_utc timestamp not null,
+    confirmed_at_in_utc timestamp,
+    account_id bigint not null,
+    primary key (id)
+);
+
+create table account_role (
+    id bigint AUTO_INCREMENT,
+    verification_type varchar(100) not null,
+    token varchar(36) not null,
+    expiry_date_in_utc timestamp not null,
+    confirmed_at_in_utc timestamp,
+    account_id bigint not null,
+    primary key (id)
+);
+
+create table role (
+    id bigint AUTO_INCREMENT,
+    name varchar(255) unique not null,
+    created_at_in_utc timestamp default (utc_timestamp),
+    primary key (id)
+);
+
+create table account_roles (
+    account_id bigint not null,
+    roles_id bigint not null,
+    created_at_in_utc timestamp default (utc_timestamp),
+    modified_at_in_utc timestamp default (utc_timestamp),
+    primary key (account_id, roles_id)
 );

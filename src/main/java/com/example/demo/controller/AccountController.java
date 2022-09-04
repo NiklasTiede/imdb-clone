@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.entity.Account;
 import com.example.demo.repository.AccountRepository;
+import com.example.demo.security.CurrentUser;
+import com.example.demo.security.UserPrincipal;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,12 @@ public class AccountController {
   private static final Logger LOGGER = Logger.getLogger(String.valueOf(AccountController.class));
 
   // ------------- GET ----------------
+
+  @GetMapping("/bla")
+  //  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+  public ResponseEntity<String> doSomething(@CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>("", HttpStatus.CREATED);
+  }
 
   @GetMapping("/get-by-username/{userName}")
   public ResponseEntity<Account> getAccountByUsername(@PathVariable String userName) {

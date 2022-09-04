@@ -1,8 +1,8 @@
-package com.example.demo.dto;
+package com.example.demo.Payload;
 
 import com.example.demo.enums.MovieGenreEnum;
 import com.example.demo.enums.MovieTypeEnum;
-import java.util.Date;
+import java.time.Instant;
 import java.util.Set;
 
 public record MovieRecord(
@@ -11,8 +11,8 @@ public record MovieRecord(
     Integer startYear,
     Integer endYear,
     Integer runtimeMinutes,
-    Date modifiedAt,
-    Date createdAt,
+    Instant modifiedAtInUtc,
+    Instant createdAtInUtc,
     Set<MovieGenreEnum> movieGenre,
     MovieTypeEnum movieType,
     Float imdbRating,

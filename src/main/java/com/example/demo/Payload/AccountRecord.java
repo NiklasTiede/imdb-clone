@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.Payload;
 
 import java.util.Date;
 import javax.validation.constraints.NotBlank;

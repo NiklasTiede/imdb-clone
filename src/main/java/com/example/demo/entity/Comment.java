@@ -1,17 +1,15 @@
 package com.example.demo.entity;
 
-import java.util.Date;
+import com.example.demo.entity.audit.DateAudit;
 import javax.persistence.*;
 
 @Entity
-public class Comment {
+public class Comment extends DateAudit {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   private String message;
-  private Date createdAt;
-  private Date modifiedAt;
 
   @ManyToOne
   @JoinColumn(name = "account_id")
@@ -35,22 +33,6 @@ public class Comment {
 
   public void setMessage(String message) {
     this.message = message;
-  }
-
-  public Date getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Date createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  public Date getModifiedAt() {
-    return modifiedAt;
-  }
-
-  public void setModifiedAt(Date modifiedAt) {
-    this.modifiedAt = modifiedAt;
   }
 
   public Account getAccount() {

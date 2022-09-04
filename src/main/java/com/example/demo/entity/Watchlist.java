@@ -1,15 +1,12 @@
 package com.example.demo.entity;
 
-import java.time.Instant;
+import com.example.demo.entity.audit.CreatedAtAudit;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "watchlist")
-public class Watchlist {
+public class Watchlist extends CreatedAtAudit {
 
   @EmbeddedId private WatchlistId id;
-
-  private Instant createdAt;
 
   @ManyToOne
   @MapsId("movieId")
@@ -43,13 +40,5 @@ public class Watchlist {
 
   public void setId(WatchlistId id) {
     this.id = id;
-  }
-
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Instant createdAt) {
-    this.createdAt = createdAt;
   }
 }

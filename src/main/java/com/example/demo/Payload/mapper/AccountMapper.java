@@ -1,6 +1,6 @@
-package com.example.demo.dto.mapper;
+package com.example.demo.Payload.mapper;
 
-import com.example.demo.dto.AccountRecord;
+import com.example.demo.Payload.AccountRecord;
 import com.example.demo.entity.Account;
 import java.util.List;
 import org.mapstruct.Mapper;

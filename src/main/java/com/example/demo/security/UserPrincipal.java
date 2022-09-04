@@ -12,21 +12,16 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public class UserPrincipal implements UserDetails {
-  private static final long serialVersionUID = 1L;
 
-  private Long id;
-
-  private String firstName;
-
-  private String lastName;
-
-  private String username;
-
-  @JsonIgnore private String email;
-
-  @JsonIgnore private String password;
-
-  private Collection<? extends GrantedAuthority> authorities;
+  private final Long id;
+  private final String firstName;
+  private final String lastName;
+  private final String username;
+  @JsonIgnore private final String email;
+  @JsonIgnore private final String password;
+  private final boolean locked;
+  private final boolean enabled;
+  private final Collection<? extends GrantedAuthority> authorities;
 
   public UserPrincipal(
       Long id,
@@ -35,6 +30,8 @@ public class UserPrincipal implements UserDetails {
       String username,
       String email,
       String password,
+      boolean locked,
+      boolean enabled,
       Collection<? extends GrantedAuthority> authorities) {
     this.id = id;
     this.firstName = firstName;
@@ -42,6 +39,8 @@ public class UserPrincipal implements UserDetails {
     this.username = username;
     this.email = email;
     this.password = password;
+    this.locked = locked;
+    this.enabled = enabled;
 
     if (authorities == null) {
       this.authorities = null;
@@ -54,7 +53,7 @@ public class UserPrincipal implements UserDetails {
     System.out.println(account.getRoles());
     List<GrantedAuthority> authorities =
         account.getRoles().stream()
-            .map(role -> new SimpleGrantedAuthority(role.getName()))
+            .map(role -> new SimpleGrantedAuthority(role.getName().name()))
             .collect(Collectors.toList());
 
     return new UserPrincipal(
@@ -64,6 +63,8 @@ public class UserPrincipal implements UserDetails {
         account.getUsername(),
         account.getEmail(),
         account.getPassword(),
+        account.getLocked(),
+        account.getEnabled(),
         authorities);
   }
 
@@ -97,7 +98,7 @@ public class UserPrincipal implements UserDetails {
 
   @Override
   public boolean isAccountNonLocked() {
-    return true;
+    return !locked;
   }
 
   @Override
@@ -107,7 +108,7 @@ public class UserPrincipal implements UserDetails {
 
   @Override
   public boolean isEnabled() {
-    return true;
+    return enabled;
   }
 
   public boolean equals(Object object) {

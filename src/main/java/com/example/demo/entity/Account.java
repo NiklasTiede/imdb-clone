@@ -1,6 +1,6 @@
 package com.example.demo.entity;
 
-import com.example.demo.entity.role.Role;
+import com.example.demo.entity.audit.DateAudit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
       @UniqueConstraint(columnNames = {"username"}),
       @UniqueConstraint(columnNames = {"email"})
     })
-public class Account {
+public class Account extends DateAudit {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,8 +27,8 @@ public class Account {
   private String phone;
   private String bio;
   private Date birthday;
-  private Date createdAt;
-  private Date modifiedAt;
+  private Boolean locked = false;
+  private Boolean enabled = false;
 
   @ManyToMany(fetch = FetchType.EAGER)
   private Collection<Role> roles = new ArrayList<>();
@@ -48,17 +48,7 @@ public class Account {
 
   public Account() {}
 
-  public Account(String username, String email, String password, Collection<Role> roles) {
-    this.username = username;
-    this.email = email;
-    this.password = password;
-    this.roles = roles;
-  }
-
-  public Account(
-      String firstName, String lastName, String username, String email, String password) {
-    this.firstName = firstName;
-    this.lastName = lastName;
+  public Account(String username, String email, String password) {
     this.username = username;
     this.email = email;
     this.password = password;
@@ -132,19 +122,64 @@ public class Account {
     this.birthday = birthday;
   }
 
-  public Date getCreatedAt() {
-    return createdAt;
-  }
-
-  public Date getModifiedAt() {
-    return modifiedAt;
-  }
-
   public Collection<Role> getRoles() {
     return roles;
   }
 
   public void setRoles(Collection<Role> roles) {
     this.roles = roles;
+  }
+
+  public Boolean getLocked() {
+    return locked;
+  }
+
+  public void setLocked(Boolean locked) {
+    this.locked = locked;
+  }
+
+  public Boolean getEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(Boolean enabled) {
+    this.enabled = enabled;
+  }
+
+  @Override
+  public String toString() {
+    return "Account{"
+        + "id="
+        + id
+        + ", username='"
+        + username
+        + '\''
+        + ", email='"
+        + email
+        + '\''
+        + ", password='"
+        + password
+        + '\''
+        + ", firstName='"
+        + firstName
+        + '\''
+        + ", lastName='"
+        + lastName
+        + '\''
+        + ", phone='"
+        + phone
+        + '\''
+        + ", bio='"
+        + bio
+        + '\''
+        + ", birthday="
+        + birthday
+        + ", locked="
+        + locked
+        + ", enabled="
+        + enabled
+        + ", roles="
+        + roles
+        + '}';
   }
 }

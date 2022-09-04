@@ -1,12 +1,13 @@
 package com.example.demo.entity;
 
+import com.example.demo.entity.audit.DateAudit;
 import com.example.demo.enums.MovieGenreEnum;
 import com.example.demo.enums.MovieTypeEnum;
 import java.util.*;
 import javax.persistence.*;
 
 @Entity
-public class Movie {
+public class Movie extends DateAudit {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,8 +18,6 @@ public class Movie {
   private Integer startYear;
   private Integer endYear;
   private Integer runtimeMinutes;
-  private Date modifiedAt;
-  private Date createdAt;
 
   @SuppressWarnings("JpaAttributeTypeInspection")
   private Set<MovieGenreEnum> movieGenre;
@@ -36,6 +35,7 @@ public class Movie {
   @OneToMany(mappedBy = "movie")
   private Collection<Watchlist> watchedMovies;
 
+  // movie?
   @OneToMany(mappedBy = "rating")
   private Collection<Rating> ratings;
 
@@ -85,22 +85,6 @@ public class Movie {
 
   public void setRuntimeMinutes(Integer runtimeMinutes) {
     this.runtimeMinutes = runtimeMinutes;
-  }
-
-  public Date getModifiedAt() {
-    return modifiedAt;
-  }
-
-  public void setModifiedAt(Date modifiedAt) {
-    this.modifiedAt = modifiedAt;
-  }
-
-  public Date getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Date createdAt) {
-    this.createdAt = createdAt;
   }
 
   public Set<MovieGenreEnum> getMovieGenre() {

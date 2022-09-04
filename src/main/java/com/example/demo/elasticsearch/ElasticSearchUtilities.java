@@ -12,7 +12,6 @@ import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
-import com.example.demo.dto.Todo;
 import java.io.IOException;
 import java.util.List;
 import org.apache.http.HttpHost;

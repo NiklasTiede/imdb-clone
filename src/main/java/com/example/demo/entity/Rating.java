@@ -1,18 +1,16 @@
 package com.example.demo.entity;
 
+import com.example.demo.entity.audit.CreatedAtAudit;
 import java.math.BigDecimal;
-import java.time.Instant;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "rating")
-public class Rating {
+public class Rating extends CreatedAtAudit {
+
   @EmbeddedId private RatingId id;
 
   @Column(name = "rating", nullable = false, precision = 2, scale = 1)
   private BigDecimal rating;
-
-  private Instant createdAt;
 
   @ManyToOne
   @MapsId("movieId")
@@ -38,14 +36,6 @@ public class Rating {
 
   public void setRating(BigDecimal rating) {
     this.rating = rating;
-  }
-
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Instant createdAt) {
-    this.createdAt = createdAt;
   }
 
   public Movie getMovie() {

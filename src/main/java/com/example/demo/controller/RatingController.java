@@ -6,6 +6,17 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/rating")
 public class RatingController {
 
-  @PostMapping("/account/{accountId}/rated-movie/{movieId}")
-  public void rateMovie(@PathVariable Integer movieId, @PathVariable String accountId) {}
+  @GetMapping("/{movieId}/rate-movie")
+  public void rateMovie(@PathVariable Integer movieId) {
+
+    // rate movie
+
+  }
+
+  // change rating
+
+  // remove rating
+
+  // get all ratings of a user, chronology
+
 }

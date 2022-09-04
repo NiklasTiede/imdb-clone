@@ -2,6 +2,7 @@ package com.example.demo.util;
 
 import java.util.Date;
 
+// config for ms!
 public class StopWatch {
   private Date start;
   private long splitTime;
