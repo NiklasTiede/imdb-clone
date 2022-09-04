@@ -1,6 +1,9 @@
 
+# Database
 todo.txt
-/data/imdb-dataset/title.basics.tsv.gz
+/database/data-processing/.ipynb_checkpoints
+/database/data-processing/imdb-dataset
+/database/data-processing/processed_imdb_movies.csv
 
 # generated typescript clients
 /frontend/src/client/**/generator-output/
