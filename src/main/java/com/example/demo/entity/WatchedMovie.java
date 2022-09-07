@@ -4,16 +4,16 @@ import com.example.demo.entity.audit.CreatedAtAudit;
 import javax.persistence.*;
 
 @Entity
-public class Watchlist extends CreatedAtAudit {
+public class WatchedMovie extends CreatedAtAudit {
 
   @EmbeddedId private WatchlistId id;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("movieId")
   @JoinColumn(name = "movie_id")
   private Movie movie;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("accountId")
   @JoinColumn(name = "account_id")
   private Account account;
@@ -41,4 +41,9 @@ public class Watchlist extends CreatedAtAudit {
   public void setId(WatchlistId id) {
     this.id = id;
   }
+
+  //  @Override
+  //  public String toString() {
+  //    return "WatchedMovie{" + "id=" + id + ", movie=" + movie + ", account=" + account + '}';
+  //  }
 }

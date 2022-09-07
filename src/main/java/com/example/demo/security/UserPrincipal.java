@@ -50,7 +50,6 @@ public class UserPrincipal implements UserDetails {
   }
 
   public static UserPrincipal create(Account account) {
-    System.out.println(account.getRoles());
     List<GrantedAuthority> authorities =
         account.getRoles().stream()
             .map(role -> new SimpleGrantedAuthority(role.getName().name()))

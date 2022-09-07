@@ -29,15 +29,24 @@ public class Movie extends DateAudit {
   private Float rating;
   private Integer ratingCount;
 
-  @OneToMany(mappedBy = "movie")
-  private Collection<Comment> movieComments;
+  @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Collection<Comment> comments;
 
-  @OneToMany(mappedBy = "movie")
-  private Collection<Watchlist> watchedMovies;
+  @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Collection<WatchedMovie> watchedMovies;
 
-  // movie?
-  @OneToMany(mappedBy = "rating")
+  @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<Rating> ratings;
+
+  public Movie() {}
+
+  public Movie(
+      String primaryTitle, String originalTitle, MovieTypeEnum movieType, Integer runtimeMinutes) {
+    this.primaryTitle = primaryTitle;
+    this.originalTitle = originalTitle;
+    this.movieType = movieType;
+    this.runtimeMinutes = runtimeMinutes;
+  }
 
   public Long getId() {
     return id;
@@ -143,19 +152,19 @@ public class Movie extends DateAudit {
     this.ratingCount = ratingCount;
   }
 
-  public Collection<Comment> getMovieComments() {
-    return movieComments;
+  public Collection<Comment> getComments() {
+    return comments;
   }
 
-  public void setMovieComments(Collection<Comment> movieComments) {
-    this.movieComments = movieComments;
+  public void setComments(Collection<Comment> comments) {
+    this.comments = comments;
   }
 
-  public Collection<Watchlist> getWatchedMovies() {
+  public Collection<WatchedMovie> getWatchedMovies() {
     return watchedMovies;
   }
 
-  public void setWatchedMovies(Collection<Watchlist> watchedMovies) {
+  public void setWatchedMovies(Collection<WatchedMovie> watchedMovies) {
     this.watchedMovies = watchedMovies;
   }
 

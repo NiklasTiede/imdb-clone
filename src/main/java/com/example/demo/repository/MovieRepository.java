@@ -18,4 +18,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
   @Query("SELECT m FROM Movie m WHERE m.primaryTitle LIKE :keyword%")
   List<Movie> searchByTitleLike(@Param("keyword") String keyword);
+
+  List<Movie> findMoviesByIdIn(List<Long> movieIds);
+
+  //  Boolean existsById(Long movieId);
+
 }

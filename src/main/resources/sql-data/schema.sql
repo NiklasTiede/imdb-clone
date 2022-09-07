@@ -55,47 +55,48 @@ create table account (
 );
 
  create table rating (
-    rating decimal(2,1) not null,
-    created_at_in_utc timestamp default (utc_timestamp),
     movie_id bigint,
     account_id bigint,
+    rating decimal(3,1) not null,
+    created_at_in_utc timestamp default (utc_timestamp),
+    modified_at_in_utc timestamp,
     primary key (movie_id, account_id)
 );
 
-create table watchlist (
-    created_at_in_utc timestamp default (utc_timestamp),
+create table watched_movie (
     movie_id bigint,
     account_id bigint,
+    created_at_in_utc timestamp default (utc_timestamp),
     primary key (movie_id, account_id)
 );
 
 create table comment (
     id bigint AUTO_INCREMENT,
+    movie_id bigint not null,
+    account_id bigint not null,
     message text,
     created_at_in_utc timestamp default (utc_timestamp),
     modified_at_in_utc timestamp default (utc_timestamp),
-    movie_id bigint not null,
-    account_id bigint not null,
     primary key (id)
 );
 
 create table verification_token (
     id bigint AUTO_INCREMENT,
+    account_id bigint not null,
     verification_type varchar(100) not null,
     token varchar(36) not null,
     expiry_date_in_utc timestamp not null,
     confirmed_at_in_utc timestamp,
-    account_id bigint not null,
     primary key (id)
 );
 
 create table account_role (
     id bigint AUTO_INCREMENT,
+    account_id bigint not null,
     verification_type varchar(100) not null,
     token varchar(36) not null,
     expiry_date_in_utc timestamp not null,
     confirmed_at_in_utc timestamp,
-    account_id bigint not null,
     primary key (id)
 );
 

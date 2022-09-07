@@ -42,4 +42,9 @@ public class WatchlistId implements Serializable {
   public int hashCode() {
     return Objects.hash(accountId, movieId);
   }
+
+  @Override
+  public String toString() {
+    return "WatchlistId{" + "movieId=" + movieId + ", accountId=" + accountId + '}';
+  }
 }

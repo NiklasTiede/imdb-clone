@@ -11,4 +11,6 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
   List<Rating> findRatingsByMovie(Movie movie);
 
   List<Rating> findRatingsByAccount(Account account);
+
+  Rating findRatingByAccountIdAndMovieId(Long accountId, Long movieId);
 }

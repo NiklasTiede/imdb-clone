@@ -24,7 +24,7 @@ public class MovieServiceImpl implements MovieService {
     this.movieMapper = movieMapper;
   }
 
-  public MovieRecord findMovieById(Long movieId) {
+  public MovieRecord findMovieRecordById(Long movieId) {
     Movie movie =
         movieRepository
             .findById(movieId)
@@ -34,6 +34,18 @@ public class MovieServiceImpl implements MovieService {
                         "Movie with MovieId [" + movieId + "] not found in database."));
     log.info("Movie with Id [" + movie.getId() + "] was retrieved.");
     return movieMapper.entityToDTO(movie);
+  }
+
+  public Movie findMovieById(Long movieId) {
+    Movie movie =
+        movieRepository
+            .findById(movieId)
+            .orElseThrow(
+                () ->
+                    new NotFoundException(
+                        "Movie with MovieId [" + movieId + "] not found in database."));
+    log.info("Movie with Id [" + movie.getId() + "] was retrieved.");
+    return movie;
   }
 
   public List<MovieRecord> findMovieByTitle(String title) throws NotFoundException {

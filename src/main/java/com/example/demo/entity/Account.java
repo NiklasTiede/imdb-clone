@@ -30,21 +30,20 @@ public class Account extends DateAudit {
   private Boolean locked = false;
   private Boolean enabled = false;
 
-  @ManyToMany(fetch = FetchType.EAGER)
+  @ManyToMany(fetch = FetchType.LAZY)
   private Collection<Role> roles = new ArrayList<>();
 
-  //  @OneToMany(mappedBy = "account")
-  //  private Collection<Watchlist> watchedMovies;
+  @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Collection<WatchedMovie> watchedMovies;
 
-  //  @JsonIgnore
-  //  @OneToMany(mappedBy = "account")
-  //  private Set<UserRating> userratings = new HashSet<>();
+  @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Collection<Comment> comments;
 
-  // watchlist
+  @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Collection<Rating> ratings;
 
-  // comment
-
-  //  public Account() {}
+  @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Collection<VerificationToken> verificationTokens;
 
   public Account() {}
 
@@ -56,6 +55,10 @@ public class Account extends DateAudit {
 
   public Long getId() {
     return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
   }
 
   public String getUsername() {
@@ -122,14 +125,6 @@ public class Account extends DateAudit {
     this.birthday = birthday;
   }
 
-  public Collection<Role> getRoles() {
-    return roles;
-  }
-
-  public void setRoles(Collection<Role> roles) {
-    this.roles = roles;
-  }
-
   public Boolean getLocked() {
     return locked;
   }
@@ -146,40 +141,43 @@ public class Account extends DateAudit {
     this.enabled = enabled;
   }
 
-  @Override
-  public String toString() {
-    return "Account{"
-        + "id="
-        + id
-        + ", username='"
-        + username
-        + '\''
-        + ", email='"
-        + email
-        + '\''
-        + ", password='"
-        + password
-        + '\''
-        + ", firstName='"
-        + firstName
-        + '\''
-        + ", lastName='"
-        + lastName
-        + '\''
-        + ", phone='"
-        + phone
-        + '\''
-        + ", bio='"
-        + bio
-        + '\''
-        + ", birthday="
-        + birthday
-        + ", locked="
-        + locked
-        + ", enabled="
-        + enabled
-        + ", roles="
-        + roles
-        + '}';
+  public Collection<Role> getRoles() {
+    return roles;
+  }
+
+  public void setRoles(Collection<Role> roles) {
+    this.roles = roles;
+  }
+
+  public Collection<WatchedMovie> getWatchedMovies() {
+    return watchedMovies;
+  }
+
+  public void setWatchedMovies(Collection<WatchedMovie> watchedMovies) {
+    this.watchedMovies = watchedMovies;
+  }
+
+  public Collection<Comment> getComments() {
+    return comments;
+  }
+
+  public void setComments(Collection<Comment> comments) {
+    this.comments = comments;
+  }
+
+  public Collection<Rating> getRatings() {
+    return ratings;
+  }
+
+  public void setRatings(Collection<Rating> ratings) {
+    this.ratings = ratings;
+  }
+
+  public Collection<VerificationToken> getVerificationTokens() {
+    return verificationTokens;
+  }
+
+  public void setVerificationTokens(Collection<VerificationToken> verificationTokens) {
+    this.verificationTokens = verificationTokens;
   }
 }

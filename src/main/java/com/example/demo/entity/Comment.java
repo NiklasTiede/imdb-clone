@@ -11,11 +11,11 @@ public class Comment extends DateAudit {
 
   private String message;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY) // fetch = FetchType.LAZY
   @JoinColumn(name = "account_id")
   private Account account;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY) // fetch = FetchType.LAZY
   @JoinColumn(name = "movie_id")
   private Movie movie;
 

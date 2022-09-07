@@ -18,11 +18,15 @@ public class MovieController {
     this.movieService = movieService;
   }
 
-  @GetMapping("/{movieId}")
-  public ResponseEntity<MovieRecord> findMovieById(@PathVariable Long movieId) {
-    MovieRecord movieResponse = movieService.findMovieById(movieId);
-    return new ResponseEntity<>(movieResponse, HttpStatus.OK);
-  }
+  // ------------------------------------
+
+  //  @GetMapping("/{movieId}")
+  //  public ResponseEntity<MovieRecord> findMovieById(@PathVariable Long movieId) {
+  //
+  //    MovieRecord movieResponse = movieService.findMovieById(movieId);
+  //
+  //    return new ResponseEntity<>(movieResponse, HttpStatus.OK);
+  //  }
 
   @GetMapping("/search-by-primary-title/{primaryTitle}")
   public ResponseEntity<List<MovieRecord>> searchMovieByTitle(@PathVariable String primaryTitle) {

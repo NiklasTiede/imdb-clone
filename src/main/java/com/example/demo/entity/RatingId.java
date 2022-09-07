@@ -13,6 +13,13 @@ public class RatingId implements Serializable {
 
   @NotNull private Long accountId;
 
+  public RatingId() {}
+
+  public RatingId(Long movieId, Long accountId) {
+    this.movieId = movieId;
+    this.accountId = accountId;
+  }
+
   public Long getMovieId() {
     return movieId;
   }

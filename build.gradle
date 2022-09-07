@@ -77,6 +77,7 @@ dependencies {
 	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.6.2'
 	testImplementation group: 'junit', name: 'junit', version: '4.13.2'
 	testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
+	// testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.7.0'
 
 	// ES client: index, query, sort, aggregate - https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/searching.html
 	implementation group: 'co.elastic.clients', name: 'elasticsearch-java', version: '8.2.2'
