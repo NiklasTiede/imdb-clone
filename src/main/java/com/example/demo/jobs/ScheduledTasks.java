@@ -1,7 +1,18 @@
 package com.example.demo.jobs;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.example.demo.entity.Movie;
+import com.example.demo.entity.Rating;
+import com.example.demo.entity.VerificationToken;
+import com.example.demo.exceptions.NotFoundException;
+import com.example.demo.repository.MovieRepository;
+import com.example.demo.repository.RatingRepository;
+import com.example.demo.repository.VerificationTokenRepository;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -10,17 +21,80 @@ import org.springframework.stereotype.Component;
 @Component
 public class ScheduledTasks {
 
-  private static final Logger log = LoggerFactory.getLogger(ScheduledTasks.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
 
-  private static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+  private final RatingRepository ratingRepository;
 
-  @Scheduled(cron = "0 0/10 * * * *")
-  public void reportCurrentTime() {
-    log.info("The time is now {}", dateFormat.format(new Date()));
+  private final MovieRepository movieRepository;
+
+  private final VerificationTokenRepository verificationTokenRepository;
+
+  public ScheduledTasks(
+      RatingRepository ratingRepository,
+      MovieRepository movieRepository,
+      VerificationTokenRepository verificationTokenRepository) {
+    this.ratingRepository = ratingRepository;
+    this.movieRepository = movieRepository;
+    this.verificationTokenRepository = verificationTokenRepository;
   }
 
-  // clean job for 4 week old verification tokens
+  /**
+   * If a user created a new rating for a movie in the last 24h the movie's rating will be updated.
+   * The job is scheduled at 1:00 AM
+   */
+  @Scheduled(cron = "0 0 1 * * *")
+  public void updateMovieRatings() {
+    List<Rating> recentlyCreatedRatings =
+        ratingRepository.findAllByModifiedAtInUtcAfter(Instant.now().minus(24, ChronoUnit.HOURS));
+    if (recentlyCreatedRatings.isEmpty()) {
+      LOGGER.info("no newly created ratings in the last 24h, no movie to update");
+    } else {
+      List<List<Rating>> ratingsOfMovies =
+          recentlyCreatedRatings.stream()
+              .map(rating -> rating.getMovie().getId())
+              .map(ratingRepository::findRatingsByMovieId)
+              .toList();
 
-  // updating movies ratings if movies were rated
+      for (List<Rating> movieRating : ratingsOfMovies) {
+        double sumOfAllRatings =
+            movieRating.stream().map(Rating::getRating).mapToDouble(BigDecimal::doubleValue).sum();
+        int countOfAllRatings = movieRating.size();
+        double averageRating = sumOfAllRatings / countOfAllRatings;
 
+        BigDecimal newRating =
+            new BigDecimal(averageRating, new MathContext(2, RoundingMode.HALF_EVEN));
+        Movie movie =
+            movieRepository
+                .findById(movieRating.get(0).getMovie().getId())
+                .orElseThrow(
+                    () ->
+                        new NotFoundException(
+                            "Movie with id ["
+                                + movieRating.get(0).getMovie().getId()
+                                + "] not found"));
+        movie.setRating(newRating);
+        movie.setRatingCount(countOfAllRatings);
+        Movie savedMovie = movieRepository.save(movie);
+
+        LOGGER.info(
+            "movie [{}] was updated. The new average rating is [{}] with [{}] counts",
+            savedMovie.getPrimaryTitle(),
+            savedMovie.getRating(),
+            savedMovie.getRatingCount());
+      }
+      LOGGER.info("The rating / ratingCount of [{}] movie(s) were updated", ratingsOfMovies.size());
+    }
+  }
+
+  /** Cleaning job deleting 30-day old tokens. The job is scheduled at 1:10 AM */
+  @Scheduled(cron = "0 10 1 * * *")
+  public void deleteExpiredVerificationTokens() {
+    List<VerificationToken> oldExpiredVerificationTokens =
+        verificationTokenRepository.findAllByExpiryDateInUtcBefore(
+            Instant.now().minus(30, ChronoUnit.DAYS));
+    Integer oldTokensCount = oldExpiredVerificationTokens.size();
+    verificationTokenRepository.deleteAll(oldExpiredVerificationTokens);
+    LOGGER.info(
+        "[{}] expired verification tokens older than 4 weeks were deleted ", oldTokensCount);
+  }
 }
