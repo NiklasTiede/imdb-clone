@@ -3,6 +3,7 @@ package com.example.demo.entity;
 import com.example.demo.entity.audit.DateAudit;
 import com.example.demo.enums.MovieGenreEnum;
 import com.example.demo.enums.MovieTypeEnum;
+import java.math.BigDecimal;
 import java.util.*;
 import javax.persistence.*;
 
@@ -26,7 +27,7 @@ public class Movie extends DateAudit {
   private Float imdbRating;
   private Integer imdbRatingCount;
   private Boolean adult;
-  private Float rating;
+  private BigDecimal rating;
   private Integer ratingCount;
 
   @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -136,11 +137,11 @@ public class Movie extends DateAudit {
     this.adult = adult;
   }
 
-  public Float getRating() {
+  public BigDecimal getRating() {
     return rating;
   }
 
-  public void setRating(Float rating) {
+  public void setRating(BigDecimal rating) {
     this.rating = rating;
   }
 
