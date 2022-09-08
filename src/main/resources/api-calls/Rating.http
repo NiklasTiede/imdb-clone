@@ -1,0 +1,19 @@
+
+### rate movie
+GET http://localhost:8080/api/movie-rating/2872718/rating-score/7.8
+Content-Type: application/json
+
+
+### get all ratings of an account
+GET http://localhost:8080/api/movie-rating/my-ratings
+Content-Type: application/json
+
+
+### delete rating
+DELETE http://localhost:8080/api/movie-rating/delete-rating
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "niklastiede2@gmail.com",
+  "password": "mypassword"
+}

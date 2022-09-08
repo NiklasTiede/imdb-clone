@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 @Service
 public interface RatingService {
 
-  Rating rateMovie(Long movieId, BigDecimal score, UserPrincipal currentUser);
+  Rating rateMovie(UserPrincipal currentUser, Long movieId, BigDecimal score);
 
   List<Rating> getRatingsByAccount(UserPrincipal currentUser);
+
+  void deleteRating(UserPrincipal currentUser, Long movieId);
 }

@@ -22,47 +22,33 @@ public class RatingController {
     this.ratingService = ratingService;
   }
 
-  // rate movie
   @GetMapping("/{movieId}/rating-score/{score}")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Rating> rateMovie(
+      @CurrentUser UserPrincipal currentUser,
       @PathVariable Long movieId,
-      @PathVariable BigDecimal score,
-      @CurrentUser UserPrincipal currentUser) {
-
+      @PathVariable BigDecimal score) {
     // should entity data put into payload object?
-
     if (score.floatValue() < 0 || score.floatValue() > 10.1) {
       throw new BadRequestException("Score must be between 0 and 10");
     } else {
       return new ResponseEntity<>(
-          ratingService.rateMovie(movieId, score, currentUser), HttpStatus.CREATED);
+          ratingService.rateMovie(currentUser, movieId, score), HttpStatus.CREATED);
     }
   }
 
-  // get all rated movies of user x
   @GetMapping("/my-ratings")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<List<Rating>> getRatedMovieOfUser(@CurrentUser UserPrincipal currentUser) {
-    // should I get ratings back or then a list of movies as well?
     // would be better to fetch some movie data as well!
-    return new ResponseEntity<>(ratingService.getRatingsByAccount(currentUser), HttpStatus.CREATED);
+    return new ResponseEntity<>(ratingService.getRatingsByAccount(currentUser), HttpStatus.OK);
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-  // get all userratings of a movie
-
-  // delete movie rating
-
+  @DeleteMapping("/{movieId}/delete-rating")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<Void> deleteRating(
+      @CurrentUser UserPrincipal currentUser, @PathVariable Long movieId) {
+    ratingService.deleteRating(currentUser, movieId);
+    return new ResponseEntity<>(HttpStatus.OK);
+  }
 }
