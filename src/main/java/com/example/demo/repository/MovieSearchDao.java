@@ -3,7 +3,7 @@ package com.example.demo.repository;
 import com.example.demo.entity.Movie;
 import java.util.List;
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 
 /** LIKE queries with 9 mio Movie-table are not working with JpaRepository */
@@ -17,10 +17,11 @@ public class MovieSearchDao {
   }
 
   public List<Movie> findByPrimaryTitleStartsWith(String startsWithPrimaryTitle) {
-    Query query =
-        this.entityManager.createNativeQuery(
-            "SELECT m.* FROM IMDBCLONE.movie m WHERE m.primary_title LIKE :keyword");
+    TypedQuery<Movie> query =
+        entityManager.createQuery(
+            "SELECT m FROM Movie m WHERE m.primaryTitle LIKE :keyword", Movie.class);
     query.setParameter("keyword", startsWithPrimaryTitle + "%");
+    query.setMaxResults(50);
     return query.getResultList();
   }
 }

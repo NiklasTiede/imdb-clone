@@ -1,0 +1,25 @@
+
+### get 1 movie by id
+GET localhost:8080/api/movie/1457767
+Content-Type: application/json
+
+
+### get multiple movies by an array of ids
+POST localhost:8080/api/movie/get-movies
+Content-Type: application/json
+
+{
+  "movieIds": [1457767, 1396484, 2872718]
+}
+
+### save movie, done by admins
+POST localhost:8080/api/movie/save-movie
+Content-Type: application/json
+
+{
+
+}
+
+
+
+

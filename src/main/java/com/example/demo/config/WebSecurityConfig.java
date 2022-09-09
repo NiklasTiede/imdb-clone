@@ -55,6 +55,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .permitAll()
         .antMatchers(HttpMethod.POST, "/api/auth/**")
         .permitAll()
+        .antMatchers(HttpMethod.POST, "/api/movie/**")
+        .permitAll()
         .antMatchers(
             HttpMethod.GET,
             "/api/users/checkUsernameAvailability",

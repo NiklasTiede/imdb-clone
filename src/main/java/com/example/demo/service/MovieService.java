@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.Payload.MovieRecord;
+import com.example.demo.Payload.MovieRequest;
 import com.example.demo.entity.Movie;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -8,13 +9,15 @@ import org.springframework.stereotype.Service;
 @Service
 public interface MovieService {
 
-  MovieRecord findMovieRecordById(Long movieId);
+  MovieRecord findMovieById(Long movieId);
 
-  Movie findMovieById(Long movieId);
+  List<MovieRecord> findMoviesByIds(List<Long> movieIds);
 
-  List<MovieRecord> findMovieByTitle(String title);
+  Movie createMovie(MovieRequest movieRequest);
 
-  String saveMovie(MovieRecord movieRecord);
+  Movie updateMovie(Long movieId, MovieRequest request);
 
   String deleteMovie(Long movieId);
+
+  List<MovieRecord> searchMoviesByTitle(String title);
 }
