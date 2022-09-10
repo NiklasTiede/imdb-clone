@@ -11,13 +11,21 @@ public class Comment extends DateAudit {
 
   private String message;
 
-  @ManyToOne(fetch = FetchType.LAZY) // fetch = FetchType.LAZY
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "account_id")
   private Account account;
 
-  @ManyToOne(fetch = FetchType.LAZY) // fetch = FetchType.LAZY
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "movie_id")
   private Movie movie;
+
+  public Comment() {}
+
+  public Comment(String message, Account account, Movie movie) {
+    this.message = message;
+    this.account = account;
+    this.movie = movie;
+  }
 
   public Long getId() {
     return id;

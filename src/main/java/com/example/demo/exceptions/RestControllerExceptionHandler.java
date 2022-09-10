@@ -48,6 +48,19 @@ public class RestControllerExceptionHandler extends ResponseEntityExceptionHandl
     return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler(UnauthorizedException.class)
+  public final ResponseEntity<Object> handleUnauthorizedException(
+      UnauthorizedException ex, WebRequest request) {
+    ApiError apiError =
+        new ApiError(
+            "User has no access to the resource.", request.getDescription(false), ex.getMessage());
+    LOGGER.error(
+        "User has no permission for '{}', returning error message: '{}'",
+        request.getDescription(false),
+        ex.getMessage());
+    return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
+  }
+
   @SuppressWarnings("NullableProblems")
   @Override
   protected ResponseEntity<Object> handleMethodArgumentNotValid(
@@ -75,7 +88,7 @@ public class RestControllerExceptionHandler extends ResponseEntityExceptionHandl
     return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
   }
 
-  public String convertWithStream(HashMap<String, String> map) {
+  private String convertWithStream(HashMap<String, String> map) {
     return map.keySet().stream()
         .map(key -> key + "=" + map.get(key))
         .collect(Collectors.joining(", "));
