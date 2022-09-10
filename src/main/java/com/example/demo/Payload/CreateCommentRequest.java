@@ -1,4 +1,3 @@
 package com.example.demo.Payload;
 
-public record CreateCommentRequest(String message) {
-}
+public record CreateCommentRequest(String message) {}

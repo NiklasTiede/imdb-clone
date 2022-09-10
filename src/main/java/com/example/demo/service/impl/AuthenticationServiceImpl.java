@@ -63,7 +63,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         verificationTokenRepository
             .findByToken(token)
             .orElseThrow(
-                () -> new NotFoundException("Email Confirmation Token [" + token + "] not found"));
+                () ->
+                    new NotFoundException(
+                        "Email Confirmation Token [" + token + "] not found in database."));
     Account account = verificationToken.getAccount();
     account.setEnabled(true);
     accountRepository.save(account);
@@ -78,7 +80,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             .findByEmail(email)
             .orElseThrow(
                 () ->
-                    new NotFoundException("Account with email address [" + email + "] not found"));
+                    new NotFoundException(
+                        "Account with email address [" + email + "] not found in database."));
     return createAndSendPasswordResetToken(account);
   }
 
@@ -105,7 +108,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     VerificationToken verificationToken =
         verificationTokenRepository
             .findByToken(request.token())
-            .orElseThrow(() -> new NotFoundException("Password Reset Token not valid"));
+            .orElseThrow(
+                () ->
+                    new NotFoundException(
+                        "Password Reset Token [" + request.token() + "] not found in database."));
     Account account = verificationToken.getAccount();
     account.setPassword(passwordEncoder.encode(request.newPassword()));
     accountRepository.save(account);

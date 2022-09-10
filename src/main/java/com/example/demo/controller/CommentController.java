@@ -41,8 +41,12 @@ public class CommentController {
   }
 
   @PostMapping("/{movieId}")
-  public ResponseEntity<Comment> createComment(@PathVariable Long movieId, @RequestBody CreateCommentRequest request, @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(commentService.createComment(movieId, request, currentAccount), HttpStatus.CREATED);
+  public ResponseEntity<Comment> createComment(
+      @PathVariable Long movieId,
+      @RequestBody CreateCommentRequest request,
+      @CurrentUser UserPrincipal currentAccount) {
+    return new ResponseEntity<>(
+        commentService.createComment(movieId, request, currentAccount), HttpStatus.CREATED);
   }
 
   @PutMapping("/{commentId}")

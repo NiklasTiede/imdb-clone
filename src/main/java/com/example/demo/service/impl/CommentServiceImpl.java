@@ -72,10 +72,11 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
-  public Comment createComment(Long movieId, CreateCommentRequest request, UserPrincipal currentAccount) {
+  public Comment createComment(
+      Long movieId, CreateCommentRequest request, UserPrincipal currentAccount) {
     Movie movie = movieRepository.getMovieById(movieId);
     Account account = accountRepository.getAccount(currentAccount);
-    Comment comment = new Comment(request.message(),account ,movie);
+    Comment comment = new Comment(request.message(), account, movie);
     Comment savedComment = commentRepository.save(comment);
     LOGGER.info("Comment with id [{}] was created", savedComment.getId());
     return savedComment;
