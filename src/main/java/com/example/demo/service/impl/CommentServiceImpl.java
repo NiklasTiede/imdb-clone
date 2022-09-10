@@ -5,7 +5,6 @@ import com.example.demo.Payload.UpdateCommentRequest;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Comment;
 import com.example.demo.entity.Movie;
-import com.example.demo.enums.RoleNameEnum;
 import com.example.demo.exceptions.NotFoundException;
 import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.repository.AccountRepository;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -87,7 +85,7 @@ public class CommentServiceImpl implements CommentService {
       Long commentId, UpdateCommentRequest request, UserPrincipal currentAccount) {
     Comment comment = commentRepository.getCommentById(commentId);
     if (Objects.equals(comment.getAccount().getId(), currentAccount.getId())
-        || isCurrentAccountAdmin(currentAccount)) {
+        || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       comment.setMessage(request.message());
       Comment updatedComment = commentRepository.save(comment);
       LOGGER.info("comment with id [{}] was updated.", updatedComment.getId());
@@ -104,7 +102,7 @@ public class CommentServiceImpl implements CommentService {
   public String deleteComment(Long commentId, UserPrincipal currentAccount) {
     Comment comment = commentRepository.getCommentById(commentId);
     if (Objects.equals(comment.getAccount().getId(), currentAccount.getId())
-        || isCurrentAccountAdmin(currentAccount)) {
+        || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       commentRepository.delete(comment);
       LOGGER.info("comment with id [{}] was deleted.", comment.getId());
       return "comment with id [" + comment.getId() + "] was deleted.";
@@ -114,12 +112,5 @@ public class CommentServiceImpl implements CommentService {
               + currentAccount.getId()
               + "] has no permission to delete this resource.");
     }
-  }
-
-  // maybe move into own class, so every class can import this
-  private Boolean isCurrentAccountAdmin(UserPrincipal currentAccount) {
-    return currentAccount
-        .getAuthorities()
-        .contains(new SimpleGrantedAuthority(RoleNameEnum.ROLE_ADMIN.toString()));
   }
 }

@@ -1,7 +1,6 @@
 package com.example.demo.repository;
 
 import com.example.demo.entity.VerificationToken;
-import com.example.demo.enums.VerificationTypeEnum;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -12,10 +11,4 @@ public interface VerificationTokenRepository extends JpaRepository<VerificationT
   Optional<VerificationToken> findByToken(String token);
 
   List<VerificationToken> findAllByExpiryDateInUtcBefore(Instant instant);
-
-  VerificationToken findFirstByAccount_IdAndVerificationTypeOrderByIdDesc(
-      Long accountId, VerificationTypeEnum verificationTypeEnum);
-
-  VerificationToken findFirstByAccount_IdAndVerificationTypeOrderByExpiryDateInUtcDesc(
-      Long accountId, VerificationTypeEnum verificationTypeEnum);
 }

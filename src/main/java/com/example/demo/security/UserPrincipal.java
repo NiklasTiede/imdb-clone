@@ -1,6 +1,7 @@
 package com.example.demo.security;
 
 import com.example.demo.entity.Account;
+import com.example.demo.enums.RoleNameEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -127,5 +128,11 @@ public class UserPrincipal implements UserDetails {
 
   public String getLastName() {
     return lastName;
+  }
+
+  public static Boolean isCurrentAccountAdmin(UserPrincipal currentAccount) {
+    return currentAccount
+        .getAuthorities()
+        .contains(new SimpleGrantedAuthority(RoleNameEnum.ROLE_ADMIN.toString()));
   }
 }

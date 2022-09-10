@@ -34,7 +34,7 @@ public class CommentController {
   }
 
   @GetMapping("/all-mine")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<List<Comment>> findCommentsByCurrentAccount(
       @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(commentService.getCommentsByAccount(currentAccount), HttpStatus.OK);
@@ -54,7 +54,7 @@ public class CommentController {
   public ResponseEntity<Comment> updateComment(
       @PathVariable Long commentId,
       @RequestBody UpdateCommentRequest request,
-      UserPrincipal currentAccount) {
+      @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         commentService.updateComment(commentId, request, currentAccount), HttpStatus.OK);
   }
