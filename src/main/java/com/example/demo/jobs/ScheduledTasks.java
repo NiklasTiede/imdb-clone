@@ -3,7 +3,6 @@ package com.example.demo.jobs;
 import com.example.demo.entity.Movie;
 import com.example.demo.entity.Rating;
 import com.example.demo.entity.VerificationToken;
-import com.example.demo.exceptions.NotFoundException;
 import com.example.demo.repository.MovieRepository;
 import com.example.demo.repository.RatingRepository;
 import com.example.demo.repository.VerificationTokenRepository;
@@ -63,15 +62,8 @@ public class ScheduledTasks {
 
         BigDecimal newRating =
             new BigDecimal(averageRating, new MathContext(2, RoundingMode.HALF_EVEN));
-        Movie movie =
-            movieRepository
-                .findById(movieRating.get(0).getMovie().getId())
-                .orElseThrow(
-                    () ->
-                        new NotFoundException(
-                            "Movie with id ["
-                                + movieRating.get(0).getMovie().getId()
-                                + "] not found"));
+
+        Movie movie = movieRepository.getMovieById(movieRating.get(0).getMovie().getId());
         movie.setRating(newRating);
         movie.setRatingCount(countOfAllRatings);
         Movie savedMovie = movieRepository.save(movie);

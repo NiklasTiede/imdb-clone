@@ -32,13 +32,7 @@ public class MovieServiceImpl implements MovieService {
 
   @Override
   public MovieRecord findMovieById(Long movieId) {
-    Movie movie =
-        movieRepository
-            .findById(movieId)
-            .orElseThrow(
-                () ->
-                    new NotFoundException(
-                        "Movie with MovieId [" + movieId + "] not found in database."));
+    Movie movie = movieRepository.getMovieById(movieId);
     LOGGER.info("Movie with Id [" + movie.getId() + "] was retrieved.");
     return movieMapper.entityToDTO(movie);
   }
@@ -66,13 +60,7 @@ public class MovieServiceImpl implements MovieService {
 
   @Override
   public Movie updateMovie(Long movieId, MovieRequest request) {
-    Movie movie =
-        movieRepository
-            .findById(movieId)
-            .orElseThrow(
-                () ->
-                    new NotFoundException(
-                        "Movie with MovieId [" + movieId + "] not found in database."));
+    Movie movie = movieRepository.getMovieById(movieId);
     movie.setPrimaryTitle(request.primaryTitle());
     movie.setOriginalTitle(request.originalTitle());
     movie.setStartYear(request.startYear());
@@ -91,13 +79,7 @@ public class MovieServiceImpl implements MovieService {
 
   @Override
   public String deleteMovie(Long movieId) {
-    Movie movie =
-        movieRepository
-            .findById(movieId)
-            .orElseThrow(
-                () ->
-                    new NotFoundException(
-                        "Movie with MovieId [" + movieId + "] not found in database."));
+    Movie movie = movieRepository.getMovieById(movieId);
     movieRepository.delete(movie);
     return "the movie [" + movie.getPrimaryTitle() + "] was deleted successfully.";
   }

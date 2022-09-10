@@ -34,13 +34,7 @@ public class RatingServiceImpl implements RatingService {
 
   @Override
   public Rating rateMovie(UserPrincipal currentUser, Long movieId, BigDecimal score) {
-    Movie movie =
-        movieRepository
-            .findById(movieId)
-            .orElseThrow(
-                () ->
-                    new NotFoundException(
-                        "Movie with MovieId [" + movieId + "] not found in database."));
+    Movie movie = movieRepository.getMovieById(movieId);
     Account account = accountRepository.getAccount(currentUser);
     Rating rating = new Rating(score, movie, account, new RatingId(movie.getId(), account.getId()));
     return ratingRepository.save(rating);
@@ -58,7 +52,13 @@ public class RatingServiceImpl implements RatingService {
         ratingRepository
             .findRatingByAccountIdAndMovieId(currentUser.getId(), movieId)
             .orElseThrow(
-                () -> new NotFoundException("rating of movie with id [" + movieId + "] not found"));
+                () ->
+                    new NotFoundException(
+                        "Rating with movieId ["
+                            + movieId
+                            + "] and accountId ["
+                            + currentUser.getId()
+                            + "] not found in database."));
     ratingRepository.delete(rating);
   }
 }
