@@ -7,11 +7,18 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.Hibernate;
 
 @Embeddable
-public class WatchlistId implements Serializable {
+public class WatchedMovieId implements Serializable {
 
   @NotNull private Long movieId;
 
   @NotNull private Long accountId;
+
+  public WatchedMovieId() {}
+
+  public WatchedMovieId(Long movieId, Long accountId) {
+    this.movieId = movieId;
+    this.accountId = accountId;
+  }
 
   public Long getMovieId() {
     return movieId;
@@ -33,7 +40,7 @@ public class WatchlistId implements Serializable {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-    WatchlistId entity = (WatchlistId) o;
+    WatchedMovieId entity = (WatchedMovieId) o;
     return Objects.equals(this.accountId, entity.accountId)
         && Objects.equals(this.movieId, entity.movieId);
   }
