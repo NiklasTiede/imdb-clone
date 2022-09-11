@@ -43,9 +43,8 @@ dependencies {
 	// safely evolve DB schema - https://www.youtube.com/watch?v=xjXHecGOy84 - https://www.baeldung.com/liquibase-refactor-schema-of-java-app
 	// implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.12.0'
 
-	//  swagger UI - migrate to springdoc !
-	implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
-	// implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.11'
+	// documentation - swagger ui
+	 implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.11'
 
 	// serialization / deserialization
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.13.1'
