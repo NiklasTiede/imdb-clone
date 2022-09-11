@@ -1,12 +1,16 @@
 package com.example.demo.controller;
 
+import com.example.demo.Payload.AccountSummaryResponse;
+import com.example.demo.Payload.CreateAccountRequest;
 import com.example.demo.Payload.MessageResponse;
 import com.example.demo.entity.Account;
-import com.example.demo.repository.AccountRepository;
+import com.example.demo.entity.Comment;
+import com.example.demo.entity.Rating;
+import com.example.demo.entity.WatchedMovie;
 import com.example.demo.security.CurrentUser;
 import com.example.demo.security.UserPrincipal;
-import java.util.logging.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.demo.service.AccountService;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,44 +19,85 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Validated
-@RequestMapping(("/account"))
+@RequestMapping(("/api/account"))
 public class AccountController {
 
-  @Autowired private AccountRepository accountRepository;
+  private final AccountService accountService;
 
-  private static final Logger LOGGER = Logger.getLogger(String.valueOf(AccountController.class));
+  public AccountController(AccountService accountService) {
+    this.accountService = accountService;
+  }
 
   @GetMapping("/me")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> getMe(@CurrentUser UserPrincipal currentUser) {
-
-    return new ResponseEntity<>(new MessageResponse("answer"), HttpStatus.CREATED);
+  public ResponseEntity<AccountSummaryResponse> getCurrentAccount(
+      @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(accountService.getCurrentAccount(currentUser), HttpStatus.OK);
   }
 
-  @GetMapping("/bla")
-  //  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-  public ResponseEntity<String> doSomething(@CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>("", HttpStatus.CREATED);
+  @GetMapping("/{username}/profile")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<Account> getUserProfile(
+      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(accountService.getProfile(username, currentUser), HttpStatus.OK);
   }
 
-  @GetMapping("/get-by-username/{userName}")
-  public ResponseEntity<Account> getAccountByUsername(@PathVariable String userName) {
-    Account account = accountRepository.findByUsername(userName).orElseThrow();
-    return new ResponseEntity<>(account, HttpStatus.OK);
+  @GetMapping("/{username}/comments")
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+  public ResponseEntity<List<Comment>> getCommentsByAccount(
+      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(
+        accountService.getCommentsByAccount(username, currentUser), HttpStatus.OK);
   }
 
-  //    @PostMapping("/register")
-  //    public ResponseEntity<User> addUser(@RequestBody User user) {
-  //      System.out.println(user);
-  //      if (user.getEmail() == null | user.getUsername() == null | user.getPassword() == null) {
-  //        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-  //      }
-  //      User savedEntity = userRepository.save(user);
-  //      URI location =
-  //          ServletUriComponentsBuilder.fromCurrentRequest()
-  //              .path("/{id}")
-  //              .buildAndExpand(savedEntity.getId())
-  //              .toUri();
-  //      return ResponseEntity.status(HttpStatus.CREATED).location(location).body(savedEntity);
-  //    }
+  @GetMapping("/{username}/watchlist")
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+  public ResponseEntity<List<WatchedMovie>> getWatchedMoviesByAccount(
+      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(
+        accountService.getWatchedMoviesByAccount(username, currentUser), HttpStatus.OK);
+  }
+
+  @GetMapping("/{username}/ratings")
+  public ResponseEntity<List<Rating>> getRatingsByAccount(
+      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(
+        accountService.getRatingsByAccount(username, currentUser), HttpStatus.OK);
+  }
+
+  @PutMapping("/{username}")
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+  public ResponseEntity<Account> updateAccount(
+      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(accountService.updateAccount(username, currentUser), HttpStatus.OK);
+  }
+
+  @DeleteMapping("/{username}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<MessageResponse> deleteAccount(
+      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(accountService.deleteAccount(username, currentUser), HttpStatus.OK);
+  }
+
+  @PostMapping("/add-account")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Account> createAccount(
+      CreateAccountRequest request, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(
+        accountService.createAccount(request, currentUser), HttpStatus.CREATED);
+  }
+
+  @PutMapping("/{username}/give-admin")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<MessageResponse> giveAdminRole(
+      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(accountService.giveAdminRole(username, currentUser), HttpStatus.OK);
+  }
+
+  @PutMapping("/{username}/take-admin")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<MessageResponse> takeAdminRole(
+      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(accountService.takeAdminRole(username, currentUser), HttpStatus.OK);
+  }
 }

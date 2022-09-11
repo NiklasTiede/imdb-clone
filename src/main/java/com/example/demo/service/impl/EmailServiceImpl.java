@@ -25,6 +25,7 @@ public class EmailServiceImpl implements EmailService {
     this.mailSender = mailSender;
   }
 
+  @Override
   @Async
   public void sendEmail(String emailReceiverAddress, String subject, String emailText) {
     try {
@@ -41,6 +42,7 @@ public class EmailServiceImpl implements EmailService {
     }
   }
 
+  @Override
   public String buildConfirmationEmail(String name, String link) {
     String confirmationEmailTemplate =
         """
@@ -105,6 +107,7 @@ public class EmailServiceImpl implements EmailService {
     return confirmationEmailTemplate.replace("$name", name).replace("$link", link);
   }
 
+  @Override
   public String buildPasswordResetEmail(String name, String link) {
     String passwordResetTemplate =
         """

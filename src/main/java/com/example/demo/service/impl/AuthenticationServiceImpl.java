@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
+  // add logging
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
 
   private final AccountRepository accountRepository;
@@ -42,6 +43,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     this.passwordEncoder = passwordEncoder;
   }
 
+  @Override
   public String createAndSendEmailConfirmationToken(Account account) {
     String token = UUID.randomUUID().toString();
 
@@ -60,6 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     return "Confirmation email was send";
   }
 
+  @Override
   public MessageResponse confirmEmailAddress(String token) {
     if (!TokenValidation.isValid(token)) {
       throw new BadRequestException(TokenValidation.rules());
@@ -79,6 +82,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     return new MessageResponse("Email was confirmed and therefore account was activated");
   }
 
+  @Override
   public MessageResponse resetPassword(String email) {
     Account account =
         accountRepository
@@ -90,6 +94,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     return createAndSendPasswordResetToken(account);
   }
 
+  @Override
   public MessageResponse createAndSendPasswordResetToken(Account account) {
     String token = UUID.randomUUID().toString();
     VerificationToken verificationToken =
@@ -109,6 +114,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     return new MessageResponse("Email was send successfully");
   }
 
+  @Override
   public MessageResponse saveNewPassword(PasswordResetRequest request) {
     if (!PasswordValidation.isValid(request.newPassword())) {
       throw new BadRequestException(PasswordValidation.rules());
