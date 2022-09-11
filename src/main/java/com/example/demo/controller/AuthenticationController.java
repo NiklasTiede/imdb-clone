@@ -10,14 +10,11 @@ import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.security.JwtTokenProvider;
 import com.example.demo.service.AuthenticationService;
-import com.example.demo.util.PasswordValidation;
-import com.example.demo.util.TokenValidation;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,23 +28,34 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthenticationController {
+
   private static final String USER_ROLE_NOT_SET = "User role not set";
   private static final String ADMIN_ROLE_NOT_SET = "Admin role not set";
 
-  @Autowired private AuthenticationManager authenticationManager;
+  private final AuthenticationManager authenticationManager;
+  private final AccountRepository accountRepository;
+  private final RoleRepository roleRepository;
+  private final PasswordEncoder passwordEncoder;
+  private final JwtTokenProvider jwtTokenProvider;
+  private final AuthenticationService authenticationService;
 
-  @Autowired private AccountRepository accountRepository;
-
-  @Autowired private RoleRepository roleRepository;
-
-  @Autowired private PasswordEncoder passwordEncoder;
-
-  @Autowired private JwtTokenProvider jwtTokenProvider;
-
-  @Autowired private AuthenticationService authenticationService;
+  public AuthenticationController(
+      AuthenticationManager authenticationManager,
+      AccountRepository accountRepository,
+      RoleRepository roleRepository,
+      PasswordEncoder passwordEncoder,
+      JwtTokenProvider jwtTokenProvider,
+      AuthenticationService authenticationService) {
+    this.authenticationManager = authenticationManager;
+    this.accountRepository = accountRepository;
+    this.roleRepository = roleRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.jwtTokenProvider = jwtTokenProvider;
+    this.authenticationService = authenticationService;
+  }
 
   @PostMapping("/login")
-  public ResponseEntity<LoginResponse> authenticateUser(
+  public ResponseEntity<LoginResponse> authenticateAccount(
       @Valid @RequestBody LoginRequest loginRequest) {
     Authentication authentication =
         authenticationManager.authenticate(
@@ -110,26 +118,17 @@ public class AuthenticationController {
 
   @GetMapping("/confirm-email-address")
   public ResponseEntity<MessageResponse> confirmEmailAddress(@RequestParam("token") String token) {
-    if (!TokenValidation.isValid(token)) {
-      throw new BadRequestException(TokenValidation.rules());
-    }
-    return new ResponseEntity<>(
-        new MessageResponse(authenticationService.confirmEmailAddress(token)), HttpStatus.OK);
+    return new ResponseEntity<>(authenticationService.confirmEmailAddress(token), HttpStatus.OK);
   }
 
   @GetMapping("/reset-password")
   public ResponseEntity<MessageResponse> resetPassword(@RequestParam("email") @Email String email) {
-    return new ResponseEntity<>(
-        new MessageResponse(authenticationService.resetPassword(email)), HttpStatus.OK);
+    return new ResponseEntity<>(authenticationService.resetPassword(email), HttpStatus.OK);
   }
 
   @PostMapping("/save-new-password")
   public ResponseEntity<MessageResponse> saveNewPassword(
       @RequestBody PasswordResetRequest request) {
-    if (!PasswordValidation.isValid(request.newPassword())) {
-      throw new BadRequestException(PasswordValidation.rules());
-    }
-    String message = authenticationService.saveNewPassword(request);
-    return new ResponseEntity<>(new MessageResponse(message), HttpStatus.CREATED);
+    return new ResponseEntity<>(authenticationService.saveNewPassword(request), HttpStatus.CREATED);
   }
 }

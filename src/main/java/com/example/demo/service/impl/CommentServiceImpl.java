@@ -1,6 +1,7 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.Payload.CreateCommentRequest;
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.Payload.UpdateCommentRequest;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Comment;
@@ -24,9 +25,7 @@ public class CommentServiceImpl implements CommentService {
   private static final Logger LOGGER = LoggerFactory.getLogger(CommentServiceImpl.class);
 
   private final CommentRepository commentRepository;
-
   private final MovieRepository movieRepository;
-
   private final AccountRepository accountRepository;
 
   public CommentServiceImpl(
@@ -99,13 +98,13 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
-  public String deleteComment(Long commentId, UserPrincipal currentAccount) {
+  public MessageResponse deleteComment(Long commentId, UserPrincipal currentAccount) {
     Comment comment = commentRepository.getCommentById(commentId);
     if (Objects.equals(comment.getAccount().getId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       commentRepository.delete(comment);
       LOGGER.info("comment with id [{}] was deleted.", comment.getId());
-      return "comment with id [" + comment.getId() + "] was deleted.";
+      return new MessageResponse("comment with id [" + comment.getId() + "] was deleted.");
     } else {
       throw new UnauthorizedException(
           "Account with id ["

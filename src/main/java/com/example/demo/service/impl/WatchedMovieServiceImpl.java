@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Movie;
 import com.example.demo.entity.WatchedMovie;
@@ -21,9 +22,7 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   private static final Logger LOGGER = LoggerFactory.getLogger(WatchedMovieServiceImpl.class);
 
   private final WatchedMovieRepository watchedMovieRepository;
-
   private final MovieRepository movieRepository;
-
   private final AccountRepository accountRepository;
 
   public WatchedMovieServiceImpl(
@@ -67,7 +66,7 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   }
 
   @Override
-  public String deleteWatchedMovie(Long movieId, UserPrincipal currentAccount) {
+  public MessageResponse deleteWatchedMovie(Long movieId, UserPrincipal currentAccount) {
     WatchedMovie watchedMovie =
         watchedMovieRepository
             .findWatchedMovieByMovieIdAndAccountId(movieId, currentAccount.getId())
@@ -84,10 +83,11 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
         "WatchedMovie with movieId [{}] and accountId [{}] was deleted.",
         movieId,
         currentAccount.getId());
-    return "WatchedMovie with movieId ["
-        + movieId
-        + "] and accountId ["
-        + currentAccount.getId()
-        + "] was deleted";
+    return new MessageResponse(
+        "WatchedMovie with movieId ["
+            + movieId
+            + "] and accountId ["
+            + currentAccount.getId()
+            + "] was deleted");
   }
 }

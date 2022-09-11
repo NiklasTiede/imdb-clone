@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.Payload.MovieRecord;
 import com.example.demo.Payload.MovieRequest;
 import com.example.demo.Payload.mapper.MovieMapper;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class MovieServiceImpl implements MovieService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MovieServiceImpl.class);
+
   private final MovieRepository movieRepository;
   private final MovieSearchDao movieSearchDao;
   private final MovieMapper movieMapper;
@@ -78,10 +80,11 @@ public class MovieServiceImpl implements MovieService {
   }
 
   @Override
-  public String deleteMovie(Long movieId) {
+  public MessageResponse deleteMovie(Long movieId) {
     Movie movie = movieRepository.getMovieById(movieId);
     movieRepository.delete(movie);
-    return "the movie [" + movie.getPrimaryTitle() + "] was deleted successfully.";
+    return new MessageResponse(
+        "the movie [" + movie.getPrimaryTitle() + "] was deleted successfully.");
   }
 
   @Override

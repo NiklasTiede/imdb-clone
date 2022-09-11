@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.entity.Rating;
 import com.example.demo.security.UserPrincipal;
 import java.math.BigDecimal;
@@ -13,5 +14,5 @@ public interface RatingService {
 
   List<Rating> getRatingsByAccount(UserPrincipal currentAccount);
 
-  void deleteRating(UserPrincipal currentAccount, Long movieId);
+  MessageResponse deleteRating(UserPrincipal currentAccount, Long movieId);
 }

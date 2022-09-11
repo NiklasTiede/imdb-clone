@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Movie;
 import com.example.demo.entity.Rating;
@@ -25,9 +26,7 @@ public class RatingServiceImpl implements RatingService {
   private static final Logger LOGGER = LoggerFactory.getLogger(RatingServiceImpl.class);
 
   private final MovieRepository movieRepository;
-
   private final AccountRepository accountRepository;
-
   private final RatingRepository ratingRepository;
 
   public RatingServiceImpl(
@@ -70,7 +69,7 @@ public class RatingServiceImpl implements RatingService {
   }
 
   @Override
-  public void deleteRating(UserPrincipal currentAccount, Long movieId) {
+  public MessageResponse deleteRating(UserPrincipal currentAccount, Long movieId) {
     Rating rating =
         ratingRepository
             .findRatingByAccountIdAndMovieId(currentAccount.getId(), movieId)
@@ -86,6 +85,12 @@ public class RatingServiceImpl implements RatingService {
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       ratingRepository.delete(rating);
       LOGGER.info("rating with id [{}] was deleted.", rating.getId());
+      return new MessageResponse(
+          "WatchedMovie with movieId ["
+              + movieId
+              + "] and accountId ["
+              + currentAccount.getId()
+              + "] was deleted");
     } else {
       throw new UnauthorizedException(
           "Account with id ["

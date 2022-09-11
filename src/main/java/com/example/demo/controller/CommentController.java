@@ -64,7 +64,6 @@ public class CommentController {
   public ResponseEntity<MessageResponse> deleteComment(
       @PathVariable Long commentId, @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
-        new MessageResponse(commentService.deleteComment(commentId, currentAccount)),
-        HttpStatus.OK);
+        commentService.deleteComment(commentId, currentAccount), HttpStatus.OK);
   }
 }

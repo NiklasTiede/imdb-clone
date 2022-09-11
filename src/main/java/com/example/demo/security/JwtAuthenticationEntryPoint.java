@@ -1,7 +1,6 @@
 package com.example.demo.security;
 
 import java.io.IOException;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -12,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
   private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationEntryPoint.class);
 
   @Override
@@ -19,7 +19,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
       HttpServletRequest httpServletRequest,
       HttpServletResponse httpServletResponse,
       AuthenticationException e)
-      throws IOException, ServletException {
+      throws IOException {
     LOGGER.error("Responding with unauthorized error. Message - {}", e.getMessage());
     httpServletResponse.sendError(
         HttpServletResponse.SC_UNAUTHORIZED,

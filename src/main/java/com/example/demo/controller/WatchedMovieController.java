@@ -42,7 +42,6 @@ public class WatchedMovieController {
   public ResponseEntity<MessageResponse> getWatchlistByAccount(
       @PathVariable Long movieId, @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
-        new MessageResponse(watchedMovieService.deleteWatchedMovie(movieId, currentAccount)),
-        HttpStatus.OK);
+        watchedMovieService.deleteWatchedMovie(movieId, currentAccount), HttpStatus.OK);
   }
 }

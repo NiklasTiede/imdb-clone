@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class JwtTokenProvider {
+
   private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenProvider.class);
 
   @Value(value = "${app.jwtSecret}")

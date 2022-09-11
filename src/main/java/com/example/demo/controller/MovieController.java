@@ -45,8 +45,7 @@ public class MovieController {
   @DeleteMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteMovieById(@PathVariable Long movieId) {
-    return new ResponseEntity<>(
-        new MessageResponse(movieService.deleteMovie(movieId)), HttpStatus.OK);
+    return new ResponseEntity<>(movieService.deleteMovie(movieId), HttpStatus.OK);
   }
 
   @GetMapping("/search-by-primary-title/{primaryTitle}")

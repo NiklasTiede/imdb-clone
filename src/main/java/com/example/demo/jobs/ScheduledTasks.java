@@ -23,9 +23,7 @@ public class ScheduledTasks {
   private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
 
   private final RatingRepository ratingRepository;
-
   private final MovieRepository movieRepository;
-
   private final VerificationTokenRepository verificationTokenRepository;
 
   public ScheduledTasks(

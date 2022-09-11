@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.Payload.CreateCommentRequest;
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.Payload.UpdateCommentRequest;
 import com.example.demo.entity.Comment;
 import com.example.demo.security.UserPrincipal;
@@ -20,5 +21,5 @@ public interface CommentService {
 
   Comment updateComment(Long commentId, UpdateCommentRequest request, UserPrincipal currentAccount);
 
-  String deleteComment(Long commentId, UserPrincipal currentAccount);
+  MessageResponse deleteComment(Long commentId, UserPrincipal currentAccount);
 }

@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.Payload.MovieRecord;
 import com.example.demo.Payload.MovieRequest;
 import com.example.demo.entity.Movie;
@@ -17,7 +18,7 @@ public interface MovieService {
 
   Movie updateMovie(Long movieId, MovieRequest request);
 
-  String deleteMovie(Long movieId);
+  MessageResponse deleteMovie(Long movieId);
 
   List<MovieRecord> searchMoviesByTitle(String title);
 }

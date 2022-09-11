@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.entity.WatchedMovie;
 import com.example.demo.security.UserPrincipal;
 import java.util.List;
@@ -12,5 +13,5 @@ public interface WatchedMovieService {
 
   List<WatchedMovie> getWatchedMoviesByAccount(UserPrincipal currentAccount);
 
-  String deleteWatchedMovie(Long movieId, UserPrincipal currentAccount);
+  MessageResponse deleteWatchedMovie(Long movieId, UserPrincipal currentAccount);
 }

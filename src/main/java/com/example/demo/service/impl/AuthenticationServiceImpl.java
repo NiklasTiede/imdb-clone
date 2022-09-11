@@ -1,20 +1,23 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.Payload.PasswordResetRequest;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.VerificationToken;
 import com.example.demo.enums.VerificationTypeEnum;
+import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.NotFoundException;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.VerificationTokenRepository;
 import com.example.demo.service.AuthenticationService;
 import com.example.demo.service.EmailService;
+import com.example.demo.util.PasswordValidation;
+import com.example.demo.util.TokenValidation;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,20 +27,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
 
   private final AccountRepository accountRepository;
-
   private final VerificationTokenRepository verificationTokenRepository;
-
   private final EmailService emailService;
-
-  @Autowired private PasswordEncoder passwordEncoder;
+  private final PasswordEncoder passwordEncoder;
 
   public AuthenticationServiceImpl(
       AccountRepository accountRepository,
       VerificationTokenRepository verificationTokenRepository,
-      EmailService emailService) {
+      EmailService emailService,
+      PasswordEncoder passwordEncoder) {
     this.accountRepository = accountRepository;
     this.verificationTokenRepository = verificationTokenRepository;
     this.emailService = emailService;
+    this.passwordEncoder = passwordEncoder;
   }
 
   public String createAndSendEmailConfirmationToken(Account account) {
@@ -58,7 +60,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     return "Confirmation email was send";
   }
 
-  public String confirmEmailAddress(String token) {
+  public MessageResponse confirmEmailAddress(String token) {
+    if (!TokenValidation.isValid(token)) {
+      throw new BadRequestException(TokenValidation.rules());
+    }
     VerificationToken verificationToken =
         verificationTokenRepository
             .findByToken(token)
@@ -71,10 +76,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     accountRepository.save(account);
     verificationToken.setConfirmedAtInUtc(Instant.now());
     verificationTokenRepository.save(verificationToken);
-    return "Email was confirmed and therefore account was activated";
+    return new MessageResponse("Email was confirmed and therefore account was activated");
   }
 
-  public String resetPassword(String email) {
+  public MessageResponse resetPassword(String email) {
     Account account =
         accountRepository
             .findByEmail(email)
@@ -85,7 +90,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     return createAndSendPasswordResetToken(account);
   }
 
-  public String createAndSendPasswordResetToken(Account account) {
+  public MessageResponse createAndSendPasswordResetToken(Account account) {
     String token = UUID.randomUUID().toString();
     VerificationToken verificationToken =
         new VerificationToken(
@@ -101,10 +106,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     String link = "http://localhost:3000/api/auth/reset-password?token=" + token;
     String PasswordResetEmail = emailService.buildPasswordResetEmail(account.getUsername(), link);
     emailService.sendEmail(account.getEmail(), "Reset Password", PasswordResetEmail);
-    return "Email was send successfully";
+    return new MessageResponse("Email was send successfully");
   }
 
-  public String saveNewPassword(PasswordResetRequest request) {
+  public MessageResponse saveNewPassword(PasswordResetRequest request) {
+    if (!PasswordValidation.isValid(request.newPassword())) {
+      throw new BadRequestException(PasswordValidation.rules());
+    }
     VerificationToken verificationToken =
         verificationTokenRepository
             .findByToken(request.token())
@@ -115,6 +123,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     Account account = verificationToken.getAccount();
     account.setPassword(passwordEncoder.encode(request.newPassword()));
     accountRepository.save(account);
-    return "New Password was saved";
+    return new MessageResponse("New Password was saved");
   }
 }

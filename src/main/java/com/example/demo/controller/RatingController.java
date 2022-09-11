@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.Payload.MessageResponse;
 import com.example.demo.entity.Rating;
 import com.example.demo.security.CurrentUser;
 import com.example.demo.security.UserPrincipal;
@@ -40,9 +41,8 @@ public class RatingController {
 
   @DeleteMapping("/{movieId}/delete-rating")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-  public ResponseEntity<Void> deleteRating(
+  public ResponseEntity<MessageResponse> deleteRating(
       @PathVariable Long movieId, @CurrentUser UserPrincipal currentAccount) {
-    ratingService.deleteRating(currentAccount, movieId);
-    return new ResponseEntity<>(HttpStatus.OK);
+    return new ResponseEntity<>(ratingService.deleteRating(currentAccount, movieId), HttpStatus.OK);
   }
 }
