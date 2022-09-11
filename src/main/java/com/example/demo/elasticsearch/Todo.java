@@ -51,8 +51,6 @@ public class Todo {
   @Override
   public String toString() {
     return "Todo{"
-        + "id="
-        + id
         + ", userId="
         + userId
         + ", title='"
