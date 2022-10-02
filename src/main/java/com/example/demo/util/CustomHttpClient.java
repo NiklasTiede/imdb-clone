@@ -27,7 +27,7 @@ public class CustomHttpClient {
       HttpRequest request =
           HttpRequest.newBuilder()
               .method(httpMethod.toString(), HttpRequest.BodyPublishers.ofString(requestBody))
-              .uri(URI.create(uri))
+              .uri(URI.create(baseUrl + uri))
               .header("Content-Type", "application/json")
               .timeout(Duration.of(60, ChronoUnit.SECONDS))
               .build();

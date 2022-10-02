@@ -1,6 +1,5 @@
 package com.example.demo.webclient;
 
-import com.example.demo.elasticsearch.Todo;
 import com.example.demo.util.CustomHttpClient;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
@@ -12,8 +11,12 @@ public class TodoClient {
   String baseUrl = "https://jsonplaceholder.typicode.com";
 
   public Todo getFirstEndpoint(Todo todo) {
+    return CustomHttpClient.makeRequest(HttpMethod.POST, baseUrl, "/posts", todo, Todo.class);
+  }
+
+  public Todo getSecondEndpoint(Todo todo) {
     return CustomHttpClient.makeRequest(
-        HttpMethod.POST, baseUrl, "https://jsonplaceholder.typicode.com/posts", todo, Todo.class);
+        HttpMethod.GET, baseUrl, "posts/{postId}", todo, Todo.class);
   }
 
   // more endpoints
