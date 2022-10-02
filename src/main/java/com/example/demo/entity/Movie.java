@@ -3,6 +3,7 @@ package com.example.demo.entity;
 import com.example.demo.entity.audit.DateAudit;
 import com.example.demo.enums.MovieGenreEnum;
 import com.example.demo.enums.MovieTypeEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.util.*;
 import javax.persistence.*;
@@ -30,12 +31,15 @@ public class Movie extends DateAudit {
   private BigDecimal rating;
   private Integer ratingCount;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<Comment> comments;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<WatchedMovie> watchedMovies;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<Rating> ratings;
 

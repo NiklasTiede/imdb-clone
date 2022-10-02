@@ -1,6 +1,9 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.Payload.MessageResponse;
+import com.example.demo.Payload.PagedResponse;
+import com.example.demo.Payload.WatchedMovieRecord;
+import com.example.demo.Payload.mapper.CustomWatchedMovieMapper;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Movie;
 import com.example.demo.entity.WatchedMovie;
@@ -11,9 +14,13 @@ import com.example.demo.repository.MovieRepository;
 import com.example.demo.repository.WatchedMovieRepository;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.WatchedMovieService;
-import java.util.List;
+import com.example.demo.util.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,14 +31,17 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   private final WatchedMovieRepository watchedMovieRepository;
   private final MovieRepository movieRepository;
   private final AccountRepository accountRepository;
+  private final CustomWatchedMovieMapper watchedMovieMapper;
 
   public WatchedMovieServiceImpl(
       WatchedMovieRepository watchedMovieRepository,
       MovieRepository movieRepository,
-      AccountRepository accountRepository) {
+      AccountRepository accountRepository,
+      CustomWatchedMovieMapper watchedMovieMapper) {
     this.watchedMovieRepository = watchedMovieRepository;
     this.movieRepository = movieRepository;
     this.accountRepository = accountRepository;
+    this.watchedMovieMapper = watchedMovieMapper;
   }
 
   @Override
@@ -49,20 +59,32 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   }
 
   @Override
-  public List<WatchedMovie> getWatchedMoviesByAccount(UserPrincipal currentAccount) {
-    List<WatchedMovie> watchedMovies =
-        watchedMovieRepository.findAllByAccountIdOrderByCreatedAtInUtcDesc(currentAccount.getId());
-    if (watchedMovies.isEmpty()) {
+  public PagedResponse<WatchedMovieRecord> getWatchedMoviesByAccount(
+      String username, int page, int size) {
+    Pagination.validatePageNumberAndSize(page, size);
+    Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
+    Account account = accountRepository.getAccountByName(username);
+    Page<WatchedMovie> watchedMovies =
+        watchedMovieRepository.findAllByAccountIdOrderByCreatedAtInUtcDesc(
+            account.getId(), pageable);
+    Page<WatchedMovieRecord> watchedMovieRecordPage =
+        watchedMovies.map(watchedMovieMapper::entityToDTO);
+    if (watchedMovies.getContent().isEmpty()) {
       throw new NotFoundException(
-          "WatchedMovies of account with id ["
-              + currentAccount.getId()
-              + "] not found in database.");
+          "WatchedMovies of account with id [" + account.getId() + "] not found in database.");
     }
     LOGGER.info(
         "[{}] watchedMovies from account with id [{}] were retrieved.",
-        watchedMovies.size(),
-        currentAccount.getId());
-    return watchedMovies;
+        watchedMovies.getContent().size(),
+        account.getId());
+
+    return new PagedResponse<>(
+        watchedMovieRecordPage.getContent(),
+        watchedMovieRecordPage.getNumber(),
+        watchedMovieRecordPage.getSize(),
+        watchedMovieRecordPage.getTotalElements(),
+        watchedMovieRecordPage.getTotalPages(),
+        watchedMovieRecordPage.isLast());
   }
 
   @Override

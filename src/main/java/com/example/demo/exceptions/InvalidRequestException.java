@@ -1,5 +1,6 @@
 package com.example.demo.exceptions;
 
+// not implemented yet
 public class InvalidRequestException extends RuntimeException {
 
   private String message;

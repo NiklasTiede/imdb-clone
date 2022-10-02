@@ -1,0 +1,67 @@
+
+###
+GET http://localhost:8080/api/account/me
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+
+###
+GET http://localhost:8080/api/account/onemanarmy/profile
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+
+###
+GET http://localhost:8080/api/account/onemanarmy/comments
+#Content-Type: application/json
+
+
+###
+GET http://localhost:8080/api/account/onemanarmy/watchlist
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+
+###
+GET http://localhost:8080/api/account/onemanarmy/ratings
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+
+###
+PUT http://localhost:8080/api/account/onemanarmy
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+
+###
+DELETE http://localhost:8080/api/account/{username}
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+
+###
+POST http://localhost:8080/api/account/add-account
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+{
+  "username": "",
+  "email": "",
+  "password": "",
+  "firstName": "",
+  "lastName": ""
+}
+
+
+###
+PUT http://localhost:8080/api/account/{username}/give-admin
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+
+###
+PUT http://localhost:8080/api/account/{username}/take-admin
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+

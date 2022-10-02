@@ -28,6 +28,7 @@ spotless {
 		removeUnusedImports()
 		trimTrailingWhitespace()
 		googleJavaFormat()
+		toggleOffOn()
 	}
 }
 
@@ -79,9 +80,14 @@ dependencies {
 	// testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.7.0'
 
 	// ES client: index, query, sort, aggregate - https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/searching.html
-	implementation group: 'co.elastic.clients', name: 'elasticsearch-java', version: '8.2.2'
-	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.3'
-	implementation group: 'jakarta.json', name: 'jakarta.json-api', version: '2.1.0'
+	implementation group: 'co.elastic.clients', name: 'elasticsearch-java', version: '8.2.1'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4'
+	implementation group: 'jakarta.json', name: 'jakarta.json-api', version: '2.1.1'
+
+	// simpler ES alternative: MeiliSearch.
+	// https://docs.meilisearch.com/learn/getting_started/quick_start.html#setup-and-installation
+	// https://github.com/meilisearch/meilisearch-java#-installation
+    // implementation group: 'com.meilisearch.sdk', name: 'meilisearch-java', version: '0.7.2'
 
 	// monitoring
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '2.7.0'

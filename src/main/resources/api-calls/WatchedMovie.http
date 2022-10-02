@@ -1,17 +1,17 @@
 
-### rate movie
-GET http://localhost:8080/api/movie-rating/2872718/rating-score/7.8
+### watch a movie
+GET http://localhost:8080/api/watched-movie/2872718/watch
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 
-### get all ratings of an account
-GET http://localhost:8080/api/movie-rating/my-ratings
+### get list of users watched movies
+GET http://localhost:8080/api/watched-movie/get-all
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 
-### delete rating
-DELETE http://localhost:8080/api/movie-rating/2872718/delete-rating
+### delete watched movie
+DELETE http://localhost:8080/api/watched-movie/2872718
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json

@@ -5,7 +5,6 @@ import com.example.demo.entity.WatchedMovie;
 import com.example.demo.security.CurrentUser;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.WatchedMovieService;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,23 +22,15 @@ public class WatchedMovieController {
 
   @GetMapping("/{movieId}/watch")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<WatchedMovie> rateMovie(
+  public ResponseEntity<WatchedMovie> watchMovie(
       @PathVariable Long movieId, @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         watchedMovieService.watchMovie(movieId, currentAccount), HttpStatus.CREATED);
   }
 
-  @GetMapping("/all-watched-movies")
-  @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<List<WatchedMovie>> getWatchlistByAccount(
-      @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(
-        watchedMovieService.getWatchedMoviesByAccount(currentAccount), HttpStatus.OK);
-  }
-
   @DeleteMapping("/{movieId}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<MessageResponse> getWatchlistByAccount(
+  public ResponseEntity<MessageResponse> deleteWatchedMovie(
       @PathVariable Long movieId, @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         watchedMovieService.deleteWatchedMovie(movieId, currentAccount), HttpStatus.OK);

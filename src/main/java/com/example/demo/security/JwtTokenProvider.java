@@ -20,7 +20,7 @@ public class JwtTokenProvider {
   private String jwtSecret;
 
   @Value(value = "${app.jwtExpirationInMs}")
-  private int jwtExpirationInMs;
+  private long jwtExpirationInMs;
 
   public String generateToken(Authentication authentication) {
     UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
@@ -42,13 +42,11 @@ public class JwtTokenProvider {
 
   public Long getUserIdFromJWT(String token) {
 
-    // refactor from both methods
     Key key =
         new SecretKeySpec(
             Base64.getDecoder().decode(jwtSecret), SignatureAlgorithm.HS512.getJcaName());
 
     Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-    //    Claims claims = Jwts.parser().setSigningKey(key).parseClaimsJws(token).getBody();
 
     return Long.valueOf(claims.getSubject());
   }
@@ -61,10 +59,7 @@ public class JwtTokenProvider {
 
     try {
       Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken);
-      //      Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
       return true;
-      // ExpiredJwtException, UnsupportedJwtException, MalformedJwtException,
-      // io.jsonwebtoken.security.SignatureException, IllegalArgumentException
     } catch (SecurityException ex) {
       LOGGER.error("Invalid JWT signature");
     } catch (MalformedJwtException ex) {

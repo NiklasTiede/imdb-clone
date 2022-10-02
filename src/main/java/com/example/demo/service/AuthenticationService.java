@@ -1,19 +1,27 @@
 package com.example.demo.service;
 
-import com.example.demo.Payload.PasswordResetRequest;
+import com.example.demo.Payload.*;
 import com.example.demo.entity.Account;
 import org.springframework.stereotype.Service;
 
 @Service
 public interface AuthenticationService {
 
+  UserIdentityAvailability checkEmailAvailability(String email);
+
+  UserIdentityAvailability checkUsernameAvailability(String username);
+
+  LoginResponse loginUser(LoginRequest request);
+
+  MessageResponse registerUser(RegistrationRequest request);
+
   String createAndSendEmailConfirmationToken(Account account);
 
-  String confirmEmailAddress(String token);
+  MessageResponse confirmEmailAddress(String token);
 
-  String resetPassword(String email);
+  MessageResponse resetPassword(String email);
 
-  String createAndSendPasswordResetToken(Account account);
+  MessageResponse createAndSendPasswordResetToken(Account account);
 
-  String saveNewPassword(PasswordResetRequest request);
+  MessageResponse saveNewPassword(PasswordResetRequest request);
 }

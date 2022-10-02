@@ -1,0 +1,42 @@
+
+### get specific comment by id
+GET http://localhost:8080/api/comment/3
+Content-Type: application/json
+
+
+### get all comments of a movie
+GET http://localhost:8080/api/comment/all/2872718
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+
+### get all comments of user
+GET http://localhost:8080/api/comment/all-mine
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+
+### comment a movie
+POST http://localhost:8080/api/comment/2872718
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+{
+  "message": "Nightcrawler is creepy."
+}
+
+
+### update existing comment
+PUT http://localhost:8080/api/comment/3
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+{
+  "message": "This comment was edited by me!"
+}
+
+
+### delete comment by id
+DELETE http://localhost:8080/api/comment/1
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json

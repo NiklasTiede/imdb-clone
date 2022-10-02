@@ -1,0 +1,52 @@
+
+### check username availability
+GET http://localhost:8080/api/auth/checkUsernameAvailability?username=notusedusername
+Content-Type: application/json
+
+
+### check email availability
+GET http://localhost:8080/api/auth/checkEmailAvailability?email=notused@gmail.com
+Content-Type: application/json
+
+
+### login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "niklastiede2@gmail.com",
+  "password": "mypassword"
+}
+
+
+### register
+POST http://localhost:8080/api/auth/registration
+Content-Type: application/json
+
+{
+  "firstName": "Niklas",
+  "lastName": "Tiede",
+  "username": "OneManArmy",
+  "password": "mypassword",
+  "email": "niklastiede2@gmail.com"
+}
+
+
+### confirm email token
+GET http://localhost:8080/api/auth/confirm-email-address?token=xxx
+Content-Type: application/json
+
+
+### reset password
+GET http://localhost:8080/api/auth/reset-password?email=niklastiede2@gmail.com
+Content-Type: application/json
+
+
+### save new password
+POST http://localhost:8080/api/auth/save-new-password
+Content-Type: application/json
+
+{
+  "token": "sometoken",
+  "newPassword": "123456"
+}

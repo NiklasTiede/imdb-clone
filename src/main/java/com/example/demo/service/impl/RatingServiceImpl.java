@@ -1,6 +1,9 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.Payload.MessageResponse;
+import com.example.demo.Payload.PagedResponse;
+import com.example.demo.Payload.RatingRecord;
+import com.example.demo.Payload.mapper.CustomRatingMapper;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Movie;
 import com.example.demo.entity.Rating;
@@ -13,11 +16,15 @@ import com.example.demo.repository.MovieRepository;
 import com.example.demo.repository.RatingRepository;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.RatingService;
+import com.example.demo.util.Pagination;
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,14 +35,17 @@ public class RatingServiceImpl implements RatingService {
   private final MovieRepository movieRepository;
   private final AccountRepository accountRepository;
   private final RatingRepository ratingRepository;
+  private final CustomRatingMapper ratingMapper;
 
   public RatingServiceImpl(
       MovieRepository movieRepository,
       AccountRepository accountRepository,
-      RatingRepository ratingRepository) {
+      RatingRepository ratingRepository,
+      CustomRatingMapper ratingMapper) {
     this.movieRepository = movieRepository;
     this.accountRepository = accountRepository;
     this.ratingRepository = ratingRepository;
+    this.ratingMapper = ratingMapper;
   }
 
   @Override
@@ -54,18 +64,27 @@ public class RatingServiceImpl implements RatingService {
   }
 
   @Override
-  public List<Rating> getRatingsByAccount(UserPrincipal currentAccount) {
-    Account account = accountRepository.getAccount(currentAccount);
-    List<Rating> ratings = ratingRepository.findRatingsByAccount(account);
-    if (ratings.isEmpty()) {
+  public PagedResponse<RatingRecord> getRatingsByAccount(String username, int page, int size) {
+    Pagination.validatePageNumberAndSize(page, size);
+    Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
+    Account account = accountRepository.getAccountByName(username);
+    Page<Rating> ratings = ratingRepository.findRatingsByAccount(account, pageable);
+    Page<RatingRecord> ratingRecordPage = ratings.map(ratingMapper::entityToDTO);
+    if (ratings.getContent().isEmpty()) {
       throw new NotFoundException(
-          "ratings of account with id [" + currentAccount.getId() + "] not found in database.");
+          "ratings of account with id [" + account.getId() + "] not found in database.");
     }
     LOGGER.info(
         "[{}] ratings from account with id [{}] were retrieved.",
-        ratings.size(),
-        currentAccount.getId());
-    return ratings;
+        ratings.getContent().size(),
+        account.getId());
+    return new PagedResponse<>(
+        ratingRecordPage.getContent(),
+        ratingRecordPage.getNumber(),
+        ratingRecordPage.getSize(),
+        ratingRecordPage.getTotalElements(),
+        ratingRecordPage.getTotalPages(),
+        ratingRecordPage.isLast());
   }
 
   @Override

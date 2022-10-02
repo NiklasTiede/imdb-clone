@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import com.example.demo.entity.audit.DateAudit;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -33,15 +34,19 @@ public class Account extends DateAudit {
   @ManyToMany(fetch = FetchType.LAZY)
   private Collection<Role> roles = new ArrayList<>();
 
+  @JsonIgnore
   @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<WatchedMovie> watchedMovies;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<Comment> comments;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<Rating> ratings;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<VerificationToken> verificationTokens;
 

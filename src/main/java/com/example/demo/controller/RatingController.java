@@ -6,7 +6,6 @@ import com.example.demo.security.CurrentUser;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.RatingService;
 import java.math.BigDecimal;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,13 +29,6 @@ public class RatingController {
       @PathVariable BigDecimal score) {
     return new ResponseEntity<>(
         ratingService.rateMovie(currentAccount, movieId, score), HttpStatus.CREATED);
-  }
-
-  @GetMapping("/my-ratings")
-  @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<List<Rating>> getRatedMovieOfUser(
-      @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(ratingService.getRatingsByAccount(currentAccount), HttpStatus.OK);
   }
 
   @DeleteMapping("/{movieId}/delete-rating")

@@ -1,16 +1,15 @@
 package com.example.demo.controller;
 
-import com.example.demo.Payload.AccountSummaryResponse;
-import com.example.demo.Payload.CreateAccountRequest;
-import com.example.demo.Payload.MessageResponse;
+import com.example.demo.Payload.*;
 import com.example.demo.entity.Account;
-import com.example.demo.entity.Comment;
-import com.example.demo.entity.Rating;
-import com.example.demo.entity.WatchedMovie;
+import com.example.demo.repository.CommentRepository;
 import com.example.demo.security.CurrentUser;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.AccountService;
-import java.util.List;
+import com.example.demo.service.CommentService;
+import com.example.demo.service.RatingService;
+import com.example.demo.service.WatchedMovieService;
+import com.example.demo.util.Pagination;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,46 +22,62 @@ import org.springframework.web.bind.annotation.*;
 public class AccountController {
 
   private final AccountService accountService;
+  private final CommentService commentService;
+  private final WatchedMovieService watchedMovieService;
+  private final RatingService ratingService;
 
-  public AccountController(AccountService accountService) {
+  private final CommentRepository commentRepository;
+
+  public AccountController(
+      AccountService accountService,
+      CommentService commentService,
+      WatchedMovieService watchedMovieService,
+      RatingService ratingService,
+      CommentRepository commentRepository) {
     this.accountService = accountService;
+    this.commentService = commentService;
+    this.watchedMovieService = watchedMovieService;
+    this.ratingService = ratingService;
+    this.commentRepository = commentRepository;
   }
 
   @GetMapping("/me")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<AccountSummaryResponse> getCurrentAccount(
       @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(accountService.getCurrentAccount(currentUser), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/profile")
-  @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Account> getUserProfile(
-      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(accountService.getProfile(username, currentUser), HttpStatus.OK);
+  public ResponseEntity<Account> getUserProfile(@PathVariable String username) {
+    return new ResponseEntity<>(accountService.getProfile(username), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/comments")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-  public ResponseEntity<List<Comment>> getCommentsByAccount(
-      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+  public ResponseEntity<PagedResponse<CommentRecord>> getCommentsByAccount(
+      @PathVariable String username,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
     return new ResponseEntity<>(
-        accountService.getCommentsByAccount(username, currentUser), HttpStatus.OK);
+        commentService.getCommentsByAccount(username, page, size), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/watchlist")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-  public ResponseEntity<List<WatchedMovie>> getWatchedMoviesByAccount(
-      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+  public ResponseEntity<PagedResponse<WatchedMovieRecord>> getWatchedMoviesByAccount(
+      @PathVariable String username,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
     return new ResponseEntity<>(
-        accountService.getWatchedMoviesByAccount(username, currentUser), HttpStatus.OK);
+        watchedMovieService.getWatchedMoviesByAccount(username, page, size), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/ratings")
-  public ResponseEntity<List<Rating>> getRatingsByAccount(
-      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+  public ResponseEntity<PagedResponse<RatingRecord>> getRatingsByAccount(
+      @PathVariable String username,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
     return new ResponseEntity<>(
-        accountService.getRatingsByAccount(username, currentUser), HttpStatus.OK);
+        ratingService.getRatingsByAccount(username, page, size), HttpStatus.OK);
   }
 
   @PutMapping("/{username}")
@@ -73,7 +88,7 @@ public class AccountController {
   }
 
   @DeleteMapping("/{username}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteAccount(
       @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(accountService.deleteAccount(username, currentUser), HttpStatus.OK);

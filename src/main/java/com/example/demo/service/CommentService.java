@@ -1,9 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.Payload.CreateCommentRequest;
-import com.example.demo.Payload.MessageResponse;
-import com.example.demo.Payload.UpdateCommentRequest;
-import com.example.demo.entity.Comment;
+import com.example.demo.Payload.*;
 import com.example.demo.security.UserPrincipal;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -11,15 +8,17 @@ import org.springframework.stereotype.Service;
 @Service
 public interface CommentService {
 
-  Comment getComment(Long commentId);
+  CommentRecord getComment(Long commentId);
 
-  List<Comment> getCommentsByMovieId(Long movieId);
+  List<CommentRecord> getCommentsByMovieId(Long movieId);
 
-  List<Comment> getCommentsByAccount(UserPrincipal currentAccount);
+  CommentRecord createComment(
+      Long movieId, CreateCommentRequest request, UserPrincipal currentAccount);
 
-  Comment createComment(Long movieId, CreateCommentRequest request, UserPrincipal currentAccount);
+  PagedResponse<CommentRecord> getCommentsByAccount(String username, int page, int size);
 
-  Comment updateComment(Long commentId, UpdateCommentRequest request, UserPrincipal currentAccount);
+  CommentRecord updateComment(
+      Long commentId, UpdateCommentRequest request, UserPrincipal currentAccount);
 
   MessageResponse deleteComment(Long commentId, UserPrincipal currentAccount);
 }

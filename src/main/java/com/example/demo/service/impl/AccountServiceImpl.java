@@ -3,14 +3,14 @@ package com.example.demo.service.impl;
 import com.example.demo.Payload.AccountSummaryResponse;
 import com.example.demo.Payload.CreateAccountRequest;
 import com.example.demo.Payload.MessageResponse;
-import com.example.demo.entity.Account;
-import com.example.demo.entity.Comment;
-import com.example.demo.entity.Rating;
-import com.example.demo.entity.WatchedMovie;
+import com.example.demo.Payload.mapper.CustomCommentMapper;
+import com.example.demo.entity.*;
 import com.example.demo.repository.AccountRepository;
+import com.example.demo.repository.CommentRepository;
+import com.example.demo.repository.RatingRepository;
+import com.example.demo.repository.WatchedMovieRepository;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.AccountService;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,9 +21,22 @@ public class AccountServiceImpl implements AccountService {
   private static final Logger LOGGER = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   private final AccountRepository accountRepository;
+  private final WatchedMovieRepository watchedMovieRepository;
+  private final RatingRepository ratingRepository;
+  private final CommentRepository commentRepository;
+  private final CustomCommentMapper commentMapper;
 
-  public AccountServiceImpl(AccountRepository accountRepository) {
+  public AccountServiceImpl(
+      AccountRepository accountRepository,
+      WatchedMovieRepository watchedMovieRepository,
+      RatingRepository ratingRepository,
+      CommentRepository commentRepository,
+      CustomCommentMapper commentMapper) {
     this.accountRepository = accountRepository;
+    this.watchedMovieRepository = watchedMovieRepository;
+    this.ratingRepository = ratingRepository;
+    this.commentRepository = commentRepository;
+    this.commentMapper = commentMapper;
   }
 
   @Override
@@ -37,24 +50,10 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public Account getProfile(String username, UserPrincipal currentAccount) {
+  public Account getProfile(String username) {
 
-    return null;
-  }
+    LOGGER.info("the movie [{}] was saved successfully with movieId [{}].", "");
 
-  @Override
-  public List<Comment> getCommentsByAccount(String username, UserPrincipal currentAccoun) {
-    return null;
-  }
-
-  @Override
-  public List<WatchedMovie> getWatchedMoviesByAccount(
-      String username, UserPrincipal currentAccount) {
-    return null;
-  }
-
-  @Override
-  public List<Rating> getRatingsByAccount(String username, UserPrincipal currentAccount) {
     return null;
   }
 
