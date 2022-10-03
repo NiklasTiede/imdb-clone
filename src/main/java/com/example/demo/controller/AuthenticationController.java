@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.Payload.*;
+import com.example.demo.payload.*;
 import com.example.demo.service.AuthenticationService;
 import javax.validation.Valid;
 import javax.validation.constraints.Email;
@@ -20,14 +20,14 @@ public class AuthenticationController {
 
   @GetMapping("/check-username-availability")
   public ResponseEntity<UserIdentityAvailability> checkUsernameAvailability(
-      @RequestParam("username") String username) {
+      @RequestParam String username) {
     return new ResponseEntity<>(
         authenticationService.checkUsernameAvailability(username), HttpStatus.OK);
   }
 
   @GetMapping("/check-email-availability")
   public ResponseEntity<UserIdentityAvailability> checkEmailAvailability(
-      @RequestParam("email") String email) {
+      @RequestParam String email) {
     return new ResponseEntity<>(authenticationService.checkEmailAvailability(email), HttpStatus.OK);
   }
 
@@ -38,24 +38,24 @@ public class AuthenticationController {
   }
 
   @PostMapping("/registration")
-  public ResponseEntity<MessageResponse> registerUser(
+  public ResponseEntity<MessageResponse> registerAccount(
       @Valid @RequestBody RegistrationRequest request) {
     return new ResponseEntity<>(authenticationService.registerUser(request), HttpStatus.CREATED);
   }
 
   @GetMapping("/confirm-email-address")
-  public ResponseEntity<MessageResponse> confirmEmailAddress(@RequestParam("token") String token) {
+  public ResponseEntity<MessageResponse> confirmEmailAddress(@RequestParam String token) {
     return new ResponseEntity<>(authenticationService.confirmEmailAddress(token), HttpStatus.OK);
   }
 
   @GetMapping("/reset-password")
-  public ResponseEntity<MessageResponse> resetPassword(@RequestParam("email") @Email String email) {
+  public ResponseEntity<MessageResponse> resetPassword(@RequestParam @Email String email) {
     return new ResponseEntity<>(authenticationService.resetPassword(email), HttpStatus.OK);
   }
 
   @PostMapping("/save-new-password")
   public ResponseEntity<MessageResponse> saveNewPassword(
-      @RequestBody PasswordResetRequest request) {
+      @Valid @RequestBody PasswordResetRequest request) {
     return new ResponseEntity<>(authenticationService.saveNewPassword(request), HttpStatus.CREATED);
   }
 }

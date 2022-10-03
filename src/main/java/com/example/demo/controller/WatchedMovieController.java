@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.Payload.MessageResponse;
 import com.example.demo.entity.WatchedMovie;
+import com.example.demo.payload.MessageResponse;
 import com.example.demo.security.CurrentUser;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.WatchedMovieService;

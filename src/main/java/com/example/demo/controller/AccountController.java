@@ -1,15 +1,12 @@
 package com.example.demo.controller;
 
-import com.example.demo.Payload.*;
 import com.example.demo.entity.Account;
-import com.example.demo.repository.CommentRepository;
+import com.example.demo.payload.*;
 import com.example.demo.security.CurrentUser;
 import com.example.demo.security.UserPrincipal;
-import com.example.demo.service.AccountService;
-import com.example.demo.service.CommentService;
-import com.example.demo.service.RatingService;
-import com.example.demo.service.WatchedMovieService;
+import com.example.demo.service.*;
 import com.example.demo.util.Pagination;
+import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,20 +22,19 @@ public class AccountController {
   private final CommentService commentService;
   private final WatchedMovieService watchedMovieService;
   private final RatingService ratingService;
-
-  private final CommentRepository commentRepository;
+  private final RoleService roleService;
 
   public AccountController(
       AccountService accountService,
       CommentService commentService,
       WatchedMovieService watchedMovieService,
       RatingService ratingService,
-      CommentRepository commentRepository) {
+      RoleService roleService) {
     this.accountService = accountService;
     this.commentService = commentService;
     this.watchedMovieService = watchedMovieService;
     this.ratingService = ratingService;
-    this.commentRepository = commentRepository;
+    this.roleService = roleService;
   }
 
   @GetMapping("/me")
@@ -49,8 +45,8 @@ public class AccountController {
   }
 
   @GetMapping("/{username}/profile")
-  public ResponseEntity<Account> getUserProfile(@PathVariable String username) {
-    return new ResponseEntity<>(accountService.getProfile(username), HttpStatus.OK);
+  public ResponseEntity<AccountProfile> getAccountProfile(@PathVariable String username) {
+    return new ResponseEntity<>(accountService.getAccountProfile(username), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/comments")
@@ -80,11 +76,23 @@ public class AccountController {
         ratingService.getRatingsByAccount(username, page, size), HttpStatus.OK);
   }
 
+  /** Simple generation of Test Accounts */
+  @PostMapping("/add-account")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<Account> createAccount(
+      @Valid @RequestBody RegistrationRequest request, @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(
+        accountService.createAccount(request, currentUser), HttpStatus.CREATED);
+  }
+
   @PutMapping("/{username}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<Account> updateAccount(
-      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(accountService.updateAccount(username, currentUser), HttpStatus.OK);
+      @PathVariable String username,
+      @Valid @RequestBody AccountRecord accountRecord,
+      @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(
+        accountService.updateAccount(username, accountRecord, currentUser), HttpStatus.OK);
   }
 
   @DeleteMapping("/{username}")
@@ -94,25 +102,17 @@ public class AccountController {
     return new ResponseEntity<>(accountService.deleteAccount(username, currentUser), HttpStatus.OK);
   }
 
-  @PostMapping("/add-account")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Account> createAccount(
-      CreateAccountRequest request, @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(
-        accountService.createAccount(request, currentUser), HttpStatus.CREATED);
-  }
-
   @PutMapping("/{username}/give-admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> giveAdminRole(
       @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(accountService.giveAdminRole(username, currentUser), HttpStatus.OK);
+    return new ResponseEntity<>(roleService.giveAdminRole(username, currentUser), HttpStatus.OK);
   }
 
   @PutMapping("/{username}/take-admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> takeAdminRole(
       @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(accountService.takeAdminRole(username, currentUser), HttpStatus.OK);
+    return new ResponseEntity<>(roleService.removeAdminRole(username, currentUser), HttpStatus.OK);
   }
 }

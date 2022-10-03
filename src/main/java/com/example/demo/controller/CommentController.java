@@ -1,19 +1,17 @@
 package com.example.demo.controller;
 
-import com.example.demo.Payload.CommentRecord;
-import com.example.demo.Payload.CreateCommentRequest;
-import com.example.demo.Payload.MessageResponse;
-import com.example.demo.Payload.UpdateCommentRequest;
+import com.example.demo.payload.*;
 import com.example.demo.security.CurrentUser;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.CommentService;
+import com.example.demo.util.Pagination;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/comment")
+@RequestMapping("/api/comments")
 public class CommentController {
 
   private final CommentService commentService;
@@ -23,8 +21,17 @@ public class CommentController {
   }
 
   @GetMapping("/{commentId}")
-  public ResponseEntity<CommentRecord> findCommentById(@PathVariable Long commentId) {
+  public ResponseEntity<CommentRecord> getCommentById(@PathVariable Long commentId) {
     return new ResponseEntity<>(commentService.getComment(commentId), HttpStatus.OK);
+  }
+
+  @GetMapping("/{movieId}/comments")
+  public ResponseEntity<PagedResponse<CommentRecord>> getCommentsByMovieId(
+      @PathVariable Long movieId,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
+    return new ResponseEntity<>(
+        commentService.getCommentsByMovieId(movieId, page, size), HttpStatus.OK);
   }
 
   @PostMapping("/{movieId}")

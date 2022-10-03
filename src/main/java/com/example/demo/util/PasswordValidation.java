@@ -19,9 +19,9 @@ public class PasswordValidation {
             - minimum length is 8
             """;
 
-  public static boolean isValid(final String password) {
+  public static boolean isNotValid(final String password) {
     Matcher matcher = pattern.matcher(password);
-    return matcher.matches();
+    return !matcher.matches();
   }
 
   public static String rules() {

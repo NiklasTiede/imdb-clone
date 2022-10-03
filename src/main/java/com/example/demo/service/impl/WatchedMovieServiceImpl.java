@@ -1,14 +1,14 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.Payload.MessageResponse;
-import com.example.demo.Payload.PagedResponse;
-import com.example.demo.Payload.WatchedMovieRecord;
-import com.example.demo.Payload.mapper.CustomWatchedMovieMapper;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Movie;
 import com.example.demo.entity.WatchedMovie;
 import com.example.demo.entity.WatchedMovieId;
 import com.example.demo.exceptions.NotFoundException;
+import com.example.demo.payload.MessageResponse;
+import com.example.demo.payload.PagedResponse;
+import com.example.demo.payload.WatchedMovieRecord;
+import com.example.demo.payload.mapper.CustomWatchedMovieMapper;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.MovieRepository;
 import com.example.demo.repository.WatchedMovieRepository;
@@ -63,7 +63,7 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
       String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
-    Account account = accountRepository.getAccountByName(username);
+    Account account = accountRepository.getAccountByUsername(username);
     Page<WatchedMovie> watchedMovies =
         watchedMovieRepository.findAllByAccountIdOrderByCreatedAtInUtcDesc(
             account.getId(), pageable);

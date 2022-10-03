@@ -1,19 +1,18 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.Payload.*;
-import com.example.demo.Payload.mapper.CustomCommentMapper;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Comment;
 import com.example.demo.entity.Movie;
 import com.example.demo.exceptions.NotFoundException;
 import com.example.demo.exceptions.UnauthorizedException;
+import com.example.demo.payload.*;
+import com.example.demo.payload.mapper.CustomCommentMapper;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.CommentRepository;
 import com.example.demo.repository.MovieRepository;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.CommentService;
 import com.example.demo.util.Pagination;
-import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,18 +52,25 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
-  public List<CommentRecord> getCommentsByMovieId(Long movieId) {
+  public PagedResponse<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size) {
+    Pagination.validatePageNumberAndSize(page, size);
+    Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
     Movie movie = movieRepository.getMovieById(movieId);
-    System.out.println(movie.getPrimaryTitle());
-    List<Comment> comments = commentRepository.findCommentsByMovieOrderByCreatedAtInUtc(movie);
-    System.out.println(comments);
-    if (comments.isEmpty()) {
+    Page<Comment> comments =
+        commentRepository.findCommentsByMovieOrderByCreatedAtInUtc(movie, pageable);
+    if (comments.getContent().isEmpty()) {
       throw new NotFoundException(
           "No comments of movie with id [" + movie.getId() + "] found in database.");
     }
-    List<CommentRecord> commentRecords = commentMapper.entityToDTO(comments);
-    LOGGER.info("[{}] comments were retrieved from database.", comments.size());
-    return commentRecords;
+    LOGGER.info("[{}] comments were retrieved from database.", comments.getContent().size());
+    Page<CommentRecord> commentRecordPage = comments.map(commentMapper::entityToDTO);
+    return new PagedResponse<>(
+        commentRecordPage.getContent(),
+        commentRecordPage.getNumber(),
+        commentRecordPage.getSize(),
+        commentRecordPage.getTotalElements(),
+        commentRecordPage.getTotalPages(),
+        commentRecordPage.isLast());
   }
 
   @Override
@@ -82,7 +88,7 @@ public class CommentServiceImpl implements CommentService {
   public PagedResponse<CommentRecord> getCommentsByAccount(String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
-    Account account = accountRepository.getAccountByName(username);
+    Account account = accountRepository.getAccountByUsername(username);
     Page<Comment> comments =
         commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);
     if (comments.getContent().isEmpty()) {

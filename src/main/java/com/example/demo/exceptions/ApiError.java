@@ -36,6 +36,3 @@ public class ApiError {
     this.resource = resource;
   }
 }
-
-// public record ApiError (String message, String details, String resource) {
-// }

@@ -1,8 +1,8 @@
-package com.example.demo.Payload.mapper;
+package com.example.demo.payload.mapper;
 
-import com.example.demo.Payload.MovieRecord;
-import com.example.demo.Payload.MovieRequest;
 import com.example.demo.entity.Movie;
+import com.example.demo.payload.MovieRecord;
+import com.example.demo.payload.MovieRequest;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

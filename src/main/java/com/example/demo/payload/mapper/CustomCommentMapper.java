@@ -1,7 +1,7 @@
-package com.example.demo.Payload.mapper;
+package com.example.demo.payload.mapper;
 
-import com.example.demo.Payload.CommentRecord;
 import com.example.demo.entity.Comment;
+import com.example.demo.payload.CommentRecord;
 import java.util.List;
 import org.springframework.stereotype.Component;
 

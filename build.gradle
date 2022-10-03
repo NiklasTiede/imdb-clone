@@ -3,7 +3,7 @@ plugins {
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
 
-	id "com.diffplug.spotless" version "6.7.2"
+	id 'com.diffplug.spotless' version '6.7.2'
 }
 
 group = 'com.example'
@@ -23,7 +23,8 @@ compileJava.dependsOn 'spotlessApply'
 spotless {
 	java {
 		target 'src/main/java/**/*.java'
-		targetExclude "build/**", "frontend/**"
+		targetExclude 'build/**', 'frontend/**'
+		targetExclude 'src/main/java/**/payload/*.java'
 		importOrder()
 		removeUnusedImports()
 		trimTrailingWhitespace()

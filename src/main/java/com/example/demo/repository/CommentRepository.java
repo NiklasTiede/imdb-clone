@@ -4,16 +4,17 @@ import com.example.demo.entity.Account;
 import com.example.demo.entity.Comment;
 import com.example.demo.entity.Movie;
 import com.example.demo.exceptions.NotFoundException;
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-  List<Comment> findCommentsByMovieOrderByCreatedAtInUtc(Movie movie);
+  Page<Comment> findCommentsByMovieOrderByCreatedAtInUtc(Movie movie, Pageable pageable);
 
   Page<Comment> findCommentsByAccountOrderByCreatedAtInUtc(Account account, Pageable pageable);
+
+  Long countCommentsByAccount(Account account);
 
   default Comment getCommentById(Long commentId) {
     return findById(commentId)

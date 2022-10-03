@@ -1,8 +1,7 @@
 package com.example.demo.service;
 
-import com.example.demo.Payload.*;
+import com.example.demo.payload.*;
 import com.example.demo.security.UserPrincipal;
-import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -10,7 +9,7 @@ public interface CommentService {
 
   CommentRecord getComment(Long commentId);
 
-  List<CommentRecord> getCommentsByMovieId(Long movieId);
+  PagedResponse<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size);
 
   CommentRecord createComment(
       Long movieId, CreateCommentRequest request, UserPrincipal currentAccount);

@@ -16,12 +16,14 @@ public class MovieSearchDao {
     this.entityManager = entityManager;
   }
 
-  public List<Movie> findByPrimaryTitleStartsWith(String startsWithPrimaryTitle) {
+  public List<Movie> findByPrimaryTitleStartsWith(
+      String startsWithPrimaryTitle, int page, int size) {
     TypedQuery<Movie> query =
         entityManager.createQuery(
             "SELECT m FROM Movie m WHERE m.primaryTitle LIKE :keyword", Movie.class);
     query.setParameter("keyword", startsWithPrimaryTitle + "%");
-    query.setMaxResults(50);
+    query.setFirstResult(page * size);
+    query.setMaxResults(size);
     return query.getResultList();
   }
 }

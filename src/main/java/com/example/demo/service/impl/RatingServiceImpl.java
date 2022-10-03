@@ -1,9 +1,5 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.Payload.MessageResponse;
-import com.example.demo.Payload.PagedResponse;
-import com.example.demo.Payload.RatingRecord;
-import com.example.demo.Payload.mapper.CustomRatingMapper;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Movie;
 import com.example.demo.entity.Rating;
@@ -11,6 +7,10 @@ import com.example.demo.entity.RatingId;
 import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.NotFoundException;
 import com.example.demo.exceptions.UnauthorizedException;
+import com.example.demo.payload.MessageResponse;
+import com.example.demo.payload.PagedResponse;
+import com.example.demo.payload.RatingRecord;
+import com.example.demo.payload.mapper.CustomRatingMapper;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.MovieRepository;
 import com.example.demo.repository.RatingRepository;
@@ -67,9 +67,8 @@ public class RatingServiceImpl implements RatingService {
   public PagedResponse<RatingRecord> getRatingsByAccount(String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
-    Account account = accountRepository.getAccountByName(username);
+    Account account = accountRepository.getAccountByUsername(username);
     Page<Rating> ratings = ratingRepository.findRatingsByAccount(account, pageable);
-    Page<RatingRecord> ratingRecordPage = ratings.map(ratingMapper::entityToDTO);
     if (ratings.getContent().isEmpty()) {
       throw new NotFoundException(
           "ratings of account with id [" + account.getId() + "] not found in database.");
@@ -78,6 +77,7 @@ public class RatingServiceImpl implements RatingService {
         "[{}] ratings from account with id [{}] were retrieved.",
         ratings.getContent().size(),
         account.getId());
+    Page<RatingRecord> ratingRecordPage = ratings.map(ratingMapper::entityToDTO);
     return new PagedResponse<>(
         ratingRecordPage.getContent(),
         ratingRecordPage.getNumber(),

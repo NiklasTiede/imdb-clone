@@ -5,7 +5,6 @@ import com.example.demo.exceptions.NotFoundException;
 import com.example.demo.security.UserPrincipal;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
@@ -20,17 +19,14 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
   Boolean existsByEmail(String email);
 
   default Account getAccount(UserPrincipal currentUser) {
-    return getAccountByName(currentUser.getUsername());
+    return getAccountByUsername(currentUser.getUsername());
   }
 
-  default Account getAccountByName(String username) {
+  default Account getAccountByUsername(String username) {
     return findByUsername(username)
         .orElseThrow(
             () ->
                 new NotFoundException(
                     "User with username [" + username + "] not found in database."));
   }
-
-  @Query("UPDATE Account a " + "SET a.enabled = TRUE WHERE a.email = ?1")
-  int enableAppUser(String email);
 }

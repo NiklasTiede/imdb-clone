@@ -1,7 +1,7 @@
-package com.example.demo.Payload.mapper;
+package com.example.demo.payload.mapper;
 
-import com.example.demo.Payload.WatchedMovieRecord;
 import com.example.demo.entity.WatchedMovie;
+import com.example.demo.payload.WatchedMovieRecord;
 import java.util.List;
 import org.springframework.stereotype.Component;
 

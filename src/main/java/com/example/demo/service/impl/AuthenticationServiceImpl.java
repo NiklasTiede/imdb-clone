@@ -1,12 +1,12 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.Payload.*;
 import com.example.demo.entity.Account;
 import com.example.demo.entity.Role;
 import com.example.demo.entity.VerificationToken;
 import com.example.demo.enums.VerificationTypeEnum;
 import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.NotFoundException;
+import com.example.demo.payload.*;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.VerificationTokenRepository;
 import com.example.demo.security.JwtTokenProvider;
@@ -37,26 +37,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
   private final AuthenticationManager authenticationManager;
   private final JwtTokenProvider jwtTokenProvider;
+  private final PasswordEncoder passwordEncoder;
   private final AccountRepository accountRepository;
   private final VerificationTokenRepository verificationTokenRepository;
   private final EmailService emailService;
-  private final PasswordEncoder passwordEncoder;
   private final RoleService roleService;
 
   public AuthenticationServiceImpl(
       AuthenticationManager authenticationManager,
       JwtTokenProvider jwtTokenProvider,
+      PasswordEncoder passwordEncoder,
       AccountRepository accountRepository,
       VerificationTokenRepository verificationTokenRepository,
       EmailService emailService,
-      PasswordEncoder passwordEncoder,
       RoleService roleService) {
     this.authenticationManager = authenticationManager;
     this.jwtTokenProvider = jwtTokenProvider;
+    this.passwordEncoder = passwordEncoder;
     this.accountRepository = accountRepository;
     this.verificationTokenRepository = verificationTokenRepository;
     this.emailService = emailService;
-    this.passwordEncoder = passwordEncoder;
     this.roleService = roleService;
   }
 
@@ -89,6 +89,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
     if (Boolean.TRUE.equals(accountRepository.existsByEmail(request.email()))) {
       throw new BadRequestException("Email is already taken");
+    }
+    if (PasswordValidation.isNotValid(request.password())) {
+      throw new BadRequestException(PasswordValidation.rules());
     }
     String username = request.username().toLowerCase();
     String email = request.email().toLowerCase();
@@ -190,7 +193,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
   @Override
   public MessageResponse saveNewPassword(PasswordResetRequest request) {
-    if (!PasswordValidation.isValid(request.newPassword())) {
+    if (PasswordValidation.isNotValid(request.newPassword())) {
       throw new BadRequestException(PasswordValidation.rules());
     }
     VerificationToken verificationToken =

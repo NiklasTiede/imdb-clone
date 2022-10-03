@@ -1,9 +1,10 @@
 package com.example.demo.service;
 
-import com.example.demo.Payload.MessageResponse;
-import com.example.demo.Payload.MovieRecord;
-import com.example.demo.Payload.MovieRequest;
 import com.example.demo.entity.Movie;
+import com.example.demo.payload.MessageResponse;
+import com.example.demo.payload.MovieRecord;
+import com.example.demo.payload.MovieRequest;
+import com.example.demo.payload.PagedResponse;
 import com.example.demo.security.UserPrincipal;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ public interface MovieService {
 
   MovieRecord findMovieById(Long movieId);
 
-  List<MovieRecord> findMoviesByIds(List<Long> movieIds);
+  PagedResponse<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size);
 
   Movie createMovie(MovieRequest movieRequest, UserPrincipal currentAccount);
 
@@ -21,5 +22,5 @@ public interface MovieService {
 
   MessageResponse deleteMovie(Long movieId, UserPrincipal currentAccount);
 
-  List<MovieRecord> searchMoviesByTitle(String title);
+  List<MovieRecord> searchMoviesByTitle(String title, int page, int size);
 }

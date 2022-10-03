@@ -18,4 +18,6 @@ public interface RatingRepository extends JpaRepository<Rating, Long> {
   Optional<Rating> findRatingByAccountIdAndMovieId(Long accountId, Long movieId);
 
   List<Rating> findAllByModifiedAtInUtcAfter(Instant instant);
+
+  Long countRatingsByAccount(Account account);
 }

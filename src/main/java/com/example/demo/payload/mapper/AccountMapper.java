@@ -1,7 +1,7 @@
-package com.example.demo.Payload.mapper;
+package com.example.demo.payload.mapper;
 
-import com.example.demo.Payload.AccountRecord;
 import com.example.demo.entity.Account;
+import com.example.demo.payload.AccountRecord;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

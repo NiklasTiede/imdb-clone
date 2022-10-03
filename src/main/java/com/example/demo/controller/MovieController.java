@@ -1,11 +1,11 @@
 package com.example.demo.controller;
 
-import com.example.demo.Payload.*;
 import com.example.demo.entity.Movie;
+import com.example.demo.payload.*;
 import com.example.demo.security.CurrentUser;
 import com.example.demo.security.UserPrincipal;
-import com.example.demo.service.CommentService;
 import com.example.demo.service.MovieService;
+import com.example.demo.util.Pagination;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,27 +17,23 @@ import org.springframework.web.bind.annotation.*;
 public class MovieController {
 
   private final MovieService movieService;
-  private final CommentService commentService;
 
-  public MovieController(MovieService movieService, CommentService commentService) {
+  public MovieController(MovieService movieService) {
     this.movieService = movieService;
-    this.commentService = commentService;
   }
 
   @GetMapping("/{movieId}")
-  public ResponseEntity<MovieRecord> findMovieById(@PathVariable Long movieId) {
+  public ResponseEntity<MovieRecord> getMovieById(@PathVariable Long movieId) {
     return new ResponseEntity<>(movieService.findMovieById(movieId), HttpStatus.OK);
   }
 
   @PostMapping("/get-movies")
-  public ResponseEntity<List<MovieRecord>> findMoviesByIds(@RequestBody MovieIdsRequest request) {
-    return new ResponseEntity<>(movieService.findMoviesByIds(request.movieIds()), HttpStatus.OK);
-  }
-
-  // introduce pages response? let everyone access ratings of others as well
-  @GetMapping("/{movieId}/comments")
-  public ResponseEntity<List<CommentRecord>> findCommentsByMovieId(@PathVariable Long movieId) {
-    return new ResponseEntity<>(commentService.getCommentsByMovieId(movieId), HttpStatus.OK);
+  public ResponseEntity<PagedResponse<MovieRecord>> getMoviesByIds(
+      @RequestBody MovieIdsRequest request,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
+    return new ResponseEntity<>(
+        movieService.findMoviesByIds(request.movieIds(), page, size), HttpStatus.OK);
   }
 
   @PostMapping("/create-movie")
@@ -65,9 +61,14 @@ public class MovieController {
     return new ResponseEntity<>(movieService.deleteMovie(movieId, currentAccount), HttpStatus.OK);
   }
 
-  // introduce pages response?
+  // substring search does not work very well (IndexOutOfBound-Exception too short search)
+  // replace later by Elasticsearch!
   @GetMapping("/search-by-primary-title/{primaryTitle}")
-  public ResponseEntity<List<MovieRecord>> searchMoviesByTitle(@PathVariable String primaryTitle) {
-    return new ResponseEntity<>(movieService.searchMoviesByTitle(primaryTitle), HttpStatus.OK);
+  public ResponseEntity<List<MovieRecord>> searchMoviesByTitle(
+      @PathVariable String primaryTitle,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
+    return new ResponseEntity<>(
+        movieService.searchMoviesByTitle(primaryTitle, page, size), HttpStatus.OK);
   }
 }
