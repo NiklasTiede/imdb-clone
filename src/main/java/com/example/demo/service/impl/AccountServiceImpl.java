@@ -10,7 +10,6 @@ import com.example.demo.repository.RatingRepository;
 import com.example.demo.repository.WatchedMovieRepository;
 import com.example.demo.security.UserPrincipal;
 import com.example.demo.service.AccountService;
-import com.example.demo.util.PasswordValidation;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,9 +75,6 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account createAccount(RegistrationRequest request, UserPrincipal currentAccount) {
-    if (PasswordValidation.isNotValid(request.password())) {
-      throw new BadRequestException(PasswordValidation.rules());
-    }
     if (Boolean.TRUE.equals(accountRepository.existsByUsername(request.username()))) {
       throw new BadRequestException("Username is already taken");
     }
@@ -108,9 +104,6 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Account updateAccount(
       String username, AccountRecord accountRecord, UserPrincipal currentAccount) {
-    if (PasswordValidation.isNotValid(accountRecord.password())) {
-      throw new BadRequestException(PasswordValidation.rules());
-    }
     Account account = accountRepository.getAccountByUsername(username);
     if (Objects.equals(account.getId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {

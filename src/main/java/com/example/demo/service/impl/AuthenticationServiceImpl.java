@@ -13,7 +13,6 @@ import com.example.demo.security.JwtTokenProvider;
 import com.example.demo.service.AuthenticationService;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.RoleService;
-import com.example.demo.util.PasswordValidation;
 import com.example.demo.util.TokenValidation;
 import java.net.MalformedURLException;
 import java.time.Instant;
@@ -89,9 +88,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
     if (Boolean.TRUE.equals(accountRepository.existsByEmail(request.email()))) {
       throw new BadRequestException("Email is already taken");
-    }
-    if (PasswordValidation.isNotValid(request.password())) {
-      throw new BadRequestException(PasswordValidation.rules());
     }
     String username = request.username().toLowerCase();
     String email = request.email().toLowerCase();
@@ -193,9 +189,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
   @Override
   public MessageResponse saveNewPassword(PasswordResetRequest request) {
-    if (PasswordValidation.isNotValid(request.newPassword())) {
-      throw new BadRequestException(PasswordValidation.rules());
-    }
     VerificationToken verificationToken =
         verificationTokenRepository
             .findByToken(request.token())

@@ -1,5 +1,7 @@
 package com.example.demo.payload;
 
+import com.example.demo.util.ValidatePassword;
+
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
@@ -16,5 +18,6 @@ public record RegistrationRequest(
 
         @NotBlank
         @Size(min = 6, max = 20)
+        @ValidatePassword
         String password
 ) {}

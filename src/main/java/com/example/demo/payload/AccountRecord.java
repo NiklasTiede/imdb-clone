@@ -1,5 +1,7 @@
 package com.example.demo.payload;
 
+import com.example.demo.util.ValidatePassword;
+
 import java.util.Date;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Past;
@@ -10,6 +12,7 @@ public record AccountRecord(
         @Size(min = 2, max = 50, message = "firstName must be 2-50 characters long.")
         String username,
 
+        @ValidatePassword
         String password,
 
         @Email(message = "Email must be valid.")
