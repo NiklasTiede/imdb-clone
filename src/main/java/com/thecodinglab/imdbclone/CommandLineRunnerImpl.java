@@ -1,16 +1,14 @@
-package com.example.demo;
+package com.thecodinglab.imdbclone;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import com.example.demo.elasticsearch.EsClientConfig;
-import com.example.demo.elasticsearch.EsUtils;
-import com.example.demo.entity.Account;
-import com.example.demo.entity.Comment;
-import com.example.demo.payload.CommentRecord;
-import com.example.demo.payload.mapper.CustomCommentMapper;
-import com.example.demo.payload.mapper.MovieMapper;
-import com.example.demo.repository.*;
-import com.example.demo.service.CommentService;
-import com.example.demo.service.RatingService;
+import com.thecodinglab.imdbclone.elasticsearch.EsUtils;
+import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.entity.Comment;
+import com.thecodinglab.imdbclone.payload.CommentRecord;
+import com.thecodinglab.imdbclone.payload.mapper.CustomCommentMapper;
+import com.thecodinglab.imdbclone.payload.mapper.MovieMapper;
+import com.thecodinglab.imdbclone.repository.*;
+import com.thecodinglab.imdbclone.service.CommentService;
+import com.thecodinglab.imdbclone.service.RatingService;
 import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +41,6 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
   private final CustomCommentMapper commentMapper;
 
   private final EsUtils esUtils;
-  private final ElasticsearchClient esClient;
 
   public CommandLineRunnerImpl(
       MovieSearchDao movieDao,
@@ -60,8 +57,7 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
       CommentService commentService,
       EntityManager entityManager,
       CustomCommentMapper commentMapper,
-      EsUtils esUtils,
-      EsClientConfig esClientConfig) {
+      EsUtils esUtils) {
     this.movieDao = movieDao;
     this.movieRepository = movieRepository;
     this.accountRepository = accountRepository;
@@ -77,7 +73,6 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
     this.entityManager = entityManager;
     this.commentMapper = commentMapper;
     this.esUtils = esUtils;
-    this.esClient = esClientConfig.getClient();
   }
 
   @Override

@@ -1,9 +1,9 @@
-package com.example.demo.repository;
+package com.thecodinglab.imdbclone.repository;
 
-import com.example.demo.entity.Account;
-import com.example.demo.entity.Comment;
-import com.example.demo.entity.Movie;
-import com.example.demo.exceptions.NotFoundException;
+import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.entity.Comment;
+import com.thecodinglab.imdbclone.entity.Movie;
+import com.thecodinglab.imdbclone.exceptions.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,4 +1,4 @@
-package com.example.demo.security;
+package com.thecodinglab.imdbclone.security;
 
 import java.lang.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

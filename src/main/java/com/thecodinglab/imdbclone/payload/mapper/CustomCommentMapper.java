@@ -1,7 +1,7 @@
-package com.example.demo.payload.mapper;
+package com.thecodinglab.imdbclone.payload.mapper;
 
-import com.example.demo.entity.Comment;
-import com.example.demo.payload.CommentRecord;
+import com.thecodinglab.imdbclone.entity.Comment;
+import com.thecodinglab.imdbclone.payload.CommentRecord;
 import java.util.List;
 import org.springframework.stereotype.Component;
 

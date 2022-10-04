@@ -1,10 +1,10 @@
-package com.example.demo.controller;
+package com.thecodinglab.imdbclone.controller;
 
-import com.example.demo.payload.*;
-import com.example.demo.security.CurrentUser;
-import com.example.demo.security.UserPrincipal;
-import com.example.demo.service.CommentService;
-import com.example.demo.util.Pagination;
+import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.security.CurrentUser;
+import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.service.CommentService;
+import com.thecodinglab.imdbclone.util.Pagination;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

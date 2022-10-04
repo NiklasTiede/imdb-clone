@@ -1,6 +1,6 @@
-package com.example.demo.entity;
+package com.thecodinglab.imdbclone.entity;
 
-import com.example.demo.entity.audit.DateAudit;
+import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import javax.persistence.*;
 
 @Entity

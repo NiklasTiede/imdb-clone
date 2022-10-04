@@ -1,7 +1,7 @@
-package com.example.demo.payload.mapper;
+package com.thecodinglab.imdbclone.payload.mapper;
 
-import com.example.demo.entity.Rating;
-import com.example.demo.payload.RatingRecord;
+import com.thecodinglab.imdbclone.entity.Rating;
+import com.thecodinglab.imdbclone.payload.RatingRecord;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +13,7 @@ public class CustomRatingMapper {
         rating.getRating(), rating.getAccount().getId(), rating.getMovie().getId());
   }
 
-  public List<RatingRecord> entityToDTO(List<Rating> comments) {
-    return comments.stream().map(this::entityToDTO).toList();
+  public List<RatingRecord> entityToDTO(List<Rating> ratings) {
+    return ratings.stream().map(this::entityToDTO).toList();
   }
 }

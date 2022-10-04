@@ -1,7 +1,7 @@
-package com.example.demo.service;
+package com.thecodinglab.imdbclone.service;
 
-import com.example.demo.entity.Account;
-import com.example.demo.payload.*;
+import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.payload.*;
 import org.springframework.stereotype.Service;
 
 @Service

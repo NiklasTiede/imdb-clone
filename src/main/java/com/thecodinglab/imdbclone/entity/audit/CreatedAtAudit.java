@@ -1,4 +1,4 @@
-package com.example.demo.entity.audit;
+package com.thecodinglab.imdbclone.entity.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Instant;

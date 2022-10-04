@@ -1,9 +1,9 @@
-package com.example.demo.service.impl;
+package com.thecodinglab.imdbclone.service.impl;
 
-import com.example.demo.entity.Account;
-import com.example.demo.repository.AccountRepository;
-import com.example.demo.security.UserPrincipal;
-import com.example.demo.service.CustomUserDetailsService;
+import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.repository.AccountRepository;
+import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.service.CustomUserDetailsService;
 import javax.transaction.Transactional;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
