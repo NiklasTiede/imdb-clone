@@ -1,6 +1,5 @@
 package com.example.demo.webclient;
 
-import com.example.demo.elasticsearch.Todo;
 import com.example.demo.security.UserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

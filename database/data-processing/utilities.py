@@ -37,21 +37,20 @@ class MovieGenreEnum(Enum):
             if enum2 in MovieGenreEnum:
                 bit_value |= enum2.value
         return bit_value
-    
 
 
 class MovieTypeEnum(Enum):
-    SHORT = 1
-    MOVIE = 2
-    VIDEO = 3
-    TV_MOVIE = 4
-    TV_EPISODE = 5
-    TV_MINI_SERIES = 6
-    TV_SPECIAL = 7
-    TV_SERIES = 8
-    TV_SHORT = 9
-    TV_PILOT = 10
-    VIDEO_GAME = 11
+    SHORT = 0
+    MOVIE = 1
+    VIDEO = 2
+    TV_MOVIE = 3
+    TV_EPISODE = 4
+    TV_MINI_SERIES = 5
+    TV_SPECIAL = 6
+    TV_SERIES = 7
+    TV_SHORT = 8
+    TV_PILOT = 9
+    VIDEO_GAME = 10
 
 
 movietype_map = {

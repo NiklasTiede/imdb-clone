@@ -1,0 +1,32 @@
+GET _search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+
+GET _cat/indices
+
+
+DELETE /products
+
+
+GET /movies/_search
+{
+  "query": {
+    "match": {"primaryTitle":"Nightcrawler"}
+  }
+}
+
+
+GET /movies/_search
+{
+  "query": {
+    "match": {"primaryTitle":"it"}
+  }
+}
+
+
+
+

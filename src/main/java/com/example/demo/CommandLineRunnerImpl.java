@@ -1,14 +1,24 @@
 package com.example.demo;
 
-import com.example.demo.Payload.mapper.MovieMapper;
-import com.example.demo.entity.*;
-import com.example.demo.exceptions.NotFoundException;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import com.example.demo.elasticsearch.EsClientConfig;
+import com.example.demo.elasticsearch.EsUtils;
+import com.example.demo.entity.Account;
+import com.example.demo.entity.Comment;
+import com.example.demo.payload.CommentRecord;
+import com.example.demo.payload.mapper.CustomCommentMapper;
+import com.example.demo.payload.mapper.MovieMapper;
 import com.example.demo.repository.*;
+import com.example.demo.service.CommentService;
 import com.example.demo.service.RatingService;
+import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,238 +26,184 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CommandLineRunnerImpl.class);
 
-  @Autowired private MovieSearchDao movieDao;
-
-  @Autowired private MovieRepository movieRepository;
-
-  @Autowired private AccountRepository accountRepository;
-
-  @Autowired private RatingRepository ratingRepository;
-
-  @Autowired private CommentRepository commentRepository;
-
-  @Autowired private WatchedMovieRepository watchedMovieRepository;
-
-  @Autowired private RoleRepository roleRepository;
-
-  @Autowired private VerificationTokenRepository verificationTokenRepository;
-
-  @Autowired private RatingService ratingService;
-
+  private final MovieSearchDao movieDao;
+  private final MovieRepository movieRepository;
+  private final AccountRepository accountRepository;
+  private final RatingRepository ratingRepository;
+  private final CommentRepository commentRepository;
+  private final WatchedMovieRepository watchedMovieRepository;
+  private final RoleRepository roleRepository;
+  private final VerificationTokenRepository verificationTokenRepository;
+  private final RatingService ratingService;
   private final MovieMapper movieMapper;
+  private final MovieSearchDao movieSearchDao;
+  private final CommentService commentService;
+  private final EntityManager entityManager;
 
-  public CommandLineRunnerImpl(MovieMapper movieMapper) {
+  private final CustomCommentMapper commentMapper;
+
+  private final EsUtils esUtils;
+  private final ElasticsearchClient esClient;
+
+  public CommandLineRunnerImpl(
+      MovieSearchDao movieDao,
+      MovieRepository movieRepository,
+      AccountRepository accountRepository,
+      RatingRepository ratingRepository,
+      CommentRepository commentRepository,
+      WatchedMovieRepository watchedMovieRepository,
+      RoleRepository roleRepository,
+      VerificationTokenRepository verificationTokenRepository,
+      RatingService ratingService,
+      MovieMapper movieMapper,
+      MovieSearchDao movieSearchDao,
+      CommentService commentService,
+      EntityManager entityManager,
+      CustomCommentMapper commentMapper,
+      EsUtils esUtils,
+      EsClientConfig esClientConfig) {
+    this.movieDao = movieDao;
+    this.movieRepository = movieRepository;
+    this.accountRepository = accountRepository;
+    this.ratingRepository = ratingRepository;
+    this.commentRepository = commentRepository;
+    this.watchedMovieRepository = watchedMovieRepository;
+    this.roleRepository = roleRepository;
+    this.verificationTokenRepository = verificationTokenRepository;
+    this.ratingService = ratingService;
     this.movieMapper = movieMapper;
+    this.movieSearchDao = movieSearchDao;
+    this.commentService = commentService;
+    this.entityManager = entityManager;
+    this.commentMapper = commentMapper;
+    this.esUtils = esUtils;
+    this.esClient = esClientConfig.getClient();
   }
 
   @Override
   public void run(String... arg0) {
 
-    Account account =
-        accountRepository
-            .findByEmail("niklas@gmail.com")
-            .orElseThrow(() -> new NotFoundException("bla"));
+    Account account = accountRepository.findById(6L).orElseThrow();
 
-    //    List<Rating> ratingList = ratingRepository.findRatingsByAccount(account);
-    //    System.out.println(ratingList);
-    //    System.out.println(ratingList.get(0).getMovie().getId());
-    //    System.out.println(ratingList.get(0).getRating());
-    //    System.out.println(ratingList.get(1).getMovie().getId());
-    //    System.out.println(ratingList.get(1).getRating());
-    //
+    Comment comment = commentRepository.getCommentById(2L);
+    System.out.println(comment.getId());
+    System.out.println(comment.getMessage());
+    System.out.println(comment.getAccount().getId());
+    System.out.println(comment.getMovie().getId());
+
+    CommentRecord commentRecord = commentMapper.entityToDTO(comment);
+
+    //    CommentRecord commentRecord = commentMapper.entityToDTO(comment);
+    System.out.println(commentRecord);
+    System.out.println(commentRecord.id());
+    System.out.println(commentRecord.message());
+    System.out.println(commentRecord.accountId());
+    System.out.println(commentRecord.movieId());
+
+    Pageable pageable = PageRequest.of(0, 30, Sort.Direction.DESC, "createdAtInUtc");
+    Page<Comment> comments =
+        commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);
+
+    System.out.println(comments);
+    System.out.println(comments.getContent());
+    System.out.println(comments.getNumber());
+    System.out.println(comments.getSize());
+    System.out.println(comments.isLast());
+    System.out.println(comments.getTotalElements());
+    System.out.println(comments.getTotalPages());
+
+    Long bla = commentRepository.countCommentsByAccount(account);
+    System.out.println("count: " + bla);
+
+    //    // bulk index
     //    List<Long> movieIds = new ArrayList<>();
-    //    movieIds.add(1L);
-    //    movieIds.add(2L);
+    //    movieIds.add(3235888L);
+    //    movieIds.add(2494362L);
+    //    movieIds.add(1396484L);
+    //    movieIds.add(1457767L);
+    //    movieIds.add(2872718L);
+    //    List<Movie> movies = movieRepository.findAllById(movieIds);
+    //    esUtils.indexMovies(movies);
     //
-    //    List<Movie> movies = movieRepository.findMoviesByIdIn(movieIds);
-    //    System.out.println(movies.get(0).getPrimaryTitle());
-    //    System.out.println(movies.get(1).getPrimaryTitle());
+    //    // index single document
+    //    Movie movie = movieRepository.getMovieById(2872718L);
+    //    esUtils.indexMovie(movie);
+    //
+    //    // search by id:
+    //    Movie bla = esUtils.getMovieDocumentById(2872718L);
+    //    System.out.println(bla.getPrimaryTitle());
+    //
+    //    // search by text
+    //    String searchText = "it";
+    //    List<Movie> movies1 = esUtils.searchMoviesByPrimaryTitle(searchText);
+    //    System.out.println(movies1.size());
+    //
+    //    // range query
+    //    float minRating = 5.0F;
+    //    float maxRating = 8.0F;
+    //    List<Movie> moviesBetweenRatings = esUtils.searchMoviesByRatingRange(minRating,
+    // maxRating);
+    //    System.out.println(moviesBetweenRatings.size());
+    //
+    //    System.out.println("availableProcessors: " + Runtime.getRuntime().availableProcessors());
 
-    //    Rating rating = ratingRepository.findRatingByAccountIdAndMovieId(1L, 1457767L);
-    //    System.out.println(rating.getRating());
+    //        // making a searchRequest
+    //        String searchText2 = "bike";
+    //        double maxPrice = 200.0;
+    //
+    //        // Search by product name
+    //        Query byName = MatchQuery.of(m -> m.field("name").query(searchText2))._toQuery();
+    //
+    //        // Search by max price
+    //        Query byMaxPrice = RangeQuery.of(r ->
+    //     r.field("price").gte(JsonData.of(maxPrice)))._toQuery();
+    //
+    //        // Combine name and price queries to search the product index
+    //        SearchResponse<Todo> response =
+    //                null;
+    //        try {
+    //          response = esClient.search(
+    //                  s -> s.index("products").query(q -> q.bool(b ->
+    //     b.must(byName).must(byMaxPrice))),
+    //                  Todo.class);
+    //        } catch (IOException e) {
+    //          throw new RuntimeException(e);
+    //        }
+    //
+    //        List<Hit<Todo>> hits = response.hits().hits();
+    //        for (Hit<Todo> hit : hits) {
+    //          Todo todo = hit.source();
+    //          LOGGER.info(
+    //                  "Found todo " + (todo != null ? todo.getTitle() : null) + ", score " +
+    //     hit.score());
+    //        }
+    //
+    //        // aggregations
+    //        String searchText3 = "bike";
+    //
+    //        Query query = MatchQuery.of(m -> m.field("name").query(searchText3))._toQuery();
+    //
+    //        try {
+    //          SearchResponse<Void> response2 =
+    //                  esClient.search(
+    //                          b ->
+    //                                  b.index("products")
+    //                                          .size(0)
+    //                                          .query(query)
+    //                                          .aggregations(
+    //                                                  "price-histogram", a -> a.histogram(h ->
+    //     h.field("price").interval(50.0))),
+    //                          Void.class);
+    //        } catch (IOException e) {
+    //          throw new RuntimeException(e);
+    //        }
+    //
+    //        List<HistogramBucket> buckets =
+    //                response.aggregations().get("price-histogram").histogram().buckets().array();
+    //
+    //        for (HistogramBucket bucket : buckets) {
+    //          LOGGER.info("There are " + bucket.docCount() + " bikes under " + bucket.key());
+    //        }
 
-    //    String bla = ratingService.rateMovie(1457767L, new BigDecimal("5.5"), 6L);
-    //    System.out.println(bla);
-
-    // generate base64-encoded secret:
-    //    SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-    //    String base64Key = Encoders.BASE64.encode(key.getEncoded());
-    //    System.out.println(base64Key);
-    //
-    //    try {
-    //      KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA512");
-    //      Key key2 = keyGen.generateKey();
-    //      System.out.println(key2);
-    //      System.out.println(key2.getFormat());
-    //      System.out.println(key2.getAlgorithm());
-    //      System.out.println(Arrays.toString(key2.getEncoded()));
-    //    } catch (NoSuchAlgorithmException e) {
-    //      throw new RuntimeException(e);
-    //    }
-    //    String secret =
-    //
-    // "fKq+2kMG4sdb7yrZDOuBJxYJ6SquHrEMI5wE/N0x1fOzkXjxu8G0Aue6lLY+fjogSTyuF0sm1c6X0ccRwJPUnQ==";
-    //    Key hmacKey =
-    //        new SecretKeySpec(
-    //            Base64.getDecoder().decode(secret), SignatureAlgorithm.HS512.getJcaName());
-    //    System.out.println(hmacKey);
-    //    System.out.println(Arrays.toString(hmacKey.getEncoded()));
-    //
-    //    String token = UUID.randomUUID().toString();
-    //    System.out.println("Tokenlength: " + token.length());
-    //    System.out.println("Token: " + token);
-
-    //    VerificationToken verificationToken =
-    // verificationTokenRepository.findById(1L).orElseThrow();
-    //    System.out.println(verificationToken);
-    //    System.out.println("enum: " + verificationToken.getVerificationType());
-    //    System.out.println("enum: " + verificationToken.getVerificationType().name());
-    //
-    //    VerificationToken bla =
-    //        verificationTokenRepository.findFirstByAccount_IdAndVerificationTypeOrderByIdDesc(
-    //            1L, VerificationTypeEnum.EMAIL_CONFIRMATION);
-    //    System.out.println(bla);
-    //
-    //    VerificationToken bla2 =
-    //
-    // verificationTokenRepository.findFirstByAccount_IdAndVerificationTypeOrderByExpiryDateDesc(
-    //            1L, VerificationTypeEnum.EMAIL_CONFIRMATION);
-    //    System.out.println(bla2);
-
-    //    // Role
-    //    roleRepository.save(new Role("ROLE_ADMIN"));
-    //    roleRepository.save(new Role("ROLE_USER"));
-
-    // movies
-    //    Movie movie = movieRepository.findById(1457767L).get();
-    //    System.out.println(movie);
-
-    //    MovieRecord movieRecord = movieMapper.entityToDTO(movie);
-    //    System.out.println(movieRecord);
-    //    System.out.println(movieRecord.movieGenre());
-
-    //    long startTime = System.currentTimeMillis();
-    //    List<Movie> movies = movieDao.findByPrimaryTitleStartsWith("The Conjuring");
-    //    System.out.println(movies.size());
-    //    long stopTime = System.currentTimeMillis();
-    //    long elapsedTime = stopTime - startTime;
-    //    System.out.println("elapsedTime (ms): " + elapsedTime);
-
-    //    Account account2 =
-    //        accountRepository
-    //            .findByEmail("niklastiede2@gmail.com")
-    //            .orElseThrow(() -> new NotFoundException("bla"));
-    //    System.out.println(account2.getEmail());
-    //    System.out.println(account2.getId());
-    //
-    //    List<WatchedMovie> watchedMovies =
-    // watchedMovieRepository.findAllByAccountId(account2.getId());
-    //    System.out.println(watchedMovies.get(0).getId());
-    //    System.out.println(watchedMovies.get(0).getCreatedAtInUtc());
-    //    System.out.println(watchedMovies.get(0).getMovie().getId());
-    //
-    //    List<Long> longs =
-    //        watchedMovies.stream().map(WatchedMovie::getId).map(WatchlistId::getMovieId).toList();
-    //    System.out.println(longs);
-    //
-    //    List<WatchedMovie> watchedMovies1 =
-    //        watchedMovieRepository.findAllByAccountIdOrderByCreatedAtInUtcDesc(account2.getId());
-    //    System.out.println("kaboom");
-    //    System.out.println(watchedMovies1.get(0).getCreatedAtInUtc());
-    //    System.out.println(watchedMovies1.get(0).getMovie().getId());
-    //    System.out.println(watchedMovies1.get(1).getCreatedAtInUtc());
-    //    System.out.println(watchedMovies1.get(1).getMovie().getId());
-    //
-    //    System.out.println(watchedMovies1.get(1).getId().getMovieId());
-    //    System.out.println(watchedMovies1.get(1).getId().getAccountId());
-    //
-    //    Movie movie2 = movieRepository.findById(1457767L).get();
-    //    MovieRecord movieRecord2 = movieMapper.entityToDTO(movie2);
-    //    System.out.println(movieRecord2);
-
-    //    // accounts
-    //    Account account = accountRepository.findById(1L).get();
-    //    System.out.println(account.getFirstName());
-    //    System.out.println(account.getModifiedAt());
-    //
-    //    Account userAcc = accountRepository.findByEmail("schnuggi@yahoo.de").orElseThrow();
-    //    System.out.println(userAcc.getEmail());
-    //
-    //    String email = "schnuggi@yahoo.de";
-    //    Account userAcc2 = accountRepository.findByUsernameOrEmail(email, email).orElseThrow();
-    //    System.out.println(userAcc2.getEmail());
-    //
-    //    // ratings
-    //    List<Rating> rating = ratingRepository.findAll();
-    //    rating.stream().map(Rating::getRating).forEach(System.out::println);
-    //
-    //    List<Rating> ratingsByMovie = ratingRepository.findRatingsByMovie(movie);
-    //    ratingsByMovie.stream().map(Rating::getRating).forEach(System.out::println);
-    //
-    //    List<Rating> ratingsByAccount = ratingRepository.findRatingsByAccount(account);
-    //    ratingsByAccount.stream().map(Rating::getRating).forEach(System.out::println);
-    //
-    //    // comments
-    //    List<Comment> allComments = commentRepository.findAll();
-    //    allComments.stream().map(Comment::getMessage).forEach(System.out::println);
-    //
-    //    List<Comment> movieComments = commentRepository.findCommentsByMovie(movie);
-    //    movieComments.stream().map(Comment::getMessage).forEach(System.out::println);
-    //
-    //    List<Comment> accountComments = commentRepository.findCommentsByAccount(account);
-    //    accountComments.stream().map(Comment::getMessage).forEach(System.out::println);
-    //
-    //    // watchlist
-    //    List<Watchlist> watchlists = watchlistRepository.findAll();
-    //    watchlists.stream().map(Watchlist::getCreatedAt).forEach(System.out::println);
-    //
-    //    System.out.println("OneToMany of composite PKs...");
-    //    List<Watchlist> watchlists2 = watchlistRepository.findAllByMovieId(1457767L);
-    //    watchlists2.stream()
-    //        .map(Watchlist::getAccount)
-    //        .map(Account::getEmail)
-    //        .forEach(System.out::println);
-    //
-    //    List<Watchlist> watchlists3 = watchlistRepository.findAllByAccountId(1L);
-    //    watchlists3.stream()
-    //        .map(Watchlist::getMovie)
-    //        .map(Movie::getPrimaryTitle)
-    //        .forEach(System.out::println);
-
-    // test timezone stuff:
-    //    System.out.println("timezone stuff");
-    //    System.out.println("new Date(): " + new Date()); // works with UTC
-    //    Instant instant = new Date().toInstant();
-    //    System.out.println("instant: " + instant);
-    //
-    //    ZoneId zoneId = ZoneId.of("Europe/Paris");
-    //    LocalDateTime bla = instant.atZone(ZoneId.systemDefault()).toLocalDateTime();
-    //    System.out.println("bla:" + bla);
-    //
-    //    Instant convertedInstant = instant.atZone(zoneId).toInstant();
-    //    System.out.println("instant after timezone: " + convertedInstant);
-    //
-    //    System.out.println("LocalDateTime.now(): " + LocalDateTime.now());
-    //    LocalDateTime localDateTime = LocalDateTime.now().plusMinutes(30);
-    //    System.out.println("LocalDateTime.now().plusMinutes(30): " + localDateTime);
-    //
-    //    // java.time.instant: time in UTC
-    //    Instant instant3 = Instant.now();
-    //    System.out.println("instant3: " + instant3);
-    //    instant3.plus(30, ChronoUnit.MINUTES);
-    //    System.out.println(instant3);
-    //
-    //    Instant aTime = Instant.now().plus(30, ChronoUnit.MINUTES);
-
-    //    // how are the times set as default in create table differing?
-    //    String emailOrUsername2 = "niklastiede2@gmail.com";
-    //    Account account2 =
-    //        accountRepository.findByUsernameOrEmail(emailOrUsername2,
-    // emailOrUsername2).orElseThrow();
-    //    System.out.println(account2);
-
-    //    Instant createdAt = account2.getCreatedAtInUtc();
-    //    System.out.println("createdAt: " + createdAt);
-    //    System.out.println("createdAt: " + createdAt);
   }
 }

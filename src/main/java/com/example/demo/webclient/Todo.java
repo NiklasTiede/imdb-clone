@@ -1,4 +1,4 @@
-package com.example.demo.elasticsearch;
+package com.example.demo.webclient;
 
 public class Todo {
 
