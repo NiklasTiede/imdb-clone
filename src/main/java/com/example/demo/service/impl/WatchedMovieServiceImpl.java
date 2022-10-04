@@ -62,7 +62,7 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   public PagedResponse<WatchedMovieRecord> getWatchedMoviesByAccount(
       String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
-    Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Account account = accountRepository.getAccountByUsername(username);
     Page<WatchedMovie> watchedMovies =
         watchedMovieRepository.findAllByAccountIdOrderByCreatedAtInUtcDesc(

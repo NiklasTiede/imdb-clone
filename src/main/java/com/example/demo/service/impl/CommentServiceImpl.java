@@ -54,7 +54,7 @@ public class CommentServiceImpl implements CommentService {
   @Override
   public PagedResponse<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
-    Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Movie movie = movieRepository.getMovieById(movieId);
     Page<Comment> comments =
         commentRepository.findCommentsByMovieOrderByCreatedAtInUtc(movie, pageable);
@@ -87,7 +87,7 @@ public class CommentServiceImpl implements CommentService {
   @Override
   public PagedResponse<CommentRecord> getCommentsByAccount(String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
-    Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Account account = accountRepository.getAccountByUsername(username);
     Page<Comment> comments =
         commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);

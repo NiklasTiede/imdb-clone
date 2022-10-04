@@ -100,7 +100,7 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
     System.out.println(commentRecord.accountId());
     System.out.println(commentRecord.movieId());
 
-    Pageable pageable = PageRequest.of(0, 30, Sort.Direction.DESC, "createdAtInUtc");
+    Pageable pageable = PageRequest.of(0, 30, Sort.by("createdAtInUtc").descending());
     Page<Comment> comments =
         commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);
 

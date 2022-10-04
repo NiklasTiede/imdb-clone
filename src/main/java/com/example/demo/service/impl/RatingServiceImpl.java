@@ -66,7 +66,7 @@ public class RatingServiceImpl implements RatingService {
   @Override
   public PagedResponse<RatingRecord> getRatingsByAccount(String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
-    Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "createdAtInUtc");
+    Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Account account = accountRepository.getAccountByUsername(username);
     Page<Rating> ratings = ratingRepository.findRatingsByAccount(account, pageable);
     if (ratings.getContent().isEmpty()) {
