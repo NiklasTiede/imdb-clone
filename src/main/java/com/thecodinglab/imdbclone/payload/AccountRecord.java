@@ -1,6 +1,6 @@
-package com.example.demo.payload;
+package com.thecodinglab.imdbclone.payload;
 
-import com.example.demo.util.ValidatePassword;
+import com.thecodinglab.imdbclone.util.ValidatePassword;
 
 import java.util.Date;
 import javax.validation.constraints.Email;

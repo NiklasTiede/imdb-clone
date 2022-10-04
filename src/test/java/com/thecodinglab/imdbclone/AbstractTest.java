@@ -1,4 +1,4 @@
-//package com.example.demo;
+//package com.thecodinglab.imdbclone;
 //
 //import com.fasterxml.jackson.core.JsonParseException;
 //import com.fasterxml.jackson.core.JsonProcessingException;

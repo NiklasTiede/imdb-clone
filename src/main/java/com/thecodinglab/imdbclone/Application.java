@@ -1,6 +1,6 @@
-package com.example.demo;
+package com.thecodinglab.imdbclone;
 
-import com.example.demo.security.JwtAuthenticationFilter;
+import com.thecodinglab.imdbclone.security.JwtAuthenticationFilter;
 import java.util.TimeZone;
 import javax.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;

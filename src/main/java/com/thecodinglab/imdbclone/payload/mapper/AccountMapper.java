@@ -1,7 +1,7 @@
-package com.example.demo.payload.mapper;
+package com.thecodinglab.imdbclone.payload.mapper;
 
-import com.example.demo.entity.Account;
-import com.example.demo.payload.AccountRecord;
+import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.payload.AccountRecord;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

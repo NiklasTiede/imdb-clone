@@ -1,8 +1,8 @@
-package com.example.demo.repository;
+package com.thecodinglab.imdbclone.repository;
 
-import com.example.demo.entity.Account;
-import com.example.demo.exceptions.NotFoundException;
-import com.example.demo.security.UserPrincipal;
+import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.exceptions.NotFoundException;
+import com.thecodinglab.imdbclone.security.UserPrincipal;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

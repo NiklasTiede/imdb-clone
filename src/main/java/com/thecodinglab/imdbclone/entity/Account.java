@@ -1,7 +1,7 @@
-package com.example.demo.entity;
+package com.thecodinglab.imdbclone.entity;
 
-import com.example.demo.entity.audit.DateAudit;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;

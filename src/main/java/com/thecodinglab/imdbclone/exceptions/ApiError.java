@@ -1,4 +1,4 @@
-package com.example.demo.exceptions;
+package com.thecodinglab.imdbclone.exceptions;
 
 public class ApiError {
 

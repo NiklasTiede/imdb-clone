@@ -1,6 +1,7 @@
-package com.example.demo.payload;
+package com.thecodinglab.imdbclone.payload;
 
-import com.example.demo.entity.Role;
+import com.thecodinglab.imdbclone.entity.Role;
+
 import java.util.Collection;
 import java.util.Date;
 

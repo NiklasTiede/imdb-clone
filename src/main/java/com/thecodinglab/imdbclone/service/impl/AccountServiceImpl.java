@@ -1,15 +1,15 @@
-package com.example.demo.service.impl;
+package com.thecodinglab.imdbclone.service.impl;
 
-import com.example.demo.entity.*;
-import com.example.demo.exceptions.BadRequestException;
-import com.example.demo.exceptions.UnauthorizedException;
-import com.example.demo.payload.*;
-import com.example.demo.repository.AccountRepository;
-import com.example.demo.repository.CommentRepository;
-import com.example.demo.repository.RatingRepository;
-import com.example.demo.repository.WatchedMovieRepository;
-import com.example.demo.security.UserPrincipal;
-import com.example.demo.service.AccountService;
+import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.exceptions.BadRequestException;
+import com.thecodinglab.imdbclone.exceptions.UnauthorizedException;
+import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.repository.AccountRepository;
+import com.thecodinglab.imdbclone.repository.CommentRepository;
+import com.thecodinglab.imdbclone.repository.RatingRepository;
+import com.thecodinglab.imdbclone.repository.WatchedMovieRepository;
+import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.service.AccountService;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
