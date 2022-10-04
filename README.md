@@ -11,7 +11,7 @@ This webapp persists Movie data and presents them the user by searching.
 ## How to Run this Project from Source
 
 To set up the project we have to build up the database (see [here](database/README.md)), 
-the [backend](src/main/java/com/example/demo/Application.java) and the [frontend](frontend/package.json). 
+the [backend](src/main/java/com/thecodinglab/imdbclone/Application.java) and the [frontend](frontend/package.json). 
 
 At first, we will pull and run a MySQL db image.
 
