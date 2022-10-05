@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.service.impl;
 
 import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.exceptions.BadRequestException;
 import com.thecodinglab.imdbclone.exceptions.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.*;
@@ -10,6 +11,8 @@ import com.thecodinglab.imdbclone.repository.RatingRepository;
 import com.thecodinglab.imdbclone.repository.WatchedMovieRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.AccountService;
+import com.thecodinglab.imdbclone.service.RoleService;
+import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,18 +29,21 @@ public class AccountServiceImpl implements AccountService {
   private final RatingRepository ratingRepository;
   private final CommentRepository commentRepository;
   private final PasswordEncoder passwordEncoder;
+  private final RoleService roleService;
 
   public AccountServiceImpl(
       AccountRepository accountRepository,
       WatchedMovieRepository watchedMovieRepository,
       RatingRepository ratingRepository,
       CommentRepository commentRepository,
-      PasswordEncoder passwordEncoder) {
+      PasswordEncoder passwordEncoder,
+      RoleService roleService) {
     this.accountRepository = accountRepository;
     this.watchedMovieRepository = watchedMovieRepository;
     this.ratingRepository = ratingRepository;
     this.commentRepository = commentRepository;
     this.passwordEncoder = passwordEncoder;
+    this.roleService = roleService;
   }
 
   @Override
@@ -87,6 +93,8 @@ public class AccountServiceImpl implements AccountService {
       String password = passwordEncoder.encode(request.password());
       Account account = new Account(username, email, password);
       account.setEnabled(true);
+      List<Role> roles = roleService.giveRoleToRegisteredUser();
+      account.setRoles(roles);
       Account savedAccount = accountRepository.save(account);
       LOGGER.info("Account with id [{}] was created and activated.", savedAccount.getId());
       return savedAccount;

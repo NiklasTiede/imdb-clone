@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service;
 @Service
 public interface AuthenticationService {
 
-  UserIdentityAvailability checkEmailAvailability(String email);
-
   UserIdentityAvailability checkUsernameAvailability(String username);
+
+  UserIdentityAvailability checkEmailAvailability(String email);
 
   LoginResponse loginUser(LoginRequest request);
 

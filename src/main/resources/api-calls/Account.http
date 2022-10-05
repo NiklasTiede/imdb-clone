@@ -1,67 +1,74 @@
 
-###
+### get current user
 GET http://localhost:8080/api/account/me
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 
-###
+### get account-profile
 GET http://localhost:8080/api/account/onemanarmy/profile
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 
-###
+### get comments of user
 GET http://localhost:8080/api/account/onemanarmy/comments
-#Content-Type: application/json
+Content-Type: application/json
 
 
-###
+### get watchlist of user
 GET http://localhost:8080/api/account/onemanarmy/watchlist
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 
-###
+### get ratings of user
 GET http://localhost:8080/api/account/onemanarmy/ratings
+Content-Type: application/json
+
+
+### update account data
+PUT http://localhost:8080/api/account/bluu
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Content-Type: application/json
+
+{
+  "username": "UnderTheSee",
+  "password": "3v3nStr0ngEr!",
+  "email": "inventedemail@magicmail.com",
+  "firstName": "Kermit",
+  "lastName": "The Frog",
+  "phone": "0152/8273654",
+  "bio": "I like to swim.",
+  "birthday": "1995-01-25T00:00:00.000"
+}
+
+
+### delete account
+DELETE http://localhost:8080/api/account/underthesee
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 
-###
-PUT http://localhost:8080/api/account/onemanarmy
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
-Content-Type: application/json
-
-
-###
-DELETE http://localhost:8080/api/account/{username}
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
-Content-Type: application/json
-
-
-###
+### create new account, without email confirmation (simple test acc generation)
 POST http://localhost:8080/api/account/add-account
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 {
-  "username": "",
-  "email": "",
-  "password": "",
-  "firstName": "",
-  "lastName": ""
+  "username": "TheIncredibleHulk",
+  "email": "MisterX@gmail.com",
+  "password": "Str0ng!Pa55Word",
+  "firstName": "Kermit",
+  "lastName": "The Frog"
 }
 
 
-###
-PUT http://localhost:8080/api/account/{username}/give-admin
+### give account ADMIN permission
+PUT http://localhost:8080/api/account/TheIncredibleHulk/give-admin
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 
-###
-PUT http://localhost:8080/api/account/{username}/take-admin
+### remove ADMIN permission of an account
+PUT http://localhost:8080/api/account/TheIncredibleHulk/take-admin
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
-

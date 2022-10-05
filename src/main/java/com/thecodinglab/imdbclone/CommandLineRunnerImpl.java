@@ -1,9 +1,6 @@
 package com.thecodinglab.imdbclone;
 
 import com.thecodinglab.imdbclone.elasticsearch.EsUtils;
-import com.thecodinglab.imdbclone.entity.Account;
-import com.thecodinglab.imdbclone.entity.Comment;
-import com.thecodinglab.imdbclone.payload.CommentRecord;
 import com.thecodinglab.imdbclone.payload.mapper.CustomCommentMapper;
 import com.thecodinglab.imdbclone.payload.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.repository.*;
@@ -13,10 +10,6 @@ import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -78,37 +71,37 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
   @Override
   public void run(String... arg0) {
 
-    Account account = accountRepository.findById(6L).orElseThrow();
-
-    Comment comment = commentRepository.getCommentById(2L);
-    System.out.println(comment.getId());
-    System.out.println(comment.getMessage());
-    System.out.println(comment.getAccount().getId());
-    System.out.println(comment.getMovie().getId());
-
-    CommentRecord commentRecord = commentMapper.entityToDTO(comment);
-
+    //    Account account = accountRepository.findById(6L).orElseThrow();
+    //
+    //    Comment comment = commentRepository.getCommentById(2L);
+    //    System.out.println(comment.getId());
+    //    System.out.println(comment.getMessage());
+    //    System.out.println(comment.getAccount().getId());
+    //    System.out.println(comment.getMovie().getId());
+    //
     //    CommentRecord commentRecord = commentMapper.entityToDTO(comment);
-    System.out.println(commentRecord);
-    System.out.println(commentRecord.id());
-    System.out.println(commentRecord.message());
-    System.out.println(commentRecord.accountId());
-    System.out.println(commentRecord.movieId());
-
-    Pageable pageable = PageRequest.of(0, 30, Sort.by("createdAtInUtc").descending());
-    Page<Comment> comments =
-        commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);
-
-    System.out.println(comments);
-    System.out.println(comments.getContent());
-    System.out.println(comments.getNumber());
-    System.out.println(comments.getSize());
-    System.out.println(comments.isLast());
-    System.out.println(comments.getTotalElements());
-    System.out.println(comments.getTotalPages());
-
-    Long bla = commentRepository.countCommentsByAccount(account);
-    System.out.println("count: " + bla);
+    //
+    //    //    CommentRecord commentRecord = commentMapper.entityToDTO(comment);
+    //    System.out.println(commentRecord);
+    //    System.out.println(commentRecord.id());
+    //    System.out.println(commentRecord.message());
+    //    System.out.println(commentRecord.accountId());
+    //    System.out.println(commentRecord.movieId());
+    //
+    //    Pageable pageable = PageRequest.of(0, 30, Sort.by("createdAtInUtc").descending());
+    //    Page<Comment> comments =
+    //        commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);
+    //
+    //    System.out.println(comments);
+    //    System.out.println(comments.getContent());
+    //    System.out.println(comments.getNumber());
+    //    System.out.println(comments.getSize());
+    //    System.out.println(comments.isLast());
+    //    System.out.println(comments.getTotalElements());
+    //    System.out.println(comments.getTotalPages());
+    //
+    //    Long bla = commentRepository.countCommentsByAccount(account);
+    //    System.out.println("count: " + bla);
 
     //    // bulk index
     //    List<Long> movieIds = new ArrayList<>();

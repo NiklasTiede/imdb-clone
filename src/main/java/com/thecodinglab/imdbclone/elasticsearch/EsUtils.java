@@ -115,7 +115,6 @@ public class EsUtils {
   public List<Movie> searchMoviesByRatingRange(float minRating, float maxRating) {
     try {
       SearchResponse<Movie> response = esClient.search(s -> s.index("movies").query(q -> q.range(t -> t.field("imdbRating").gte(JsonData.of(minRating)).lte(JsonData.of(maxRating)))), Movie.class);
-      System.out.println(response.hits().hits().size());
       List<Movie> movies = response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
       LOGGER.info("Document search by ratings between [{}] and [{}] gave [{}] results.",minRating, maxRating, movies.size());
       return movies;

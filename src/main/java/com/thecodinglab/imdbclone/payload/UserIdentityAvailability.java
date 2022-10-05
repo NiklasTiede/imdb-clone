@@ -2,5 +2,5 @@ package com.thecodinglab.imdbclone.payload;
 
 public record UserIdentityAvailability(
 
-        Boolean available
+        Boolean isAvailable
 ) {}

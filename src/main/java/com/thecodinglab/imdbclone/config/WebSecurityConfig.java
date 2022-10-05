@@ -3,7 +3,6 @@ package com.thecodinglab.imdbclone.config;
 import com.thecodinglab.imdbclone.security.JwtAuthenticationEntryPoint;
 import com.thecodinglab.imdbclone.security.JwtAuthenticationFilter;
 import com.thecodinglab.imdbclone.service.impl.CustomUserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -28,9 +27,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   private final JwtAuthenticationEntryPoint unauthorizedHandler;
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-  @Value(value = "${springdoc.api-docs.path}")
-  private String springDocUrl;
-
   public WebSecurityConfig(
       CustomUserDetailsServiceImpl customUserDetailsService,
       JwtAuthenticationEntryPoint unauthorizedHandler,
@@ -54,13 +50,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
         .authorizeRequests()
-        .antMatchers(HttpMethod.GET, springDocUrl, springDocUrl + ".yaml")
+        .antMatchers("/v3/**")
         .permitAll()
-        .antMatchers(HttpMethod.GET, "/api/**")
+        .antMatchers("/api/auth/**")
         .permitAll()
-        .antMatchers(HttpMethod.POST, "/api/auth/**")
+        .antMatchers(HttpMethod.GET, "/api/movie/**", "/api/comment/**", "/api/account/**")
         .permitAll()
-        .antMatchers(HttpMethod.POST, "/api/movie/**")
+        .antMatchers(HttpMethod.POST, "/api/movie/get-movies")
         .permitAll()
         .anyRequest()
         .authenticated();

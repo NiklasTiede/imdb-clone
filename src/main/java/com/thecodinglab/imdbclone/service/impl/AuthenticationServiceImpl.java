@@ -60,14 +60,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   }
 
   @Override
-  public UserIdentityAvailability checkEmailAvailability(String email) {
-    Boolean isAvailable = !accountRepository.existsByEmail(email);
+  public UserIdentityAvailability checkUsernameAvailability(String username) {
+    Boolean isAvailable = !accountRepository.existsByUsername(username);
     return new UserIdentityAvailability(isAvailable);
   }
 
   @Override
-  public UserIdentityAvailability checkUsernameAvailability(String username) {
-    Boolean isAvailable = !accountRepository.existsByUsername(username);
+  public UserIdentityAvailability checkEmailAvailability(String email) {
+    Boolean isAvailable = !accountRepository.existsByEmail(email);
     return new UserIdentityAvailability(isAvailable);
   }
 
@@ -122,7 +122,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
               .toUri()
               .toURL()
               .toString();
-      System.out.println("currentUrl: " + currentUrl);
     } catch (MalformedURLException e) {
       LOGGER.error("");
       throw new RuntimeException(e);
@@ -181,7 +180,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     // how to replace localhost by other addresses? send to frontend form! which saves token in post
     // and adds new password to post request
-    String link = "http://localhost:3000/api/auth/reset-password?token=" + token;
+    String link = "http://localhost:3000/reset-password?token=" + token;
     String PasswordResetEmail = emailService.buildPasswordResetEmail(account.getUsername(), link);
     emailService.sendEmail(account.getEmail(), "Reset Password", PasswordResetEmail);
     return new MessageResponse("Email was send successfully");

@@ -26,7 +26,6 @@ public class CustomHttpClient {
       case DELETE:
         return null;
       default:
-        System.out.println("");
         return null;
     }
   }

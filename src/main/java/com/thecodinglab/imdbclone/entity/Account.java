@@ -22,14 +22,14 @@ public class Account extends DateAudit {
 
   @NotNull private String username;
   @NotNull private String email;
-  @NotNull private String password;
+  @NotNull @JsonIgnore private String password;
   private String firstName;
   private String lastName;
   private String phone;
   private String bio;
   private Date birthday;
-  private Boolean locked = false;
-  private Boolean enabled = false;
+  @JsonIgnore private Boolean locked = false;
+  @JsonIgnore private Boolean enabled = false;
 
   @ManyToMany(fetch = FetchType.LAZY)
   private Collection<Role> roles = new ArrayList<>();
