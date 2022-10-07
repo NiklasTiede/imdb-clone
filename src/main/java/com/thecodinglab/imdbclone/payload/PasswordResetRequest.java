@@ -1,14 +1,14 @@
 package com.thecodinglab.imdbclone.payload;
 
-import com.thecodinglab.imdbclone.util.ValidatePassword;
+import com.thecodinglab.imdbclone.validation.ValidPassword;
 
 import javax.validation.constraints.Size;
 
 public record PasswordResetRequest(
 
-        @Size(min = 36, max = 36, message = "token must have a length of 36 characters.")
+        @Size(min = 36, max = 36)
         String token,
 
-        @ValidatePassword
+        @ValidPassword
         String newPassword
 ) {}

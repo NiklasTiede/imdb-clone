@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.util;
+package com.thecodinglab.imdbclone.utility;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

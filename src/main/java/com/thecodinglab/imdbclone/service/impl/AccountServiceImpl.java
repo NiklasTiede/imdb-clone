@@ -2,8 +2,8 @@ package com.thecodinglab.imdbclone.service.impl;
 
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
-import com.thecodinglab.imdbclone.exceptions.BadRequestException;
-import com.thecodinglab.imdbclone.exceptions.UnauthorizedException;
+import com.thecodinglab.imdbclone.exception.BadRequestException;
+import com.thecodinglab.imdbclone.exception.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.CommentRepository;

@@ -5,8 +5,9 @@ import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.MovieService;
-import com.thecodinglab.imdbclone.util.Pagination;
+import com.thecodinglab.imdbclone.validation.Pagination;
 import java.util.List;
+import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,7 +40,7 @@ public class MovieController {
   @PostMapping("/create-movie")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Movie> createMovie(
-      @RequestBody MovieRequest request, @CurrentUser UserPrincipal currentAccount) {
+      @Valid @RequestBody MovieRequest request, @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         movieService.createMovie(request, currentAccount), HttpStatus.CREATED);
   }
@@ -48,7 +49,7 @@ public class MovieController {
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Movie> updateMovie(
       @PathVariable Long movieId,
-      @RequestBody MovieRequest request,
+      @Valid @RequestBody MovieRequest request,
       @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         movieService.updateMovie(movieId, request, currentAccount), HttpStatus.CREATED);

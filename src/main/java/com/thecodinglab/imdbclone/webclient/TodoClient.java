@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.webclient;
 
-import com.thecodinglab.imdbclone.util.CustomHttpClient;
+import com.thecodinglab.imdbclone.utility.CustomHttpClient;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 

@@ -1,5 +1,6 @@
 package com.thecodinglab.imdbclone.enums;
 
+/** Sets of MovieGenreEnums are persisted as bit values */
 public enum MovieGenreEnum {
   HORROR(1 << 1),
   MYSTERY(1 << 2),

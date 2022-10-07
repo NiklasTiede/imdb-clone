@@ -4,7 +4,8 @@ import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.CommentService;
-import com.thecodinglab.imdbclone.util.Pagination;
+import com.thecodinglab.imdbclone.validation.Pagination;
+import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,7 +38,7 @@ public class CommentController {
   @PostMapping("/{movieId}")
   public ResponseEntity<CommentRecord> createComment(
       @PathVariable Long movieId,
-      @RequestBody CreateCommentRequest request,
+      @Valid @RequestBody CreateCommentRequest request,
       @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         commentService.createComment(movieId, request, currentAccount), HttpStatus.CREATED);
@@ -47,7 +48,7 @@ public class CommentController {
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<CommentRecord> updateComment(
       @PathVariable Long commentId,
-      @RequestBody UpdateCommentRequest request,
+      @Valid @RequestBody UpdateCommentRequest request,
       @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         commentService.updateComment(commentId, request, currentAccount), HttpStatus.OK);

@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.jobs;
+package com.thecodinglab.imdbclone.job;
 
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.entity.Rating;

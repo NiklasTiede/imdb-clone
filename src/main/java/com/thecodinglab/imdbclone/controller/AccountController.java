@@ -5,7 +5,7 @@ import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.*;
-import com.thecodinglab.imdbclone.util.Pagination;
+import com.thecodinglab.imdbclone.validation.Pagination;
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

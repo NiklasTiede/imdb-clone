@@ -4,8 +4,8 @@ import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.entity.VerificationToken;
 import com.thecodinglab.imdbclone.enums.VerificationTypeEnum;
-import com.thecodinglab.imdbclone.exceptions.BadRequestException;
-import com.thecodinglab.imdbclone.exceptions.NotFoundException;
+import com.thecodinglab.imdbclone.exception.BadRequestException;
+import com.thecodinglab.imdbclone.exception.NotFoundException;
 import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.VerificationTokenRepository;
@@ -13,7 +13,6 @@ import com.thecodinglab.imdbclone.security.JwtTokenProvider;
 import com.thecodinglab.imdbclone.service.AuthenticationService;
 import com.thecodinglab.imdbclone.service.EmailService;
 import com.thecodinglab.imdbclone.service.RoleService;
-import com.thecodinglab.imdbclone.util.TokenValidation;
 import java.net.MalformedURLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -136,9 +135,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
   @Override
   public MessageResponse confirmEmailAddress(String token) {
-    if (!TokenValidation.isValid(token)) {
-      throw new BadRequestException(TokenValidation.rules());
-    }
     VerificationToken verificationToken =
         verificationTokenRepository
             .findByToken(token)

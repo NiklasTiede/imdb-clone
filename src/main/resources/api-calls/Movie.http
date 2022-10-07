@@ -19,13 +19,13 @@ Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4L
 Content-Type: application/json
 
 {
-  "primaryTitle": "My Test Movie 2",
+  "primaryTitle": "My Test Movivie 8",
   "originalTitle": "My Test Movie 2",
-  "startYear": 2018,
-  "endYear": null,
+  "startYear": 2050,
+    "endYear": null,
   "runtimeMinutes": 118,
-  "movieGenre": ["ANIMATION", "MYSTERY"],
-  "movieType": "TV_MOVIE",
+  "movieGenre": ["ANIMATIOd1N", "MYSTERY"],
+  "movieType": "TV_MOVE9",
   "adult": false
 }
 

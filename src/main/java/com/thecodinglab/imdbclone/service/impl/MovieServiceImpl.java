@@ -1,9 +1,8 @@
 package com.thecodinglab.imdbclone.service.impl;
 
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.exceptions.NotFoundException;
-import com.thecodinglab.imdbclone.exceptions.UnauthorizedException;
-import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.exception.NotFoundException;
+import com.thecodinglab.imdbclone.exception.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.MovieRecord;
 import com.thecodinglab.imdbclone.payload.MovieRequest;
@@ -13,7 +12,7 @@ import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.repository.MovieSearchDao;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.MovieService;
-import com.thecodinglab.imdbclone.util.Pagination;
+import com.thecodinglab.imdbclone.validation.Pagination;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

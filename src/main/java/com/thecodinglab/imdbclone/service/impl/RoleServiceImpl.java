@@ -3,7 +3,7 @@ package com.thecodinglab.imdbclone.service.impl;
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.enums.RoleNameEnum;
-import com.thecodinglab.imdbclone.exceptions.UnauthorizedException;
+import com.thecodinglab.imdbclone.exception.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.RoleRepository;

@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.util;
+package com.thecodinglab.imdbclone.utility;
 
 import java.util.Date;
 

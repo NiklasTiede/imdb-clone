@@ -1,11 +1,10 @@
-package com.thecodinglab.imdbclone.exceptions;
+package com.thecodinglab.imdbclone.exception;
 
-// not implemented yet
-public class InvalidRequestException extends RuntimeException {
+public class BadRequestException extends RuntimeException {
 
   private String message;
 
-  public InvalidRequestException(String message) {
+  public BadRequestException(String message) {
     this.message = message;
   }
 
