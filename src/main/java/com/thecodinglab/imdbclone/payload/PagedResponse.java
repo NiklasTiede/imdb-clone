@@ -11,6 +11,8 @@ public class PagedResponse<T> {
   private int totalPages;
   private boolean last;
 
+  public PagedResponse() {}
+
   public PagedResponse(
       List<T> content, int page, int size, long totalElements, int totalPages, boolean last) {
     this.content = content;
