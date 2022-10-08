@@ -32,12 +32,14 @@ spotless {
 	}
 }
 
+def springBootVersion = '2.7.4'
+
 dependencies {
 	// starters
-	developmentOnly group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '2.7.4'
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.7.4'
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.7.4'
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '2.7.4'
+	developmentOnly group: 'org.springframework.boot', name: 'spring-boot-devtools', version: "$springBootVersion"
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: "$springBootVersion"
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: "$springBootVersion"
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: "$springBootVersion"
 
 	// MySQL Database
 	implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.29'
@@ -52,7 +54,7 @@ dependencies {
 	implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.13.1'
 
 	// validation
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: '2.7.4'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: "$springBootVersion"
 	implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 
 	// mapstruct mapping classes with many fields
@@ -68,7 +70,7 @@ dependencies {
 	implementation group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.1.1.RELEASE'
 
 	// Email
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: '2.7.4'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: "$springBootVersion"
 
 	// Code Formatter
 	implementation group: 'com.diffplug.spotless', name: 'spotless-plugin-gradle', version: '6.7.2'
@@ -84,11 +86,11 @@ dependencies {
     // implementation group: 'com.meilisearch.sdk', name: 'meilisearch-java', version: '0.7.2'
 
 	// monitoring
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '2.7.4'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: "$springBootVersion"
 //	implementation group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.7.2'
 
 	// Testing
-	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.7.4'
+	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: "$springBootVersion"
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
 	testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
 	 testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.7.0'
