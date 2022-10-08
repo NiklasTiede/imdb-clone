@@ -73,12 +73,6 @@ dependencies {
 	// Code Formatter
 	implementation group: 'com.diffplug.spotless', name: 'spotless-plugin-gradle', version: '6.7.2'
 
-	// Testing
-	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.7.4'
-	testImplementation group: 'junit', name: 'junit', version: '4.13.2'
-	testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
-	// testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.7.0'
-
 	// ES client: index, query, sort, aggregate - https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/searching.html
 	implementation group: 'co.elastic.clients', name: 'elasticsearch-java', version: '8.2.1'
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4'
@@ -92,6 +86,15 @@ dependencies {
 	// monitoring
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: '2.7.4'
 //	implementation group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.7.2'
+
+	// Testing
+	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.7.4'
+	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
+	testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
+	 testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.7.0'
+//	testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+
+
 }
 
 test {

@@ -11,7 +11,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint . --ext .tsx,.ts",
-    "build:moviesGen": "openapi-generator-cli generate -i ../src/main/resources/open-api/movies.yaml -g typescript-axios -o ./src/client/movies/generator-output/"
+    "build:moviesGen": "openapi-generator-cli generate -i ../src/main/resources/open-api/imdb-clone-backend.yaml -g typescript-axios -o ./src/client/movies/generator-output/"
   },
   "dependencies": {
     "@emotion/styled": "^11.6.0",
