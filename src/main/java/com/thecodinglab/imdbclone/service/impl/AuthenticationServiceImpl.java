@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -40,6 +41,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private final VerificationTokenRepository verificationTokenRepository;
   private final EmailService emailService;
   private final RoleService roleService;
+
+  @Value("${imdb-clone.backend.host}")
+  private String imdbCloneBackendHost;
+
+  @Value("${imdb-clone.frontend.host}")
+  private String imdbCloneFrontendHost;
 
   public AuthenticationServiceImpl(
       AuthenticationManager authenticationManager,
@@ -127,7 +134,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     // how to replace localhost by other addresses?
-    String link = "http://localhost:8080/api/auth/confirm-email-address?token=" + token;
+    String link = imdbCloneBackendHost + "/api/auth/confirm-email-address?token=" + token;
     String confirmationEmail = emailService.buildConfirmationEmail(account.getUsername(), link);
     emailService.sendEmail(account.getEmail(), "Confirming Email Address", confirmationEmail);
     return "Confirmation email was send";
@@ -176,7 +183,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     // how to replace localhost by other addresses? send to frontend form! which saves token in post
     // and adds new password to post request
-    String link = "http://localhost:3000/reset-password?token=" + token;
+    String link = imdbCloneFrontendHost + "/reset-password?token=" + token;
     String PasswordResetEmail = emailService.buildPasswordResetEmail(account.getUsername(), link);
     emailService.sendEmail(account.getEmail(), "Reset Password", PasswordResetEmail);
     return new MessageResponse("Email was send successfully");
