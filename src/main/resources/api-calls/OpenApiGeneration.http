@@ -1,14 +1,14 @@
 
 ### swagger UI - exec in browser
-GET http://localhost:8080/v3/swagger-ui.html
+GET {{protocol}}{{host}}:{{port}}/v3/swagger-ui.html
 Content-Type: application/json
 
 
 ### swagger as json
-GET http://localhost:8080/v3/api-docs
+GET {{protocol}}{{host}}:{{port}}/v3/api-docs
 Content-Type: application/json
 
 
 ### download openapi-spec
-GET http://localhost:8080/v3/api-docs.yaml
+GET {{protocol}}{{host}}:{{port}}/v3/api-docs.yaml
 Content-Type: application/json

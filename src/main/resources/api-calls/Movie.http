@@ -1,11 +1,11 @@
 
 ### get 1 movie by id
-GET http://localhost:8080/api/movie/1457767
+GET {{protocol}}{{host}}:{{port}}/api/movie/1457767
 Content-Type: application/json
 
 
 ### get multiple movies by an array of ids
-POST http://localhost:8080/api/movie/get-movies
+POST {{protocol}}{{host}}:{{port}}/api/movie/get-movies
 Content-Type: application/json
 
 {
@@ -14,7 +14,7 @@ Content-Type: application/json
 
 
 ### add new movie to db
-POST http://localhost:8080/api/movie/create-movie
+POST {{protocol}}{{host}}:{{port}}/api/movie/create-movie
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
@@ -31,7 +31,7 @@ Content-Type: application/json
 
 
 ### update existing movie
-PUT http://localhost:8080/api/movie/21110305
+PUT {{protocol}}{{host}}:{{port}}/api/movie/21110305
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
@@ -48,11 +48,11 @@ Content-Type: application/json
 
 
 ### delete movie
-DELETE http://localhost:8080/api/movie/21110304
+DELETE {{protocol}}{{host}}:{{port}}/api/movie/21110304
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 
 ### search for movie by primaryTitle
-GET http://localhost:8080/api/movie/search-by-primary-title/Nightcrawler
+GET {{protocol}}{{host}}:{{port}}/api/movie/search-by-primary-title/Nightcrawler
 Content-Type: application/json

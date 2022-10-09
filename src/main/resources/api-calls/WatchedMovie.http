@@ -1,11 +1,11 @@
 
 ### watch a movie
-GET http://localhost:8080/api/watched-movie/2872718/watch
+GET {{protocol}}{{host}}:{{port}}/api/watched-movie/2872718/watch
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 
 
 ### delete watched movie
-DELETE http://localhost:8080/api/watched-movie/2872718
+DELETE {{protocol}}{{host}}:{{port}}/api/watched-movie/2872718
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json

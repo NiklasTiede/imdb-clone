@@ -1,18 +1,3 @@
 {
-  "properties": [
-    {
-      "name": "ENVIRONMENT_CLIENT_CRM_API_BASEURL",
-      "type": "java.lang.String",
-      "description": "Description for ENVIRONMENT_CLIENT_CRM_API_BASEURL."
-    },
-    {
-      "name": "jwt.expiration",
-      "type": "java.lang.String",
-      "description": "Description for jwt.expiration."
-    },
-    {
-      "name": "cors.allowed-endpoints",
-      "type": "java.lang.String",
-      "description": "Description for cors.allowed-endpoints."
-    }
-  ] }
+  "properties": []
+}

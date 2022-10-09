@@ -1,52 +1,52 @@
 
 ### check username availability
-GET http://localhost:8080/api/auth/check-username-availability?username=notusedusername
+GET {{protocol}}{{host}}:{{port}}/api/auth/check-username-availability?username=notusedusername
 Content-Type: application/json
 
 
 ### check email availability
-GET http://localhost:8080/api/auth/check-email-availability?email=notused@gmail.com
+GET {{protocol}}{{host}}:{{port}}/api/auth/check-email-availability?email=notused@gmail.com
 Content-Type: application/json
 
 
 ### login
-POST http://localhost:8080/api/auth/login
+POST {{protocol}}{{host}}:{{port}}/api/auth/login
 Content-Type: application/json
 
 {
   "usernameOrEmail": "niklastiede2@gmail.com",
-  "password": "mypassword"
+  "password": "Str0nG!Pa55Word?"
 }
 
 
 ### register
-POST http://localhost:8080/api/auth/registration
+POST {{protocol}}{{host}}:{{port}}/api/auth/registration
 Content-Type: application/json
 
 {
   "firstName": "Niklas",
   "lastName": "Tiede",
-  "username": "OneManArmy",
-  "password": "mypassword",
+  "username": "superman",
+  "password": "Str0nG!Pa55Word?",
   "email": "niklastiede2@gmail.com"
 }
 
 
 ### confirm email token
-GET http://localhost:8080/api/auth/confirm-email-address?token=a32f1eaa-7b1a-4015-9b27-bf8d6e0bcaf0
+GET {{protocol}}{{host}}:{{port}}/api/auth/confirm-email-address?token=a32f1eaa-7b1a-4015-9b27-bf8d6e0bcaf0
 Content-Type: application/json
 
 
 ### reset password
-GET http://localhost:8080/api/auth/reset-password?email=niklastiede2@gmail.com
+GET {{protocol}}{{host}}:{{port}}/api/auth/reset-password?email=niklastiede2@gmail.com
 Content-Type: application/json
 
 
 ### save new password
-POST http://localhost:8080/api/auth/save-new-password
+POST {{protocol}}{{host}}:{{port}}/api/auth/save-new-password
 Content-Type: application/json
 
 {
   "token": "4a4e73e5-54cb-4e8f-8c42-40fd1e1adc54",
-  "newPassword": "12!Hgdt?mm"
+  "newPassword": "Th1s.Is.Str0ng!"
 }
