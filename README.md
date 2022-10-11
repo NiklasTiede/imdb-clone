@@ -1,7 +1,25 @@
 
-# Movie Database Clone
+<p align="center">
+<img  alt="imdb-clone" align="center" width="500" src="docs/imdb-clone-logo.png" />
+<h3 align="center">This Project exemplifies a Real-World Java / React Web App.</h3>
+<p>
 
-This webapp persists Movie data and presents them the user by searching.
+---
+
+<p id="Badges" align="center">
+  <a href="https://github.com/NiklasTiede/IMDb-Clone/commits/master">
+    <img src="https://img.shields.io/github/last-commit/NiklasTiede/IMDb-Clone">
+  </a>
+  <a href="https://github.com/NiklasTiede/IMDb-Clone/issues">
+    <img src="https://img.shields.io/github/issues-raw/niklastiede/imdb-clone" />
+  </a>
+  <a>
+    <img src="https://img.shields.io/github/languages/code-size/niklastiede/imdb-clone" />
+  </a>
+  <a>
+    <img src="https://img.shields.io/github/license/niklastiede/imdb-clone" />
+  </a>
+</p>
 
 ## Techstack
 - Languages: Java JDK17 / Typescript
@@ -11,25 +29,16 @@ This webapp persists Movie data and presents them the user by searching.
 ## How to Run this Project from Source
 
 To set up the project we have to build up the database (see [here](database/README.md)), 
-the [backend](src/main/java/com/thecodinglab/imdbclone/Application.java) and the [frontend](frontend/package.json). 
+the [backend](src/main/java/com/thecodinglab/imdbclone/Application.java) and the [frontend](frontend/package.json).
 
-At first, we will pull and run a MySQL db image.
-
-```bash
-docker pull mysql
-docker run --name imdb-db -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secret -e MYSQL_DATABASE=moviesdb -d mysql:latest
-```
-
-Next, we have to import some processed movie data into our running db-container using `./data/movieset_100_indexed.csv`. 
-I use DBeaver to connect to the database and use its import functionality. 
+We have to download and import the processed [Movie Dataset](https://www.dropbox.com/s/rzmhet4qf2joczz/processed_imdb_movies.csv?dl=0) 
+into the database. I use DBeaver to connect to the database and use its import functionality. 
 
 Now we can run our backend.
 
 ```bash
-gradle bootRun
+./gradlew clean bootRun
 ```
-
-If we add `http://localhost:8080/movies` to the browser a list of our previously imported movie data should be shown.
 
 Lastly, we build up the frontend and serve it to `http://localhost:3000/`.
 
@@ -41,3 +50,10 @@ npm run start
 
 I also added a `Makefile` as a little cheat sheet to refresh our memory for all the important commands 
 we use during development.
+
+### Todo:
+
+-[x] Set up Database and import Movie Data
+-[x] Create Java Backend 
+-[ ] Create React Frontend
+-[ ] Add CI, CD and Monitoring
