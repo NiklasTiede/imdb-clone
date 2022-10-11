@@ -14,7 +14,7 @@ Then I went through the following steps to build everything up.
 - evtl. restart mysql-server
 
 
--[ ] write bash script for installing MySQL DB
+- [ ] write bash script for installing MySQL DB
 
 ## Process Movies/Rating Datasets
 
@@ -41,4 +41,4 @@ Instead of rerunning the jupyter notebook you can download the
 - load data using `load-data.sql` file (executed with DBeaver)
 
 
--[ ] write bash script for loading data into MySQL DB
+- [ ] write bash script for loading data into MySQL DB
