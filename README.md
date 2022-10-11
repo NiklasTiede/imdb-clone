@@ -53,7 +53,7 @@ we use during development.
 
 ### Todo:
 
--[x] Set up Database and import Movie Data
--[x] Create Java Backend 
--[ ] Create React Frontend
--[ ] Add CI, CD and Monitoring
+- [x] Set up Database and import Movie Data
+- [x] Create Java Backend 
+- [ ] Create React Frontend
+- [ ] Add CI, CD and Monitoring
