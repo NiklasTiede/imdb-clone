@@ -2,7 +2,6 @@ package com.thecodinglab.imdbclone.service.impl;
 
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
-import com.thecodinglab.imdbclone.exception.BadRequestException;
 import com.thecodinglab.imdbclone.exception.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
@@ -12,6 +11,7 @@ import com.thecodinglab.imdbclone.repository.WatchedMovieRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.AccountService;
 import com.thecodinglab.imdbclone.service.RoleService;
+import com.thecodinglab.imdbclone.validation.UniqueValidation;
 import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -81,12 +81,8 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account createAccount(RegistrationRequest request, UserPrincipal currentAccount) {
-    if (Boolean.TRUE.equals(accountRepository.existsByUsername(request.username()))) {
-      throw new BadRequestException("Username is already taken");
-    }
-    if (Boolean.TRUE.equals(accountRepository.existsByEmail(request.email()))) {
-      throw new BadRequestException("Email is already taken");
-    }
+    UniqueValidation.isUsernameAndEmailValid(request.username(), request.email());
+
     if (UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       String username = request.username().toLowerCase();
       String email = request.email().toLowerCase();

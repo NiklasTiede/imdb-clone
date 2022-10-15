@@ -4,7 +4,6 @@ import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.entity.VerificationToken;
 import com.thecodinglab.imdbclone.enums.VerificationTypeEnum;
-import com.thecodinglab.imdbclone.exception.BadRequestException;
 import com.thecodinglab.imdbclone.exception.NotFoundException;
 import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
@@ -13,6 +12,7 @@ import com.thecodinglab.imdbclone.security.JwtTokenProvider;
 import com.thecodinglab.imdbclone.service.AuthenticationService;
 import com.thecodinglab.imdbclone.service.EmailService;
 import com.thecodinglab.imdbclone.service.RoleService;
+import com.thecodinglab.imdbclone.validation.UniqueValidation;
 import java.net.MalformedURLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -89,12 +89,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
   @Override
   public MessageResponse registerUser(RegistrationRequest request) {
-    if (Boolean.TRUE.equals(accountRepository.existsByUsername(request.username()))) {
-      throw new BadRequestException("Username is already taken");
-    }
-    if (Boolean.TRUE.equals(accountRepository.existsByEmail(request.email()))) {
-      throw new BadRequestException("Email is already taken");
-    }
+    UniqueValidation.isUsernameAndEmailValid(request.username(), request.email());
+
     String username = request.username().toLowerCase();
     String email = request.email().toLowerCase();
     String password = passwordEncoder.encode(request.password());
