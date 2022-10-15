@@ -1,8 +1,8 @@
 
 ## Creation of MySQL Docker Image with Movie Data
 
-At first, navigate into this folder and decompress the 
-processed dataset:
+At first, download this compressed [Dataset](https://www.dropbox.com/s/87wwsn2z3eziskb/processed_imdb_movies.csv.gz?dl=0)
+into this folder and decompress it:
 
 ```bash
 gzip --decompress --keep processed_imdb_movies.csv.gz
