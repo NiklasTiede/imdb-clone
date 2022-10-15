@@ -28,11 +28,13 @@
 
 ## How to Run this Project from Source
 
-To set up the project we have to build up the database (see [here](database/README.md)), 
-the [backend](src/main/java/com/thecodinglab/imdbclone/Application.java) and the [frontend](frontend/package.json).
+You can either download the processed [Movie Dataset](https://www.dropbox.com/s/rzmhet4qf2joczz/processed_imdb_movies.csv?dl=0) 
+by yourself and import it or go the easy way and pull/run the docker image I created for this purpose:
 
-We have to download and import the processed [Movie Dataset](https://www.dropbox.com/s/rzmhet4qf2joczz/processed_imdb_movies.csv?dl=0) 
-into the database. I use DBeaver to connect to the database and use its import functionality. 
+```bash
+docker pull niklastiede/movie-db:latest
+docker run --name niklastiede/movie-db -d --restart=always -p 3310:3306 niklastiede/movie-db --secure-file-priv=tmp
+```
 
 Now we can run our backend.
 
@@ -48,7 +50,7 @@ run build:moviesGen
 npm run start
 ```
 
-I also added a `Makefile` as a little cheat sheet to refresh our memory for all the important commands 
+I also added a [Makefile](Makefile) as a little cheat sheet to refresh our memory for all the important commands 
 we use during development.
 
 ### Todo:

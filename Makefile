@@ -1,25 +1,25 @@
 # This file serves also as a cheat sheet
 
-# ------------ Set-up and run MySQL DB  -------------------------------------------------------------------------------
+# ------------ Set-up and run MySQL DB (containing movie data)  -------------------------------------------------------
 
 .PHONY: pull-db run-db stop-db start-db remove-db-container
 
-DB_IMD = imdb-db
+DB_IMG = niklastiede/movie-db
 
 pull-db: ## pull mysql image
-	docker pull mysql
+	docker pull $(DB_IMG):latest
 
-run-db: ## run container opened to port 3306
-	docker run --name $(DB_IMD) -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secret -e MYSQL_DATABASE=moviesdb -d mysql:latest
+run-db: ## run container opened to port 3310
+	docker run --name movie-db -d --restart=always -p 3310:3306 $(DB_IMG) --secure-file-priv=tmp
 
 stop-db: ## stop running container
-	docker stop $(DB_IMD)
+	docker stop $(DB_IMG)
 
 start-db: ## start container
-	docker start $(DB_IMD)
+	docker start $(DB_IMG)
 
-remove-db-container: ## removes container (instance of image)
-	docker rm -f $(DB_IMD)
+remove-db-container: ## removes container
+	docker rm $(DB_IMG)
 
 
 

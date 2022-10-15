@@ -3,7 +3,7 @@
 todo.txt
 /infrastructure/database/data-processing/.ipynb_checkpoints
 /infrastructure/database/data-processing/imdb-dataset
-/infrastructure/database/docker-image-creation/processed_imdb_movies.csv
+/infrastructure/database/docker-image-creation/processed_imdb_movies*
 /infrastructure/prometheus
 /infrastructure/elasticsearch
 
