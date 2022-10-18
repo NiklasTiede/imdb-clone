@@ -51,7 +51,7 @@ have admin permissions. Just go into [Authentication.http](src/main/resources/ap
 make a registration post request.
 
 ```shell
-POST {{protocol}}{{host}}:{{port}}/api/auth/registration
+POST http://localhost:8080/api/auth/registration
 Content-Type: application/json
 
 {
@@ -64,7 +64,7 @@ Content-Type: application/json
 Then you can login and you will get a JWT token back, which can be used to use all protected endpoints.
 
 ```shell
-POST {{protocol}}{{host}}:{{port}}/api/auth/login
+POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
