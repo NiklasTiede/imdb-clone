@@ -43,7 +43,7 @@ Content-Type: application/json
 
 
 ### delete account
-DELETE {{protocol}}{{host}}:{{port}}/api/account/underthesee
+DELETE {{protocol}}{{host}}:{{port}}/api/account/superman
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 

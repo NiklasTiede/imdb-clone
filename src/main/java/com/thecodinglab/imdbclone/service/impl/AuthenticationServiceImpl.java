@@ -13,7 +13,6 @@ import com.thecodinglab.imdbclone.service.AuthenticationService;
 import com.thecodinglab.imdbclone.service.EmailService;
 import com.thecodinglab.imdbclone.service.RoleService;
 import com.thecodinglab.imdbclone.validation.UniqueValidation;
-import java.net.MalformedURLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -27,7 +26,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -41,6 +39,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private final VerificationTokenRepository verificationTokenRepository;
   private final EmailService emailService;
   private final RoleService roleService;
+
+  @Value("${spring.mail.properties.mail.smtp.starttls.enable}")
+  private Boolean emailEnabled;
 
   @Value("${imdb-clone.backend.host}")
   private String imdbCloneBackendHost;
@@ -98,9 +99,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     Account account = new Account(username, email, password);
     List<Role> roles = roleService.giveRoleToRegisteredUser();
     account.setRoles(roles);
+    if (Boolean.FALSE.equals(emailEnabled)) {
+      account.setEnabled(true);
+    }
     Account savedAccount = accountRepository.save(account);
     LOGGER.info("Account with id [{}] was created", account.getId());
-    return new MessageResponse(createAndSendEmailConfirmationToken(savedAccount));
+    return new MessageResponse(
+        emailEnabled
+            ? createAndSendEmailConfirmationToken(savedAccount)
+            : "Email verification is turned off: no verification email was sent but account was activated!");
   }
 
   @Override
@@ -115,21 +122,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             account);
     verificationTokenRepository.save(verificationToken);
 
-    // replace static link either by injection through .properties or use servletUri
-    try {
-      String currentUrl =
-          ServletUriComponentsBuilder.fromCurrentContextPath()
-              .path("/api/auth/confirm-email-address?token={token}")
-              .buildAndExpand(token)
-              .toUri()
-              .toURL()
-              .toString();
-    } catch (MalformedURLException e) {
-      LOGGER.error("");
-      throw new RuntimeException(e);
-    }
-
-    // how to replace localhost by other addresses?
     String link = imdbCloneBackendHost + "/api/auth/confirm-email-address?token=" + token;
     String confirmationEmail = emailService.buildConfirmationEmail(account.getUsername(), link);
     emailService.sendEmail(account.getEmail(), "Confirming Email Address", confirmationEmail);
@@ -177,8 +169,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     verificationToken.setConfirmedAtInUtc(Instant.now());
     verificationTokenRepository.save(verificationToken);
 
-    // how to replace localhost by other addresses? send to frontend form! which saves token in post
-    // and adds new password to post request
     String link = imdbCloneFrontendHost + "/reset-password?token=" + token;
     String PasswordResetEmail = emailService.buildPasswordResetEmail(account.getUsername(), link);
     emailService.sendEmail(account.getEmail(), "Reset Password", PasswordResetEmail);

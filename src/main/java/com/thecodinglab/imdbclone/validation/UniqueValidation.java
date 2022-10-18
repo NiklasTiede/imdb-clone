@@ -2,7 +2,9 @@ package com.thecodinglab.imdbclone.validation;
 
 import com.thecodinglab.imdbclone.exception.BadRequestException;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
+import org.springframework.stereotype.Component;
 
+@Component
 public class UniqueValidation {
 
   private static AccountRepository accountRepository;

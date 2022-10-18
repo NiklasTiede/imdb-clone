@@ -15,17 +15,17 @@ Content-Type: application/json
 
 ### add new movie to db
 POST {{protocol}}{{host}}:{{port}}/api/movie/create-movie
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIyIiwiaWF0IjoxNjY2MDY4MTYyLCJleHAiOjE2Njg2NjAxNjJ9.S1q_wUaLn5k-fWlV2GxupXSdIWmpVVRhOqXtHyJGUwALs505fYQTkffaMc4IA6Bz8wSO8npRDrQuOID8AMl_og
 Content-Type: application/json
 
 {
-  "primaryTitle": "My Test Movivie 8",
-  "originalTitle": "My Test Movie 2",
-  "startYear": 2050,
-    "endYear": null,
+  "primaryTitle": "My Test Movie",
+  "originalTitle": "My Test Movie",
+  "startYear": 2025,
+  "endYear": null,
   "runtimeMinutes": 118,
-  "movieGenre": ["ANIMATIOd1N", "MYSTERY"],
-  "movieType": "TV_MOVE9",
+  "movieGenre": ["ANIMATION", "MYSTERY"],
+  "movieType": "TV_MOVIE",
   "adult": false
 }
 

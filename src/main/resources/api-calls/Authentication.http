@@ -24,8 +24,6 @@ POST {{protocol}}{{host}}:{{port}}/api/auth/registration
 Content-Type: application/json
 
 {
-  "firstName": "Niklas",
-  "lastName": "Tiede",
   "username": "superman",
   "password": "Str0nG!Pa55Word?",
   "email": "niklastiede2@gmail.com"
