@@ -26,6 +26,8 @@
 - Frameworks: Spring Boot / React (MaterialUI)
 - Database: MySQL
 
+App is secured with modern JWT authentication. 
+
 ## How to Run this Project from Source
 
 You can either download the processed [Movie Dataset](https://www.dropbox.com/s/rzmhet4qf2joczz/processed_imdb_movies.csv?dl=0) 
@@ -93,3 +95,4 @@ we use during development.
 - [x] Create Java Backend 
 - [ ] Create React Frontend
 - [ ] Add CI, CD and Monitoring
+- [ ] Add elasticsearch and http client, microservice architecture

@@ -1,12 +1,14 @@
 package com.thecodinglab.imdbclone;
 
 import com.thecodinglab.imdbclone.elasticsearch.EsUtils;
+import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.payload.mapper.CustomCommentMapper;
 import com.thecodinglab.imdbclone.payload.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.repository.*;
 import com.thecodinglab.imdbclone.service.CommentService;
 import com.thecodinglab.imdbclone.service.RatingService;
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -69,7 +71,14 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
   }
 
   @Override
+  @Transactional
   public void run(String... arg0) {
+
+    // lazy loading only possible by using the transactional annotation:
+    Account account = accountRepository.getAccountByUsername("superman");
+    System.out.println(account.getUsername());
+    System.out.println(account.getRatings());
+    System.out.println(account.getWatchedMovies());
 
     //    Account account = accountRepository.findById(6L).orElseThrow();
     //
