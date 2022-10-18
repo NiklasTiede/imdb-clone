@@ -31,20 +31,55 @@
 You can either download the processed [Movie Dataset](https://www.dropbox.com/s/rzmhet4qf2joczz/processed_imdb_movies.csv?dl=0) 
 by yourself and import it or go the easy way and pull/run the docker image I created for this purpose:
 
-```bash
+```shell
 docker pull niklastiede/movie-db:latest
 docker run --name niklastiede/movie-db -d --restart=always -p 3310:3306 niklastiede/movie-db --secure-file-priv=tmp
 ```
 
-Now we can run our backend.
+---
 
-```bash
+The backend is finished in the current state. YAfter rebuilding the project you can run it.
+
+```shell
 ./gradlew clean bootRun
 ```
 
-Lastly, we build up the frontend and serve it to `http://localhost:3000/`.
+Email verification is turned off by default, so you can easily register the first User which will also 
+have admin permissions. Just go into [Authentication.http](src/main/resources/api-calls/Authentication.http) and 
+make a registration post request:
 
-```bash
+```shell
+POST {{protocol}}{{host}}:{{port}}/api/auth/registration
+Content-Type: application/json
+
+{
+  "username": "OneManArmy",
+  "password": "Str0nG!Pa55Word?",
+  "email": "niklastiede2@gmail.com"
+}
+```
+
+Then you can login and you will get a JWT token back, which can be used to use all protected endpoints:
+
+```shell
+### login
+POST {{protocol}}{{host}}:{{port}}/api/auth/login
+Content-Type: application/json
+
+{
+"usernameOrEmail": "your@email.com",
+"password": "Str0nG!Pa55Word?"
+}
+```
+
+Now you can search for movies, add comments, rate them or put them on a watchlist!
+
+---
+
+Lastly, we build up the frontend and serve it to `http://localhost:3000/`. Although the frontend is 
+currently under construction :wink: 
+
+```shell
 cd ./frontend
 run build:moviesGen
 npm run start
