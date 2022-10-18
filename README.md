@@ -46,7 +46,7 @@ The backend is finished in the current state. YAfter rebuilding the project you 
 
 Email verification is turned off by default, so you can easily register the first User which will also 
 have admin permissions. Just go into [Authentication.http](src/main/resources/api-calls/Authentication.http) and 
-make a registration post request:
+make a registration post request.
 
 ```shell
 POST {{protocol}}{{host}}:{{port}}/api/auth/registration
@@ -55,14 +55,13 @@ Content-Type: application/json
 {
   "username": "OneManArmy",
   "password": "Str0nG!Pa55Word?",
-  "email": "niklastiede2@gmail.com"
+  "email": "your@email.com"
 }
 ```
 
-Then you can login and you will get a JWT token back, which can be used to use all protected endpoints:
+Then you can login and you will get a JWT token back, which can be used to use all protected endpoints.
 
 ```shell
-### login
 POST {{protocol}}{{host}}:{{port}}/api/auth/login
 Content-Type: application/json
 
