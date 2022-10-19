@@ -1,6 +1,6 @@
 
 <p align="center">
-<img  alt="imdb-clone" align="center" width="500" src="docs/imdb-clone-logo.png" />
+<img  alt="imdb-clone" align="center" width="500" src="docs/imdb-clone-logo.jpg" />
 <h3 align="center">This Project exemplifies a Real-World Java / React Web App.</h3>
 <p>
 
