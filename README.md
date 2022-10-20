@@ -95,4 +95,4 @@ we use during development.
 - [x] Create Java Backend 
 - [ ] Create React Frontend
 - [ ] Add CI, CD and Monitoring
-- [ ] Add elasticsearch and http client, microservice architecture
+- [ ] Add Elasticsearch, Photos/storage and Microservice Architecture
