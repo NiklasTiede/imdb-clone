@@ -22,5 +22,5 @@ public interface MovieService {
 
   MessageResponse deleteMovie(Long movieId, UserPrincipal currentAccount);
 
-  List<MovieRecord> searchMoviesByTitle(String title, int page, int size);
+  PagedResponse<Movie> searchMoviesByTitle(String title, int page, int size);
 }

@@ -1,6 +1,8 @@
 package com.thecodinglab.imdbclone.repository;
 
 import com.thecodinglab.imdbclone.entity.Movie;
+import com.thecodinglab.imdbclone.exception.BadRequestException;
+import com.thecodinglab.imdbclone.payload.PagedResponse;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
@@ -16,14 +18,23 @@ public class MovieSearchDao {
     this.entityManager = entityManager;
   }
 
-  public List<Movie> findByPrimaryTitleStartsWith(
+  public PagedResponse<Movie> findByPrimaryTitleStartsWith(
       String startsWithPrimaryTitle, int page, int size) {
     TypedQuery<Movie> query =
         entityManager.createQuery(
-            "SELECT m FROM Movie m WHERE m.primaryTitle LIKE :keyword", Movie.class);
+            "SELECT m FROM Movie m WHERE m.primaryTitle LIKE :keyword ORDER BY m.imdbRatingCount DESC",
+            Movie.class);
     query.setParameter("keyword", startsWithPrimaryTitle + "%");
-    query.setFirstResult(page * size);
-    query.setMaxResults(size);
-    return query.getResultList();
+    List<Movie> result = query.getResultList();
+    int totalElements = result.size();
+    int totalPages = (int) Math.ceil((float) totalElements / size);
+    if (page * size > totalElements) {
+      throw new BadRequestException("Page number must be less than [" + totalPages + "].");
+    }
+    boolean isLast = (page + 1) * size > totalElements;
+    if (size < totalElements) {
+      result = result.subList(page * size, Math.min((page + 1) * size, totalElements));
+    }
+    return new PagedResponse<>(result, page, size, totalElements, totalPages, isLast);
   }
 }

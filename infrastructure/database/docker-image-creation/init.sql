@@ -113,3 +113,5 @@ LOAD DATA INFILE '/tmp/processed_imdb_movies.csv' INTO TABLE movie_db.movie
 
 SET UNIQUE_CHECKS = 1;
 SET FOREIGN_KEY_CHECKS = 1;
+
+create index movie_idx on movie_db.movie (primary_title(100));

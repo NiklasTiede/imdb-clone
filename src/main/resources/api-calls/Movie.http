@@ -54,5 +54,5 @@ Content-Type: application/json
 
 
 ### search for movie by primaryTitle
-GET {{protocol}}{{host}}:{{port}}/api/movie/search-by-primary-title/Nightcrawler
+GET {{protocol}}{{host}}:{{port}}/api/movie/search/Nightcrawler?page=0&size=10
 Content-Type: application/json

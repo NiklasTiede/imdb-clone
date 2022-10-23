@@ -6,7 +6,6 @@ import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.MovieService;
 import com.thecodinglab.imdbclone.validation.Pagination;
-import java.util.List;
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,8 +63,8 @@ public class MovieController {
 
   // substring search does not work very well (IndexOutOfBound-Exception too short search)
   // replace later by Elasticsearch!
-  @GetMapping("/search-by-primary-title/{primaryTitle}")
-  public ResponseEntity<List<MovieRecord>> searchMoviesByTitle(
+  @GetMapping("/search/{primaryTitle}")
+  public ResponseEntity<PagedResponse<Movie>> searchMoviesByTitle(
       @PathVariable String primaryTitle,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {

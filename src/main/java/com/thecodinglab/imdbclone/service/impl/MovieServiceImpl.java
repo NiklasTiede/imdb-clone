@@ -125,12 +125,13 @@ public class MovieServiceImpl implements MovieService {
   }
 
   @Override
-  public List<MovieRecord> searchMoviesByTitle(String title, int page, int size) {
-    List<Movie> movies = movieSearchDao.findByPrimaryTitleStartsWith(title, page, size);
-    if (movies.isEmpty()) {
+  public PagedResponse<Movie> searchMoviesByTitle(String title, int page, int size) {
+    Pagination.validatePageNumberAndSize(page, size);
+    PagedResponse<Movie> movies = movieSearchDao.findByPrimaryTitleStartsWith(title, page, size);
+    if (movies.getContent().isEmpty()) {
       throw new NotFoundException("No similar movie with title [" + title + "] found in database.");
     }
-    LOGGER.info("[{}] movies were retrieved from database.", movies.size());
-    return movieMapper.entityToDTO(movies);
+    LOGGER.info("[{}] movies were retrieved from database.", movies.getContent().size());
+    return movies;
   }
 }
