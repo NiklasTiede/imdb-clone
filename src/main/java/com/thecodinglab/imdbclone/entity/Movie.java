@@ -24,7 +24,9 @@ public class Movie extends DateAudit {
   @SuppressWarnings("JpaAttributeTypeInspection")
   private Set<MovieGenreEnum> movieGenre;
 
+  @Enumerated(EnumType.ORDINAL)
   private MovieTypeEnum movieType;
+
   private Float imdbRating;
   private Integer imdbRatingCount;
   private Boolean adult;
