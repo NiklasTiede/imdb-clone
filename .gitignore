@@ -6,6 +6,7 @@ todo.txt
 /infrastructure/database/docker-image-creation/processed_imdb_movies*
 /infrastructure/prometheus
 /infrastructure/elasticsearch
+/infrastructure/redis
 
 # generated typescript clients
 /frontend/src/client/**/generator-output/

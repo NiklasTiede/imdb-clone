@@ -32,7 +32,7 @@ spotless {
 	}
 }
 
-def springBootVersion = '2.7.4'
+def springBootVersion = '2.7.5'
 
 dependencies {
 	// starters
@@ -43,8 +43,6 @@ dependencies {
 
 	// MySQL Database
 	implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.29'
-	// safely evolve DB schema - https://www.youtube.com/watch?v=xjXHecGOy84 - https://www.baeldung.com/liquibase-refactor-schema-of-java-app
-	// implementation group: 'org.liquibase', name: 'liquibase-core', version: '4.12.0'
 
 	// documentation - swagger ui
 	 implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.11'
@@ -67,7 +65,6 @@ dependencies {
 	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
 
 	implementation group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.5.2.RELEASE'
-	implementation group: 'org.springframework.security', name: 'spring-security-jwt', version: '1.1.1.RELEASE'
 
 	// Email
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: "$springBootVersion"
@@ -77,7 +74,7 @@ dependencies {
 
 	// ES client: index, query, sort, aggregate - https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/searching.html
 	implementation group: 'co.elastic.clients', name: 'elasticsearch-java', version: '8.2.1'
-	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4'
+	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.0-rc2'
 	implementation group: 'jakarta.json', name: 'jakarta.json-api', version: '2.1.1'
 
 	// simpler ES alternative: MeiliSearch.
