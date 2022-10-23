@@ -1,7 +1,6 @@
 package com.thecodinglab.imdbclone;
 
 import com.thecodinglab.imdbclone.elasticsearch.EsUtils;
-import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.payload.mapper.CustomCommentMapper;
 import com.thecodinglab.imdbclone.payload.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.repository.*;
@@ -75,10 +74,10 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
   public void run(String... arg0) {
 
     // lazy loading only possible by using the transactional annotation:
-    Account account = accountRepository.getAccountByUsername("superman");
-    System.out.println(account.getUsername());
-    System.out.println(account.getRatings());
-    System.out.println(account.getWatchedMovies());
+    //    Account account = accountRepository.getAccountByUsername("superman");
+    //    System.out.println(account.getUsername());
+    //    System.out.println(account.getRatings());
+    //    System.out.println(account.getWatchedMovies());
 
     //    Account account = accountRepository.findById(6L).orElseThrow();
     //
