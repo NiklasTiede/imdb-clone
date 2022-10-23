@@ -56,7 +56,7 @@ class Role {
   - name \t RoleNameEnum
 }
 
-class Account_Roles {
+class AccountRoles {
   - accountId \t\t long
   - roleId \t\t\t long
 }

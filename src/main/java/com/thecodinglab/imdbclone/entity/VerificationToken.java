@@ -4,8 +4,6 @@ import com.thecodinglab.imdbclone.enums.VerificationTypeEnum;
 import java.time.Instant;
 import javax.persistence.*;
 
-// create job which cleans all confirmation tokens which are older than 4 weeks
-// this is only to show the user that the token has been expired
 @Entity
 public class VerificationToken {
 
