@@ -1,5 +1,5 @@
 import { moviesApi } from '../client/movies/MoviesApi';
-import {MovieDto} from '../client/movies/generator-output/';
+import {MovieRecord} from '../client/movies/generator-output/';
 
 import {createModel} from '@rematch/core';
 import type { RootModel } from './models';
@@ -23,7 +23,7 @@ export const movies = createModel<RootModel>()({
       isLoading: false,
       loaded: true,
     }),
-    setMovie: (state, payload: MovieDto) => reduce(state, {
+    setMovie: (state, payload: MovieRecord) => reduce(state, {
       movie: payload
     }),
     movieErrorOccurred: (state) => reduce(state, {
@@ -32,7 +32,8 @@ export const movies = createModel<RootModel>()({
   },
   effects: (dispatch) => ({
     async loadMovieById(movieId) {
-      moviesApi.getMovieById(movieId)
+        dispatch.movies.startLoading();
+        moviesApi.getMovieById(movieId)
                .then(
                  (response: any) => {
                    if (response.status === 200 && response.data !== null) {

@@ -82,8 +82,9 @@ currently under construction :wink:
 
 ```shell
 cd ./frontend
-run build:moviesGen
-npm run start
+npm install
+npm run build:moviesGen
+npm start
 ```
 
 I also added a [Makefile](Makefile) as a little cheat sheet to refresh our memory for all the important commands 
