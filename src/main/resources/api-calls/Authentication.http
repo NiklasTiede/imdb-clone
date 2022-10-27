@@ -14,7 +14,7 @@ POST {{protocol}}{{host}}:{{port}}/api/auth/login
 Content-Type: application/json
 
 {
-  "usernameOrEmail": "onemanarmy",
+  "usernameOrEmail": "superman",
   "password": "Str0nG!Pa55Word?"
 }
 

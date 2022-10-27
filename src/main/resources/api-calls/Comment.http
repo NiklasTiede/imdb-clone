@@ -12,7 +12,7 @@ Content-Type: application/json
 
 ### comment a movie
 POST {{protocol}}{{host}}:{{port}}/api/comment/2872718
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNjY2ODcxNDkzLCJleHAiOjE2Njk0NjM0OTN9.uDiMKr1LvPiM5cg942jzk2REmHYgen8LEK-xpZQoqPQp9wJgyY_vBF0YG_kYGuT00p68dfLvVEkciivDZgGJIw
 Content-Type: application/json
 
 {
@@ -21,7 +21,7 @@ Content-Type: application/json
 
 
 ### update existing comment
-PUT {{protocol}}{{host}}:{{port}}/api/comment/3
+PUT {{protocol}}{{host}}:{{port}}/api/comment/1
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
 Content-Type: application/json
 

@@ -6,22 +6,22 @@ Content-Type: application/json
 
 
 ### get account-profile
-GET {{protocol}}{{host}}:{{port}}/api/account/onemanarmy/profile
+GET {{protocol}}{{host}}:{{port}}/api/account/superman/profile
 Content-Type: application/json
 
 
 ### get comments of user
-GET {{protocol}}{{host}}:{{port}}/api/account/onemanarmy/comments
+GET {{protocol}}{{host}}:{{port}}/api/account/superman/comments?page=0&size=10
 Content-Type: application/json
 
 
 ### get watchlist of user
-GET {{protocol}}{{host}}:{{port}}/api/account/onemanarmy/watchlist
+GET {{protocol}}{{host}}:{{port}}/api/account/superman/watchlist
 Content-Type: application/json
 
 
 ### get ratings of user
-GET {{protocol}}{{host}}:{{port}}/api/account/onemanarmy/ratings
+GET {{protocol}}{{host}}:{{port}}/api/account/superman/ratings
 Content-Type: application/json
 
 

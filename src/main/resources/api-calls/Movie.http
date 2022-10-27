@@ -1,6 +1,6 @@
 
 ### get 1 movie by id
-GET {{protocol}}{{host}}:{{port}}/api/movie/1457767
+GET {{protocol}}{{host}}:{{port}}/api/movie/2872718
 Content-Type: application/json
 
 
