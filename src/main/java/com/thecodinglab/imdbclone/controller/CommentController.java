@@ -5,6 +5,7 @@ import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.CommentService;
 import com.thecodinglab.imdbclone.validation.Pagination;
+import io.swagger.v3.oas.annotations.Parameter;
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +50,7 @@ public class CommentController {
   public ResponseEntity<CommentRecord> updateComment(
       @PathVariable Long commentId,
       @Valid @RequestBody UpdateCommentRequest request,
-      @CurrentUser UserPrincipal currentAccount) {
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         commentService.updateComment(commentId, request, currentAccount), HttpStatus.OK);
   }
@@ -57,7 +58,8 @@ public class CommentController {
   @DeleteMapping("/{commentId}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteComment(
-      @PathVariable Long commentId, @CurrentUser UserPrincipal currentAccount) {
+      @PathVariable Long commentId,
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         commentService.deleteComment(commentId, currentAccount), HttpStatus.OK);
   }

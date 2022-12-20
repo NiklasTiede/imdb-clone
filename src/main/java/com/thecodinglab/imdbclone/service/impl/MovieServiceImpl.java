@@ -1,7 +1,6 @@
 package com.thecodinglab.imdbclone.service.impl;
 
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.exception.NotFoundException;
 import com.thecodinglab.imdbclone.exception.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.MovieRecord;
@@ -51,9 +50,6 @@ public class MovieServiceImpl implements MovieService {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size);
     Page<Movie> movies = movieRepository.findByIds(movieIds, pageable);
-    if (movies.getContent().isEmpty()) {
-      throw new NotFoundException("Movies with Ids [" + movieIds + "] not found in database.");
-    }
     LOGGER.info("[{}] movies were retrieved from database.", movies.getContent().size());
     Page<MovieRecord> movieRecordPage = movies.map(movieMapper::entityToDTO);
     return new PagedResponse<>(
@@ -128,9 +124,6 @@ public class MovieServiceImpl implements MovieService {
   public PagedResponse<Movie> searchMoviesByTitle(String title, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     PagedResponse<Movie> movies = movieSearchDao.findByPrimaryTitleStartsWith(title, page, size);
-    if (movies.getContent().isEmpty()) {
-      throw new NotFoundException("No similar movie with title [" + title + "] found in database.");
-    }
     LOGGER.info("[{}] movies were retrieved from database.", movies.getContent().size());
     return movies;
   }

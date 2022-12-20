@@ -6,6 +6,7 @@ import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.MovieService;
 import com.thecodinglab.imdbclone.validation.Pagination;
+import io.swagger.v3.oas.annotations.Parameter;
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,8 @@ public class MovieController {
   @PostMapping("/create-movie")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Movie> createMovie(
-      @Valid @RequestBody MovieRequest request, @CurrentUser UserPrincipal currentAccount) {
+      @Valid @RequestBody MovieRequest request,
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         movieService.createMovie(request, currentAccount), HttpStatus.CREATED);
   }
@@ -49,7 +51,7 @@ public class MovieController {
   public ResponseEntity<Movie> updateMovie(
       @PathVariable Long movieId,
       @Valid @RequestBody MovieRequest request,
-      @CurrentUser UserPrincipal currentAccount) {
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         movieService.updateMovie(movieId, request, currentAccount), HttpStatus.CREATED);
   }
@@ -57,7 +59,8 @@ public class MovieController {
   @DeleteMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteMovieById(
-      @PathVariable Long movieId, @CurrentUser UserPrincipal currentAccount) {
+      @PathVariable Long movieId,
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(movieService.deleteMovie(movieId, currentAccount), HttpStatus.OK);
   }
 

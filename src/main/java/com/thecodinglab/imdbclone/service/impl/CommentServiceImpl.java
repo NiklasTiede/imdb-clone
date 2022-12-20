@@ -3,7 +3,6 @@ package com.thecodinglab.imdbclone.service.impl;
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Comment;
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.exception.NotFoundException;
 import com.thecodinglab.imdbclone.exception.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.payload.mapper.CustomCommentMapper;
@@ -58,10 +57,6 @@ public class CommentServiceImpl implements CommentService {
     Movie movie = movieRepository.getMovieById(movieId);
     Page<Comment> comments =
         commentRepository.findCommentsByMovieOrderByCreatedAtInUtc(movie, pageable);
-    if (comments.getContent().isEmpty()) {
-      throw new NotFoundException(
-          "No comments of movie with id [" + movie.getId() + "] found in database.");
-    }
     LOGGER.info("[{}] comments were retrieved from database.", comments.getContent().size());
     Page<CommentRecord> commentRecordPage = comments.map(commentMapper::entityToDTO);
     return new PagedResponse<>(
@@ -91,10 +86,6 @@ public class CommentServiceImpl implements CommentService {
     Account account = accountRepository.getAccountByUsername(username);
     Page<Comment> comments =
         commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);
-    if (comments.getContent().isEmpty()) {
-      throw new NotFoundException(
-          "Comments of account with id [" + account.getId() + "] not found in database.");
-    }
     LOGGER.info("[{}] comments were retrieved from database.", comments.getContent().size());
     Page<CommentRecord> commentRecordPage = comments.map(commentMapper::entityToDTO);
     return new PagedResponse<>(

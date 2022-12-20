@@ -6,6 +6,7 @@ import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.*;
 import com.thecodinglab.imdbclone.validation.Pagination;
+import io.swagger.v3.oas.annotations.Parameter;
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +41,7 @@ public class AccountController {
   @GetMapping("/me")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<AccountSummaryResponse> getCurrentAccount(
-      @CurrentUser UserPrincipal currentUser) {
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(accountService.getCurrentAccount(currentUser), HttpStatus.OK);
   }
 
@@ -80,7 +81,8 @@ public class AccountController {
   @PostMapping("/add-account")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Account> createAccount(
-      @Valid @RequestBody RegistrationRequest request, @CurrentUser UserPrincipal currentUser) {
+      @Valid @RequestBody RegistrationRequest request,
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
         accountService.createAccount(request, currentUser), HttpStatus.CREATED);
   }
@@ -90,7 +92,7 @@ public class AccountController {
   public ResponseEntity<Account> updateAccount(
       @PathVariable String username,
       @Valid @RequestBody AccountRecord accountRecord,
-      @CurrentUser UserPrincipal currentUser) {
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
         accountService.updateAccount(username, accountRecord, currentUser), HttpStatus.OK);
   }
@@ -98,21 +100,24 @@ public class AccountController {
   @DeleteMapping("/{username}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteAccount(
-      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+      @PathVariable String username,
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(accountService.deleteAccount(username, currentUser), HttpStatus.OK);
   }
 
   @PutMapping("/{username}/give-admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> giveAdminRole(
-      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+      @PathVariable String username,
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(roleService.giveAdminRole(username, currentUser), HttpStatus.OK);
   }
 
   @PutMapping("/{username}/take-admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> takeAdminRole(
-      @PathVariable String username, @CurrentUser UserPrincipal currentUser) {
+      @PathVariable String username,
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(roleService.removeAdminRole(username, currentUser), HttpStatus.OK);
   }
 }

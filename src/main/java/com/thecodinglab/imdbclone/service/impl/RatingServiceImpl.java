@@ -69,10 +69,6 @@ public class RatingServiceImpl implements RatingService {
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Account account = accountRepository.getAccountByUsername(username);
     Page<Rating> ratings = ratingRepository.findRatingsByAccount(account, pageable);
-    if (ratings.getContent().isEmpty()) {
-      throw new NotFoundException(
-          "ratings of account with id [" + account.getId() + "] not found in database.");
-    }
     LOGGER.info(
         "[{}] ratings from account with id [{}] were retrieved.",
         ratings.getContent().size(),

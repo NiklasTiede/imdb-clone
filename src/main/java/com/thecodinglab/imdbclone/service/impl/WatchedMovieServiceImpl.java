@@ -69,10 +69,6 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
             account.getId(), pageable);
     Page<WatchedMovieRecord> watchedMovieRecordPage =
         watchedMovies.map(watchedMovieMapper::entityToDTO);
-    if (watchedMovies.getContent().isEmpty()) {
-      throw new NotFoundException(
-          "WatchedMovies of account with id [" + account.getId() + "] not found in database.");
-    }
     LOGGER.info(
         "[{}] watchedMovies from account with id [{}] were retrieved.",
         watchedMovies.getContent().size(),
