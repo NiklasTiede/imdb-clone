@@ -1,3 +1,9 @@
 {
-  "properties": []
+  "properties": [
+    {
+      "name": "jwt.refresh-token.secret",
+      "type": "java.lang.String",
+      "description": "Description for jwt.refresh-token.secret."
+    }
+  ]
 }

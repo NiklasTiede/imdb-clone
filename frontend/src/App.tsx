@@ -1,47 +1,48 @@
-import { Link } from "react-router-dom";
-import {makeStyles} from "@material-ui/core";
-import { Provider } from 'react-redux';
-import {store} from './redux/store';
-import React  from 'react';
+import {Route, Routes} from "react-router-dom";
+import MyAppBar from "./components/AppBarTop";
+import Home from "./components/Home";
+import Login from "./components/authentication/Login";
+import Logout from "./components/authentication/Logout";
+import Registration from "./components/authentication/Registration";
+import YourRatings from "./components/profile/YourRatings";
+import YourWatchlist from "./components/profile/YourWatchlist";
+import AccountSettings from "./components/profile/AccountSettings";
+import MovieSearch from "./components/movies/MovieSearch";
+import {useMode, ColorModeContext} from "./theme";
+import {CssBaseline, ThemeProvider} from "@mui/material";
+import React from "react";
+import EditMovie from "./components/movies/EditMovie";
+import Messages from "./components/profile/Messages";
 
-const useStyles = makeStyles({
-    title: {
-        fontFamily: "ubuntu",
-        fontSize: "26px",
-    },
-    home: {
-        margin: '30px',
-        backgroundImage: 'linear-gradient(90deg, #14ebff, #11fab4)'
-    },
-    navbar: {
-        borderBottom: "solid 1px",
-        paddingBottom: "1rem",
-        fontFamily: "ubuntu"
-    }
-})
 
-export default function App() {
-    const classes = useStyles()
+function App() {
+    const [theme, colorMode] = useMode();
 
-  return (
-    <Provider store={store}>
-      <div className={classes.home}>
-          <h1  className={classes.title}>IMDB Clone</h1>
-          <nav className={classes.navbar}>
-              <Link to="/registration">Registration</Link> |{" "}
-              <Link to="/login">Login</Link> |{" "}
-              <Link to="/userprofile">User Profile</Link> |{" "}
-              <Link to="/moviesearch">Movie Search</Link> |{" "}
-              <Link to="/navbar">Navbar</Link> |{" "}
-              <Link to="/movielist">Movie List</Link> |{" "}
-              <Link to="/counter">Counter</Link> |{" "}
-              <Link to="/counters">Counters</Link> |{" "}
-              <Link to="/greetings">Greetings</Link> |{" "}
-              <Link to="/notes">Notes</Link> |{" "}
-              <Link to="/moviedetails">Movie Details</Link> |{" "}
-              <Link to="/searchbarlist">SearchBarList</Link>
-          </nav>
-      </div>
-    </Provider>
-  );
+    return (
+        <ColorModeContext.Provider value={colorMode}>
+            <ThemeProvider theme={theme}>
+                <CssBaseline/>
+                <div className="App">
+                    <MyAppBar/>
+                    <Routes>
+                        <Route path="/home" element={<Home/>}/>
+
+                        <Route path="/login" element={<Login/>}/>
+                        <Route path="/logout" element={<Logout/>}/>
+                        <Route path="/registration" element={<Registration/>}/>
+
+                        <Route path="/your-ratings" element={<YourRatings/>}/>
+                        <Route path="/your-watchlist" element={<YourWatchlist/>}/>
+                        <Route path="/account-settings" element={<AccountSettings/>}/>
+                        <Route path="/your-messages" element={<Messages/>}/>
+
+                        <Route path="/movie-search" element={<MovieSearch/>}/>
+                        <Route path="/editing" element={<EditMovie/>}/>
+                    </Routes>
+                </div>
+            </ThemeProvider>
+        </ColorModeContext.Provider>
+    );
 }
+
+export default App;

@@ -1,6 +1,0 @@
-@font-face {
-    font-family: 'Ubuntu';
-    src: local('fonts'), url(./fonts/Ubuntu-Regular.ttf) format('ttf');
-    /* other formats include: 'woff2', 'truetype, 'opentype',
-                              'embedded-opentype', and 'svg' */
-}
