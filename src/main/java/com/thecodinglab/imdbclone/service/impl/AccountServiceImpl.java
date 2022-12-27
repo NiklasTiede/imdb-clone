@@ -111,11 +111,12 @@ public class AccountServiceImpl implements AccountService {
     Account account = accountRepository.getAccountByUsername(username);
     if (Objects.equals(account.getId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
-      account.setUsername(accountRecord.username().toLowerCase());
-      account.setEmail(accountRecord.email().toLowerCase());
-      account.setPassword(passwordEncoder.encode(accountRecord.password()));
-      account.setFirstName(accountRecord.firstName().toLowerCase());
-      account.setLastName(accountRecord.lastName().toLowerCase());
+      String firstName =
+          accountRecord.firstName() != null ? accountRecord.firstName().toLowerCase() : null;
+      account.setFirstName(firstName);
+      String lastName =
+          accountRecord.lastName() != null ? accountRecord.lastName().toLowerCase() : null;
+      account.setLastName(lastName);
       account.setPhone(accountRecord.phone());
       account.setBirthday(accountRecord.birthday());
       account.setBio(accountRecord.bio());

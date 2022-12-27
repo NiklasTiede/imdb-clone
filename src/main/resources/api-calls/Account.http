@@ -1,8 +1,7 @@
 
 ### get current user
 GET {{protocol}}{{host}}:{{port}}/api/account/me
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNjcxNDAxNTEyLCJleHAiOjE2NzM5OTM1MTJ9.9qKXGvZKW2MBhGI8osFKDKrqcb-mlYmsz8pHtYjCCafBZp4cuX5Tsuww30KOQKJOFa5Zo7Tfrk7CX7T8Ex5wLQ
-#Cookie: token=eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzE0ODUwMTAsImV4cCI6MTY3NDA3NzAxMH0.cqszskr6kcLpVcn_Ov3zQA7zqv-Wk0WhPf_GVgdo8wc2ro98xTgKCTfP0AytEkVIzB62JKw33wdi3ukukFp1rw; Max-Age=604800; HttpOnly; SameSite=strict
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzIwOTM0NDUsImV4cCI6MTY3NDY4NTQ0NX0.zsJCJZcMAP87dHfOLXHmjJs7w7TRs7Ldemv4EWZseM6Ki9oJV5ukGEJJweVPjxc0fcdP4Yx0YrDrsMKBox5Zyg
 
 
 ### get account-profile
@@ -26,14 +25,11 @@ Content-Type: application/json
 
 
 ### update account data
-PUT {{protocol}}{{host}}:{{port}}/api/account/bluu
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+PUT {{protocol}}{{host}}:{{port}}/api/account/superman
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzIwOTM0NDUsImV4cCI6MTY3NDY4NTQ0NX0.zsJCJZcMAP87dHfOLXHmjJs7w7TRs7Ldemv4EWZseM6Ki9oJV5ukGEJJweVPjxc0fcdP4Yx0YrDrsMKBox5Zyg
 Content-Type: application/json
 
 {
-  "username": "UnderTheSee",
-  "password": "3v3nStr0ngEr!",
-  "email": "inventedemail@magicmail.com",
   "firstName": "Kermit",
   "lastName": "The Frog",
   "phone": "0152/8273654",
