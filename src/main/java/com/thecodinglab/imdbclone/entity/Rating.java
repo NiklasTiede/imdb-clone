@@ -2,8 +2,8 @@ package com.thecodinglab.imdbclone.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
-import javax.persistence.*;
 
 @Entity
 public class Rating extends DateAudit {

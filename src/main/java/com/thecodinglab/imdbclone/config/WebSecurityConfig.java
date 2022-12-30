@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,8 +17,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableWebSecurity
-@EnableGlobalMethodSecurity(securedEnabled = true, jsr250Enabled = true, prePostEnabled = true)
+@EnableWebSecurity()
+@EnableMethodSecurity(jsr250Enabled = true, securedEnabled = true)
 public class WebSecurityConfig {
 
   private final JwtAuthenticationEntryPoint unauthorizedHandler;
@@ -43,14 +43,14 @@ public class WebSecurityConfig {
         .sessionManagement()
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
-        .authorizeRequests()
-        .antMatchers("/v3/**")
+        .authorizeHttpRequests()
+        .requestMatchers(HttpMethod.GET, "/**")
         .permitAll()
-        .antMatchers("/api/auth/**")
+        .requestMatchers("/api/auth/**")
         .permitAll()
-        .antMatchers(HttpMethod.GET, "/api/movie/**", "/api/comment/**", "/api/account/**")
+        .requestMatchers(HttpMethod.GET, "/api/movie/**", "/api/comment/**", "/api/account/**")
         .permitAll()
-        .antMatchers(HttpMethod.POST, "/api/movie/get-movies")
+        .requestMatchers(HttpMethod.POST, "/api/movie/get-movies")
         .permitAll()
         .anyRequest()
         .authenticated();

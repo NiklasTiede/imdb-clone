@@ -1,7 +1,7 @@
 
 ### get current user
 GET {{protocol}}{{host}}:{{port}}/api/account/me
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzIwOTM0NDUsImV4cCI6MTY3NDY4NTQ0NX0.zsJCJZcMAP87dHfOLXHmjJs7w7TRs7Ldemv4EWZseM6Ki9oJV5ukGEJJweVPjxc0fcdP4Yx0YrDrsMKBox5Zyg
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzI0MzkxMzIsImV4cCI6MTY3NTAzMTEzMn0.yL5gA3RGiCovYS-Zq4w9lA2CpIzU_o-zjxZqcBU4IY-fhhB3bK6E7eHVEWde06zNqbyLn7QDMIEv8XFxVOqaRA
 
 
 ### get account-profile

@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.validation;
 
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 
 public class ValidPasswordImpl implements ConstraintValidator<ValidPassword, String> {
 

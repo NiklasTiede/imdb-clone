@@ -1,8 +1,8 @@
 package com.thecodinglab.imdbclone.entity;
 
 import com.thecodinglab.imdbclone.enums.VerificationTypeEnum;
+import jakarta.persistence.*;
 import java.time.Instant;
-import javax.persistence.*;
 
 @Entity
 public class VerificationToken {

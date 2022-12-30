@@ -1,10 +1,10 @@
 package com.thecodinglab.imdbclone.enums.attributeconverter;
 
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
+import jakarta.persistence.Converter;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.persistence.Converter;
 
 @Converter(autoApply = true)
 public class MovieGenreConverterImpl implements MovieGenreConverter<Set<MovieGenreEnum>, Long> {

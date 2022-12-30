@@ -1,8 +1,8 @@
 package com.thecodinglab.imdbclone.validation;
 
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 import java.lang.annotation.*;
-import javax.validation.Constraint;
-import javax.validation.Payload;
 
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)

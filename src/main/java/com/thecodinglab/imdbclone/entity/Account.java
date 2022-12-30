@@ -2,11 +2,11 @@ package com.thecodinglab.imdbclone.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(

@@ -1,12 +1,12 @@
 package com.thecodinglab.imdbclone.enums.attributeconverter;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 
 // could be used if its more useful to convert startYear/endYear integers into dates!
 // add @Convert(converter = StartYearConverter.class)

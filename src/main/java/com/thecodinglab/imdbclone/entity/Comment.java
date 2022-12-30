@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.entity;
 
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 public class Comment extends DateAudit {

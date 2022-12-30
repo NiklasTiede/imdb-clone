@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.entity;
 
 import com.thecodinglab.imdbclone.enums.RoleNameEnum;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 public class Role {

@@ -16,18 +16,20 @@ public class CustomHttpClient {
 
   public static <T> T makeRequest(HttpMethod requestType) {
 
-    switch (requestType) {
-      case GET:
-        return null;
-      case POST:
-        return null;
-      case PUT:
-        return null;
-      case DELETE:
-        return null;
-      default:
-        return null;
-    }
+    return null;
+
+    //    switch (requestType) {
+    //      case GET:
+    //        return null;
+    //      case POST:
+    //        return null;
+    //      case PUT:
+    //        return null;
+    //      case DELETE:
+    //        return null;
+    //      default:
+    //        return null;
+    //    }
   }
   // GET request, method overloading for multiple path vars / request porams ?
   public static <T> T makeRequest(

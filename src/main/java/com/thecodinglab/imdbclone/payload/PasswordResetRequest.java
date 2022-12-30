@@ -2,7 +2,8 @@ package com.thecodinglab.imdbclone.payload;
 
 import com.thecodinglab.imdbclone.validation.ValidPassword;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
 
 public record PasswordResetRequest(
 

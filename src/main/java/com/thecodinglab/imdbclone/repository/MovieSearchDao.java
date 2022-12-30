@@ -3,9 +3,9 @@ package com.thecodinglab.imdbclone.repository;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.exception.BadRequestException;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import java.util.List;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 
 /** LIKE queries with 9 mio Movie-table are not working with JpaRepository */

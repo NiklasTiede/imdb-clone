@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.entity;
 
+import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
-import javax.persistence.Embeddable;
-import javax.validation.constraints.NotNull;
 import org.hibernate.Hibernate;
 
 @Embeddable

@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.entity.audit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 import java.time.Instant;
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @MappedSuperclass

@@ -2,7 +2,7 @@ package com.thecodinglab.imdbclone.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.entity.audit.CreatedAtAudit;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 public class WatchedMovie extends CreatedAtAudit {

@@ -2,8 +2,9 @@ package com.thecodinglab.imdbclone.payload;
 
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
+import jakarta.validation.constraints.*;
 
-import javax.validation.constraints.*;
+
 import java.util.Set;
 
 public record MovieRequest(

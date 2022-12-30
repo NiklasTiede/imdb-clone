@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.enums.attributeconverter;
 
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 import java.util.Set;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
 
 @Converter
 public interface MovieGenreConverter<S extends Set<MovieGenreEnum>, L extends Number>

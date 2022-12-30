@@ -272,12 +272,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                request:
-                  $ref: '#/components/schemas/CreateCommentRequest'
-                currentAccount:
-                  $ref: '#/components/schemas/UserPrincipal'
+              $ref: '#/components/schemas/CreateCommentRequest'
         required: true
       responses:
         "200":
@@ -664,8 +659,6 @@ paths:
             '*/*':
               schema:
                 $ref: '#/components/schemas/AccountSummaryResponse'
-      security:
-        - bearerAuth: []
   /api/watched-movie/{movieId}:
     delete:
       tags:
@@ -884,10 +877,6 @@ components:
           type: integer
           format: int64
     AccountRecord:
-      required:
-        - email
-        - password
-        - username
       type: object
       properties:
         username:
@@ -1077,35 +1066,6 @@ components:
           maxLength: 1000
           minLength: 0
           type: string
-    GrantedAuthority:
-      type: object
-      properties:
-        authority:
-          type: string
-    UserPrincipal:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        firstName:
-          type: string
-        lastName:
-          type: string
-        username:
-          type: string
-        enabled:
-          type: boolean
-        authorities:
-          type: array
-          items:
-            $ref: '#/components/schemas/GrantedAuthority'
-        accountNonExpired:
-          type: boolean
-        accountNonLocked:
-          type: boolean
-        credentialsNonExpired:
-          type: boolean
     PasswordResetRequest:
       type: object
       properties:

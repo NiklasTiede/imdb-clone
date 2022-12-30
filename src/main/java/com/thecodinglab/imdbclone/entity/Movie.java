@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.*;
-import javax.persistence.*;
 
 @Entity
 public class Movie extends DateAudit {
@@ -20,8 +20,6 @@ public class Movie extends DateAudit {
   private Integer startYear;
   private Integer endYear;
   private Integer runtimeMinutes;
-
-  @SuppressWarnings("JpaAttributeTypeInspection")
   private Set<MovieGenreEnum> movieGenre;
 
   @Enumerated(EnumType.ORDINAL)

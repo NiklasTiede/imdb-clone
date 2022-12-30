@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.payload;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
 
 public record CreateCommentRequest(
 

@@ -6,7 +6,7 @@ import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.CommentService;
 import com.thecodinglab.imdbclone.validation.Pagination;
 import io.swagger.v3.oas.annotations.Parameter;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

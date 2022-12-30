@@ -1,5 +1,5 @@
 plugins {
-	id 'org.springframework.boot' version '2.7.4'
+	id 'org.springframework.boot' version '3.0.1'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
 	id 'com.diffplug.spotless' version '6.7.2'
@@ -32,8 +32,7 @@ spotless {
 	}
 }
 
-// upgradeable to 3.0.1
-def springBootVersion = '2.7.7'
+def springBootVersion = '3.0.1'
 
 dependencies {
 	// starters
@@ -46,7 +45,7 @@ dependencies {
 	implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.31'
 
 	// documentation - swagger ui
-	 implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.14'
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.0.2'
 
 	// serialization / deserialization
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.14.1'
@@ -54,7 +53,6 @@ dependencies {
 
 	// validation
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: "$springBootVersion"
-	implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
 
 	// mapstruct mapping classes with many fields
 	implementation group: 'org.mapstruct', name: 'mapstruct', version: '1.5.3.Final'
