@@ -40,7 +40,7 @@ docker run --name niklastiede/movie-db -d --restart=always -p 3310:3306 niklasti
 
 ---
 
-The backend is finished in the current state. YAfter rebuilding the project you can run it.
+The backend is almost finished in the current state. After rebuilding the project you can run it.
 
 ```shell
 ./gradlew clean bootRun
