@@ -23,7 +23,7 @@
 
 ## Techstack
 - Languages: Java JDK17 / Typescript
-- Frameworks: Spring Boot / React (MaterialUI)
+- Frameworks: Spring Boot v3 / React (MaterialUI)
 - Database: MySQL
 
 App is secured with modern JWT authentication. 
