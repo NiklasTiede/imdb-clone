@@ -1,4 +1,3 @@
-// @filename: models.ts
 import { Models } from "@rematch/core"
 import { movies } from "./model/movies"
 import {authentication} from "./model/authentication";
@@ -14,5 +13,4 @@ export const models: RootModel = {
   movies,
   authentication,
   account,
-
 }
