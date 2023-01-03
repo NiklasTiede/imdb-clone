@@ -11,12 +11,6 @@ const Logout = () => {
     const navigateTo = useNavigate();
     const dispatch = useDispatch<Dispatch>()
 
-    console.log("The logout component was just  rendered!");
-
-    window.localStorage.removeItem('jwtToken');
-    window.localStorage.removeItem('rolesFromJwt');
-    window.localStorage.removeItem('jwtExpiresAt');
-
     return (
         <div>
             You're now logged out!

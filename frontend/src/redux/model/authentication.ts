@@ -15,15 +15,24 @@ interface MyJwtPayload extends JwtPayload {
     roles: string;
 }
 
+export type State = {
+    showCaseValue: Array<String>,
+    isLoading: boolean,
+    loaded: boolean,
+    isEmailAvailable: boolean,
+    isUsernameAvailable: boolean,
+    isAuthenticated: boolean,
+}
 
 export const authentication = createModel<RootModel>()({
     state: {
+        showCaseValue: [],
         isLoading: false,
         loaded: false,
         isEmailAvailable: false,
         isUsernameAvailable: false,
-        authStateChanged: null,
-    },
+        isAuthenticated: false,
+    } as State,
     reducers: {
         startLoading: (state) => reduce(state, {
             isLoading: true,
@@ -38,8 +47,8 @@ export const authentication = createModel<RootModel>()({
         isUsernameAvailable: (state, payload: boolean) => reduce(state, {
             isUsernameAvailable: payload
         }),
-        setAuthStateChanged: (state, payload: boolean) => reduce(state, {
-            authStateChanged: payload
+        setIsAuthenticated: (state, payload: boolean) => reduce(state, {
+            isAuthenticated: payload
         }),
     },
     effects: (dispatch) => ({
@@ -88,14 +97,13 @@ export const authentication = createModel<RootModel>()({
                 .then(
                     (response: AxiosResponse<LoginResponse>) => {
                         if (response.status === 200 && response.data !== null && response.data.accessToken !== null && response.data.accessToken !== undefined) {
-                            console.log("data are gotten");
-                            dispatch.authentication.setAuthStateChanged(true);
                             window.localStorage.setItem('jwtToken', response.data.accessToken);
                             let decoded = jwt_decode<MyJwtPayload>(response.data.accessToken);
                             window.localStorage.setItem('rolesFromJwt', decoded.roles);
                             if (decoded.exp !== undefined) {
                                 window.localStorage.setItem('jwtExpiresAt', decoded.exp.toString());
                             }
+                            dispatch.authentication.setIsAuthenticated(true);
                         }
                         if (response.status === 401) {
                             console.log("401: Bad Credentials");

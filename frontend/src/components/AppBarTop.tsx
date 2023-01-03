@@ -19,14 +19,14 @@ import MoreIcon from '@mui/icons-material/MoreVert';
 import {Link} from "react-router-dom";
 import {useTheme} from "@mui/material";
 import {ColorModeContext, tokens} from "../theme";
-import {useContext} from "react";
+import {useContext} from 'react';
 import LoginIcon from '@mui/icons-material/Login';
 import EditIcon from '@mui/icons-material/Edit';
 import {isJwtNotExpired, isUserAdmin} from "../utilities/jwtHelper";
-import {RootState} from "../redux/store";
-import {useSelector} from "react-redux";
+import {Dispatch} from '../redux/store';
+import {useDispatch, useSelector} from 'react-redux';
 import {i18n} from "../utilities/i18n";
-
+import {State as AuthenticationStatus} from '../redux/model/authentication';
 
 let settings = [
     {
@@ -90,6 +90,7 @@ function AppBarTop() {
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const colorMode = useContext(ColorModeContext);
+    const dispatch = useDispatch<Dispatch>()
 
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -97,11 +98,10 @@ function AppBarTop() {
     const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
-    // to rerender AppBar when logged out
-    useSelector((state: { authentication: RootState }) => state.authentication.authStateChanged);
-
-    let isAdmin: boolean = isUserAdmin();
-    let isLoggedIn: boolean = isJwtNotExpired();
+    // after isAuthenticated from store is updated -> AppBar comp. is re-rendered
+    useSelector((state: {authentication: AuthenticationStatus}) => state.authentication.isAuthenticated);
+    const isAdmin: boolean = isUserAdmin();
+    const isLoggedIn: boolean = isJwtNotExpired();
 
 
     const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -125,7 +125,7 @@ function AppBarTop() {
         window.localStorage.removeItem('rolesFromJwt');
         window.localStorage.removeItem('jwtExpiresAt');
 
-        console.log("localstorage deleted, logging out!");
+        dispatch.authentication.setIsAuthenticated(false);
     }
 
     const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -317,8 +317,10 @@ function AppBarTop() {
                             )}
                         </Badge>
                     </IconButton>
+
                     {isAdmin ? renderMoviesEditing : ''}
                     {isLoggedIn ? renderLoggedInMenu : renderLogin}
+
                 </Toolbar>
             </AppBar>
             {renderMobileMenu}

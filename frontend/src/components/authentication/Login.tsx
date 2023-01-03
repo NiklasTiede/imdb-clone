@@ -23,7 +23,6 @@ const Login = () => {
             password: password
         };
         dispatch.authentication.authenticateAccount(payload);
-        dispatch.authentication.setAuthStateChanged(false);
         navigateTo("/home");
     }
 
