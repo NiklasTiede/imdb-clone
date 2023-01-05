@@ -3,21 +3,21 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-  - url: http://localhost:8080
-    description: Generated server url
+- url: http://localhost:8080
+  description: Generated server url
 paths:
   /api/movie/{movieId}:
     get:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: getMovieById
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
@@ -27,15 +27,15 @@ paths:
                 $ref: '#/components/schemas/MovieRecord'
     put:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: updateMovie
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           application/json:
@@ -51,15 +51,15 @@ paths:
                 $ref: '#/components/schemas/Movie'
     delete:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: deleteMovieById
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
@@ -70,15 +70,15 @@ paths:
   /api/comment/{commentId}:
     get:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: getCommentById
       parameters:
-        - name: commentId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
@@ -88,15 +88,15 @@ paths:
                 $ref: '#/components/schemas/CommentRecord'
     put:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: updateComment
       parameters:
-        - name: commentId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           application/json:
@@ -112,15 +112,15 @@ paths:
                 $ref: '#/components/schemas/CommentRecord'
     delete:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: deleteComment
       parameters:
-        - name: commentId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
@@ -131,14 +131,14 @@ paths:
   /api/account/{username}:
     put:
       tags:
-        - account-controller
-      operationId: updateAccount
+      - account-controller
+      operationId: updateAccountProfile
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -151,17 +151,17 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: '#/components/schemas/Account'
+                $ref: '#/components/schemas/UpdatedAccountProfile'
     delete:
       tags:
-        - account-controller
+      - account-controller
       operationId: deleteAccount
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -172,14 +172,14 @@ paths:
   /api/account/{username}/take-admin:
     put:
       tags:
-        - account-controller
+      - account-controller
       operationId: takeAdminRole
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -190,14 +190,14 @@ paths:
   /api/account/{username}/give-admin:
     put:
       tags:
-        - account-controller
+      - account-controller
       operationId: giveAdminRole
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -208,23 +208,23 @@ paths:
   /api/movie/get-movies:
     post:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: getMoviesByIds
       parameters:
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       requestBody:
         content:
           application/json:
@@ -241,7 +241,7 @@ paths:
   /api/movie/create-movie:
     post:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: createMovie
       requestBody:
         content:
@@ -259,15 +259,15 @@ paths:
   /api/comment/{movieId}:
     post:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: createComment
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           application/json:
@@ -284,7 +284,7 @@ paths:
   /api/auth/save-new-password:
     post:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: saveNewPassword
       requestBody:
         content:
@@ -302,7 +302,7 @@ paths:
   /api/auth/registration:
     post:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: registerAccount
       requestBody:
         content:
@@ -320,7 +320,7 @@ paths:
   /api/auth/login:
     post:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: authenticateAccount
       requestBody:
         content:
@@ -338,7 +338,7 @@ paths:
   /api/account/add-account:
     post:
       tags:
-        - account-controller
+      - account-controller
       operationId: createAccount
       requestBody:
         content:
@@ -356,15 +356,15 @@ paths:
   /api/watched-movie/{movieId}/watch:
     get:
       tags:
-        - watched-movie-controller
+      - watched-movie-controller
       operationId: watchMovie
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
@@ -375,28 +375,28 @@ paths:
   /api/movie/search/{primaryTitle}:
     get:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: searchMoviesByTitle
       parameters:
-        - name: primaryTitle
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: primaryTitle
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
@@ -407,20 +407,20 @@ paths:
   /api/movie-rating/{movieId}/rating-score/{score}:
     get:
       tags:
-        - rating-controller
+      - rating-controller
       operationId: rateMovie
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: score
-          in: path
-          required: true
-          schema:
-            type: number
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: score
+        in: path
+        required: true
+        schema:
+          type: number
       responses:
         "200":
           description: OK
@@ -431,29 +431,29 @@ paths:
   /api/comment/{movieId}/comments:
     get:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: getCommentsByMovieId
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
@@ -464,14 +464,14 @@ paths:
   /api/auth/reset-password:
     get:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: resetPassword
       parameters:
-        - name: email
-          in: query
-          required: true
-          schema:
-            type: string
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -482,14 +482,14 @@ paths:
   /api/auth/confirm-email-address:
     get:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: confirmEmailAddress
       parameters:
-        - name: token
-          in: query
-          required: true
-          schema:
-            type: string
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -500,14 +500,14 @@ paths:
   /api/auth/check-username-availability:
     get:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: checkUsernameAvailability
       parameters:
-        - name: username
-          in: query
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: query
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -518,14 +518,14 @@ paths:
   /api/auth/check-email-availability:
     get:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: checkEmailAvailability
       parameters:
-        - name: email
-          in: query
-          required: true
-          schema:
-            type: string
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -536,28 +536,28 @@ paths:
   /api/account/{username}/watchlist:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getWatchedMoviesByAccount
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
@@ -568,28 +568,28 @@ paths:
   /api/account/{username}/ratings:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getRatingsByAccount
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
@@ -600,14 +600,14 @@ paths:
   /api/account/{username}/profile:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getAccountProfile
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -618,28 +618,28 @@ paths:
   /api/account/{username}/comments:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getCommentsByAccount
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
@@ -650,7 +650,7 @@ paths:
   /api/account/me:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getCurrentAccount
       responses:
         "200":
@@ -662,15 +662,15 @@ paths:
   /api/watched-movie/{movieId}:
     delete:
       tags:
-        - watched-movie-controller
+      - watched-movie-controller
       operationId: deleteWatchedMovie
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
@@ -681,15 +681,15 @@ paths:
   /api/movie-rating/{movieId}:
     delete:
       tags:
-        - rating-controller
+      - rating-controller
       operationId: deleteRating
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
@@ -701,7 +701,7 @@ components:
   schemas:
     MovieRequest:
       required:
-        - originalTitle
+      - originalTitle
       type: object
       properties:
         primaryTitle:
@@ -731,48 +731,48 @@ components:
           items:
             type: string
             enum:
-              - HORROR
-              - MYSTERY
-              - THRILLER
-              - CRIME
-              - WESTERN
-              - WAR
-              - ACTION
-              - ADVENTURE
-              - FAMILY
-              - COMEDY
-              - ANIMATION
-              - FANTASY
-              - SCI_FI
-              - DRAMA
-              - ROMANCE
-              - SPORT
-              - HISTORY
-              - BIOGRAPHY
-              - MUSIC
-              - MUSICAL
-              - DOCUMENTARY
-              - NEWS
-              - ADULT
-              - REALITY_TV
-              - TALK_SHOW
-              - GAME_SHOW
-              - FILM_NOIR
-              - SHORT
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
         movieType:
           type: string
           enum:
-            - SHORT
-            - MOVIE
-            - VIDEO
-            - TV_MOVIE
-            - TV_EPISODE
-            - TV_MINI_SERIES
-            - TV_SPECIAL
-            - TV_SERIES
-            - TV_SHORT
-            - TV_PILOT
-            - VIDEO_GAME
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
         adult:
           type: boolean
     Movie:
@@ -800,48 +800,48 @@ components:
           items:
             type: string
             enum:
-              - HORROR
-              - MYSTERY
-              - THRILLER
-              - CRIME
-              - WESTERN
-              - WAR
-              - ACTION
-              - ADVENTURE
-              - FAMILY
-              - COMEDY
-              - ANIMATION
-              - FANTASY
-              - SCI_FI
-              - DRAMA
-              - ROMANCE
-              - SPORT
-              - HISTORY
-              - BIOGRAPHY
-              - MUSIC
-              - MUSICAL
-              - DOCUMENTARY
-              - NEWS
-              - ADULT
-              - REALITY_TV
-              - TALK_SHOW
-              - GAME_SHOW
-              - FILM_NOIR
-              - SHORT
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
         movieType:
           type: string
           enum:
-            - SHORT
-            - MOVIE
-            - VIDEO
-            - TV_MOVIE
-            - TV_EPISODE
-            - TV_MINI_SERIES
-            - TV_SPECIAL
-            - TV_SERIES
-            - TV_SHORT
-            - TV_PILOT
-            - VIDEO_GAME
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
         imdbRating:
           type: number
           format: float
@@ -902,15 +902,9 @@ components:
         birthday:
           type: string
           format: date-time
-    Account:
-      required:
-        - email
-        - username
+    UpdatedAccountProfile:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
         username:
           type: string
         email:
@@ -926,21 +920,6 @@ components:
         birthday:
           type: string
           format: date-time
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/Role'
-    Role:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-          enum:
-            - ROLE_USER
-            - ROLE_ADMIN
     MessageResponse:
       type: object
       properties:
@@ -982,48 +961,48 @@ components:
           items:
             type: string
             enum:
-              - HORROR
-              - MYSTERY
-              - THRILLER
-              - CRIME
-              - WESTERN
-              - WAR
-              - ACTION
-              - ADVENTURE
-              - FAMILY
-              - COMEDY
-              - ANIMATION
-              - FANTASY
-              - SCI_FI
-              - DRAMA
-              - ROMANCE
-              - SPORT
-              - HISTORY
-              - BIOGRAPHY
-              - MUSIC
-              - MUSICAL
-              - DOCUMENTARY
-              - NEWS
-              - ADULT
-              - REALITY_TV
-              - TALK_SHOW
-              - GAME_SHOW
-              - FILM_NOIR
-              - SHORT
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
         movieType:
           type: string
           enum:
-            - SHORT
-            - MOVIE
-            - VIDEO
-            - TV_MOVIE
-            - TV_EPISODE
-            - TV_MINI_SERIES
-            - TV_SPECIAL
-            - TV_SERIES
-            - TV_SHORT
-            - TV_PILOT
-            - VIDEO_GAME
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
         imdbRating:
           type: number
           format: float
@@ -1077,9 +1056,9 @@ components:
           type: string
     RegistrationRequest:
       required:
-        - email
-        - password
-        - username
+      - email
+      - password
+      - username
       type: object
       properties:
         username:
@@ -1092,8 +1071,8 @@ components:
           type: string
     LoginRequest:
       required:
-        - password
-        - usernameOrEmail
+      - password
+      - usernameOrEmail
       type: object
       properties:
         usernameOrEmail:
@@ -1107,6 +1086,45 @@ components:
           type: string
         tokenType:
           type: string
+    Account:
+      required:
+      - email
+      - username
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        bio:
+          type: string
+        birthday:
+          type: string
+          format: date-time
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          enum:
+          - ROLE_USER
+          - ROLE_ADMIN
     WatchedMovie:
       type: object
       properties:
@@ -1114,8 +1132,8 @@ components:
           $ref: '#/components/schemas/WatchedMovieId'
     WatchedMovieId:
       required:
-        - accountId
-        - movieId
+      - accountId
+      - movieId
       type: object
       properties:
         movieId:
@@ -1154,8 +1172,8 @@ components:
           type: number
     RatingId:
       required:
-        - accountId
-        - movieId
+      - accountId
+      - movieId
       type: object
       properties:
         movieId:
@@ -1259,8 +1277,6 @@ components:
           type: string
         email:
           type: string
-        password:
-          type: string
         firstName:
           type: string
         lastName:
@@ -1272,10 +1288,6 @@ components:
         birthday:
           type: string
           format: date-time
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/Role'
         ratingsCount:
           type: integer
           format: int64
