@@ -119,6 +119,7 @@ export const authentication = createModel<RootModel>()({
               );
             }
             dispatch.authentication.setIsAuthenticated(true);
+            dispatch.account.getCurrentAccount();
           }
           if (response.status === 401) {
             console.log("401: Bad Credentials");

@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.payload;
+package com.thecodinglab.imdbclone.payload.comment;
 
 public record CommentRecord(
 

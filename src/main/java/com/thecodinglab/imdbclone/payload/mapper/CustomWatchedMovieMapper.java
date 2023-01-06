@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.payload.mapper;
 
 import com.thecodinglab.imdbclone.entity.WatchedMovie;
-import com.thecodinglab.imdbclone.payload.WatchedMovieRecord;
+import com.thecodinglab.imdbclone.payload.watchlist.WatchedMovieRecord;
 import java.util.List;
 import org.springframework.stereotype.Component;
 

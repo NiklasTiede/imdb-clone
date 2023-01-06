@@ -20,3 +20,7 @@ export const isJwtNotExpired = () => {
   }
   return isNotExpired;
 };
+
+export const getUsername = () => {
+  return window.localStorage.getItem("username");
+};

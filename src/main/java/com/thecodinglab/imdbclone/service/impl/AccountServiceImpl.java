@@ -4,6 +4,11 @@ import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.exception.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.payload.account.AccountProfile;
+import com.thecodinglab.imdbclone.payload.account.AccountRecord;
+import com.thecodinglab.imdbclone.payload.account.AccountSummaryResponse;
+import com.thecodinglab.imdbclone.payload.account.UpdatedAccountProfile;
+import com.thecodinglab.imdbclone.payload.authentication.RegistrationRequest;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.CommentRepository;
 import com.thecodinglab.imdbclone.repository.RatingRepository;
@@ -67,13 +72,11 @@ public class AccountServiceImpl implements AccountService {
     return new AccountProfile(
         account.getUsername(),
         account.getEmail(),
-        account.getPassword(),
         account.getFirstName(),
         account.getLastName(),
         account.getPhone(),
         account.getBio(),
         account.getBirthday(),
-        account.getRoles(),
         ratingsCount,
         watchedMoviesCount,
         commentsCount);
@@ -106,7 +109,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public Account updateAccount(
+  public UpdatedAccountProfile updateAccountProfile(
       String username, AccountRecord accountRecord, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     if (Objects.equals(account.getId(), currentAccount.getId())
@@ -122,7 +125,14 @@ public class AccountServiceImpl implements AccountService {
       account.setBio(accountRecord.bio());
       Account updatedAccount = accountRepository.save(account);
       LOGGER.info("Account with id [{}] was updated.", updatedAccount.getId());
-      return updatedAccount;
+      return new UpdatedAccountProfile(
+          updatedAccount.getUsername(),
+          updatedAccount.getEmail(),
+          updatedAccount.getFirstName(),
+          updatedAccount.getLastName(),
+          updatedAccount.getPhone(),
+          updatedAccount.getBio(),
+          updatedAccount.getBirthday());
     } else {
       LOGGER.warn(
           "User with accountId [{}] tried to update an account without ADMIN permissions.",

@@ -2,7 +2,7 @@ package com.thecodinglab.imdbclone.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.payload.MovieIdsRequest;
+import com.thecodinglab.imdbclone.payload.movie.MovieIdsRequest;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

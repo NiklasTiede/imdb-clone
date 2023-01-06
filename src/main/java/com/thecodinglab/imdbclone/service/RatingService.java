@@ -3,7 +3,7 @@ package com.thecodinglab.imdbclone.service;
 import com.thecodinglab.imdbclone.entity.Rating;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.payload.RatingRecord;
+import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import java.math.BigDecimal;
 import org.springframework.stereotype.Service;

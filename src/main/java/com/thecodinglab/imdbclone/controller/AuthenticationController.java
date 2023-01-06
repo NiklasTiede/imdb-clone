@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.controller;
 
 import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.payload.authentication.*;
 import com.thecodinglab.imdbclone.service.AuthenticationService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;

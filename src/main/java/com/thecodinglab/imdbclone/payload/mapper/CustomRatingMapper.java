@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.payload.mapper;
 
 import com.thecodinglab.imdbclone.entity.Rating;
-import com.thecodinglab.imdbclone.payload.RatingRecord;
+import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
 import java.util.List;
 import org.springframework.stereotype.Component;
 

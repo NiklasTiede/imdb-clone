@@ -23,7 +23,7 @@ spotless {
 	java {
 		target 'src/main/java/**/*.java'
 		targetExclude 'build/**', 'frontend/**'
-		targetExclude 'src/main/java/**/payload/*.java'
+		targetExclude 'src/main/java/**/payload/*.java', 'src/main/java/**/payload/**/*.java'
 		importOrder()
 		removeUnusedImports()
 		trimTrailingWhitespace()

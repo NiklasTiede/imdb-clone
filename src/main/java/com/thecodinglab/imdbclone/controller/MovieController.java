@@ -2,6 +2,9 @@ package com.thecodinglab.imdbclone.controller;
 
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.payload.movie.MovieIdsRequest;
+import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
+import com.thecodinglab.imdbclone.payload.movie.MovieRequest;
 import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.MovieService;

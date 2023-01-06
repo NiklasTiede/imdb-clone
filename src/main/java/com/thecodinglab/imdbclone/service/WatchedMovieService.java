@@ -3,7 +3,7 @@ package com.thecodinglab.imdbclone.service;
 import com.thecodinglab.imdbclone.entity.WatchedMovie;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.payload.WatchedMovieRecord;
+import com.thecodinglab.imdbclone.payload.watchlist.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import org.springframework.stereotype.Service;
 

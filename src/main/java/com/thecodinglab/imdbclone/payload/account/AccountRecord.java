@@ -1,11 +1,9 @@
-package com.thecodinglab.imdbclone.payload;
+package com.thecodinglab.imdbclone.payload.account;
 
 import java.util.Date;
 import jakarta.validation.constraints.*;
 
-
 public record AccountRecord(
-
         @Size(min = 2, max = 50)
         String username,
 

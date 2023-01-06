@@ -1,63 +1,73 @@
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import {
   Button,
-  Container,
   Grid,
   Paper,
   Stack,
-  styled,
   TextField,
   Typography,
   useTheme,
 } from "@mui/material";
 import { tokens } from "../../theme";
-import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
-import { AccountRecord } from "../../client/movies/generator-output";
+import React, { useEffect, useState } from "react";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import Box from "@mui/material/Box";
-import moment from "moment/moment";
-
-const StyledContainer = styled(Container)(({ theme }) => ({
-  sx: {
-    padding: 5,
-  },
-  backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
-  padding: theme.spacing(1),
-}));
+import { State as AccountStatus } from "../../redux/model/account";
+import { getUsername } from "../../utilities/jwtHelper";
+import moment from "moment";
+import {i18n} from "../../utilities/i18n";
 
 const AccountSettings = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const navigateTo = useNavigate();
   const dispatch = useDispatch<Dispatch>();
 
-  const [usernameOrEmail, setUsernameOrEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [birthdayDate, setBirthdayDate] = useState(moment("01/01/1990"));
+  const username = getUsername();
+  const accountProfile = useSelector(
+    (state: { account: AccountStatus }) => state.account.accountProfile
+  );
 
-  dispatch.account.getCurrentAccount();
+  // set-able
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
+  const [birthdayDate, setBirthdayDate] = useState("");
 
-  dispatch.account.getAccountProfileSettings("superman");
+  useEffect(() => {
+    if (username) {
+      dispatch.account.getAccountProfileSettings(username);
+    }
+  }, []);
 
-  // as soon as opened: load names
+  useEffect(() => {
+    setFirstName(accountProfile.firstName ?? "");
+    setLastName(accountProfile.lastName ?? "");
+    setPhone(accountProfile.phone ?? "");
+    setBirthdayDate(accountProfile.birthday ?? "");
+    setBio(accountProfile.bio ?? "");
+  }, [accountProfile]);
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
 
-    console.log(usernameOrEmail);
-
-    const payload: AccountRecord = {
-      firstName: usernameOrEmail,
-      lastName: password,
-      phone: "",
-      bio: "",
-    };
-
-    // @ts-ignore
-    dispatch.account.updateAccountProfileSettings("superman", payload);
+    if (username) {
+      const payload: any = {
+        username: username,
+        accountRecord: {
+          firstName: firstName,
+          lastName: lastName,
+          birthday: moment(birthdayDate).toISOString(),
+          phone: phone,
+          bio: bio,
+        },
+      };
+      dispatch.account.updateAccountProfileSettings(payload);
+    } else {
+      console.log("Username is not present!");
+    }
   };
 
   return (
@@ -75,20 +85,7 @@ const AccountSettings = () => {
           <Stack spacing={6}>
             <Grid>
               <Typography gutterBottom fontSize={14}>
-                Full Name
-              </Typography>
-              <TextField
-                type={"text"}
-                fullWidth
-                inputProps={{ spellCheck: "false" }}
-                variant={"outlined"}
-                // onChange={(e) => setUsernameOrEmail(e.target.value)}
-                value={"Niklas Tiede"}
-              />
-            </Grid>
-            <Grid>
-              <Typography gutterBottom fontSize={14}>
-                Email Address
+                {i18n.accountSettings.username}
               </Typography>
               <TextField
                 type={"email"}
@@ -96,12 +93,54 @@ const AccountSettings = () => {
                 variant={"outlined"}
                 autoComplete="off"
                 inputProps={{ spellCheck: "false" }}
-                // onChange={(e) => setUsernameOrEmail(e.target.value)}
-                value={"niklastiede2@gmail.com"}
+                disabled
+                value={accountProfile.username}
+              />
+            </Grid>
+            <Grid>
+              <Typography gutterBottom fontSize={14}>
+                {i18n.accountSettings.email}
+              </Typography>
+              <TextField
+                type={"email"}
+                fullWidth
+                variant={"outlined"}
+                autoComplete="off"
+                inputProps={{ spellCheck: "false" }}
+                disabled
+                value={accountProfile.email}
+              />
+            </Grid>
+            <Grid>
+              <Typography gutterBottom fontSize={14}>
+                {i18n.accountSettings.firstName}
+              </Typography>
+              <TextField
+                type={"text"}
+                fullWidth
+                inputProps={{ spellCheck: "false" }}
+                variant={"outlined"}
+                onChange={(e) => setFirstName(e.target.value)}
+                value={firstName}
+              />
+            </Grid>
+            <Grid>
+              <Typography gutterBottom fontSize={14}>
+                {i18n.accountSettings.lastName}
+              </Typography>
+              <TextField
+                type={"text"}
+                fullWidth
+                inputProps={{ spellCheck: "false" }}
+                variant={"outlined"}
+                onChange={(e) => setLastName(e.target.value)}
+                value={lastName}
               />
             </Grid>
             <Grid container direction={"column"}>
-              <Typography gutterBottom>Birthday</Typography>
+              <Typography gutterBottom>
+                {i18n.accountSettings.birthday}
+              </Typography>
               <LocalizationProvider dateAdapter={AdapterMoment}>
                 <DatePicker
                   disableFuture
@@ -116,15 +155,29 @@ const AccountSettings = () => {
               </LocalizationProvider>
             </Grid>
             <Grid>
-              <Typography gutterBottom>Biography</Typography>
+              <Typography gutterBottom>
+                {i18n.accountSettings.phone}
+              </Typography>
               <TextField
                 type={"text"}
                 fullWidth
                 variant={"outlined"}
                 autoComplete={"false"}
-                onChange={(e) => setUsernameOrEmail(e.target.value)}
-                // value={"Hi, this is my profile!"}
-                value={usernameOrEmail}
+                onChange={(e) => setPhone(e.target.value)}
+                value={phone}
+              />
+            </Grid>
+            <Grid>
+              <Typography gutterBottom>
+                {i18n.accountSettings.bio}
+              </Typography>
+              <TextField
+                type={"text"}
+                fullWidth
+                variant={"outlined"}
+                autoComplete={"false"}
+                onChange={(e) => setBio(e.target.value)}
+                value={bio}
               />
             </Grid>
             <Button
@@ -141,7 +194,7 @@ const AccountSettings = () => {
               type={"submit"}
               fullWidth
             >
-              Update
+              {i18n.accountSettings.submit}
             </Button>
           </Stack>
         </form>

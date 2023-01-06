@@ -6,6 +6,7 @@ import com.thecodinglab.imdbclone.entity.VerificationToken;
 import com.thecodinglab.imdbclone.enums.VerificationTypeEnum;
 import com.thecodinglab.imdbclone.exception.NotFoundException;
 import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.payload.authentication.*;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.VerificationTokenRepository;
 import com.thecodinglab.imdbclone.security.JwtTokenProvider;

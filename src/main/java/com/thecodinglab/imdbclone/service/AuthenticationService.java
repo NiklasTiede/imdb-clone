@@ -2,6 +2,7 @@ package com.thecodinglab.imdbclone.service;
 
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.payload.authentication.*;
 import org.springframework.stereotype.Service;
 
 @Service

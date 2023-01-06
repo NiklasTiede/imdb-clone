@@ -1,6 +1,9 @@
 package com.thecodinglab.imdbclone.service;
 
 import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.payload.comment.CommentRecord;
+import com.thecodinglab.imdbclone.payload.comment.CreateCommentRequest;
+import com.thecodinglab.imdbclone.payload.comment.UpdateCommentRequest;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import org.springframework.stereotype.Service;
 

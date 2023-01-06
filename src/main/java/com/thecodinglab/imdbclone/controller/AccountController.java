@@ -2,6 +2,14 @@ package com.thecodinglab.imdbclone.controller;
 
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.payload.*;
+import com.thecodinglab.imdbclone.payload.account.AccountProfile;
+import com.thecodinglab.imdbclone.payload.account.AccountRecord;
+import com.thecodinglab.imdbclone.payload.account.AccountSummaryResponse;
+import com.thecodinglab.imdbclone.payload.account.UpdatedAccountProfile;
+import com.thecodinglab.imdbclone.payload.authentication.RegistrationRequest;
+import com.thecodinglab.imdbclone.payload.comment.CommentRecord;
+import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
+import com.thecodinglab.imdbclone.payload.watchlist.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.*;
@@ -89,12 +97,12 @@ public class AccountController {
 
   @PutMapping("/{username}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-  public ResponseEntity<Account> updateAccount(
+  public ResponseEntity<UpdatedAccountProfile> updateAccountProfile(
       @PathVariable String username,
       @Valid @RequestBody AccountRecord accountRecord,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
-        accountService.updateAccount(username, accountRecord, currentUser), HttpStatus.OK);
+        accountService.updateAccountProfile(username, accountRecord, currentUser), HttpStatus.OK);
   }
 
   @DeleteMapping("/{username}")

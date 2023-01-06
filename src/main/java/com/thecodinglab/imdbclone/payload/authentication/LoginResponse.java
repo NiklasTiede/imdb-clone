@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.payload;
+package com.thecodinglab.imdbclone.payload.authentication;
 
 public class LoginResponse {
 

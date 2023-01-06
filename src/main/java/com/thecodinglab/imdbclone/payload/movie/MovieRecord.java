@@ -1,31 +1,23 @@
-package com.thecodinglab.imdbclone.payload;
+package com.thecodinglab.imdbclone.payload.movie;
 
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
-import jakarta.validation.constraints.*;
-
-
+import java.time.Instant;
 import java.util.Set;
 
-public record MovieRequest(
-
-        @Size(max = 200)
+public record MovieRecord(
         String primaryTitle,
-
-        @NotBlank
-        @Size(max = 200)
         String originalTitle,
-
-        @Min(1850)
-        @Max(2030)
         Integer startYear,
-
-        @Min(1850)
-        @Max(2030)
         Integer endYear,
-
         Integer runtimeMinutes,
+        Instant modifiedAtInUtc,
+        Instant createdAtInUtc,
         Set<MovieGenreEnum> movieGenre,
         MovieTypeEnum movieType,
-        Boolean adult
+        Float imdbRating,
+        Integer imdbRatingCount,
+        Boolean adult,
+        Float rating,
+        Integer ratingCount
 ) {}
