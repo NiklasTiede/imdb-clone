@@ -21,24 +21,22 @@ function App() {
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <div className="App">
-          <MyAppBar />
-          <Routes>
-            <Route path="/home" element={<Home />} />
+        <MyAppBar />
+        <Routes>
+          <Route path="/home" element={<Home />} />
 
-            <Route path="/login" element={<Login />} />
-            <Route path="/logout" element={<Logout />} />
-            <Route path="/registration" element={<Registration />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/logout" element={<Logout />} />
+          <Route path="/registration" element={<Registration />} />
 
-            <Route path="/your-ratings" element={<YourRatings />} />
-            <Route path="/your-watchlist" element={<YourWatchlist />} />
-            <Route path="/account-settings" element={<AccountSettings />} />
-            <Route path="/your-messages" element={<Messages />} />
+          <Route path="/your-ratings" element={<YourRatings />} />
+          <Route path="/your-watchlist" element={<YourWatchlist />} />
+          <Route path="/account-settings" element={<AccountSettings />} />
+          <Route path="/your-messages" element={<Messages />} />
 
-            <Route path="/movie-search" element={<MovieSearch />} />
-            <Route path="/editing" element={<EditMovie />} />
-          </Routes>
-        </div>
+          <Route path="/movie-search" element={<MovieSearch />} />
+          <Route path="/editing" element={<EditMovie />} />
+        </Routes>
       </ThemeProvider>
     </ColorModeContext.Provider>
   );

@@ -24,10 +24,10 @@ const Login = () => {
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    const payload: LoginRequest = {
+    const payload = {
       usernameOrEmail: usernameOrEmail,
       password: password,
-    };
+    } satisfies LoginRequest;
     dispatch.authentication.authenticateAccount(payload);
     navigateTo("/home");
   };

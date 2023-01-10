@@ -9,15 +9,13 @@ import {
 import { authApi } from "../../client/movies/MoviesApi";
 import { AxiosResponse } from "axios";
 import jwt_decode, { JwtPayload } from "jwt-decode";
+import { i18n } from "../../i18n";
 
 interface MyJwtPayload extends JwtPayload {
   roles: string;
 }
 
 export type State = {
-  showCaseValue: Array<String>;
-  isLoading: boolean;
-  loaded: boolean;
   isEmailAvailable: boolean;
   isUsernameAvailable: boolean;
   isAuthenticated: boolean;
@@ -25,23 +23,11 @@ export type State = {
 
 export const authentication = createModel<RootModel>()({
   state: {
-    showCaseValue: [],
-    isLoading: false,
-    loaded: false,
     isEmailAvailable: false,
     isUsernameAvailable: false,
     isAuthenticated: false,
   } as State,
   reducers: {
-    startLoading: (state) =>
-      reduce(state, {
-        isLoading: true,
-      }),
-    stopLoading: (state) =>
-      reduce(state, {
-        isLoading: false,
-        loaded: true,
-      }),
     isEmailAvailable: (state, payload: boolean) =>
       reduce(state, {
         isEmailAvailable: payload,
@@ -65,9 +51,10 @@ export const authentication = createModel<RootModel>()({
           }
         })
         .catch((reason: any) => {
-          // log
-          // notification
-          console.log(reason);
+          dispatch.notify.error(i18n.registration.loadingError);
+          console.log(
+            `Error while registering User, reason: ${JSON.stringify(reason)}`
+          );
         });
     },
     async checkUsernameAvailability(username: string) {
@@ -79,9 +66,10 @@ export const authentication = createModel<RootModel>()({
           }
         })
         .catch((reason: any) => {
-          // log
-          // notification
-          console.log(reason);
+          dispatch.notify.error(i18n.registration.loadingError);
+          console.log(
+            `Error while registering User, reason: ${JSON.stringify(reason)}`
+          );
         });
     },
     async registerAccount({ registrationRequest, options }) {
@@ -89,14 +77,15 @@ export const authentication = createModel<RootModel>()({
         .registerAccount(registrationRequest, options)
         .then((response: AxiosResponse<MessageResponse>) => {
           if (response.status === 200 && response.data !== null) {
-            //notification ?
+            dispatch.notify.success(i18n.registration.registrationSuccessful);
             console.log(response.data.message);
           }
         })
         .catch((reason: any) => {
-          // log
-          // notification
-          console.log(reason);
+          dispatch.notify.error(i18n.registration.loadingError);
+          console.log(
+            `Error while registering User, reason: ${JSON.stringify(reason)}`
+          );
         });
     },
     async authenticateAccount(loginRequest: LoginRequest) {
@@ -122,13 +111,15 @@ export const authentication = createModel<RootModel>()({
             dispatch.account.getCurrentAccount();
           }
           if (response.status === 401) {
+            dispatch.notify.error(i18n.login.badCredentials);
             console.log("401: Bad Credentials");
           }
         })
-        .catch((reason: any) => {
-          // log
-          // notification
-          console.log(reason);
+        .catch((reason: unknown) => {
+          dispatch.notify.error(i18n.login.loadingError);
+          console.log(
+            `Error while attempting to login, reason: ${JSON.stringify(reason)}`
+          );
         });
     },
   }),

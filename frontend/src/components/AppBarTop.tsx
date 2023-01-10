@@ -22,11 +22,12 @@ import { ColorModeContext, tokens } from "../theme";
 import { useContext } from "react";
 import LoginIcon from "@mui/icons-material/Login";
 import EditIcon from "@mui/icons-material/Edit";
-import { isJwtNotExpired, isUserAdmin } from "../utilities/jwtHelper";
+import { isJwtNotExpired, isUserAdmin } from "../utils/jwtHelper";
 import { Dispatch } from "../redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { i18n } from "../utilities/i18n";
+import { i18n } from "../i18n";
 import { State as AuthenticationStatus } from "../redux/model/authentication";
+import { useNotifier } from "../hooks/useNotifier";
 
 let settings = [
   {
@@ -90,6 +91,9 @@ function AppBarTop() {
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
   const dispatch = useDispatch<Dispatch>();
+
+  // to use redux-Notifications on all child components
+  useNotifier();
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] =

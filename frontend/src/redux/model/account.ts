@@ -8,20 +8,15 @@ import {
 } from "../../client/movies/generator-output";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
 import moment from "moment";
+import { i18n } from "../../i18n";
 
 export type State = {
-  isLoading: boolean;
-  loaded: boolean;
-
   accountProfile: AccountProfile;
   username: string;
 };
 
 export const account = createModel<RootModel>()({
   state: {
-    isLoading: false,
-    loaded: false,
-
     accountProfile: {
       firstName: "",
       lastName: "",
@@ -87,9 +82,14 @@ export const account = createModel<RootModel>()({
           }
         })
         .catch((reason: any) => {
-          // log
-          // notification
-          console.log(reason);
+          dispatch.notify.error(
+            i18n.accountSettings.loadingError("get current User")
+          );
+          console.log(
+            `Error while attempting to get current User, reason: ${JSON.stringify(
+              reason
+            )}`
+          );
         });
     },
     async getAccountProfileSettings(username: string) {
@@ -106,9 +106,14 @@ export const account = createModel<RootModel>()({
           }
         })
         .catch((reason: any) => {
-          // log
-          // notification
-          console.log(reason);
+          dispatch.notify.error(
+            i18n.accountSettings.loadingError("get Account Profile")
+          );
+          console.log(
+            `Error while attempting to get current User, reason: ${JSON.stringify(
+              reason
+            )}`
+          );
         });
     },
     async updateAccountProfileSettings(payload) {
@@ -122,16 +127,30 @@ export const account = createModel<RootModel>()({
         .then((response: AxiosResponse<UpdatedAccountProfile>) => {
           if (response.status === 200 && response.data !== null) {
             dispatch.account.setUpdateAccountProfile(response.data);
-            // throw notification, to give user response!
-            console.log("Account Profile was updated!");
+            dispatch.notify.info(i18n.accountSettings.successfulUpdate);
+            console.log(i18n.accountSettings.successfulUpdate);
           } else {
-            console.log("warn: response was not 200!");
+            dispatch.notify.error(
+              i18n.accountSettings.loadingError(
+                "update Account Profile, http code not 200"
+              )
+            );
+            console.log(
+              i18n.accountSettings.loadingError(
+                "update Account Profile, http code not 200"
+              )
+            );
           }
         })
         .catch((reason: any) => {
-          // log
-          // notification
-          console.log(reason);
+          dispatch.notify.error(
+            i18n.accountSettings.loadingError("update Account Profile")
+          );
+          console.log(
+            `Error while attempting to update Account Profile, reason: ${JSON.stringify(
+              reason
+            )}`
+          );
         });
     },
   }),

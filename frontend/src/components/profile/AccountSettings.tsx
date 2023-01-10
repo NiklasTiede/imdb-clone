@@ -15,9 +15,9 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import Box from "@mui/material/Box";
 import { State as AccountStatus } from "../../redux/model/account";
-import { getUsername } from "../../utilities/jwtHelper";
+import { getUsername } from "../../utils/jwtHelper";
 import moment from "moment";
-import {i18n} from "../../utilities/i18n";
+import { i18n } from "../../i18n";
 
 const AccountSettings = () => {
   const theme = useTheme();
@@ -54,7 +54,7 @@ const AccountSettings = () => {
     e.preventDefault();
 
     if (username) {
-      const payload: any = {
+      const payload: unknown = {
         username: username,
         accountRecord: {
           firstName: firstName,
@@ -155,9 +155,7 @@ const AccountSettings = () => {
               </LocalizationProvider>
             </Grid>
             <Grid>
-              <Typography gutterBottom>
-                {i18n.accountSettings.phone}
-              </Typography>
+              <Typography gutterBottom>{i18n.accountSettings.phone}</Typography>
               <TextField
                 type={"text"}
                 fullWidth
@@ -168,9 +166,7 @@ const AccountSettings = () => {
               />
             </Grid>
             <Grid>
-              <Typography gutterBottom>
-                {i18n.accountSettings.bio}
-              </Typography>
+              <Typography gutterBottom>{i18n.accountSettings.bio}</Typography>
               <TextField
                 type={"text"}
                 fullWidth
