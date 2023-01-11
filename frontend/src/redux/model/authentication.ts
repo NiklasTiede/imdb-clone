@@ -72,11 +72,11 @@ export const authentication = createModel<RootModel>()({
           );
         });
     },
-    async registerAccount({ registrationRequest, options }) {
+    async registerAccount(registrationRequest) {
       authApi
-        .registerAccount(registrationRequest, options)
+        .registerAccount(registrationRequest)
         .then((response: AxiosResponse<MessageResponse>) => {
-          if (response.status === 200 && response.data !== null) {
+          if (response.status === 201) {
             dispatch.notify.success(i18n.registration.registrationSuccessful);
             console.log(response.data.message);
           }

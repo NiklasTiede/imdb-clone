@@ -49,7 +49,7 @@ const Login = () => {
                   <Grid item>
                     <TextField
                       type={"text"}
-                      fullWidth={true}
+                      fullWidth
                       label={"Email / Username"}
                       variant={"outlined"}
                       onChange={(e) => setUsernameOrEmail(e.target.value)}
@@ -59,7 +59,7 @@ const Login = () => {
                   <Grid item>
                     <TextField
                       type={"password"}
-                      fullWidth={true}
+                      fullWidth
                       label={"Password"}
                       variant={"outlined"}
                       onChange={(e) => setPassword(e.target.value)}

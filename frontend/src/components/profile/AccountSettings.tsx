@@ -57,8 +57,8 @@ const AccountSettings = () => {
       const payload: unknown = {
         username: username,
         accountRecord: {
-          firstName: firstName,
-          lastName: lastName,
+          firstName: firstName ? firstName : null,
+          lastName: lastName ? lastName : null,
           birthday: moment(birthdayDate).toISOString(),
           phone: phone,
           bio: bio,

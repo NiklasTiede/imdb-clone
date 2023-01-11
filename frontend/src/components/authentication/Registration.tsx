@@ -31,9 +31,8 @@ const Registration = () => {
       email: email,
       password: password,
     };
-    console.log(payload);
-    // dispatch.authentication.registerAccount(payload);
-    // navigateTo("/login");
+    dispatch.authentication.registerAccount(payload);
+    navigateTo("/login");
   };
 
   return (
@@ -57,6 +56,8 @@ const Registration = () => {
                       label={"Enter your Username"}
                       placeholder={"Username"}
                       variant={"outlined"}
+                      onChange={(e) => setUsername(e.target.value)}
+                      value={username}
                     />
                   </Grid>
                   <Grid item>
@@ -66,6 +67,8 @@ const Registration = () => {
                       label={"Enter your Email"}
                       placeholder={"Email"}
                       variant={"outlined"}
+                      onChange={(e) => setEmail(e.target.value)}
+                      value={email}
                     />
                   </Grid>
                   <Grid item>
@@ -75,6 +78,8 @@ const Registration = () => {
                       label={"Enter your Password"}
                       placeholder={"Password"}
                       variant={"outlined"}
+                      onChange={(e) => setPassword(e.target.value)}
+                      value={password}
                     />
                   </Grid>
                   <Grid item textAlign="center">
@@ -90,7 +95,6 @@ const Registration = () => {
                       variant={"contained"}
                       type={"submit"}
                       fullWidth
-                      onClick={() => console.log("you clicked me.")}
                     >
                       Register
                     </Button>

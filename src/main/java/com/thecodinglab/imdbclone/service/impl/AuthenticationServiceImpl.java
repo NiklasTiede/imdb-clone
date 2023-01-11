@@ -104,7 +104,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
       account.setEnabled(true);
     }
     Account savedAccount = accountRepository.save(account);
-    LOGGER.info("Account with id [{}] was created", account.getId());
+    LOGGER.info("Account with id [{}] was created", savedAccount.getId());
     return new MessageResponse(
         emailEnabled
             ? createAndSendEmailConfirmationToken(savedAccount)
