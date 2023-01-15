@@ -18,7 +18,7 @@ public @interface ValidPassword {
             - at least 1 digit
             - at least 1 special character
             - minimum length is 8
-            - maximum length is 20
+            - maximum length is 30
             """;
 
   Class<?>[] groups() default {};
