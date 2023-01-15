@@ -130,7 +130,7 @@ export const themeSettings = (mode: any) => {
       ...(mode === "dark"
         ? {
             primary: {
-              main: colors.primary[500],
+              main: colors.primary[200],
             },
             secondary: {
               main: colors.greenAccent[500],
@@ -198,6 +198,7 @@ export const ColorModeContext = createContext({
 });
 
 export const useMode = () => {
+  // either save in localStorage or in db + account-settings
   const [mode, setMode] = useState("dark");
 
   const colorMode: any = useMemo(
