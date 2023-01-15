@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import {
   Button,
+  FormHelperText,
   Grid,
   Paper,
   Stack,
@@ -36,6 +37,9 @@ const AccountSettings = () => {
   const [bio, setBio] = useState("");
   const [birthdayDate, setBirthdayDate] = useState("");
 
+  const [characterCount, setCharacterCount] = useState(0);
+  const maxBioLength = 300;
+
   useEffect(() => {
     if (username) {
       dispatch.account.getAccountProfileSettings(username);
@@ -48,10 +52,18 @@ const AccountSettings = () => {
     setPhone(accountProfile.phone ?? "");
     setBirthdayDate(accountProfile.birthday ?? "");
     setBio(accountProfile.bio ?? "");
+    setCharacterCount(accountProfile.bio ? accountProfile.bio.length : 0);
   }, [accountProfile]);
 
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
+  const handleBioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.value.length <= maxBioLength) {
+      setBio(event.target.value);
+      setCharacterCount(event.target.value.length);
+    }
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
     if (username) {
       const payload: unknown = {
@@ -172,9 +184,19 @@ const AccountSettings = () => {
                 fullWidth
                 variant={"outlined"}
                 autoComplete={"false"}
-                onChange={(e) => setBio(e.target.value)}
+                onChange={handleBioChange}
                 value={bio}
+                multiline
               />
+              <FormHelperText
+                sx={{
+                  textAlign: "right",
+                  marginRight: 0.5,
+                  color: colors.primary[200],
+                }}
+              >
+                {characterCount} / {maxBioLength}
+              </FormHelperText>
             </Grid>
             <Button
               sx={{
