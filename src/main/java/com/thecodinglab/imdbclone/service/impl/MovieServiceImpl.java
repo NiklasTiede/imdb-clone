@@ -61,6 +61,7 @@ public class MovieServiceImpl implements MovieService {
         movieRecordPage.isLast());
   }
 
+  // remove if-else
   @Override
   public Movie createMovie(MovieRequest movieRequest, UserPrincipal currentAccount) {
     if (UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
@@ -79,6 +80,7 @@ public class MovieServiceImpl implements MovieService {
     }
   }
 
+  // remove if-else
   @Override
   public Movie updateMovie(Long movieId, MovieRequest request, UserPrincipal currentAccount) {
     if (UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
@@ -105,11 +107,14 @@ public class MovieServiceImpl implements MovieService {
     }
   }
 
+  // remove if-else
   @Override
   public MessageResponse deleteMovie(Long movieId, UserPrincipal currentAccount) {
+
     if (UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
+
       Movie movie = movieRepository.getMovieById(movieId);
-      movieRepository.delete(movie);
+      //      movieRepository.delete(movie);
       return new MessageResponse(
           "the movie [" + movie.getPrimaryTitle() + "] was deleted successfully.");
     } else {

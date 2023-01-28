@@ -16,7 +16,6 @@ import com.thecodinglab.imdbclone.repository.WatchedMovieRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.AccountService;
 import com.thecodinglab.imdbclone.service.RoleService;
-import com.thecodinglab.imdbclone.validation.UniqueValidation;
 import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -82,9 +81,9 @@ public class AccountServiceImpl implements AccountService {
         commentsCount);
   }
 
+  // remove if-else
   @Override
   public Account createAccount(RegistrationRequest request, UserPrincipal currentAccount) {
-    UniqueValidation.isUsernameAndEmailValid(request.username(), request.email());
 
     if (UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       String username = request.username().toLowerCase();

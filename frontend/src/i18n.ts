@@ -6,18 +6,18 @@ export const i18n = {
   },
   regex: {
     username: {
-      matches: (password: string) =>  password.match(i18n.regex.username.pattern),
       pattern: "^(?=.{2,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$",
-      rules: "must be between 2-20 characters, only . and _ ", // TODO
+      rules: "must be between 2-20 characters, seperated only by . and _",
     },
     email: {
       pattern:
         /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-      rules: "must be valid email address", // TODO
+      rules: "must be valid email address",
     },
     password: {
-      pattern: "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,30})",
-      rules: "password must be between 8 and 30 characters and more", // TODO
+      pattern: "(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,30}",
+      rules:
+        "password must be between 8 and 30 characters and contain a digit, a lower and upper and special character",
     },
   },
   menuOptions: {
@@ -37,6 +37,7 @@ export const i18n = {
   },
   home: {},
   registration: {
+    register: "Register",
     registrationSuccessful: "You have been registered successfully",
     loadingError: "Error while attempting to register",
   },
@@ -45,10 +46,9 @@ export const i18n = {
     loadingError: "Error while attempting to login",
   },
   logout: {},
-
   watchlist: {},
   ratings: {},
-  editMovie: {},
   messages: {},
+  editMovie: {},
   movieSearch: {},
 };

@@ -43,6 +43,7 @@ public class RoleServiceImpl implements RoleService {
     return roles;
   }
 
+  // remove if-else
   @Override
   public MessageResponse giveAdminRole(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
@@ -67,6 +68,7 @@ public class RoleServiceImpl implements RoleService {
     }
   }
 
+  // remove if-else
   @Override
   public MessageResponse removeAdminRole(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);

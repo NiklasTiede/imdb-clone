@@ -1,17 +1,68 @@
 import {
   Button,
   Container,
+  FormControlLabel,
   Grid,
+  Checkbox,
   Paper,
   TextField,
   useTheme,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { tokens } from "../../theme";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
+import { i18n } from "../../i18n";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as zod from "zod";
 import { RegistrationRequest } from "../../client/movies/generator-output";
+import { UseFormSetError } from "react-hook-form/dist/types/form";
+import { State as AuthState } from "../../redux/model/authentication";
+
+export interface FormInputs {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface RegisterRequest {
+  payload: RegistrationRequest;
+  error: UseFormSetError<FormInputs>;
+}
+
+const schema = zod
+  .object({
+    username: zod
+      .string()
+      .min(2, "Username must contain at least 2 character(s)")
+      .max(30, "Username must contain at most 30 character(s)")
+      .regex(new RegExp(i18n.regex.username.pattern), "Invalid Username"),
+    email: zod
+      .string()
+      .regex(new RegExp(i18n.regex.email.pattern), "Invalid Email"),
+    password: zod
+      .string()
+      .min(8, "Password must contain at least 8 characters")
+      .max(30, "Password must contain at most 30 characters")
+      .regex(new RegExp(i18n.regex.password.pattern), "Invalid Password"),
+    confirmPassword: zod
+      .string()
+      .min(8, "Password must contain at least 8 characters")
+      .max(30, "Password must contain at most 30 characters")
+      .regex(new RegExp(i18n.regex.password.pattern), "Invalid Password"),
+  })
+  .superRefine(({ confirmPassword, password }, ctx) => {
+    if (confirmPassword !== password) {
+      ctx.addIssue({
+        path: ["confirmPassword"],
+        code: "custom",
+        message: "Passwords do not match",
+      });
+    }
+  });
 
 const Registration = () => {
   const theme = useTheme();
@@ -19,70 +70,124 @@ const Registration = () => {
   const navigateTo = useNavigate();
   const dispatch = useDispatch<Dispatch>();
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (event: any) => {
-    event.preventDefault();
+  const registeredSuccessfully = useSelector(
+    (state: { authentication: AuthState }) =>
+      state.authentication.registrationCompleted
+  );
 
-    const payload: RegistrationRequest = {
-      username: username,
-      email: email,
-      password: password,
+  const {
+    setError,
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormInputs>({
+    mode: "onBlur",
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = (data: FormInputs) => {
+    const request: RegisterRequest = {
+      payload: {
+        username: data.username,
+        email: data.email,
+        password: data.password,
+      },
+      error: setError,
     };
-    dispatch.authentication.registerAccount(payload);
-    navigateTo("/login");
+    dispatch.authentication.registerAccount(request);
   };
+
+  useEffect(() => {
+    if (registeredSuccessfully) {
+      navigateTo("/login");
+      dispatch.authentication.setRegistrationCompleted(false);
+    }
+  }, [registeredSuccessfully]);
 
   return (
     <>
       <div>
         <Container maxWidth={"sm"}>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <Grid
               container
-              spacing={2}
+              spacing={4}
               direction={"column"}
               justifyContent={"center"}
               style={{ minHeight: "80vh" }}
             >
-              <Paper elevation={2} sx={{ padding: 5 }}>
-                <Grid container direction={"column"} spacing={2}>
+              <Paper elevation={2} sx={{ padding: 4 }}>
+                <Grid container direction={"column"} spacing={1}>
                   <Grid item>
                     <TextField
+                      label={"Username"}
                       type={"text"}
-                      fullWidth
-                      label={"Enter your Username"}
-                      placeholder={"Username"}
                       variant={"outlined"}
-                      onChange={(e) => setUsername(e.target.value)}
-                      value={username}
+                      error={!!errors.username}
+                      helperText={
+                        errors.username ? errors.username?.message : " "
+                      }
+                      fullWidth
+                      {...register("username")}
                     />
                   </Grid>
                   <Grid item>
                     <TextField
+                      label={"Email"}
                       type={"email"}
-                      fullWidth
-                      label={"Enter your Email"}
-                      placeholder={"Email"}
                       variant={"outlined"}
-                      onChange={(e) => setEmail(e.target.value)}
-                      value={email}
+                      error={!!errors.email}
+                      helperText={errors.email ? errors.email?.message : " "}
+                      fullWidth
+                      {...register("email")}
                     />
                   </Grid>
                   <Grid item>
-                    <TextField
-                      type={"password"}
-                      fullWidth
-                      label={"Enter your Password"}
-                      placeholder={"Password"}
-                      variant={"outlined"}
-                      onChange={(e) => setPassword(e.target.value)}
-                      value={password}
-                    />
+                    <Grid container spacing={3}>
+                      <Grid item xs={5}>
+                        <TextField
+                          label={"Password"}
+                          type={showPassword ? "text" : "password"}
+                          variant={"outlined"}
+                          error={!!errors.password}
+                          helperText={
+                            errors.password ? errors.password?.message : " "
+                          }
+                          fullWidth
+                          {...register("password")}
+                        />
+                      </Grid>
+                      <Grid item xs={5}>
+                        <TextField
+                          label={"Confirm Password"}
+                          type={showPassword ? "text" : "password"}
+                          variant={"outlined"}
+                          error={!!errors.confirmPassword}
+                          helperText={
+                            errors.confirmPassword
+                              ? errors.confirmPassword?.message
+                              : " "
+                          }
+                          fullWidth
+                          {...register("confirmPassword")}
+                        />
+                      </Grid>
+                      <Grid item xs={2} sx={{ marginTop: 1, marginLeft: -1 }}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              onClick={() => setShowPassword(!showPassword)}
+                            />
+                          }
+                          label="Show"
+                          labelPlacement="end"
+                        />
+                      </Grid>
+                    </Grid>
                   </Grid>
-                  <Grid item textAlign="center">
+                  <Grid item>
                     <Button
                       sx={{
                         color: colors.primary[100],
@@ -96,7 +201,7 @@ const Registration = () => {
                       type={"submit"}
                       fullWidth
                     >
-                      Register
+                      {i18n.registration.register}
                     </Button>
                   </Grid>
                 </Grid>

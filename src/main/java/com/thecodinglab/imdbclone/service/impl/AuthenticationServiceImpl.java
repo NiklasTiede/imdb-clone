@@ -13,7 +13,6 @@ import com.thecodinglab.imdbclone.security.JwtTokenProvider;
 import com.thecodinglab.imdbclone.service.AuthenticationService;
 import com.thecodinglab.imdbclone.service.EmailService;
 import com.thecodinglab.imdbclone.service.RoleService;
-import com.thecodinglab.imdbclone.validation.UniqueValidation;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -70,12 +69,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   @Override
   public UserIdentityAvailability checkUsernameAvailability(String username) {
     Boolean isAvailable = !accountRepository.existsByUsername(username);
+    LOGGER.info("username [{}] available? {}", username, isAvailable);
     return new UserIdentityAvailability(isAvailable);
   }
 
   @Override
   public UserIdentityAvailability checkEmailAvailability(String email) {
     Boolean isAvailable = !accountRepository.existsByEmail(email);
+    LOGGER.info("email [{}] available? {}", email, isAvailable);
     return new UserIdentityAvailability(isAvailable);
   }
 
@@ -91,7 +92,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
   @Override
   public MessageResponse registerUser(RegistrationRequest request) {
-    UniqueValidation.isUsernameAndEmailValid(request.username(), request.email());
 
     String username = request.username().toLowerCase();
     String email = request.email().toLowerCase();
