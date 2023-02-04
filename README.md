@@ -22,11 +22,11 @@
 </p>
 
 ## Techstack
-- Languages: Java JDK17 / Typescript
-- Frameworks: Spring Boot v3 / React (MaterialUI)
+- Languages: Java JDK17 / Typescript v4
+- Frameworks: Spring Boot v3 / React v18 (Material UI v5)
 - Database: MySQL
 
-App is secured with modern JWT authentication. 
+App is secured with JWT authentication. 
 
 ## How to Run this Project from Source
 
