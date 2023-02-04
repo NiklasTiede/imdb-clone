@@ -33,26 +33,35 @@ export interface RegisterRequest {
   error: UseFormSetError<FormInputs>;
 }
 
-const schema = zod
+export const schema = zod
   .object({
     username: zod
       .string()
       .min(2, "Username must contain at least 2 character(s)")
       .max(30, "Username must contain at most 30 character(s)")
-      .regex(new RegExp(i18n.regex.username.pattern), "Invalid Username"),
+      .regex(
+        new RegExp(i18n.regex.username.pattern),
+        i18n.regex.username.rules
+      ),
     email: zod
       .string()
-      .regex(new RegExp(i18n.regex.email.pattern), "Invalid Email"),
+      .regex(new RegExp(i18n.regex.email.pattern), i18n.regex.email.rules),
     password: zod
       .string()
       .min(8, "Password must contain at least 8 characters")
       .max(30, "Password must contain at most 30 characters")
-      .regex(new RegExp(i18n.regex.password.pattern), "Invalid Password"),
+      .regex(
+        new RegExp(i18n.regex.password.pattern),
+        i18n.regex.password.rules
+      ),
     confirmPassword: zod
       .string()
       .min(8, "Password must contain at least 8 characters")
       .max(30, "Password must contain at most 30 characters")
-      .regex(new RegExp(i18n.regex.password.pattern), "Invalid Password"),
+      .regex(
+        new RegExp(i18n.regex.password.pattern),
+        i18n.regex.password.rules
+      ),
   })
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (confirmPassword !== password) {

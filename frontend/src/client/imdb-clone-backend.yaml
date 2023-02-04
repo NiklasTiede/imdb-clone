@@ -1062,8 +1062,6 @@ components:
       type: object
       properties:
         username:
-          maxLength: 50
-          minLength: 3
           type: string
         email:
           type: string

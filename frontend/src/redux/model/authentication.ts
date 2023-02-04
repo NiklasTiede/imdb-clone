@@ -101,7 +101,7 @@ export const authentication = createModel<RootModel>()({
         })
         .catch(function (error) {
           if (
-            error.response.status == 400 &&
+            error.response.status === 400 &&
             error.response.data &&
             error.response.data.invalidParams
           ) {

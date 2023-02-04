@@ -1,21 +1,29 @@
-import { useTheme } from "@mui/material";
-import { tokens } from "../../theme";
+import { Container, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { Dispatch } from "../../redux/store";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
+import Typography from "@mui/material/Typography";
+import { i18n } from "../../i18n";
 
 const Logout = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
   const navigateTo = useNavigate();
-  const dispatch = useDispatch<Dispatch>();
 
   useEffect(() => {
-    navigateTo("/home");
-  }, []);
+    navigateTo("/logout");
+  }, [navigateTo]);
 
-  return <div>You're now logged out!</div>;
+  return (
+    <>
+      <div>
+        <Container maxWidth={"xs"}>
+          <Paper elevation={3} sx={{ padding: 4, marginTop: 10, fontSize: 18 }}>
+            <Typography variant={"inherit"} textAlign={"center"}>
+              {i18n.logout.message}
+            </Typography>
+          </Paper>
+        </Container>
+      </div>
+    </>
+  );
 };
 
 export default Logout;

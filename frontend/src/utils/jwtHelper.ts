@@ -1,15 +1,9 @@
 import moment from "moment";
+import { RoleNameEnum } from "../client/movies/generator-output";
 
-const ROLES = {
-  ROLE_ADMIN: "ROLE_ADMIN",
-  ROLE_USER: "ROLE_USER",
-} as const;
-
-export const isUserAdmin = () => {
+export const hasUserRole = (role: RoleNameEnum) => {
   let roles = window.localStorage.getItem("rolesFromJwt");
-  return roles?.indexOf(ROLES.ROLE_ADMIN) !== undefined
-    ? roles?.indexOf(ROLES.ROLE_ADMIN) > -1
-    : false;
+  return roles?.indexOf(role) !== undefined ? roles?.indexOf(role) > -1 : false;
 };
 
 export const isJwtNotExpired = () => {

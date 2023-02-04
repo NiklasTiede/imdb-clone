@@ -30,7 +30,7 @@ export const notify = createModel<RootModel>()({
       }),
     removeNotification: (state, payload: Notification) =>
       reduce(state, {
-        notifications: state.notifications.filter((e) => e.key != payload.key),
+        notifications: state.notifications.filter((e) => e.key !== payload.key),
       }),
   },
   effects: (dispatch) => ({

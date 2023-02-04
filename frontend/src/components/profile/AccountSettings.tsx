@@ -44,7 +44,7 @@ const AccountSettings = () => {
     if (username) {
       dispatch.account.getAccountProfileSettings(username);
     }
-  }, []);
+  }, [username]);
 
   useEffect(() => {
     setFirstName(accountProfile.firstName ?? "");
@@ -66,7 +66,7 @@ const AccountSettings = () => {
     event.preventDefault();
 
     if (username) {
-      const payload: unknown = {
+      const payload = {
         username: username,
         accountRecord: {
           firstName: firstName ? firstName : null,

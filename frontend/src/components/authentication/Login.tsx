@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { LoginRequest } from "../../client/movies/generator-output";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import {
   Button,
@@ -12,6 +12,29 @@ import {
   useTheme,
 } from "@mui/material";
 import { tokens } from "../../theme";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as zod from "zod";
+import { i18n } from "../../i18n";
+import { State as AuthState } from "../../redux/model/authentication";
+import { isJwtNotExpired } from "../../utils/jwtHelper";
+
+interface FormInputs {
+  usernameOrEmail: string;
+  password: string;
+}
+
+const schema = zod.object({
+  usernameOrEmail: zod
+    .string()
+    .regex(new RegExp(i18n.regex.username.pattern), "Invalid Email / Username")
+    .or(zod.string().regex(new RegExp(i18n.regex.email.pattern))),
+  password: zod
+    .string()
+    .min(8, "Password must contain at least 8 characters")
+    .max(30, "Password must contain at most 30 characters")
+    .regex(new RegExp(i18n.regex.password.pattern), "Invalid Password"),
+});
 
 const Login = () => {
   const theme = useTheme();
@@ -19,24 +42,40 @@ const Login = () => {
   const navigateTo = useNavigate();
   const dispatch = useDispatch<Dispatch>();
 
-  const [usernameOrEmail, setUsernameOrEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const isAuthenticated = useSelector(
+    (state: { authentication: AuthState }) =>
+      state.authentication.isAuthenticated
+  );
+  const isLoggedIn: boolean = isJwtNotExpired();
 
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    const payload = {
-      usernameOrEmail: usernameOrEmail,
-      password: password,
-    } satisfies LoginRequest;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormInputs>({
+    mode: "onBlur",
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = (data: FormInputs) => {
+    const payload: LoginRequest = {
+      usernameOrEmail: data.usernameOrEmail,
+      password: data.password,
+    };
     dispatch.authentication.authenticateAccount(payload);
-    navigateTo("/home");
   };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigateTo("/");
+    }
+  }, [isAuthenticated]);
 
   return (
     <>
       <div>
         <Container maxWidth={"sm"}>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <Grid
               container
               spacing={2}
@@ -49,21 +88,29 @@ const Login = () => {
                   <Grid item>
                     <TextField
                       type={"text"}
-                      fullWidth
                       label={"Email / Username"}
                       variant={"outlined"}
-                      onChange={(e) => setUsernameOrEmail(e.target.value)}
-                      value={usernameOrEmail}
+                      error={!!errors.usernameOrEmail}
+                      helperText={
+                        errors.usernameOrEmail
+                          ? errors.usernameOrEmail?.message
+                          : " "
+                      }
+                      fullWidth
+                      {...register("usernameOrEmail")}
                     />
                   </Grid>
                   <Grid item>
                     <TextField
                       type={"password"}
-                      fullWidth
                       label={"Password"}
                       variant={"outlined"}
-                      onChange={(e) => setPassword(e.target.value)}
-                      value={password}
+                      error={!!errors.password}
+                      helperText={
+                        errors.password ? errors.password?.message : " "
+                      }
+                      fullWidth
+                      {...register("password")}
                     />
                   </Grid>
                   <Grid item textAlign="center">
@@ -80,7 +127,7 @@ const Login = () => {
                       type={"submit"}
                       fullWidth
                     >
-                      Submit
+                      {i18n.login.login}
                     </Button>
                   </Grid>
                   <Grid item textAlign="center">
@@ -92,7 +139,7 @@ const Login = () => {
                         color: colors.redAccent[300],
                       }}
                     >
-                      Registration
+                      {i18n.login.registration}
                     </Link>
                   </Grid>
                 </Grid>

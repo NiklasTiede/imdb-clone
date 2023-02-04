@@ -22,12 +22,13 @@ import { ColorModeContext, tokens } from "../theme";
 import { useContext } from "react";
 import LoginIcon from "@mui/icons-material/Login";
 import EditIcon from "@mui/icons-material/Edit";
-import { isJwtNotExpired, isUserAdmin } from "../utils/jwtHelper";
+import { hasUserRole, isJwtNotExpired } from "../utils/jwtHelper";
 import { Dispatch } from "../redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { i18n } from "../i18n";
 import { State as AuthenticationStatus } from "../redux/model/authentication";
 import { useNotifier } from "../hooks/useNotifier";
+import { RoleNameEnum } from "../client/movies/generator-output";
 
 let settings = [
   {
@@ -107,7 +108,7 @@ function AppBarTop() {
     (state: { authentication: AuthenticationStatus }) =>
       state.authentication.isAuthenticated
   );
-  const isAdmin: boolean = isUserAdmin();
+  const isAdmin: boolean = hasUserRole(RoleNameEnum.Admin);
   const isLoggedIn: boolean = isJwtNotExpired();
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -130,6 +131,7 @@ function AppBarTop() {
     window.localStorage.removeItem("jwtToken");
     window.localStorage.removeItem("rolesFromJwt");
     window.localStorage.removeItem("jwtExpiresAt");
+    window.localStorage.removeItem("username");
 
     dispatch.authentication.setIsAuthenticated(false);
   };
@@ -206,14 +208,23 @@ function AppBarTop() {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
     >
-      <MenuItem style={{ color: colors.grey["100"] }}>
-        <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-          <Badge badgeContent={4} color="error">
-            <MailIcon />
-          </Badge>
-        </IconButton>
-        <p>{i18n.general.messages}</p>
-      </MenuItem>
+      <Link
+        style={{ textDecoration: "none", color: "inherit" }}
+        to={"your-messages"}
+      >
+        <MenuItem style={{ color: colors.grey["100"] }}>
+          <IconButton
+            size="large"
+            aria-label="show 4 new mails"
+            color="inherit"
+          >
+            <Badge badgeContent={4} color="error">
+              <MailIcon />
+            </Badge>
+          </IconButton>
+          <p>{i18n.general.messages}</p>
+        </MenuItem>
+      </Link>
       <MenuItem
         onClick={handleProfileMenuOpen}
         style={{ color: colors.grey["100"] }}
@@ -245,11 +256,17 @@ function AppBarTop() {
   const renderLoggedInMenu = (
     <div>
       <Box sx={{ display: { xs: "none", md: "flex" } }}>
-        <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-          <Badge badgeContent={4} color="error">
-            <MailIcon />
-          </Badge>
-        </IconButton>
+        <Link style={{ color: "inherit" }} to={"your-messages"}>
+          <IconButton
+            size="large"
+            aria-label="show 4 new mails"
+            color="inherit"
+          >
+            <Badge badgeContent={4} color="error">
+              <MailIcon />
+            </Badge>
+          </IconButton>
+        </Link>
         <IconButton
           size="large"
           edge="end"
@@ -294,7 +311,7 @@ function AppBarTop() {
             variant="h6"
             noWrap
             component="a"
-            href={"/home"}
+            href={"/"}
             sx={{
               mr: 2,
               display: { xs: "none", md: "flex" },
@@ -331,7 +348,6 @@ function AppBarTop() {
               )}
             </Badge>
           </IconButton>
-
           {isAdmin ? renderMoviesEditing : ""}
           {isLoggedIn ? renderLoggedInMenu : renderLogin}
         </Toolbar>

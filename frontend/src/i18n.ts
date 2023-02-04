@@ -7,17 +7,18 @@ export const i18n = {
   regex: {
     username: {
       pattern: "^(?=.{2,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$",
-      rules: "must be between 2-20 characters, seperated only by . and _",
+      rules:
+        "Username must be between 2 - 20 characters and can contain digits, dots or hyphens",
     },
     email: {
       pattern:
-        /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-      rules: "must be valid email address",
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+      rules: "Email must be a valid address",
     },
     password: {
       pattern: "(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,30}",
       rules:
-        "password must be between 8 and 30 characters and contain a digit, a lower and upper and special character",
+        "Password must be between 8 and 30 characters and contain a digit, a lower-, upper- and special character",
     },
   },
   menuOptions: {
@@ -42,13 +43,25 @@ export const i18n = {
     loadingError: "Error while attempting to register",
   },
   login: {
+    login: "Login",
+    registration: "Registration",
     badCredentials: "Bad Credentials",
     loadingError: "Error while attempting to login",
   },
-  logout: {},
+  logout: {
+    message: "You are now logged out.",
+  },
   watchlist: {},
   ratings: {},
   messages: {},
   editMovie: {},
   movieSearch: {},
+  notFound: {
+    message: "This page does not exist.",
+  },
+  accessDenied: {
+    warning: "Access Denied",
+    message: (role: string) =>
+      `Permission '${role}' is required to access this resource.`,
+  },
 };
