@@ -7,8 +7,10 @@ import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.*;
+import org.springframework.data.elasticsearch.annotations.Document;
 
 @Entity
+@Document(indexName = "movies")
 public class Movie extends DateAudit {
 
   @Id

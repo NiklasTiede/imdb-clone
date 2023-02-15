@@ -6,6 +6,7 @@ import com.thecodinglab.imdbclone.entity.VerificationToken;
 import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.repository.RatingRepository;
 import com.thecodinglab.imdbclone.repository.VerificationTokenRepository;
+import com.thecodinglab.imdbclone.service.MovieService;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -25,14 +26,17 @@ public class ScheduledTasks {
   private final RatingRepository ratingRepository;
   private final MovieRepository movieRepository;
   private final VerificationTokenRepository verificationTokenRepository;
+  private final MovieService movieService;
 
   public ScheduledTasks(
       RatingRepository ratingRepository,
       MovieRepository movieRepository,
-      VerificationTokenRepository verificationTokenRepository) {
+      VerificationTokenRepository verificationTokenRepository,
+      MovieService movieService) {
     this.ratingRepository = ratingRepository;
     this.movieRepository = movieRepository;
     this.verificationTokenRepository = verificationTokenRepository;
+    this.movieService = movieService;
   }
 
   /**
@@ -64,7 +68,7 @@ public class ScheduledTasks {
         Movie movie = movieRepository.getMovieById(movieRating.get(0).getMovie().getId());
         movie.setRating(newRating);
         movie.setRatingCount(countOfAllRatings);
-        Movie savedMovie = movieRepository.save(movie);
+        Movie savedMovie = movieService.performSave(movie);
 
         LOGGER.info(
             "movie [{}] was updated. The new average rating is [{}] with [{}] counts",

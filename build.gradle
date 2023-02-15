@@ -71,25 +71,19 @@ dependencies {
 	// Code Formatter
 	implementation group: 'com.diffplug.spotless', name: 'spotless-plugin-gradle', version: '6.12.0'
 
-	// ES client: index, query, sort, aggregate - https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/searching.html
-	implementation group: 'co.elastic.clients', name: 'elasticsearch-java', version: '8.2.1'
-	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.14.0-rc2'
-	implementation group: 'jakarta.json', name: 'jakarta.json-api', version: '2.1.1'
+	// SearchEngine
+	implementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '5.0.1'
 
-	// simpler ES alternative: MeiliSearch.
-	// https://docs.meilisearch.com/learn/getting_started/quick_start.html#setup-and-installation
-	// https://github.com/meilisearch/meilisearch-java#-installation
-    // implementation group: 'com.meilisearch.sdk', name: 'meilisearch-java', version: '0.7.2'
+	// File Storage
+	implementation group: 'io.minio', name: 'minio', version: '8.5.1'
 
 	// monitoring
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: "$springBootVersion"
-//	implementation group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.7.2'
 
 	// Testing
 	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: "$springBootVersion"
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
 	testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
-//	 testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.7.0'
 }
 
 test {

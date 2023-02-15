@@ -5,7 +5,7 @@ todo.txt
 /infrastructure/database/data-processing/imdb-dataset
 /infrastructure/database/docker-image-creation/processed_imdb_movies*
 /infrastructure/prometheus
-/infrastructure/elasticsearch
+/infrastructure/elasticsearch/commands.txt
 /infrastructure/redis
 
 # generated typescript clients

@@ -22,11 +22,12 @@
 </p>
 
 ## Techstack
-- Languages: Java JDK17 / Typescript
-- Frameworks: Spring Boot v3 / React (MaterialUI)
-- Database: MySQL
+- Languages: Java JDK17 / Typescript v4
+- Frameworks: Spring Boot v3 / React v18 (MaterialUI v5)
+- Rel. Database: MySQL v8
+- SearchEngine: Elasticsearch / Kibana - v8
 
-App is secured with modern JWT authentication. 
+The app is secured with JWT authentication. I keep the techstack up-to-date
 
 ## How to Run this Project from Source
 

@@ -1,0 +1,92 @@
+### get multiple movies by an array of ids
+GET {{protocol}}{{host}}:{{port}}/api/search/movies?page=0&size=20
+Content-Type: application/json
+
+{
+  "primaryTitle": "it",
+  "movieType": "MOVIE",
+  "movieGenre": ["HORROR"],
+  "minStartYear": 2010,
+  "maxStartYear": 2022,
+  "minRuntimeMinutes": 80,
+  "maxRuntimeMinutes": 230,
+  "minImdbRating": 6.3,
+  "maxImdbRating": 9,
+  "adult": false
+}
+
+
+### health
+GET http://localhost:9200/
+
+
+### cluster state and some statistics toward movies index
+GET http://localhost:9200/_cat/indices
+
+
+### properties of each field in the document of the index
+GET http://localhost:9200/movies
+
+
+### count number of documents in an index
+GET http://localhost:9200/movies/_count
+
+
+### search for by document id
+GET http://localhost:9200/movies/_doc/1396484
+
+
+### simple search
+GET http://localhost:9200/movies/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {"primaryTitle":"Nightcrawler"}
+  }
+}
+
+
+### simple search
+GET http://localhost:9200/movies/_search
+Content-Type: application/json
+
+{
+  "from": 0,
+  "size": 3,
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "primaryTitle": "It" }}
+      ]
+    }
+  }
+}
+
+
+### complexer search
+GET http://localhost:9200/movies/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "primaryTitle": "it" } },
+        { "match": { "movieGenre": "HORROR" } },
+        {
+          "range": {
+            "startYear": {
+              "gte": 2015,
+              "lte": 2022
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+### delete document by id
+DELETE http://localhost:9200/movies/_doc/816692

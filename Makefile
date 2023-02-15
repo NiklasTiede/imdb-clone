@@ -89,9 +89,10 @@ docker-clean: ## remove imdb-clone docker images and containers
 .PHONY: es-run
 
 es-run: ## show all images and containers
-	docker run --name elasticsearch --net elastic -p 9200:9200 -e discovery.type=single-node -e ES_JAVA_OPTS="-Xms1g -Xmx1g" -e ELASTIC_PASSWORD=elastic -it docker.elastic.co/elasticsearch/elasticsearch:8.2.2
-
-
+	docker network create elastic
+	docker run --name elasticsearch -d --restart=always --net elastic -p 9200:9200 -e discovery.type=single-node -e ES_JAVA_OPTS="-Xms1g -Xmx1g" -e ELASTIC_PASSWORD=elastic -it docker.elastic.co/elasticsearch/elasticsearch:8.5.3
+	docker pull docker.elastic.co/kibana/kibana:8.5.3
+	docker run --name kibana --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.5.3
 
 # ------------  Help  -------------------------------------------------------------------------------------------------
 

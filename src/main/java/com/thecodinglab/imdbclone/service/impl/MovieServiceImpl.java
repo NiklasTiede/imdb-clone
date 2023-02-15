@@ -1,17 +1,18 @@
 package com.thecodinglab.imdbclone.service.impl;
 
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.exception.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
 import com.thecodinglab.imdbclone.payload.movie.MovieRequest;
+import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.repository.MovieSearchDao;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.MovieService;
 import com.thecodinglab.imdbclone.validation.Pagination;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,14 +27,17 @@ public class MovieServiceImpl implements MovieService {
   private static final Logger LOGGER = LoggerFactory.getLogger(MovieServiceImpl.class);
 
   private final MovieRepository movieRepository;
+  private final MovieElasticSearchRepository elasticSearchRepository;
   private final MovieSearchDao movieSearchDao;
   private final MovieMapper movieMapper;
 
   public MovieServiceImpl(
       final MovieRepository movieRepository,
+      MovieElasticSearchRepository elasticSearchRepository,
       MovieSearchDao movieSearchDao,
       MovieMapper movieMapper) {
     this.movieRepository = movieRepository;
+    this.elasticSearchRepository = elasticSearchRepository;
     this.movieSearchDao = movieSearchDao;
     this.movieMapper = movieMapper;
   }
@@ -61,68 +65,32 @@ public class MovieServiceImpl implements MovieService {
         movieRecordPage.isLast());
   }
 
-  // remove if-else
   @Override
   public Movie createMovie(MovieRequest movieRequest, UserPrincipal currentAccount) {
-    if (UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
-      Movie movie = movieMapper.dtoToEntity(movieRequest);
-      Movie savedMovie = movieRepository.save(movie);
-      LOGGER.info(
-          "the movie [{}] was saved successfully with movieId [{}].",
-          movie.getOriginalTitle(),
-          movie.getId());
-      return savedMovie;
-    } else {
-      throw new UnauthorizedException(
-          "Account with id ["
-              + currentAccount.getId()
-              + "] has no permission to create this resource.");
-    }
+    Movie movie = movieMapper.dtoToEntity(movieRequest);
+    return performSave(movie);
   }
 
-  // remove if-else
   @Override
   public Movie updateMovie(Long movieId, MovieRequest request, UserPrincipal currentAccount) {
-    if (UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
-      Movie movie = movieRepository.getMovieById(movieId);
-      movie.setPrimaryTitle(request.primaryTitle());
-      movie.setOriginalTitle(request.originalTitle());
-      movie.setStartYear(request.startYear());
-      movie.setEndYear(request.endYear());
-      movie.setRuntimeMinutes(request.runtimeMinutes());
-      movie.setMovieGenre(request.movieGenre());
-      movie.setMovieType(request.movieType());
-      movie.setAdult(request.adult());
-      Movie updatedMovie = movieRepository.save(movie);
-      LOGGER.info(
-          "the movie [{}] was updated successfully with movieId [{}].",
-          updatedMovie.getOriginalTitle(),
-          updatedMovie.getId());
-      return updatedMovie;
-    } else {
-      throw new UnauthorizedException(
-          "Account with id ["
-              + currentAccount.getId()
-              + "] has no permission to update this resource.");
-    }
+    Movie movie = movieRepository.getMovieById(movieId);
+    movie.setPrimaryTitle(request.primaryTitle());
+    movie.setOriginalTitle(request.originalTitle());
+    movie.setStartYear(request.startYear());
+    movie.setEndYear(request.endYear());
+    movie.setRuntimeMinutes(request.runtimeMinutes());
+    movie.setMovieGenre(request.movieGenre());
+    movie.setMovieType(request.movieType());
+    movie.setAdult(request.adult());
+    return performSave(movie);
   }
 
-  // remove if-else
   @Override
   public MessageResponse deleteMovie(Long movieId, UserPrincipal currentAccount) {
-
-    if (UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
-
-      Movie movie = movieRepository.getMovieById(movieId);
-      //      movieRepository.delete(movie);
-      return new MessageResponse(
-          "the movie [" + movie.getPrimaryTitle() + "] was deleted successfully.");
-    } else {
-      throw new UnauthorizedException(
-          "Account with id ["
-              + currentAccount.getId()
-              + "] has no permission to delete this resource.");
-    }
+    Movie movie = movieRepository.getMovieById(movieId);
+    performDelete(movie);
+    return new MessageResponse(
+        "the movie [" + movie.getPrimaryTitle() + "] was deleted successfully.");
   }
 
   @Override
@@ -131,5 +99,26 @@ public class MovieServiceImpl implements MovieService {
     PagedResponse<Movie> movies = movieSearchDao.findByPrimaryTitleStartsWith(title, page, size);
     LOGGER.info("[{}] movies were retrieved from database.", movies.getContent().size());
     return movies;
+  }
+
+  @Transactional
+  public Movie performSave(Movie movie) {
+    Movie updatedMovie = movieRepository.save(movie);
+    elasticSearchRepository.save(movie);
+    LOGGER.info(
+        "the movie [{}] with movieId [{}] was created and/or updated from Mysql and ES.",
+        updatedMovie.getOriginalTitle(),
+        updatedMovie.getId());
+    return updatedMovie;
+  }
+
+  @Transactional
+  private void performDelete(Movie movie) {
+    movieRepository.delete(movie);
+    elasticSearchRepository.delete(movie);
+    LOGGER.info(
+        "the movie [{}] with movieId [{}] was deleted from Mysql and ES.",
+        movie.getOriginalTitle(),
+        movie.getId());
   }
 }
