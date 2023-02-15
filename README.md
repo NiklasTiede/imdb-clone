@@ -25,9 +25,9 @@
 - Languages: Java JDK17 / Typescript v4
 - Frameworks: Spring Boot v3 / React v18 (MaterialUI v5)
 - Rel. Database: MySQL v8
-- SearchEngine: Elasticsearch / Kibana - v8
+- SearchEngine: Elasticsearch v8
 
-The app is secured with JWT authentication. I keep the techstack up-to-date
+The app is secured with JWT authentication. The techstack is kept up-to-date.
 
 ## How to Run this Project from Source
 
