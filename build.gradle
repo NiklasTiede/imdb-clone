@@ -32,11 +32,10 @@ spotless {
 	}
 }
 
-def springBootVersion = '3.0.1'
+def springBootVersion = '3.0.2'
 
 dependencies {
 	// starters
-	developmentOnly group: 'org.springframework.boot', name: 'spring-boot-devtools', version: "$springBootVersion"
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: "$springBootVersion"
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: "$springBootVersion"
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: "$springBootVersion"
