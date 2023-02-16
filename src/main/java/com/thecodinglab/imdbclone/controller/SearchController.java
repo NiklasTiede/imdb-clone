@@ -5,6 +5,7 @@ import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
 import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import com.thecodinglab.imdbclone.validation.Pagination;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -21,9 +22,9 @@ public class SearchController {
     this.elasticSearchService = elasticSearchService;
   }
 
-  @GetMapping("/movies")
+  @PostMapping("/movies")
   public ResponseEntity<PagedResponse<Movie>> search(
-      @RequestBody MovieSearchRequest request,
+      @Valid @RequestBody MovieSearchRequest request,
       @RequestParam(defaultValue = Pagination.DEFAULT_PAGE_NUMBER) int page,
       @RequestParam(defaultValue = Pagination.DEFAULT_PAGE_SIZE) int size) {
     return new ResponseEntity<>(

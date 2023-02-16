@@ -205,6 +205,39 @@ paths:
             "*/*":
               schema:
                 $ref: "#/components/schemas/MessageResponse"
+  /api/search/movies:
+    post:
+      tags:
+        - search-controller
+      operationId: search
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 30
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MovieSearchRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/PagedResponseMovie"
   /api/movie/get-movies:
     post:
       tags:
@@ -925,6 +958,104 @@ components:
       properties:
         message:
           type: string
+    MovieSearchRequest:
+      required:
+        - primaryTitle
+      type: object
+      properties:
+        primaryTitle:
+          maxLength: 200
+          minLength: 0
+          type: string
+        minStartYear:
+          maximum: 2030
+          minimum: 1850
+          type: integer
+          format: int32
+        maxStartYear:
+          maximum: 2030
+          minimum: 1850
+          type: integer
+          format: int32
+        minRuntimeMinutes:
+          minimum: 0
+          type: integer
+          format: int32
+        maxRuntimeMinutes:
+          maximum: 5000
+          type: integer
+          format: int32
+        movieGenre:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+              - HORROR
+              - MYSTERY
+              - THRILLER
+              - CRIME
+              - WESTERN
+              - WAR
+              - ACTION
+              - ADVENTURE
+              - FAMILY
+              - COMEDY
+              - ANIMATION
+              - FANTASY
+              - SCI_FI
+              - DRAMA
+              - ROMANCE
+              - SPORT
+              - HISTORY
+              - BIOGRAPHY
+              - MUSIC
+              - MUSICAL
+              - DOCUMENTARY
+              - NEWS
+              - ADULT
+              - REALITY_TV
+              - TALK_SHOW
+              - GAME_SHOW
+              - FILM_NOIR
+              - SHORT
+        movieType:
+          type: string
+          enum:
+            - SHORT
+            - MOVIE
+            - VIDEO
+            - TV_MOVIE
+            - TV_EPISODE
+            - TV_MINI_SERIES
+            - TV_SPECIAL
+            - TV_SERIES
+            - TV_SHORT
+            - TV_PILOT
+            - VIDEO_GAME
+        adult:
+          type: boolean
+    PagedResponseMovie:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/Movie"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
     MovieIdsRequest:
       type: object
       properties:
@@ -1140,27 +1271,6 @@ components:
         accountId:
           type: integer
           format: int64
-    PagedResponseMovie:
-      type: object
-      properties:
-        content:
-          type: array
-          items:
-            $ref: "#/components/schemas/Movie"
-        page:
-          type: integer
-          format: int32
-        size:
-          type: integer
-          format: int32
-        totalElements:
-          type: integer
-          format: int64
-        totalPages:
-          type: integer
-          format: int32
-        last:
-          type: boolean
     Rating:
       type: object
       properties:

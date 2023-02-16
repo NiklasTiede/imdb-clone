@@ -50,7 +50,7 @@ public class WebSecurityConfig {
         .permitAll()
         .requestMatchers(HttpMethod.GET, "/api/movie/**", "/api/comment/**", "/api/account/**")
         .permitAll()
-        .requestMatchers(HttpMethod.POST, "/api/movie/get-movies")
+        .requestMatchers(HttpMethod.POST, "/api/movie/get-movies", "/api/search/movies")
         .permitAll()
         .anyRequest()
         .authenticated();
