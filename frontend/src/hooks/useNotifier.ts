@@ -27,6 +27,7 @@ export const useNotifier = () => {
       enqueueSnackbar(notification.message, {
         key: notification.key,
         variant: notification.variant,
+        autoHideDuration: 2500,
         onExited: () => {
           dispatch.notify.removeNotificationById(notification);
           removeDisplayed(notification.key);
