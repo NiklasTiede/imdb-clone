@@ -1,23 +1,10 @@
-import { Button, useTheme } from "@mui/material";
-import { tokens } from "../../theme";
-import { useNavigate } from "react-router-dom";
+import { Button } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { Dispatch } from "../../redux/store";
-import {
-  MovieRequestMovieGenreEnum,
-  MovieSearchRequest,
-  MovieSearchRequestMovieGenreEnum,
-  MovieSearchRequestMovieTypeEnum,
-} from "../../client/movies/generator-output";
-// import {useNotifier} from "../../hooks/useNotifier";
+import { MovieSearchRequestMovieTypeEnum } from "../../client/movies/generator-output";
 
 const EditMovie = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
-  const navigateTo = useNavigate();
   const dispatch = useDispatch<Dispatch>();
-
-  // useNotifier();
 
   function handleClick() {
     dispatch.notify.success("This is a success message!");
@@ -27,7 +14,7 @@ const EditMovie = () => {
       maxRuntimeMinutes: 350,
       minStartYear: 1860,
       maxStartYear: 2025,
-      movieGenre: ["HORROR","MYSTERY"],
+      movieGenre: ["HORROR", "MYSTERY"],
       movieType: MovieSearchRequestMovieTypeEnum.Movie,
       adult: false,
     };
