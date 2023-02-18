@@ -4,7 +4,6 @@ import { searchApi } from "../../client/movies/MoviesApi";
 import { i18n } from "../../i18n";
 import {
   Movie,
-  MovieSearchRequest,
   PagedResponseMovie,
 } from "../../client/movies/generator-output";
 import { AxiosResponse } from "axios";
@@ -24,9 +23,9 @@ export const search = createModel<RootModel>()({
       }),
   },
   effects: (dispatch) => ({
-    async searchMovies(payload: MovieSearchRequest) {
+    async searchMovies({query, requestSearchParams, page, size}) {
       searchApi
-        .search(payload, 0, 10) // requests are yet not working
+        .search(query, requestSearchParams, page, size)
         .then((response: AxiosResponse<PagedResponseMovie>) => {
           if (
             response.status === 200 &&

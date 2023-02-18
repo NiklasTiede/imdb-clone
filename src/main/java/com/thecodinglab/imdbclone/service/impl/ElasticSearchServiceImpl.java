@@ -1,10 +1,9 @@
 package com.thecodinglab.imdbclone.service.impl;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.ScoreSort;
-import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -36,8 +35,12 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
   public void indexMovie(Movie movie) {
     IndexResponse indexResponse;
     try {
-      indexResponse =
-          esClient.index(idx -> idx.index("movies").id(movie.getId().toString()).document(movie));
+      indexResponse = esClient
+          .index(idx -> idx
+              .index("movies")
+              .id(movie.getId().toString())
+              .document(movie));
+
       LOGGER.info(
           "Document of type Movie with id [{}] of index [{}] was [{}].",
           indexResponse.id(),
@@ -54,8 +57,11 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
   public void indexMovies(List<Movie> movies) {
     BulkRequest.Builder br = new BulkRequest.Builder();
     for (Movie movie : movies) {
-      br.operations(
-          op -> op.index(idx -> idx.index("movies").id(movie.getId().toString()).document(movie)));
+      br.operations(op -> op
+          .index(idx -> idx
+              .index("movies")
+              .id(movie.getId().toString())
+              .document(movie)));
     }
     BulkResponse result;
     try {
@@ -90,6 +96,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
                   .index("movies")
                   .id(movieId.toString()),
               Movie.class);
+
       LOGGER.info("Movie document with primaryTitle [{}] was found.", response.source() != null ? response.source().getPrimaryTitle() : null);
       return response.source();
     } catch (IOException e) {
@@ -143,20 +150,19 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
   }
 
   /** Search Movies by Multiple Parameters */
-  // TODO: search through original or primary title, boost scoring if high imdbRatingCounts
+  // TODO: boost scoring if high imdbRatingCounts
   @Override
-  public PagedResponse<Movie> searchMovies(MovieSearchRequest request, int page, int size) {
-    BoolQuery boolQuery = buildBoolQuery(request);
+  public PagedResponse<Movie> searchMovies(String query, MovieSearchRequest request, int page, int size) {
+    BoolQuery boolQuery = buildBoolQuery(query, request);
     SearchResponse<Movie> response;
 
     SearchRequest searchRequest =
-        SearchRequest.of(
-            s ->
-                s.index("movies")
-                    .from(page * size)
-                    .size(size)
-                    .query(q -> q.bool(boolQuery))
-                    .sort(so -> so.score(ScoreSort.of(sc -> sc.order(SortOrder.Desc)))));
+        SearchRequest.of(s -> s
+            .index("movies")
+            .query(q -> q.bool(boolQuery))
+            .from(page * size)
+            .size(size)
+        );
     LOGGER.info("Document search query json: [{}]", searchRequest);
 
     try {
@@ -180,37 +186,38 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
   }
 
   @Override
-  public BoolQuery buildBoolQuery(MovieSearchRequest request) {
+  public BoolQuery buildBoolQuery(String query, MovieSearchRequest request) {
     BoolQuery.Builder search = QueryBuilders.bool();
-    search.must(QueryBuilders.match(m -> m.field("primaryTitle").query(request.primaryTitle())));
+
+    search.must(QueryBuilders.multiMatch(m -> m.query(query).type(TextQueryType.MostFields).fields(List.of("primaryTitle", "originalTitle"))));
+
     if (request.movieGenre() != null && !request.movieGenre().isEmpty()) {
-      request
-          .movieGenre()
-          .forEach(
-              movieGenreEnum ->
-                  search.must(
-                      QueryBuilders.match(
-                          m -> m.field("movieGenre").query(String.valueOf(movieGenreEnum)))));
+      request.movieGenre().forEach(
+          movieGenreEnum -> search.filter(QueryBuilders
+              .match(m -> m
+                  .field("movieGenre")
+                  .query(String.valueOf(movieGenreEnum))
+              )));
     }
     if (request.movieType() != null) {
       search.filter(
-          QueryBuilders.match(m -> m.field("movieType").query(request.movieType().toString())));
+          QueryBuilders.match(m -> m
+              .field("movieType")
+              .query(request.movieType().toString())));
     }
     if (request.minStartYear() != null && request.maxStartYear() != null) {
       search.filter(
-          QueryBuilders.range(
-              r ->
-                  r.field("startYear")
-                      .gte(JsonData.of(request.minStartYear()))
-                      .lte(JsonData.of(request.maxStartYear()))));
+          QueryBuilders.range(r -> r
+              .field("startYear")
+              .gte(JsonData.of(request.minStartYear()))
+              .lte(JsonData.of(request.maxStartYear()))));
     }
     if (request.minRuntimeMinutes() != null && request.maxRuntimeMinutes() != null) {
       search.filter(
-          QueryBuilders.range(
-              r ->
-                  r.field("runtimeMinutes")
-                      .gte(JsonData.of(request.minRuntimeMinutes()))
-                      .lte(JsonData.of(request.maxRuntimeMinutes()))));
+          QueryBuilders.range(r -> r
+              .field("runtimeMinutes")
+              .gte(JsonData.of(request.minRuntimeMinutes()))
+              .lte(JsonData.of(request.maxRuntimeMinutes()))));
     }
     return search.build();
   }

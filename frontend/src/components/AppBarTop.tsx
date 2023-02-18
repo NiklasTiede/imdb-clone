@@ -324,15 +324,17 @@ function AppBarTop() {
           >
             {i18n.general.appName}
           </Typography>
+
           <Search>
             <SearchIconWrapper>
               <SearchIcon />
             </SearchIconWrapper>
             <StyledInputBase
-              placeholder="Search…"
+              placeholder="Search for Movies…"
               inputProps={{ "aria-label": "search" }}
             />
           </Search>
+
           <Box sx={{ flexGrow: 1 }} />
           <IconButton
             onClick={colorMode.toggleColorMode}

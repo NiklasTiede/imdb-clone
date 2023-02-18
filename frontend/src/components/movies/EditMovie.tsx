@@ -8,15 +8,20 @@ const EditMovie = () => {
 
   function handleClick() {
     dispatch.notify.success("This is a success message!");
+
     let payload: any = {
-      primaryTitle: "It",
-      minRuntimeMinutes: 0,
-      maxRuntimeMinutes: 350,
-      minStartYear: 1860,
-      maxStartYear: 2025,
-      movieGenre: ["HORROR", "MYSTERY"],
-      movieType: MovieSearchRequestMovieTypeEnum.Movie,
-      adult: false,
+        query: "it",
+        requestSearchParams: {
+            minRuntimeMinutes: 80,
+            maxRuntimeMinutes: 230,
+            minStartYear: 2010,
+            maxStartYear: 2022,
+            movieGenre: ["HORROR"],
+            movieType: MovieSearchRequestMovieTypeEnum.Movie,
+            adult: false,
+        },
+        page: 0,
+        size: 20
     };
     dispatch.search.searchMovies(payload);
   }

@@ -10,10 +10,6 @@ import jakarta.validation.constraints.Size;
 import java.util.Set;
 
 public record MovieSearchRequest(
-        @NotBlank
-        @Size(max = 200)
-        String primaryTitle,
-
         @Min(1850)
         @Max(2030)
         Integer minStartYear,

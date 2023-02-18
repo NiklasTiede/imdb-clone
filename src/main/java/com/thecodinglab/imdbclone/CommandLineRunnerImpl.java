@@ -1,8 +1,8 @@
 package com.thecodinglab.imdbclone;
 
-import com.thecodinglab.imdbclone.elasticsearch.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.repository.*;
+import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import com.thecodinglab.imdbclone.utility.PartitionList;
 import jakarta.transaction.Transactional;

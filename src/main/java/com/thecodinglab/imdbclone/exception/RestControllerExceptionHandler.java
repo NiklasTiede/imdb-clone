@@ -1,5 +1,6 @@
 package com.thecodinglab.imdbclone.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -86,5 +88,31 @@ public class RestControllerExceptionHandler {
         request.getDescription(false),
         ex.getMessage());
     return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  protected final ResponseEntity<Object> resolveException(
+      ConstraintViolationException ex, WebRequest request) {
+    ApiError apiError =
+        new ApiError(
+            "Request body validation failed", request.getDescription(true), ex.getMessage());
+    LOGGER.error(
+        "Request body validation failed on the following resource: '{}', returning error message: '{}'",
+        request.getDescription(false),
+        ex.getMessage());
+    return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
+  }
+
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  protected final ResponseEntity<Object> resolveException(
+      MissingServletRequestParameterException ex, WebRequest request) {
+    ApiError apiError =
+        new ApiError(
+            "Request parameter validation failed", request.getDescription(true), ex.getMessage());
+    LOGGER.error(
+        "Request parameter validation failed on the following resource: '{}', returning error message: '{}'",
+        request.getDescription(false),
+        ex.getMessage());
+    return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
   }
 }

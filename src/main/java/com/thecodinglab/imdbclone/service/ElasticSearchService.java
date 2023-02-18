@@ -20,7 +20,7 @@ public interface ElasticSearchService {
 
   List<Movie> searchMoviesByRatingRange(float minRating, float maxRating);
 
-  PagedResponse<Movie> searchMovies(MovieSearchRequest request, int page, int size);
+  PagedResponse<Movie> searchMovies(String query, MovieSearchRequest request, int page, int size);
 
-  BoolQuery buildBoolQuery(MovieSearchRequest request);
+  BoolQuery buildBoolQuery(String query, MovieSearchRequest request);
 }

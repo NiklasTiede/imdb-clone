@@ -1,9 +1,8 @@
-### get multiple movies by an array of ids
-GET {{protocol}}{{host}}:{{port}}/api/search/movies?page=0&size=20
+### search for movies by
+POST {{protocol}}{{host}}:{{port}}/api/search/movies?query=it&page=0&size=20
 Content-Type: application/json
 
 {
-  "primaryTitle": "it",
   "movieType": "MOVIE",
   "movieGenre": ["HORROR"],
   "minStartYear": 2010,
@@ -16,8 +15,19 @@ Content-Type: application/json
 }
 
 
-### health
+### get multiple movies by an array of ids
+POST {{protocol}}{{host}}:{{port}}/api/search/movies?query=Smultronstället&page=0&size=20
+Content-Type: application/json
+
+{}
+
+
+### current version
 GET http://localhost:9200/
+
+
+### cluster health
+GET http://localhost:9200/_cluster/health
 
 
 ### cluster state and some statistics toward movies index
@@ -33,38 +43,38 @@ GET http://localhost:9200/movies/_count
 
 
 ### search for by document id
-GET http://localhost:9200/movies/_doc/1396484
+GET http://localhost:9200/movies/_doc/2872718
 
 
-### simple search
+### simple match search
 GET http://localhost:9200/movies/_search
 Content-Type: application/json
 
 {
   "query": {
-    "match": {"primaryTitle":"Nightcrawler"}
-  }
-}
-
-
-### simple search
-GET http://localhost:9200/movies/_search
-Content-Type: application/json
-
-{
-  "from": 0,
-  "size": 3,
-  "query": {
-    "bool": {
-      "must": [
-        { "match": { "primaryTitle": "It" }}
-      ]
+    "match": {
+      "primaryTitle": "Nightcrawler"
     }
   }
 }
 
 
-### complexer search
+### multi match search
+GET http://localhost:9200/movies/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "multi_match": {
+      "query": "Smultronstället",
+      "type": "most_fields",
+      "fields": ["primaryTitle", "originalTitle"]
+    }
+  }
+}
+
+
+### simple search
 GET http://localhost:9200/movies/_search
 Content-Type: application/json
 
@@ -72,17 +82,94 @@ Content-Type: application/json
   "query": {
     "bool": {
       "must": [
-        { "match": { "primaryTitle": "it" } },
-        { "match": { "movieGenre": "HORROR" } },
+        { "match": {
+          "primaryTitle": "It"
+        }}
+      ]
+    }
+  },
+  "from": 0,
+  "size": 2
+}
+
+
+### complexer search (current search of movies)
+GET http://localhost:9200/movies/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "multi_match": {
+            "fields": [
+              "primaryTitle",
+              "originalTitle"
+            ],
+            "query": "it",
+            "type": "most_fields"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "match": {
+            "movieGenre": {
+              "query": "HORROR"
+            }
+          }
+        },
+        {
+          "match": {
+            "movieType": {
+              "query": "MOVIE"
+            }
+          }
+        },
         {
           "range": {
             "startYear": {
-              "gte": 2015,
+              "gte": 2010,
               "lte": 2022
+            }
+          }
+        },
+        {
+          "range": {
+            "runtimeMinutes": {
+              "gte": 80,
+              "lte": 230
             }
           }
         }
       ]
+    }
+  },
+  "from": 0,
+  "size": 20
+}
+
+
+### aggregations: avg rating per genre
+GET http://localhost:9200/movies/_search
+Content-Type: application/json
+
+{
+  "size": 0,
+  "aggs": {
+    "genres": {
+      "terms": {
+        "field": "movieGenre.keyword",
+        "size": 20
+      },
+      "aggs": {
+        "avg_rating": {
+          "avg": {
+            "field": "imdbRating"
+          }
+        }
+      }
     }
   }
 }
@@ -90,3 +177,21 @@ Content-Type: application/json
 
 ### delete document by id
 DELETE http://localhost:9200/movies/_doc/816692
+
+
+### delete whole index
+DELETE http://localhost:9200/movies
+
+
+### if watermark is reached
+PUT http://localhost:9200/_cluster/settings
+Content-Type: application/json
+
+{
+  "transient": {
+    "cluster.routing.allocation.disk.watermark.low": "85%",
+    "cluster.routing.allocation.disk.watermark.high": "90%",
+    "cluster.routing.allocation.disk.watermark.flood_stage": "95%",
+    "cluster.info.update.interval": "1m"
+  }
+}

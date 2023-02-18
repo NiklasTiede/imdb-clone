@@ -211,6 +211,13 @@ paths:
         - search-controller
       operationId: search
       parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            maxLength: 200
+            minLength: 0
+            type: string
         - name: page
           in: query
           required: false
@@ -959,14 +966,8 @@ components:
         message:
           type: string
     MovieSearchRequest:
-      required:
-        - primaryTitle
       type: object
       properties:
-        primaryTitle:
-          maxLength: 200
-          minLength: 0
-          type: string
         minStartYear:
           maximum: 2030
           minimum: 1850

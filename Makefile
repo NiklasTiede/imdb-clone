@@ -94,6 +94,10 @@ es-run: ## show all images and containers
 	docker pull docker.elastic.co/kibana/kibana:8.5.3
 	docker run --name kibana --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.5.3
 
+es-logs:
+	docker logs <container-id-or-name>
+
+
 # ------------  Help  -------------------------------------------------------------------------------------------------
 
 .PHONY: help
