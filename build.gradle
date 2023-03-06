@@ -1,7 +1,7 @@
 plugins {
-	id 'org.springframework.boot' version '3.0.1'
-	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id 'org.springframework.boot' version "$springBootVersion"
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'com.diffplug.spotless' version '6.7.2'
 }
 
@@ -32,57 +32,51 @@ spotless {
 	}
 }
 
-def springBootVersion = '3.0.2'
-
 dependencies {
-	// starters
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: "$springBootVersion"
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: "$springBootVersion"
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: "$springBootVersion"
+	//-- Servlet
+	implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
 
-	// MySQL Database
-	implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.31'
+	//-- Serialization / Deserialization
+	implementation 'com.fasterxml.jackson.core:jackson-core:2.14.2'
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.14.2'
 
-	// documentation - swagger ui
-	implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.0.2'
+	//-- Validation
+	implementation "org.springframework.boot:spring-boot-starter-validation:$springBootVersion"
 
-	// serialization / deserialization
-	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.14.1'
-	implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.14.1'
+	//-- Documentation - Swagger UI
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 
-	// validation
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: "$springBootVersion"
+	//-- Mapping
+	implementation 'org.mapstruct:mapstruct:1.5.3.Final'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.3.Final'
 
-	// mapstruct mapping classes with many fields
-	implementation group: 'org.mapstruct', name: 'mapstruct', version: '1.5.3.Final'
-	annotationProcessor group: 'org.mapstruct', name: 'mapstruct-processor', version: '1.5.3.Final'
+	//-- Database
+	implementation 'mysql:mysql-connector-java:8.0.32'
+	implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
 
-	// security: JWT / OAuth2
-	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
-	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
-	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
+	//-- SearchEngine
+	implementation 'org.springframework.data:spring-data-elasticsearch:5.0.3'
 
-	implementation group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version: '2.5.2.RELEASE'
+	//-- File Storage
+	implementation 'io.minio:minio:8.5.2'
 
-	// Email
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-mail', version: "$springBootVersion"
+	//-- Email
+	implementation "org.springframework.boot:spring-boot-starter-mail:$springBootVersion"
 
-	// Code Formatter
-	implementation group: 'com.diffplug.spotless', name: 'spotless-plugin-gradle', version: '6.12.0'
+	//-- Security: JWT / OAuth2
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-	// SearchEngine
-	implementation group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '5.0.1'
+	implementation 'org.springframework.security.oauth:spring-security-oauth2:2.5.2.RELEASE'
 
-	// File Storage
-	implementation group: 'io.minio', name: 'minio', version: '8.5.1'
+	//-- Monitoring
+	implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
 
-	// monitoring
-	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: "$springBootVersion"
-
-	// Testing
-	testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: "$springBootVersion"
-	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
-	testImplementation group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
+	//-- Testing
+	testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+	testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
 }
 
 test {
