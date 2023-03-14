@@ -60,7 +60,7 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
 
 	//-- Documentation - Swagger UI
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.1'
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.15'
 
 	//-- Mapping
 	implementation 'org.mapstruct:mapstruct:1.5.3.Final'
