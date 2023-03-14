@@ -36,6 +36,6 @@ public class WatchedMovieController {
       @PathVariable Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
-        watchedMovieService.deleteWatchedMovie(movieId, currentAccount), HttpStatus.OK);
+        watchedMovieService.deleteWatchedMovie(movieId, currentAccount), HttpStatus.NO_CONTENT);
   }
 }

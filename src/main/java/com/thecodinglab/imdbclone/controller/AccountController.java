@@ -110,7 +110,8 @@ public class AccountController {
   public ResponseEntity<MessageResponse> deleteAccount(
       @PathVariable String username,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(accountService.deleteAccount(username, currentUser), HttpStatus.OK);
+    return new ResponseEntity<>(
+        accountService.deleteAccount(username, currentUser), HttpStatus.NO_CONTENT);
   }
 
   @PutMapping("/{username}/give-admin")

@@ -64,6 +64,6 @@ public class CommentController {
       @PathVariable Long commentId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
-        commentService.deleteComment(commentId, currentAccount), HttpStatus.OK);
+        commentService.deleteComment(commentId, currentAccount), HttpStatus.NO_CONTENT);
   }
 }

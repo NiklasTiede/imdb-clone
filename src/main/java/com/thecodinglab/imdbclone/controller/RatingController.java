@@ -37,6 +37,7 @@ public class RatingController {
   public ResponseEntity<MessageResponse> deleteRating(
       @PathVariable Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(ratingService.deleteRating(currentAccount, movieId), HttpStatus.OK);
+    return new ResponseEntity<>(
+        ratingService.deleteRating(currentAccount, movieId), HttpStatus.NO_CONTENT);
   }
 }

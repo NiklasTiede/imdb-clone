@@ -64,7 +64,8 @@ public class MovieController {
   public ResponseEntity<MessageResponse> deleteMovieById(
       @PathVariable Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(movieService.deleteMovie(movieId, currentAccount), HttpStatus.OK);
+    return new ResponseEntity<>(
+        movieService.deleteMovie(movieId, currentAccount), HttpStatus.NO_CONTENT);
   }
 
   // substring search does not work very well (IndexOutOfBound-Exception too short search)

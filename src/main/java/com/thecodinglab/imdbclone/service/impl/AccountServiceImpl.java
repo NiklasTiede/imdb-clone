@@ -81,30 +81,18 @@ public class AccountServiceImpl implements AccountService {
         commentsCount);
   }
 
-  // remove if-else
   @Override
   public Account createAccount(RegistrationRequest request, UserPrincipal currentAccount) {
-
-    if (UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
-      String username = request.username().toLowerCase();
-      String email = request.email().toLowerCase();
-      String password = passwordEncoder.encode(request.password());
-      Account account = new Account(username, email, password);
-      account.setEnabled(true);
-      List<Role> roles = roleService.giveRoleToRegisteredUser();
-      account.setRoles(roles);
-      Account savedAccount = accountRepository.save(account);
-      LOGGER.info("Account with id [{}] was created and activated.", savedAccount.getId());
-      return savedAccount;
-    } else {
-      LOGGER.warn(
-          "User with accountId [{}] tried to create an account without ADMIN permissions.",
-          currentAccount.getId());
-      throw new UnauthorizedException(
-          "Account with id ["
-              + currentAccount.getId()
-              + "] has no permission to create this resource.");
-    }
+    String username = request.username().toLowerCase();
+    String email = request.email().toLowerCase();
+    String password = passwordEncoder.encode(request.password());
+    Account account = new Account(username, email, password);
+    account.setEnabled(true);
+    List<Role> roles = roleService.giveRoleToRegisteredUser();
+    account.setRoles(roles);
+    Account savedAccount = accountRepository.save(account);
+    LOGGER.info("Account with id [{}] was created and activated.", savedAccount.getId());
+    return savedAccount;
   }
 
   @Override
