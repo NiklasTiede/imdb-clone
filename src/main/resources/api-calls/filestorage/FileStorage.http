@@ -1,0 +1,43 @@
+
+### store movie image
+POST {{protocol}}{{host}}:{{port}}/api/file-storage/movie/48812
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzgzODgzMDAsImV4cCI6MTY4MDk4MDMwMH0.vws2NhBYPLiOwachZ4kHin-UJkyFUKpeLK3weTBSZceMPsDf2RopMAFheBZ5po-bZ9CkAuH2PiLoMN4Ms_Xd5w
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="image"; filename="488120_size_500x750.jpg"
+
+< ./488120_size_500x750.jpg
+--boundary--
+
+
+### show stored movie image
+GET http://192.168.178.49:9000/imdb-clone/movies/488120_size_500x750.jpg
+Content-Type: image/jpeg
+
+
+### delete movie image
+DELETE {{protocol}}{{host}}:{{port}}/api/file-storage/movie/48812
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzgzODgzMDAsImV4cCI6MTY4MDk4MDMwMH0.vws2NhBYPLiOwachZ4kHin-UJkyFUKpeLK3weTBSZceMPsDf2RopMAFheBZ5po-bZ9CkAuH2PiLoMN4Ms_Xd5w
+
+
+### store user profile photo
+POST {{protocol}}{{host}}:{{port}}/api/file-storage/profile-photo
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzgzODgzMDAsImV4cCI6MTY4MDk4MDMwMH0.vws2NhBYPLiOwachZ4kHin-UJkyFUKpeLK3weTBSZceMPsDf2RopMAFheBZ5po-bZ9CkAuH2PiLoMN4Ms_Xd5w
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="image"; filename="profile-photo.jpeg"
+
+< ./profile-photo.jpeg
+--boundary--
+
+
+### show stored user profile photo
+GET http://192.168.178.49:9000/imdb-clone/profile-photos/1_size_500x500.jpg
+Content-Type: image/jpeg
+
+
+### delete user profile photo
+DELETE {{protocol}}{{host}}:{{port}}/api/file-storage/profile-photo
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzgzODgzMDAsImV4cCI6MTY4MDk4MDMwMH0.vws2NhBYPLiOwachZ4kHin-UJkyFUKpeLK3weTBSZceMPsDf2RopMAFheBZ5po-bZ9CkAuH2PiLoMN4Ms_Xd5w
