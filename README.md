@@ -26,6 +26,7 @@
 - Frameworks: Spring Boot v3 / React v18 (MaterialUI v5)
 - Rel. Database: MySQL v8
 - SearchEngine: Elasticsearch v8
+- File Storage: MinIO
 
 The app is secured with JWT authentication. The techstack is kept up-to-date.
 
