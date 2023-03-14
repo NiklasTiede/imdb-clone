@@ -7,6 +7,7 @@ import {
   RatingControllerApi,
   SearchControllerApi,
   WatchedMovieControllerApi,
+  FileStorageControllerApi,
 } from "./generator-output";
 
 /**
@@ -28,4 +29,8 @@ export const searchApi = new SearchControllerApi(moviesApiClientConfig);
 
 export const watchlistApi = new WatchedMovieControllerApi(
   moviesApiClientConfig
+);
+
+export const fileStorageApi = new FileStorageControllerApi(
+    moviesApiClientConfig
 );

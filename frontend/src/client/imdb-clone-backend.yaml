@@ -296,6 +296,92 @@ paths:
             "*/*":
               schema:
                 $ref: "#/components/schemas/Movie"
+  /api/file-storage/profile-photo:
+    post:
+      tags:
+        - file-storage-controller
+      operationId: storeUserProfilePhoto
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - image
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  type: string
+    delete:
+      tags:
+        - file-storage-controller
+      operationId: deleteUserProfilePhoto
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/file-storage/movie/{movieId}:
+    post:
+      tags:
+        - file-storage-controller
+      operationId: storeMovieImage
+      parameters:
+        - name: movieId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - image
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: array
+                items:
+                  type: string
+    delete:
+      tags:
+        - file-storage-controller
+      operationId: deleteMovieImage
+      parameters:
+        - name: movieId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
   /api/comment/{movieId}:
     post:
       tags:
