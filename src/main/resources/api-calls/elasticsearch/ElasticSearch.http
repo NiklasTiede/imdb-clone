@@ -1,53 +1,30 @@
-### search for movies by
-POST {{protocol}}{{host}}:{{port}}/api/search/movies?query=it&page=0&size=20
-Content-Type: application/json
-
-{
-  "movieType": "MOVIE",
-  "movieGenre": ["HORROR"],
-  "minStartYear": 2010,
-  "maxStartYear": 2022,
-  "minRuntimeMinutes": 80,
-  "maxRuntimeMinutes": 230,
-  "minImdbRating": 6.3,
-  "maxImdbRating": 9,
-  "adult": false
-}
-
-
-### get multiple movies by an array of ids
-POST {{protocol}}{{host}}:{{port}}/api/search/movies?query=Smultronstället&page=0&size=20
-Content-Type: application/json
-
-{}
-
 
 ### current version
-GET http://localhost:9200/
+GET {{protocol}}{{host}}:{{port}}
 
 
 ### cluster health
-GET http://localhost:9200/_cluster/health
+GET {{protocol}}{{host}}:{{port}}/_cluster/health
 
 
 ### cluster state and some statistics toward movies index
-GET http://localhost:9200/_cat/indices
+GET {{protocol}}{{host}}:{{port}}/_cat/indices
 
 
 ### properties of each field in the document of the index
-GET http://localhost:9200/movies
+GET {{protocol}}{{host}}:{{port}}/movies
 
 
 ### count number of documents in an index
-GET http://localhost:9200/movies/_count
+GET {{protocol}}{{host}}:{{port}}/movies/_count
 
 
 ### search for by document id
-GET http://localhost:9200/movies/_doc/2872718
+GET {{protocol}}{{host}}:{{port}}/movies/_doc/2872718
 
 
 ### simple match search
-GET http://localhost:9200/movies/_search
+GET {{protocol}}{{host}}:{{port}}/movies/_search
 Content-Type: application/json
 
 {
@@ -60,7 +37,7 @@ Content-Type: application/json
 
 
 ### multi match search
-GET http://localhost:9200/movies/_search
+GET {{protocol}}{{host}}:{{port}}/movies/_search
 Content-Type: application/json
 
 {
@@ -75,7 +52,7 @@ Content-Type: application/json
 
 
 ### simple search
-GET http://localhost:9200/movies/_search
+GET {{protocol}}{{host}}:{{port}}/movies/_search
 Content-Type: application/json
 
 {
@@ -93,8 +70,37 @@ Content-Type: application/json
 }
 
 
+### multi match search and boost based on imdbRatingCount
+GET {{protocol}}{{host}}:{{port}}/movies/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "multi_match": {
+          "query": "it",
+          "type": "most_fields",
+          "fields": ["primaryTitle", "originalTitle"]
+        }
+      },
+      "functions": [
+        {
+          "field_value_factor": {
+            "field": "imdbRatingCount",
+            "factor": 0.0002,
+            "modifier": "log1p"
+          }
+        }
+      ],
+      "score_mode": "multiply"
+    }
+  }
+}
+
+
 ### complexer search (current search of movies)
-GET http://localhost:9200/movies/_search
+GET {{protocol}}{{host}}:{{port}}/movies/_search
 Content-Type: application/json
 
 {
@@ -152,7 +158,7 @@ Content-Type: application/json
 
 
 ### aggregations: avg rating per genre
-GET http://localhost:9200/movies/_search
+GET {{protocol}}{{host}}:{{port}}/movies/_search
 Content-Type: application/json
 
 {
@@ -176,15 +182,15 @@ Content-Type: application/json
 
 
 ### delete document by id
-DELETE http://localhost:9200/movies/_doc/816692
+DELETE {{protocol}}{{host}}:{{port}}/movies/_doc/816692
 
 
 ### delete whole index
-DELETE http://localhost:9200/movies
+DELETE {{protocol}}{{host}}:{{port}}/movies
 
 
 ### if watermark is reached
-PUT http://localhost:9200/_cluster/settings
+PUT {{protocol}}{{host}}:{{port}}/_cluster/settings
 Content-Type: application/json
 
 {
