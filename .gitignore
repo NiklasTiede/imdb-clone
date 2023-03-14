@@ -8,6 +8,7 @@ todo.txt
 /infrastructure/elasticsearch/commands.txt
 /infrastructure/redis
 /infrastructure/fileStorage-minio/movies/
+/infrastructure/fileStorage-minio/
 
 # generated typescript clients
 /frontend/src/client/**/generator-output/
