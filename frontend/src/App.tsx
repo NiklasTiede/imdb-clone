@@ -17,6 +17,8 @@ import { RoleNameEnum } from "./client/movies/generator-output";
 import PublicRoute from "./components/routes/PublicRoute";
 import PrivateRoute from "./components/routes/PrivateRoute";
 import NotFound from "./components/routes/NotFound";
+import MovieDetail from "./components/movies/MovieDetail";
+import FilterPanel from "./components/movies/search/FilterPanel";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -29,6 +31,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/movie-search" element={<MovieSearch />} />
+          <Route path="/movie" element={<MovieDetail />} />
+          <Route path="/filter" element={<FilterPanel />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/registration"

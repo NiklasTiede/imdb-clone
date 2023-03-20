@@ -13,7 +13,7 @@ All steps are verifiable through a [jupyter notebook](database/data-processing/p
 - process dataset using Python, Pandas, Numpy:
   - replace empty values by '\N'
   - remove incorrect values (consistent datatype per column)
-  - merge Rating- and Movie-table
+  - merge Rating-, Movie- and image/description dataframes
   - set `tconst` as index
 
 Instead of rerunning the jupyter notebook you can also just download the 

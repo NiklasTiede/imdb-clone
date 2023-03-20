@@ -23,7 +23,7 @@ export const search = createModel<RootModel>()({
       }),
   },
   effects: (dispatch) => ({
-    async searchMovies({query, requestSearchParams, page, size}) {
+    async searchMovies({ query, requestSearchParams, page, size }) {
       searchApi
         .search(query, requestSearchParams, page, size)
         .then((response: AxiosResponse<PagedResponseMovie>) => {

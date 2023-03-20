@@ -1,6 +1,8 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import {
+  Box,
+  Avatar,
   Button,
   FormHelperText,
   Grid,
@@ -14,11 +16,11 @@ import { tokens } from "../../theme";
 import React, { useEffect, useState } from "react";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import Box from "@mui/material/Box";
 import { State as AccountStatus } from "../../redux/model/account";
 import { getUsername } from "../../utils/jwtHelper";
 import moment from "moment";
 import { i18n } from "../../i18n";
+import UploadProfileImage from "./UploadProfileImage";
 
 const AccountSettings = () => {
   const theme = useTheme();
@@ -82,6 +84,14 @@ const AccountSettings = () => {
     }
   };
 
+  const [imageUrl, setImageUrl] = useState<string | undefined>(
+    "http://192.168.178.49:9000/imdb-clone/profile-photos/1_size_500x500.jpg"
+  );
+
+  const handleImageUpload = (url: string) => {
+    setImageUrl(url);
+  };
+
   return (
     <Box padding={5}>
       <Paper
@@ -93,6 +103,11 @@ const AccountSettings = () => {
           margin: "auto",
         }}
       >
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Avatar src={imageUrl} sx={{ width: 100, height: 100 }} />
+          <UploadProfileImage onUpload={handleImageUpload} />
+        </Box>
+
         <form onSubmit={handleSubmit} noValidate>
           <Stack spacing={6}>
             <Grid>

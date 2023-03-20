@@ -16,10 +16,10 @@ import MailIcon from "@mui/icons-material/Mail";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import MoreIcon from "@mui/icons-material/MoreVert";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@mui/material";
 import { ColorModeContext, tokens } from "../theme";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import LoginIcon from "@mui/icons-material/Login";
 import EditIcon from "@mui/icons-material/Edit";
 import { hasUserRole, isJwtNotExpired } from "../utils/jwtHelper";
@@ -29,6 +29,7 @@ import { i18n } from "../i18n";
 import { State as AuthenticationStatus } from "../redux/model/authentication";
 import { useNotifier } from "../hooks/useNotifier";
 import { RoleNameEnum } from "../client/movies/generator-output";
+import ClearIcon from "@mui/icons-material/Clear";
 
 let settings = [
   {
@@ -92,6 +93,7 @@ function AppBarTop() {
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
   const dispatch = useDispatch<Dispatch>();
+  const navigateTo = useNavigate();
 
   // to use redux-Notifications on all child components
   useNotifier();
@@ -138,6 +140,24 @@ function AppBarTop() {
 
   const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMobileMoreAnchorEl(event.currentTarget);
+  };
+
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialQuery = queryParams.get("query") || "";
+  const [query, setQuery] = useState(initialQuery);
+
+  const handleSearch = (event: any) => {
+    if (event.key === "Enter") {
+      const query = event.target.value;
+      setQuery(query);
+      navigateTo(`/movie-search?query=${query}`);
+    }
+  };
+
+  const handleClear = () => {
+    setQuery("");
+    navigateTo(`/movie-search`);
   };
 
   const renderMoviesEditing = (
@@ -307,24 +327,24 @@ function AppBarTop() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography
-            variant="h6"
-            noWrap
-            component="a"
-            href={"/"}
-            sx={{
-              mr: 2,
-              display: { xs: "none", md: "flex" },
-              color: colors.grey[100],
-              textDecoration: "none",
-              "&:hover": {
-                color: colors.grey[200],
-              },
-            }}
-          >
-            {i18n.general.appName}
-          </Typography>
-
+          <Link to={"/"} style={{ textDecoration: "none" }}>
+            <Typography
+              variant="h6"
+              noWrap
+              component="a"
+              sx={{
+                mr: 2,
+                display: { xs: "none", md: "flex" },
+                color: colors.grey[100],
+                textDecoration: "none",
+                "&:hover": {
+                  color: colors.grey[200],
+                },
+              }}
+            >
+              {i18n.general.appName}
+            </Typography>
+          </Link>
           <Search>
             <SearchIconWrapper>
               <SearchIcon />
@@ -332,7 +352,15 @@ function AppBarTop() {
             <StyledInputBase
               placeholder="Search for Movies…"
               inputProps={{ "aria-label": "search" }}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={handleSearch}
             />
+            {query.length > 0 && (
+              <IconButton aria-label="clear" onClick={handleClear}>
+                <ClearIcon />
+              </IconButton>
+            )}
           </Search>
 
           <Box sx={{ flexGrow: 1 }} />
