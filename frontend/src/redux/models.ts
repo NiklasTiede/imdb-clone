@@ -4,6 +4,7 @@ import { account } from "./model/account";
 import { movies } from "./model/movies";
 import { search } from "./model/search";
 import { notify } from "./model/notify";
+import { fileStorage } from "./model/filestorage";
 
 export interface RootModel extends Models<RootModel> {
   authentication: typeof authentication;
@@ -11,6 +12,7 @@ export interface RootModel extends Models<RootModel> {
   movies: typeof movies;
   search: typeof search;
   notify: typeof notify;
+  fileStorage: typeof fileStorage;
 }
 
 export const models: RootModel = {
@@ -19,4 +21,5 @@ export const models: RootModel = {
   movies,
   search,
   notify,
+  fileStorage,
 };

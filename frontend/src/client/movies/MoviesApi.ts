@@ -32,5 +32,5 @@ export const watchlistApi = new WatchedMovieControllerApi(
 );
 
 export const fileStorageApi = new FileStorageControllerApi(
-    moviesApiClientConfig
+  moviesApiClientConfig
 );
