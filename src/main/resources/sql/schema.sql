@@ -15,6 +15,8 @@ create table movie (
     adult boolean,
     rating float,
     rating_count int default 0,
+    description text,
+    image_url_token varchar(50),
     primary key (id)
 );
 
@@ -28,6 +30,7 @@ create table account (
     bio text,
     phone varchar(20),
     birthday date,
+    image_url_token varchar(50),
     created_at_in_utc timestamp default (utc_timestamp),
     modified_at_in_utc timestamp,
     locked boolean not null,

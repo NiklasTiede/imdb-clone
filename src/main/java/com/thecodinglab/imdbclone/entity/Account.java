@@ -28,6 +28,7 @@ public class Account extends DateAudit {
   private String phone;
   private String bio;
   private Date birthday;
+  private String imageUrlToken;
   @JsonIgnore private Boolean locked = false;
   @JsonIgnore private Boolean enabled = false;
 
@@ -128,6 +129,14 @@ public class Account extends DateAudit {
 
   public void setBirthday(Date birthday) {
     this.birthday = birthday;
+  }
+
+  public String getImageUrlToken() {
+    return imageUrlToken;
+  }
+
+  public void setImageUrlToken(String imageUrlToken) {
+    this.imageUrlToken = imageUrlToken;
   }
 
   public Boolean getLocked() {

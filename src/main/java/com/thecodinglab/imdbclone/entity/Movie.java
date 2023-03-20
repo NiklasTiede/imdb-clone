@@ -20,7 +20,9 @@ public class Movie extends DateAudit {
   private String primaryTitle;
   private String originalTitle;
   private Integer startYear;
-  private Integer endYear;
+
+  @JsonIgnore private Integer endYear;
+
   private Integer runtimeMinutes;
   private Set<MovieGenreEnum> movieGenre;
 
@@ -29,9 +31,15 @@ public class Movie extends DateAudit {
 
   private Float imdbRating;
   private Integer imdbRatingCount;
-  private Boolean adult;
+
+  @JsonIgnore private Boolean adult;
+
   private BigDecimal rating;
   private Integer ratingCount;
+
+  @JsonIgnore private String description;
+
+  private String imageUrlToken;
 
   @JsonIgnore
   @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -157,6 +165,22 @@ public class Movie extends DateAudit {
 
   public void setRatingCount(Integer ratingCount) {
     this.ratingCount = ratingCount;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public String getImageUrlToken() {
+    return imageUrlToken;
+  }
+
+  public void setImageUrlToken(String imageUrlToken) {
+    this.imageUrlToken = imageUrlToken;
   }
 
   public Collection<Comment> getComments() {

@@ -22,6 +22,8 @@ create table movie (
     adult boolean,
     rating float,
     rating_count int default 0,
+    description text,
+    image_url_token varchar(50),
     primary key (id)
 );
 
@@ -35,6 +37,7 @@ create table account (
     bio text,
     phone varchar(20),
     birthday date,
+    image_url_token varchar(50),
     created_at_in_utc timestamp default (utc_timestamp),
     modified_at_in_utc timestamp,
     locked boolean not null,
@@ -109,7 +112,7 @@ LOAD DATA INFILE '/tmp/processed_imdb_movies.csv' INTO TABLE movie_db.movie
     ENCLOSED BY '"'
     LINES TERMINATED BY '\n'
     IGNORE 1 LINES
-    (id,movie_type,primary_title,original_title,adult,start_year,end_year,runtime_minutes,movie_genre,imdb_rating,imdb_rating_count);
+    (id,movie_type,primary_title,original_title,adult,start_year,end_year,runtime_minutes,movie_genre,imdb_rating,imdb_rating_count,description,image_url_token);
 
 SET UNIQUE_CHECKS = 1;
 SET FOREIGN_KEY_CHECKS = 1;

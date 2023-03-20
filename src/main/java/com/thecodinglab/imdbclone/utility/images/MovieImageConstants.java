@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MovieImageConstants {
-  public static final int DETAIL_VIEW_WIDTH = 500;
-  public static final int DETAIL_VIEW_HEIGHT = 750;
+  public static final int DETAIL_VIEW_WIDTH = 600;
+  public static final int DETAIL_VIEW_HEIGHT = 900;
 
-  public static final int THUMBNAIL_WIDTH = 80;
-  public static final int THUMBNAIL_HEIGHT = 120;
+  public static final int THUMBNAIL_WIDTH = 120;
+  public static final int THUMBNAIL_HEIGHT = 180;
 
   public static final List<Integer> TARGET_SIZES =
       Arrays.asList(DETAIL_VIEW_WIDTH, THUMBNAIL_WIDTH);
@@ -19,9 +19,9 @@ public class MovieImageConstants {
 
   public static final String BUCKET_DIRECTORY_NAME = "movies/";
 
-  public static String IMAGE_NAME_DETAIL_VIEW(Long movieId) {
+  public static String IMAGE_NAME_DETAIL_VIEW(String imageUrlToken) {
     return BUCKET_DIRECTORY_NAME
-        + movieId
+        + imageUrlToken
         + "_size_"
         + DETAIL_VIEW_WIDTH
         + "x"
@@ -30,13 +30,13 @@ public class MovieImageConstants {
         + FORMAT;
   }
 
-  public static String IMAGE_NAME_THUMBNAIL(Long movieId) {
+  public static String IMAGE_NAME_THUMBNAIL(String imageUrlToken) {
     return BUCKET_DIRECTORY_NAME
-        + movieId
+        + imageUrlToken
         + "_size_"
-        + DETAIL_VIEW_WIDTH
+        + THUMBNAIL_WIDTH
         + "x"
-        + DETAIL_VIEW_HEIGHT
+        + THUMBNAIL_HEIGHT
         + "."
         + FORMAT;
   }

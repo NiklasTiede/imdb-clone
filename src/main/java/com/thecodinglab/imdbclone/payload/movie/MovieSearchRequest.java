@@ -23,7 +23,6 @@ public record MovieSearchRequest(
         Integer maxRuntimeMinutes,
 
         Set<MovieGenreEnum> movieGenre,
-        MovieTypeEnum movieType,
-        Boolean adult
+        MovieTypeEnum movieType
 ) {
 }

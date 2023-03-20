@@ -7,6 +7,7 @@ import com.thecodinglab.imdbclone.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -25,18 +26,17 @@ public class FileStorageController {
   }
 
   /**
-   * Structure of URI: <b>/profile-photo/{accountId}_size_{width}x{height}.jpg</b>
+   * Structure of URI: <b>/profile-photo/{imageUrlToken}_size_{width}x{height}.jpg</b>
    *
-   * <p>Size is 500x500 (detail view) and 80x80 (AppBar)
+   * <p>Size is 800x800 (detail view) and 120x120 (AppBar)
    */
-  @PostMapping("/profile-photo")
+  @PostMapping(value = "/profile-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<List<String>> storeUserProfilePhoto(
       @RequestParam("image") MultipartFile multipartFile,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
-        fileStorageService.storeProfilePhoto(multipartFile, currentUser.getId()),
-        HttpStatus.CREATED);
+        fileStorageService.storeProfilePhoto(multipartFile, currentUser), HttpStatus.CREATED);
   }
 
   @DeleteMapping("/profile-photo")
@@ -44,16 +44,16 @@ public class FileStorageController {
   public ResponseEntity<MessageResponse> deleteUserProfilePhoto(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
-        new MessageResponse(fileStorageService.deleteProfilePhoto(currentUser.getId())),
+        new MessageResponse(fileStorageService.deleteProfilePhoto(currentUser)),
         HttpStatus.NO_CONTENT);
   }
 
   /**
-   * Structure of URI: <b>/movies/{movieId}_size_{width}x{height}.jpg</b>
+   * Structure of URI: <b>/movies/{imageUrlToken}_size_{width}x{height}.jpg</b>
    *
-   * <p>Size is 500x750 (detail view) and 80x120 (movie search)
+   * <p>Size is 600x900 (detail view) and 120x180 (movie search)
    */
-  @PostMapping("/movie/{movieId}")
+  @PostMapping(value = "/movie/{movieId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<List<String>> storeMovieImage(
       @PathVariable Long movieId, @RequestParam("image") MultipartFile multipartFile) {

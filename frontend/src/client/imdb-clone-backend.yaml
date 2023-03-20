@@ -303,7 +303,7 @@ paths:
       operationId: storeUserProfilePhoto
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               required:
                 - image
@@ -346,7 +346,7 @@ paths:
             format: int64
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               required:
                 - image
@@ -914,9 +914,6 @@ components:
         startYear:
           type: integer
           format: int32
-        endYear:
-          type: integer
-          format: int32
         runtimeMinutes:
           type: integer
           format: int32
@@ -974,13 +971,13 @@ components:
         imdbRatingCount:
           type: integer
           format: int32
-        adult:
-          type: boolean
         rating:
           type: number
         ratingCount:
           type: integer
           format: int32
+        imageUrlToken:
+          type: string
     UpdateCommentRequest:
       type: object
       properties:
@@ -1120,8 +1117,6 @@ components:
             - TV_SHORT
             - TV_PILOT
             - VIDEO_GAME
-        adult:
-          type: boolean
     PagedResponseMovie:
       type: object
       properties:
@@ -1235,6 +1230,10 @@ components:
         ratingCount:
           type: integer
           format: int32
+        description:
+          type: string
+        imageUrlToken:
+          type: string
     PagedResponseMovieRecord:
       type: object
       properties:
@@ -1326,6 +1325,8 @@ components:
         birthday:
           type: string
           format: date-time
+        imageUrlToken:
+          type: string
         roles:
           type: array
           items:

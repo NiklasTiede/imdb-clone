@@ -19,5 +19,7 @@ public record MovieRecord(
         Integer imdbRatingCount,
         Boolean adult,
         Float rating,
-        Integer ratingCount
+        Integer ratingCount,
+        String description,
+        String imageUrlToken
 ) {}

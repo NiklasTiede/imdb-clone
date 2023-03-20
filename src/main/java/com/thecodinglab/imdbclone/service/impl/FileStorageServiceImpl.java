@@ -1,9 +1,14 @@
 package com.thecodinglab.imdbclone.service.impl;
 
 import com.thecodinglab.imdbclone.config.MinioClientConfig;
+import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Movie;
+import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.MovieRepository;
+import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.FileStorageService;
+import com.thecodinglab.imdbclone.service.MovieService;
+import com.thecodinglab.imdbclone.utility.Utility;
 import com.thecodinglab.imdbclone.utility.images.Image;
 import com.thecodinglab.imdbclone.utility.images.MovieImageConstants;
 import com.thecodinglab.imdbclone.utility.images.ProfilePhotoConstants;
@@ -11,6 +16,7 @@ import com.thecodinglab.imdbclone.validation.ImageSize;
 import io.minio.*;
 import io.minio.errors.*;
 import io.minio.http.Method;
+import jakarta.transaction.Transactional;
 import java.io.*;
 import java.nio.file.Files;
 import java.security.InvalidKeyException;
@@ -33,27 +39,49 @@ public class FileStorageServiceImpl implements FileStorageService {
 
   private final MinioClient minioClient;
   private final MovieRepository movieRepository;
+  private final AccountRepository accountRepository;
+  private final MovieService movieService;
 
-  public FileStorageServiceImpl(MinioClientConfig minioClient, MovieRepository movieRepository) {
+  public FileStorageServiceImpl(
+      MinioClientConfig minioClient,
+      MovieRepository movieRepository,
+      AccountRepository accountRepository,
+      MovieService movieService) {
     this.minioClient = minioClient.getClient();
     this.movieRepository = movieRepository;
+    this.accountRepository = accountRepository;
+    this.movieService = movieService;
   }
 
   @Override
-  public List<String> storeProfilePhoto(MultipartFile file, Long accountId) {
+  @Transactional
+  public List<String> storeProfilePhoto(MultipartFile file, UserPrincipal currentUser) {
     // validation
     ImageSize.validateProfilePhoto(file);
 
-    // generate 2 photos of size 500x500 and 80x80
+    // persist image-url-token in database
+    Account account = accountRepository.getAccount(currentUser);
+    String imageUrlToken;
+
+    if (account.getImageUrlToken() == null) {
+      imageUrlToken = Utility.generateToken();
+    } else {
+      imageUrlToken = account.getImageUrlToken();
+    }
+
+    // generate 2 photos of size 800x800 and 120x120
     List<Image> profilePhotos =
         Image.createImages(
             file,
             ProfilePhotoConstants.TARGET_SIZES,
             ProfilePhotoConstants.ASPECT_RATIO,
             ProfilePhotoConstants.BUCKET_DIRECTORY_NAME,
-            accountId);
+            imageUrlToken);
 
-    // store photos
+    account.setImageUrlToken(imageUrlToken);
+    accountRepository.save(account);
+
+    // store photos in bucket
     return profilePhotos.stream()
         .map(
             photo ->
@@ -66,29 +94,47 @@ public class FileStorageServiceImpl implements FileStorageService {
   }
 
   @Override
-  public String deleteProfilePhoto(Long accountId) {
+  public String deleteProfilePhoto(UserPrincipal currentUser) {
 
-    deleteFile(ProfilePhotoConstants.IMAGE_NAME_DETAIL_VIEW(accountId));
-    deleteFile(ProfilePhotoConstants.IMAGE_NAME_THUMBNAIL(accountId));
+    Account account = accountRepository.getAccount(currentUser);
 
-    return "Profile Photos of User with accountId [" + accountId + "] were deleted";
+    deleteFile(ProfilePhotoConstants.IMAGE_NAME_DETAIL_VIEW(account.getImageUrlToken()));
+    deleteFile(ProfilePhotoConstants.IMAGE_NAME_THUMBNAIL(account.getImageUrlToken()));
+
+    return "Profile Photos of User with accountId ["
+        + account.getId()
+        + "] and imageUrlToken ["
+        + account.getImageUrlToken()
+        + "] were deleted";
   }
 
   @Override
+  @Transactional
   public List<String> storeMovieImage(MultipartFile file, Long movieId) {
 
     // validation
     Movie movie = movieRepository.getMovieById(movieId);
     ImageSize.validateMovieImage(file);
 
-    // generate 2 images of size 500x750 and 80x120
+    String imageUrlToken;
+    if (movie.getImageUrlToken() == null) {
+      imageUrlToken = Utility.generateToken();
+    } else {
+      imageUrlToken = movie.getImageUrlToken();
+    }
+
+    // generate 2 images of size 600x900 and 120x180
     List<Image> movieImages =
         Image.createImages(
             file,
             MovieImageConstants.TARGET_SIZES,
             MovieImageConstants.ASPECT_RATIO,
             MovieImageConstants.BUCKET_DIRECTORY_NAME,
-            movie.getId());
+            imageUrlToken);
+
+    // save in DB and ES
+    movie.setImageUrlToken(imageUrlToken);
+    movieService.performSave(movie);
 
     // store images
     return movieImages.stream()
@@ -108,8 +154,8 @@ public class FileStorageServiceImpl implements FileStorageService {
     Movie movie = movieRepository.getMovieById(movieId);
 
     // delete images
-    deleteFile(MovieImageConstants.IMAGE_NAME_DETAIL_VIEW(movie.getId()));
-    deleteFile(MovieImageConstants.IMAGE_NAME_THUMBNAIL(movie.getId()));
+    deleteFile(MovieImageConstants.IMAGE_NAME_DETAIL_VIEW(movie.getImageUrlToken()));
+    deleteFile(MovieImageConstants.IMAGE_NAME_THUMBNAIL(movie.getImageUrlToken()));
 
     return "Movie images of movie with movieId [" + movie.getId() + "] were deleted";
   }

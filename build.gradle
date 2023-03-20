@@ -67,7 +67,7 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
 
 	//-- SearchEngine
-	implementation 'org.springframework.data:spring-data-elasticsearch:5.0.3'
+	implementation 'org.springframework.data:spring-data-elasticsearch:5.0.4'
 
 	//-- File Storage
 	implementation 'io.minio:minio:8.5.2'

@@ -28,9 +28,9 @@ public class Image {
       List<Integer> scalingSizes,
       double aspectRatio,
       String targetDirectory,
-      Long id) {
+      String imageUrlToken) {
     return scalingSizes.stream()
-        .map(size -> createImage(file, size, aspectRatio, targetDirectory, id))
+        .map(size -> createImage(file, size, aspectRatio, targetDirectory, imageUrlToken))
         .toList();
   }
 
@@ -39,7 +39,7 @@ public class Image {
       Integer scalingSize,
       double aspectRatio,
       String targetDirectory,
-      Long id) {
+      String imageUrlToken) {
 
     // read image
     BufferedImage image = readImage(file);
@@ -58,7 +58,7 @@ public class Image {
     InputStream inputStream = new ByteArrayInputStream(scaledImage.toByteArray());
     String imageName =
         targetDirectory
-            + id
+            + imageUrlToken
             + "_size_"
             + targetWidth
             + "x"

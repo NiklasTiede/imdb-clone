@@ -48,8 +48,8 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
   public void run(String... arg0) {
     // indexing a set of movies if no movies can be found in Elasticsearch
     if (elasticsearchOperations.indexOps(IndexCoordinates.of("movies")).exists()
-        && movieSearchRepository.count() < 100000) {
-      List<Movie> popularMovies = movieRepository.findByImdbRatingCountBetween(100, 20000000);
+        && movieSearchRepository.count() < 100) {
+      List<Movie> popularMovies = movieRepository.findByImdbRatingCountBetween(20000, 20000000);
       LOGGER.info("Number of popular movies to be indexed:  [{}]", popularMovies.size());
       List<List<Movie>> partitions = PartitionList.partition(popularMovies, 1000);
       partitions.forEach(elasticSearchService::indexMovies);

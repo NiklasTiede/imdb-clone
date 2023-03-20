@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-@RestController()
+@RestController
 @RequestMapping("/api/movie")
 public class MovieController {
 
@@ -40,6 +40,7 @@ public class MovieController {
         movieService.findMoviesByIds(request.movieIds(), page, size), HttpStatus.OK);
   }
 
+  // todo: replace entity by dto
   @PostMapping("/create-movie")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Movie> createMovie(
@@ -49,6 +50,7 @@ public class MovieController {
         movieService.createMovie(request, currentAccount), HttpStatus.CREATED);
   }
 
+  // todo: replace entity by dto
   @PutMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Movie> updateMovie(
@@ -68,6 +70,7 @@ public class MovieController {
         movieService.deleteMovie(movieId, currentAccount), HttpStatus.NO_CONTENT);
   }
 
+  // todo: was replaced by elasticsearch, to be removed
   // substring search does not work very well (IndexOutOfBound-Exception too short search)
   // replace later by Elasticsearch!
   @GetMapping("/search/{primaryTitle}")
