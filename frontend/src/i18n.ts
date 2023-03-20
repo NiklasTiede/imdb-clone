@@ -36,7 +36,9 @@ export const i18n = {
     successfulUpdate: "Account Profile was updated successfully",
     loadingError: (action: string) => `Error while attempting to ${action}`,
   },
-  home: {},
+  home: {
+    heading: "Home Page",
+  },
   registration: {
     register: "Register",
     registrationSuccessful: "You have been registered successfully",
@@ -51,11 +53,23 @@ export const i18n = {
   logout: {
     message: "You are now logged out.",
   },
-  watchlist: {},
-  ratings: {},
-  messages: {},
-  editMovie: {},
+  watchlist: {
+    heading: "Your Movie WatchList",
+  },
+  ratings: {
+    heading: "Your Ratings",
+  },
+  messages: {
+    heading: "Your Messages",
+  },
+  editMovie: {
+    heading: "Edit/Create Movie",
+  },
   movieSearch: {},
+  movieDetails: {
+    loadingError: (movieId: string | null) =>
+      `Error while attempting to get movie details about title with id ${movieId}`,
+  },
   notFound: {
     message: "This page does not exist.",
   },
