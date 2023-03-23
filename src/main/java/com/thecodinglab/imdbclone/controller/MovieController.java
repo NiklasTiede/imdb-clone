@@ -58,7 +58,7 @@ public class MovieController {
       @Valid @RequestBody MovieRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
-        movieService.updateMovie(movieId, request, currentAccount), HttpStatus.CREATED);
+        movieService.updateMovie(movieId, request, currentAccount), HttpStatus.OK);
   }
 
   @DeleteMapping("/{movieId}")

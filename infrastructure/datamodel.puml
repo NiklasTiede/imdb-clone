@@ -9,16 +9,18 @@ class Movie {
   - id \t\t\t\t long
   - primaryTitle \t\t String
   - originalTitle \t\t String
-  - startYear \t\t int
-  - endYear \t\t int
+  - startYear \t\t\t int
+  - endYear \t\t\t int
   - runtimeMinutes \t int
   - genre \t\t\t MovieGenreEnum
   - movieType \t\t MovieTypeEnum
   - adult \t\t\t boolean
   - imdbRating \t\t float
-  - imdbRatingCount int
+  - imdbRatingCount \t int
   - rating \t\t\t float
   - ratingCount \t\t int
+  - description \t\t String
+  - imageUrlToken \t String
 }
 
 class Account {
@@ -26,11 +28,12 @@ class Account {
   - username \t\t String
   - email \t\t\t String
   - password \t\t String
-  - firstName \t\t String
-  - lastName \t\t String
+  - firstName \t\t\t String
+  - lastName \t\t\t String
   - bio \t\t\t\t String
   - phone \t\t\t String
   - birthday \t\t\t Date
+  - imageUrlToken \t String
 }
 
 class Rating {
@@ -41,7 +44,7 @@ class Rating {
 
 class Comment {
   - id \t\t\t\t long
-  - message \t\t String
+  - message \t\t\t String
   - accountId \t\t long
   - movieId \t\t\t long
 }
@@ -67,15 +70,15 @@ class VerificationToken {
   - verificationType \t\t VerTypeEnum
   - token \t\t\t\t String
   - expiryDateInUtc \t\t Instant
-  - confirmedAtInUtc \t Instant
+  - confirmedAtInUtc \t\t Instant
   - accountId \t\t\t long
 }
 
 Account ||-down-|{ Rating
 Account ||-left-|{ Watchlist
 Account ||-right-|{ Comment
-Account ||-right-|{ Account_Roles
-Role ||-right-|{ Account_Roles
+Account ||-right-|{ AccountRoles
+Role ||-right-|{ AccountRoles
 Account ||-right-|{ VerificationToken
 Movie ||-down-|{ Comment
 Movie ||-up-|{ Watchlist

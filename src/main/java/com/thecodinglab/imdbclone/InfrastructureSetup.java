@@ -1,25 +1,26 @@
 package com.thecodinglab.imdbclone;
 
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.repository.*;
 import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
+import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import com.thecodinglab.imdbclone.service.FileStorageService;
 import com.thecodinglab.imdbclone.utility.PartitionList;
-import jakarta.transaction.Transactional;
 import java.util.List;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CommandLineRunnerImpl implements CommandLineRunner {
+public class InfrastructureSetup implements ApplicationListener<ApplicationReadyEvent> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(CommandLineRunnerImpl.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(InfrastructureSetup.class);
 
   private final MovieRepository movieRepository;
   private final MovieElasticSearchRepository movieSearchRepository;
@@ -30,7 +31,7 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
   @Value("${minio.rest.bucketName}")
   public String bucketName;
 
-  public CommandLineRunnerImpl(
+  public InfrastructureSetup(
       MovieRepository movieRepository,
       MovieElasticSearchRepository movieSearchRepository,
       ElasticSearchService elasticSearchService,
@@ -43,9 +44,9 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
     this.fileStorageService = fileStorageService;
   }
 
-  @Transactional
   @Override
-  public void run(String... arg0) {
+  public void onApplicationEvent(@NotNull ApplicationReadyEvent event) {
+
     // indexing a set of movies if no movies can be found in Elasticsearch
     if (elasticsearchOperations.indexOps(IndexCoordinates.of("movies")).exists()
         && movieSearchRepository.count() < 100) {
@@ -57,5 +58,7 @@ public class CommandLineRunnerImpl implements CommandLineRunner {
 
     // create bucket/directories and set bucket policy in minIO if not existent
     fileStorageService.setUpBucket();
+
+    LOGGER.info("Application is ready: MinIO bucket created and elasticsearch Data loaded");
   }
 }
