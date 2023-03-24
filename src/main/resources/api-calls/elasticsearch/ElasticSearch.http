@@ -99,7 +99,7 @@ Content-Type: application/json
 }
 
 
-### complexer search (current search of movies)
+### complexer search (results are filtrated)
 GET {{protocol}}{{host}}:{{port}}/movies/_search
 Content-Type: application/json
 
@@ -115,6 +115,77 @@ Content-Type: application/json
             ],
             "query": "it",
             "type": "most_fields"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "match": {
+            "movieGenre": {
+              "query": "HORROR"
+            }
+          }
+        },
+        {
+          "match": {
+            "movieType": {
+              "query": "MOVIE"
+            }
+          }
+        },
+        {
+          "range": {
+            "startYear": {
+              "gte": 2010,
+              "lte": 2022
+            }
+          }
+        },
+        {
+          "range": {
+            "runtimeMinutes": {
+              "gte": 80,
+              "lte": 230
+            }
+          }
+        }
+      ]
+    }
+  },
+  "from": 0,
+  "size": 20
+}
+
+### current search extended with boosting:
+GET {{protocol}}{{host}}:{{port}}/movies/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "function_score": {
+            "query": {
+              "multi_match": {
+                "fields": [
+                  "primaryTitle",
+                  "originalTitle"
+                ],
+                "query": "it",
+                "type": "most_fields"
+              }
+            },
+            "functions": [
+              {
+                "field_value_factor": {
+                  "field": "imdbRatingCount",
+                  "factor": 0.0002,
+                  "modifier": "log1p"
+                }
+              }
+            ],
+            "score_mode": "multiply"
           }
         }
       ],

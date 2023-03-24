@@ -17,24 +17,24 @@ which we will use for scraping image/description data.
 
 ```bash
 # scraping imageUrl and movie overview using the imdbId
-$ python 1_data_scraping.py
+python 1_data_scraping.py
 
 # download .jpg images and name them according to self generated token
-$ python 2_image_scraping.py
+python 2_image_scraping.py
 
 # for our purposes we create a larger image (600x900) and a thumbnail image (120x180)
-$ python 3_image_processing.py
+python 3_image_processing.py
 ```
 
 The `overview`- and `imageUrlToken`-columns will later be merged into our dataset. Now we have to set up MinIO to 
 be able to load our images into our bucket.
 
-## set Up a MinIO Container
+## Set Up a MinIO Container
 
 We will run a mounted MinIO instance. Lets pull and run it:
 
 ```bash
-$ docker pull bitnami/minio
+docker pull bitnami/minio
 
 # mount volume
 mkdir -p ~/minio/data
@@ -86,26 +86,26 @@ be performed with authentication. Our backend will do this in the future to add 
 Next we will transfer the scraped images into our bucket using the minio-client `mc`. Let's install it.
 
 ```bash
-$ curl https://dl.min.io/client/mc/release/linux-amd64/mc \
+curl https://dl.min.io/client/mc/release/linux-amd64/mc \
   --create-dirs \
   -o $HOME/minio-binaries/mc
 
-$ chmod +x $HOME/minio-binaries/mc
-$ export PATH=$PATH:$HOME/minio-binaries/
+chmod +x $HOME/minio-binaries/mc
+export PATH=$PATH:$HOME/minio-binaries/
 ```
 
 Now we connect the MinIO client with our container.
 
 ```bash
-$ ./mc alias set ALIAS http://localhost:9090/ ROOTNAME CHANGEME123
+mc alias set ALIAS http://localhost:9090/ ROOTNAME CHANGEME123
 
-$ ./mc config host add minio http://localhost:9000 ROOTNAME CHANGEME123
+mc config host add minio http://localhost:9000 ROOTNAME CHANGEME123
 ```
 
 Lastly we copy our images into the buckets `movies`-folder
 
 ```bash
-$ ./mc cp --recursive ~/PathToProject/IMDB-Clone/infrastructure/fileStorage/movie_images_processed/ minio/imdb-clone/movies/
+mc cp --recursive ~/PathToProject/IMDB-Clone/infrastructure/fileStorage/movie_images_processed/ minio/imdb-clone/movies/
 ```
 
 Now we can access our image with GET requests like `http://localhost:9000/imdb-clone/movies/{imageUrlToken}_size_600x900.jpg`

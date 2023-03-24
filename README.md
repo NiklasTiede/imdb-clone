@@ -97,5 +97,12 @@ we use during development.
 - [x] Set up Database and import Movie Data
 - [x] Create Java Backend 
 - [ ] Create React Frontend
-- [ ] Add CI, CD and Monitoring
-- [ ] Add Elasticsearch, Photos / File Storage and a Microservice Architecture
+  - [x] Account Settings
+  - [x] Movie Search
+  - [ ] Movie Detail View with rate / watchlist function
+  - [ ] watchlist list
+  - [ ] edit / create movies 
+  - [ ] home page 
+  - [ ] detail view: comments
+- [ ] Deploy on Kubernetes. Add CI, CD and Monitoring
+- [x] Add Elasticsearch, Photos / File Storage

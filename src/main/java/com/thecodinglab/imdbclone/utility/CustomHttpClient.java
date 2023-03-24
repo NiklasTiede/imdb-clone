@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import org.springframework.http.HttpMethod;
 
+// TODO: replace by openapi generator task!
 public class CustomHttpClient {
 
   static ObjectMapper objectMapper = new ObjectMapper();

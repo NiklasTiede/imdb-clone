@@ -1,9 +1,7 @@
 package com.thecodinglab.imdbclone.service.impl;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
-import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -149,8 +147,9 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     }
   }
 
-  /** Search Movies by Multiple Parameters */
-  // TODO: boost scoring if high imdbRatingCounts
+  /**
+   * Search Movies by Multiple Parameters, highest voted movies scoring is boosted
+   */
   @Override
   public PagedResponse<Movie> searchMovies(String query, MovieSearchRequest request, int page, int size) {
     BoolQuery boolQuery = buildBoolQuery(query, request);
@@ -189,8 +188,24 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
   public BoolQuery buildBoolQuery(String query, MovieSearchRequest request) {
     BoolQuery.Builder search = QueryBuilders.bool();
 
-    search.must(QueryBuilders.multiMatch(m -> m.query(query).type(TextQueryType.MostFields).fields(List.of("primaryTitle", "originalTitle"))));
+    // -- highest voted movies scoring is boosted
+    search.must(QueryBuilders
+        .functionScore(fs -> fs
+            .query(QueryBuilders
+                .multiMatch(m -> m
+                    .query(query)
+                    .type(TextQueryType.MostFields)
+                    .fields(List.of("primaryTitle", "originalTitle"))))
+            .functions(FunctionScore
+                .of(f -> f
+                    .fieldValueFactor(FunctionScoreBuilders
+                        .fieldValueFactor()
+                        .factor(0.002)
+                        .field("imdbRatingCount")
+                        .modifier(FieldValueFactorModifier.Log1p).build())))
+            .scoreMode(FunctionScoreMode.Multiply)));
 
+    // -- results are filtrated by these parameters
     if (request.movieGenre() != null && !request.movieGenre().isEmpty()) {
       request.movieGenre().forEach(
           movieGenreEnum -> search.filter(QueryBuilders
