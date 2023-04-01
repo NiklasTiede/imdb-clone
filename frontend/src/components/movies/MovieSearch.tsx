@@ -1,7 +1,7 @@
 import { Container, Grid, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { useNavigate } from "react-router-dom";
-import {shallowEqual, useDispatch, useSelector} from "react-redux";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -28,8 +28,8 @@ const MovieSearch = () => {
   // );
 
   const movies: Array<Movie> = useSelector(
-      (state: { search?: SearchState }) => state.search?.movies ?? [],
-      shallowEqual
+    (state: { search?: SearchState }) => state.search?.movies ?? [],
+    shallowEqual
   );
 
   let payload: any = {

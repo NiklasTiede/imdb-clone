@@ -1484,6 +1484,8 @@ components:
         birthday:
           type: string
           format: date-time
+        imageUrlToken:
+          type: string
         ratingsCount:
           type: integer
           format: int64

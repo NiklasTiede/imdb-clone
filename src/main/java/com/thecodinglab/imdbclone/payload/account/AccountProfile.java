@@ -10,6 +10,7 @@ public record AccountProfile(
         String phone,
         String bio,
         Date birthday,
+        String imageUrlToken,
         Long ratingsCount,
         Long watchlistCount,
         Long commentsCount

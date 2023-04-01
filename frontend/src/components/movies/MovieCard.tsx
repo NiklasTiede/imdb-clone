@@ -49,10 +49,14 @@ const MovieCard = (movie: Movie) => {
     <div>
       <Card sx={{ display: "flex", width: 600, height: 100 }}>
         <CardMedia
-            component="img"
-            alt="movie poster"
-            sx={{ width: 80, height: 100, padding: 1 }}
-            src={movie.imageUrlToken ? imageUrl : require("../../assets/img/placeholder_search.png")}
+          component="img"
+          alt="movie poster"
+          sx={{ width: 80, height: 100, padding: 1 }}
+          src={
+            movie.imageUrlToken
+              ? imageUrl
+              : require("../../assets/img/placeholder_search.png")
+          }
         />
         <Box
           sx={{

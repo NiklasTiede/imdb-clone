@@ -52,26 +52,6 @@ const UploadProfileImage: React.FC<UploadProfileImageProps> = ({
     setImageRef(image);
   };
 
-  // const handleUpload2 = async () => {
-  //   if (imageRef && crop.width && crop.height && file) {
-  //     const croppedImage = await getCroppedImage(imageRef, crop, file.name);
-  //     croppedImage.size;
-  //     const formData = new FormData();
-  //     formData.append("image", croppedImage);
-  //     axios
-  //       .post("/api/upload", formData, {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       })
-  //       .then((response) => {
-  //         const uploadedImageUrl = response.data.url;
-  //         onUpload(uploadedImageUrl);
-  //         setOpen(false);
-  //       });
-  //   }
-  // };
-
   const handleUpload = async () => {
     if (imageRef && crop.width && crop.height && file) {
       const croppedImage = await getCroppedImage(imageRef, crop, file.name);

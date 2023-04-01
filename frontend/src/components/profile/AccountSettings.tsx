@@ -17,6 +17,7 @@ import React, { useEffect, useState } from "react";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { State as AccountStatus } from "../../redux/model/account";
+import { State as FileStorageStatus } from "../../redux/model/filestorage";
 import { getUsername } from "../../utils/jwtHelper";
 import moment from "moment";
 import { i18n } from "../../i18n";
@@ -32,12 +33,18 @@ const AccountSettings = () => {
     (state: { account: AccountStatus }) => state.account.accountProfile
   );
 
+  const profilePhotoSwitch = useSelector(
+    (state: { fileStorage: FileStorageStatus }) =>
+      state.fileStorage.profilePhotoSwitch
+  );
+
   // set-able
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
   const [birthdayDate, setBirthdayDate] = useState("");
+  const [imageUrlToken, setImageUrlToken] = useState("");
 
   const [characterCount, setCharacterCount] = useState(0);
   const maxBioLength = 300;
@@ -55,6 +62,10 @@ const AccountSettings = () => {
     setBirthdayDate(accountProfile.birthday ?? "");
     setBio(accountProfile.bio ?? "");
     setCharacterCount(accountProfile.bio ? accountProfile.bio.length : 0);
+    // setImageUrlToken(accountProfile.imageUrlToken ?? "");
+
+    setImageUrl(`http://192.168.178.49:9000/imdb-clone/profile-photos/${accountProfile.imageUrlToken}_size_800x800.jpg`)
+
   }, [accountProfile]);
 
   const handleBioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,9 +95,20 @@ const AccountSettings = () => {
     }
   };
 
+  useEffect(() => {
+    console.log(profilePhotoSwitch);
+  }, [profilePhotoSwitch]);
+
+
+
   const [imageUrl, setImageUrl] = useState<string | undefined>(
-    "http://192.168.178.49:9000/imdb-clone/profile-photos/1_size_500x500.jpg"
+    `http://192.168.178.49:9000/imdb-clone/profile-photos/${imageUrlToken}_size_800x800.jpg`
   );
+
+  console.log(imageUrl);
+
+  // const bla = imageUrlToken ? `http://192.168.178.49:9000/imdb-clone/profile-photos/${imageUrlToken}_size_800x800.jpg` : null;
+
 
   const handleImageUpload = (url: string) => {
     setImageUrl(url);

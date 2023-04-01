@@ -6,14 +6,21 @@ import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { Movie } from "../../client/movies/generator-output";
 
 export type State = {
+  profilePhotoSwitch: boolean;
   movies: Array<Movie>;
 };
 
 export const fileStorage = createModel<RootModel>()({
   state: {
+    profilePhotoSwitch: false,
     movies: [],
   } as State,
   reducers: {
+    setUpdateProfilePhoto: (state) => {
+      reduce(state, {
+        profilePhotoSwitch: !state.profilePhotoSwitch,
+      });
+    },
     setMovies: (state, payload: Array<Movie>) =>
       reduce(state, {
         movies: payload,
@@ -32,6 +39,10 @@ export const fileStorage = createModel<RootModel>()({
         .then((response: AxiosResponse<Array<string>>) => {
           if (response.status === 200 && response.data !== null) {
             console.log(response.data);
+
+            // turn switch for rerendering
+            dispatch.fileStorage.setUpdateProfilePhoto();
+
             // dispatch.search.setMovies(response.data.content);
           }
         })

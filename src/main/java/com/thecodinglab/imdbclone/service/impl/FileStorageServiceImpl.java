@@ -57,7 +57,7 @@ public class FileStorageServiceImpl implements FileStorageService {
   @Transactional
   public List<String> storeProfilePhoto(MultipartFile file, UserPrincipal currentUser) {
     // validation
-    ImageSize.validateProfilePhoto(file);
+    //    ImageSize.validateProfilePhoto(file);
 
     // persist image-url-token in database
     Account account = accountRepository.getAccount(currentUser);

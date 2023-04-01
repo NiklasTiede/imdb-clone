@@ -76,6 +76,7 @@ public class AccountServiceImpl implements AccountService {
         account.getPhone(),
         account.getBio(),
         account.getBirthday(),
+        account.getImageUrlToken(),
         ratingsCount,
         watchedMoviesCount,
         commentsCount);
