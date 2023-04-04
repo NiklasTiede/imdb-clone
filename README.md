@@ -95,14 +95,15 @@ we use during development.
 ### Todo:
 
 - [x] Set up Database and import Movie Data
-- [x] Create Java Backend 
-- [ ] Create React Frontend
-  - [x] Account Settings
-  - [x] Movie Search
-  - [ ] Movie Detail View with rate / watchlist function
-  - [ ] watchlist list
-  - [ ] edit / create movies 
-  - [ ] home page 
-  - [ ] detail view: comments
-- [ ] Deploy on Kubernetes. Add CI, CD and Monitoring
+- [x] Create Java Backend
 - [x] Add Elasticsearch, Photos / File Storage
+- [ ] Create React Frontend
+  - [x] Account Settings Page
+  - [x] Movie Search Page
+  - [ ] Movie Detail View with Rating / Watchlist Feature
+  - [ ] Watchlist Page
+  - [ ] Edit / Create Movies Page 
+  - [ ] Home Page 
+  - [ ] Detail View: Comments Feature
+- [ ] Deploy on Single-Node K3s Homeserver (GitOps CI/CD)
+- [ ] Add Monitoring (Graylog, Prometheus, Grafana)
