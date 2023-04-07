@@ -64,8 +64,9 @@ const AccountSettings = () => {
     setCharacterCount(accountProfile.bio ? accountProfile.bio.length : 0);
     // setImageUrlToken(accountProfile.imageUrlToken ?? "");
 
-    setImageUrl(`http://192.168.178.49:9000/imdb-clone/profile-photos/${accountProfile.imageUrlToken}_size_800x800.jpg`)
-
+    setImageUrl(
+      `http://192.168.178.49:9000/imdb-clone/profile-photos/${accountProfile.imageUrlToken}_size_800x800.jpg`
+    );
   }, [accountProfile]);
 
   const handleBioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,8 +100,6 @@ const AccountSettings = () => {
     console.log(profilePhotoSwitch);
   }, [profilePhotoSwitch]);
 
-
-
   const [imageUrl, setImageUrl] = useState<string | undefined>(
     `http://192.168.178.49:9000/imdb-clone/profile-photos/${imageUrlToken}_size_800x800.jpg`
   );
@@ -108,7 +107,6 @@ const AccountSettings = () => {
   console.log(imageUrl);
 
   // const bla = imageUrlToken ? `http://192.168.178.49:9000/imdb-clone/profile-photos/${imageUrlToken}_size_800x800.jpg` : null;
-
 
   const handleImageUpload = (url: string) => {
     setImageUrl(url);
