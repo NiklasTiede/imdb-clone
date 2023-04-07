@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect } from "react";
-import {CardMedia, Container, Paper, useTheme} from "@mui/material";
+import { CardMedia, Container, Paper, useTheme } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import { i18n } from "../../i18n";
 import { tokens } from "../../theme";
@@ -24,14 +24,15 @@ const MovieDetail = () => {
 
   const imageUrl = `http://192.168.178.49:9000/imdb-clone/movies/${movie?.imageUrlToken}_size_600x900.jpg`;
 
-
   useEffect(() => {
     if (movieId !== null) {
       dispatch.movies.loadMovieById(parseInt(movieId));
     }
   }, [movieId]);
 
-  console.log("movie detail rendered with imageUrlToken: " + movie?.imageUrlToken);
+  console.log(
+    "movie detail rendered with imageUrlToken: " + movie?.imageUrlToken
+  );
 
   return (
     <>
@@ -46,10 +47,14 @@ const MovieDetail = () => {
                 {movie.primaryTitle}, {movie.startYear}
               </Typography>
               <CardMedia
-                  component="img"
-                  alt="movie poster"
-                  sx={{ width: 300, height: 450, padding: 1 }}
-                  src={movie.imageUrlToken ? imageUrl : require("../../assets/img/placeholder_search.png")}
+                component="img"
+                alt="movie poster"
+                sx={{ width: 300, height: 450, padding: 1 }}
+                src={
+                  movie.imageUrlToken
+                    ? imageUrl
+                    : require("../../assets/img/placeholder_search.png")
+                }
               />
               <Typography variant={"inherit"} textAlign={"center"}>
                 {movie.description}

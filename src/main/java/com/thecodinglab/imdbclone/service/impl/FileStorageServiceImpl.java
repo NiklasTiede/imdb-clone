@@ -69,6 +69,9 @@ public class FileStorageServiceImpl implements FileStorageService {
       imageUrlToken = account.getImageUrlToken();
     }
 
+    // better: create new token, each time new image is created. token change is used for
+    // rerendering!
+
     // generate 2 photos of size 800x800 and 120x120
     List<Image> profilePhotos =
         Image.createImages(
