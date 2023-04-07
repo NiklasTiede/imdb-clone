@@ -22,7 +22,7 @@
 </p>
 
 ## Techstack
-- Languages: Java JDK17 / Typescript v4
+- Languages: Java JDK19 / Typescript v4
 - Frameworks: Spring Boot v3 / React v18 (MaterialUI v5)
 - Rel. Database: MySQL v8
 - SearchEngine: Elasticsearch v8
