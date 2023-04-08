@@ -1,11 +1,10 @@
-
 # docker build -t niklastiede/movie-db .
 
 FROM mysql:latest
 
-ENV MYSQL_DATABASE movie_db
-ENV MYSQL_ROOT_PASSWORD root
-ENV MYSQL_ROOT_PASSWORD secret
+ENV MYSQL_DATABASE=movie_db \
+    MYSQL_USER=root \
+    MYSQL_PASSWORD=secret
 
 COPY init.sql /docker-entrypoint-initdb.d/init.sql
 

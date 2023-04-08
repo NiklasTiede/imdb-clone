@@ -25,6 +25,7 @@ export const account = createModel<RootModel>()({
       birthday: "",
       bio: "",
       phone: "",
+      imageUrlToken: "",
       watchlistCount: 0,
       ratingsCount: 0,
       commentsCount: 0,
