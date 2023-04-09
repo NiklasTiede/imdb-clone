@@ -30,21 +30,14 @@ jobs:
 
   frontend-build-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
 
     steps:
 
-      - name: List files in frontend folder 1st
-        working-directory: ./frontend
-        run: ls -la
-
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          path: 'frontend'
-
-      - name: List files in frontend folder 2nd
-        working-directory: ./frontend
-        run: ls -la
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -64,13 +57,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        working-directory: ./frontend
         run: yarn install --frozen-lockfile
 
-      - name: List files in frontend folder 3rd
-        working-directory: ./frontend
-        run: ls -la
-
       - name: Build
-        working-directory: ./frontend
         run: yarn build
