@@ -34,7 +34,7 @@ jobs:
     steps:
 
       - name: List files in frontend folder 1st
-        working-directory: frontend
+        working-directory: ./frontend
         run: ls -la
 
       - name: Checkout repository
@@ -43,7 +43,7 @@ jobs:
           path: 'frontend'
 
       - name: List files in frontend folder 2nd
-        working-directory: frontend
+        working-directory: ./frontend
         run: ls -la
 
       - name: Setup Node.js
@@ -64,13 +64,13 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        working-directory: frontend
+        working-directory: ./frontend
         run: yarn install --frozen-lockfile
 
       - name: List files in frontend folder 3rd
-        working-directory: frontend
+        working-directory: ./frontend
         run: ls -la
 
       - name: Build
-        working-directory: frontend
+        working-directory: ./frontend
         run: yarn build
