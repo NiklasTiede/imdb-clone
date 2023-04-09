@@ -56,6 +56,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
+      - name: Generate Clients from OpenApi-Spec File
+        run: yarn run build:moviesGen
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
