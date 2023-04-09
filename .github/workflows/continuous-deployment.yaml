@@ -45,4 +45,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build frontend Docker image
-        run: docker buildx build --platform linux/amd64 -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:latest --push frontend
+        run: docker buildx build --platform linux/amd64 -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:latest --push .
