@@ -59,4 +59,5 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build
+        working-directory: frontend
         run: yarn build
