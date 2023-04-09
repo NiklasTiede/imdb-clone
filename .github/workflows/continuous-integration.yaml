@@ -57,9 +57,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Generate Clients from OpenApi-Spec File
-        run: |
-          yarn add --dev @openapitools/openapi-generator-cli &&
-          yarn run build:moviesGen
+        run: yarn run build:moviesGen
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
