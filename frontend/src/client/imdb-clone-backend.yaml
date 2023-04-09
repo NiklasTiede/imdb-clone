@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-  - url: http://localhost:8080
+  - url: http://192.168.178.49:8080
     description: Generated server url
 paths:
   /api/movie/{movieId}:
