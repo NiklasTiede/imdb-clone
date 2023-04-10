@@ -6,7 +6,7 @@ export const i18n = {
   },
   regex: {
     username: {
-      pattern: "^(?=.{2,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$",
+      pattern: "^(?=.{2,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?:[^_.])$",
       rules:
         "Username must be between 2 - 20 characters and can contain digits, dots or hyphens",
     },
