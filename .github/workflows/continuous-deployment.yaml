@@ -1,4 +1,4 @@
-name: CD for Backend and Frontend Service
+name: CD - Docker publish for BE and FE Service
 
 on:
   workflow_dispatch:
@@ -23,7 +23,13 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build backend Docker image
-        run: docker buildx build --platform linux/amd64 -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:latest --push .
+        run: | 
+          docker buildx build \
+            --platform linux/amd64 \
+          -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:${{ github.sha }} \
+          -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:latest \
+          --push \
+          .
 
   deploy-frontend:
     runs-on: ubuntu-latest
@@ -45,4 +51,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build frontend Docker image
-        run: docker buildx build --platform linux/amd64 -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:latest --push .
+        run: | 
+          docker buildx build \
+            --platform linux/amd64 \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:${{ github.sha }} \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:latest \
+            --push \
+            .

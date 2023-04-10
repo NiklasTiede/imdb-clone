@@ -1,4 +1,4 @@
-name: CI for Backend and Frontend Service
+name: CI - Build / Test for BE and FE Service
 
 on:
   push:
