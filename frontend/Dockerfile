@@ -1,5 +1,5 @@
 # docker buildx build -t imdb-clone-frontend .
-# docker run --name imdb-clone-frontend -p 3000:80 -d imdb-clone-frontend:latest
+# docker run --name imdb-clone-frontend -p 3000:80 --restart=always -d imdb-clone-frontend:latest
 
 # Stage 1: Install dependencies and build the application
 FROM node:19-alpine as build

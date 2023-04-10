@@ -2,7 +2,15 @@
 # Provisionally Setup
 
 To make things simple I will deploy this app at 
-first by just using docker.  
+first by just using docker. As GUI client I use 
+**Portainer**. I mapped it to port 9500 because 
+9000 is already in use by MinIO.
+
+```bash
+docker run -d -p 9500:9000 --name portainer --restart always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+```
+
+These are the containers I'm running:
 
 - React (Frontend) Container
 - Spring Boot (Backend) Container
