@@ -65,13 +65,8 @@ export const account = createModel<RootModel>()({
   },
   effects: (dispatch) => ({
     async getCurrentAccount() {
-      const options: AxiosRequestConfig = {
-        headers: {
-          Authorization: "Bearer " + window.localStorage.getItem("jwtToken"),
-        },
-      };
       accountApi
-        .getCurrentAccount(options)
+        .getCurrentAccount()
         .then((response: AxiosResponse<AccountSummaryResponse>) => {
           if (
             response.status === 200 &&
@@ -94,13 +89,8 @@ export const account = createModel<RootModel>()({
         });
     },
     async getAccountProfileSettings(username: string) {
-      const options: AxiosRequestConfig = {
-        headers: {
-          Authorization: "Bearer " + window.localStorage.getItem("jwtToken"),
-        },
-      };
       accountApi
-        .getAccountProfile(username, options)
+        .getAccountProfile(username)
         .then((response: AxiosResponse<AccountProfile>) => {
           if (response.status === 200 && response.data !== null) {
             dispatch.account.setAccountProfile(response.data);

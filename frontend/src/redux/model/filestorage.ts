@@ -29,13 +29,8 @@ export const fileStorage = createModel<RootModel>()({
 
   effects: (dispatch) => ({
     async storeUserProfilePhoto(image) {
-      const options: AxiosRequestConfig = {
-        headers: {
-          Authorization: "Bearer " + window.localStorage.getItem("jwtToken"),
-        },
-      };
       fileStorageApi
-        .storeUserProfilePhoto(image, options)
+        .storeUserProfilePhoto(image)
         .then((response: AxiosResponse<Array<string>>) => {
           if (response.status === 200 && response.data !== null) {
             console.log(response.data);

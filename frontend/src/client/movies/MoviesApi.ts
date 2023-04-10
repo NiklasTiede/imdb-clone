@@ -1,3 +1,4 @@
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from "axios";
 import {
   Configuration,
   AuthenticationControllerApi,
@@ -13,7 +14,25 @@ import {
 /**
  * Configurations for Clients
  * */
-const moviesApiClientConfig: Configuration = new Configuration({});
+const customAxiosInstance: AxiosInstance = axios.create();
+customAxiosInstance.interceptors.request.use(
+  (config: AxiosRequestConfig) => {
+    const token = window.localStorage.getItem("jwtToken");
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
+  }
+);
+
+const moviesApiClientConfig: Configuration = new Configuration({
+  basePath: process.env.REACT_APP_IMDB_CLONE_API_HOST,
+  baseOptions: customAxiosInstance,
+});
 
 export const authApi = new AuthenticationControllerApi(moviesApiClientConfig);
 
