@@ -76,42 +76,6 @@ services:
     networks:
       - imdb-clone-network
 
-  ### ----------------------- Spring Boot Backend ----------------------- ###
-  imdb-clone-backend:
-    container_name: imdb-clone-backend
-    image: niklastiede/imdb-clone-backend:latest
-    restart: always
-    depends_on:
-      - imdb-clone-elasticsearch
-      - imdb-clone-minio
-      - load-minio-data
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_USERNAME_DOCKER=${MYSQL_USERNAME_ENV_VAR}
-      - MYSQL_PASSWORD_DOCKER=${MYSQL_PASSWORD_ENV_VAR}
-      - ELASTIC_USERNAME_DOCKER=${ELASTIC_USERNAME_ENV_VAR}
-      - ELASTIC_PASSWORD_DOCKER=${ELASTIC_PASSWORD_ENV_VAR}
-      - MINIO_ACCESS_KEY_DOCKER=${MINIO_ACCESS_KEY_ENV_VAR}
-      - MINIO_SECRET_KEY_DOCKER=${MINIO_SECRET_KEY_ENV_VAR}
-      - MAIL_USERNAME_DOCKER=${MAIL_USERNAME_ENV_VAR}
-      - MAIL_PASSWORD_DOCKER=${MAIL_PASSWORD_ENV_VAR}
-      - FRONTEND_APP_ADDRESS_DOCKER=${FRONTEND_APP_ADDRESS_ENV_VAR}
-      - BACKEND_APP_ADDRESS_DOCKER=${BACKEND_APP_ADDRESS_ENV_VAR}
-    ports:
-      - "8080:8080"
-    networks:
-      - imdb-clone-network
-
-  ### ----------------------- React Frontend ----------------------- ###
-  imdb-clone-frontend:
-    container_name: imdb-clone-frontend
-    image: niklastiede/imdb-clone-frontend:latest
-    restart: always
-    ports:
-      - "80:80"
-    networks:
-      - imdb-clone-network
-
 volumes:
   imdb-clone-mysql-data:
   imdb-clone-elasticsearch-data:
