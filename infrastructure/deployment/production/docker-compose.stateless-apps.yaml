@@ -6,10 +6,6 @@ services:
     container_name: imdb-clone-backend
     image: niklastiede/imdb-clone-backend:latest
     restart: always
-    depends_on:
-      - imdb-clone-elasticsearch
-      - imdb-clone-minio
-      - load-minio-data
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - MYSQL_USERNAME_DOCKER=${MYSQL_USERNAME_ENV_VAR}
@@ -32,6 +28,8 @@ services:
     container_name: imdb-clone-frontend
     image: niklastiede/imdb-clone-frontend:latest
     restart: always
+    environment:
+      - REACT_APP_IMDB_CLONE_BACKEND_APP_ADDRESS_DOCKER=${BACKEND_APP_ADDRESS_ENV_VAR}
     ports:
       - "80:80"
     networks:
