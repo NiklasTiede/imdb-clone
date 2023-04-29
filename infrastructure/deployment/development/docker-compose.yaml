@@ -1,0 +1,72 @@
+version: '3.8'
+services:
+
+  ### ----------------------- MySQL ----------------------- ###
+  imdb-clone-mysql:
+    container_name: imdb-clone-mysql
+    image: niklastiede/movie-db:latest
+    restart: always
+    environment:
+      - MYSQL_DATABASE=movie_db
+      - MYSQL_ROOT_PASSWORD=supersecret
+      - MYSQL_USER=myroot
+      - MYSQL_PASSWORD=secret
+    ports:
+      - "3310:3306"
+    volumes:
+      - imdb-clone-mysql-data:/var/lib/mysql
+    command: --secure-file-priv=tmp
+
+  ### ----------------------- MinIO ----------------------- ###
+  imdb-clone-minio:
+    container_name: imdb-clone-minio
+    image: bitnami/minio:latest
+    restart: always
+    environment:
+      - MINIO_ROOT_USER=ROOTNAME
+      - MINIO_ROOT_PASSWORD=CHANGEME123
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - imdb-clone-minio-data:/data
+    command: /opt/bitnami/minio/bin/minio server --console-address :9090 /data
+
+  load-minio-data:
+    container_name: load-minio-data
+    image: niklastiede/custom-minio-mc:latest
+    depends_on:
+      - imdb-clone-minio
+    environment:
+      - MINIO_ROOT_USER=ROOTNAME
+      - MINIO_ROOT_PASSWORD=CHANGEME123
+    entrypoint: >
+      /bin/sh -c '
+      cd /tmp/ &&
+      wget https://www.dropbox.com/s/hz4tv7j20jprldr/compressed_movie_images.tar.gz &&
+      tar -xzf ./compressed_movie_images.tar.gz &&
+      mv processed_movie_images movies &&
+      rm -rf ./compressed_movie_images.tar.gz &&
+      mc alias set minio http://imdb-clone-minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
+      (mc ls minio | grep "imdb-clone") || mc mb minio/imdb-clone &&
+      mc cp --recursive /tmp/movies minio/imdb-clone &&
+      rm -rf /tmp/movies'
+
+  ### ----------------------- ElasticSearch ----------------------- ###
+  imdb-clone-elasticsearch:
+    container_name: imdb-clone-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3
+    restart: always
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - imdb-clone-elasticsearch-data:/usr/share/elasticsearch/data
+
+volumes:
+  imdb-clone-mysql-data:
+  imdb-clone-elasticsearch-data:
+  imdb-clone-minio-data:

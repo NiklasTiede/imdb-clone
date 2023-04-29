@@ -10,6 +10,7 @@ COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile \
     && yarn cache clean
 COPY . .
+COPY .env.production ./
 RUN yarn run build:moviesGen \
     && yarn build
 

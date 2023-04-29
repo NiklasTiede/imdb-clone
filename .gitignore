@@ -1,13 +1,14 @@
 
-# Database
 todo.txt
+
+# Infrastructure (stateful services for backend)
 /infrastructure/mysql/data-processing/.ipynb_checkpoints
 /infrastructure/mysql/data-processing/imdb-dataset
 /infrastructure/mysql/docker-image-creation/processed_imdb_movies*
-/infrastructure/prometheus
-/infrastructure/elasticsearch/commands.txt
-/infrastructure/redis
-/infrastructure/fileStorage-minio/movies/
+/infrastructure/minio/original_movie_images/
+/infrastructure/minio/processed_movie_images/
+# credentials for prod on homeserver
+/infrastructure/deployment/production/.env
 
 # generated typescript clients
 /frontend/src/client/**/generator-output/
