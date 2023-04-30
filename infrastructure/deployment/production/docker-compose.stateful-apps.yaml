@@ -83,4 +83,4 @@ volumes:
 
 networks:
   imdb-clone-network:
-    driver: bridge
+    external: true
