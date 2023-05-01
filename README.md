@@ -1,23 +1,25 @@
 
 <p align="center">
+<a href="http://imdb-clone.the-coding-lab.com/">
 <img  alt="imdb-clone" align="center" width="500" src="docs/imdb-clone-logo.jpg" />
-<h3 align="center">This Project exemplifies a Real-World Java / React Web App.</h3>
+</a>
+<h3 align="center">This <a href="http://imdb-clone.the-coding-lab.com/">Project</a>  exemplifies a Real-World Java / React Web App.</h3>
 <p>
 
 ---
 
 <p id="Badges" align="center">
   <a href="https://github.com/NiklasTiede/IMDb-Clone/commits/master">
-    <img src="https://img.shields.io/github/last-commit/NiklasTiede/IMDb-Clone">
+    <img alt="commit" src="https://img.shields.io/github/last-commit/NiklasTiede/IMDb-Clone">
   </a>
   <a href="https://github.com/NiklasTiede/IMDb-Clone/issues">
-    <img src="https://img.shields.io/github/issues-raw/niklastiede/imdb-clone" />
+    <img alt="issues" src="https://img.shields.io/github/issues-raw/niklastiede/imdb-clone" />
   </a>
   <a>
-    <img src="https://img.shields.io/github/languages/code-size/niklastiede/imdb-clone" />
+    <img alt="code-size" src="https://img.shields.io/github/languages/code-size/niklastiede/imdb-clone" />
   </a>
   <a>
-    <img src="https://img.shields.io/github/license/niklastiede/imdb-clone" />
+    <img alt="license" src="https://img.shields.io/github/license/niklastiede/imdb-clone" />
   </a>
 </p>
 
@@ -28,59 +30,60 @@
 - SearchEngine: Elasticsearch v8
 - File Storage: MinIO
 
-The app is secured with JWT authentication. The techstack is kept up-to-date.
+The app is secured with JWT authentication. The techstack is kept up-to-date. 
 
-## How to Run this Project from Source
+This project can easily be run locally with docker-compose. I also deployed 
+a production version in my home-lab which can be reached here 
+[imdb-clone.the-coding-lab.com](http://imdb-clone.the-coding-lab.com).
 
-You can either download the processed [Movie Dataset](https://www.dropbox.com/s/rzmhet4qf2joczz/processed_imdb_movies.csv?dl=0) 
-by yourself and import it or go the easy way and pull/run the docker image I created for this purpose:
+## How to Run this Project locally
 
-```shell
-docker pull niklastiede/movie-db:latest
-docker run --name niklastiede/movie-db -d --restart=always -p 3310:3306 niklastiede/movie-db --secure-file-priv=tmp
-```
+The app can be built in 3 steps:
 
----
-
-The backend is almost finished in the current state. After rebuilding the project you can run it.
-
-```shell
-./gradlew clean bootRun
-```
-
-Email verification is turned off by default, so you can easily register the first User which will also 
-have admin permissions. Just go into [Authentication.http](src/main/resources/api-calls/Authentication.http) and 
-make a registration post request.
-
-```shell
-POST http://localhost:8080/api/auth/registration
-Content-Type: application/json
-
-{
-  "username": "OneManArmy",
-  "password": "Str0nG!Pa55Word?",
-  "email": "your@email.com"
-}
-```
-
-Then you can login and you will get a JWT token back, which can be used to use all protected endpoints.
-
-```shell
-POST http://localhost:8080/api/auth/login
-Content-Type: application/json
-
-{
-"usernameOrEmail": "your@email.com",
-"password": "Str0nG!Pa55Word?"
-}
-```
-
-Now you can search for movies, add comments, rate them or put them on a watchlist!
+1. Run `docker-compose` to set up preloaded backend services (MySQL, Elasticsearch and
+  MinIO)
+2. Run the Spring Boot Backend with `./gradlew build bootRun`
+3. Run the React Frontend with `yarn install` & `yarn start`
 
 ---
 
-Lastly, we build up the frontend and serve it to `http://localhost:3000/`. Although the frontend is 
-currently under construction :wink: 
+#### 1. Set Up Stateful Services: MySQL, Elasticsearch and MinIO
+
+At first, we have to run the with data preloaded stateful services (MySQL, Elasticsearch and 
+MinIO) which are used by the backend. I created a docker image of each service preloaded with 
+data, so we just have to execute the `docker-compose.yaml`.
+
+```shell
+cd infrastructure/deployment/development
+docker-compose up -d
+```
+
+Be aware: the images are x86-based. So when you're using ARM-based apple silicone machine, 
+pay attention that emulation is activated. All images will be pulled and mounted to your device. 
+The spring boot backend can connect to the containers now.
+
+For more information on how data were collected, processed and imported look into 
+the [infrastructure](./infrastructure/README.md)-folder.
+
+--- 
+
+#### 2. Set Up Spring Boot Backend
+
+Now we can start the Spring Boot app:
+
+```shell
+./gradlew build
+./gradlew bootRun
+```
+
+The backend can now be reached at port 8080 on localhost. You can test if the backend works properly by 
+sending some http requests. Use the provided [.http](./src/main/resources/api-calls) files.
+
+--- 
+
+#### 3. Set Up React Frontend
+
+Now we can run the React frontend. We have to move into the frontend-folder and build & run with yarn or npm. 
 
 ```shell
 cd ./frontend
@@ -89,6 +92,8 @@ npm run build:moviesGen
 npm start
 ```
 
+The FE is served to `http://localhost:3000/. We can search for movies and more.
+
 I also added a [Makefile](Makefile) as a little cheat sheet to refresh our memory for all the important commands 
 we use during development.
 
@@ -96,7 +101,7 @@ we use during development.
 
 - [x] Set up Database and import Movie Data
 - [x] Create Java Backend
-- [x] Add Elasticsearch, Photos / File Storage
+- [x] Set up Elasticsearch, Photos / File Storage
 - [ ] Create React Frontend
   - [x] Account Settings Page
   - [x] Movie Search Page
@@ -105,5 +110,15 @@ we use during development.
   - [ ] Edit / Create Movies Page 
   - [ ] Home Page 
   - [ ] Detail View: Comments Feature
-- [ ] Deploy on Single-Node K3s Homeserver (GitOps CI/CD)
+- [x] Deploy on Home Server with Docker
+- [ ] Deploy with Docker Swarm
+- [ ] use SSL
+
+### Future Ideas
+- [ ] Deploy on HA K3s Home Server
+- [ ] Use Flux for GitOps CD
+- [ ] Add Integration Namespace in K3s next to the Prod Env for Testing
+- [ ] Add Unit / Integration Tests in BE and FE
 - [ ] Add Monitoring (Graylog, Prometheus, Grafana)
+- [ ] make mobile compatible
+- [ ] Add more Features like Chat Functionality
