@@ -18,7 +18,7 @@ import io.minio.errors.*;
 import io.minio.http.Method;
 import jakarta.transaction.Transactional;
 import java.io.*;
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -234,14 +233,21 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
   }
 
-  // move into utils file?
   private String readResourceFile(String resourcePath) {
-    File resourceFile;
-    String resource;
     try {
-      resourceFile = ResourceUtils.getFile("classpath:" + resourcePath);
-      resource = new String(Files.readAllBytes(resourceFile.toPath()));
-      return resource;
+      InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
+      if (inputStream == null) {
+        throw new FileNotFoundException("File not found: " + resourcePath);
+      }
+
+      try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+        StringBuilder stringBuilder = new StringBuilder();
+        String line;
+        while ((line = bufferedReader.readLine()) != null) {
+          stringBuilder.append(line);
+        }
+        return stringBuilder.toString();
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
