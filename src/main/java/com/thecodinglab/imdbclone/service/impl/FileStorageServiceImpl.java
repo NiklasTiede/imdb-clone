@@ -204,12 +204,12 @@ public class FileStorageServiceImpl implements FileStorageService {
       if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
         // create bucket
         minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-
-        // set policy
-        String bucketPolicy = "config/minio-policy.json";
-        createBucketPolicyFrom(bucketPolicy);
-        logger.info("bucket [{}] was created and bucketPolicy set successfully", bucketName);
       }
+      // set policy
+      String bucketPolicy = "config/minio-policy.json";
+      createBucketPolicyFrom(bucketPolicy);
+      logger.info("bucket [{}] was created and bucketPolicy set successfully", bucketName);
+
     } catch (Exception e) {
       logger.error("Creation of bucket [{}] failed", bucketName);
       throw new RuntimeException(e);
