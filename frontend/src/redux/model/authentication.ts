@@ -14,6 +14,7 @@ import { RegisterRequest } from "../../components/authentication/Registration";
 
 interface MyJwtPayload extends JwtPayload {
   roles: string;
+  username: string;
 }
 
 export type State = {
@@ -135,6 +136,7 @@ export const authentication = createModel<RootModel>()({
           ) {
             window.localStorage.setItem("jwtToken", response.data.accessToken);
             let decoded = jwt_decode<MyJwtPayload>(response.data.accessToken);
+            window.localStorage.setItem("username", decoded.username);
             window.localStorage.setItem("rolesFromJwt", decoded.roles);
             if (decoded.exp !== undefined) {
               window.localStorage.setItem(
@@ -143,7 +145,6 @@ export const authentication = createModel<RootModel>()({
               );
             }
             dispatch.authentication.setIsAuthenticated(true);
-            dispatch.account.getCurrentAccount();
           }
           if (response.status === 401) {
             dispatch.notify.error(i18n.login.badCredentials);

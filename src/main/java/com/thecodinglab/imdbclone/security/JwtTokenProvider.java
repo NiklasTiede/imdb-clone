@@ -39,7 +39,7 @@ public class JwtTokenProvider {
         userPrincipal.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
     return Jwts.builder()
-        .setClaims(Map.of("roles", currentUserRoles))
+        .setClaims(Map.of("roles", currentUserRoles, "username", userPrincipal.getUsername()))
         .setSubject(Long.toString(userPrincipal.getId()))
         .setIssuedAt(new Date())
         .setExpiration(expiryDate)
