@@ -16,12 +16,12 @@ MINIO_SECRET_KEY_ENV_VAR=$(generate_password 16)
 ELASTIC_USERNAME_ENV_VAR=elastic
 ELASTIC_PASSWORD_ENV_VAR=$(generate_password 16)
 
-MYSQL_HOST_ENV_VAR=robotnik-um560
-ELASTICSEARCH_HOST_ENV_VAR=robotnik-um560
-MINIO_HOST_ENV_VAR=robotnik-um560
+MYSQL_HOST_ENV_VAR=imdb-clone-mysql
+ELASTICSEARCH_HOST_ENV_VAR=imdb-clone-elasticsearch
+MINIO_HOST_ENV_VAR=imdb-clone-minio
 
-FRONTEND_APP_ADDRESS_ENV_VAR=http://robotnik-um560:80
-BACKEND_APP_ADDRESS_ENV_VAR=http://robotnik-um560:8080
+FRONTEND_APP_ADDRESS_ENV_VAR=http://your-server-host:80
+BACKEND_APP_ADDRESS_ENV_VAR=http://your-server-host:8080
 
 MAIL_USERNAME_ENV_VAR=your-own-email@email.com
 MAIL_PASSWORD_ENV_VAR=your-own-password

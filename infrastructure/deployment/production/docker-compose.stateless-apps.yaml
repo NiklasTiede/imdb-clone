@@ -7,8 +7,8 @@ services:
     image: niklastiede/imdb-clone-backend:latest
     restart: always
     environment:
-      - IMDB_CLONE_BACKEND_HOST=http://robotnik-um560:8080
-      - IMDB_CLONE_FRONTEND_HOST=http://robotnik-um560:80
+      - IMDB_CLONE_BACKEND_HOST=${BACKEND_APP_ADDRESS_ENV_VAR}
+      - IMDB_CLONE_FRONTEND_HOST=${FRONTEND_APP_ADDRESS_ENV_VAR}
       - SPRING_DATASOURCE_URL=jdbc:mysql://imdb-clone-mysql:3306/movie_db?serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=${MYSQL_USERNAME_ENV_VAR}
       - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD_ENV_VAR}
