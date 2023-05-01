@@ -78,8 +78,11 @@ services:
 
 volumes:
   imdb-clone-mysql-data:
+    name: imdb-clone-mysql-data
   imdb-clone-elasticsearch-data:
+    name: imdb-clone-elasticsearch-data
   imdb-clone-minio-data:
+    name: imdb-clone-minio-data
 
 networks:
   imdb-clone-network:

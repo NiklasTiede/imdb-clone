@@ -15,6 +15,8 @@ services:
       - "3310:3306"
     volumes:
       - imdb-clone-mysql-data:/var/lib/mysql
+    networks:
+      - imdb-clone-network
     command: --secure-file-priv=tmp
 
   ### ----------------------- MinIO ----------------------- ###
@@ -30,6 +32,8 @@ services:
       - "9090:9090"
     volumes:
       - imdb-clone-minio-data:/data
+    networks:
+      - imdb-clone-network
     command: /opt/bitnami/minio/bin/minio server --console-address :9090 /data
 
   load-minio-data:
@@ -51,6 +55,8 @@ services:
       (mc ls minio | grep "imdb-clone") || mc mb minio/imdb-clone &&
       mc cp --recursive /tmp/movies minio/imdb-clone &&
       rm -rf /tmp/movies'
+    networks:
+      - imdb-clone-network
 
   ### ----------------------- ElasticSearch ----------------------- ###
   imdb-clone-elasticsearch:
@@ -65,8 +71,18 @@ services:
       - "9200:9200"
     volumes:
       - imdb-clone-elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - imdb-clone-network
 
 volumes:
   imdb-clone-mysql-data:
+    name: imdb-clone-mysql-data
   imdb-clone-elasticsearch-data:
+    name: imdb-clone-elasticsearch-data
   imdb-clone-minio-data:
+    name: imdb-clone-minio-data
+
+networks:
+  imdb-clone-network:
+    name: imdb-clone-network
+    driver: bridge
