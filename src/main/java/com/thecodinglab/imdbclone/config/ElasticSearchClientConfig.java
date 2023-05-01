@@ -10,11 +10,20 @@ import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfigurat
 public class ElasticSearchClientConfig extends ElasticsearchConfiguration {
 
   @Value("${spring.elasticsearch.rest.uris}")
-  public String elasticsearchUrl;
+  public String esUrl;
+
+  @Value("${spring.elasticsearch.username}")
+  public String esUsername;
+
+  @Value("${spring.elasticsearch.password}")
+  public String esPassword;
 
   @NotNull
   @Override
   public ClientConfiguration clientConfiguration() {
-    return ClientConfiguration.builder().connectedTo(elasticsearchUrl).build();
+    return ClientConfiguration.builder()
+        .connectedTo(esUrl)
+        .withBasicAuth(esUsername, esPassword)
+        .build();
   }
 }
