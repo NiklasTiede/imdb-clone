@@ -34,7 +34,8 @@ services:
     image: niklastiede/imdb-clone-frontend:latest
     restart: always
     environment:
-      - REACT_APP_IMDB_CLONE_BACKEND_APP_ADDRESS=${BACKEND_APP_ADDRESS_ENV_VAR}
+      - REACT_APP_IMDB_CLONE_BACKEND_ADDRESS=${BACKEND_APP_ADDRESS_ENV_VAR}
+      - REACT_APP_IMDB_CLONE_MINIO_ADDRESS=${MINIO_ADDRESS_ENV_VAR}
     ports:
       - "80:80"
     networks:

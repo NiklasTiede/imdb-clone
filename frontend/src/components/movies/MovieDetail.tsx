@@ -7,6 +7,7 @@ import { tokens } from "../../theme";
 import { useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import { State as MovieState } from "../../redux/model/movies";
+import { getMinioImageUrl, MinioImageSize } from "../../utils/imageUrlParser";
 
 const MovieDetail = () => {
   const theme = useTheme();
@@ -22,7 +23,9 @@ const MovieDetail = () => {
     (state: { movies: MovieState }) => state.movies.movie
   );
 
-  const imageUrl = `http://192.168.178.49:9000/imdb-clone/movies/${movie?.imageUrlToken}_size_600x900.jpg`;
+  const imageUrl = movie?.imageUrlToken
+    ? getMinioImageUrl(movie?.imageUrlToken, MinioImageSize.Large)
+    : null;
 
   useEffect(() => {
     if (movieId !== null) {

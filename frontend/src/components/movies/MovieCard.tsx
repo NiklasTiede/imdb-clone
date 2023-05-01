@@ -13,8 +13,9 @@ import {
   Movie,
   MovieMovieGenreEnum,
 } from "../../client/movies/generator-output";
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
+import { getMinioImageUrl, MinioImageSize } from "../../utils/imageUrlParser";
 
 export const MovieLink = styled(Link)`
   text-decoration: none;
@@ -43,7 +44,9 @@ const MovieCard = (movie: Movie) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
-  const imageUrl = `http://192.168.178.49:9000/imdb-clone/movies/${movie?.imageUrlToken}_size_120x180.jpg`;
+  const imageUrl = movie?.imageUrlToken
+    ? getMinioImageUrl(movie?.imageUrlToken, MinioImageSize.Small)
+    : null;
 
   return (
     <div>

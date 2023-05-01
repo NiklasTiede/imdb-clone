@@ -30,7 +30,7 @@ customAxiosInstance.interceptors.request.use(
 );
 
 const moviesApiClientConfig: Configuration = new Configuration({
-    basePath: process.env.REACT_APP_IMDB_CLONE_BACKEND_APP_ADDRESS,
+  basePath: process.env.REACT_APP_IMDB_CLONE_BACKEND_ADDRESS,
   baseOptions: customAxiosInstance,
 });
 
