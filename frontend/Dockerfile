@@ -3,6 +3,8 @@
 
 # Stage 1: Install dependencies and build the application
 FROM node:19-alpine as build
+ARG REACT_APP_IMDB_CLONE_BACKEND_ADDRESS
+ARG REACT_APP_IMDB_CLONE_MINIO_ADDRESS
 WORKDIR /app
 # Install Java for openapi-generator-cli
 RUN apk add --no-cache openjdk11-jre
@@ -10,6 +12,8 @@ COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile \
     && yarn cache clean
 COPY . .
+ENV REACT_APP_IMDB_CLONE_BACKEND_ADDRESS=${REACT_APP_IMDB_CLONE_BACKEND_ADDRESS}
+ENV REACT_APP_IMDB_CLONE_MINIO_ADDRESS=${REACT_APP_IMDB_CLONE_MINIO_ADDRESS}
 RUN yarn run build:moviesGen \
     && yarn build
 
