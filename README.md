@@ -1,19 +1,23 @@
 
-<p align="center">
-<a href="http://imdb-clone.the-coding-lab.com/">
-<img  alt="imdb-clone" align="center" width="500" src="docs/imdb-clone-logo.jpg" />
+<div style="text-align:center">
+<a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
+<img alt="imdb-clone-logo" width="400" src="docs/imdb-clone-logo.jpg" />
 </a>
-<h3 align="center">This <a href="http://imdb-clone.the-coding-lab.com/">Project</a>  exemplifies a Real-World Java / React Web App.</h3>
-<p>
+<h3 >This <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Project</a>  exemplifies a Real-World Java / React Web App.</h3>
+</div>
 
 ---
 
-<p id="Badges" align="center">
-  <a href="https://github.com/NiklasTiede/IMDb-Clone/commits/master">
-    <img alt="commit" src="https://img.shields.io/github/last-commit/NiklasTiede/IMDb-Clone">
+<div style="text-align:center">
+
+  <a href="https://stats.uptimerobot.com/5KMN7t0E5M">
+    <img alt="Uptime Robot Status" src="https://img.shields.io/uptimerobot/status/m794347971-509793e3b2e4d89beb04d2fb" />
   </a>
   <a href="https://github.com/NiklasTiede/IMDb-Clone/issues">
     <img alt="issues" src="https://img.shields.io/github/issues-raw/niklastiede/imdb-clone" />
+  </a>
+  <a href="https://github.com/NiklasTiede/IMDb-Clone/commits/master">
+    <img alt="commit" src="https://img.shields.io/github/last-commit/NiklasTiede/IMDb-Clone">
   </a>
   <a>
     <img alt="code-size" src="https://img.shields.io/github/languages/code-size/niklastiede/imdb-clone" />
@@ -21,7 +25,7 @@
   <a>
     <img alt="license" src="https://img.shields.io/github/license/niklastiede/imdb-clone" />
   </a>
-</p>
+</div>
 
 ## Techstack
 - Languages: Java JDK19 / Typescript v4
@@ -32,11 +36,18 @@
 
 The app is secured with JWT authentication. The techstack is kept up-to-date. 
 
-This project can easily be run locally with docker-compose. I also deployed 
-a production version in my home-lab which can be reached here 
-[imdb-clone.the-coding-lab.com](http://imdb-clone.the-coding-lab.com).
+You can easily rebuilt and run this project locally with docker-compose. I also deployed 
+it in my home-lab which you can visit here
+<a href="https://imdb-clone.the-coding-lab.com/" target="_blank">imdb-clone.the-coding-lab.com</a>. 
+For production deployment I used docker-compose with traefik as reverse-proxy: it turned out that 
+docker swarm has no good support for elasticsearch docker container. Here's a diagram of the Setup:
 
-## How to Run this Project locally
+<div style="text-align:center">
+<img  alt="architecture-diagram" width="400" src="docs/imdb-clone-flow-schema.svg" />
+<h4 >Architecture Diagram showing the App's Service Interactions.</h4>
+</div>
+
+## How to Run this Project Locally
 
 The app can be built in 3 steps:
 
@@ -79,7 +90,7 @@ Now we can start the Spring Boot app:
 The backend can now be reached at port 8080 on localhost. You can test if the backend works properly by 
 sending some http requests. Use the provided [.http](./src/main/resources/api-calls) files.
 
---- 
+---
 
 #### 3. Set Up React Frontend
 
@@ -87,9 +98,9 @@ Now we can run the React frontend. We have to move into the frontend-folder and 
 
 ```shell
 cd ./frontend
-npm install
-npm run build:moviesGen
-npm start
+yarn install
+yarn run build:moviesGen
+yarn start
 ```
 
 The FE is served to `http://localhost:3000/. We can search for movies and more.
@@ -102,23 +113,22 @@ we use during development.
 - [x] Set up Database and import Movie Data
 - [x] Create Java Backend
 - [x] Set up Elasticsearch, Photos / File Storage
+- [x] Deploy on Home Server with Docker-Compose
+- [x] enable HTTPS with reverse-proxy
 - [ ] Create React Frontend
   - [x] Account Settings Page
   - [x] Movie Search Page
   - [ ] Movie Detail View with Rating / Watchlist Feature
   - [ ] Watchlist Page
-  - [ ] Edit / Create Movies Page 
-  - [ ] Home Page 
+  - [ ] Edit / Create Movies Page
+  - [ ] Home Page
   - [ ] Detail View: Comments Feature
-- [x] Deploy on Home Server with Docker
-- [ ] Deploy with Docker Swarm
-- [ ] use SSL
+- [ ] Make Mobile Compatible
 
 ### Future Ideas
 - [ ] Deploy on HA K3s Home Server
 - [ ] Use Flux for GitOps CD
 - [ ] Add Integration Namespace in K3s next to the Prod Env for Testing
 - [ ] Add Unit / Integration Tests in BE and FE
-- [ ] Add Monitoring (Graylog, Prometheus, Grafana)
-- [ ] make mobile compatible
+- [ ] Add Monitoring (Graylog, Prometheus, Grafana, cAdvisor, glances)
 - [ ] Add more Features like Chat Functionality

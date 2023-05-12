@@ -12,7 +12,7 @@ services:
       - MYSQL_USER=${MYSQL_USERNAME_ENV_VAR}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD_ENV_VAR}
     ports:
-      - "3310:3306"
+      - "3306:3306"
     volumes:
       - imdb-clone-mysql-data:/var/lib/mysql
     networks:
@@ -35,6 +35,11 @@ services:
     networks:
       - imdb-clone-network
     command: /opt/bitnami/minio/bin/minio server --console-address :9090 /data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=Host(`minio.imdb-clone.the-coding-lab.com`)"
+      - "traefik.http.routers.minio.entrypoints=websecure"
+      - "traefik.http.routers.minio.tls.certresolver=myresolver"
 
   load-minio-data:
     container_name: load-minio-data

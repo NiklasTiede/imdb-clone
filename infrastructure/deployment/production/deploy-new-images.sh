@@ -8,4 +8,4 @@ sudo docker-compose -f docker-compose.stateful-apps.yaml down
 sudo docker rmi niklastiede/imdb-clone-frontend niklastiede/imdb-clone-backend
 sudo docker-compose -f docker-compose.stateful-apps.yaml up -d
 
-echo "Latest image of the imdb-clone was deployed!"
+echo "Latest image of the imdb-clone (FE/BE) was deployed!"

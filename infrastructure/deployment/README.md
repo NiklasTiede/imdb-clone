@@ -1,24 +1,25 @@
 
 # Deployment: Locally for Development
 
-When running locally we spin up 3 docker containers.
-- 
+When running this app locally we need to spin up 3 docker 
+containers.
+ 
 - MySQL - Rel. Database
 - Elasticsearch - SearchEngine
 - MinIO - FileStorage
 
-we run them by executing the provided docker-compose.yaml
+We run them by executing the provided `docker-compose.yaml` file (in the 
+`development`-directory).
 
 ```bash
 docker-compose up -d
 ```
 
-The provided simple credentials will be read from the `.env`
-file and injected into tye container. We can then start the 
-backend:
+The development setup uses some unsafe but simple credentials. 
+Now we can start the backend:
 
 ```bash
-./gradlew build bootRun
+./gradlew bootRun
 ```
 
 And then start the frontend
@@ -28,16 +29,52 @@ And then start the frontend
 ```
 
 
-# Deployment: Production
+# Deployment: Production on Home Server
 
 In this configuration we use some generated safe credentials.
-Besides the the before mentioned containers we will also
-deploy a spring boot and react container.
+Besides the before mentioned containers we will also
+deploy a spring boot and react container and handle the 
+incoming traffic with traefik to enable encryption (SSL).
 
-You Can download the content of this `/production` directory onto
-you computer or a server and deploy everthing by running
+You can download the content of this `/production` directory onto 
+a server and deploy everything by running.
 
 ```bash
-docker-compose up -d
+# generate credentials
+./generate_credentials.sh
+
+# deploy stateful apps
+docker-compose -f docker-compose.stateful-apps.yaml up -d
+
+# deploy stateless apps
+docker-compose -f docker-compose.stateless-apps.yaml up -d
 ```
 
+But this process also involves port-forwarding of your server, setting up DNS
+with your domain and configuring ddclient to update DNS for public IP address. 
+So for each case some additional work has to be done.
+
+
+
+daemon=300
+syslog=yes
+pid=/var/run/ddclient.pid
+ssl=yes
+use=web, web=https://api.ipify.org/
+protocol=namecheap
+server=dynamicdns.park-your-domain.com
+
+# imdb-clone.the-coding-lab.com
+login=imdb-clone.the-coding-lab.com
+password='57cee664c7f14c0dbf096c1ed3ec5d35'
+@
+
+# minio.imdb-clone.the-coding-lab.com
+login=minio.imdb-clone.the-coding-lab.com
+password='57cee664c7f14c0dbf096c1ed3ec5d35'
+@
+
+# backend.imdb-clone.the-coding-lab.com
+login=backend.imdb-clone.the-coding-lab.com
+password='57cee664c7f14c0dbf096c1ed3ec5d35'
+@

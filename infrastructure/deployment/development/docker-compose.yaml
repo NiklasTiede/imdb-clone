@@ -12,7 +12,7 @@ services:
       - MYSQL_USER=myroot
       - MYSQL_PASSWORD=secret
     ports:
-      - "3310:3306"
+      - "3306:3306"
     volumes:
       - imdb-clone-mysql-data:/var/lib/mysql
     networks:

@@ -20,9 +20,9 @@ MYSQL_HOST_ENV_VAR=imdb-clone-mysql
 ELASTICSEARCH_HOST_ENV_VAR=imdb-clone-elasticsearch
 MINIO_HOST_ENV_VAR=imdb-clone-minio
 
-FRONTEND_APP_ADDRESS_ENV_VAR=http://your-server-host:80
-BACKEND_APP_ADDRESS_ENV_VAR=http://your-server-host:8080
-MINIO_ADDRESS_ENV_VAR=http://your-server-host:9000
+FRONTEND_APP_ADDRESS_ENV_VAR=https://imdb-clone.the-coding-lab.com
+BACKEND_APP_ADDRESS_ENV_VAR=https://backend.imdb-clone.the-coding-lab.com
+MINIO_ADDRESS_ENV_VAR=https://minio.imdb-clone.the-coding-lab.com
 
 MAIL_USERNAME_ENV_VAR=your-own-email@email.com
 MAIL_PASSWORD_ENV_VAR=your-own-password
