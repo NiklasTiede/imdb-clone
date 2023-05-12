@@ -10,21 +10,11 @@ plugins {
 group = 'com.thecodinglab'
 version = '1.0.0'
 
-sourceCompatibility = JavaVersion.VERSION_19
-targetCompatibility = JavaVersion.VERSION_19
-
-compileJava {
-	sourceCompatibility = JavaVersion.VERSION_19
-	targetCompatibility = JavaVersion.VERSION_19
-}
-
 compileJava.dependsOn 'spotlessApply'
 
 idea {
 	project {
 		languageLevel = '19'
-		sourceCompatibility = '19'
-		targetCompatibility = '19'
 	}
 	module {
 		jdkName = '19'
@@ -67,7 +57,7 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
 
 	//-- SearchEngine
-	implementation 'org.springframework.data:spring-data-elasticsearch:5.0.5'
+	implementation 'org.springframework.data:spring-data-elasticsearch:5.1.0'
 
 	//-- File Storage
 	implementation 'io.minio:minio:8.5.2'
