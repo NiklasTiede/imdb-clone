@@ -240,7 +240,8 @@ public class FileStorageServiceImpl implements FileStorageService {
         throw new FileNotFoundException("File not found: " + resourcePath);
       }
 
-      try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+      try (BufferedReader bufferedReader =
+          new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
         StringBuilder stringBuilder = new StringBuilder();
         String line;
         while ((line = bufferedReader.readLine()) != null) {

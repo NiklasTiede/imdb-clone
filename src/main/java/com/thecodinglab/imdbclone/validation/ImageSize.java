@@ -12,8 +12,6 @@ public class ImageSize {
   public static final int MIN_MOVIE_IMAGE_WIDTH = 600;
   public static final int MIN_MOVIE_IMAGE_HEIGHT = 900;
 
-  //  public static final int MIN_PROFILE_PHOTO_WIDTH = 800;
-  //  public static final int MIN_PROFILE_PHOTO_HEIGHT = 800;
   public static final int MIN_PROFILE_PHOTO_WIDTH = 500;
   public static final int MIN_PROFILE_PHOTO_HEIGHT = 500;
 
