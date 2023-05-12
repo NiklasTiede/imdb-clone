@@ -9,6 +9,7 @@ todo.txt
 /infrastructure/minio/processed_movie_images/
 # credentials for prod on homeserver
 /infrastructure/deployment/production/.env
+/infrastructure/deployment/production/docker-swarm-deploy
 
 # generated typescript clients
 /frontend/src/client/**/generator-output/
