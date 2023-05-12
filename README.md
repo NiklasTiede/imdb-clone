@@ -1,7 +1,7 @@
 
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
-    <img alt="imdb-clone-logo" width="400" src="docs/imdb-clone-logo.jpg" />
+    <img alt="imdb-clone-logo" width="450" src="docs/imdb-clone-logo.jpg" />
   </a>
 
   <h3 align="center">This <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Project</a>  exemplifies a Real-World Java / React Web App.</h3>
@@ -44,7 +44,7 @@ For production deployment I used docker-compose with traefik as reverse-proxy: i
 docker swarm has no good support for elasticsearch docker container. Here's a diagram of the Setup:
 
 <p align="center">
-  <img  alt="architecture-diagram" width="400" src="docs/imdb-clone-flow-schema.svg" />
+  <img  alt="architecture-diagram" width="460" src="docs/imdb-clone-flow-schema.svg" />
 
 <h4 align="center">Architecture Diagram showing the App's Service Interactions.</h4>
 </p>
@@ -55,7 +55,7 @@ The app can be built in 3 steps:
 
 1. Run `docker-compose` to set up preloaded backend services (MySQL, Elasticsearch and
   MinIO)
-2. Run the Spring Boot Backend with `./gradlew build bootRun`
+2. Run the Spring Boot Backend with `./gradlew bootRun`
 3. Run the React Frontend with `yarn install` & `yarn start`
 
 ---
