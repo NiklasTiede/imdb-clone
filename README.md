@@ -1,14 +1,15 @@
 
-<div style="text-align:center">
-<a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
-<img alt="imdb-clone-logo" width="400" src="docs/imdb-clone-logo.jpg" />
-</a>
-<h3 >This <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Project</a>  exemplifies a Real-World Java / React Web App.</h3>
-</div>
+<p align="center">
+  <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
+    <img alt="imdb-clone-logo" width="400" src="docs/imdb-clone-logo.jpg" />
+  </a>
+
+  <h3 align="center">This <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Project</a>  exemplifies a Real-World Java / React Web App.</h3>
+</p>
 
 ---
 
-<div style="text-align:center">
+<p align="center">
 
   <a href="https://stats.uptimerobot.com/5KMN7t0E5M">
     <img alt="Uptime Robot Status" src="https://img.shields.io/uptimerobot/status/m794347971-509793e3b2e4d89beb04d2fb" />
@@ -25,7 +26,7 @@
   <a>
     <img alt="license" src="https://img.shields.io/github/license/niklastiede/imdb-clone" />
   </a>
-</div>
+</p>
 
 ## Techstack
 - Languages: Java JDK19 / Typescript v4
@@ -42,10 +43,11 @@ it in my home-lab which you can visit here
 For production deployment I used docker-compose with traefik as reverse-proxy: it turned out that 
 docker swarm has no good support for elasticsearch docker container. Here's a diagram of the Setup:
 
-<div style="text-align:center">
-<img  alt="architecture-diagram" width="400" src="docs/imdb-clone-flow-schema.svg" />
-<h4 >Architecture Diagram showing the App's Service Interactions.</h4>
-</div>
+<p align="center">
+  <img  alt="architecture-diagram" width="400" src="docs/imdb-clone-flow-schema.svg" />
+
+<h4 align="center">Architecture Diagram showing the App's Service Interactions.</h4>
+</p>
 
 ## How to Run this Project Locally
 
