@@ -53,28 +53,3 @@ docker-compose -f docker-compose.stateless-apps.yaml up -d
 But this process also involves port-forwarding of your server, setting up DNS
 with your domain and configuring ddclient to update DNS for public IP address. 
 So for each case some additional work has to be done.
-
-
-
-daemon=300
-syslog=yes
-pid=/var/run/ddclient.pid
-ssl=yes
-use=web, web=https://api.ipify.org/
-protocol=namecheap
-server=dynamicdns.park-your-domain.com
-
-# imdb-clone.the-coding-lab.com
-login=imdb-clone.the-coding-lab.com
-password='57cee664c7f14c0dbf096c1ed3ec5d35'
-@
-
-# minio.imdb-clone.the-coding-lab.com
-login=minio.imdb-clone.the-coding-lab.com
-password='57cee664c7f14c0dbf096c1ed3ec5d35'
-@
-
-# backend.imdb-clone.the-coding-lab.com
-login=backend.imdb-clone.the-coding-lab.com
-password='57cee664c7f14c0dbf096c1ed3ec5d35'
-@

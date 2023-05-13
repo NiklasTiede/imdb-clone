@@ -37,17 +37,27 @@
 
 The app is secured with JWT authentication. The techstack is kept up-to-date. 
 
-You can easily rebuilt and run this project locally with docker-compose. I also deployed 
-it in my home-lab which you can visit here
-<a href="https://imdb-clone.the-coding-lab.com/" target="_blank">imdb-clone.the-coding-lab.com</a>. 
-For production deployment I used docker-compose with traefik as reverse-proxy: it turned out that 
-docker swarm has no good support for elasticsearch docker container. Here's a diagram of the Setup:
+---
+
+## Motivation
+
+When entering the field of software engineering you need to learn how to build applications professionally.
+You need to learn from good code bases (at best: similar to company code). There are the typical blog examples 
+([here](https://github.com/gothinkster/realworld)) but what is about search functionality or the handling 
+of images? How is the App deployed on a home server? Security? How to preload the App with data? The answer to 
+all these questions you can find in this codebase.
+
+This project can be rather easily rebuild locally (for a project of this size). If you want to explore a deployed 
+instance of the IMDB Clone then visit [imdb-clone.the-coding-lab.com](https://imdb-clone.the-coding-lab.com/)
+(it's running on my home server). Here's a diagram of the setup:
 
 <p align="center">
   <img  alt="architecture-diagram" width="500" src="docs/imdb-clone-flow-schema.svg" />
 
 <h4 align="center">Architecture Diagram showing the App's Service Interactions.</h4>
 </p>
+
+---
 
 ## How to Run this Project Locally
 
@@ -60,7 +70,7 @@ The app can be built in 3 steps:
 
 ---
 
-#### 1. Set Up Stateful Services: MySQL, Elasticsearch and MinIO
+### 1. Set Up Stateful Services: MySQL, Elasticsearch and MinIO
 
 At first, we have to run the with data preloaded stateful services (MySQL, Elasticsearch and 
 MinIO) which are used by the backend. I created a docker image of each service preloaded with 
@@ -80,7 +90,7 @@ the [infrastructure](./infrastructure/README.md)-folder.
 
 --- 
 
-#### 2. Set Up Spring Boot Backend
+### 2. Set Up Spring Boot Backend
 
 Now we can start the Spring Boot app:
 
@@ -94,7 +104,7 @@ sending some http requests. Use the provided [.http](./src/main/resources/api-ca
 
 ---
 
-#### 3. Set Up React Frontend
+### 3. Set Up React Frontend
 
 Now we can run the React frontend. We have to move into the frontend-folder and build & run with yarn or npm. 
 
@@ -109,6 +119,8 @@ The FE is served to `http://localhost:3000/. We can search for movies and more.
 
 I also added a [Makefile](Makefile) as a little cheat sheet to refresh our memory for all the important commands 
 we use during development.
+
+---
 
 ### Todo:
 
@@ -125,7 +137,7 @@ we use during development.
   - [ ] Edit / Create Movies Page
   - [ ] Home Page
   - [ ] Detail View: Comments Feature
-- [ ] Make Mobile Compatible
+  - [ ] Make Mobile Compatible
 
 ### Future Ideas
 - [ ] Deploy on HA K3s Home Server
