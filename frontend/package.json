@@ -9,6 +9,7 @@
     "eject": "react-scripts eject",
     "lint": "eslint . --ext .tsx,.ts",
     "format": "yarn prettier --write .",
+    "checkUpdates": "ncu",
     "updateOpenApiSpec": "curl http://localhost:8080/v3/api-docs.yaml > ./src/client/imdb-clone-backend.yaml",
     "build:moviesGen": "openapi-generator-cli generate -i ./src/client/imdb-clone-backend.yaml -g typescript-axios -o ./src/client/movies/generator-output/"
   },
