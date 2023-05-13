@@ -28,13 +28,13 @@ remove-db-container: ## removes container
 .PHONY: run-backend generate-jar docker-build-backend docker-run-backend
 
 run-backend: ## bootRun java backend
-	gradle bootRun
+	./gradlew bootRun
 
-generate-jar: ## clean and build jar file (for dockerizing)
-	gradle clean
-	gradle bootJar
+generate-jar: ## clean and build jar file (for building docker image)
+	./gradlew clean
+	./gradlew bootJar
 
-DOCKER_IMG_BACKEND = imdb-backend
+DOCKER_IMG_BACKEND = imdb-clone-backend
 
 docker-build-backend: ## build backend docker image from Dockerfile
 	docker build -t $(DOCKER_IMG_BACKEND) .
@@ -49,18 +49,18 @@ docker-run-backend: ## run backend docker container
 .PHONY: npm-install generate-client npm-lint run-frontend docker-build-frontend docker-run-frontend
 
 npm-install: ## install NPM dependencies
-	cd ./frontend; npm install
+	cd ./frontend; yarn install
 
 generate-client: ## generate client code from openapi spec
-	cd ./frontend; npm run build:moviesGen
+	cd ./frontend; yarn run build:moviesGen
 
 npm-lint: ## lint frontend code
-	cd ./frontend; npm run lint
+	cd ./frontend; yarn run lint
 
 run-frontend: ## run frontend
-	cd ./frontend; npm run start
+	cd ./frontend; yarn run start
 
-DOCKER_IMG_FRONTEND = imdb-frontend
+DOCKER_IMG_FRONTEND = imdb-clone-frontend
 
 docker-build-frontend: ## build frontend docker image from Dockerfile
 	cd ./frontend; docker build -t $(DOCKER_IMG_FRONTEND) .
@@ -82,20 +82,6 @@ docker-clean: ## remove imdb-clone docker images and containers
 	docker rmi -f $(DOCKER_IMG_FRONTEND) $(DOCKER_IMG_BACKEND)
 	docker rm -f $(DOCKER_IMG_FRONTEND) $(DOCKER_IMG_BACKEND)
 
-
-
-# ------------  Elasticsearch  ----------------------------------------------------------------------------------------
-
-.PHONY: es-run
-
-es-run: ## show all images and containers
-	docker network create elastic
-	docker run --name elasticsearch -d --restart=always --net elastic -p 9200:9200 -e discovery.type=single-node -e ES_JAVA_OPTS="-Xms1g -Xmx1g" -e ELASTIC_PASSWORD=elastic -it docker.elastic.co/elasticsearch/elasticsearch:8.5.3
-	docker pull docker.elastic.co/kibana/kibana:8.5.3
-	docker run --name kibana --net elastic -p 5601:5601 docker.elastic.co/kibana/kibana:8.5.3
-
-es-logs:
-	docker logs <container-id-or-name>
 
 
 # ------------  Help  -------------------------------------------------------------------------------------------------

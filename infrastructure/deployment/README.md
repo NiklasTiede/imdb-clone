@@ -25,9 +25,10 @@ Now we can start the backend:
 And then start the frontend
 
 ```bash
-
+cd frontend
+yarn install
+yarn start
 ```
-
 
 # Deployment: Production on Home Server
 

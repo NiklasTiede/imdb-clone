@@ -29,7 +29,7 @@
 </p>
 
 ## Techstack
-- Languages: Java JDK19 / Typescript v4
+- Languages: Java JDK20 / Typescript v4
 - Frameworks: Spring Boot v3 / React v18 (MaterialUI v5)
 - Rel. Database: MySQL v8
 - SearchEngine: Elasticsearch v8
@@ -44,12 +44,12 @@ The app is secured with JWT authentication. The techstack is kept up-to-date.
 When entering the field of software engineering you need to learn how to build applications professionally.
 You need to learn from good code bases (at best: similar to company code). There are the typical blog examples 
 ([here](https://github.com/gothinkster/realworld)) but what is about search functionality or the handling 
-of images? How is the App deployed on a home server? Security? How to preload the App with data? The answer to 
-all these questions you can find in this codebase.
+of images? How is the App deployed on a home server? How to generate client code with openapi-specifications?
+How can I preload my App with data? The answer to all these questions and more can be found in this codebase.
 
-This project can be rather easily rebuild locally (for a project of this size). If you want to explore a deployed 
-instance of the IMDB Clone then visit [imdb-clone.the-coding-lab.com](https://imdb-clone.the-coding-lab.com/)
-(it's running on my home server). Here's a diagram of the setup:
+The project can be rather easily rebuild locally (for a project of this size). If you want to explore a deployed 
+instance of the IMDB Clone then visit [imdb-clone.the-coding-lab.com](https://imdb-clone.the-coding-lab.com/). 
+Here's a diagram of the setup:
 
 <p align="center">
   <img  alt="architecture-diagram" width="500" src="docs/imdb-clone-flow-schema.svg" />

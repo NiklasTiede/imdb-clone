@@ -1,7 +1,7 @@
 
 # File Storage for Images
 
-Storing data like images, videos or pdf's is a valuable feature. Here we want to show images for the 5000 most 
+Storing data like images, videos or pdf files is a valuable feature. Here we want to show images for the 5000 most 
 popular movies. Without calling an external Api we want to achieve this by scraping image data and storing 
 them in our own mounted MinIO container. This gives us more control on write operations (add/delete) on 
 the images and what image size we want to serve to our frontend.

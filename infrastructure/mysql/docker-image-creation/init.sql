@@ -1,3 +1,5 @@
+# This is a copy of schema.sql in src/main/resources/sql
+
 # set up database with data
 DROP DATABASE IF EXISTS movie_db;
 

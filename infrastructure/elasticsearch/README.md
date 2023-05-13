@@ -6,4 +6,4 @@ data when the spring boot backend container starts (and cannot find indexed movi
 using an application listener.
 
 The `docker run` command used for running the ES image can be found in the 
-[deployment/docker-compose.yaml](https://github.com/niklastiede/imdb-clone/blob/master/infrastructure/deployment/development/docker-compose.yaml#L55).
+[deployment/development/docker-compose.yaml](https://github.com/niklastiede/imdb-clone/blob/master/infrastructure/deployment/development/docker-compose.yaml#L61).
