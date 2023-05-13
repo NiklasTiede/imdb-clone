@@ -1,25 +1,14 @@
 # This file serves also as a cheat sheet
 
-# ------------ Set-up and run MySQL DB (containing movie data)  -------------------------------------------------------
+# ------------ Set-up and run MySQL / ElasticSearch / MinIO  ----------------------------------------------------------
 
 .PHONY: pull-db run-db stop-db start-db remove-db-container
 
-DB_IMG = niklastiede/movie-db
+docker-compose-dev-up: ## run services for backend
+	cd ./infrastructure/deployment/development; docker-compose up -d
 
-pull-db: ## pull mysql image
-	docker pull $(DB_IMG):latest
-
-run-db: ## run container opened to port 3310
-	docker run --name movie-db -d --restart=always -p 3310:3306 $(DB_IMG) --secure-file-priv=tmp
-
-stop-db: ## stop running container
-	docker stop $(DB_IMG)
-
-start-db: ## start container
-	docker start $(DB_IMG)
-
-remove-db-container: ## removes container
-	docker rm $(DB_IMG)
+docker-compose-dev-down: ## stop services for backend
+	cd ./infrastructure/deployment/development; docker-compose down
 
 
 
