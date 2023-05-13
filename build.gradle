@@ -14,10 +14,10 @@ compileJava.dependsOn 'spotlessApply'
 
 idea {
 	project {
-		languageLevel = '19'
+		languageLevel = '20'
 	}
 	module {
-		jdkName = '19'
+		jdkName = '20'
 	}
 }
 
