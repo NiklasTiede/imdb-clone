@@ -19,7 +19,9 @@ public class ProfilePhotoConstants {
 
   public static final String BUCKET_DIRECTORY_NAME = "profile-photos/";
 
-  public static String IMAGE_NAME_DETAIL_VIEW(String imageUrlToken) {
+  private ProfilePhotoConstants() {}
+
+  public static String getDetailViewImageName(String imageUrlToken) {
     return BUCKET_DIRECTORY_NAME
         + imageUrlToken
         + "_size_"
@@ -30,7 +32,7 @@ public class ProfilePhotoConstants {
         + FORMAT;
   }
 
-  public static String IMAGE_NAME_THUMBNAIL(String imageUrlToken) {
+  public static String getThumbnailImageName(String imageUrlToken) {
     return BUCKET_DIRECTORY_NAME
         + imageUrlToken
         + "_size_"

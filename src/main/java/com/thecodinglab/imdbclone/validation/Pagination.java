@@ -10,6 +10,8 @@ public class Pagination {
 
   public static final int MAX_PAGE_SIZE = 30;
 
+  private Pagination() {}
+
   public static void validatePageNumberAndSize(int page, int size) {
     if (page < 0) {
       throw new BadRequestException("Page number cannot be less than zero.");

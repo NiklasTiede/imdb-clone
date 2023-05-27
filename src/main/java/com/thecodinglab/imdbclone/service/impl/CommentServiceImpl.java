@@ -105,7 +105,7 @@ public class CommentServiceImpl implements CommentService {
       Long commentId, UpdateCommentRequest request, UserPrincipal currentAccount) {
     Comment comment = commentRepository.getCommentById(commentId);
     if (Objects.equals(comment.getAccount().getId(), currentAccount.getId())
-        || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
+        || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       comment.setMessage(request.message());
       Comment updatedComment = commentRepository.save(comment);
       LOGGER.info("comment with id [{}] was updated.", updatedComment.getId());
@@ -122,7 +122,7 @@ public class CommentServiceImpl implements CommentService {
   public MessageResponse deleteComment(Long commentId, UserPrincipal currentAccount) {
     Comment comment = commentRepository.getCommentById(commentId);
     if (Objects.equals(comment.getAccount().getId(), currentAccount.getId())
-        || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
+        || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       commentRepository.delete(comment);
       LOGGER.info("comment with id [{}] was deleted.", comment.getId());
       return new MessageResponse("comment with id [" + comment.getId() + "] was deleted.");

@@ -7,9 +7,9 @@ import java.util.regex.Pattern;
 
 public class ValidUsernameImpl implements ConstraintValidator<ValidUsername, String> {
 
-  public static final String usernamePattern =
+  public static final String USERNAME_PATTERN =
       "^(?=.{2,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$";
-  private static final Pattern pattern = Pattern.compile(usernamePattern);
+  private static final Pattern pattern = Pattern.compile(USERNAME_PATTERN);
 
   @Override
   public void initialize(ValidUsername constraintAnnotation) {

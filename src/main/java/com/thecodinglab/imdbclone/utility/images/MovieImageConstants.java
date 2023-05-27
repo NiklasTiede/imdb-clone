@@ -19,7 +19,7 @@ public class MovieImageConstants {
 
   public static final String BUCKET_DIRECTORY_NAME = "movies/";
 
-  public static String IMAGE_NAME_DETAIL_VIEW(String imageUrlToken) {
+  public static String getDetailViewImageName(String imageUrlToken) {
     return BUCKET_DIRECTORY_NAME
         + imageUrlToken
         + "_size_"
@@ -30,7 +30,7 @@ public class MovieImageConstants {
         + FORMAT;
   }
 
-  public static String IMAGE_NAME_THUMBNAIL(String imageUrlToken) {
+  public static String getThumbNailImageName(String imageUrlToken) {
     return BUCKET_DIRECTORY_NAME
         + imageUrlToken
         + "_size_"

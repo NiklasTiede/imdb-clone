@@ -31,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-  private static final Logger logger = LoggerFactory.getLogger(FileStorageServiceImpl.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FileStorageServiceImpl.class);
 
   @Value("${minio.rest.bucketName}")
   public String bucketName;
@@ -100,8 +100,8 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     Account account = accountRepository.getAccount(currentUser);
 
-    deleteFile(ProfilePhotoConstants.IMAGE_NAME_DETAIL_VIEW(account.getImageUrlToken()));
-    deleteFile(ProfilePhotoConstants.IMAGE_NAME_THUMBNAIL(account.getImageUrlToken()));
+    deleteFile(ProfilePhotoConstants.getDetailViewImageName(account.getImageUrlToken()));
+    deleteFile(ProfilePhotoConstants.getThumbnailImageName(account.getImageUrlToken()));
 
     return "Profile Photos of User with accountId ["
         + account.getId()
@@ -156,8 +156,8 @@ public class FileStorageServiceImpl implements FileStorageService {
     Movie movie = movieRepository.getMovieById(movieId);
 
     // delete images
-    deleteFile(MovieImageConstants.IMAGE_NAME_DETAIL_VIEW(movie.getImageUrlToken()));
-    deleteFile(MovieImageConstants.IMAGE_NAME_THUMBNAIL(movie.getImageUrlToken()));
+    deleteFile(MovieImageConstants.getDetailViewImageName(movie.getImageUrlToken()));
+    deleteFile(MovieImageConstants.getThumbNailImageName(movie.getImageUrlToken()));
 
     return "Movie images of movie with movieId [" + movie.getId() + "] were deleted";
   }
@@ -207,10 +207,10 @@ public class FileStorageServiceImpl implements FileStorageService {
       // set policy
       String bucketPolicy = "config/minio-policy.json";
       createBucketPolicyFrom(bucketPolicy);
-      logger.info("bucket [{}] was created and bucketPolicy set successfully", bucketName);
+      LOGGER.info("bucket [{}] was created and bucketPolicy set successfully", bucketName);
 
     } catch (Exception e) {
-      logger.error("Creation of bucket [{}] failed", bucketName);
+      LOGGER.error("Creation of bucket [{}] failed", bucketName);
       throw new RuntimeException(e);
     }
   }

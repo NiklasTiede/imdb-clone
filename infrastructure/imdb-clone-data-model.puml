@@ -1,0 +1,87 @@
+@startuml
+
+skinparam linetype ortho
+hide circle
+
+namespace entities {
+
+  class Movie #b8d5fc {
+    - id : long
+    - primaryTitle : String
+    - originalTitle : String
+    - startYear : int
+    - endYear : int
+    - runtimeMinutes : int
+    - genre : MovieGenreEnum
+    - movieType : MovieTypeEnum
+    - adult : boolean
+    - imdbRating : float
+    - imdbRatingCount : int
+    - rating : float
+    - ratingCount : int
+    - description : String
+    - imageUrlToken : String
+  }
+
+  class Account #b8d5fc {
+    - id : long
+    - username : String
+    - email : String
+    - password : String
+    - firstName : String
+    - lastName : String
+    - bio : String
+    - phone : String
+    - birthday : Date
+    - imageUrlToken : String
+  }
+
+  class Role #c8eafa {
+    - id : long
+    - name : RoleNameEnum
+  }
+
+  class Rating #c8eafa {
+    - movieId : long
+    - accountId : long
+    - ratingScore : BigDecimal
+  }
+
+  class Comment #c8eafa {
+    - id : long
+    - message : String
+    - accountId : long
+    - movieId : long
+  }
+
+  class Watchlist #c8eafa {
+    - accountId : long
+    - movieId : long
+  }
+
+  class AccountRoles #c8eafa {
+    - accountId : long
+    - roleId : long
+  }
+
+  class VerificationToken #c8eafa {
+    - id : long
+    - verificationType : VerTypeEnum
+    - token : String
+    - expiryDateInUtc : Instant
+    - confirmedAtInUtc : Instant
+    - accountId : long
+  }
+}
+
+Account ||-right-|{ VerificationToken
+Account ||-down-|{ Rating
+Movie ||-right-|{ Rating
+Account ||-left-|{ Watchlist
+Account ||-right-|{ Comment
+Account ||-right-|{ AccountRoles
+Role ||-up-|{ AccountRoles
+Movie ||-down-|{ Comment
+Movie ||-up-|{ Watchlist
+
+@enduml

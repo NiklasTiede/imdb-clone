@@ -3,7 +3,7 @@ plugins {
 	id 'idea'
 	id 'org.springframework.boot' version "${springBootVersion}"
 	id 'io.spring.dependency-management' version '1.1.0'
-	id 'com.diffplug.spotless' version '6.18.0'
+	id 'com.diffplug.spotless' version '6.19.0'
 	id 'com.github.ben-manes.versions' version '0.46.0'
 }
 
@@ -60,7 +60,7 @@ dependencies {
 	implementation 'org.springframework.data:spring-data-elasticsearch:5.1.0'
 
 	//-- File Storage
-	implementation 'io.minio:minio:8.5.2'
+	implementation 'io.minio:minio:8.5.3'
 
 	//-- Email
 	implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"
@@ -77,7 +77,7 @@ dependencies {
 
 	//-- Testing
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0-M1'
 	testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
 }
 

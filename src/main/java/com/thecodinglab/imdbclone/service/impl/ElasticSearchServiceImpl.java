@@ -24,6 +24,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchServiceImpl.class);
   private final ElasticsearchClient esClient;
+  private static final String MOVIES_INDEX = "movies";
 
   public ElasticSearchServiceImpl(ElasticsearchClient esClient) {
     this.esClient = esClient;
@@ -35,15 +36,19 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     try {
       indexResponse = esClient
           .index(idx -> idx
-              .index("movies")
+              .index(MOVIES_INDEX)
               .id(movie.getId().toString())
               .document(movie));
 
-      LOGGER.info(
-          "Document of type Movie with id [{}] of index [{}] was [{}].",
-          indexResponse.id(),
-          indexResponse.index(),
-          indexResponse.result().jsonValue());
+      if (LOGGER.isInfoEnabled()) {
+        LOGGER.info(
+                "Document of type Movie with id [{}] of index [{}] was [{}].",
+                indexResponse.id(),
+                indexResponse.index(),
+                indexResponse.result().jsonValue()
+        );
+      }
+
     } catch (IOException e) {
       LOGGER.error(
           "Document of type movie with id [{}] was not indexed successfully.", movie.getId());
@@ -57,7 +62,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     for (Movie movie : movies) {
       br.operations(op -> op
           .index(idx -> idx
-              .index("movies")
+              .index(MOVIES_INDEX)
               .id(movie.getId().toString())
               .document(movie)));
     }
@@ -77,7 +82,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     if (result.errors()) {
       LOGGER.error("Bulk had errors");
       for (BulkResponseItem item : result.items()) {
-        if (item.error() != null) {
+        if (item.error() != null && LOGGER.isInfoEnabled()) {
           LOGGER.error(item.error().reason());
         }
       }
@@ -91,7 +96,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     try {
       GetResponse<Movie> response = esClient
           .get(g -> g
-                  .index("movies")
+                  .index(MOVIES_INDEX)
                   .id(movieId.toString()),
               Movie.class);
 
@@ -111,7 +116,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     try {
       response = esClient
           .search(s -> s
-                  .index("movies")
+                  .index(MOVIES_INDEX)
                   .query(q -> q
                       .match(m -> m
                           .field("primaryTitle")
@@ -132,7 +137,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     try {
       SearchResponse<Movie> response = esClient
           .search(s -> s
-                  .index("movies")
+                  .index(MOVIES_INDEX)
                   .query(q -> q
                       .range(r -> r
                           .field("imdbRating")
@@ -157,7 +162,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
 
     SearchRequest searchRequest =
         SearchRequest.of(s -> s
-            .index("movies")
+            .index(MOVIES_INDEX)
             .query(q -> q.bool(boolQuery))
             .from(page * size)
             .size(size)

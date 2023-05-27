@@ -14,8 +14,8 @@ public class Image {
   private final String imageName;
   private final InputStream inputStream;
   private final int streamSize;
-  private static final String contentType = "image/jpeg";
-  private static final String imageType = "jpg";
+  private static final String CONTENT_TYPE = "image/jpeg";
+  private static final String IMAGE_TYPE = "jpg";
 
   private Image(String imageName, InputStream inputStream, int streamSize) {
     this.imageName = imageName;
@@ -50,8 +50,7 @@ public class Image {
     // rescale to provided size
     int targetWidth = scalingSize;
     int targetHeight = (int) (scalingSize / aspectRatio);
-    ByteArrayOutputStream scaledImage =
-        rescaleImage(normalizedImage, targetWidth, targetHeight, imageType);
+    ByteArrayOutputStream scaledImage = rescaleImage(normalizedImage, targetWidth, targetHeight);
 
     // set properties
     int streamSize = scaledImage.size();
@@ -64,7 +63,7 @@ public class Image {
             + "x"
             + targetHeight
             + "."
-            + imageType; // TODO: refactor
+            + IMAGE_TYPE;
 
     return new Image(imageName, inputStream, streamSize);
   }
@@ -95,7 +94,7 @@ public class Image {
   }
 
   private static ByteArrayOutputStream rescaleImage(
-      BufferedImage normalizedImage, int targetWidth, int targetHeight, String imageType) {
+      BufferedImage normalizedImage, int targetWidth, int targetHeight) {
 
     BufferedImage resized =
         new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
@@ -112,7 +111,7 @@ public class Image {
     // Write images to output streams
     ByteArrayOutputStream originalStream = new ByteArrayOutputStream();
     try {
-      ImageIO.write(resized, imageType, originalStream);
+      ImageIO.write(resized, Image.IMAGE_TYPE, originalStream);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -132,7 +131,7 @@ public class Image {
   }
 
   public String getContentType() {
-    return contentType;
+    return CONTENT_TYPE;
   }
 
   @Override

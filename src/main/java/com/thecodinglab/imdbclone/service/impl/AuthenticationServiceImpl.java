@@ -41,7 +41,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private final RoleService roleService;
 
   @Value("${spring.mail.properties.mail.smtp.starttls.enable}")
-  private Boolean emailEnabled;
+  private boolean emailEnabled;
 
   @Value("${imdb-clone.backend.host}")
   private String imdbCloneBackendHost;
@@ -171,8 +171,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     verificationTokenRepository.save(verificationToken);
 
     String link = imdbCloneFrontendHost + "/reset-password?token=" + token;
-    String PasswordResetEmail = emailService.buildPasswordResetEmail(account.getUsername(), link);
-    emailService.sendEmail(account.getEmail(), "Reset Password", PasswordResetEmail);
+    String passwordResetEmail = emailService.buildPasswordResetEmail(account.getUsername(), link);
+    emailService.sendEmail(account.getEmail(), "Reset Password", passwordResetEmail);
     return new MessageResponse("Email was send successfully");
   }
 

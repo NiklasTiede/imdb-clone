@@ -97,7 +97,7 @@ public class RatingServiceImpl implements RatingService {
                             + currentAccount.getId()
                             + "] not found in database."));
     if (Objects.equals(rating.getAccount().getId(), currentAccount.getId())
-        || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
+        || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       ratingRepository.delete(rating);
       LOGGER.info("rating with id [{}] was deleted.", rating.getId());
       return new MessageResponse(

@@ -45,7 +45,7 @@ public class MovieServiceImpl implements MovieService {
   @Override
   public MovieRecord findMovieById(Long movieId) {
     Movie movie = movieRepository.getMovieById(movieId);
-    LOGGER.info("Movie with Id [" + movie.getId() + "] was retrieved.");
+    LOGGER.info("Movie with Id [{}] was retrieved.", movie.getId());
     return movieMapper.entityToDTO(movie);
   }
 
@@ -113,7 +113,7 @@ public class MovieServiceImpl implements MovieService {
   }
 
   @Transactional
-  private void performDelete(Movie movie) {
+  public void performDelete(Movie movie) {
     movieRepository.delete(movie);
     elasticSearchRepository.delete(movie);
     LOGGER.info(

@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -51,10 +50,10 @@ public class UserPrincipal implements UserDetails {
   }
 
   public static UserPrincipal create(Account account) {
-    List<GrantedAuthority> authorities =
+    List<SimpleGrantedAuthority> authorities =
         account.getRoles().stream()
             .map(role -> new SimpleGrantedAuthority(role.getName().name()))
-            .collect(Collectors.toList());
+            .toList();
 
     return new UserPrincipal(
         account.getId(),
@@ -130,7 +129,7 @@ public class UserPrincipal implements UserDetails {
     return lastName;
   }
 
-  public static Boolean isCurrentAccountAdmin(UserPrincipal currentAccount) {
+  public static boolean isCurrentAccountAdmin(UserPrincipal currentAccount) {
     return currentAccount
         .getAuthorities()
         .contains(new SimpleGrantedAuthority(RoleNameEnum.ROLE_ADMIN.toString()));

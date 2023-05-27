@@ -2,7 +2,7 @@ package com.thecodinglab.imdbclone.exception;
 
 public class UnauthorizedException extends RuntimeException {
 
-  private String message;
+  private final String message;
 
   public UnauthorizedException(String message) {
     this.message = message;
@@ -11,9 +11,5 @@ public class UnauthorizedException extends RuntimeException {
   @Override
   public String getMessage() {
     return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
   }
 }
