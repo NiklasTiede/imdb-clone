@@ -4,11 +4,11 @@ plugins {
 	id 'org.springframework.boot' version "${springBootVersion}"
 	id 'io.spring.dependency-management' version '1.1.0'
 	id 'com.diffplug.spotless' version '6.19.0'
-	id 'com.github.ben-manes.versions' version '0.46.0'
+	id 'com.github.ben-manes.versions' version '0.47.0'
 }
 
 group = 'com.thecodinglab'
-version = '0.1.0'
+version = '1.0.0'
 
 compileJava.dependsOn 'spotlessApply'
 
@@ -57,7 +57,7 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
 
 	//-- SearchEngine
-	implementation 'org.springframework.data:spring-data-elasticsearch:5.1.0'
+	implementation 'org.springframework.data:spring-data-elasticsearch:5.1.1'
 
 	//-- File Storage
 	implementation 'io.minio:minio:8.5.3'

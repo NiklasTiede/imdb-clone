@@ -1,0 +1,35 @@
+## --- Health ---
+
+### overall health parameters
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/health
+
+### liveness
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/health/liveness
+
+### detail of health: elasticsearch
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/health/elasticsearch
+
+## --- env vars / Metrics ---
+
+### available env vars: security breach!
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/env
+
+### available metrics
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/metrics
+
+###
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/metrics/application.ready.time
+
+###
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/metrics/jdbc.connections.max
+
+###
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/metrics/system.load.average.1m
+
+## --- Analysis ---
+
+### analyze threads for performance / concurrency issues
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/threaddump
+
+### analyze memory usage
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/heapdump
