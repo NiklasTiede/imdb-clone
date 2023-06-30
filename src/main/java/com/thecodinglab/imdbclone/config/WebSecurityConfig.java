@@ -80,8 +80,8 @@ public class WebSecurityConfig {
             HttpMethod.DELETE.name(),
             HttpMethod.OPTIONS.name()));
     configuration.setAllowedHeaders(Collections.singletonList("*"));
-    configuration.setAllowCredentials(true); // maybe?
-    configuration.setMaxAge(MAX_AGE_SECS); // maybe?
+    configuration.setAllowCredentials(true);
+    configuration.setMaxAge(MAX_AGE_SECS);
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
     return source;
