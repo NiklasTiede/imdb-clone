@@ -39,6 +39,9 @@ spotless {
 }
 
 dependencies {
+	// hot reload
+	developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
+
 	//-- Servlet
 	implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
 
@@ -60,7 +63,7 @@ dependencies {
 	implementation 'org.springframework.data:spring-data-elasticsearch:5.1.1'
 
 	//-- File Storage
-	implementation 'io.minio:minio:8.5.3'
+	implementation 'io.minio:minio:8.5.4'
 
 	//-- Email
 	implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"

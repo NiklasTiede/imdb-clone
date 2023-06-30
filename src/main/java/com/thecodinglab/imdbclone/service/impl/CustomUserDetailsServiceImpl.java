@@ -5,6 +5,7 @@ import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.CustomUserDetailsService;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,6 +16,7 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService, CustomU
 
   private final AccountRepository accountRepository;
 
+  @Autowired
   public CustomUserDetailsServiceImpl(AccountRepository accountRepository) {
     this.accountRepository = accountRepository;
   }
