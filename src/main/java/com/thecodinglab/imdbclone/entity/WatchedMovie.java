@@ -29,6 +29,11 @@ public class WatchedMovie extends CreatedAtAudit {
     this.account = account;
   }
 
+  public static WatchedMovie create(Movie movie, Account account) {
+    WatchedMovieId watchedMovieId = new WatchedMovieId(movie.getId(), account.getId());
+    return new WatchedMovie(watchedMovieId, movie, account);
+  }
+
   public Account getAccount() {
     return account;
   }

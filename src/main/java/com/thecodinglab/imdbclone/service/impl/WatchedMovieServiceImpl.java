@@ -3,7 +3,6 @@ package com.thecodinglab.imdbclone.service.impl;
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.entity.WatchedMovie;
-import com.thecodinglab.imdbclone.entity.WatchedMovieId;
 import com.thecodinglab.imdbclone.exception.NotFoundException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
@@ -48,8 +47,7 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   public WatchedMovie watchMovie(Long movieId, UserPrincipal currentAccount) {
     Movie movie = movieRepository.getMovieById(movieId);
     Account account = accountRepository.getAccount(currentAccount);
-    WatchedMovie watchedMovie =
-        new WatchedMovie(new WatchedMovieId(movie.getId(), account.getId()), movie, account);
+    WatchedMovie watchedMovie = WatchedMovie.create(movie, account);
     WatchedMovie savedWatchedMovie = watchedMovieRepository.save(watchedMovie);
     LOGGER.info(
         "Movie with id [{}] is watched by account with id [{}].",

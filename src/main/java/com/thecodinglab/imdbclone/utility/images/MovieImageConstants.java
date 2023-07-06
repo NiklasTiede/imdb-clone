@@ -10,7 +10,7 @@ public class MovieImageConstants {
   public static final int THUMBNAIL_WIDTH = 120;
   public static final int THUMBNAIL_HEIGHT = 180;
 
-  public static final List<Integer> TARGET_SIZES =
+  protected static final List<Integer> TARGET_SIZES =
       Arrays.asList(DETAIL_VIEW_WIDTH, THUMBNAIL_WIDTH);
 
   public static final double ASPECT_RATIO = 1.0 / 1.5;
@@ -18,6 +18,8 @@ public class MovieImageConstants {
   public static final String FORMAT = "jpg";
 
   public static final String BUCKET_DIRECTORY_NAME = "movies/";
+
+  private MovieImageConstants() {}
 
   public static String getDetailViewImageName(String imageUrlToken) {
     return BUCKET_DIRECTORY_NAME

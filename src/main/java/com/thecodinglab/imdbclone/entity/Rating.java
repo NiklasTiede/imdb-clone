@@ -27,16 +27,16 @@ public class Rating extends DateAudit {
 
   public Rating() {}
 
-  public Rating(BigDecimal rating, RatingId id) {
-    this.rating = rating;
-    this.id = id;
-  }
-
   public Rating(BigDecimal rating, Movie movie, Account account, RatingId id) {
     this.rating = rating;
     this.movie = movie;
     this.account = account;
     this.id = id;
+  }
+
+  public static Rating create(BigDecimal rating, Movie movie, Account account) {
+    RatingId ratingId = new RatingId(movie.getId(), account.getId());
+    return new Rating(rating, movie, account, ratingId);
   }
 
   public RatingId getId() {

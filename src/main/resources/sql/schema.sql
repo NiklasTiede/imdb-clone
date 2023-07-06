@@ -49,7 +49,7 @@ create table account_roles (
     account_id bigint not null,
     roles_id bigint not null,
     created_at_in_utc timestamp default (utc_timestamp),
-    modified_at_in_utc timestamp default (utc_timestamp),
+    modified_at_in_utc timestamp,
     primary key (account_id, roles_id)
 );
 
@@ -75,7 +75,7 @@ create table comment (
     account_id bigint not null,
     message text,
     created_at_in_utc timestamp default (utc_timestamp),
-    modified_at_in_utc timestamp default (utc_timestamp),
+    modified_at_in_utc timestamp,
     primary key (id)
 );
 

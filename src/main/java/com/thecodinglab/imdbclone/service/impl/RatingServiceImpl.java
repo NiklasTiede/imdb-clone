@@ -3,7 +3,6 @@ package com.thecodinglab.imdbclone.service.impl;
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.entity.Rating;
-import com.thecodinglab.imdbclone.entity.RatingId;
 import com.thecodinglab.imdbclone.exception.BadRequestException;
 import com.thecodinglab.imdbclone.exception.NotFoundException;
 import com.thecodinglab.imdbclone.exception.UnauthorizedException;
@@ -55,8 +54,7 @@ public class RatingServiceImpl implements RatingService {
     } else {
       Movie movie = movieRepository.getMovieById(movieId);
       Account account = accountRepository.getAccount(currentAccount);
-      Rating rating =
-          new Rating(score, movie, account, new RatingId(movie.getId(), account.getId()));
+      Rating rating = Rating.create(score, movie, account);
       Rating savedRating = ratingRepository.save(rating);
       LOGGER.info("rating with id [{}] was created.", savedRating.getId());
       return savedRating;

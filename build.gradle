@@ -80,7 +80,7 @@ dependencies {
 
 	//-- Testing
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0-M1'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0-RC1'
 	testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
 }
 
