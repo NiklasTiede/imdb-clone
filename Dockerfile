@@ -5,7 +5,8 @@ WORKDIR /home/gradle/app
 RUN gradle bootJar --no-daemon
 
 # best to keep JDK and JRE version same
-FROM eclipse-temurin:20-jre-alpine
+#FROM eclipse-temurin:20-jre-alpine
+FROM eclipse-temurin:19-jre-alpine
 ARG JAR_FILE=/home/gradle/app/build/libs/*.jar
 COPY --from=build ${JAR_FILE} app.jar
 EXPOSE 8080
