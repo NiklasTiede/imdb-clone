@@ -1,6 +1,5 @@
 package com.thecodinglab.imdbclone.utility.images;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class MovieImageConstants {
@@ -10,8 +9,7 @@ public class MovieImageConstants {
   public static final int THUMBNAIL_WIDTH = 120;
   public static final int THUMBNAIL_HEIGHT = 180;
 
-  protected static final List<Integer> TARGET_SIZES =
-      Arrays.asList(DETAIL_VIEW_WIDTH, THUMBNAIL_WIDTH);
+  public static final List<Integer> TARGET_SIZES = List.of(DETAIL_VIEW_WIDTH, THUMBNAIL_WIDTH);
 
   public static final double ASPECT_RATIO = 1.0 / 1.5;
 
