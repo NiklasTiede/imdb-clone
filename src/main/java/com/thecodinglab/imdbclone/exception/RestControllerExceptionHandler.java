@@ -24,7 +24,7 @@ public class RestControllerExceptionHandler {
       LoggerFactory.getLogger(RestControllerExceptionHandler.class);
 
   @ExceptionHandler(NotFoundException.class)
-  protected final ResponseEntity<Object> resolveException(
+  protected final ResponseEntity<ApiError> resolveException(
       NotFoundException ex, WebRequest request) {
     ApiError apiError =
         new ApiError("Resource was not found.", request.getDescription(false), ex.getMessage());
@@ -36,7 +36,7 @@ public class RestControllerExceptionHandler {
   }
 
   @ExceptionHandler(BadRequestException.class)
-  protected final ResponseEntity<Object> resolveException(
+  protected final ResponseEntity<ApiError> resolveException(
       BadRequestException ex, WebRequest request) {
     ApiError apiError =
         new ApiError(
@@ -49,7 +49,7 @@ public class RestControllerExceptionHandler {
   }
 
   @ExceptionHandler(UnauthorizedException.class)
-  protected final ResponseEntity<Object> resolveException(
+  protected final ResponseEntity<ApiError> resolveException(
       UnauthorizedException ex, WebRequest request) {
     ApiError apiError =
         new ApiError(
@@ -62,7 +62,7 @@ public class RestControllerExceptionHandler {
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
-  protected final ResponseEntity<Object> resolveException(
+  protected final ResponseEntity<ApiError> resolveException(
       HttpMessageNotReadableException ex, WebRequest request) {
     ApiError apiError =
         new ApiError(
@@ -75,7 +75,7 @@ public class RestControllerExceptionHandler {
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  protected final ResponseEntity<Object> resolveException(
+  protected final ResponseEntity<ApiError> resolveException(
       MethodArgumentNotValidException ex, WebRequest request) {
     Map<String, String> errorMap = new HashMap<>();
     ex.getBindingResult()
@@ -91,7 +91,7 @@ public class RestControllerExceptionHandler {
   }
 
   @ExceptionHandler(ConstraintViolationException.class)
-  protected final ResponseEntity<Object> resolveException(
+  protected final ResponseEntity<ApiError> resolveException(
       ConstraintViolationException ex, WebRequest request) {
     ApiError apiError =
         new ApiError(
@@ -100,11 +100,11 @@ public class RestControllerExceptionHandler {
         "Request body validation failed on the following resource: '{}', returning error message: '{}'",
         request.getDescription(false),
         ex.getMessage());
-    return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
+    return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(MissingServletRequestParameterException.class)
-  protected final ResponseEntity<Object> resolveException(
+  protected final ResponseEntity<ApiError> resolveException(
       MissingServletRequestParameterException ex, WebRequest request) {
     ApiError apiError =
         new ApiError(
@@ -113,6 +113,6 @@ public class RestControllerExceptionHandler {
         "Request parameter validation failed on the following resource: '{}', returning error message: '{}'",
         request.getDescription(false),
         ex.getMessage());
-    return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
+    return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
   }
 }
