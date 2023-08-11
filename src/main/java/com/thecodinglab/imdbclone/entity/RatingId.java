@@ -15,7 +15,7 @@ public class RatingId implements Serializable {
 
   public RatingId() {}
 
-  public RatingId(Long movieId, Long accountId) {
+  public RatingId(long movieId, long accountId) {
     this.movieId = movieId;
     this.accountId = accountId;
   }
