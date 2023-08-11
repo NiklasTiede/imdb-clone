@@ -15,7 +15,7 @@ public class WatchedMovieId implements Serializable {
 
   public WatchedMovieId() {}
 
-  public WatchedMovieId(Long movieId, Long accountId) {
+  public WatchedMovieId(long movieId, long accountId) {
     this.movieId = movieId;
     this.accountId = accountId;
   }
