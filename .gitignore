@@ -3,6 +3,7 @@ todo.txt
 
 # Infrastructure (stateful services for backend)
 /infrastructure/mysql/data-processing/.ipynb_checkpoints
+/infrastructure/mysql/data-processing/__pycache__
 /infrastructure/mysql/data-processing/imdb-dataset
 /infrastructure/mysql/docker-image-creation/processed_imdb_movies*
 /infrastructure/minio/original_movie_images/
