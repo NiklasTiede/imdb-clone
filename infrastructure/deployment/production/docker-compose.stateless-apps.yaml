@@ -26,6 +26,7 @@ services:
       - JWT_SECRET=${JWT_SECRET_ENV_VAR}
     ports:
       - "8080:8080"
+      - "8081:8081"
     networks:
       - imdb-clone-network
     labels:

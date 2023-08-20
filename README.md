@@ -129,6 +129,8 @@ we use during development.
 - [x] Set up Elasticsearch, Photos / File Storage
 - [x] Deploy on Home Server with Docker-Compose
 - [x] enable HTTPS with reverse-proxy
+- [ ] Add Monitoring (Prometheus, Grafana, Exporters) and expose Grafana
+- [ ] Add Logging (ELK Stack) and expose Kibana
 - [ ] Create React Frontend
   - [x] Account Settings Page
   - [x] Movie Search Page
@@ -144,5 +146,4 @@ we use during development.
 - [ ] Use Flux for GitOps CD
 - [ ] Add Integration Namespace in K3s next to the Prod Env for Testing
 - [ ] Add Unit / Integration Tests in BE and FE
-- [ ] Add Monitoring (Graylog, Prometheus, Grafana, cAdvisor, glances)
 - [ ] Add more Features like Chat Functionality

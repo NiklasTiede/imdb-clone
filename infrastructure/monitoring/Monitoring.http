@@ -1,0 +1,23 @@
+# prometheus: attached exporters
+POST http://robotnik-um560:9500/api/v1/query?query=up
+Content-Type: application/json
+
+{}
+
+
+### prometheus health check
+GET http://robotnik-um560:9500/-/healthy
+Content-Type: application/json
+
+
+### prometheus: metrics list
+GET http://robotnik-um560:9500/api/v1/label/__name__/values
+
+
+### node exporter for system metrics
+GET http://robotnik-um560:9100/metrics
+
+
+### cAdvisor for docker metrics
+GET http://robotnik-um560:9520/metrics
+

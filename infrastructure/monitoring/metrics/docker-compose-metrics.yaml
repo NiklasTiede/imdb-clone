@@ -1,0 +1,75 @@
+version: '3.8'
+services:
+
+  ### ----------------------- Time-Series Database with PromQL ----------------------- ###
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - "9500:9090"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - prometheus-data:/prometheus
+    networks:
+      - imdb-clone-network
+    command: "--config.file=/etc/prometheus/prometheus.yaml"
+
+### ----------------------- Data Visualization ----------------------- ###
+  grafana:
+    container_name: grafana
+    image: grafana/grafana-oss:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - imdb-clone-network
+
+  ### ----------------------- Export System Metrics ----------------------- ###
+  node-exporter:
+    container_name: node-exporter
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - imdb-clone-network
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+
+  ### ----------------------- Export Docker Metrics ----------------------- ###
+#  cadvisor:
+#    image: google/cadvisor:latest
+#    container_name: cadvisor
+#    privileged: true
+#    volumes:
+#      - /:/rootfs:ro
+#      - /var/run:/var/run:rw
+#      - /sys:/sys:ro
+#      - /var/lib/docker/:/var/lib/docker:ro
+#    ports:
+#      - "9520:8080"
+#    environment:
+#      - DOCKER_API_VERSION=1.43
+#    command:
+#      - --docker_only
+#      - --store_container_labels=false
+
+volumes:
+  grafana-data:
+    driver: local
+  prometheus-data:
+    driver: local
+
+networks:
+  imdb-clone-network:
+    name: imdb-clone-network
+    external: true
