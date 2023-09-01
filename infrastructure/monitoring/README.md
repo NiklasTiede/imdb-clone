@@ -36,7 +36,7 @@ this project  (see [imdb-clone-metrics.the-coding-lab.com](https://imdb-clone-me
 
 ---
 
-## Logging: Elasticsearch / Logstash / Kibana (ELK Stack)
+## Logging: Elasticsearch / Logstash Filebeat / Kibana (ELK Stack)
 
 -[ ] in progress
 
