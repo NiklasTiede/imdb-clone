@@ -5,11 +5,13 @@ import com.thecodinglab.imdbclone.entity.Rating;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+
+import com.thecodinglab.imdbclone.entity.RatingId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface RatingRepository extends JpaRepository<Rating, Long> {
+public interface RatingRepository extends JpaRepository<Rating, RatingId> {
 
   List<Rating> findRatingsByMovieId(Long movieId);
 
