@@ -76,6 +76,10 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
 	implementation 'io.micrometer:micrometer-registry-prometheus:1.11.3'
 
+	//-- Logging
+	implementation "org.springframework.boot:spring-boot-starter-logging:${springBootVersion}"
+	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
 	//-- Testing
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
