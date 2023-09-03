@@ -7,23 +7,19 @@ services:
     image: niklastiede/imdb-clone-backend:latest
     restart: always
     environment:
-      - IMDB_CLONE_BACKEND_HOST=${BACKEND_APP_ADDRESS_ENV_VAR}
-      - IMDB_CLONE_FRONTEND_HOST=${FRONTEND_APP_ADDRESS_ENV_VAR}
-      - SPRING_DATASOURCE_URL=jdbc:mysql://imdb-clone-mysql:3306/movie_db?serverTimezone=UTC
-      - SPRING_DATASOURCE_USERNAME=${MYSQL_USERNAME_ENV_VAR}
-      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD_ENV_VAR}
-      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=false
-      - SPRING_MAIL_USERNAME=${MAIL_USERNAME_ENV_VAR}
-      - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD_ENV_VAR}
-      - SPRING_ELASTICSEARCH_REST_URIS=imdb-clone-elasticsearch:9200
-      - SPRING_ELASTICSEARCH_USERNAME=${ELASTIC_USERNAME_ENV_VAR}
-      - SPRING_ELASTICSEARCH_PASSWORD=${ELASTIC_PASSWORD_ENV_VAR}
-      - MINIO_REST_URI=https://imdb-clone-minio:9000
-      - MINIO_REST_ACCESSKEY=${MINIO_ACCESS_KEY_ENV_VAR}
-      - MINIO_REST_SECRETKEY=${MINIO_SECRET_KEY_ENV_VAR}
-      - JWT_EXPIRATION_IN_MS=2592000000
-      - CORS_ALLOWED_ORIGINS=${FRONTEND_APP_ADDRESS_ENV_VAR}
-      - JWT_SECRET=${JWT_SECRET_ENV_VAR}
+      - SPRING_PROFILES_ACTIVE=prod
+      - backend_address_prod=${BACKEND_APP_ADDRESS_ENV_VAR}
+      - frontend_address_prod=${FRONTEND_APP_ADDRESS_ENV_VAR}
+      - mysql_username_prod=${MYSQL_USERNAME_ENV_VAR}
+      - mysql_password_prod=${MYSQL_PASSWORD_ENV_VAR}
+      - enable_mail_prod=false
+      - mail_username_prod=${MAIL_USERNAME_ENV_VAR}
+      - mail_password_prod=${MAIL_PASSWORD_ENV_VAR}
+      - elasticsearch_username_prod=${ELASTIC_USERNAME_ENV_VAR}
+      - elasticsearch_password_prod=${ELASTIC_PASSWORD_ENV_VAR}
+      - minio_access_key_prod=${MINIO_ACCESS_KEY_ENV_VAR}
+      - minio_secret_key_prod=${MINIO_SECRET_KEY_ENV_VAR}
+      - jwt_secret_prod=${JWT_SECRET_ENV_VAR}
     ports:
       - "8080:8080"
       - "8081:8081"
