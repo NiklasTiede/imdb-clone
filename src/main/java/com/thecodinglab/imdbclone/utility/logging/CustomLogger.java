@@ -120,7 +120,7 @@ public class CustomLogger {
     try {
       String msg = logMap.get(MESSAGE).toString();
       if (msg != null) {
-        logMap.remove("message");
+        logMap.remove(MESSAGE);
       }
       Object[] arguments =
           logMap.entrySet().stream()
