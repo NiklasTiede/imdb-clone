@@ -9,11 +9,11 @@ services:
     ports:
       - "9500:9090"
     volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     networks:
       - imdb-clone-network
-    command: "--config.file=/etc/prometheus/prometheus.yaml"
+    command: "--config.file=/etc/prometheus/prometheus.yml"
 
 ### ----------------------- Data Visualization ----------------------- ###
   grafana:

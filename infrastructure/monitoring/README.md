@@ -13,7 +13,7 @@ language (PromQL) to search for these metrics and display them with Grafana. Spr
 metrics via actuator resources. Other technologies need dedicated exporters to export metrics to Prometheus.
 
 For deploying Prometheus and Grafana we need to pull the images, copy the 
-[docker-compose-metrics.yaml](./metrics/docker-compose-metrics.yaml) and [prometheus.yaml](./metrics/prometheus.yaml)
+[docker-compose-metrics.yaml](./metrics/docker-compose-metrics.yaml) and [prometheus.yaml](./metrics/prometheus.yml)
 into the folder where we run the `docker-compose up` command.
 
 ```bash
