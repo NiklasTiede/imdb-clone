@@ -71,7 +71,7 @@ services:
     environment:
       - xpack.security.enabled=false
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - ES_JAVA_OPTS=-Xms4096m -Xmx4096m
 #      - ELASTIC_USERNAME=${ELASTIC_USERNAME_ENV_VAR}
 #      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD_ENV_VAR}
     ports:
