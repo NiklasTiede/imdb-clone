@@ -19,7 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+  private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
   @Autowired private JwtTokenProvider jwtTokenProvider;
   @Autowired private CustomUserDetailsService customUserDetailsService;
@@ -45,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
       }
     } catch (Exception ex) {
-      LOGGER.error("Could not set user authentication in security context", ex);
+      logger.error("Could not set user authentication in security context", ex);
     }
 
     filterChain.doFilter(request, response);

@@ -1,5 +1,9 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
+import static com.thecodinglab.imdbclone.utility.Log.MOVIE_ID;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.entity.WatchedMovie;
@@ -25,7 +29,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class WatchedMovieServiceImpl implements WatchedMovieService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(WatchedMovieServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(WatchedMovieServiceImpl.class);
 
   private final WatchedMovieRepository watchedMovieRepository;
   private final MovieRepository movieRepository;
@@ -49,9 +53,9 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
     Account account = accountRepository.getAccount(currentAccount);
     WatchedMovie watchedMovie = WatchedMovie.create(movie, account);
     WatchedMovie savedWatchedMovie = watchedMovieRepository.save(watchedMovie);
-    LOGGER.info(
-        "Movie with id [{}] is watched by account with id [{}].",
-        savedWatchedMovie.getId().getMovieId(),
+    logger.info(
+        "Movie with [{}] is watched by account with id [{}].",
+        kv(MOVIE_ID, savedWatchedMovie.getId().getMovieId()),
         savedWatchedMovie.getId().getAccountId());
     return savedWatchedMovie;
   }
@@ -67,11 +71,10 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
             account.getId(), pageable);
     Page<WatchedMovieRecord> watchedMovieRecordPage =
         watchedMovies.map(watchedMovieMapper::entityToDTO);
-    LOGGER.info(
-        "[{}] watchedMovies from account with id [{}] were retrieved.",
+    logger.info(
+        "[{}] watchedMovies from account with [{}] were retrieved.",
         watchedMovies.getContent().size(),
-        account.getId());
-
+        kv(ACCOUNT_ID, account.getId()));
     return new PagedResponse<>(
         watchedMovieRecordPage.getContent(),
         watchedMovieRecordPage.getNumber(),
@@ -95,10 +98,10 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
                             + currentAccount.getId()
                             + "] not found in database."));
     watchedMovieRepository.delete(watchedMovie);
-    LOGGER.info(
-        "WatchedMovie with movieId [{}] and accountId [{}] was deleted.",
-        movieId,
-        currentAccount.getId());
+    logger.info(
+        "WatchedMovie with [{}] and [{}] was deleted.",
+        kv(MOVIE_ID, movieId),
+        kv(ACCOUNT_ID, currentAccount.getId()));
     return new MessageResponse(
         "WatchedMovie with movieId ["
             + movieId

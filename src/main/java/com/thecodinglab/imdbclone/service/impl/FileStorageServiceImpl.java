@@ -31,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FileStorageServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(FileStorageServiceImpl.class);
 
   @Value("${minio.rest.bucketName}")
   public String bucketName;
@@ -207,10 +207,10 @@ public class FileStorageServiceImpl implements FileStorageService {
       // set policy
       String bucketPolicy = "config/minio-policy.json";
       createBucketPolicyFrom(bucketPolicy);
-      LOGGER.info("bucket [{}] was created and bucketPolicy set successfully", bucketName);
+      logger.info("bucket [{}] was created and bucketPolicy set successfully", bucketName);
 
     } catch (Exception e) {
-      LOGGER.error("Creation of bucket [{}] failed", bucketName);
+      logger.error("Creation of bucket [{}] failed", bucketName);
       throw new RuntimeException(e);
     }
   }

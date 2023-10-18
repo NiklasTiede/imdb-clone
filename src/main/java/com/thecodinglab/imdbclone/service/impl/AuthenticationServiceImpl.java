@@ -1,5 +1,8 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.entity.VerificationToken;
@@ -30,7 +33,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
 
   private final AuthenticationManager authenticationManager;
   private final JwtTokenProvider jwtTokenProvider;
@@ -69,14 +72,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   @Override
   public UserIdentityAvailability checkUsernameAvailability(String username) {
     Boolean isAvailable = !accountRepository.existsByUsername(username);
-    LOGGER.info("username [{}] available? {}", username, isAvailable);
+    logger.info("username [{}] available? {}", username, isAvailable);
     return new UserIdentityAvailability(isAvailable);
   }
 
   @Override
   public UserIdentityAvailability checkEmailAvailability(String email) {
     Boolean isAvailable = !accountRepository.existsByEmail(email);
-    LOGGER.info("email [{}] available? {}", email, isAvailable);
+    logger.info("email [{}] available? {}", email, isAvailable);
     return new UserIdentityAvailability(isAvailable);
   }
 
@@ -104,7 +107,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
       account.setEnabled(true);
     }
     Account savedAccount = accountRepository.save(account);
-    LOGGER.info("Account with id [{}] was created", savedAccount.getId());
+    logger.info("Account with [{}] was created", kv(ACCOUNT_ID, savedAccount.getId()));
     return new MessageResponse(
         emailEnabled
             ? createAndSendEmailConfirmationToken(savedAccount)

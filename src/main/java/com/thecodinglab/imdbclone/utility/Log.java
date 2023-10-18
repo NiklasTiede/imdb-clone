@@ -18,6 +18,10 @@ public class Log {
   public static final String MOVIE_IDS = "movieIds";
   public static final String COMMENT_ID = "commentId";
   public static final String COMMENT_IDS = "commentIds";
+
+  public static final String RATING_ID = "ratingId";
+  public static final String WATCHED_MOVIE_ID = "watchedMovieId";
+
   public static final String MOVIE_TYPE_ENUM = "movieTypeEnum";
   public static final String VERIFICATION_TYPE_ENUM = "verificationTypeEnum";
   public static final String MOVIE_GENRE_ENUM = "movieGenreEnum";

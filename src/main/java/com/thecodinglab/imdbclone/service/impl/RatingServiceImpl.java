@@ -1,5 +1,9 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
+import static com.thecodinglab.imdbclone.utility.Log.RATING_ID;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.entity.Rating;
@@ -29,7 +33,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class RatingServiceImpl implements RatingService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(RatingServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(RatingServiceImpl.class);
 
   private final MovieRepository movieRepository;
   private final AccountRepository accountRepository;
@@ -56,7 +60,7 @@ public class RatingServiceImpl implements RatingService {
       Account account = accountRepository.getAccount(currentAccount);
       Rating rating = Rating.create(score, movie, account);
       Rating savedRating = ratingRepository.save(rating);
-      LOGGER.info("rating with id [{}] was created.", savedRating.getId());
+      logger.info("rating with [{}] was created.", kv(RATING_ID, savedRating.getId()));
       return savedRating;
     }
   }
@@ -67,10 +71,10 @@ public class RatingServiceImpl implements RatingService {
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Account account = accountRepository.getAccountByUsername(username);
     Page<Rating> ratings = ratingRepository.findRatingsByAccount(account, pageable);
-    LOGGER.info(
-        "[{}] ratings from account with id [{}] were retrieved.",
+    logger.info(
+        "[{}] ratings from account with [{}] were retrieved.",
         ratings.getContent().size(),
-        account.getId());
+        kv(ACCOUNT_ID, account.getId()));
     Page<RatingRecord> ratingRecordPage = ratings.map(ratingMapper::entityToDTO);
     return new PagedResponse<>(
         ratingRecordPage.getContent(),
@@ -97,7 +101,7 @@ public class RatingServiceImpl implements RatingService {
     if (Objects.equals(rating.getAccount().getId(), currentAccount.getId())
         || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       ratingRepository.delete(rating);
-      LOGGER.info("rating with id [{}] was deleted.", rating.getId());
+      logger.info("rating with [{}] was deleted.", kv(RATING_ID, rating.getId()));
       return new MessageResponse(
           "WatchedMovie with movieId ["
               + movieId

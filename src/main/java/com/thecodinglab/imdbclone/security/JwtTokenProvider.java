@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtTokenProvider {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenProvider.class);
+  private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
   @Value(value = "${jwt.secret}")
   private String jwtSecret;
@@ -68,15 +68,15 @@ public class JwtTokenProvider {
       Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken);
       return true;
     } catch (SecurityException ex) {
-      LOGGER.error("Invalid JWT signature");
+      logger.error("Invalid JWT signature");
     } catch (MalformedJwtException ex) {
-      LOGGER.error("Invalid JWT token");
+      logger.error("Invalid JWT token");
     } catch (ExpiredJwtException ex) {
-      LOGGER.error("Expired JWT token");
+      logger.error("Expired JWT token");
     } catch (UnsupportedJwtException ex) {
-      LOGGER.error("Unsupported JWT token");
+      logger.error("Unsupported JWT token");
     } catch (IllegalArgumentException ex) {
-      LOGGER.error("JWT claims string is empty");
+      logger.error("JWT claims string is empty");
     }
     return false;
   }
