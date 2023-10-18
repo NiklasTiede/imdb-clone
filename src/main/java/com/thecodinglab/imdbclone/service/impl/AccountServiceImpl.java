@@ -1,8 +1,12 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import static com.thecodinglab.imdbclone.utility.Log.*;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+import static net.logstash.logback.argument.StructuredArguments.v;
+
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
-import com.thecodinglab.imdbclone.exception.UnauthorizedException;
+import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.payload.account.AccountProfile;
 import com.thecodinglab.imdbclone.payload.account.AccountRecord;
@@ -26,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AccountServiceImpl implements AccountService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AccountServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   private final AccountRepository accountRepository;
   private final WatchedMovieRepository watchedMovieRepository;
@@ -66,8 +70,9 @@ public class AccountServiceImpl implements AccountService {
     Long ratingsCount = ratingRepository.countRatingsByAccount(account);
     Long watchedMoviesCount = watchedMovieRepository.countWatchedMoviesByAccount(account);
     Long commentsCount = commentRepository.countCommentsByAccount(account);
-    LOGGER.info(
-        "Account profile with username [{}] was retrieved from database.", account.getUsername());
+    logger.info(
+        "Account profile with id [{}] was retrieved from database.",
+        v(ACCOUNT_ID, account.getId()));
     return new AccountProfile(
         account.getUsername(),
         account.getEmail(),
@@ -92,7 +97,8 @@ public class AccountServiceImpl implements AccountService {
     List<Role> roles = roleService.giveRoleToRegisteredUser();
     account.setRoles(roles);
     Account savedAccount = accountRepository.save(account);
-    LOGGER.info("Account with id [{}] was created and activated.", savedAccount.getId());
+    logger.info(
+        "Account with [{}] was created and activated.", kv(ACCOUNT_ID, savedAccount.getId()));
     return savedAccount;
   }
 
@@ -112,7 +118,7 @@ public class AccountServiceImpl implements AccountService {
       account.setBirthday(accountRecord.birthday());
       account.setBio(accountRecord.bio());
       Account updatedAccount = accountRepository.save(account);
-      LOGGER.info("Account with id [{}] was updated.", updatedAccount.getId());
+      logger.info("Account with [{}] was updated.", kv(ACCOUNT_ID, updatedAccount.getId()));
       return new UpdatedAccountProfile(
           updatedAccount.getUsername(),
           updatedAccount.getEmail(),
@@ -122,9 +128,9 @@ public class AccountServiceImpl implements AccountService {
           updatedAccount.getBio(),
           updatedAccount.getBirthday());
     } else {
-      LOGGER.warn(
-          "User with accountId [{}] tried to update an account without ADMIN permissions.",
-          currentAccount.getId());
+      logger.warn(
+          "User with [{}] tried to update an account without ADMIN permissions.",
+          kv(ACCOUNT_ID, currentAccount.getId()));
       throw new UnauthorizedException(
           "Account with id ["
               + currentAccount.getId()
@@ -138,12 +144,12 @@ public class AccountServiceImpl implements AccountService {
     if (Objects.equals(account.getId(), currentAccount.getId())
         || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       accountRepository.delete(account);
-      LOGGER.info("Account with id [{}] was deleted.", account.getId());
+      logger.info("Account with [{}] was deleted.", kv(ACCOUNT_ID, account.getId()));
       return new MessageResponse("Account with id [" + account.getId() + "] was deleted.");
     } else {
-      LOGGER.warn(
-          "User with accountId [{}] tried to delete an account without ADMIN permissions.",
-          currentAccount.getId());
+      logger.warn(
+          "User with [{}] tried to delete an account without ADMIN permissions.",
+          kv(ACCOUNT_ID, currentAccount.getId()));
       throw new UnauthorizedException(
           "Account with id ["
               + currentAccount.getId()

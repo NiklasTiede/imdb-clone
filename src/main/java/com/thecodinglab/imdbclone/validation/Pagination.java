@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.validation;
 
-import com.thecodinglab.imdbclone.exception.BadRequestException;
+import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
 
 public class Pagination {
 

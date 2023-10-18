@@ -2,7 +2,7 @@ package com.thecodinglab.imdbclone.repository;
 
 import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.enums.RoleNameEnum;
-import com.thecodinglab.imdbclone.exception.NotFoundException;
+import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -1,0 +1,3 @@
+
+### get movie trivia questions and answers
+GET https://opentdb.com/api.php?amount=3&category=11&difficulty=easy

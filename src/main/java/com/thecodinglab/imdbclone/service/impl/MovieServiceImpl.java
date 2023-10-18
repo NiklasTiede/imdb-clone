@@ -1,5 +1,8 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import static com.thecodinglab.imdbclone.utility.Log.*;
+import static net.logstash.logback.argument.StructuredArguments.*;
+
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
@@ -12,10 +15,10 @@ import com.thecodinglab.imdbclone.repository.MovieSearchDao;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.MovieService;
 import com.thecodinglab.imdbclone.validation.Pagination;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +27,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class MovieServiceImpl implements MovieService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(MovieServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(MovieServiceImpl.class);
 
   private final MovieRepository movieRepository;
   private final MovieElasticSearchRepository elasticSearchRepository;
@@ -45,7 +48,7 @@ public class MovieServiceImpl implements MovieService {
   @Override
   public MovieRecord findMovieById(Long movieId) {
     Movie movie = movieRepository.getMovieById(movieId);
-    LOGGER.info("Movie with Id [{}] was retrieved.", movie.getId());
+    logger.info("Movie with {} was retrieved", kv(MOVIE_ID, movieId));
     return movieMapper.entityToDTO(movie);
   }
 
@@ -54,7 +57,10 @@ public class MovieServiceImpl implements MovieService {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size);
     Page<Movie> movies = movieRepository.findByIds(movieIds, pageable);
-    LOGGER.info("[{}] movies were retrieved from database.", movies.getContent().size());
+    logger.info(
+        "[{}] movies were retrieved from database",
+        v(COUNT, movies.getContent().size()),
+        kv(MOVIE_IDS, movies.getContent().stream().map(Movie::getId).toList()));
     Page<MovieRecord> movieRecordPage = movies.map(movieMapper::entityToDTO);
     return new PagedResponse<>(
         movieRecordPage.getContent(),
@@ -74,6 +80,7 @@ public class MovieServiceImpl implements MovieService {
   @Override
   public Movie updateMovie(Long movieId, MovieRequest request, UserPrincipal currentAccount) {
     Movie movie = movieRepository.getMovieById(movieId);
+    BeanUtils.copyProperties(request, movie);
     movie.setPrimaryTitle(request.primaryTitle());
     movie.setOriginalTitle(request.originalTitle());
     movie.setStartYear(request.startYear());
@@ -97,28 +104,29 @@ public class MovieServiceImpl implements MovieService {
   public PagedResponse<Movie> searchMoviesByTitle(String title, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     PagedResponse<Movie> movies = movieSearchDao.findByPrimaryTitleStartsWith(title, page, size);
-    LOGGER.info("[{}] movies were retrieved from database.", movies.getContent().size());
+    logger.info(
+        "[{}] movies were retrieved from database",
+        v(COUNT, movies.getContent().size()),
+        kv(MOVIE_IDS, movies.getContent().stream().map(Movie::getId).toList()));
     return movies;
   }
 
-  @Transactional
   public Movie performSave(Movie movie) {
     Movie updatedMovie = movieRepository.save(movie);
     elasticSearchRepository.save(movie);
-    LOGGER.info(
-        "the movie [{}] with movieId [{}] was created and/or updated from Mysql and ES.",
+    logger.info(
+        "the movie [{}] with movieId [{}] was created and/or updated from Mysql and ES",
         updatedMovie.getOriginalTitle(),
-        updatedMovie.getId());
+        v(MOVIE_ID, updatedMovie.getId()));
     return updatedMovie;
   }
 
-  @Transactional
   public void performDelete(Movie movie) {
     movieRepository.delete(movie);
     elasticSearchRepository.delete(movie);
-    LOGGER.info(
-        "the movie [{}] with movieId [{}] was deleted from Mysql and ES.",
+    logger.info(
+        "the movie [{}] with [{}] was deleted from Mysql and ES",
         movie.getOriginalTitle(),
-        movie.getId());
+        kv(MOVIE_ID, movie.getId()));
   }
 }

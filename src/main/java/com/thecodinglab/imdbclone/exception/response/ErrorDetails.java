@@ -1,23 +1,23 @@
-package com.thecodinglab.imdbclone.exception;
+package com.thecodinglab.imdbclone.exception.response;
 
-import java.util.Map;
+import java.util.List;
 
-public class ApiError {
+public class ErrorDetails {
 
   private String message;
-  private Map<String, String> invalidParams;
   private String details;
+  private List<FieldError> fieldErrors;
   private String resource;
 
-  public ApiError(String message, String resource, String details) {
+  public ErrorDetails(String message, String resource, String details) {
     this.message = message;
     this.details = details;
     this.resource = resource;
   }
 
-  public ApiError(String message, Map<String, String> invalidParams, String resource) {
+  public ErrorDetails(String message, List<FieldError> fieldErrors, String resource) {
     this.message = message;
-    this.invalidParams = invalidParams;
+    this.fieldErrors = fieldErrors;
     this.resource = resource;
   }
 
@@ -29,12 +29,12 @@ public class ApiError {
     this.message = message;
   }
 
-  public Map<String, String> getInvalidParams() {
-    return invalidParams;
+  public List<FieldError> getFieldErrors() {
+    return fieldErrors;
   }
 
-  public void setInvalidParams(Map<String, String> invalidParams) {
-    this.invalidParams = invalidParams;
+  public void setFieldErrors(List<FieldError> fieldErrors) {
+    this.fieldErrors = fieldErrors;
   }
 
   public String getDetails() {

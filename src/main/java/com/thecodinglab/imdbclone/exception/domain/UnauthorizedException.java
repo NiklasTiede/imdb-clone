@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.exception;
+package com.thecodinglab.imdbclone.exception.domain;
 
 public class UnauthorizedException extends RuntimeException {
 

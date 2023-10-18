@@ -1,18 +1,15 @@
-package com.thecodinglab.imdbclone.exception;
+package com.thecodinglab.imdbclone.exception.domain;
 
 public class BadRequestException extends RuntimeException {
 
-  private String message;
+  private final String message;
 
   public BadRequestException(String message) {
     this.message = message;
   }
 
+  @Override
   public String getMessage() {
     return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
   }
 }

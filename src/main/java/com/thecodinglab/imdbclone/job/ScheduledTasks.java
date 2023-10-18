@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ScheduledTasks {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledTasks.class);
+  private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
 
   private final RatingRepository ratingRepository;
   private final MovieRepository movieRepository;
@@ -48,7 +48,7 @@ public class ScheduledTasks {
     List<Rating> recentlyCreatedRatings =
         ratingRepository.findAllByModifiedAtInUtcAfter(Instant.now().minus(24, ChronoUnit.HOURS));
     if (recentlyCreatedRatings.isEmpty()) {
-      LOGGER.info("no newly created ratings in the last 24h, no movie to update");
+      logger.info("no newly created ratings in the last 24h, no movie to update");
     } else {
       List<List<Rating>> ratingsOfMovies =
           recentlyCreatedRatings.stream()
@@ -70,13 +70,13 @@ public class ScheduledTasks {
         movie.setRatingCount(countOfAllRatings);
         Movie savedMovie = movieService.performSave(movie);
 
-        LOGGER.info(
+        logger.info(
             "movie [{}] was updated. The new average rating is [{}] with [{}] counts",
             savedMovie.getPrimaryTitle(),
             savedMovie.getRating(),
             savedMovie.getRatingCount());
       }
-      LOGGER.info("The rating / ratingCount of [{}] movie(s) were updated", ratingsOfMovies.size());
+      logger.info("The rating / ratingCount of [{}] movie(s) were updated", ratingsOfMovies.size());
     }
   }
 
@@ -88,7 +88,7 @@ public class ScheduledTasks {
             Instant.now().minus(30, ChronoUnit.DAYS));
     Integer oldTokensCount = oldExpiredVerificationTokens.size();
     verificationTokenRepository.deleteAll(oldExpiredVerificationTokens);
-    LOGGER.info(
+    logger.info(
         "[{}] expired verification tokens older than 4 weeks were deleted ", oldTokensCount);
   }
 }

@@ -1,5 +1,8 @@
 package com.thecodinglab.imdbclone;
 
+import static com.thecodinglab.imdbclone.utility.Log.COUNT;
+import static net.logstash.logback.argument.StructuredArguments.v;
+
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.repository.MovieRepository;
@@ -20,7 +23,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class InfrastructureSetup implements ApplicationListener<ApplicationReadyEvent> {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(InfrastructureSetup.class);
+  private static final Logger logger = LoggerFactory.getLogger(InfrastructureSetup.class);
 
   private final MovieRepository movieRepository;
   private final MovieElasticSearchRepository movieSearchRepository;
@@ -51,7 +54,7 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
     if (elasticsearchOperations.indexOps(IndexCoordinates.of("movies")).exists()
         && movieSearchRepository.count() < 100) {
       List<Movie> popularMovies = movieRepository.findByImdbRatingCountBetween(20000, 20000000);
-      LOGGER.info("Number of popular movies to be indexed:  [{}]", popularMovies.size());
+      logger.info("Number of popular movies to be indexed: [{}]", v(COUNT, popularMovies.size()));
       List<List<Movie>> partitions = PartitionList.partition(popularMovies, 1000);
       partitions.forEach(elasticSearchService::indexMovies);
     }
@@ -59,6 +62,6 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
     // create bucket/directories and set bucket policy in minIO if not existent
     fileStorageService.setUpBucket();
 
-    LOGGER.info("Application is ready: MinIO bucket created and elasticsearch Data loaded");
+    logger.info("Application is ready: MinIO bucket created and elasticsearch Data loaded");
   }
 }

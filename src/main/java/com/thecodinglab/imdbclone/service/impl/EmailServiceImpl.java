@@ -1,5 +1,8 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import static com.thecodinglab.imdbclone.utility.Log.*;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.thecodinglab.imdbclone.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -14,7 +17,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailServiceImpl implements EmailService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(EmailServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(EmailServiceImpl.class);
 
   private final JavaMailSender mailSender;
 
@@ -37,7 +40,7 @@ public class EmailServiceImpl implements EmailService {
       helper.setFrom(emailSender);
       mailSender.send(mimeMessage);
     } catch (MessagingException e) {
-      LOGGER.error("failed to send email", e);
+      logger.error("failed to send email", kv(EXCEPTION_MESSAGE, e.getMessage()));
       throw new IllegalStateException("failed to send email");
     }
   }

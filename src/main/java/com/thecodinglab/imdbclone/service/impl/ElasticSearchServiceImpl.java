@@ -1,5 +1,8 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import static com.thecodinglab.imdbclone.utility.Log.MOVIE_ID;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.*;
@@ -22,7 +25,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ElasticSearchServiceImpl implements ElasticSearchService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchServiceImpl.class);
   private final ElasticsearchClient esClient;
   private static final String MOVIES_INDEX = "movies";
 
@@ -40,18 +43,18 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
               .id(movie.getId().toString())
               .document(movie));
 
-      if (LOGGER.isInfoEnabled()) {
-        LOGGER.info(
-                "Document of type Movie with id [{}] of index [{}] was [{}].",
-                indexResponse.id(),
+      if (logger.isInfoEnabled()) {
+        logger.info(
+                "Document of type Movie with [{}] of index [{}] was [{}].",
+                kv(MOVIE_ID, indexResponse.id()),
                 indexResponse.index(),
                 indexResponse.result().jsonValue()
         );
       }
 
     } catch (IOException e) {
-      LOGGER.error(
-          "Document of type movie with id [{}] was not indexed successfully.", movie.getId());
+      logger.error(
+          "Document of type movie with [{}] was not indexed successfully.", kv(MOVIE_ID,movie.getId()));
       throw new RuntimeException(e);
     }
   }
@@ -69,7 +72,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     BulkResponse result;
     try {
       result = esClient.bulk(br.build());
-      LOGGER.info(
+      logger.info(
           "Number of documents which were [{}] is [{}]",
           result.items().stream()
               .map(BulkResponseItem::result)
@@ -80,10 +83,10 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
       throw new RuntimeException(e);
     }
     if (result.errors()) {
-      LOGGER.error("Bulk had errors");
+      logger.error("Bulk had errors");
       for (BulkResponseItem item : result.items()) {
-        if (item.error() != null && LOGGER.isInfoEnabled()) {
-          LOGGER.error(item.error().reason());
+        if (item.error() != null && logger.isInfoEnabled()) {
+          logger.error(item.error().reason());
         }
       }
     }
@@ -100,10 +103,10 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
                   .id(movieId.toString()),
               Movie.class);
 
-      LOGGER.info("Movie document with primaryTitle [{}] was found.", response.source() != null ? response.source().getPrimaryTitle() : null);
+      logger.info("Movie document with primaryTitle [{}] was found.", response.source() != null ? response.source().getPrimaryTitle() : null);
       return response.source();
     } catch (IOException e) {
-      LOGGER.error("Movie document with id [{}] was not found", movieId);
+      logger.error("Movie document with [{}] was not found", kv(MOVIE_ID, movieId));
       throw new RuntimeException(e);
     }
   }
@@ -126,7 +129,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
       throw new RuntimeException(e);
     }
     List<Movie> movies = response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
-    LOGGER.info("Document search by primaryTitle gave [{}] results.", movies.size());
+    logger.info("Document search by primaryTitle gave [{}] results.", movies.size());
     return movies;
   }
 
@@ -145,7 +148,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
                           .lte(JsonData.of(maxRating)))),
               Movie.class);
       List<Movie> movies = response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
-      LOGGER.info("Document search by ratings between [{}] and [{}] gave [{}] results.",minRating, maxRating, movies.size());
+      logger.info("Document search by ratings between [{}] and [{}] gave [{}] results.",minRating, maxRating, movies.size());
       return movies;
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -167,7 +170,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
             .from(page * size)
             .size(size)
         );
-    LOGGER.info("Document search query json: [{}]", searchRequest);
+    logger.info("Document search query json: [{}]", searchRequest);
 
     try {
       response = esClient.search(searchRequest, Movie.class);
@@ -178,7 +181,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     List<Movie> movies =
         response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
 
-    LOGGER.info(
+    logger.info(
         "Scores of found documents: [{}]",
         response.hits().hits().stream().map(Hit::score).toList());
 

@@ -3,8 +3,8 @@ plugins {
 	id 'idea'
 	id 'org.springframework.boot' version "${springBootVersion}"
 	id 'io.spring.dependency-management' version '1.1.3'
-	id 'com.diffplug.spotless' version '6.21.0'
-	id 'com.github.ben-manes.versions' version '0.47.0'
+	id 'com.diffplug.spotless' version '6.22.0'
+	id 'com.github.ben-manes.versions' version '0.49.0'
 }
 
 group = 'com.thecodinglab'
@@ -12,12 +12,16 @@ version = '1.0.0'
 
 compileJava.dependsOn 'spotlessApply'
 
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+}
+
 idea {
 	project {
-		languageLevel = '20'
+		languageLevel = JavaVersion.VERSION_21
 	}
 	module {
-		jdkName = '20'
+		jdkName = JavaVersion.VERSION_21
 	}
 }
 
@@ -41,6 +45,7 @@ spotless {
 dependencies {
 	//-- Servlet
 	implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+	implementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
 
 	//-- Validation
 	implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
@@ -57,10 +62,10 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
 
 	//-- SearchEngine
-	implementation 'org.springframework.data:spring-data-elasticsearch:5.1.3'
+	implementation 'org.springframework.data:spring-data-elasticsearch:5.1.5'
 
 	//-- File Storage
-	implementation 'io.minio:minio:8.5.5'
+	implementation 'io.minio:minio:8.5.6'
 
 	//-- Email
 	implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"
@@ -74,7 +79,7 @@ dependencies {
 
 	//-- Monitoring
 	implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
-	implementation 'io.micrometer:micrometer-registry-prometheus:1.11.3'
+	implementation 'io.micrometer:micrometer-registry-prometheus:1.11.5'
 
 	//-- Logging
 	implementation "org.springframework.boot:spring-boot-starter-logging:${springBootVersion}"
@@ -84,6 +89,8 @@ dependencies {
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
 	testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
+
+	testImplementation 'io.rest-assured:rest-assured:5.3.2'
 }
 
 test {

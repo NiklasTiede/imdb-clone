@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.repository;
 
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.exception.BadRequestException;
+import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;

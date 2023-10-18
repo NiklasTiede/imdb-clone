@@ -1,5 +1,8 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.enums.RoleNameEnum;
@@ -18,7 +21,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class RoleServiceImpl implements RoleService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(RoleServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(RoleServiceImpl.class);
 
   private final AccountRepository accountRepository;
   private final RoleRepository roleRepository;
@@ -34,7 +37,7 @@ public class RoleServiceImpl implements RoleService {
     if (accountRepository.count() == 0) {
       roles.add(roleRepository.getRoleByRoleEnum(RoleNameEnum.ROLE_USER));
       roles.add(roleRepository.getRoleByRoleEnum(RoleNameEnum.ROLE_ADMIN));
-      LOGGER.info("First user was created and admin role was added.");
+      logger.info("First user was created and admin role was added.");
     } else {
       roles.add(roleRepository.getRoleByRoleEnum(RoleNameEnum.ROLE_USER));
     }
@@ -49,7 +52,8 @@ public class RoleServiceImpl implements RoleService {
     roles.add(adminRole);
     account.setRoles(roles);
     Account updatedAccount = accountRepository.save(account);
-    LOGGER.info("Account with id [{}] was given ADMIN permission.", updatedAccount.getId());
+    logger.info(
+        "Account with [{}] was given ADMIN permission.", kv(ACCOUNT_ID, updatedAccount.getId()));
     return new MessageResponse(
         "Account with id [" + updatedAccount.getId() + "] was given ADMIN permission.");
   }
@@ -62,7 +66,8 @@ public class RoleServiceImpl implements RoleService {
     roles.remove(adminRole);
     account.setRoles(roles);
     Account updatedAccount = accountRepository.save(account);
-    LOGGER.info("Account with id [{}] was taken ADMIN permission.", updatedAccount.getId());
+    logger.info(
+        "Account with id [{}] was taken ADMIN permission.", kv(ACCOUNT_ID, updatedAccount.getId()));
     return new MessageResponse(
         "Account with id [" + updatedAccount.getId() + "] was taken ADMIN permission.");
   }

@@ -1,9 +1,12 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import static com.thecodinglab.imdbclone.utility.Log.*;
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Comment;
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.exception.UnauthorizedException;
+import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.payload.comment.CommentRecord;
 import com.thecodinglab.imdbclone.payload.comment.CreateCommentRequest;
@@ -27,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CommentServiceImpl implements CommentService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(CommentServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(CommentServiceImpl.class);
 
   private final CommentRepository commentRepository;
   private final MovieRepository movieRepository;
@@ -49,7 +52,7 @@ public class CommentServiceImpl implements CommentService {
   public CommentRecord getComment(Long commentId) {
     Comment comment = commentRepository.getCommentById(commentId);
     CommentRecord commentRecord = commentMapper.entityToDTO(comment);
-    LOGGER.info("comment with id [{}] was retrieved from database.", comment.getId());
+    logger.info("comment with [{}] was retrieved from database.", kv(COMMENT_ID, comment.getId()));
     return commentRecord;
   }
 
@@ -60,7 +63,7 @@ public class CommentServiceImpl implements CommentService {
     Movie movie = movieRepository.getMovieById(movieId);
     Page<Comment> comments =
         commentRepository.findCommentsByMovieOrderByCreatedAtInUtc(movie, pageable);
-    LOGGER.info("[{}] comments were retrieved from database.", comments.getContent().size());
+    logger.info("[{}] comments were retrieved from database.", comments.getContent().size());
     Page<CommentRecord> commentRecordPage = comments.map(commentMapper::entityToDTO);
     return new PagedResponse<>(
         commentRecordPage.getContent(),
@@ -78,7 +81,7 @@ public class CommentServiceImpl implements CommentService {
     Account account = accountRepository.getAccount(currentAccount);
     Comment comment = new Comment(request.message(), account, movie);
     Comment savedComment = commentRepository.save(comment);
-    LOGGER.info("Comment with id [{}] was created", savedComment.getId());
+    logger.info("Comment with [{}] was created", kv(COMMENT_ID, savedComment.getId()));
     return commentMapper.entityToDTO(comment);
   }
 
@@ -89,7 +92,7 @@ public class CommentServiceImpl implements CommentService {
     Account account = accountRepository.getAccountByUsername(username);
     Page<Comment> comments =
         commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);
-    LOGGER.info("[{}] comments were retrieved from database.", comments.getContent().size());
+    logger.info("[{}] comments were retrieved from database.", comments.getContent().size());
     Page<CommentRecord> commentRecordPage = comments.map(commentMapper::entityToDTO);
     return new PagedResponse<>(
         commentRecordPage.getContent(),
@@ -108,7 +111,7 @@ public class CommentServiceImpl implements CommentService {
         || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       comment.setMessage(request.message());
       Comment updatedComment = commentRepository.save(comment);
-      LOGGER.info("comment with id [{}] was updated.", updatedComment.getId());
+      logger.info("comment with [{}] was updated.", kv(COMMENT_ID, updatedComment.getId()));
       return commentMapper.entityToDTO(updatedComment);
     } else {
       throw new UnauthorizedException(
@@ -124,7 +127,7 @@ public class CommentServiceImpl implements CommentService {
     if (Objects.equals(comment.getAccount().getId(), currentAccount.getId())
         || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       commentRepository.delete(comment);
-      LOGGER.info("comment with id [{}] was deleted.", comment.getId());
+      logger.info("comment with [{}] was deleted.", kv(COMMENT_ID, comment.getId()));
       return new MessageResponse("comment with id [" + comment.getId() + "] was deleted.");
     } else {
       throw new UnauthorizedException(

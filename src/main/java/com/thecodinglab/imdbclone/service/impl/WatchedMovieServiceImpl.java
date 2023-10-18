@@ -3,7 +3,7 @@ package com.thecodinglab.imdbclone.service.impl;
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.entity.WatchedMovie;
-import com.thecodinglab.imdbclone.exception.NotFoundException;
+import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.mapper.CustomWatchedMovieMapper;
