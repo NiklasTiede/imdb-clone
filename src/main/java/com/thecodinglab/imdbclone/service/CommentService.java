@@ -5,6 +5,7 @@ import com.thecodinglab.imdbclone.payload.comment.CommentRecord;
 import com.thecodinglab.imdbclone.payload.comment.CreateCommentRequest;
 import com.thecodinglab.imdbclone.payload.comment.UpdateCommentRequest;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,12 +13,12 @@ public interface CommentService {
 
   CommentRecord getComment(Long commentId);
 
-  PagedResponse<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size);
+  Page<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size);
 
   CommentRecord createComment(
       Long movieId, CreateCommentRequest request, UserPrincipal currentAccount);
 
-  PagedResponse<CommentRecord> getCommentsByAccount(String username, int page, int size);
+  Page<CommentRecord> getCommentsByAccount(String username, int page, int size);
 
   CommentRecord updateComment(
       Long commentId, UpdateCommentRequest request, UserPrincipal currentAccount);

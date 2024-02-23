@@ -7,7 +7,6 @@ import com.thecodinglab.imdbclone.validation.ValidUsername;
 import jakarta.validation.constraints.*;
 
 public record RegistrationRequest(
-
     @NotBlank
     @ValidUsername
     @AvailableUsername

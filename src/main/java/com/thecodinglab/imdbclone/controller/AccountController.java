@@ -16,6 +16,7 @@ import com.thecodinglab.imdbclone.service.*;
 import com.thecodinglab.imdbclone.validation.Pagination;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -59,7 +60,7 @@ public class AccountController {
   }
 
   @GetMapping("/{username}/comments")
-  public ResponseEntity<PagedResponse<CommentRecord>> getCommentsByAccount(
+  public ResponseEntity<Page<CommentRecord>> getCommentsByAccount(
       @PathVariable String username,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
@@ -68,7 +69,7 @@ public class AccountController {
   }
 
   @GetMapping("/{username}/watchlist")
-  public ResponseEntity<PagedResponse<WatchedMovieRecord>> getWatchedMoviesByAccount(
+  public ResponseEntity<Page<WatchedMovieRecord>> getWatchedMoviesByAccount(
       @PathVariable String username,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
@@ -77,7 +78,7 @@ public class AccountController {
   }
 
   @GetMapping("/{username}/ratings")
-  public ResponseEntity<PagedResponse<RatingRecord>> getRatingsByAccount(
+  public ResponseEntity<Page<RatingRecord>> getRatingsByAccount(
       @PathVariable String username,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {

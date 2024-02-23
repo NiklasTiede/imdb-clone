@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.service.impl;
 
 import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
+import static com.thecodinglab.imdbclone.utility.Log.TOKEN;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.entity.Account;
@@ -90,6 +91,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             new UsernamePasswordAuthenticationToken(request.usernameOrEmail(), request.password()));
     SecurityContextHolder.getContext().setAuthentication(authentication);
     String jwt = jwtTokenProvider.generateToken(authentication);
+    logger.info("user with email/username [{}] logged in", request.usernameOrEmail());
     return new LoginResponse(jwt);
   }
 
@@ -107,7 +109,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
       account.setEnabled(true);
     }
     Account savedAccount = accountRepository.save(account);
-    logger.info("Account with [{}] was created", kv(ACCOUNT_ID, savedAccount.getId()));
+    logger.info("Account with [{}] was registered", kv(ACCOUNT_ID, savedAccount.getId()));
     return new MessageResponse(
         emailEnabled
             ? createAndSendEmailConfirmationToken(savedAccount)
@@ -129,6 +131,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     String link = imdbCloneBackendHost + "/api/auth/confirm-email-address?token=" + token;
     String confirmationEmail = emailService.buildConfirmationEmail(account.getUsername(), link);
     emailService.sendEmail(account.getEmail(), "Confirming Email Address", confirmationEmail);
+    logger.info(
+        "confirmation email containing activation token for account with [{}] was send",
+        kv(ACCOUNT_ID, account.getId()));
     return "Confirmation email was send";
   }
 
@@ -146,6 +151,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     accountRepository.save(account);
     verificationToken.setConfirmedAtInUtc(Instant.now());
     verificationTokenRepository.save(verificationToken);
+    logger.info("email address of new account was confirmed by token with [{}]", kv(TOKEN, token));
     return new MessageResponse("Email was confirmed and therefore account was activated");
   }
 
@@ -176,6 +182,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     String link = imdbCloneFrontendHost + "/reset-password?token=" + token;
     String passwordResetEmail = emailService.buildPasswordResetEmail(account.getUsername(), link);
     emailService.sendEmail(account.getEmail(), "Reset Password", passwordResetEmail);
+    logger.info(
+        "confirmation email containing activation token for account with [{}] was send",
+        kv(ACCOUNT_ID, account.getId()));
     return new MessageResponse("Email was send successfully");
   }
 
@@ -191,6 +200,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     Account account = verificationToken.getAccount();
     account.setPassword(passwordEncoder.encode(request.newPassword()));
     accountRepository.save(account);
+    logger.info("new password was saved for account with [{}]", kv(ACCOUNT_ID, account.getId()));
     return new MessageResponse("New Password was saved");
   }
 }

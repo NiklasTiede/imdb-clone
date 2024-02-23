@@ -1,10 +1,8 @@
 package com.thecodinglab.imdbclone.validation;
 
 import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
+import com.thecodinglab.imdbclone.utility.images.Image;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import javax.imageio.ImageIO;
 import org.springframework.web.multipart.MultipartFile;
 
 public class ImageSize {
@@ -15,8 +13,10 @@ public class ImageSize {
   public static final int MIN_PROFILE_PHOTO_WIDTH = 500;
   public static final int MIN_PROFILE_PHOTO_HEIGHT = 500;
 
+  private ImageSize() {}
+
   public static void validateMovieImage(MultipartFile file) {
-    BufferedImage image = readImage(file);
+    BufferedImage image = Image.readImage(file);
 
     if (image.getWidth() < MIN_MOVIE_IMAGE_WIDTH) {
       throw new BadRequestException(
@@ -29,7 +29,7 @@ public class ImageSize {
   }
 
   public static void validateProfilePhoto(MultipartFile file) {
-    BufferedImage image = readImage(file);
+    BufferedImage image = Image.readImage(file);
 
     if (image.getWidth() < MIN_PROFILE_PHOTO_WIDTH) {
       throw new BadRequestException(
@@ -38,17 +38,6 @@ public class ImageSize {
     if (image.getHeight() < MIN_PROFILE_PHOTO_HEIGHT) {
       throw new BadRequestException(
           "Profile photo cannot be less than [" + MIN_PROFILE_PHOTO_HEIGHT + "] in height.");
-    }
-  }
-
-  // TODO: evtl. refactor into utils
-  private static BufferedImage readImage(MultipartFile image) {
-    BufferedImage bufferedImage;
-    try {
-      bufferedImage = ImageIO.read(new ByteArrayInputStream(image.getBytes()));
-      return bufferedImage;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
   }
 }

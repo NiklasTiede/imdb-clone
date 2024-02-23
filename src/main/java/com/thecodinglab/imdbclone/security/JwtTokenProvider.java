@@ -27,19 +27,11 @@ public class JwtTokenProvider {
 
   public String generateToken(Authentication authentication) {
     UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-
-    Date now = new Date();
-    Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
-
-    Key key =
-        new SecretKeySpec(
-            Base64.getDecoder().decode(jwtSecret), SignatureAlgorithm.HS512.getJcaName());
-
-    List<String> currentUserRoles =
-        userPrincipal.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
+    Key key = createSigningKey();
+    Date expiryDate = new Date((new Date()).getTime() + jwtExpirationInMs);
 
     return Jwts.builder()
-        .setClaims(Map.of("roles", currentUserRoles, "username", userPrincipal.getUsername()))
+        .setClaims(createClaims(userPrincipal))
         .setSubject(Long.toString(userPrincipal.getId()))
         .setIssuedAt(new Date())
         .setExpiration(expiryDate)
@@ -47,37 +39,37 @@ public class JwtTokenProvider {
         .compact();
   }
 
+  private Map<String, Object> createClaims(UserPrincipal userPrincipal) {
+    List<String> roles =
+        userPrincipal.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
+    return Map.of("roles", roles, "username", userPrincipal.getUsername());
+  }
+
   public Long getUserIdFromJWT(String token) {
-
-    Key key =
-        new SecretKeySpec(
-            Base64.getDecoder().decode(jwtSecret), SignatureAlgorithm.HS512.getJcaName());
-
-    Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-
+    Claims claims = extractClaims(token);
     return Long.valueOf(claims.getSubject());
   }
 
   public boolean validateToken(String authToken) {
-
-    Key key =
-        new SecretKeySpec(
-            Base64.getDecoder().decode(jwtSecret), SignatureAlgorithm.HS512.getJcaName());
-
     try {
-      Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken);
+      extractClaims(authToken);
       return true;
-    } catch (SecurityException ex) {
-      logger.error("Invalid JWT signature");
-    } catch (MalformedJwtException ex) {
-      logger.error("Invalid JWT token");
-    } catch (ExpiredJwtException ex) {
-      logger.error("Expired JWT token");
-    } catch (UnsupportedJwtException ex) {
-      logger.error("Unsupported JWT token");
-    } catch (IllegalArgumentException ex) {
-      logger.error("JWT claims string is empty");
+    } catch (JwtException ex) {
+      logger.error("JWT validation failed: {}", ex.getMessage());
+      return false;
     }
-    return false;
+  }
+
+  private Claims extractClaims(String token) {
+    return Jwts.parserBuilder()
+        .setSigningKey(createSigningKey())
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
+  }
+
+  private Key createSigningKey() {
+    return new SecretKeySpec(
+        Base64.getDecoder().decode(jwtSecret), SignatureAlgorithm.HS512.getJcaName());
   }
 }

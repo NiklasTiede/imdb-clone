@@ -63,7 +63,8 @@ public class ScheduledTasks {
         double averageRating = sumOfAllRatings / countOfAllRatings;
 
         BigDecimal newRating =
-            new BigDecimal(averageRating, new MathContext(2, RoundingMode.HALF_EVEN));
+            new BigDecimal(
+                String.valueOf(averageRating), new MathContext(2, RoundingMode.HALF_EVEN));
 
         Movie movie = movieRepository.getMovieById(movieRating.get(0).getMovie().getId());
         movie.setRating(newRating);

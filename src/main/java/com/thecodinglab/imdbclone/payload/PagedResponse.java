@@ -3,7 +3,6 @@ package com.thecodinglab.imdbclone.payload;
 import java.util.List;
 
 public class PagedResponse<T> {
-
   private List<T> content;
   private int page;
   private int size;

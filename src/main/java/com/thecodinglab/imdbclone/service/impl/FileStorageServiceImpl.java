@@ -3,24 +3,21 @@ package com.thecodinglab.imdbclone.service.impl;
 import com.thecodinglab.imdbclone.config.MinioClientConfig;
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Movie;
+import com.thecodinglab.imdbclone.exception.domain.MinioOperationException;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.FileStorageService;
 import com.thecodinglab.imdbclone.service.MovieService;
-import com.thecodinglab.imdbclone.utility.Utility;
 import com.thecodinglab.imdbclone.utility.images.Image;
 import com.thecodinglab.imdbclone.utility.images.MovieImageConstants;
 import com.thecodinglab.imdbclone.utility.images.ProfilePhotoConstants;
 import com.thecodinglab.imdbclone.validation.ImageSize;
 import io.minio.*;
-import io.minio.errors.*;
 import io.minio.http.Method;
 import jakarta.transaction.Transactional;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,13 +57,9 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     // persist image-url-token in database
     Account account = accountRepository.getAccount(currentUser);
-    String imageUrlToken;
 
-    if (account.getImageUrlToken() == null) {
-      imageUrlToken = Utility.generateToken();
-    } else {
-      imageUrlToken = account.getImageUrlToken();
-    }
+    String imageUrlToken =
+        (account.getImageUrlToken() != null) ? account.getImageUrlToken() : Image.generateToken();
 
     // better: create new token, each time new image is created. token change is used for
     // rerendering!
@@ -120,7 +113,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     String imageUrlToken;
     if (movie.getImageUrlToken() == null) {
-      imageUrlToken = Utility.generateToken();
+      imageUrlToken = Image.generateToken();
     } else {
       imageUrlToken = movie.getImageUrlToken();
     }
@@ -175,7 +168,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                   .build());
       return "Image was stored with etag [" + resp.etag() + "]";
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new MinioOperationException("Error while storing file in MinIO", e);
     }
   }
 
@@ -184,16 +177,8 @@ public class FileStorageServiceImpl implements FileStorageService {
     try {
       minioClient.removeObject(
           RemoveObjectArgs.builder().bucket(bucketName).object(imageName).build());
-    } catch (ErrorResponseException
-        | InsufficientDataException
-        | InternalException
-        | InvalidKeyException
-        | InvalidResponseException
-        | IOException
-        | NoSuchAlgorithmException
-        | ServerException
-        | XmlParserException e) {
-      throw new RuntimeException(e);
+    } catch (Exception e) {
+      throw new MinioOperationException("Error while deleting file in MinIO", e);
     }
   }
 
@@ -211,7 +196,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     } catch (Exception e) {
       logger.error("Creation of bucket [{}] failed", bucketName);
-      throw new RuntimeException(e);
+      throw new MinioOperationException("Error while creating bucket in MinIO", e);
     }
   }
 
@@ -220,16 +205,9 @@ public class FileStorageServiceImpl implements FileStorageService {
     try {
       minioClient.setBucketPolicy(
           SetBucketPolicyArgs.builder().bucket(bucketName).config(policyConfig).build());
-    } catch (ErrorResponseException
-        | InsufficientDataException
-        | InternalException
-        | InvalidKeyException
-        | InvalidResponseException
-        | IOException
-        | NoSuchAlgorithmException
-        | ServerException
-        | XmlParserException e) {
-      throw new RuntimeException(e);
+    } catch (Exception e) {
+      logger.error("Creation of bucket policy failed");
+      throw new MinioOperationException("Error while creating bucket policy in MinIO", e);
     }
   }
 
@@ -250,7 +228,8 @@ public class FileStorageServiceImpl implements FileStorageService {
         return stringBuilder.toString();
       }
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      logger.error("Reading file with path [{}] failed", resourcePath);
+      throw new MinioOperationException("Error while reading policy config", e);
     }
   }
 
@@ -267,16 +246,9 @@ public class FileStorageServiceImpl implements FileStorageService {
                   .expiry(60 * 60 * 24)
                   .build());
       return presignedUrl;
-    } catch (ErrorResponseException
-        | InsufficientDataException
-        | InternalException
-        | InvalidKeyException
-        | InvalidResponseException
-        | IOException
-        | NoSuchAlgorithmException
-        | XmlParserException
-        | ServerException e) {
-      throw new RuntimeException(e);
+    } catch (Exception e) {
+      logger.error("Generate presigned object URL file with image name [{}] failed", imageName);
+      throw new MinioOperationException("Error while generating presigned URL in MinIO", e);
     }
   }
 }

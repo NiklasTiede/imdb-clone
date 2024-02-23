@@ -1,12 +1,12 @@
 package com.thecodinglab.imdbclone.controller;
 
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
 import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import com.thecodinglab.imdbclone.validation.Pagination;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -24,7 +24,7 @@ public class SearchController {
   }
 
   @PostMapping("/movies")
-  public ResponseEntity<PagedResponse<Movie>> search(
+  public ResponseEntity<Page<Movie>> search(
       @Valid @RequestBody MovieSearchRequest request,
       @RequestParam @Size(max = 200) String query,
       @RequestParam(defaultValue = Pagination.DEFAULT_PAGE_NUMBER) int page,

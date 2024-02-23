@@ -6,11 +6,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -18,8 +17,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-  private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
   @Autowired private JwtTokenProvider jwtTokenProvider;
   @Autowired private CustomUserDetailsService customUserDetailsService;
@@ -30,22 +27,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       @NonNull HttpServletResponse response,
       @NonNull FilterChain filterChain)
       throws ServletException, IOException {
+
     try {
       String jwt = getJwtFromRequest(request);
-
-      if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
-        Long userId = jwtTokenProvider.getUserIdFromJWT(jwt);
-
-        UserDetails userDetails = customUserDetailsService.loadUserById(userId);
-        UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-      }
+      validateAndSetAuthentication(jwt, request);
+    } catch (AuthenticationException ex) {
+      logger.warn("Authentication failed", ex);
     } catch (Exception ex) {
-      logger.error("Could not set user authentication in security context", ex);
+      logger.error("Unexpected exception occurred", ex);
     }
 
     filterChain.doFilter(request, response);
@@ -57,5 +46,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return bearerToken.substring(7);
     }
     return null;
+  }
+
+  private void validateAndSetAuthentication(String jwt, HttpServletRequest request) {
+    if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
+      Long userId = jwtTokenProvider.getUserIdFromJWT(jwt);
+      UserDetails userDetails = customUserDetailsService.loadUserById(userId);
+      setAuthentication(request, userDetails);
+    }
+  }
+
+  private void setAuthentication(HttpServletRequest request, UserDetails userDetails) {
+    UsernamePasswordAuthenticationToken authenticationToken =
+        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
   }
 }

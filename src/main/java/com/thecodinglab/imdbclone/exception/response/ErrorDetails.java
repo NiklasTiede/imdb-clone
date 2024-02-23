@@ -3,7 +3,6 @@ package com.thecodinglab.imdbclone.exception.response;
 import java.util.List;
 
 public class ErrorDetails {
-
   private String message;
   private String details;
   private List<FieldError> fieldErrors;

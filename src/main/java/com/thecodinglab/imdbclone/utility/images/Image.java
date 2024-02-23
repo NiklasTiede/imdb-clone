@@ -1,10 +1,13 @@
 package com.thecodinglab.imdbclone.utility.images;
 
+import com.thecodinglab.imdbclone.exception.domain.ImageProcessingException;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 import javax.imageio.ImageIO;
 import org.springframework.web.multipart.MultipartFile;
@@ -68,14 +71,12 @@ public class Image {
     return new Image(imageName, inputStream, streamSize);
   }
 
-  private static BufferedImage readImage(MultipartFile image) {
-    BufferedImage bufferedImage;
+  public static BufferedImage readImage(MultipartFile image) {
     try {
-      bufferedImage = ImageIO.read(image.getInputStream());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+      return ImageIO.read(image.getInputStream());
+    } catch (IOException ex) {
+      throw new ImageProcessingException("Failed to read image: " + ex.getMessage());
     }
-    return bufferedImage;
   }
 
   private static BufferedImage normalizeImage(BufferedImage image, double aspectRatio) {
@@ -112,10 +113,19 @@ public class Image {
     ByteArrayOutputStream originalStream = new ByteArrayOutputStream();
     try {
       ImageIO.write(resized, Image.IMAGE_TYPE, originalStream);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    } catch (IOException ex) {
+      throw new ImageProcessingException(
+          "Failed to write bytestream while rescaling image: " + ex.getMessage());
     }
     return originalStream;
+  }
+
+  public static String generateToken() {
+    SecureRandom random = new SecureRandom();
+    byte[] bytes = new byte[25];
+    random.nextBytes(bytes);
+    String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    return token.replace("-", "y").replace("_", "z").substring(0, 30);
   }
 
   public String getImageName() {

@@ -49,4 +49,9 @@ public class RatingId implements Serializable {
   public int hashCode() {
     return Objects.hash(accountId, movieId);
   }
+
+  @Override
+  public String toString() {
+    return "RatingId{" + "movieId=" + movieId + ", accountId=" + accountId + '}';
+  }
 }

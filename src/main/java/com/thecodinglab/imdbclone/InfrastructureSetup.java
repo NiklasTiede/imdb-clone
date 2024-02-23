@@ -3,12 +3,12 @@ package com.thecodinglab.imdbclone;
 import static com.thecodinglab.imdbclone.utility.Log.COUNT;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
+import com.google.common.collect.Lists;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import com.thecodinglab.imdbclone.service.FileStorageService;
-import com.thecodinglab.imdbclone.utility.PartitionList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
         && movieSearchRepository.count() < 100) {
       List<Movie> popularMovies = movieRepository.findByImdbRatingCountBetween(20000, 20000000);
       logger.info("Number of popular movies to be indexed: [{}]", v(COUNT, popularMovies.size()));
-      List<List<Movie>> partitions = PartitionList.partition(popularMovies, 1000);
+      List<List<Movie>> partitions = Lists.partition(popularMovies, 1000);
       partitions.forEach(elasticSearchService::indexMovies);
     }
 

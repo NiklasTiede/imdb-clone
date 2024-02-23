@@ -10,7 +10,7 @@ import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.JsonData;
 import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
+import com.thecodinglab.imdbclone.exception.domain.ElasticsearchOperationException;
 import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
 import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import java.io.IOException;
@@ -19,6 +19,10 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 // spotless:off
@@ -55,7 +59,8 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     } catch (IOException e) {
       logger.error(
           "Document of type movie with [{}] was not indexed successfully.", kv(MOVIE_ID,movie.getId()));
-      throw new RuntimeException(e);
+//      throw new RuntimeException(e);
+      throw new ElasticsearchOperationException("Document of type movie with [{}] was not indexed successfully.", e);
     }
   }
 
@@ -159,7 +164,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
    * Search Movies by Multiple Parameters, highest voted movies scoring is boosted
    */
   @Override
-  public PagedResponse<Movie> searchMovies(String query, MovieSearchRequest request, int page, int size) {
+  public Page<Movie> searchMovies(String query, MovieSearchRequest request, int page, int size) {
     BoolQuery boolQuery = buildBoolQuery(query, request);
     SearchResponse<Movie> response;
 
@@ -175,21 +180,21 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     try {
       response = esClient.search(searchRequest, Movie.class);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new ElasticsearchOperationException("error while search was performed", e);
     }
-
-    List<Movie> movies =
-        response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
-
     logger.info(
         "Scores of found documents: [{}]",
         response.hits().hits().stream().map(Hit::score).toList());
 
     int totalHits = (int) (response.hits().total() != null ? response.hits().total().value() : 0);
-    int totalPages = (int) Math.ceil((double) totalHits / size);
-    boolean isLast = (page + 1) == totalPages;
+    Pageable pageable = PageRequest.of(page, size);
 
-    return new PagedResponse<>(movies, page, size, totalHits, totalPages, isLast);
+    List<Movie> movies = response.hits().hits().stream()
+            .map(Hit::source)
+            .filter(Objects::nonNull)
+            .toList();
+
+    return new PageImpl<>(movies, pageable, totalHits);
   }
 
   @Override

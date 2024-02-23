@@ -1,12 +1,9 @@
 package com.thecodinglab.imdbclone.exception;
 
-import static com.thecodinglab.imdbclone.utility.Log.EXCEPTION_MESSAGE;
-import static com.thecodinglab.imdbclone.utility.Log.HTTP_RESOURCE_PATH;
+import static com.thecodinglab.imdbclone.utility.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
-import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
-import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
-import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
+import com.thecodinglab.imdbclone.exception.domain.*;
 import com.thecodinglab.imdbclone.exception.response.ErrorDetails;
 import com.thecodinglab.imdbclone.exception.response.FieldError;
 import jakarta.validation.ConstraintViolationException;
@@ -68,6 +65,38 @@ public class GlobalExceptionHandler {
         v(HTTP_RESOURCE_PATH, request.getDescription(true)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
     return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);
+  }
+
+  @ExceptionHandler(MinioOperationException.class)
+  protected final ResponseEntity<ErrorDetails> resolveException(
+      MinioOperationException ex, WebRequest request) {
+    ErrorDetails errorDetails =
+        new ErrorDetails(
+            "While interacting with MinIO an error occurred",
+            request.getDescription(false),
+            ex.getMessage());
+    logger.warn(
+        "While interacting with MinIO an error occurred with message: '{}'",
+        v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
+        v(HTTP_RESOURCE_PATH, request.getDescription(true)),
+        v(EXCEPTION_MESSAGE, ex.getException().getMessage()));
+    return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(ElasticsearchOperationException.class)
+  protected final ResponseEntity<ErrorDetails> resolveException(
+      ElasticsearchOperationException ex, WebRequest request) {
+    ErrorDetails errorDetails =
+        new ErrorDetails(
+            "While interacting with ElasticSearch an error occurred",
+            request.getDescription(false),
+            ex.getMessage());
+    logger.warn(
+        "While interacting with ElasticSearch an error occurred with message: '{}'",
+        v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
+        v(HTTP_RESOURCE_PATH, request.getDescription(true)),
+        v(EXCEPTION_MESSAGE, ex.getException().getMessage()));
+    return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   @ExceptionHandler(WebClientResponseException.class)

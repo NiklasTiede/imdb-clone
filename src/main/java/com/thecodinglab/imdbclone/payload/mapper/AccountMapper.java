@@ -3,6 +3,8 @@ package com.thecodinglab.imdbclone.payload.mapper;
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.payload.account.AccountRecord;
 import java.util.List;
+
+import com.thecodinglab.imdbclone.payload.account.UpdatedAccountProfile;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -18,4 +20,6 @@ public interface AccountMapper {
   Account dtoToEntity(AccountRecord account);
 
   List<Account> dtoToEntity(Iterable<AccountRecord> accounts);
+
+  UpdatedAccountProfile entityToUpdatedProfile(Account account);
 }

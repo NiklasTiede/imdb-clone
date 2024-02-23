@@ -11,7 +11,6 @@ import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.mapper.CustomRatingMapper;
 import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
@@ -66,7 +65,7 @@ public class RatingServiceImpl implements RatingService {
   }
 
   @Override
-  public PagedResponse<RatingRecord> getRatingsByAccount(String username, int page, int size) {
+  public Page<RatingRecord> getRatingsByAccount(String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Account account = accountRepository.getAccountByUsername(username);
@@ -75,14 +74,7 @@ public class RatingServiceImpl implements RatingService {
         "[{}] ratings from account with [{}] were retrieved.",
         ratings.getContent().size(),
         kv(ACCOUNT_ID, account.getId()));
-    Page<RatingRecord> ratingRecordPage = ratings.map(ratingMapper::entityToDTO);
-    return new PagedResponse<>(
-        ratingRecordPage.getContent(),
-        ratingRecordPage.getNumber(),
-        ratingRecordPage.getSize(),
-        ratingRecordPage.getTotalElements(),
-        ratingRecordPage.getTotalPages(),
-        ratingRecordPage.isLast());
+    return ratings.map(ratingMapper::entityToDTO);
   }
 
   @Override

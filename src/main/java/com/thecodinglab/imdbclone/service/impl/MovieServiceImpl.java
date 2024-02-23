@@ -18,7 +18,6 @@ import com.thecodinglab.imdbclone.validation.Pagination;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -53,7 +52,7 @@ public class MovieServiceImpl implements MovieService {
   }
 
   @Override
-  public PagedResponse<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size) {
+  public Page<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size);
     Page<Movie> movies = movieRepository.findByIds(movieIds, pageable);
@@ -61,14 +60,7 @@ public class MovieServiceImpl implements MovieService {
         "[{}] movies were retrieved from database",
         v(COUNT, movies.getContent().size()),
         kv(MOVIE_IDS, movies.getContent().stream().map(Movie::getId).toList()));
-    Page<MovieRecord> movieRecordPage = movies.map(movieMapper::entityToDTO);
-    return new PagedResponse<>(
-        movieRecordPage.getContent(),
-        movieRecordPage.getNumber(),
-        movieRecordPage.getSize(),
-        movieRecordPage.getTotalElements(),
-        movieRecordPage.getTotalPages(),
-        movieRecordPage.isLast());
+    return movies.map(movieMapper::entityToDTO);
   }
 
   @Override
@@ -78,18 +70,12 @@ public class MovieServiceImpl implements MovieService {
   }
 
   @Override
-  public Movie updateMovie(Long movieId, MovieRequest request, UserPrincipal currentAccount) {
+  public MovieRecord updateMovie(
+      Long movieId, MovieRequest movieRequest, UserPrincipal currentAccount) {
     Movie movie = movieRepository.getMovieById(movieId);
-    BeanUtils.copyProperties(request, movie);
-    movie.setPrimaryTitle(request.primaryTitle());
-    movie.setOriginalTitle(request.originalTitle());
-    movie.setStartYear(request.startYear());
-    movie.setEndYear(request.endYear());
-    movie.setRuntimeMinutes(request.runtimeMinutes());
-    movie.setMovieGenre(request.movieGenre());
-    movie.setMovieType(request.movieType());
-    movie.setAdult(request.adult());
-    return performSave(movie);
+    movieMapper.dtoToEntity(movieRequest);
+    Movie updatedMovie = performSave(movie);
+    return movieMapper.entityToDTO(updatedMovie);
   }
 
   @Override

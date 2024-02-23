@@ -2,6 +2,7 @@ package com.thecodinglab.imdbclone.service.impl;
 
 import static com.thecodinglab.imdbclone.utility.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
+import static net.logstash.logback.argument.StructuredArguments.v;
 
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Comment;
@@ -57,21 +58,18 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
-  public PagedResponse<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size) {
+  public Page<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Movie movie = movieRepository.getMovieById(movieId);
     Page<Comment> comments =
         commentRepository.findCommentsByMovieOrderByCreatedAtInUtc(movie, pageable);
-    logger.info("[{}] comments were retrieved from database.", comments.getContent().size());
-    Page<CommentRecord> commentRecordPage = comments.map(commentMapper::entityToDTO);
-    return new PagedResponse<>(
-        commentRecordPage.getContent(),
-        commentRecordPage.getNumber(),
-        commentRecordPage.getSize(),
-        commentRecordPage.getTotalElements(),
-        commentRecordPage.getTotalPages(),
-        commentRecordPage.isLast());
+    logger.info(
+        "[{}] comments by [{}] were retrieved from database.",
+        comments.getContent().size(),
+        kv(MOVIE_ID, movieId),
+        v(COMMENT_IDS, comments.getContent().stream().map(Comment::getId).toList()));
+    return comments.map(commentMapper::entityToDTO);
   }
 
   @Override
@@ -86,21 +84,18 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
-  public PagedResponse<CommentRecord> getCommentsByAccount(String username, int page, int size) {
+  public Page<CommentRecord> getCommentsByAccount(String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Account account = accountRepository.getAccountByUsername(username);
     Page<Comment> comments =
         commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);
-    logger.info("[{}] comments were retrieved from database.", comments.getContent().size());
-    Page<CommentRecord> commentRecordPage = comments.map(commentMapper::entityToDTO);
-    return new PagedResponse<>(
-        commentRecordPage.getContent(),
-        commentRecordPage.getNumber(),
-        commentRecordPage.getSize(),
-        commentRecordPage.getTotalElements(),
-        commentRecordPage.getTotalPages(),
-        commentRecordPage.isLast());
+    logger.info(
+        "[{}] comments of account [{}] were retrieved from database.",
+        comments.getContent().size(),
+        username,
+        v(COMMENT_IDS, comments.getContent().stream().map(Comment::getId).toList()));
+    return comments.map(commentMapper::entityToDTO);
   }
 
   @Override

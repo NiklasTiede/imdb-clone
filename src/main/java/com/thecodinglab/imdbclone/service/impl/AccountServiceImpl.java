@@ -13,6 +13,7 @@ import com.thecodinglab.imdbclone.payload.account.AccountRecord;
 import com.thecodinglab.imdbclone.payload.account.AccountSummaryResponse;
 import com.thecodinglab.imdbclone.payload.account.UpdatedAccountProfile;
 import com.thecodinglab.imdbclone.payload.authentication.RegistrationRequest;
+import com.thecodinglab.imdbclone.payload.mapper.AccountMapper;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.CommentRepository;
 import com.thecodinglab.imdbclone.repository.RatingRepository;
@@ -38,6 +39,7 @@ public class AccountServiceImpl implements AccountService {
   private final CommentRepository commentRepository;
   private final PasswordEncoder passwordEncoder;
   private final RoleService roleService;
+  private final AccountMapper accountMapper;
 
   public AccountServiceImpl(
       AccountRepository accountRepository,
@@ -45,13 +47,15 @@ public class AccountServiceImpl implements AccountService {
       RatingRepository ratingRepository,
       CommentRepository commentRepository,
       PasswordEncoder passwordEncoder,
-      RoleService roleService) {
+      RoleService roleService,
+      AccountMapper accountMapper) {
     this.accountRepository = accountRepository;
     this.watchedMovieRepository = watchedMovieRepository;
     this.ratingRepository = ratingRepository;
     this.commentRepository = commentRepository;
     this.passwordEncoder = passwordEncoder;
     this.roleService = roleService;
+    this.accountMapper = accountMapper;
   }
 
   @Override
@@ -119,14 +123,7 @@ public class AccountServiceImpl implements AccountService {
       account.setBio(accountRecord.bio());
       Account updatedAccount = accountRepository.save(account);
       logger.info("Account with [{}] was updated.", kv(ACCOUNT_ID, updatedAccount.getId()));
-      return new UpdatedAccountProfile(
-          updatedAccount.getUsername(),
-          updatedAccount.getEmail(),
-          updatedAccount.getFirstName(),
-          updatedAccount.getLastName(),
-          updatedAccount.getPhone(),
-          updatedAccount.getBio(),
-          updatedAccount.getBirthday());
+      return accountMapper.entityToUpdatedProfile(updatedAccount);
     } else {
       logger.warn(
           "User with [{}] tried to update an account without ADMIN permissions.",
@@ -151,9 +148,9 @@ public class AccountServiceImpl implements AccountService {
           "User with [{}] tried to delete an account without ADMIN permissions.",
           kv(ACCOUNT_ID, currentAccount.getId()));
       throw new UnauthorizedException(
-          "Account with id ["
-              + currentAccount.getId()
-              + "] has no permission to delete this resource.");
+          String.format(
+              "Account with id [%s] has no permission to delete this resource.",
+              currentAccount.getId()));
     }
   }
 }
