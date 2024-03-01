@@ -14,7 +14,7 @@ public class MovieSearchDao {
 
   private final EntityManager entityManager;
 
-  public MovieSearchDao(EntityManager entityManager) {
+  MovieSearchDao(EntityManager entityManager) {
     this.entityManager = entityManager;
   }
 

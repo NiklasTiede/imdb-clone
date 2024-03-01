@@ -5,6 +5,7 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.4'
 	id 'com.diffplug.spotless' version '6.25.0'
 	id 'com.github.ben-manes.versions' version '0.51.0'
+	id "com.github.spotbugs" version "6.0.8"
 }
 
 group = 'com.thecodinglab'
@@ -12,9 +13,6 @@ version = '1.0.0'
 
 compileJava.dependsOn 'spotlessApply'
 
-java {
-	sourceCompatibility = JavaVersion.VERSION_21
-}
 
 idea {
 	project {
@@ -57,7 +55,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 
 	//-- Start/stop containers with startup
-//	implementation "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
+	implementation "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
 
 	//-- Mapping
 	implementation 'org.mapstruct:mapstruct:1.6.0.Beta1'
@@ -84,7 +82,9 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-	implementation 'org.springframework.security.oauth:spring-security-oauth2:2.5.2.RELEASE'
+	implementation "org.springframework.security:spring-security-core:${springVersion}"
+	implementation "org.springframework.security:spring-security-web:${springVersion}"
+	implementation "org.springframework.security:spring-security-config:${springVersion}"
 
 	//-- Monitoring
 	implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
@@ -97,12 +97,13 @@ dependencies {
 	//-- Testing
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-	testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
 
-	testImplementation 'io.rest-assured:rest-assured:5.4.0'
+	testImplementation 'org.testcontainers:testcontainers:1.19.6'
+	testImplementation 'org.testcontainers:junit-jupiter:1.19.6'
 
-	testImplementation 'org.testcontainers:testcontainers:1.19.5'
-	testImplementation 'org.testcontainers:junit-jupiter:1.19.5'
+	if (System.getProperty('os.name').toLowerCase().contains('mac')) {
+		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.107.Final:osx-aarch_64'
+	}
 }
 
 test {
