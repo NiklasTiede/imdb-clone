@@ -10,10 +10,10 @@ public class MinioClientConfig {
   @Value("${minio.rest.uri}")
   public String minioUrl;
 
-  @Value("${minio.rest.accessKey}")
+  @Value("${minio.rest.access-key}")
   public String accessKey;
 
-  @Value("${minio.rest.secretKey}")
+  @Value("${minio.rest.secret-key}")
   public String secretKey;
 
   public MinioClient getClient() {

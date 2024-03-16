@@ -30,7 +30,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
   private static final Logger logger = LoggerFactory.getLogger(FileStorageServiceImpl.class);
 
-  @Value("${minio.rest.bucketName}")
+  @Value("${minio.rest.bucket-name}")
   public String bucketName;
 
   private final MinioClient minioClient;

@@ -31,7 +31,7 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
   private final ElasticsearchOperations elasticsearchOperations;
   private final FileStorageService fileStorageService;
 
-  @Value("${minio.rest.bucketName}")
+  @Value("${minio.rest.bucket-name}")
   public String bucketName;
 
   public InfrastructureSetup(
