@@ -55,7 +55,7 @@ public class MovieServiceImpl implements MovieService {
   public Page<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size);
-    Page<Movie> movies = movieRepository.findByIds(movieIds, pageable);
+    Page<Movie> movies = movieRepository.findByIdIn(movieIds, pageable);
     logger.info(
         "[{}] movies were retrieved from database",
         v(COUNT, movies.getContent().size()),

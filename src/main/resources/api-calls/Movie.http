@@ -5,7 +5,7 @@ Content-Type: application/json
 
 
 ### get multiple movies by an array of ids
-POST {{protocol}}{{host}}:{{port}}/api/movie/get-movies?page=2&size=2
+POST {{protocol}}{{host}}:{{port}}/api/movie/get-movies?page=0&size=2
 Content-Type: application/json
 
 {
