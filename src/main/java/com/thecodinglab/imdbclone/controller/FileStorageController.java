@@ -56,14 +56,14 @@ public class FileStorageController {
   @PostMapping(value = "/movie/{movieId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<List<String>> storeMovieImage(
-      @PathVariable Long movieId, @RequestParam("image") MultipartFile multipartFile) {
+      @PathVariable("movieId") Long movieId, @RequestParam("image") MultipartFile multipartFile) {
     return new ResponseEntity<>(
         fileStorageService.storeMovieImage(multipartFile, movieId), HttpStatus.CREATED);
   }
 
   @DeleteMapping("/movie/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> deleteMovieImage(@PathVariable Long movieId) {
+  public ResponseEntity<MessageResponse> deleteMovieImage(@PathVariable("movieId") Long movieId) {
     return new ResponseEntity<>(
         new MessageResponse(fileStorageService.deleteMovieImage(movieId)), HttpStatus.NO_CONTENT);
   }

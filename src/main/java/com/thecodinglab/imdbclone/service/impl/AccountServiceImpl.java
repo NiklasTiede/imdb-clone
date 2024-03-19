@@ -148,9 +148,8 @@ public class AccountServiceImpl implements AccountService {
           "User with [{}] tried to delete an account without ADMIN permissions.",
           kv(ACCOUNT_ID, currentAccount.getId()));
       throw new UnauthorizedException(
-          String.format(
-              "Account with id [%s] has no permission to delete this resource.",
-              currentAccount.getId()));
+          "Account with id [%s] has no permission to delete this resource."
+              .formatted(currentAccount.getId()));
     }
   }
 }

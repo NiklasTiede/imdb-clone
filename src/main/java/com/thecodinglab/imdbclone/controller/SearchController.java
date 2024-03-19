@@ -26,9 +26,9 @@ public class SearchController {
   @PostMapping("/movies")
   public ResponseEntity<Page<Movie>> search(
       @Valid @RequestBody MovieSearchRequest request,
-      @RequestParam @Size(max = 200) String query,
-      @RequestParam(defaultValue = Pagination.DEFAULT_PAGE_NUMBER) int page,
-      @RequestParam(defaultValue = Pagination.DEFAULT_PAGE_SIZE) int size) {
+      @RequestParam(value = "query") @Size(max = 200) String query,
+      @RequestParam(defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page") int page,
+      @RequestParam(defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size") int size) {
     return new ResponseEntity<>(
         elasticSearchService.searchMovies(query, request, page, size), HttpStatus.OK);
   }

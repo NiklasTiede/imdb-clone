@@ -28,15 +28,17 @@ public class MovieController {
   }
 
   @GetMapping("/{movieId}")
-  public ResponseEntity<MovieRecord> getMovieById(@PathVariable Long movieId) {
+  public ResponseEntity<MovieRecord> getMovieById(@PathVariable("movieId") Long movieId) {
     return new ResponseEntity<>(movieService.findMovieById(movieId), HttpStatus.OK);
   }
 
   @PostMapping("/get-movies")
   public ResponseEntity<Page<MovieRecord>> getMoviesByIds(
       @RequestBody MovieIdsRequest request,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
+          int page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
+          int size) {
     Pagination.validatePageNumberAndSize(page, size);
     return new ResponseEntity<>(
         movieService.findMoviesByIds(request.movieIds(), page, size), HttpStatus.OK);
@@ -55,7 +57,7 @@ public class MovieController {
   @PutMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MovieRecord> updateMovie(
-      @PathVariable Long movieId,
+      @PathVariable("movieId") Long movieId,
       @Valid @RequestBody MovieRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
@@ -65,7 +67,7 @@ public class MovieController {
   @DeleteMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteMovieById(
-      @PathVariable Long movieId,
+      @PathVariable("movieId") Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         movieService.deleteMovie(movieId, currentAccount), HttpStatus.NO_CONTENT);
@@ -76,9 +78,11 @@ public class MovieController {
   // replace later by Elasticsearch!
   @GetMapping("/search/{primaryTitle}")
   public ResponseEntity<PagedResponse<Movie>> searchMoviesByTitle(
-      @PathVariable String primaryTitle,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
+      @PathVariable("primaryTitle") String primaryTitle,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
+          int page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
+          int size) {
     return new ResponseEntity<>(
         movieService.searchMoviesByTitle(primaryTitle, page, size), HttpStatus.OK);
   }

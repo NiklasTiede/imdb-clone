@@ -24,7 +24,7 @@ public class WatchedMovieController {
   @GetMapping("/{movieId}/watch")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<WatchedMovie> watchMovie(
-      @PathVariable Long movieId,
+      @PathVariable("movieId") Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         watchedMovieService.watchMovie(movieId, currentAccount), HttpStatus.CREATED);
@@ -33,7 +33,7 @@ public class WatchedMovieController {
   @DeleteMapping("/{movieId}")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<MessageResponse> deleteWatchedMovie(
-      @PathVariable Long movieId,
+      @PathVariable("movieId") Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         watchedMovieService.deleteWatchedMovie(movieId, currentAccount), HttpStatus.NO_CONTENT);

@@ -5,7 +5,6 @@ import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.CustomUserDetailsService;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,7 +15,6 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService, CustomU
 
   private final AccountRepository accountRepository;
 
-  @Autowired
   public CustomUserDetailsServiceImpl(AccountRepository accountRepository) {
     this.accountRepository = accountRepository;
   }
@@ -30,8 +28,8 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService, CustomU
             .orElseThrow(
                 () ->
                     new UsernameNotFoundException(
-                        String.format(
-                            "User not found with this username or email: %s", usernameOrEmail)));
+                        "User not found with this username or email: %s"
+                            .formatted(usernameOrEmail)));
     return UserPrincipal.create(account);
   }
 
@@ -42,8 +40,7 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService, CustomU
         accountRepository
             .findById(id)
             .orElseThrow(
-                () ->
-                    new UsernameNotFoundException(String.format("User not found with id: %s", id)));
+                () -> new UsernameNotFoundException("User not found with id: %s".formatted(id)));
     return UserPrincipal.create(account);
   }
 }

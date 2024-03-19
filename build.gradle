@@ -6,6 +6,17 @@ plugins {
 	id 'com.diffplug.spotless' version '6.25.0'
 	id 'com.github.ben-manes.versions' version '0.51.0'
 	id "com.github.spotbugs" version "6.0.8"
+	id "org.openrewrite.rewrite" version "6.10.0"
+}
+
+rewrite {
+//	activeRecipe("org.openrewrite.java.spring.PropertiesToKebabCase")
+//	activeRecipe("org.openrewrite.java.spring.boot3.SpringBoot3BestPractices")
+//	activeRecipe("org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2")
+//	activeRecipe("org.openrewrite.java.spring.boot3.SpringBootProperties_3_2")
+//	activeRecipe("org.openrewrite.java.dependencies.DependencyVulnerabilityCheck")
+//	activeRecipe("com.yourorg.ParameterizedLoggingExample")
+
 }
 
 group = 'com.thecodinglab'
@@ -41,6 +52,7 @@ spotless {
 }
 
 dependencies {
+	rewrite("org.openrewrite.recipe:rewrite-spring:5.6.0")
 	//-- Improved developing
 //	implementation "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
 
@@ -52,7 +64,7 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
 
 	//-- Documentation - Swagger UI
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0'
 
 	//-- Start/stop containers with startup
 	implementation "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
@@ -62,17 +74,17 @@ dependencies {
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.0.Beta1'
 
 	//-- Rel. Database
-	implementation 'mysql:mysql-connector-java:8.0.33'
+	implementation 'com.mysql:mysql-connector-j:8.0.33'
 	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
 
 	//-- Shared Cache
 	implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
 
 	//-- SearchEngine
-	implementation 'org.springframework.data:spring-data-elasticsearch:5.2.3'
+	implementation 'org.springframework.data:spring-data-elasticsearch:5.2.4'
 
 	//-- File Storage
-	implementation 'io.minio:minio:8.5.8'
+	implementation 'io.minio:minio:8.5.9'
 
 	//-- Email
 	implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"
@@ -88,7 +100,7 @@ dependencies {
 
 	//-- Monitoring
 	implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
-	implementation 'io.micrometer:micrometer-registry-prometheus:1.12.3'
+	implementation 'io.micrometer:micrometer-registry-prometheus:1.12.4'
 
 	//-- Logging
 	implementation "org.springframework.boot:spring-boot-starter-logging:${springBootVersion}"
@@ -98,8 +110,8 @@ dependencies {
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
 
-	testImplementation 'org.testcontainers:testcontainers:1.19.6'
-	testImplementation 'org.testcontainers:junit-jupiter:1.19.6'
+	testImplementation 'org.testcontainers:testcontainers:1.19.7'
+	testImplementation 'org.testcontainers:junit-jupiter:1.19.7'
 
 	if (System.getProperty('os.name').toLowerCase().contains('mac')) {
 		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.107.Final:osx-aarch_64'

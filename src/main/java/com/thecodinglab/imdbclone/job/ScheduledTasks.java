@@ -66,7 +66,7 @@ public class ScheduledTasks {
             new BigDecimal(
                 String.valueOf(averageRating), new MathContext(2, RoundingMode.HALF_EVEN));
 
-        Movie movie = movieRepository.getMovieById(movieRating.get(0).getMovie().getId());
+        Movie movie = movieRepository.getMovieById(movieRating.getFirst().getMovie().getId());
         movie.setRating(newRating);
         movie.setRatingCount(countOfAllRatings);
         Movie savedMovie = movieService.performSave(movie);

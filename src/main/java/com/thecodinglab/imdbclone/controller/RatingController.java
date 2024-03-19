@@ -26,8 +26,8 @@ public class RatingController {
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<Rating> rateMovie(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount,
-      @PathVariable Long movieId,
-      @PathVariable BigDecimal score) {
+      @PathVariable("movieId") Long movieId,
+      @PathVariable("score") BigDecimal score) {
     return new ResponseEntity<>(
         ratingService.rateMovie(currentAccount, movieId, score), HttpStatus.CREATED);
   }
@@ -35,7 +35,7 @@ public class RatingController {
   @DeleteMapping("/{movieId}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteRating(
-      @PathVariable Long movieId,
+      @PathVariable("movieId") Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         ratingService.deleteRating(currentAccount, movieId), HttpStatus.NO_CONTENT);

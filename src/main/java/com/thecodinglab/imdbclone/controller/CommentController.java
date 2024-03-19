@@ -27,22 +27,24 @@ public class CommentController {
   }
 
   @GetMapping("/{commentId}")
-  public ResponseEntity<CommentRecord> getCommentById(@PathVariable Long commentId) {
+  public ResponseEntity<CommentRecord> getCommentById(@PathVariable("commentId") Long commentId) {
     return new ResponseEntity<>(commentService.getComment(commentId), HttpStatus.OK);
   }
 
   @GetMapping("/{movieId}/comments")
   public ResponseEntity<Page<CommentRecord>> getCommentsByMovieId(
-      @PathVariable Long movieId,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
+      @PathVariable("movieId") Long movieId,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
+          int page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
+          int size) {
     return new ResponseEntity<>(
         commentService.getCommentsByMovieId(movieId, page, size), HttpStatus.OK);
   }
 
   @PostMapping("/{movieId}")
   public ResponseEntity<CommentRecord> createComment(
-      @PathVariable Long movieId,
+      @PathVariable("movieId") Long movieId,
       @Valid @RequestBody CreateCommentRequest request,
       @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
@@ -52,7 +54,7 @@ public class CommentController {
   @PutMapping("/{commentId}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<CommentRecord> updateComment(
-      @PathVariable Long commentId,
+      @PathVariable("commentId") Long commentId,
       @Valid @RequestBody UpdateCommentRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
@@ -62,7 +64,7 @@ public class CommentController {
   @DeleteMapping("/{commentId}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteComment(
-      @PathVariable Long commentId,
+      @PathVariable("commentId") Long commentId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         commentService.deleteComment(commentId, currentAccount), HttpStatus.NO_CONTENT);

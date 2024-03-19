@@ -55,33 +55,40 @@ public class AccountController {
   }
 
   @GetMapping("/{username}/profile")
-  public ResponseEntity<AccountProfile> getAccountProfile(@PathVariable String username) {
+  public ResponseEntity<AccountProfile> getAccountProfile(
+      @PathVariable("username") String username) {
     return new ResponseEntity<>(accountService.getAccountProfile(username), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/comments")
   public ResponseEntity<Page<CommentRecord>> getCommentsByAccount(
-      @PathVariable String username,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
+      @PathVariable("username") String username,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
+          int page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
+          int size) {
     return new ResponseEntity<>(
         commentService.getCommentsByAccount(username, page, size), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/watchlist")
   public ResponseEntity<Page<WatchedMovieRecord>> getWatchedMoviesByAccount(
-      @PathVariable String username,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
+      @PathVariable("username") String username,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
+          int page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
+          int size) {
     return new ResponseEntity<>(
         watchedMovieService.getWatchedMoviesByAccount(username, page, size), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/ratings")
   public ResponseEntity<Page<RatingRecord>> getRatingsByAccount(
-      @PathVariable String username,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER) Integer page,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE) Integer size) {
+      @PathVariable("username") String username,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
+          int page,
+      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
+          int size) {
     return new ResponseEntity<>(
         ratingService.getRatingsByAccount(username, page, size), HttpStatus.OK);
   }
@@ -99,7 +106,7 @@ public class AccountController {
   @PutMapping("/{username}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<UpdatedAccountProfile> updateAccountProfile(
-      @PathVariable String username,
+      @PathVariable("username") String username,
       @Valid @RequestBody AccountRecord accountRecord,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
@@ -109,7 +116,7 @@ public class AccountController {
   @DeleteMapping("/{username}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteAccount(
-      @PathVariable String username,
+      @PathVariable("username") String username,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
         accountService.deleteAccount(username, currentUser), HttpStatus.NO_CONTENT);
@@ -118,7 +125,7 @@ public class AccountController {
   @PutMapping("/{username}/give-admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> giveAdminRole(
-      @PathVariable String username,
+      @PathVariable("username") String username,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(roleService.giveAdminRole(username, currentUser), HttpStatus.OK);
   }
@@ -126,7 +133,7 @@ public class AccountController {
   @PutMapping("/{username}/take-admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> takeAdminRole(
-      @PathVariable String username,
+      @PathVariable("username") String username,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(roleService.removeAdminRole(username, currentUser), HttpStatus.OK);
   }
