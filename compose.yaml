@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+
+  ### ----------------------- MySQL ----------------------- ###
+  mysql:
+    container_name: imdb-clone-mysql
+    image: mysql:latest
+    restart: always
+    environment:
+      - MYSQL_DATABASE=movie_db
+      - MYSQL_ROOT_PASSWORD=supersecret
+      - MYSQL_USER=myroot
+      - MYSQL_PASSWORD=secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./src/main/resources/sql:/docker-entrypoint-initdb.d
+    networks:
+      - imdb-clone-network
+
+networks:
+  imdb-clone-network:
+    name: imdb-clone-network
+    driver: bridge
