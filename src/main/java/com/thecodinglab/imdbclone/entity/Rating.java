@@ -16,13 +16,11 @@ public class Rating extends DateAudit {
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("movieId")
-  @JoinColumn(name = "movie_id")
   private Movie movie;
 
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
   @MapsId("accountId")
-  @JoinColumn(name = "account_id")
   private Account account;
 
   public Rating() {}

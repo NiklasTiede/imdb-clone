@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Email Confirmation</title>
@@ -36,7 +36,7 @@
             <td style="padding:20px;font-family:Helvetica,Arial,sans-serif;font-size:19px;line-height:1.315789474;max-width:560px">
                 <p>Hi <span th:text="${name}">Name</span>,</p>
                 <p>Thank you for registering at IMDb-Clone. Please click on the link below to activate your account!</p>
-                <p><a th:href="${link}" href="default-link">Activate Now</a></p>
+                <p><a th:href="${link}">Activate Now</a></p>
                 <p>The link will expire in 30 minutes.</p>
                 <p>Have a nice day!</p>
             </td>

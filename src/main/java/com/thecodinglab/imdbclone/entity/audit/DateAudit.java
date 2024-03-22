@@ -12,7 +12,7 @@ public abstract class DateAudit extends CreatedAtAudit {
   @JsonIgnore
   @UpdateTimestamp
   @Column(nullable = false)
-  private Instant modifiedAtInUtc = Instant.now();
+  private final Instant modifiedAtInUtc = Instant.now();
 
   public Instant getModifiedAtInUtc() {
     return modifiedAtInUtc;

@@ -24,7 +24,7 @@ public class VerificationToken {
   private Instant confirmedAtInUtc;
 
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(nullable = false, name = "account_id")
+  @JoinColumn(nullable = false)
   private Account account;
 
   public VerificationToken(

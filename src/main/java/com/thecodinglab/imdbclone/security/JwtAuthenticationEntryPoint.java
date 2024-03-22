@@ -1,7 +1,5 @@
 package com.thecodinglab.imdbclone.security;
 
-import static com.thecodinglab.imdbclone.utility.Log.*;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;

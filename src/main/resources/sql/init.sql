@@ -60,7 +60,6 @@ create table account_roles (
     account_id bigint not null,
     roles_id bigint not null,
     created_at_in_utc timestamp default current_timestamp,
-    modified_at_in_utc timestamp on update current_timestamp,
     primary key (account_id, roles_id),
     foreign key (roles_id) references role(id),
     foreign key (account_id) references account(id)
