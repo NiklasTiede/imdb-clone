@@ -11,7 +11,7 @@ public interface OpenTriviaService {
 
   @GetExchange
   OpenTriviaResponse getRandomMovieTriviaQuestion(
-      @RequestParam int amount,
-      @RequestParam int category,
-      @RequestParam QuestionDifficulty difficulty);
+      @RequestParam("amount") int amount,
+      @RequestParam("category") int category,
+      @RequestParam("difficulty") QuestionDifficulty difficulty);
 }

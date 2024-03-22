@@ -89,6 +89,7 @@ dependencies {
 
 	//-- Email
 	implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"
+	implementation "org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}"
 
 	//-- Security: JWT / OAuth2
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'

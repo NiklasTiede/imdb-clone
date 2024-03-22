@@ -21,14 +21,14 @@ public class AuthenticationController {
 
   @GetMapping("/check-username-availability")
   public ResponseEntity<UserIdentityAvailability> checkUsernameAvailability(
-      @RequestParam String username) {
+      @RequestParam("username") String username) {
     return new ResponseEntity<>(
         authenticationService.checkUsernameAvailability(username), HttpStatus.OK);
   }
 
   @GetMapping("/check-email-availability")
   public ResponseEntity<UserIdentityAvailability> checkEmailAvailability(
-      @RequestParam String email) {
+      @RequestParam("email") String email) {
     return new ResponseEntity<>(authenticationService.checkEmailAvailability(email), HttpStatus.OK);
   }
 
@@ -45,12 +45,12 @@ public class AuthenticationController {
   }
 
   @GetMapping("/confirm-email-address")
-  public ResponseEntity<MessageResponse> confirmEmailAddress(@RequestParam String token) {
+  public ResponseEntity<MessageResponse> confirmEmailAddress(@RequestParam("token") String token) {
     return new ResponseEntity<>(authenticationService.confirmEmailAddress(token), HttpStatus.OK);
   }
 
   @GetMapping("/reset-password")
-  public ResponseEntity<MessageResponse> resetPassword(@RequestParam @Email String email) {
+  public ResponseEntity<MessageResponse> resetPassword(@RequestParam("email") @Email String email) {
     return new ResponseEntity<>(authenticationService.resetPassword(email), HttpStatus.OK);
   }
 

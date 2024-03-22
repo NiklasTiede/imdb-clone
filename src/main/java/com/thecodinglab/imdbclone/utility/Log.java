@@ -1,16 +1,7 @@
 package com.thecodinglab.imdbclone.utility;
 
-import static net.logstash.logback.argument.StructuredArguments.v;
-
-import net.logstash.logback.argument.StructuredArgument;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-
 /** These values can be logged */
 public class Log {
-
-  private static final Logger logger = LoggerFactory.getLogger(Log.class);
 
   public static final String ACCOUNT_ID = "accountId";
   public static final String ACCOUNT_IDS = "accountIds";
@@ -38,30 +29,4 @@ public class Log {
   public static final String HTTP_RESOURCE_PATH = "HttpResourcePath";
 
   private Log() {}
-
-  public static void webClientExrror(
-      WebClientResponseException ex, String methodIdentifier, StructuredArgument... extraFields) {
-    if (ex.getStatusCode().is4xxClientError()) {
-      logger.warn(
-          "API request failed for [{}], ClientError",
-          v(METHOD_IDENTIFIER, methodIdentifier),
-          v(EXCEPTION_MESSAGE, ex.getMessage()),
-          v(STATUS_CODE, ex.getStatusCode()),
-          extraFields);
-    } else if (ex.getStatusCode().is5xxServerError()) {
-      logger.error(
-          "API request failed for [{}], ServerError",
-          v(METHOD_IDENTIFIER, methodIdentifier),
-          v(EXCEPTION_MESSAGE, ex.getMessage()),
-          v(STATUS_CODE, ex.getStatusCode()),
-          extraFields);
-    } else {
-      logger.error(
-          "API request failed for [{}], OtherError",
-          v(METHOD_IDENTIFIER, methodIdentifier),
-          v(EXCEPTION_MESSAGE, ex.getMessage()),
-          v(STATUS_CODE, ex.getStatusCode()),
-          extraFields);
-    }
-  }
 }
