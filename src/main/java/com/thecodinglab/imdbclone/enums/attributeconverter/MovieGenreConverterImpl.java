@@ -3,10 +3,11 @@ package com.thecodinglab.imdbclone.enums.attributeconverter;
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import jakarta.persistence.Converter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Converter(autoApply = true)
+@Converter
 public class MovieGenreConverterImpl implements MovieGenreConverter<Set<MovieGenreEnum>, Long> {
 
   @Override
@@ -24,7 +25,7 @@ public class MovieGenreConverterImpl implements MovieGenreConverter<Set<MovieGen
   @Override
   public Set<MovieGenreEnum> convertToEntityAttribute(Long bitValue) {
     if (bitValue == null) {
-      return null;
+      return Collections.emptySet();
     }
     return Arrays.stream(MovieGenreEnum.values())
         .filter(singleEnum -> (bitValue & singleEnum.getId()) != 0)

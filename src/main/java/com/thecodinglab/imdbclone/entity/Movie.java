@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
+import com.thecodinglab.imdbclone.enums.attributeconverter.MovieGenreConverterImpl;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.*;
@@ -24,6 +25,8 @@ public class Movie extends DateAudit {
   @JsonIgnore private Integer endYear;
 
   private Integer runtimeMinutes;
+
+  @Convert(converter = MovieGenreConverterImpl.class)
   private Set<MovieGenreEnum> movieGenre;
 
   @Enumerated(EnumType.ORDINAL)
@@ -41,14 +44,17 @@ public class Movie extends DateAudit {
 
   private String imageUrlToken;
 
+  @Transient
   @JsonIgnore
   @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<Comment> comments;
 
+  @Transient
   @JsonIgnore
   @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<WatchedMovie> watchedMovies;
 
+  @Transient
   @JsonIgnore
   @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<Rating> ratings;
