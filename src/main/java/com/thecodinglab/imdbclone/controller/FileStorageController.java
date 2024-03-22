@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @Validated
-@RequestMapping(("/api/file-storage"))
+@RequestMapping("/api/file-storage")
 public class FileStorageController {
 
   private final FileStorageService fileStorageService;
