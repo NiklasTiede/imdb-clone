@@ -3,6 +3,7 @@ package com.thecodinglab.imdbclone.entity;
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Embeddable
 public class WatchedMovieId implements Serializable {
@@ -32,6 +33,19 @@ public class WatchedMovieId implements Serializable {
 
   public void setAccountId(Long accountId) {
     this.accountId = accountId;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    WatchedMovieId that = (WatchedMovieId) o;
+    return Objects.equals(movieId, that.movieId) && Objects.equals(accountId, that.accountId);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(movieId, accountId);
   }
 
   @Override
