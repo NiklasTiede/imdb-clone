@@ -7,6 +7,7 @@ import java.sql.Statement;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -54,11 +55,32 @@ public class BaseContainers {
     registry.add("spring.elasticsearch.uris", elasticContainer::getHttpHostAddress);
   }
 
+  // Add this to your existing BaseContainers class
+  public static MinIOContainer minioContainer =
+      new MinIOContainer(DockerImageName.parse("minio/minio:latest"))
+          .withEnv("MINIO_ACCESS_KEY", "minioadmin")
+          .withEnv("MINIO_SECRET_KEY", "minioadmin")
+          .withCommand("server /data");
+
+  @DynamicPropertySource
+  static void minioProperties(DynamicPropertyRegistry registry) {
+    registry.add(
+        "minio.rest.uri",
+        () ->
+            String.format(
+                "http://%s:%d", minioContainer.getHost(), minioContainer.getMappedPort(9000)));
+    registry.add("minio.rest.access-key", () -> "minioadmin");
+    registry.add("minio.rest.secret-key", () -> "minioadmin");
+    registry.add("minio.rest.bucket-name", () -> "imdb-clone");
+  }
+
   static {
     mysqlContainer.start();
     populateTables("src/test/resources/sql/test-data.sql");
 
     elasticContainer.withEnv("xpack.security.enabled", "false");
     elasticContainer.start();
+
+    minioContainer.start();
   }
 }

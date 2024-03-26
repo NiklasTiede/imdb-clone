@@ -117,6 +117,7 @@ dependencies {
 	testImplementation "org.testcontainers:junit-jupiter:${testContainersVersion}"
 	testImplementation "org.testcontainers:mysql:${testContainersVersion}"
 	testImplementation "org.testcontainers:elasticsearch:${testContainersVersion}"
+	implementation "org.testcontainers:minio:${testContainersVersion}"
 
 	if (System.getProperty('os.name').toLowerCase().contains('mac')) {
 		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.108.Final:osx-aarch_64'
