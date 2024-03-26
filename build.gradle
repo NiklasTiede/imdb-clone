@@ -37,7 +37,7 @@ repositories {
 
 spotless {
 	java {
-		target 'src/main/java/**/*.java'
+		target 'src/main/java/**/*.java', 'src/test/java/**/*.java'
 		targetExclude 'build/**', 'frontend/**'
 		targetExclude 'src/main/java/**/payload/*.java', 'src/main/java/**/payload/**/*.java'
 		importOrder()
@@ -92,9 +92,9 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}"
 
 	//-- Security: JWT / OAuth2
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+	implementation "io.jsonwebtoken:jjwt-api:${jwtVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
 
 	implementation "org.springframework.security:spring-security-core:${springVersion}"
 	implementation "org.springframework.security:spring-security-web:${springVersion}"
@@ -113,11 +113,13 @@ dependencies {
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
 
-	testImplementation 'org.testcontainers:testcontainers:1.19.7'
-	testImplementation 'org.testcontainers:junit-jupiter:1.19.7'
+	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
+	testImplementation "org.testcontainers:junit-jupiter:${testContainersVersion}"
+	testImplementation "org.testcontainers:mysql:${testContainersVersion}"
+	testImplementation "org.testcontainers:elasticsearch:${testContainersVersion}"
 
 	if (System.getProperty('os.name').toLowerCase().contains('mac')) {
-		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.107.Final:osx-aarch_64'
+		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.108.Final:osx-aarch_64'
 	}
 }
 

@@ -1,5 +1,5 @@
 # Use a multi-stage build to generate the JAR file and then package it into the Docker image
-FROM gradle:8.3-jdk20-alpine AS build
+FROM gradle:8.6.0-jdk21-alpine AS build
 COPY --chown=gradle:gradle . /home/gradle/app
 WORKDIR /home/gradle/app
 RUN gradle bootJar --no-daemon
