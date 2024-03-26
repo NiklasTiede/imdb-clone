@@ -129,6 +129,8 @@ we use during development.
 - [x] Set up Elasticsearch, Photos / File Storage
 - [x] Deploy on Home Server with Docker-Compose
 - [x] enable HTTPS with reverse-proxy
+- [ ] simplify local development with spring-boot-starter-docker-compose
+- [ ] setup and add integration tests
 - [ ] Add Monitoring (Prometheus, Grafana, Exporters) and expose Grafana
 - [ ] Add Logging (ELK Stack) and expose Kibana
 - [ ] Create React Frontend
