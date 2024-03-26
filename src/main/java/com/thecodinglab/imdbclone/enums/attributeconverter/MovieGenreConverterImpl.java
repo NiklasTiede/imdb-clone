@@ -12,7 +12,7 @@ public class MovieGenreConverterImpl implements MovieGenreConverter<Set<MovieGen
 
   @Override
   public Long convertToDatabaseColumn(Set<MovieGenreEnum> movieGenreEnumSet) {
-    if (movieGenreEnumSet.isEmpty()) {
+    if (movieGenreEnumSet == null || movieGenreEnumSet.isEmpty()) {
       return null;
     }
     long bitValue = 1L;

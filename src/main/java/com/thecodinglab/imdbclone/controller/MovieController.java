@@ -66,7 +66,7 @@ public class MovieController {
 
   @DeleteMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> deleteMovieById(
+  public ResponseEntity<MessageResponse> deleteMovie(
       @PathVariable("movieId") Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
