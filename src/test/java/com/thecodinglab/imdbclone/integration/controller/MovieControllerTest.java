@@ -50,7 +50,7 @@ class MovieControllerTest extends BaseContainers {
         .expectHeader()
         .contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.detail")
+        .jsonPath("$.details")
         .isEqualTo("Movie with id [" + nonExistentMovieId + "] not found in database.");
   }
 
