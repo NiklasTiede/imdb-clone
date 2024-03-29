@@ -17,6 +17,9 @@
   <a href="https://github.com/NiklasTiede/IMDb-Clone/issues">
     <img alt="issues" src="https://img.shields.io/github/issues-raw/niklastiede/imdb-clone" />
   </a>
+  <a href="https://app.codecov.io/gh/NiklasTiede/imdb-clone/src/test">
+    <img alt="Codecov" src="https://img.shields.io/codecov/c/github/NiklasTiede/imdb-clone">
+  </a>
   <a href="https://github.com/NiklasTiede/IMDb-Clone/commits/master">
     <img alt="commit" src="https://img.shields.io/github/last-commit/NiklasTiede/IMDb-Clone">
   </a>

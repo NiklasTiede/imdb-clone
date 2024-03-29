@@ -2,7 +2,7 @@ name: CI - Build / Test for BE and FE Service
 
 on:
   push:
-    branches: '*'
+    branches: ['*']
 
 jobs:
   backend-build-test:
@@ -26,7 +26,13 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle-
 
       - name: Build and Test Spring Boot Application
-        run: ./gradlew build
+        run: ./gradlew build jacocoTestReport
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./build/reports/jacoco/test/jacocoTestReport.xml
+          fail_ci_if_error: true
 
   frontend-build-test:
     runs-on: ubuntu-latest
