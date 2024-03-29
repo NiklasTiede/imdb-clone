@@ -167,8 +167,8 @@ public class FileStorageServiceImpl implements FileStorageService {
                   .stream(file, fileSize, -1)
                   .build());
       return "Image was stored with etag [" + resp.etag() + "]";
-    } catch (Exception e) {
-      throw new MinioOperationException("Error while storing file in MinIO", e);
+    } catch (Exception ex) {
+      throw new MinioOperationException("Error while storing file in MinIO", ex);
     }
   }
 
@@ -194,9 +194,9 @@ public class FileStorageServiceImpl implements FileStorageService {
       createBucketPolicyFrom(bucketPolicy);
       logger.info("bucket [{}] was created and bucketPolicy set successfully", bucketName);
 
-    } catch (Exception e) {
+    } catch (Exception ex) {
       logger.error("Creation of bucket [{}] failed", bucketName);
-      throw new MinioOperationException("Error while creating bucket in MinIO", e);
+      throw new MinioOperationException("Error while creating bucket in MinIO", ex);
     }
   }
 
@@ -205,9 +205,9 @@ public class FileStorageServiceImpl implements FileStorageService {
     try {
       minioClient.setBucketPolicy(
           SetBucketPolicyArgs.builder().bucket(bucketName).config(policyConfig).build());
-    } catch (Exception e) {
+    } catch (Exception ex) {
       logger.error("Creation of bucket policy failed");
-      throw new MinioOperationException("Error while creating bucket policy in MinIO", e);
+      throw new MinioOperationException("Error while creating bucket policy in MinIO", ex);
     }
   }
 
@@ -227,9 +227,9 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
         return stringBuilder.toString();
       }
-    } catch (IOException e) {
+    } catch (IOException ex) {
       logger.error("Reading file with path [{}] failed", resourcePath);
-      throw new MinioOperationException("Error while reading policy config", e);
+      throw new MinioOperationException("Error while reading policy config", ex);
     }
   }
 
@@ -246,9 +246,9 @@ public class FileStorageServiceImpl implements FileStorageService {
                   .expiry(60 * 60 * 24)
                   .build());
       return presignedUrl;
-    } catch (Exception e) {
+    } catch (Exception ex) {
       logger.error("Generate presigned object URL file with image name [{}] failed", imageName);
-      throw new MinioOperationException("Error while generating presigned URL in MinIO", e);
+      throw new MinioOperationException("Error while generating presigned URL in MinIO", ex);
     }
   }
 }

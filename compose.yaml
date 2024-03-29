@@ -1,11 +1,10 @@
-version: '3.8'
 services:
 
   ### ----------------------- MySQL ----------------------- ###
-  mysql:
+  imdb-clone-mysql:
     container_name: imdb-clone-mysql
-    image: mysql:latest
-    restart: always
+    image: mysql:8.3.0
+    restart: unless-stopped
     environment:
       - MYSQL_DATABASE=movie_db
       - MYSQL_ROOT_PASSWORD=supersecret
@@ -17,6 +16,45 @@ services:
       - ./src/main/resources/sql:/docker-entrypoint-initdb.d
     networks:
       - imdb-clone-network
+
+  imdb-clone-elasticsearch:
+    container_name: imdb-clone-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    restart: unless-stopped
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx2g
+    ports:
+      - "9200:9200"
+    volumes:
+      - imdb-clone-elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - imdb-clone-network
+
+  ### ----------------------- MinIO ----------------------- ###
+  imdb-clone-minio:
+    container_name: imdb-clone-minio
+    image: bitnami/minio:2024.3.26
+    restart: unless-stopped
+    user: root
+    environment:
+      - MINIO_ROOT_USER=ROOTNAME
+      - MINIO_ROOT_PASSWORD=CHANGEME123
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - imdb-clone-minio-data:/data
+    networks:
+      - imdb-clone-network
+    command: /opt/bitnami/minio/bin/minio server --console-address :9090 /data
+
+volumes:
+  imdb-clone-elasticsearch-data:
+    name: imdb-clone-elasticsearch-data
+  imdb-clone-minio-data:
+    name: imdb-clone-minio-data
 
 networks:
   imdb-clone-network:

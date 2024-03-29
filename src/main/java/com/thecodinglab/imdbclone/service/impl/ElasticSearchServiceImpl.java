@@ -59,8 +59,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     } catch (IOException e) {
       logger.error(
           "Document of type movie with [{}] was not indexed successfully.", kv(MOVIE_ID,movie.getId()));
-//      throw new RuntimeException(e);
-      throw new ElasticsearchOperationException("Document of type movie with [{}] was not indexed successfully.", e);
+      throw new ElasticsearchOperationException("Document of type movie with id [%s] was not indexed successfully.".formatted(movie.getId()), e);
     }
   }
 

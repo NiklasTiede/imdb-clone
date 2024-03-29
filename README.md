@@ -61,12 +61,10 @@ Here's a diagram of the setup:
 
 ## How to Run this Project Locally
 
-The app can be built in 3 steps:
+The app can be built in 2 steps:
 
-1. Run `docker-compose` to set up preloaded backend services (MySQL, Elasticsearch and
-  MinIO)
-2. Run the Spring Boot Backend with `./gradlew bootRun`
-3. Run the React Frontend with `yarn install` & `yarn start`
+1. Run the Spring Boot Backend with `./gradlew bootRun` (this will automatically spin up mysql/elastic/minio containers)
+2. Run the React Frontend with `yarn install` & `yarn start`
 
 ---
 
@@ -76,21 +74,12 @@ At first, we have to run the with data preloaded stateful services (MySQL, Elast
 MinIO) which are used by the backend. I created a docker image of each service preloaded with 
 data, so we just have to execute the `docker-compose.yaml`.
 
-```shell
-cd infrastructure/deployment/development
-docker-compose up -d
-```
-
-Be aware: the images are x86-based. So when you're using ARM-based apple silicone machine, 
-pay attention that emulation is activated. All images will be pulled and mounted to your device. 
-The spring boot backend can connect to the containers now.
-
 For more information on how data were collected, processed and imported look into 
 the [infrastructure](./infrastructure/README.md)-folder.
 
 --- 
 
-### 2. Set Up Spring Boot Backend
+### 1. Set Up Spring Boot Backend and Stateful Services: MySQL, Elasticsearch and MinIO
 
 Now we can start the Spring Boot app:
 
@@ -99,12 +88,16 @@ Now we can start the Spring Boot app:
 ./gradlew bootRun
 ```
 
+This will automatically pull/start the stateful containers. So pulling might take time depending 
+on your bandwidth. For more information on how data were collected, processed and imported look into
+the [infrastructure](./infrastructure/README.md)-folder.
+
 The backend can now be reached at port 8080 on localhost. You can test if the backend works properly by 
 sending some http requests. Use the provided [.http](./src/main/resources/api-calls) files.
 
 ---
 
-### 3. Set Up React Frontend
+### 2. Set Up React Frontend
 
 Now we can run the React frontend. We have to move into the frontend-folder and build & run with yarn or npm. 
 
@@ -129,8 +122,8 @@ we use during development.
 - [x] Set up Elasticsearch, Photos / File Storage
 - [x] Deploy on Home Server with Docker-Compose
 - [x] enable HTTPS with reverse-proxy
-- [ ] simplify local development with spring-boot-starter-docker-compose
-- [ ] setup and add integration tests
+- [x] simplify local development with spring-boot-starter-docker-compose
+- [x] setup and add integration tests
 - [ ] Add Monitoring (Prometheus, Grafana, Exporters) and expose Grafana
 - [ ] Add Logging (ELK Stack) and expose Kibana
 - [ ] Create React Frontend
@@ -147,5 +140,5 @@ we use during development.
 - [ ] Deploy on HA K3s Home Server
 - [ ] Use Flux for GitOps CD
 - [ ] Add Integration Namespace in K3s next to the Prod Env for Testing
-- [ ] Add Unit / Integration Tests in BE and FE
+- [ ] Add Selenium for E2E-tests from FE to BE
 - [ ] Add more Features like Chat Functionality

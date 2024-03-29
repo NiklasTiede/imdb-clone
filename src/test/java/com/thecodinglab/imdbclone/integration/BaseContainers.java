@@ -20,11 +20,11 @@ import org.testcontainers.utility.DockerImageName;
 public class BaseContainers {
 
   public static MySQLContainer<?> mysqlContainer =
-      new MySQLContainer<>(DockerImageName.parse("mysql:latest"))
-          .withDatabaseName("testdb")
+      new MySQLContainer<>(DockerImageName.parse("mysql:8.3.0"))
+          .withDatabaseName("movie_db")
           .withUsername("test")
           .withPassword("test")
-          .withInitScript("sql/init.sql");
+          .withInitScript("sql/1_init_schema.sql");
 
   @DynamicPropertySource
   static void mysqlProperties(DynamicPropertyRegistry registry) {
@@ -48,7 +48,7 @@ public class BaseContainers {
 
   static ElasticsearchContainer elasticContainer =
       new ElasticsearchContainer(
-          DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:8.7.1"));
+          DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:8.13.0"));
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
@@ -57,7 +57,7 @@ public class BaseContainers {
 
   // Add this to your existing BaseContainers class
   public static MinIOContainer minioContainer =
-      new MinIOContainer(DockerImageName.parse("minio/minio:latest"))
+      new MinIOContainer(DockerImageName.parse("minio/minio:RELEASE.2024-03-26T22-10-45Z"))
           .withEnv("MINIO_ACCESS_KEY", "minioadmin")
           .withEnv("MINIO_SECRET_KEY", "minioadmin")
           .withCommand("server /data");

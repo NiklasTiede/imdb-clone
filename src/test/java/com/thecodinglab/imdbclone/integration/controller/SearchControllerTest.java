@@ -2,7 +2,8 @@ package com.thecodinglab.imdbclone.integration.controller;
 
 import com.thecodinglab.imdbclone.integration.BaseContainers;
 import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
-//import org.junit.jupiter.api.Test;
+import java.util.Collections;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,11 +16,10 @@ class SearchControllerTest extends BaseContainers {
 
   @Autowired private WebTestClient webTestClient;
 
-  // TODO: fix not FOUND Nightcrawler movie (although it seemed to be indexed)
-//  @Test
+  @Test
   void search_success() {
     // Arrange
-    var request = new MovieSearchRequest(null, null, null, null, null, null);
+    var request = new MovieSearchRequest(null, null, null, null, Collections.emptySet(), null);
 
     // Act and Assert
     webTestClient
@@ -28,9 +28,12 @@ class SearchControllerTest extends BaseContainers {
         .bodyValue(request)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
-        .expectStatus().isOk()
-        .expectHeader().contentType(MediaType.APPLICATION_JSON)
+        .expectStatus()
+        .isOk()
+        .expectHeader()
+        .contentType(MediaType.APPLICATION_JSON)
         .expectBody()
-        .jsonPath("$.pageNumber").isEqualTo(0);
+        .jsonPath("$.content[0].primaryTitle")
+        .isEqualTo("Nightcrawler");
   }
 }
