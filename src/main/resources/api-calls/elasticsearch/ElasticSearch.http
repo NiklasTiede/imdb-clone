@@ -29,7 +29,7 @@ Authorization: Basic <base64_credentials>
 
 
 ### search for by document id
-GET {{protocol}}{{host}}:{{port}}/movies/_doc/2872718
+GET {{protocol}}{{host}}:{{port}}/movies/_doc/109830
 Authorization: Basic <base64_credentials>
 
 
@@ -41,7 +41,7 @@ Content-Type: application/json
 {
   "query": {
     "match": {
-      "primaryTitle": "Nightcrawler"
+      "primaryTitle": "The"
     }
   }
 }

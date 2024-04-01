@@ -1,7 +1,7 @@
 
 ### store movie image
-POST {{protocol}}{{host}}:{{port}}/api/file-storage/movie/48812
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzkzMDUzMDAsImV4cCI6MTY4MTg5NzMwMH0.wZTqM6p69J1DSrtO3bpLgc5yPVm8dWTffHTHT3lF5E8y9Qn4vK5JZeiD5yeGXxOc-FZy3cdauiZGpbCi74R4uA
+POST {{protocol}}{{host}}:{{port}}/api/file-storage/movie/2872718
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6InN1cGVybWFuIiwicm9sZXMiOlsiUk9MRV9BRE1JTiIsIlJPTEVfVVNFUiJdLCJzdWIiOiIyIiwiaWF0IjoxNzExMTI5NDY5LCJleHAiOjE3MTM3MjE0Njl9.VVgFcLBNajKTBInxw8a_QUE26xlXqKEqzypkrhTQ_xZm1PqImr3Os3LrgDFLerFCzdRsTeaXlnSKakXoRJo0vA
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary

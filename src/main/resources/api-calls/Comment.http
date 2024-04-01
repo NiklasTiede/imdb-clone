@@ -1,18 +1,18 @@
 
 ### get specific comment by id
-GET {{protocol}}{{host}}:{{port}}/api/comment/3
+GET {{protocol}}{{host}}:{{port}}/api/comment/1
 Content-Type: application/json
 
 
 ### get all comments of a movie
-GET {{protocol}}{{host}}:{{port}}/api/comment/2872718/comments
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+GET {{protocol}}{{host}}:{{port}}/api/comment/120382/comments
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTk2Mzg5NywiZXhwIjoxNzE0NTU1ODk3fQ.zFbNOSxfFQttqIxahFk827kApdbNQTIohxXc3SdgtB1QzmRutiOZA5SrKofr8Y5dxk1CsN4bTS0-53tO0OLV2w
 Content-Type: application/json
 
 
 ### comment a movie
-POST {{protocol}}{{host}}:{{port}}/api/comment/2872718
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNjY2ODcxNDkzLCJleHAiOjE2Njk0NjM0OTN9.uDiMKr1LvPiM5cg942jzk2REmHYgen8LEK-xpZQoqPQp9wJgyY_vBF0YG_kYGuT00p68dfLvVEkciivDZgGJIw
+POST {{protocol}}{{host}}:{{port}}/api/comment/120382
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTk2Mzg5NywiZXhwIjoxNzE0NTU1ODk3fQ.zFbNOSxfFQttqIxahFk827kApdbNQTIohxXc3SdgtB1QzmRutiOZA5SrKofr8Y5dxk1CsN4bTS0-53tO0OLV2w
 Content-Type: application/json
 
 {
@@ -22,7 +22,7 @@ Content-Type: application/json
 
 ### update existing comment
 PUT {{protocol}}{{host}}:{{port}}/api/comment/1
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX1VTRVIiXSwidXNlcm5hbWUiOiJqZWZmX3BvcnRub3kiLCJzdWIiOiIyIiwiaWF0IjoxNzExOTY2NTY0LCJleHAiOjE3MTQ1NTg1NjR9.IwljCrFCtus9SKvo5B4FNxxliXVLlMGn671JeaE45CxtDEaRiAClOls553qZV805M_IsY_t8KjX_BQxcRiBlvg
 Content-Type: application/json
 
 {

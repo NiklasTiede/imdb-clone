@@ -1,11 +1,11 @@
 
 ### rate movie
-GET {{protocol}}{{host}}:{{port}}/api/movie-rating/2872718/rating-score/7.8
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+GET {{protocol}}{{host}}:{{port}}/api/movie-rating/2872718/rating-score/11
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoic3VwZXJtYW4iLCJzdWIiOiIyIiwiaWF0IjoxNzExMTQyMzEzLCJleHAiOjE3MTM3MzQzMTN9.AmAK3QBo7K1_xKxMDHN_A9L92Ltn9z-CU9-N-iLUmbE1FdKFA3bcpIFAritq3sadUcSR1caxXjx6AdXHurAsdA
 Content-Type: application/json
 
 
 ### delete rating
 DELETE {{protocol}}{{host}}:{{port}}/api/movie-rating/2872718
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoic3VwZXJtYW4iLCJzdWIiOiIyIiwiaWF0IjoxNzExMTQyMzEzLCJleHAiOjE3MTM3MzQzMTN9.AmAK3QBo7K1_xKxMDHN_A9L92Ltn9z-CU9-N-iLUmbE1FdKFA3bcpIFAritq3sadUcSR1caxXjx6AdXHurAsdA
 Content-Type: application/json

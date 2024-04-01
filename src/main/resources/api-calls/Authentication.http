@@ -24,9 +24,9 @@ POST {{protocol}}{{host}}:{{port}}/api/auth/registration
 Content-Type: application/json
 
 {
-  "username": "superman",
-  "password": "Str0nG!Pa55Word?",
-  "email": "your@email.com"
+  "username": "kirk_lazarus",
+  "password": "Encrypted!Pa55worD",
+  "email": "kirk.lazarus@gmail.com"
 }
 
 
