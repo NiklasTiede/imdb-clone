@@ -19,8 +19,14 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest
 public class BaseContainers {
 
+  private static final DockerImageName mysqlImage = DockerImageName.parse("mysql:8.3.0");
+  private static final DockerImageName elasticsearchImage =
+      DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:8.13.0");
+  private static final DockerImageName minioImage =
+      DockerImageName.parse("minio/minio:RELEASE.2024-03-26T22-10-45Z");
+
   public static MySQLContainer<?> mysqlContainer =
-      new MySQLContainer<>(DockerImageName.parse("mysql:8.3.0"))
+      new MySQLContainer<>(mysqlImage)
           .withDatabaseName("movie_db")
           .withUsername("test")
           .withPassword("test")
@@ -46,18 +52,15 @@ public class BaseContainers {
     }
   }
 
-  static ElasticsearchContainer elasticContainer =
-      new ElasticsearchContainer(
-          DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:8.13.0"));
+  static ElasticsearchContainer elasticContainer = new ElasticsearchContainer(elasticsearchImage);
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.elasticsearch.uris", elasticContainer::getHttpHostAddress);
   }
 
-  // Add this to your existing BaseContainers class
   public static MinIOContainer minioContainer =
-      new MinIOContainer(DockerImageName.parse("minio/minio:RELEASE.2024-03-26T22-10-45Z"))
+      new MinIOContainer(minioImage)
           .withEnv("MINIO_ACCESS_KEY", "minioadmin")
           .withEnv("MINIO_SECRET_KEY", "minioadmin")
           .withCommand("server /data");

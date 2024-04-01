@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+// spotless:off
 @SpringBootTest
 @AutoConfigureMockMvc
 class MovieControllerTest extends BaseContainers {
@@ -21,17 +22,15 @@ class MovieControllerTest extends BaseContainers {
 
     // Act and Assert
     webTestClient
-        .get()
-        .uri("/api/movie/{movieId}", existingMovie)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectHeader()
-        .contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-        .jsonPath("$.primaryTitle")
-        .isEqualTo("Nightcrawler");
+            .get()
+            .uri("/api/movie/{movieId}", existingMovie)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBody()
+            .jsonPath("$.primaryTitle").isEqualTo("Nightcrawler")
+    ;
   }
 
   @Test
@@ -41,17 +40,14 @@ class MovieControllerTest extends BaseContainers {
 
     // Act and Assert
     webTestClient
-        .get()
-        .uri("/api/movie/{movieId}", nonExistentMovieId)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isNotFound()
-        .expectHeader()
-        .contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-        .jsonPath("$.details")
-        .isEqualTo("Movie with id [" + nonExistentMovieId + "] not found in database.");
+            .get()
+            .uri("/api/movie/{movieId}", nonExistentMovieId)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("Movie with id [%d] not found in database.".formatted(nonExistentMovieId));
   }
 
   @Test
@@ -69,3 +65,4 @@ class MovieControllerTest extends BaseContainers {
   @Test
   void searchMoviesByTitle() {}
 }
+// spotless:on

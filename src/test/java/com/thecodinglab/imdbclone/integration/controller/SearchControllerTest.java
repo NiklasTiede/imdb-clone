@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+// spotless:off
 @SpringBootTest
 @AutoConfigureMockMvc
 class SearchControllerTest extends BaseContainers {
@@ -23,17 +24,15 @@ class SearchControllerTest extends BaseContainers {
 
     // Act and Assert
     webTestClient
-        .post()
-        .uri("/api/search/movies?query=nightcrawler")
-        .bodyValue(request)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectHeader()
-        .contentType(MediaType.APPLICATION_JSON)
-        .expectBody()
-        .jsonPath("$.content[0].primaryTitle")
-        .isEqualTo("Nightcrawler");
+            .post()
+            .uri("/api/search/movies?query=nightcrawler")
+            .bodyValue(request)
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk()
+            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+            .expectBody()
+            .jsonPath("$.content[0].primaryTitle").isEqualTo("Nightcrawler");
   }
 }
+// spotless:on
