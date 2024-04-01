@@ -55,11 +55,10 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
                 indexResponse.result().jsonValue()
         );
       }
-
-    } catch (IOException e) {
+    } catch (IOException ex) {
       logger.error(
           "Document of type movie with [{}] was not indexed successfully.", kv(MOVIE_ID,movie.getId()));
-      throw new ElasticsearchOperationException("Document of type movie with id [%s] was not indexed successfully.".formatted(movie.getId()), e);
+      throw new ElasticsearchOperationException("Document of type movie with id [%s] was not indexed successfully.".formatted(movie.getId()), ex);
     }
   }
 
@@ -83,8 +82,8 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
               .filter(Objects::nonNull)
               .collect(Collectors.toSet()),
           result.items().size());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    } catch (IOException ex) {
+      throw new ElasticsearchOperationException("Error while indexing a Movie Document in ElasticSearch", ex);
     }
     if (result.errors()) {
       logger.error("Bulk had errors");
@@ -109,9 +108,9 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
 
       logger.info("Movie document with primaryTitle [{}] was found.", response.source() != null ? response.source().getPrimaryTitle() : null);
       return response.source();
-    } catch (IOException e) {
+    } catch (IOException ex) {
       logger.error("Movie document with [{}] was not found", kv(MOVIE_ID, movieId));
-      throw new RuntimeException(e);
+      throw new ElasticsearchOperationException("Error while retrieving a Movie Document by ID in ElasticSearch", ex);
     }
   }
 
@@ -129,8 +128,8 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
                           .field("primaryTitle")
                           .query(searchText))),
               Movie.class);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    } catch (IOException ex) {
+      throw new ElasticsearchOperationException("Error while searching for a Movie Document by primaryTitle in ElasticSearch", ex);
     }
     List<Movie> movies = response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
     logger.info("Document search by primaryTitle gave [{}] results.", movies.size());
@@ -154,8 +153,8 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
       List<Movie> movies = response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
       logger.info("Document search by ratings between [{}] and [{}] gave [{}] results.",minRating, maxRating, movies.size());
       return movies;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    } catch (IOException ex) {
+      throw new ElasticsearchOperationException("Error while searching for a Movie Document by rating range in ElasticSearch", ex);
     }
   }
 

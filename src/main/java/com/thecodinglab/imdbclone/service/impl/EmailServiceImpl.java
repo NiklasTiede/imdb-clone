@@ -45,7 +45,7 @@ public class EmailServiceImpl implements EmailService {
       helper.setFrom(emailSender);
       mailSender.send(mimeMessage);
     } catch (MessagingException e) {
-      logger.error("failed to send email", kv(EXCEPTION_MESSAGE, e.getMessage()));
+      logger.error("failed to send email, reason: {}", kv(EXCEPTION_MESSAGE, e.getMessage()));
       throw new IllegalStateException("failed to send email");
     }
   }

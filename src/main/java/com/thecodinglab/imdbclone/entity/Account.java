@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
@@ -33,7 +32,7 @@ public class Account extends DateAudit {
   @JsonIgnore private Boolean enabled = false;
 
   @ManyToMany(fetch = FetchType.LAZY)
-  private Collection<Role> roles = new ArrayList<>();
+  private Collection<Role> roles;
 
   @JsonIgnore
   @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)

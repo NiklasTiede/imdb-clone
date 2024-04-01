@@ -51,7 +51,7 @@ public class RatingServiceImpl implements RatingService {
   }
 
   @Override
-  public Rating rateMovie(UserPrincipal currentAccount, Long movieId, BigDecimal score) {
+  public RatingRecord rateMovie(UserPrincipal currentAccount, Long movieId, BigDecimal score) {
     if (score.floatValue() < 0 || score.floatValue() > 10.1) {
       throw new BadRequestException("Score must be between 0 and 10");
     } else {
@@ -60,7 +60,10 @@ public class RatingServiceImpl implements RatingService {
       Rating rating = Rating.create(score, movie, account);
       Rating savedRating = ratingRepository.save(rating);
       logger.info("rating with [{}] was created.", kv(RATING_ID, savedRating.getId()));
-      return savedRating;
+      return new RatingRecord(
+          savedRating.getRating(),
+          savedRating.getAccount().getId(),
+          savedRating.getMovie().getId());
     }
   }
 
@@ -85,26 +88,19 @@ public class RatingServiceImpl implements RatingService {
             .orElseThrow(
                 () ->
                     new NotFoundException(
-                        "Rating with movieId ["
-                            + movieId
-                            + "] and accountId ["
-                            + currentAccount.getId()
-                            + "] not found in database."));
+                        "Rating with movieId [%d] and accountId [%d] not found in database."
+                            .formatted(movieId, currentAccount.getId())));
     if (Objects.equals(rating.getAccount().getId(), currentAccount.getId())
         || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       ratingRepository.delete(rating);
       logger.info("rating with [{}] was deleted.", kv(RATING_ID, rating.getId()));
       return new MessageResponse(
-          "WatchedMovie with movieId ["
-              + movieId
-              + "] and accountId ["
-              + currentAccount.getId()
-              + "] was deleted");
+          "WatchedMovie with movieId [%d] and accountId [%d] was deleted"
+              .formatted(movieId, currentAccount.getId()));
     } else {
       throw new UnauthorizedException(
-          "Account with id ["
-              + currentAccount.getId()
-              + "] has no permission to delete this resource.");
+          "Account with id [%d] has no permission to delete this resource."
+              .formatted(currentAccount.getId()));
     }
   }
 }

@@ -43,6 +43,7 @@ public class CommentController {
   }
 
   @PostMapping("/{movieId}")
+  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<CommentRecord> createComment(
       @PathVariable("movieId") Long movieId,
       @Valid @RequestBody CreateCommentRequest request,

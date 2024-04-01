@@ -4,17 +4,16 @@ import static com.thecodinglab.imdbclone.utility.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 import com.thecodinglab.imdbclone.exception.domain.*;
-import com.thecodinglab.imdbclone.exception.response.ErrorDetails;
-import com.thecodinglab.imdbclone.exception.response.FieldError;
 import jakarta.validation.ConstraintViolationException;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -30,140 +29,138 @@ public class GlobalExceptionHandler {
   private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
   @ExceptionHandler(NotFoundException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
-      NotFoundException ex, WebRequest request) {
-    ErrorDetails errorDetails =
-        new ErrorDetails("Resource was not found.", request.getDescription(true), ex.getMessage());
+  protected final ProblemDetail resolveNotFoundException(NotFoundException ex, WebRequest request) {
     logger.warn(
         "Resource was not found for '{}', returning error message: '{}'",
         v(HTTP_RESOURCE_PATH, request.getDescription(false)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
-    return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    return problemDetail;
   }
 
   @ExceptionHandler(BadRequestException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
+  protected final ProblemDetail resolveBadRequestException(
       BadRequestException ex, WebRequest request) {
-    ErrorDetails errorDetails =
-        new ErrorDetails(
-            "Resource was not posted correct.", request.getDescription(false), ex.getMessage());
     logger.warn(
         "Resource was not posted correctly for '{}', returning error message: '{}'",
         v(HTTP_RESOURCE_PATH, request.getDescription(false)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
-    return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    return problemDetail;
   }
 
   @ExceptionHandler(UnauthorizedException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
+  protected final ProblemDetail resolveUnauthorizedException(
       UnauthorizedException ex, WebRequest request) {
-    ErrorDetails errorDetails =
-        new ErrorDetails(
-            "User has no access to the resource.", request.getDescription(false), ex.getMessage());
     logger.warn(
         "User has no permission for '{}', returning error message: '{}'",
         v(HTTP_RESOURCE_PATH, request.getDescription(true)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
-    return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    return problemDetail;
   }
 
   @ExceptionHandler(MinioOperationException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
+  protected final ProblemDetail resolveMinioOperationException(
       MinioOperationException ex, WebRequest request) {
-    ErrorDetails errorDetails =
-        new ErrorDetails(
-            "While interacting with MinIO an error occurred",
-            request.getDescription(false),
-            ex.getMessage());
     logger.warn(
-        "While interacting with MinIO an error occurred with message: '{}'",
+        "While interacting with MinIO an error occurred with message: '{}' and '{}' on resource '{}' ",
         v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
-        v(HTTP_RESOURCE_PATH, request.getDescription(true)),
-        v(EXCEPTION_MESSAGE, ex.getException().getMessage()));
-    return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+        v(EXCEPTION_MESSAGE, ex.getException().getMessage()),
+        v(HTTP_RESOURCE_PATH, request.getDescription(true)));
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    return problemDetail;
   }
 
   @ExceptionHandler(ElasticsearchOperationException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
+  protected final ProblemDetail resolveElasticsearchOperationException(
       ElasticsearchOperationException ex, WebRequest request) {
-    ErrorDetails errorDetails =
-        new ErrorDetails(
-            "While interacting with ElasticSearch an error occurred",
-            request.getDescription(false),
-            ex.getMessage());
     logger.warn(
-        "While interacting with ElasticSearch an error occurred with message: '{}'",
+        "While interacting with ElasticSearch an error occurred with message: '{}' and '{}' on resource '{}'",
         v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
-        v(HTTP_RESOURCE_PATH, request.getDescription(true)),
-        v(EXCEPTION_MESSAGE, ex.getException().getMessage()));
-    return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
+        v(EXCEPTION_MESSAGE, ex.getException().getMessage()),
+        v(HTTP_RESOURCE_PATH, request.getDescription(true)));
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    return problemDetail;
   }
 
   @ExceptionHandler(WebClientResponseException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
+  protected final ProblemDetail resolveWebClientResponseException(
       WebClientResponseException ex, WebRequest request) {
-    ErrorDetails errorDetails =
-        new ErrorDetails(
-            "HTTP request to external service failed",
-            request.getDescription(false),
-            ex.getMessage());
-    return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    logger.warn(
+        "While making a request to an API an error occurred with message: '{}' on resource '{}'",
+        v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
+        v(HTTP_RESOURCE_PATH, request.getDescription(true)));
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    return problemDetail;
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
+  protected final ProblemDetail resolveHttpMessageNotReadableException(
       HttpMessageNotReadableException ex, WebRequest request) {
-    ErrorDetails errorDetails =
-        new ErrorDetails(
-            "User has to provide existing enums.", request.getDescription(false), ex.getMessage());
     logger.warn(
         "User did not provide existing enum '{}', returning error message: '{}'",
         v(HTTP_RESOURCE_PATH, request.getDescription(false)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
-    return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    return problemDetail;
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
+  protected final ProblemDetail resolveMethodArgumentNotValidException(
       MethodArgumentNotValidException ex, WebRequest request) {
-    List<FieldError> fieldErrors = new ArrayList<>();
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    Map<String, Object> properties = new HashMap<>();
     ex.getBindingResult()
         .getFieldErrors()
-        .forEach(
-            error -> fieldErrors.add(new FieldError(error.getField(), error.getDefaultMessage())));
-    ErrorDetails errorDetails =
-        new ErrorDetails(
-            "Validation failed for parameter(s)", fieldErrors, request.getDescription(false));
+        .forEach(error -> properties.put(error.getField(), error.getDefaultMessage()));
+    problemDetail.setProperties(properties);
     logger.warn(
         "User did not provide valid value for '{}', returning error message: '{}'",
         v(HTTP_RESOURCE_PATH, request.getDescription(false)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
-    return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    return problemDetail;
   }
 
   @ExceptionHandler(ConstraintViolationException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
+  protected final ProblemDetail resolveConstraintViolationException(
       ConstraintViolationException ex, WebRequest request) {
-    ErrorDetails errorDetails =
-        new ErrorDetails(
-            "Request body validation failed", request.getDescription(true), ex.getMessage());
     logger.warn(
         "Request body validation failed on the following resource: '{}', returning error message: '{}'",
         v(HTTP_RESOURCE_PATH, request.getDescription(false)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
-    return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    return problemDetail;
   }
 
   @ExceptionHandler(MissingServletRequestParameterException.class)
-  protected final ResponseEntity<ErrorDetails> resolveException(
+  protected final ProblemDetail resolveMissingServletRequestParameterException(
       MissingServletRequestParameterException ex, WebRequest request) {
-    ErrorDetails errorDetails =
-        new ErrorDetails(
-            "Request parameter validation failed", request.getDescription(true), ex.getMessage());
     logger.warn(
         "Request parameter validation failed on the following resource: '{}', returning error message: '{}'",
         v(HTTP_RESOURCE_PATH, request.getDescription(false)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
-    return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    problemDetail.setType(URI.create(""));
+    return problemDetail;
   }
 }

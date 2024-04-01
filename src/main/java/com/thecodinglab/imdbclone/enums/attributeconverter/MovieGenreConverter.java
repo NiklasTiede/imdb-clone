@@ -6,5 +6,4 @@ import jakarta.persistence.Converter;
 import java.util.Set;
 
 @Converter
-public interface MovieGenreConverter<S extends Set<MovieGenreEnum>, L extends Number>
-    extends AttributeConverter<Set<MovieGenreEnum>, Long> {}
+public interface MovieGenreConverter extends AttributeConverter<Set<MovieGenreEnum>, Long> {}

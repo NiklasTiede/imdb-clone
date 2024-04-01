@@ -14,8 +14,8 @@ POST {{protocol}}{{host}}:{{port}}/api/auth/login
 Content-Type: application/json
 
 {
-  "usernameOrEmail": "superman",
-  "password": "Str0nG!Pa55Word?"
+  "usernameOrEmail": "les_grossman",
+  "password": "Encrypted!Pa55worD"
 }
 
 
@@ -36,7 +36,7 @@ Content-Type: application/json
 
 
 ### reset password
-GET {{protocol}}{{host}}:{{port}}/api/auth/reset-password?email=niklastiede2@gmail.com
+GET {{protocol}}{{host}}:{{port}}/api/auth/reset-password?email=kirk.lazarus@gmail.com
 Content-Type: application/json
 
 

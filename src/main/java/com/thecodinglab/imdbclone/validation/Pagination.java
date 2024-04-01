@@ -20,7 +20,8 @@ public class Pagination {
       throw new BadRequestException("Size number cannot be less than zero.");
     }
     if (size > MAX_PAGE_SIZE) {
-      throw new BadRequestException("Page size must not be greater than " + MAX_PAGE_SIZE);
+      throw new BadRequestException(
+          "Page size must not be greater than %d".formatted(MAX_PAGE_SIZE));
     }
   }
 }

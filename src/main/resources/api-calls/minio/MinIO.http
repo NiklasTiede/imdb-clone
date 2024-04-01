@@ -1,7 +1,7 @@
 
 ### store movie image
-POST {{protocol}}{{host}}:{{port}}/api/file-storage/movie/48812
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzkzMDUzMDAsImV4cCI6MTY4MTg5NzMwMH0.wZTqM6p69J1DSrtO3bpLgc5yPVm8dWTffHTHT3lF5E8y9Qn4vK5JZeiD5yeGXxOc-FZy3cdauiZGpbCi74R4uA
+POST {{protocol}}{{host}}:{{port}}/api/file-storage/movie/2872718
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6Imxlc19ncm9zc21hbiIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwic3ViIjoiMSIsImlhdCI6MTcxMTk2ODAyOCwiZXhwIjoxNzE0NTYwMDI4fQ.7Lab8BqKy9WWPYcoYi-pHqZz7x2fB1zJlDmiZXrXck5G3DZEdg1GjjKHsIArre5tqzUq91g_uhAKdzBApaNb5Q
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
@@ -17,13 +17,13 @@ Content-Type: image/jpeg
 
 
 ### delete movie image
-DELETE {{protocol}}{{host}}:{{port}}/api/file-storage/movie/48812
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzkzMDUzMDAsImV4cCI6MTY4MTg5NzMwMH0.wZTqM6p69J1DSrtO3bpLgc5yPVm8dWTffHTHT3lF5E8y9Qn4vK5JZeiD5yeGXxOc-FZy3cdauiZGpbCi74R4uA
+DELETE {{protocol}}{{host}}:{{port}}/api/file-storage/movie/2872718
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6Imxlc19ncm9zc21hbiIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwic3ViIjoiMSIsImlhdCI6MTcxMTk2ODAyOCwiZXhwIjoxNzE0NTYwMDI4fQ.7Lab8BqKy9WWPYcoYi-pHqZz7x2fB1zJlDmiZXrXck5G3DZEdg1GjjKHsIArre5tqzUq91g_uhAKdzBApaNb5Q
 
 
 ### store user profile photo
 POST {{protocol}}{{host}}:{{port}}/api/file-storage/profile-photo
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzkzMDUzMDAsImV4cCI6MTY4MTg5NzMwMH0.wZTqM6p69J1DSrtO3bpLgc5yPVm8dWTffHTHT3lF5E8y9Qn4vK5JZeiD5yeGXxOc-FZy3cdauiZGpbCi74R4uA
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6Imxlc19ncm9zc21hbiIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwic3ViIjoiMSIsImlhdCI6MTcxMTk2ODAyOCwiZXhwIjoxNzE0NTYwMDI4fQ.7Lab8BqKy9WWPYcoYi-pHqZz7x2fB1zJlDmiZXrXck5G3DZEdg1GjjKHsIArre5tqzUq91g_uhAKdzBApaNb5Q
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
@@ -40,4 +40,4 @@ Content-Type: image/jpeg
 
 ### delete user profile photo
 DELETE {{protocol}}{{host}}:{{port}}/api/file-storage/profile-photo
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInN1YiI6IjEiLCJpYXQiOjE2NzkzMDUzMDAsImV4cCI6MTY4MTg5NzMwMH0.wZTqM6p69J1DSrtO3bpLgc5yPVm8dWTffHTHT3lF5E8y9Qn4vK5JZeiD5yeGXxOc-FZy3cdauiZGpbCi74R4uA
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6Imxlc19ncm9zc21hbiIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwic3ViIjoiMSIsImlhdCI6MTcxMTk2ODAyOCwiZXhwIjoxNzE0NTYwMDI4fQ.7Lab8BqKy9WWPYcoYi-pHqZz7x2fB1zJlDmiZXrXck5G3DZEdg1GjjKHsIArre5tqzUq91g_uhAKdzBApaNb5Q

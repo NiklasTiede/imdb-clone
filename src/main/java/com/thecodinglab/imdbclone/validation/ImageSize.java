@@ -20,11 +20,11 @@ public class ImageSize {
 
     if (image.getWidth() < MIN_MOVIE_IMAGE_WIDTH) {
       throw new BadRequestException(
-          "Movie image cannot be less than [" + MIN_MOVIE_IMAGE_WIDTH + "] in width.");
+          "Movie image cannot be less than [%d] in width.".formatted(MIN_MOVIE_IMAGE_WIDTH));
     }
     if (image.getHeight() < MIN_MOVIE_IMAGE_HEIGHT) {
       throw new BadRequestException(
-          "Movie image cannot be less than [" + MIN_MOVIE_IMAGE_HEIGHT + "] in height.");
+          "Movie image cannot be less than [%d] in height.".formatted(MIN_MOVIE_IMAGE_HEIGHT));
     }
   }
 
@@ -33,11 +33,11 @@ public class ImageSize {
 
     if (image.getWidth() < MIN_PROFILE_PHOTO_WIDTH) {
       throw new BadRequestException(
-          "Profile photo cannot be less than [" + MIN_PROFILE_PHOTO_WIDTH + "] in width.");
+          "Profile photo cannot be less than [%d] in width.".formatted(MIN_PROFILE_PHOTO_WIDTH));
     }
     if (image.getHeight() < MIN_PROFILE_PHOTO_HEIGHT) {
       throw new BadRequestException(
-          "Profile photo cannot be less than [" + MIN_PROFILE_PHOTO_HEIGHT + "] in height.");
+          "Profile photo cannot be less than [%d] in height.".formatted(MIN_PROFILE_PHOTO_HEIGHT));
     }
   }
 }

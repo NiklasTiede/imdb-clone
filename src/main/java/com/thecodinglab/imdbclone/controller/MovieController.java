@@ -44,10 +44,9 @@ public class MovieController {
         movieService.findMoviesByIds(request.movieIds(), page, size), HttpStatus.OK);
   }
 
-  // todo: replace entity by dto
   @PostMapping("/create-movie")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Movie> createMovie(
+  public ResponseEntity<MovieRecord> createMovie(
       @Valid @RequestBody MovieRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
@@ -73,9 +72,10 @@ public class MovieController {
         movieService.deleteMovie(movieId, currentAccount), HttpStatus.NO_CONTENT);
   }
 
-  // todo: was replaced by elasticsearch, to be removed
-  // substring search does not work very well (IndexOutOfBound-Exception too short search)
-  // replace later by Elasticsearch!
+  /**
+   * @deprecated and thus replaced by ElasticsSearch Queries
+   */
+  @Deprecated(forRemoval = true)
   @GetMapping("/search/{primaryTitle}")
   public ResponseEntity<PagedResponse<Movie>> searchMoviesByTitle(
       @PathVariable("primaryTitle") String primaryTitle,

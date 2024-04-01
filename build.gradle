@@ -2,19 +2,10 @@ plugins {
 	id 'java'
 	id 'idea'
 	id 'org.springframework.boot' version "${springBootVersion}"
-	id 'io.spring.dependency-management' version '1.1.4'
-	id 'com.diffplug.spotless' version '6.25.0'
-	id 'com.github.ben-manes.versions' version '0.51.0'
-	id "org.openrewrite.rewrite" version "6.11.2"
 	id 'jacoco'
-}
-
-rewrite {
-//	activeRecipe("org.openrewrite.java.spring.boot3.SpringBoot3BestPractices")
-//	activeRecipe("org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2")
-//	activeRecipe("org.openrewrite.java.spring.boot3.SpringBootProperties_3_2")
-//	activeRecipe("org.openrewrite.java.dependencies.DependencyVulnerabilityCheck")
-//	activeRecipe("org.openrewrite.recipes.JavaRecipeBestPractices")
+	id 'io.spring.dependency-management' version '1.1.4'
+	id 'com.github.ben-manes.versions' version '0.51.0'
+	id 'com.diffplug.spotless' version '6.25.0'
 }
 
 group = 'com.thecodinglab'
@@ -50,10 +41,6 @@ spotless {
 }
 
 dependencies {
-//	rewrite("org.openrewrite.recipe:rewrite-spring:5.6.0")
-//	rewrite("org.openrewrite.recipe:rewrite-java-dependencies:1.6.0")
-//	rewrite("org.openrewrite.recipe:rewrite-recommendations:1.3.1")
-
 	//-- Improved developing
 	implementation "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
 
@@ -67,7 +54,7 @@ dependencies {
 	//-- Documentation - Swagger UI
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0'
 
-	//-- Start/stop containers with startup
+	//-- create persistence containers with startup
 	implementation "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
 
 	//-- Mapping
@@ -109,7 +96,7 @@ dependencies {
 	//-- Testing
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
 
 	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
 	testImplementation "org.testcontainers:junit-jupiter:${testContainersVersion}"
@@ -135,5 +122,4 @@ jacocoTestReport {
 	reports {
 		xml.required = true
 	}
-
 }

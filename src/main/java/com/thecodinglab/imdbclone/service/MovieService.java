@@ -17,7 +17,7 @@ public interface MovieService {
 
   Page<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size);
 
-  Movie createMovie(MovieRequest movieRequest, UserPrincipal currentAccount);
+  MovieRecord createMovie(MovieRequest movieRequest, UserPrincipal currentAccount);
 
   MovieRecord updateMovie(Long movieId, MovieRequest request, UserPrincipal currentAccount);
 

@@ -11,6 +11,7 @@ import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.RoleRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.RoleService;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,6 +46,7 @@ public class RoleServiceImpl implements RoleService {
   }
 
   @Override
+  @Transactional
   public MessageResponse giveAdminRole(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     Collection<Role> roles = account.getRoles();
@@ -55,10 +57,11 @@ public class RoleServiceImpl implements RoleService {
     logger.info(
         "Account with [{}] was given ADMIN permission.", kv(ACCOUNT_ID, updatedAccount.getId()));
     return new MessageResponse(
-        "Account with id [" + updatedAccount.getId() + "] was given ADMIN permission.");
+        "Account with id [%d] was given ADMIN permission.".formatted(updatedAccount.getId()));
   }
 
   @Override
+  @Transactional
   public MessageResponse removeAdminRole(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     Collection<Role> roles = account.getRoles();
@@ -69,6 +72,6 @@ public class RoleServiceImpl implements RoleService {
     logger.info(
         "Account with id [{}] was taken ADMIN permission.", kv(ACCOUNT_ID, updatedAccount.getId()));
     return new MessageResponse(
-        "Account with id [" + updatedAccount.getId() + "] was taken ADMIN permission.");
+        "Account with id [%d] was taken ADMIN permission.".formatted(updatedAccount.getId()));
   }
 }

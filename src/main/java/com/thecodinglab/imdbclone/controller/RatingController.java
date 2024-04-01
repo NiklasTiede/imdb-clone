@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.controller;
 
-import com.thecodinglab.imdbclone.entity.Rating;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
+import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
 import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.RatingService;
@@ -24,7 +24,7 @@ public class RatingController {
 
   @GetMapping("/{movieId}/rating-score/{score}")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<Rating> rateMovie(
+  public ResponseEntity<RatingRecord> rateMovie(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount,
       @PathVariable("movieId") Long movieId,
       @PathVariable("score") BigDecimal score) {

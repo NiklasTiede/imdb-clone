@@ -65,10 +65,10 @@ public class CommentServiceImpl implements CommentService {
     Page<Comment> comments =
         commentRepository.findCommentsByMovieOrderByCreatedAtInUtc(movie, pageable);
     logger.info(
-        "[{}] comments by [{}] were retrieved from database.",
+        "[{}] comments with commentIds [{}] by [{}] were retrieved from database.",
         comments.getContent().size(),
-        kv(MOVIE_ID, movieId),
-        v(COMMENT_IDS, comments.getContent().stream().map(Comment::getId).toList()));
+        v(COMMENT_IDS, comments.getContent().stream().map(Comment::getId).toList()),
+        kv(MOVIE_ID, movieId));
     return comments.map(commentMapper::entityToDTO);
   }
 
@@ -91,10 +91,10 @@ public class CommentServiceImpl implements CommentService {
     Page<Comment> comments =
         commentRepository.findCommentsByAccountOrderByCreatedAtInUtc(account, pageable);
     logger.info(
-        "[{}] comments of account [{}] were retrieved from database.",
+        "[{}] comments with commentIds [{}] of account [{}] were retrieved from database.",
         comments.getContent().size(),
-        username,
-        v(COMMENT_IDS, comments.getContent().stream().map(Comment::getId).toList()));
+        v(COMMENT_IDS, comments.getContent().stream().map(Comment::getId).toList()),
+        username);
     return comments.map(commentMapper::entityToDTO);
   }
 
@@ -110,9 +110,8 @@ public class CommentServiceImpl implements CommentService {
       return commentMapper.entityToDTO(updatedComment);
     } else {
       throw new UnauthorizedException(
-          "Account with id ["
-              + currentAccount.getId()
-              + "] has no permission to update this resource.");
+          "Account with id [%d] has no permission to update this resource."
+              .formatted(currentAccount.getId()));
     }
   }
 
@@ -123,12 +122,11 @@ public class CommentServiceImpl implements CommentService {
         || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       commentRepository.delete(comment);
       logger.info("comment with [{}] was deleted.", kv(COMMENT_ID, comment.getId()));
-      return new MessageResponse("comment with id [" + comment.getId() + "] was deleted.");
+      return new MessageResponse("comment with id [%d] was deleted.".formatted(comment.getId()));
     } else {
       throw new UnauthorizedException(
-          "Account with id ["
-              + currentAccount.getId()
-              + "] has no permission to delete this resource.");
+          "Account with id [%d] has no permission to delete this resource."
+              .formatted(currentAccount.getId()));
     }
   }
 }

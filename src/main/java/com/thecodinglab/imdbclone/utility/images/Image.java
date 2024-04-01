@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
+import java.text.MessageFormat;
 import java.util.Base64;
 import java.util.List;
 import javax.imageio.ImageIO;
@@ -59,14 +60,9 @@ public class Image {
     int streamSize = scaledImage.size();
     InputStream inputStream = new ByteArrayInputStream(scaledImage.toByteArray());
     String imageName =
-        targetDirectory
-            + imageUrlToken
-            + "_size_"
-            + targetWidth
-            + "x"
-            + targetHeight
-            + "."
-            + IMAGE_TYPE;
+        MessageFormat.format(
+            "{0}{1}_size_{2}x{3}.{4}",
+            targetDirectory, imageUrlToken, targetWidth, targetHeight, IMAGE_TYPE);
 
     return new Image(imageName, inputStream, streamSize);
   }

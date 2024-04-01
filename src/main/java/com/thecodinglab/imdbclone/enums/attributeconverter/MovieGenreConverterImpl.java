@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Converter
-public class MovieGenreConverterImpl implements MovieGenreConverter<Set<MovieGenreEnum>, Long> {
+public class MovieGenreConverterImpl implements MovieGenreConverter {
 
   @Override
   public Long convertToDatabaseColumn(Set<MovieGenreEnum> movieGenreEnumSet) {

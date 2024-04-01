@@ -1,11 +1,7 @@
 package com.thecodinglab.imdbclone.controller;
 
-import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.payload.*;
-import com.thecodinglab.imdbclone.payload.account.AccountProfile;
-import com.thecodinglab.imdbclone.payload.account.AccountRecord;
-import com.thecodinglab.imdbclone.payload.account.AccountSummaryResponse;
-import com.thecodinglab.imdbclone.payload.account.UpdatedAccountProfile;
+import com.thecodinglab.imdbclone.payload.account.*;
 import com.thecodinglab.imdbclone.payload.authentication.RegistrationRequest;
 import com.thecodinglab.imdbclone.payload.comment.CommentRecord;
 import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
@@ -96,7 +92,7 @@ public class AccountController {
   /** Simple generation of Test Accounts */
   @PostMapping("/add-account")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Account> createAccount(
+  public ResponseEntity<AccountCreated> createAccount(
       @Valid @RequestBody RegistrationRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(

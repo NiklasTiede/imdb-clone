@@ -1,5 +1,6 @@
 package com.thecodinglab.imdbclone.utility.images;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 public class MovieImageConstants {
@@ -20,24 +21,14 @@ public class MovieImageConstants {
   private MovieImageConstants() {}
 
   public static String getDetailViewImageName(String imageUrlToken) {
-    return BUCKET_DIRECTORY_NAME
-        + imageUrlToken
-        + "_size_"
-        + DETAIL_VIEW_WIDTH
-        + "x"
-        + DETAIL_VIEW_HEIGHT
-        + "."
-        + FORMAT;
+    return MessageFormat.format(
+        "{0}{1}_size_{2}x{3}.{4}",
+        BUCKET_DIRECTORY_NAME, imageUrlToken, DETAIL_VIEW_WIDTH, DETAIL_VIEW_HEIGHT, FORMAT);
   }
 
   public static String getThumbNailImageName(String imageUrlToken) {
-    return BUCKET_DIRECTORY_NAME
-        + imageUrlToken
-        + "_size_"
-        + THUMBNAIL_WIDTH
-        + "x"
-        + THUMBNAIL_HEIGHT
-        + "."
-        + FORMAT;
+    return MessageFormat.format(
+        "{0}{1}_size_{2}x{3}.{4}",
+        BUCKET_DIRECTORY_NAME, imageUrlToken, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, FORMAT);
   }
 }

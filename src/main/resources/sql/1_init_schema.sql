@@ -22,7 +22,7 @@ create table movie (
     end_year int,
     runtime_minutes int,
     created_at_in_utc timestamp default current_timestamp,
-    modified_at_in_utc timestamp on update current_timestamp,
+    modified_at_in_utc timestamp default current_timestamp on update current_timestamp,
     movie_genre int,
     movie_type int,
     imdb_rating float,
@@ -47,7 +47,7 @@ create table account (
     birthday date,
     image_url_token varchar(50),
     created_at_in_utc timestamp default current_timestamp,
-    modified_at_in_utc timestamp on update current_timestamp,
+    modified_at_in_utc timestamp default current_timestamp on update current_timestamp,
     locked boolean not null,
     enabled boolean not null,
     primary key (id)
@@ -74,7 +74,7 @@ create table rating (
     account_id bigint,
     rating decimal(3,1) not null,
     created_at_in_utc timestamp default current_timestamp,
-    modified_at_in_utc timestamp on update current_timestamp,
+    modified_at_in_utc timestamp default current_timestamp on update current_timestamp,
     primary key (movie_id, account_id),
     foreign key (movie_id) references movie(id),
     foreign key (account_id) references account(id)
@@ -95,7 +95,7 @@ create table comment (
     account_id bigint not null,
     message text,
     created_at_in_utc timestamp default current_timestamp,
-    modified_at_in_utc timestamp on update current_timestamp,
+    modified_at_in_utc timestamp default current_timestamp on update current_timestamp,
     primary key (id),
     foreign key (movie_id) references movie(id),
     foreign key (account_id) references account(id)

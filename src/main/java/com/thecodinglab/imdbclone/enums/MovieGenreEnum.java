@@ -31,7 +31,7 @@ public enum MovieGenreEnum {
   FILM_NOIR(1 << 27),
   SHORT(1 << 28);
 
-  private int id;
+  private final int id;
 
   MovieGenreEnum(int id) {
     this.id = id;
@@ -39,9 +39,5 @@ public enum MovieGenreEnum {
 
   public int getId() {
     return id;
-  }
-
-  public void setId(int id) {
-    this.id = id;
   }
 }

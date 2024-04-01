@@ -13,7 +13,8 @@ public class CustomCommentMapper {
         comment.getId(),
         comment.getMessage(),
         comment.getAccount().getId(),
-        comment.getMovie().getId());
+        comment.getMovie().getId(),
+            comment.getCreatedAtInUtc());
   }
 
   public List<CommentRecord> entityToDTO(List<Comment> comments) {

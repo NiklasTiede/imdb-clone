@@ -46,7 +46,7 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   }
 
   @Override
-  public WatchedMovie watchMovie(Long movieId, UserPrincipal currentAccount) {
+  public WatchedMovieRecord watchMovie(Long movieId, UserPrincipal currentAccount) {
     Movie movie = movieRepository.getMovieById(movieId);
     Account account = accountRepository.getAccount(currentAccount);
     WatchedMovie watchedMovie = WatchedMovie.create(movie, account);
@@ -55,7 +55,8 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
         "Movie with [{}] is watched by account with id [{}].",
         kv(WATCHED_MOVIE_ID, savedWatchedMovie.getId()),
         savedWatchedMovie.getId().getAccountId());
-    return savedWatchedMovie;
+    return new WatchedMovieRecord(
+        savedWatchedMovie.getAccount().getId(), savedWatchedMovie.getMovie().getId());
   }
 
   @Override
@@ -83,18 +84,12 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
             .orElseThrow(
                 () ->
                     new NotFoundException(
-                        "WatchedMovie with movieId ["
-                            + movieId
-                            + "] and accountId ["
-                            + currentAccount.getId()
-                            + "] not found in database."));
+                        "WatchedMovie with movieId [%d] and accountId [%d] not found in database."
+                            .formatted(movieId, currentAccount.getId())));
     watchedMovieRepository.delete(watchedMovie);
     logger.info("WatchedMovie with [{}] was deleted.", kv(WATCHED_MOVIE_ID, watchedMovie.getId()));
     return new MessageResponse(
-        "WatchedMovie with movieId ["
-            + movieId
-            + "] and accountId ["
-            + currentAccount.getId()
-            + "] was deleted");
+        "WatchedMovie with movieId [%d] and accountId [%d] was deleted"
+            .formatted(movieId, currentAccount.getId()));
   }
 }

@@ -57,23 +57,31 @@ public class MovieServiceImpl implements MovieService {
     Pageable pageable = PageRequest.of(page, size);
     Page<Movie> movies = movieRepository.findByIdIn(movieIds, pageable);
     logger.info(
-        "[{}] movies were retrieved from database",
+        "[{}] movies with movieIds [{}] were retrieved from database",
         v(COUNT, movies.getContent().size()),
         kv(MOVIE_IDS, movies.getContent().stream().map(Movie::getId).toList()));
     return movies.map(movieMapper::entityToDTO);
   }
 
   @Override
-  public Movie createMovie(MovieRequest movieRequest, UserPrincipal currentAccount) {
+  public MovieRecord createMovie(MovieRequest movieRequest, UserPrincipal currentAccount) {
     Movie movie = movieMapper.dtoToEntity(movieRequest);
-    return performSave(movie);
+    Movie savedMovie = performSave(movie);
+    return movieMapper.entityToDTO(savedMovie);
   }
 
   @Override
   public MovieRecord updateMovie(
       Long movieId, MovieRequest movieRequest, UserPrincipal currentAccount) {
     Movie movie = movieRepository.getMovieById(movieId);
-    movieMapper.dtoToEntity(movieRequest);
+    movie.setPrimaryTitle(movieRequest.primaryTitle());
+    movie.setOriginalTitle(movieRequest.originalTitle());
+    movie.setStartYear(movieRequest.startYear());
+    movie.setEndYear(movieRequest.endYear());
+    movie.setRuntimeMinutes(movieRequest.runtimeMinutes());
+    movie.setMovieGenre(movieRequest.movieGenre());
+    movie.setMovieType(movieRequest.movieType());
+    movie.setAdult(movieRequest.adult());
     Movie updatedMovie = performSave(movie);
     return movieMapper.entityToDTO(updatedMovie);
   }
@@ -83,7 +91,7 @@ public class MovieServiceImpl implements MovieService {
     Movie movie = movieRepository.getMovieById(movieId);
     performDelete(movie);
     return new MessageResponse(
-        "the movie [" + movie.getPrimaryTitle() + "] was deleted successfully.");
+        "the movie [%s] was deleted successfully.".formatted(movie.getPrimaryTitle()));
   }
 
   @Override
@@ -91,7 +99,7 @@ public class MovieServiceImpl implements MovieService {
     Pagination.validatePageNumberAndSize(page, size);
     PagedResponse<Movie> movies = movieSearchDao.findByPrimaryTitleStartsWith(title, page, size);
     logger.info(
-        "[{}] movies were retrieved from database",
+        "[{}] movies with movieIds [{}] were retrieved from database",
         v(COUNT, movies.getContent().size()),
         kv(MOVIE_IDS, movies.getContent().stream().map(Movie::getId).toList()));
     return movies;

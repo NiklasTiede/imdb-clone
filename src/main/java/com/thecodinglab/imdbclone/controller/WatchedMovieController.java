@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.controller;
 
-import com.thecodinglab.imdbclone.entity.WatchedMovie;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
+import com.thecodinglab.imdbclone.payload.watchlist.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.WatchedMovieService;
@@ -23,7 +23,7 @@ public class WatchedMovieController {
 
   @GetMapping("/{movieId}/watch")
   @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<WatchedMovie> watchMovie(
+  public ResponseEntity<WatchedMovieRecord> watchMovie(
       @PathVariable("movieId") Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(

@@ -8,10 +8,7 @@ import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.*;
-import com.thecodinglab.imdbclone.payload.account.AccountProfile;
-import com.thecodinglab.imdbclone.payload.account.AccountRecord;
-import com.thecodinglab.imdbclone.payload.account.AccountSummaryResponse;
-import com.thecodinglab.imdbclone.payload.account.UpdatedAccountProfile;
+import com.thecodinglab.imdbclone.payload.account.*;
 import com.thecodinglab.imdbclone.payload.authentication.RegistrationRequest;
 import com.thecodinglab.imdbclone.payload.mapper.AccountMapper;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
@@ -92,7 +89,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public Account createAccount(RegistrationRequest request, UserPrincipal currentAccount) {
+  public AccountCreated createAccount(RegistrationRequest request, UserPrincipal currentAccount) {
     String username = request.username().toLowerCase();
     String email = request.email().toLowerCase();
     String password = passwordEncoder.encode(request.password());
@@ -103,7 +100,7 @@ public class AccountServiceImpl implements AccountService {
     Account savedAccount = accountRepository.save(account);
     logger.info(
         "Account with [{}] was created and activated.", kv(ACCOUNT_ID, savedAccount.getId()));
-    return savedAccount;
+    return new AccountCreated(savedAccount.getUsername(), savedAccount.getEmail());
   }
 
   @Override
@@ -129,9 +126,8 @@ public class AccountServiceImpl implements AccountService {
           "User with [{}] tried to update an account without ADMIN permissions.",
           kv(ACCOUNT_ID, currentAccount.getId()));
       throw new UnauthorizedException(
-          "Account with id ["
-              + currentAccount.getId()
-              + "] has no permission to update this resource.");
+          "Account with id [%d] has no permission to update this resource."
+              .formatted(currentAccount.getId()));
     }
   }
 
@@ -142,7 +138,7 @@ public class AccountServiceImpl implements AccountService {
         || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
       accountRepository.delete(account);
       logger.info("Account with [{}] was deleted.", kv(ACCOUNT_ID, account.getId()));
-      return new MessageResponse("Account with id [" + account.getId() + "] was deleted.");
+      return new MessageResponse("Account with id [%d] was deleted.".formatted(account.getId()));
     } else {
       logger.warn(
           "User with [{}] tried to delete an account without ADMIN permissions.",

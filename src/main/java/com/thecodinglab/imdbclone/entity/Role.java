@@ -14,8 +14,6 @@ public class Role {
   @Column(nullable = false)
   private RoleNameEnum name;
 
-  public Role() {}
-
   public Long getId() {
     return id;
   }

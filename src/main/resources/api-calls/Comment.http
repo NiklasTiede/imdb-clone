@@ -16,7 +16,7 @@ Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwiaWF0IjoxNjY2ODcxNDkzL
 Content-Type: application/json
 
 {
-  "message": "Nightcrawler is creepy."
+  "message": "Jm Carrrrey's best moe!"
 }
 
 
@@ -26,11 +26,11 @@ Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4L
 Content-Type: application/json
 
 {
-  "message": "This comment was edited by me!"
+  "message": "blubbbb"
 }
 
 
 ### delete comment by id
-DELETE {{protocol}}{{host}}:{{port}}/api/comment/1
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI2IiwiaWF0IjoxNjY0NDczODU4LCJleHAiOjE2NjcwNjU4NTh9.ETAhhVOlArJFdUVV1TsFO9xiEeUCICeorW19lZIgwtZeCS_qx_wrCL7sgcZjjrCb0IxO8pQWTvos9hXYZtF8JA
+DELETE {{protocol}}{{host}}:{{port}}/api/comment/6
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTk2Mzg5NywiZXhwIjoxNzE0NTU1ODk3fQ.zFbNOSxfFQttqIxahFk827kApdbNQTIohxXc3SdgtB1QzmRutiOZA5SrKofr8Y5dxk1CsN4bTS0-53tO0OLV2w
 Content-Type: application/json

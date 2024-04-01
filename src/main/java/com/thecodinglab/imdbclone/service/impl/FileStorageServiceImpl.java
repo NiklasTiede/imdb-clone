@@ -96,11 +96,8 @@ public class FileStorageServiceImpl implements FileStorageService {
     deleteFile(ProfilePhotoConstants.getDetailViewImageName(account.getImageUrlToken()));
     deleteFile(ProfilePhotoConstants.getThumbnailImageName(account.getImageUrlToken()));
 
-    return "Profile Photos of User with accountId ["
-        + account.getId()
-        + "] and imageUrlToken ["
-        + account.getImageUrlToken()
-        + "] were deleted";
+    return "Profile Photos of User with accountId [%d] and imageUrlToken [%s] were deleted"
+        .formatted(account.getId(), account.getImageUrlToken());
   }
 
   @Override
@@ -152,7 +149,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     deleteFile(MovieImageConstants.getDetailViewImageName(movie.getImageUrlToken()));
     deleteFile(MovieImageConstants.getThumbNailImageName(movie.getImageUrlToken()));
 
-    return "Movie images of movie with movieId [" + movie.getId() + "] were deleted";
+    return "Movie images of movie with movieId [%d] were deleted".formatted(movie.getId());
   }
 
   @Override
@@ -177,8 +174,8 @@ public class FileStorageServiceImpl implements FileStorageService {
     try {
       minioClient.removeObject(
           RemoveObjectArgs.builder().bucket(bucketName).object(imageName).build());
-    } catch (Exception e) {
-      throw new MinioOperationException("Error while deleting file in MinIO", e);
+    } catch (Exception ex) {
+      throw new MinioOperationException("Error while deleting file in MinIO", ex);
     }
   }
 
@@ -215,7 +212,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     try {
       InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
       if (inputStream == null) {
-        throw new FileNotFoundException("File not found: " + resourcePath);
+        throw new FileNotFoundException("File not found: %s".formatted(resourcePath));
       }
 
       try (BufferedReader bufferedReader =
