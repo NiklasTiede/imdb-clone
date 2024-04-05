@@ -83,6 +83,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ElasticsearchOperationException.class)
   protected final ProblemDetail resolveElasticsearchOperationException(
       ElasticsearchOperationException ex, WebRequest request) {
+    logger.error("Stack trace for cause:", ex.getException().getCause());
     logger.warn(
         "While interacting with ElasticSearch an error occurred with message: '{}' and '{}' on resource '{}'",
         v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),

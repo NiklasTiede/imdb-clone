@@ -43,7 +43,7 @@ public class BaseContainers {
     try {
       File file = new File(scriptPath);
       String content = new String(Files.readAllBytes(file.toPath()));
-      try (Connection conn = mysqlContainer.createConnection("");
+      try (Connection conn = mysqlContainer.createConnection("?allowMultiQueries=true");
           Statement statement = conn.createStatement()) {
         statement.execute(content);
       }

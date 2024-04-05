@@ -107,7 +107,7 @@ public class MovieServiceImpl implements MovieService {
 
   public Movie performSave(Movie movie) {
     Movie updatedMovie = movieRepository.save(movie);
-    elasticSearchRepository.save(movie);
+    elasticSearchRepository.save(updatedMovie);
     logger.info(
         "the movie [{}] with movieId [{}] was created and/or updated from Mysql and ES",
         updatedMovie.getOriginalTitle(),

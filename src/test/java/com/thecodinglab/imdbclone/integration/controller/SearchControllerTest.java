@@ -25,14 +25,18 @@ class SearchControllerTest extends BaseContainers {
     // Act and Assert
     webTestClient
             .post()
-            .uri("/api/search/movies?query=nightcrawler")
+            .uri(uriBuilder -> uriBuilder
+                    .path("/api/search/movies")
+                    .queryParam("query", "testMovieOnePri")
+                    .build())
             .bodyValue(request)
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.content[0].primaryTitle").isEqualTo("Nightcrawler");
+            .expectAll(spec -> spec.expectStatus().isOk(),
+                    spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+                    spec -> spec.expectBody()
+                            .jsonPath("$.content[0].primaryTitle").isEqualTo("testMovieOnePri")
+            );
   }
 }
 // spotless:on

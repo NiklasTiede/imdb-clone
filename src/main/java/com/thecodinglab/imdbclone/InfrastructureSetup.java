@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.repository.MovieRepository;
-import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import com.thecodinglab.imdbclone.service.FileStorageService;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +26,6 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
 
   private final MovieRepository movieRepository;
   private final MovieElasticSearchRepository movieSearchRepository;
-  private final ElasticSearchService elasticSearchService;
   private final ElasticsearchOperations elasticsearchOperations;
   private final FileStorageService fileStorageService;
 
@@ -37,12 +35,10 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
   public InfrastructureSetup(
       MovieRepository movieRepository,
       MovieElasticSearchRepository movieSearchRepository,
-      ElasticSearchService elasticSearchService,
       ElasticsearchOperations elasticsearchOperations,
       FileStorageService fileStorageService) {
     this.movieRepository = movieRepository;
     this.movieSearchRepository = movieSearchRepository;
-    this.elasticSearchService = elasticSearchService;
     this.elasticsearchOperations = elasticsearchOperations;
     this.fileStorageService = fileStorageService;
   }
@@ -56,7 +52,7 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
       List<Movie> popularMovies = movieRepository.findByImdbRatingCountBetween(20000, 20000000);
       logger.info("Number of popular movies to be indexed: [{}]", v(COUNT, popularMovies.size()));
       List<List<Movie>> partitions = Lists.partition(popularMovies, 1000);
-      partitions.forEach(elasticSearchService::indexMovies);
+      partitions.forEach(movieSearchRepository::saveAll);
     }
 
     // create bucket/directories and set bucket policy in minIO if not existent

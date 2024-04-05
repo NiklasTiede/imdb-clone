@@ -177,8 +177,8 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
 
     try {
       response = esClient.search(searchRequest, Movie.class);
-    } catch (IOException e) {
-      throw new ElasticsearchOperationException("error while search was performed", e);
+    } catch (IOException ex) {
+      throw new ElasticsearchOperationException("error while search was performed", ex);
     }
     logger.info(
         "Scores of found documents: [{}]",

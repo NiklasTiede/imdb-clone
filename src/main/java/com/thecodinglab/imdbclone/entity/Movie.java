@@ -9,9 +9,10 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.*;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
 
 @Entity
-@Document(indexName = "movies")
+@Document(indexName = "movies", writeTypeHint = WriteTypeHint.FALSE)
 public class Movie extends DateAudit {
 
   @Id
