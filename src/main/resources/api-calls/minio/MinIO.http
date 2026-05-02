@@ -16,6 +16,11 @@ GET http://192.168.178.49:9000/imdb-clone/movies/XcqwH4yMsw7D9UolxzrIyqkMVR0ADp_
 Content-Type: image/jpeg
 
 
+### show stored movie image
+GET http://localhost:9000/imdb-clone/movies/XcqwH4yMsw7D9UolxzrIyqkMVR0ADp_size_600x900.jpg
+Content-Type: image/jpeg
+
+
 ### delete movie image
 DELETE {{protocol}}{{host}}:{{port}}/api/file-storage/movie/2872718
 Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6Imxlc19ncm9zc21hbiIsInJvbGVzIjpbIlJPTEVfQURNSU4iLCJST0xFX1VTRVIiXSwic3ViIjoiMSIsImlhdCI6MTcxMTk2ODAyOCwiZXhwIjoxNzE0NTYwMDI4fQ.7Lab8BqKy9WWPYcoYi-pHqZz7x2fB1zJlDmiZXrXck5G3DZEdg1GjjKHsIArre5tqzUq91g_uhAKdzBApaNb5Q

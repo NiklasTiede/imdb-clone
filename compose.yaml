@@ -35,7 +35,7 @@ services:
   ### ----------------------- MinIO ----------------------- ###
   imdb-clone-minio:
     container_name: imdb-clone-minio
-    image: bitnami/minio:2024.3.26
+    image: minio/minio:RELEASE.2024-03-26T22-10-45Z
     restart: unless-stopped
     user: root
     environment:
@@ -48,7 +48,7 @@ services:
       - imdb-clone-minio-data:/data
     networks:
       - imdb-clone-network
-    command: /opt/bitnami/minio/bin/minio server --console-address :9090 /data
+    command: server --console-address :9090 /data
 
 volumes:
   imdb-clone-elasticsearch-data:
