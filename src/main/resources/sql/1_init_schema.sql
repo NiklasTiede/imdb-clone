@@ -58,7 +58,7 @@ create table role (
     name varchar(255) unique not null,
     created_at_in_utc timestamp default current_timestamp,
     primary key (id)
-);
+) comment 'Table storing roles available in the system';
 
 create table account_roles (
     account_id bigint not null,
@@ -81,19 +81,25 @@ create table rating (
 );
 
 create table watched_movie (
-    movie_id bigint,
-    account_id bigint,
+    movie_id bigint not null,
+    account_id bigint not null,
     created_at_in_utc timestamp default current_timestamp,
     primary key (movie_id, account_id),
-    foreign key (movie_id) references movie(id),
-    foreign key (account_id) references account(id)
-);
+    constraint fk_watched_movie_movie foreign key (movie_id)
+        references movie(id)
+        on delete cascade,
+    constraint fk_watched_movie_account foreign key (account_id)
+        references account(id)
+        on delete cascade,
+    index idx_watched_movie_movie_id (movie_id),
+    index idx_watched_movie_account_id (account_id)
+) comment 'Table storing information about favorite movies observed by users';
 
 create table comment (
     id bigint auto_increment,
     movie_id bigint not null,
     account_id bigint not null,
-    message text,
+    message text not null,
     created_at_in_utc timestamp default current_timestamp,
     modified_at_in_utc timestamp default current_timestamp on update current_timestamp,
     primary key (id),
