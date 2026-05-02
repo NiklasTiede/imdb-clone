@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.List;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -13,8 +14,18 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * The same Test Data Set is used across all Integration Tests. The file can be found at
- * [resources/sql/test-data.sql].
+ * Provides a consistent Test Data Set across all integration tests. The initial data set for the
+ * tests is loaded from the SQL file located at {@code src/test/resources/sql/test-data.sql}.
+ *
+ * <p>Use the following credentials to connect to the MySQL TestContainer for debugging purposes:
+ *
+ * <ul>
+ *   <li>Host: localhost
+ *   <li>Port: 3310
+ *   <li>Database: movie_db
+ *   <li>Username: test
+ *   <li>Password: test
+ * </ul>
  */
 @SpringBootTest
 public class BaseContainers {
@@ -78,6 +89,7 @@ public class BaseContainers {
   }
 
   static {
+    mysqlContainer.setPortBindings(List.of("3310:3306"));
     mysqlContainer.start();
     populateTables("src/test/resources/sql/test-data.sql");
 
