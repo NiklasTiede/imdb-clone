@@ -3,9 +3,9 @@ plugins {
 	id 'idea'
 	id 'org.springframework.boot' version "${springBootVersion}"
 	id 'jacoco'
-	id 'io.spring.dependency-management' version '1.1.4'
+	id 'io.spring.dependency-management' version '1.1.6'
 	id 'com.github.ben-manes.versions' version '0.51.0'
-	id 'com.diffplug.spotless' version '6.25.0'
+	id 'com.diffplug.spotless' version '7.0.0.BETA1'
 }
 
 group = 'com.thecodinglab'
@@ -35,7 +35,7 @@ spotless {
 		importOrder()
 		removeUnusedImports()
 		trimTrailingWhitespace()
-		googleJavaFormat()
+//		googleJavaFormat()
 		toggleOffOn()
 	}
 }
@@ -52,25 +52,25 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
 
 	//-- Documentation - Swagger UI
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
 	//-- create persistence containers with startup
 	implementation "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
 
 	//-- Mapping
-	implementation 'org.mapstruct:mapstruct:1.6.0.Beta1'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.0.Beta1'
+	implementation 'org.mapstruct:mapstruct:1.6.0.RC1'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.0.RC1'
 
 	//-- Rel. Database
-	implementation 'com.mysql:mysql-connector-j:8.3.0'
+	implementation 'com.mysql:mysql-connector-j:9.0.0'
 	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
 
 	//-- SearchEngine
-	implementation 'org.springframework.data:spring-data-elasticsearch:5.2.4'
-	implementation 'org.eclipse.parsson:parsson:1.1.5' // fix transitive vulnerability
+	implementation 'org.springframework.data:spring-data-elasticsearch:5.3.2'
+	implementation 'org.eclipse.parsson:parsson:1.1.7' // fix transitive vulnerability
 
 	//-- File Storage
-	implementation 'io.minio:minio:8.5.9'
+	implementation 'io.minio:minio:8.5.11'
 
 	//-- Email
 	implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"
@@ -87,17 +87,17 @@ dependencies {
 
 	//-- Monitoring
 	implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
-	implementation 'io.micrometer:micrometer-registry-prometheus:1.12.4'
+	implementation 'io.micrometer:micrometer-registry-prometheus:1.13.2'
 
 	//-- Logging
 	implementation "org.springframework.boot:spring-boot-starter-logging:${springBootVersion}"
-	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+	implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
 
 	//-- Testing
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-	testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
-	testImplementation 'org.assertj:assertj-core:3.25.3'
+	testImplementation "org.junit.jupiter:junit-jupiter:5.11.0-M2"
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
+	testImplementation 'org.assertj:assertj-core:3.26.3'
 
 	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
 	testImplementation "org.testcontainers:junit-jupiter:${testContainersVersion}"
@@ -106,7 +106,7 @@ dependencies {
 	testImplementation "org.testcontainers:minio:${testContainersVersion}"
 
 	if (System.getProperty('os.name').toLowerCase().contains('mac')) {
-		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.108.Final:osx-aarch_64'
+		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.2.0.Alpha2:osx-aarch_64'
 	}
 }
 
