@@ -3,9 +3,9 @@ plugins {
 	id 'idea'
 	id 'org.springframework.boot' version "${springBootVersion}"
 	id 'jacoco'
-	id 'io.spring.dependency-management' version '1.1.6'
-	id 'com.github.ben-manes.versions' version '0.51.0'
-	id 'com.diffplug.spotless' version '7.0.0.BETA1'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'com.github.ben-manes.versions' version '0.54.0'
+	id 'com.diffplug.spotless' version '8.4.0'
 }
 
 group = 'com.thecodinglab'
@@ -20,6 +20,12 @@ idea {
 	}
 	module {
 		jdkName = JavaVersion.VERSION_21
+	}
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
@@ -58,11 +64,11 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
 
 	//-- Mapping
-	implementation 'org.mapstruct:mapstruct:1.6.0.RC1'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.0.RC1'
+	implementation 'org.mapstruct:mapstruct:1.7.0.Beta1'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.7.0.Beta1'
 
 	//-- Rel. Database
-	implementation 'com.mysql:mysql-connector-j:9.0.0'
+	implementation 'com.mysql:mysql-connector-j:9.7.0'
 	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
 
 	//-- SearchEngine
@@ -87,16 +93,14 @@ dependencies {
 
 	//-- Monitoring
 	implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
-	implementation 'io.micrometer:micrometer-registry-prometheus:1.13.2'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 	//-- Logging
 	implementation "org.springframework.boot:spring-boot-starter-logging:${springBootVersion}"
-	implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
+	implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
 
 	//-- Testing
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-	testImplementation "org.junit.jupiter:junit-jupiter:5.11.0-M2"
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.0-M2'
 	testImplementation 'org.assertj:assertj-core:3.26.3'
 
 	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
@@ -106,7 +110,7 @@ dependencies {
 	testImplementation "org.testcontainers:minio:${testContainersVersion}"
 
 	if (System.getProperty('os.name').toLowerCase().contains('mac')) {
-		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.2.0.Alpha2:osx-aarch_64'
+		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.2.12.Final:osx-aarch_64'
 	}
 }
 
