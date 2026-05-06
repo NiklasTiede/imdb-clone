@@ -4,7 +4,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.List;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -21,7 +20,7 @@ import org.testcontainers.utility.DockerImageName;
  *
  * <ul>
  *   <li>Host: localhost
- *   <li>Port: 3310
+ *   <li>Port: {@code mysqlContainer.getMappedPort(3306)}
  *   <li>Database: movie_db
  *   <li>Username: test
  *   <li>Password: test
@@ -89,7 +88,6 @@ public class BaseContainers {
   }
 
   static {
-    mysqlContainer.setPortBindings(List.of("3310:3306"));
     mysqlContainer.start();
     populateTables("src/test/resources/sql/test-data.sql");
 
