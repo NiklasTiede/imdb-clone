@@ -8,7 +8,6 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.json.JsonData;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.exception.domain.ElasticsearchOperationException;
 import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
@@ -146,9 +145,10 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
                   .index(MOVIES_INDEX)
                   .query(q -> q
                       .range(r -> r
-                          .field("imdbRating")
-                          .gte(JsonData.of(minRating))
-                          .lte(JsonData.of(maxRating)))),
+                          .number(n -> n
+                              .field("imdbRating")
+                              .gte((double) minRating)
+                              .lte((double) maxRating)))),
               Movie.class);
       List<Movie> movies = response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
       logger.info("Document search by ratings between [{}] and [{}] gave [{}] results.",minRating, maxRating, movies.size());
@@ -234,16 +234,18 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
     if (request.minStartYear() != null && request.maxStartYear() != null) {
       search.filter(
           QueryBuilders.range(r -> r
-              .field("startYear")
-              .gte(JsonData.of(request.minStartYear()))
-              .lte(JsonData.of(request.maxStartYear()))));
+              .number(n -> n
+                  .field("startYear")
+                  .gte(request.minStartYear().doubleValue())
+                  .lte(request.maxStartYear().doubleValue()))));
     }
     if (request.minRuntimeMinutes() != null && request.maxRuntimeMinutes() != null) {
       search.filter(
           QueryBuilders.range(r -> r
-              .field("runtimeMinutes")
-              .gte(JsonData.of(request.minRuntimeMinutes()))
-              .lte(JsonData.of(request.maxRuntimeMinutes()))));
+              .number(n -> n
+                  .field("runtimeMinutes")
+                  .gte(request.minRuntimeMinutes().doubleValue())
+                  .lte(request.maxRuntimeMinutes().doubleValue()))));
     }
     return search.build();
   }

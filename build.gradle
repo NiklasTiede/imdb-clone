@@ -78,7 +78,7 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
 
 	//-- SearchEngine
-	implementation 'org.springframework.data:spring-data-elasticsearch:5.3.2'
+	implementation "org.springframework.boot:spring-boot-starter-data-elasticsearch:${springBootVersion}"
 	implementation 'org.eclipse.parsson:parsson:1.1.7' // fix transitive vulnerability
 
 	//-- File Storage
