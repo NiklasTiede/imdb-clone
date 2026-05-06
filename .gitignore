@@ -81,3 +81,9 @@ yarn-error.log*
 
 # jupyter lab
 /data/.ipynb_checkpoints/**
+
+# agentic configs
+.codex/
+
+# local planning docs
+/docs/project-revival-roadmap.md
