@@ -1,7 +1,7 @@
 
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
-    <img alt="imdb-clone-logo" width="500" src="docs/imdb-clone-logo.jpg" />
+    <img alt="imdb-clone-logo" width="500" src="docs/assets/imdb-clone-logo.jpg" />
   </a>
 
   <h3 align="center">This <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Project</a>  exemplifies a Real-World Java / React Web App.</h3>
@@ -32,11 +32,12 @@
 </p>
 
 ## Techstack
-- Languages: Java JDK21 / Typescript v5
-- Frameworks: Spring Boot v3 / React v18 (MaterialUI v5)
-- Rel. Database: MySQL v8
-- SearchEngine: Elasticsearch v8
-- File Storage: MinIO
+- Languages: Java 25 / TypeScript 5.1.6
+- Frameworks: Spring Boot 4.0.6 / React 18.2.0 / Material UI 5.14.3
+- Rel. Database: MySQL 9.7.0
+- SearchEngine: Elasticsearch 9.3.4
+- File Storage: MinIO RELEASE.2024-03-26T22-10-45Z
+- Build / test tooling: Gradle 9.5.0 / Testcontainers 2.0.5
 
 The app is secured with JWT authentication. The techstack is kept up-to-date. 
 
@@ -111,7 +112,7 @@ yarn run build:moviesGen
 yarn start
 ```
 
-The FE is served to `http://localhost:3000/. We can search for movies and more.
+The FE is served to `http://localhost:3000/`. We can search for movies and more.
 
 I also added a [Makefile](Makefile) as a little cheat sheet to refresh our memory for all the important commands 
 we use during development.

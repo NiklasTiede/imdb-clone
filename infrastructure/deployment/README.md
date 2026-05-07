@@ -8,11 +8,10 @@ containers.
 - Elasticsearch - SearchEngine
 - MinIO - FileStorage
 
-We run them by executing the provided `docker-compose.yaml` file (in the 
-`development`-directory).
+For normal local development, run the root `compose.yaml`.
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 The development setup uses some unsafe but simple credentials. 
@@ -45,10 +44,10 @@ a server and deploy everything by running.
 ./generate_credentials.sh
 
 # deploy stateful apps
-docker-compose -f docker-compose.stateful-apps.yaml up -d
+docker compose -f docker-compose.stateful-apps.yaml up -d
 
 # deploy stateless apps
-docker-compose -f docker-compose.stateless-apps.yaml up -d
+docker compose -f docker-compose.stateless-apps.yaml up -d
 ```
 
 But this process also involves port-forwarding of your server, setting up DNS

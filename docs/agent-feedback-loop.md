@@ -15,9 +15,10 @@ Run from the repository root.
 Notes:
 
 - The backend test suite uses Testcontainers for MySQL, Elasticsearch, and MinIO.
+- The backend uses Java 25, Gradle 9.5.0, Spring Boot 4.0.6, and Testcontainers 2.0.5.
+- The local service baseline is MySQL 9.7.0, Elasticsearch 9.3.4, and MinIO RELEASE.2024-03-26T22-10-45Z.
 - Gradle 9 requires `org.junit.platform:junit-platform-launcher` on the test runtime classpath.
-- The Spring Boot Gradle plugin is intentionally newer than the runtime dependency BOM. The plugin is `4.0.5` so `bootJar` works on Gradle 9, while application dependencies are pinned to the Spring Boot `3.3.2` BOM until the planned runtime migration.
-- The Gradle launcher may print Java native-access warnings when Gradle runs on Java 25. The application itself uses the Java 21 toolchain.
+- The Gradle launcher may print Java native-access warnings when Gradle runs on Java 25.
 
 ## Frontend Checks
 
