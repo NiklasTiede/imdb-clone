@@ -56,7 +56,7 @@ instance of the IMDB Clone then visit [imdb-clone.the-coding-lab.com](https://im
 Here's a diagram of the setup:
 
 <p align="center">
-  <img  alt="architecture-diagram" width="500" src="docs/imdb-clone-flow-schema.svg" />
+  <img  alt="architecture-diagram" width="500" src="docs/assets/imdb-clone-flow-schema.svg" />
 
 <h4 align="center">Architecture Diagram showing the App's Service Interactions.</h4>
 </p>
