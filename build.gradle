@@ -107,10 +107,10 @@ dependencies {
 	testImplementation 'org.assertj:assertj-core:3.26.3'
 
 	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
-	testImplementation "org.testcontainers:junit-jupiter:${testContainersVersion}"
-	testImplementation "org.testcontainers:mysql:${testContainersVersion}"
-	testImplementation "org.testcontainers:elasticsearch:${testContainersVersion}"
-	testImplementation "org.testcontainers:minio:${testContainersVersion}"
+	testImplementation "org.testcontainers:testcontainers-junit-jupiter:${testContainersVersion}"
+	testImplementation "org.testcontainers:testcontainers-mysql:${testContainersVersion}"
+	testImplementation "org.testcontainers:testcontainers-elasticsearch:${testContainersVersion}"
+	testImplementation "org.testcontainers:testcontainers-minio:${testContainersVersion}"
 
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 

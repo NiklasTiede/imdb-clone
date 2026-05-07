@@ -29,7 +29,7 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest
 public class BaseContainers {
 
-  private static final DockerImageName mysqlImage = DockerImageName.parse("mysql:8.3.0");
+  private static final DockerImageName mysqlImage = DockerImageName.parse("mysql:9.7.0");
   private static final DockerImageName elasticsearchImage =
       DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:9.3.4");
   private static final DockerImageName minioImage =
