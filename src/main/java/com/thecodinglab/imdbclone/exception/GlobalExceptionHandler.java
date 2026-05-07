@@ -4,6 +4,7 @@ import static com.thecodinglab.imdbclone.utility.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 import com.thecodinglab.imdbclone.exception.domain.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -63,6 +65,21 @@ public class GlobalExceptionHandler {
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     problemDetail.setType(URI.create(""));
+    return problemDetail;
+  }
+
+  @ExceptionHandler(AuthenticationException.class)
+  protected final ProblemDetail resolveAuthenticationException(
+      AuthenticationException ex, HttpServletRequest request) {
+    logger.warn(
+        "Authentication failed for '{}', returning error message: '{}'",
+        v(HTTP_RESOURCE_PATH, request.getRequestURI()),
+        v(EXCEPTION_MESSAGE, ex.getMessage()));
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.UNAUTHORIZED, "Sorry, you're not authorized to access this resource.");
+    problemDetail.setType(URI.create(""));
+    problemDetail.setInstance(URI.create(request.getRequestURI()));
     return problemDetail;
   }
 

@@ -16,16 +16,16 @@ compileJava.dependsOn 'spotlessApply'
 
 idea {
 	project {
-		languageLevel = JavaVersion.VERSION_21
+		languageLevel = JavaVersion.VERSION_25
 	}
 	module {
-		jdkName = JavaVersion.VERSION_21
+		jdkName = JavaVersion.VERSION_25
 	}
 }
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(25)
 	}
 }
 
@@ -47,7 +47,6 @@ spotless {
 		importOrder()
 		removeUnusedImports()
 		trimTrailingWhitespace()
-//		googleJavaFormat()
 		toggleOffOn()
 	}
 }
@@ -57,14 +56,14 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
 
 	//-- Servlet
-	implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+	implementation "org.springframework.boot:spring-boot-starter-webmvc:${springBootVersion}"
 	implementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
 
 	//-- Validation
 	implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
 
 	//-- Documentation - Swagger UI
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 
 	//-- create persistence containers with startup
 	implementation "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
@@ -79,7 +78,6 @@ dependencies {
 
 	//-- SearchEngine
 	implementation "org.springframework.boot:spring-boot-starter-data-elasticsearch:${springBootVersion}"
-	implementation 'org.eclipse.parsson:parsson:1.1.7' // fix transitive vulnerability
 
 	//-- File Storage
 	implementation 'io.minio:minio:8.5.11'
@@ -93,9 +91,7 @@ dependencies {
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
 	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
 
-	implementation "org.springframework.security:spring-security-core:${springVersion}"
-	implementation "org.springframework.security:spring-security-web:${springVersion}"
-	implementation "org.springframework.security:spring-security-config:${springVersion}"
+	implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
 
 	//-- Monitoring
 	implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
@@ -107,6 +103,7 @@ dependencies {
 
 	//-- Testing
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+	testImplementation "org.springframework.boot:spring-boot-starter-webmvc-test:${springBootVersion}"
 	testImplementation 'org.assertj:assertj-core:3.26.3'
 
 	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
@@ -127,7 +124,7 @@ test {
 }
 
 jacoco {
-	toolVersion = "0.8.11"
+	toolVersion = "0.8.14"
 }
 
 jacocoTestReport {

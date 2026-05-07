@@ -14,18 +14,21 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
 @SpringBootTest
+@AutoConfigureRestTestClient
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MovieControllerTest extends BaseContainers {
 
-  @Autowired private WebTestClient webTestClient;
+  @Autowired private RestTestClient restTestClient;
 
   @Autowired private AuthenticationService authenticationService;
 
@@ -40,6 +43,7 @@ class MovieControllerTest extends BaseContainers {
     var adminRequest = new LoginRequest("test_user_one", "Encrypted!Pa55worD");
     var adminLogin = authenticationService.loginUser(adminRequest);
     adminToken = "%s %s".formatted(adminLogin.getTokenType(), adminLogin.getAccessToken());
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -48,7 +52,7 @@ class MovieControllerTest extends BaseContainers {
     var invalidIdFormat = "abc";
 
     // Act and Assert
-    webTestClient
+    restTestClient
             .get()
             .uri("/api/movie/{movieId}", invalidIdFormat)
             .accept(MediaType.APPLICATION_JSON)
@@ -69,7 +73,7 @@ class MovieControllerTest extends BaseContainers {
     Long nonExistentMovieId = 999999L;
 
     // Act and Assert
-    webTestClient
+    restTestClient
             .get()
             .uri("/api/movie/{movieId}", nonExistentMovieId)
             .accept(MediaType.APPLICATION_JSON)
@@ -88,7 +92,7 @@ class MovieControllerTest extends BaseContainers {
     long existingMovie = 1L;
 
     // Act and Assert
-    webTestClient
+    restTestClient
             .get()
             .uri("/api/movie/{movieId}", existingMovie)
             .accept(MediaType.APPLICATION_JSON)
@@ -108,11 +112,11 @@ class MovieControllerTest extends BaseContainers {
     var nonExistingMovies = new MovieIdsRequest(List.of(999999L));
 
     // Act and Assert
-    webTestClient
+    restTestClient
             .post()
             .uri("/api/movie/get-movies")
             .accept(MediaType.APPLICATION_JSON)
-            .bodyValue(nonExistingMovies)
+            .body(nonExistingMovies)
             .exchange()
             .expectAll(
                     spec -> spec.expectStatus().isOk(),
@@ -129,11 +133,11 @@ class MovieControllerTest extends BaseContainers {
     var existingMovies = new MovieIdsRequest(List.of(1L, 2L));
 
     // Act and Assert
-    webTestClient
+    restTestClient
             .post()
             .uri("/api/movie/get-movies")
             .accept(MediaType.APPLICATION_JSON)
-            .bodyValue(existingMovies)
+            .body(existingMovies)
             .exchange()
             .expectAll(
                     spec -> spec.expectStatus().isOk(),
@@ -159,12 +163,12 @@ class MovieControllerTest extends BaseContainers {
     );
 
     // Act and Assert
-    webTestClient
+    restTestClient
             .post()
             .uri("/api/movie/create-movie")
             .header("Authorization", adminToken)
             .accept(MediaType.APPLICATION_JSON)
-            .bodyValue(movieRequest)
+            .body(movieRequest)
             .exchange()
             .expectAll(
                     spec -> spec.expectStatus().isCreated(),

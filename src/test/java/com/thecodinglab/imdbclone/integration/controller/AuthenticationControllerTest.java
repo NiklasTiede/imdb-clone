@@ -4,21 +4,23 @@ import com.thecodinglab.imdbclone.integration.BaseContainers;
 import com.thecodinglab.imdbclone.payload.authentication.LoginRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
 @SpringBootTest
+@AutoConfigureRestTestClient
 @AutoConfigureMockMvc
 class AuthenticationControllerTest extends BaseContainers {
 
-  @Autowired private WebTestClient webTestClient;
+  @Autowired private RestTestClient restTestClient;
 
   @Test
   void checkUsernameAvailability_existingUsername() {
-    webTestClient
+    restTestClient
         .get()
         .uri(uriBuilder -> uriBuilder
             .path("/api/auth/check-username-availability")
@@ -34,7 +36,7 @@ class AuthenticationControllerTest extends BaseContainers {
 
   @Test
   void checkEmailAvailability_availableEmail() {
-    webTestClient
+    restTestClient
         .get()
         .uri(uriBuilder -> uriBuilder
             .path("/api/auth/check-email-availability")
@@ -52,12 +54,12 @@ class AuthenticationControllerTest extends BaseContainers {
   void login_success() {
     var request = new LoginRequest("test_user_one", "Encrypted!Pa55worD");
 
-    webTestClient
+    restTestClient
         .post()
         .uri("/api/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON)
-        .bodyValue(request)
+        .body(request)
         .exchange()
         .expectAll(
             spec -> spec.expectStatus().isOk(),
@@ -72,12 +74,12 @@ class AuthenticationControllerTest extends BaseContainers {
   void login_badCredentials() {
     var request = new LoginRequest("test_user_one", "Wrong!Pa55worD");
 
-    webTestClient
+    restTestClient
         .post()
         .uri("/api/auth/login")
         .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON)
-        .bodyValue(request)
+        .body(request)
         .exchange()
         .expectAll(
             spec -> spec.expectStatus().isUnauthorized(),

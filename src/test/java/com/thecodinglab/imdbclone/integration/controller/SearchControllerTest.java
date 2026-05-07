@@ -5,17 +5,19 @@ import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
 @SpringBootTest
+@AutoConfigureRestTestClient
 @AutoConfigureMockMvc
 class SearchControllerTest extends BaseContainers {
 
-  @Autowired private WebTestClient webTestClient;
+  @Autowired private RestTestClient restTestClient;
 
   @Test
   void search_success() {
@@ -23,13 +25,13 @@ class SearchControllerTest extends BaseContainers {
     var request = new MovieSearchRequest(null, null, null, null, Collections.emptySet(), null);
 
     // Act and Assert
-    webTestClient
+    restTestClient
             .post()
             .uri(uriBuilder -> uriBuilder
                     .path("/api/search/movies")
                     .queryParam("query", "testMovieOnePri")
                     .build())
-            .bodyValue(request)
+            .body(request)
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectAll(spec -> spec.expectStatus().isOk(),

@@ -12,7 +12,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
 
 @Entity
-@Document(indexName = "movies", writeTypeHint = WriteTypeHint.FALSE)
+@Document(indexName = "movies", createIndex = false, writeTypeHint = WriteTypeHint.FALSE)
 public class Movie extends DateAudit {
 
   @Id

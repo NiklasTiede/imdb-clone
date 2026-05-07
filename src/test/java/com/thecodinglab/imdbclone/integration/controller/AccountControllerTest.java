@@ -7,18 +7,21 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
 @SpringBootTest
+@AutoConfigureRestTestClient
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccountControllerTest extends BaseContainers {
 
-  @Autowired private WebTestClient webTestClient;
+  @Autowired private RestTestClient restTestClient;
 
   @Autowired private AuthenticationService authenticationService;
 
@@ -29,11 +32,12 @@ class AccountControllerTest extends BaseContainers {
     var userRequest = new LoginRequest("test_user_two", "Encrypted!Pa55worD");
     var userLogin = authenticationService.loginUser(userRequest);
     userToken = "%s %s".formatted(userLogin.getTokenType(), userLogin.getAccessToken());
+    SecurityContextHolder.clearContext();
   }
 
   @Test
   void getCurrentAccount_unauthenticated() {
-    webTestClient
+    restTestClient
         .get()
         .uri("/api/account/me")
         .accept(MediaType.APPLICATION_JSON)
@@ -52,7 +56,7 @@ class AccountControllerTest extends BaseContainers {
 
   @Test
   void getCurrentAccount_success() {
-    webTestClient
+    restTestClient
         .get()
         .uri("/api/account/me")
         .header("Authorization", userToken)
@@ -70,7 +74,7 @@ class AccountControllerTest extends BaseContainers {
 
   @Test
   void getAccountProfile_success() {
-    webTestClient
+    restTestClient
         .get()
         .uri("/api/account/{username}/profile", "test_user_two")
         .accept(MediaType.APPLICATION_JSON)
@@ -89,7 +93,7 @@ class AccountControllerTest extends BaseContainers {
 
   @Test
   void getAccountProfile_notFound() {
-    webTestClient
+    restTestClient
         .get()
         .uri("/api/account/{username}/profile", "missing_user")
         .accept(MediaType.APPLICATION_JSON)
