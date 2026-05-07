@@ -61,7 +61,7 @@ services:
   ### ----------------------- ElasticSearch ----------------------- ###
   imdb-clone-elasticsearch:
     container_name: imdb-clone-elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.4
     restart: always
     environment:
       - xpack.security.enabled=false

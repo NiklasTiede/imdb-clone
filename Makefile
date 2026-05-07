@@ -5,10 +5,10 @@
 .PHONY: pull-db run-db stop-db start-db remove-db-container
 
 docker-compose-dev-up: ## run services for backend
-	cd ./infrastructure/deployment/development; docker-compose up -d
+	docker compose up -d
 
 docker-compose-dev-down: ## stop services for backend
-	cd ./infrastructure/deployment/development; docker-compose down
+	docker compose down
 
 
 
