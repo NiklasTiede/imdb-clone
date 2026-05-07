@@ -22,7 +22,6 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
@@ -108,19 +107,6 @@ public class GlobalExceptionHandler {
         v(HTTP_RESOURCE_PATH, request.getDescription(true)));
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    return problemDetail;
-  }
-
-  @ExceptionHandler(WebClientResponseException.class)
-  protected final ProblemDetail resolveWebClientResponseException(
-      WebClientResponseException ex, WebRequest request) {
-    logger.warn(
-        "While making a request to an API an error occurred with message: '{}' on resource '{}'",
-        v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
-        v(HTTP_RESOURCE_PATH, request.getDescription(true)));
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     problemDetail.setType(URI.create(""));
     return problemDetail;
   }

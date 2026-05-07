@@ -53,20 +53,19 @@ spotless {
 
 dependencies {
 	//-- Improved developing
-	implementation "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
+	developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
+
+	//-- create persistence containers with startup
+	developmentOnly "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
 
 	//-- Servlet
 	implementation "org.springframework.boot:spring-boot-starter-webmvc:${springBootVersion}"
-	implementation "org.springframework.boot:spring-boot-starter-webflux:${springBootVersion}"
 
 	//-- Validation
 	implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
 
 	//-- Documentation - Swagger UI
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
-
-	//-- create persistence containers with startup
-	implementation "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
 
 	//-- Mapping
 	implementation 'org.mapstruct:mapstruct:1.7.0.Beta1'
