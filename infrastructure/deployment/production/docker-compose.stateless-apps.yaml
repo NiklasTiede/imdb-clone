@@ -54,7 +54,7 @@ services:
 
   ## ----------------------- Reverse Proxy ----------------------- ###
   imdb-clone-reverse-proxy:
-    image: traefik:latest
+    image: traefik:v3.7.0
     container_name: imdb-clone-reverse-proxy
     command:
       - "--api.insecure=true"
