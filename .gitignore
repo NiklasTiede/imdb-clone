@@ -8,6 +8,9 @@ todo.txt
 /infrastructure/mysql/docker-image-creation/processed_imdb_movies*
 /infrastructure/minio/original_movie_images/
 /infrastructure/minio/processed_movie_images/
+/infrastructure/minio/dev-seed/__pycache__/
+/infrastructure/minio/dev-seed/.venv/
+/infrastructure/minio/dev-seed/movies/
 # credentials for prod on homeserver
 /infrastructure/deployment/production/.env
 /infrastructure/deployment/production/docker-swarm-deploy
