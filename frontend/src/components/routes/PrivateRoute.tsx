@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router";
 import { RoleNameEnum } from "../../types/roles";
 import { hasUserRole, isJwtNotExpired } from "../../utils/jwtHelper";
 import AccessDenied from "./AccessDenied";

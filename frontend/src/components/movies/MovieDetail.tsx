@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import React, { useEffect } from "react";
 import { CardMedia, Container, Paper } from "@mui/material";
 import Typography from "@mui/material/Typography";

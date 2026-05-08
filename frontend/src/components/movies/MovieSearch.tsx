@@ -2,7 +2,7 @@ import { Container, Grid } from "@mui/material";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { MovieRecord } from "../../client/movies/generator-output";
 import MovieCard from "./MovieCard";
 import { State as SearchState } from "../../redux/model/search";

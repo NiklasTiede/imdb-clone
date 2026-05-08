@@ -11,7 +11,7 @@ import {
 import { tokens } from "../../theme";
 import { MovieRecord } from "../../client/movies/generator-output";
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { getMinioImageUrl, MinioImageSize } from "../../utils/imageUrlParser";
 import placeholderSearch from "../../assets/img/placeholder_search.png";
 

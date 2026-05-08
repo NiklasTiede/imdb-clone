@@ -1,5 +1,5 @@
 import { Container, Paper } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import React, { useEffect } from "react";
 import Typography from "@mui/material/Typography";
 import { i18n } from "../../i18n";

@@ -16,7 +16,7 @@ import MailIcon from "@mui/icons-material/Mail";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import MoreIcon from "@mui/icons-material/MoreVert";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useTheme } from "@mui/material";
 import { ColorModeContext, tokens } from "../theme";
 import { useContext, useState } from "react";
