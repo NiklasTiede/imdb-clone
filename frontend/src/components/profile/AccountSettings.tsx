@@ -50,7 +50,7 @@ const AccountSettings = () => {
 
   useEffect(() => {
     if (username) {
-      dispatch.account.getAccountProfileSettings(username);
+      dispatch.account.getAccountProfileSettings();
     }
   }, [dispatch.account, username]);
 
@@ -105,10 +105,6 @@ const AccountSettings = () => {
 
   // const bla = imageUrlToken ? `http://192.168.178.49:9000/imdb-clone/profile-photos/${imageUrlToken}_size_800x800.jpg` : null;
 
-  const handleImageUpload = (url: string) => {
-    setImageUrl(url);
-  };
-
   return (
     <Box padding={5}>
       <Paper
@@ -122,7 +118,7 @@ const AccountSettings = () => {
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Avatar src={imageUrl} sx={{ width: 100, height: 100 }} />
-          <UploadProfileImage onUpload={handleImageUpload} />
+          <UploadProfileImage />
         </Box>
 
         <form onSubmit={handleSubmit} noValidate>

@@ -12,13 +12,7 @@ import "react-image-crop/dist/ReactCrop.css";
 import { useDispatch } from "react-redux";
 import { Dispatch } from "../../redux/store";
 
-interface UploadProfileImageProps {
-  onUpload: (url: string) => void;
-}
-
-const UploadProfileImage: React.FC<UploadProfileImageProps> = ({
-  onUpload,
-}) => {
+const UploadProfileImage: React.FC = () => {
   const dispatch = useDispatch<Dispatch>();
 
   const [open, setOpen] = useState(false);

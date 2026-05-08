@@ -88,7 +88,7 @@ export const account = createModel<RootModel>()({
           );
         });
     },
-    async getAccountProfileSettings(username: string) {
+    async getAccountProfileSettings() {
       accountApi
         .getCurrentAccountProfile()
         .then((response: AxiosResponse<AccountProfile>) => {

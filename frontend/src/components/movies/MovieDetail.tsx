@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import { State as MovieState } from "../../redux/model/movies";
 import { getMinioImageUrl, MinioImageSize } from "../../utils/imageUrlParser";
+import placeholderSearch from "../../assets/img/placeholder_search.png";
 
 const MovieDetail = () => {
   const dispatch = useDispatch<Dispatch>();
@@ -21,7 +22,7 @@ const MovieDetail = () => {
 
   const imageUrl = movie?.imageUrlToken
     ? getMinioImageUrl(movie?.imageUrlToken, MinioImageSize.Large)
-    : null;
+    : undefined;
 
   useEffect(() => {
     if (movieId !== null) {
@@ -52,7 +53,7 @@ const MovieDetail = () => {
                 src={
                   movie.imageUrlToken
                     ? imageUrl
-                    : require("../../assets/img/placeholder_search.png")
+                    : placeholderSearch
                 }
               />
               <Typography variant={"inherit"} textAlign={"center"}>

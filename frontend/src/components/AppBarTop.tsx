@@ -31,7 +31,7 @@ import { useNotifier } from "../hooks/useNotifier";
 import { RoleNameEnum } from "../types/roles";
 import ClearIcon from "@mui/icons-material/Clear";
 
-let settings = [
+const settings = [
   {
     name: "YourRatings",
     to: "/your-ratings",

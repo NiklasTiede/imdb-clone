@@ -13,6 +13,7 @@ import { MovieRecord } from "../../client/movies/generator-output";
 import React from "react";
 import { Link } from "react-router-dom";
 import { getMinioImageUrl, MinioImageSize } from "../../utils/imageUrlParser";
+import placeholderSearch from "../../assets/img/placeholder_search.png";
 
 export const MovieLink = styled(Link)`
   text-decoration: none;
@@ -43,7 +44,7 @@ const MovieCard = (movie: MovieRecord) => {
 
   const imageUrl = movie?.imageUrlToken
     ? getMinioImageUrl(movie?.imageUrlToken, MinioImageSize.Small)
-    : null;
+    : undefined;
 
   return (
     <div>
@@ -55,7 +56,7 @@ const MovieCard = (movie: MovieRecord) => {
           src={
             movie.imageUrlToken
               ? imageUrl
-              : require("../../assets/img/placeholder_search.png")
+              : placeholderSearch
           }
         />
         <Box

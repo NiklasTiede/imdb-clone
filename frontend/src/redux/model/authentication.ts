@@ -135,7 +135,7 @@ export const authentication = createModel<RootModel>()({
             response.data.accessToken !== undefined
           ) {
             window.localStorage.setItem("jwtToken", response.data.accessToken);
-            let decoded = jwt_decode<MyJwtPayload>(response.data.accessToken);
+            const decoded = jwt_decode<MyJwtPayload>(response.data.accessToken);
             window.localStorage.setItem("username", decoded.username);
             window.localStorage.setItem("rolesFromJwt", decoded.roles);
             if (decoded.exp !== undefined) {

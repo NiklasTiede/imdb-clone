@@ -11,7 +11,7 @@
     "e2e:headed": "playwright test --headed",
     "e2e:install": "playwright install chromium",
     "e2e:ui": "playwright test --ui",
-    "lint": "eslint . --ext .tsx,.ts",
+    "lint": "eslint .",
     "format": "yarn prettier --write .",
     "checkUpdates": "ncu",
     "updateOpenApiSpec": "curl http://localhost:8080/v3/api-docs.yaml > ./src/client/imdb-clone-backend.yaml",
@@ -41,6 +41,7 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@openapitools/openapi-generator-cli": "^2.7.0",
     "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^5.17.0",
@@ -49,34 +50,17 @@
     "@types/node": "^20.4.9",
     "@types/react": "18.3.28",
     "@types/react-dom": "18.3.7",
-    "@typescript-eslint/eslint-plugin": "^6.3.0",
-    "@typescript-eslint/parser": "^6.3.0",
     "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^8.47.0",
-    "eslint-config-react-app": "^7.0.1",
-    "eslint-plugin-react": "^7.33.1",
+    "eslint": "10.3.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-testing-library": "7.16.2",
+    "globals": "17.6.0",
     "jsdom": "^27.3.0",
     "prettier": "^3.8.3",
     "typescript": "6.0.3",
+    "typescript-eslint": "8.59.2",
     "vite": "^8.0.11",
     "vitest": "^4.0.7"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ],
-    "overrides": [
-      {
-        "files": [
-          "e2e/**/*.ts",
-          "playwright.config.ts"
-        ],
-        "rules": {
-          "testing-library/prefer-screen-queries": "off"
-        }
-      }
-    ]
   },
   "browserslist": {
     "production": [
