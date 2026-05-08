@@ -1,18 +1,14 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import React, { useEffect } from "react";
-import { CardMedia, Container, Paper, useTheme } from "@mui/material";
+import { CardMedia, Container, Paper } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import { i18n } from "../../i18n";
-import { tokens } from "../../theme";
 import { useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import { State as MovieState } from "../../redux/model/movies";
 import { getMinioImageUrl, MinioImageSize } from "../../utils/imageUrlParser";
 
 const MovieDetail = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
-  const navigateTo = useNavigate();
   const dispatch = useDispatch<Dispatch>();
 
   const location = useLocation();
@@ -20,7 +16,7 @@ const MovieDetail = () => {
   const movieId = queryParams.get("id");
 
   const movie = useSelector(
-    (state: { movies: MovieState }) => state.movies.movie
+    (state: { movies: MovieState }) => state.movies.movie,
   );
 
   const imageUrl = movie?.imageUrlToken
@@ -31,10 +27,10 @@ const MovieDetail = () => {
     if (movieId !== null) {
       dispatch.movies.loadMovieById(parseInt(movieId));
     }
-  }, [movieId]);
+  }, [dispatch.movies, movieId]);
 
   console.log(
-    "movie detail rendered with imageUrlToken: " + movie?.imageUrlToken
+    "movie detail rendered with imageUrlToken: " + movie?.imageUrlToken,
   );
 
   return (

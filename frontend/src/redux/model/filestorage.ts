@@ -2,18 +2,15 @@ import { createModel } from "@rematch/core";
 import { RootModel } from "../models";
 import { fileStorageApi } from "../../client/movies/MoviesApi";
 import { i18n } from "../../i18n";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { Movie } from "../../client/movies/generator-output";
+import { AxiosResponse } from "axios";
 
 export type State = {
   profilePhotoSwitch: boolean;
-  movies: Array<Movie>;
 };
 
 export const fileStorage = createModel<RootModel>()({
   state: {
     profilePhotoSwitch: false,
-    movies: [],
   } as State,
   reducers: {
     setUpdateProfilePhoto: (state) => {
@@ -21,10 +18,6 @@ export const fileStorage = createModel<RootModel>()({
         profilePhotoSwitch: !state.profilePhotoSwitch,
       });
     },
-    setMovies: (state, payload: Array<Movie>) =>
-      reduce(state, {
-        movies: payload,
-      }),
   },
 
   effects: (dispatch) => ({
@@ -43,12 +36,12 @@ export const fileStorage = createModel<RootModel>()({
         })
         .catch((reason: any) => {
           dispatch.notify.error(
-            i18n.accountSettings.loadingError("search for Movies")
+            i18n.accountSettings.loadingError("search for Movies"),
           );
           console.log(
             `Error while attempting to search for movies, reason: ${JSON.stringify(
-              reason
-            )}`
+              reason,
+            )}`,
           );
         });
     },

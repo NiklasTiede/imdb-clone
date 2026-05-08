@@ -41,7 +41,7 @@ export const schema = zod
       .max(30, "Username must contain at most 30 character(s)")
       .regex(
         new RegExp(i18n.regex.username.pattern),
-        i18n.regex.username.rules
+        i18n.regex.username.rules,
       ),
     email: zod
       .string()
@@ -52,7 +52,7 @@ export const schema = zod
       .max(30, "Password must contain at most 30 characters")
       .regex(
         new RegExp(i18n.regex.password.pattern),
-        i18n.regex.password.rules
+        i18n.regex.password.rules,
       ),
     confirmPassword: zod
       .string()
@@ -60,7 +60,7 @@ export const schema = zod
       .max(30, "Password must contain at most 30 characters")
       .regex(
         new RegExp(i18n.regex.password.pattern),
-        i18n.regex.password.rules
+        i18n.regex.password.rules,
       ),
   })
   .superRefine(({ confirmPassword, password }, ctx) => {
@@ -83,7 +83,7 @@ const Registration = () => {
 
   const registeredSuccessfully = useSelector(
     (state: { authentication: AuthState }) =>
-      state.authentication.registrationCompleted
+      state.authentication.registrationCompleted,
   );
 
   const {
@@ -113,7 +113,7 @@ const Registration = () => {
       navigateTo("/login");
       dispatch.authentication.setRegistrationCompleted(false);
     }
-  }, [registeredSuccessfully]);
+  }, [dispatch.authentication, navigateTo, registeredSuccessfully]);
 
   return (
     <>

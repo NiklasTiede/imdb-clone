@@ -1,6 +1,4 @@
-import { Container, Grid, useTheme } from "@mui/material";
-import { tokens } from "../../theme";
-import { useNavigate } from "react-router-dom";
+import { Container, Grid } from "@mui/material";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import React, { useEffect } from "react";
@@ -10,9 +8,6 @@ import MovieCard from "./MovieCard";
 import { State as SearchState } from "../../redux/model/search";
 
 const MovieSearch = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
-  const navigateTo = useNavigate();
   const dispatch = useDispatch<Dispatch>();
 
   const location = useLocation();
@@ -26,27 +21,18 @@ const MovieSearch = () => {
 
   const movies: Array<MovieRecord> = useSelector(
     (state: { search?: SearchState }) => state.search?.movies ?? [],
-    shallowEqual
+    shallowEqual,
   );
 
-  let payload: any = {
-    query: queryTerm,
-    requestSearchParams: {
-      // minRuntimeMinutes: 80,
-      // maxRuntimeMinutes: 230,
-      // minStartYear: 2010,
-      // maxStartYear: 2022,
-      // movieGenre: ["HORROR"],
-      // movieType: MovieSearchRequestMovieTypeEnum.Movie,
-      // adult: false,
-    },
-    page: 0,
-    size: 20,
-  };
-
   useEffect(() => {
+    const payload = {
+      query: queryTerm,
+      requestSearchParams: {},
+      page: 0,
+      size: 20,
+    };
     dispatch.search.searchMovies(payload);
-  }, [queryTerm]);
+  }, [dispatch.search, queryTerm]);
 
   console.log(movies);
 

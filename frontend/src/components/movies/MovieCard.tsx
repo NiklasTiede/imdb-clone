@@ -85,7 +85,7 @@ const MovieCard = (movie: MovieRecord) => {
             {movie.startYear +
               " - " +
               snakeToPascalCase(
-                movie.movieType !== undefined ? movie.movieType : ""
+                movie.movieType !== undefined ? movie.movieType : "",
               )}
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -95,11 +95,11 @@ const MovieCard = (movie: MovieRecord) => {
               sx={{ margin: 0.6, marginBottom: 3 }}
             >
               {movie.movieGenre &&
-                Array.from(movie.movieGenre).map(
-                  (movieGenre: string) => (
-                    <Item>{snakeToPascalCase(movieGenre)}</Item>
-                  )
-                )}
+                Array.from(movie.movieGenre).map((movieGenre) => (
+                  <Item key={String(movieGenre)}>
+                    {snakeToPascalCase(String(movieGenre))}
+                  </Item>
+                ))}
             </Stack>
           </Box>
         </Box>

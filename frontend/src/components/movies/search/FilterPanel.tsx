@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import {
   Box,
@@ -16,7 +15,6 @@ import {
 } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import { MovieSearchRequestMovieTypeEnum } from "../../../client/movies/generator-output";
-import { snakeToPascalCase } from "../MovieCard";
 
 const minDistance = 1.0;
 
@@ -76,14 +74,12 @@ const IOSSlider = styled(Slider)(({ theme }) => ({
 }));
 
 const FilterPanel = () => {
-  const navigateTo = useNavigate();
-
   const [ratingRange, setRatingRange] = useState<number[]>([0.0, 10.0]);
 
   const handleChange = (
     event: Event,
     newRatingRange: number | number[],
-    activeThumb: number
+    activeThumb: number,
   ) => {
     if (!Array.isArray(newRatingRange)) {
       return;
@@ -157,7 +153,7 @@ const FilterPanel = () => {
                     {Object.keys(MovieSearchRequestMovieTypeEnum).map(
                       (movieGenre: string) => (
                         <MenuItem value={movieGenre}>{movieGenre}</MenuItem>
-                      )
+                      ),
                     )}
                   </Select>
                 </FormControl>

@@ -44,7 +44,7 @@ const Login = () => {
 
   const isAuthenticated = useSelector(
     (state: { authentication: AuthState }) =>
-      state.authentication.isAuthenticated
+      state.authentication.isAuthenticated,
   );
   const isLoggedIn: boolean = isJwtNotExpired();
 
@@ -69,7 +69,7 @@ const Login = () => {
     if (isLoggedIn) {
       navigateTo("/");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLoggedIn, navigateTo]);
 
   return (
     <>

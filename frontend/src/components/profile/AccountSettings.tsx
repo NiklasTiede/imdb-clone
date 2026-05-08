@@ -30,12 +30,12 @@ const AccountSettings = () => {
 
   const username = getUsername();
   const accountProfile = useSelector(
-    (state: { account: AccountStatus }) => state.account.accountProfile
+    (state: { account: AccountStatus }) => state.account.accountProfile,
   );
 
   const profilePhotoSwitch = useSelector(
     (state: { fileStorage: FileStorageStatus }) =>
-      state.fileStorage.profilePhotoSwitch
+      state.fileStorage.profilePhotoSwitch,
   );
 
   // set-able
@@ -44,7 +44,6 @@ const AccountSettings = () => {
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
   const [birthdayDate, setBirthdayDate] = useState("");
-  const [imageUrlToken, setImageUrlToken] = useState("");
 
   const [characterCount, setCharacterCount] = useState(0);
   const maxBioLength = 300;
@@ -53,7 +52,7 @@ const AccountSettings = () => {
     if (username) {
       dispatch.account.getAccountProfileSettings(username);
     }
-  }, [username]);
+  }, [dispatch.account, username]);
 
   useEffect(() => {
     setFirstName(accountProfile.firstName ?? "");
@@ -62,11 +61,11 @@ const AccountSettings = () => {
     setBirthdayDate(accountProfile.birthday ?? "");
     setBio(accountProfile.bio ?? "");
     setCharacterCount(accountProfile.bio ? accountProfile.bio.length : 0);
-    // setImageUrlToken(accountProfile.imageUrlToken ?? "");
-
-    setImageUrl(
-      `http://192.168.178.49:9000/imdb-clone/profile-photos/${accountProfile.imageUrlToken}_size_800x800.jpg`
-    );
+    if (accountProfile.imageUrlToken) {
+      setImageUrl(
+        `http://192.168.178.49:9000/imdb-clone/profile-photos/${accountProfile.imageUrlToken}_size_800x800.jpg`,
+      );
+    }
   }, [accountProfile]);
 
   const handleBioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,9 +99,7 @@ const AccountSettings = () => {
     console.log(profilePhotoSwitch);
   }, [profilePhotoSwitch]);
 
-  const [imageUrl, setImageUrl] = useState<string | undefined>(
-    `http://192.168.178.49:9000/imdb-clone/profile-photos/${imageUrlToken}_size_800x800.jpg`
-  );
+  const [imageUrl, setImageUrl] = useState<string | undefined>();
 
   console.log(imageUrl);
 
