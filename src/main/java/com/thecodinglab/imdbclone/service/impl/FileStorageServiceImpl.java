@@ -14,7 +14,7 @@ import com.thecodinglab.imdbclone.utility.images.MovieImageConstants;
 import com.thecodinglab.imdbclone.utility.images.ProfilePhotoConstants;
 import com.thecodinglab.imdbclone.validation.ImageSize;
 import io.minio.*;
-import io.minio.http.Method;
+import io.minio.Http.Method;
 import jakarta.transaction.Transactional;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -161,7 +161,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                   .bucket(bucketName)
                   .contentType(contentType)
                   .object(fileName)
-                  .stream(file, fileSize, -1)
+                  .stream(file, (long) fileSize, -1L)
                   .build());
       return "Image was stored with etag [" + resp.etag() + "]";
     } catch (Exception ex) {

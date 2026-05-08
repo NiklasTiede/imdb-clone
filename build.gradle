@@ -82,7 +82,7 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-data-elasticsearch:${springBootVersion}"
 
 	//-- File Storage
-	implementation 'io.minio:minio:8.5.11'
+	implementation 'io.minio:minio:9.0.0'
 
 	//-- Email
 	implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"

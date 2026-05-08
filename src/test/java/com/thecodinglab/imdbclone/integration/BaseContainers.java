@@ -33,7 +33,7 @@ public class BaseContainers {
   private static final DockerImageName elasticsearchImage =
       DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:9.3.4");
   private static final DockerImageName minioImage =
-      DockerImageName.parse("minio/minio:RELEASE.2024-03-26T22-10-45Z");
+      DockerImageName.parse("minio/minio:RELEASE.2025-09-07T16-13-09Z");
 
   public static MySQLContainer<?> mysqlContainer =
       new MySQLContainer<>(mysqlImage)
