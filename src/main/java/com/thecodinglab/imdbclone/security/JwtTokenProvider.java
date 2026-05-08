@@ -1,11 +1,13 @@
 package com.thecodinglab.imdbclone.security;
 
-import io.jsonwebtoken.*;
-import java.security.Key;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,15 +29,15 @@ public class JwtTokenProvider {
 
   public String generateToken(Authentication authentication) {
     UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-    Key key = createSigningKey();
+    SecretKey key = createSigningKey();
     Date expiryDate = new Date((new Date()).getTime() + jwtExpirationInMs);
 
     return Jwts.builder()
-        .setClaims(createClaims(userPrincipal))
-        .setSubject(Long.toString(userPrincipal.getId()))
-        .setIssuedAt(new Date())
-        .setExpiration(expiryDate)
-        .signWith(key)
+        .claims(createClaims(userPrincipal))
+        .subject(Long.toString(userPrincipal.getId()))
+        .issuedAt(new Date())
+        .expiration(expiryDate)
+        .signWith(key, Jwts.SIG.HS512)
         .compact();
   }
 
@@ -61,15 +63,14 @@ public class JwtTokenProvider {
   }
 
   private Claims extractClaims(String token) {
-    return Jwts.parserBuilder()
-        .setSigningKey(createSigningKey())
+    return Jwts.parser()
+        .verifyWith(createSigningKey())
         .build()
-        .parseClaimsJws(token)
-        .getBody();
+        .parseSignedClaims(token)
+        .getPayload();
   }
 
-  private Key createSigningKey() {
-    return new SecretKeySpec(
-        Base64.getDecoder().decode(jwtSecret), SignatureAlgorithm.HS512.getJcaName());
+  private SecretKey createSigningKey() {
+    return new SecretKeySpec(Base64.getDecoder().decode(jwtSecret), "HmacSHA512");
   }
 }
