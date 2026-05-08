@@ -1,3 +1,20 @@
+set foreign_key_checks = 0;
+
+delete from comment;
+delete from watched_movie;
+delete from rating;
+delete from account_roles;
+delete from verification_token;
+delete from account;
+delete from movie;
+
+set foreign_key_checks = 1;
+
+insert ignore into role(id, name)
+values(1, 'ROLE_ADMIN');
+insert ignore into role(id, name)
+values(2, 'ROLE_USER');
+
 insert into movie(id, primary_title, original_title, start_year, end_year, runtime_minutes, movie_genre, movie_type, imdb_rating, imdb_rating_count, adult, rating, rating_count, description, image_url_token)
 values(1,'testMovieOnePri','testMovieOneOri',2010,2010,100,16409,'MOVIE',8.0,528339,0,null,0,'Awesome movie.','superUrlTokenOne');
 insert into movie(id, primary_title, original_title, start_year, end_year, runtime_minutes, movie_genre, movie_type, imdb_rating, imdb_rating_count, adult, rating, rating_count, description, image_url_token)

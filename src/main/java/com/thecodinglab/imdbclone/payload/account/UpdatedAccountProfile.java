@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.payload.account;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public record UpdatedAccountProfile(
         String username,
@@ -9,5 +9,5 @@ public record UpdatedAccountProfile(
         String lastName,
         String phone,
         String bio,
-        Date birthday
+        LocalDate birthday
 ) {}

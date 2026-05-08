@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Date;
 
 @Entity
 @Table(
@@ -26,7 +26,8 @@ public class Account extends DateAudit {
   private String lastName;
   private String phone;
   private String bio;
-  private Date birthday;
+
+  private LocalDate birthday;
 
   @Column(length = 255)
   private String imageUrlToken;
@@ -125,11 +126,11 @@ public class Account extends DateAudit {
     this.bio = bio;
   }
 
-  public Date getBirthday() {
+  public LocalDate getBirthday() {
     return birthday;
   }
 
-  public void setBirthday(Date birthday) {
+  public void setBirthday(LocalDate birthday) {
     this.birthday = birthday;
   }
 

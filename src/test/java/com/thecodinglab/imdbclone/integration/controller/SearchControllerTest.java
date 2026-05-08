@@ -2,7 +2,10 @@ package com.thecodinglab.imdbclone.integration.controller;
 
 import com.thecodinglab.imdbclone.integration.BaseContainers;
 import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
+import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
+import com.thecodinglab.imdbclone.repository.MovieRepository;
 import java.util.Collections;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -18,6 +21,16 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 class SearchControllerTest extends BaseContainers {
 
   @Autowired private RestTestClient restTestClient;
+
+  @Autowired private MovieRepository movieRepository;
+
+  @Autowired private MovieElasticSearchRepository movieSearchRepository;
+
+  @BeforeEach
+  void indexSeedMovies() {
+    movieSearchRepository.deleteAll();
+    movieSearchRepository.saveAll(movieRepository.findAll());
+  }
 
   @Test
   void search_success() {

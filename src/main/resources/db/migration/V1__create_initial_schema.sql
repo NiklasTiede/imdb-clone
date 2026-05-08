@@ -1,21 +1,5 @@
--- Attempt to create the database if it doesn't already exist
-create database if not exists movie_db;
-use movie_db;
-
--- Drop tables to clean
-drop table if exists comment;
-drop table if exists watched_movie;
-drop table if exists rating;
-drop table if exists account_roles;
-drop table if exists verification_token;
-drop table if exists movie;
-drop table if exists account;
-drop table if exists role;
-
-
--- Create table schemas
 create table movie (
-    id bigint auto_increment comment 'IMDb title id stored without the tt prefix, for example tt3235888 is stored as 3235888',
+    id bigint auto_increment,
     primary_title varchar(1000),
     original_title varchar(1000),
     start_year int,
@@ -23,15 +7,15 @@ create table movie (
     runtime_minutes int,
     created_at_in_utc timestamp default current_timestamp,
     modified_at_in_utc timestamp default current_timestamp on update current_timestamp,
-    movie_genre int comment 'Bitmask of MovieGenreEnum values, not a foreign key',
-    movie_type varchar(50) comment 'MovieTypeEnum name stored as text to avoid enum ordinal drift',
+    movie_genre int,
+    movie_type int,
     imdb_rating float,
     imdb_rating_count int,
     adult boolean,
     rating float,
     rating_count int default 0,
     description text,
-    image_url_token varchar(255) comment 'MinIO object-name token used to derive movie image object keys',
+    image_url_token varchar(50),
     primary key (id)
 );
 
@@ -45,7 +29,7 @@ create table account (
     bio text,
     phone varchar(20),
     birthday date,
-    image_url_token varchar(255) comment 'MinIO object-name token used to derive profile image object keys',
+    image_url_token varchar(50),
     created_at_in_utc timestamp default current_timestamp,
     modified_at_in_utc timestamp default current_timestamp on update current_timestamp,
     locked boolean not null,
@@ -65,30 +49,20 @@ create table account_roles (
     roles_id bigint not null,
     created_at_in_utc timestamp default current_timestamp,
     primary key (account_id, roles_id),
-    constraint fk_account_roles_role foreign key (roles_id)
-        references role(id)
-        on delete cascade,
-    constraint fk_account_roles_account foreign key (account_id)
-        references account(id)
-        on delete cascade,
-    index idx_account_roles_roles_id (roles_id)
+    foreign key (roles_id) references role(id),
+    foreign key (account_id) references account(id)
 );
 
 create table rating (
-    movie_id bigint not null,
-    account_id bigint not null,
+    movie_id bigint,
+    account_id bigint,
     rating decimal(3,1) not null,
     created_at_in_utc timestamp default current_timestamp,
     modified_at_in_utc timestamp default current_timestamp on update current_timestamp,
     primary key (movie_id, account_id),
-    constraint fk_rating_movie foreign key (movie_id)
-        references movie(id)
-        on delete cascade,
-    constraint fk_rating_account foreign key (account_id)
-        references account(id)
-        on delete cascade,
-    index idx_rating_account_id (account_id)
-) comment 'User ratings; one rating per account and movie';
+    foreign key (movie_id) references movie(id),
+    foreign key (account_id) references account(id)
+);
 
 create table watched_movie (
     movie_id bigint not null,
@@ -103,7 +77,7 @@ create table watched_movie (
         on delete cascade,
     index idx_watched_movie_movie_id (movie_id),
     index idx_watched_movie_account_id (account_id)
-) comment 'Movies marked as watched by users';
+) comment 'Table storing information about favorite movies observed by users';
 
 create table comment (
     id bigint auto_increment,
@@ -113,14 +87,8 @@ create table comment (
     created_at_in_utc timestamp default current_timestamp,
     modified_at_in_utc timestamp default current_timestamp on update current_timestamp,
     primary key (id),
-    constraint fk_comment_movie foreign key (movie_id)
-        references movie(id)
-        on delete cascade,
-    constraint fk_comment_account foreign key (account_id)
-        references account(id)
-        on delete cascade,
-    index idx_comment_movie_id_created_at_in_utc (movie_id, created_at_in_utc),
-    index idx_comment_account_id_created_at_in_utc (account_id, created_at_in_utc)
+    foreign key (movie_id) references movie(id),
+    foreign key (account_id) references account(id)
 );
 
 create table verification_token (
@@ -131,13 +99,5 @@ create table verification_token (
     expiry_date_in_utc timestamp not null,
     confirmed_at_in_utc timestamp,
     primary key (id),
-    constraint fk_verification_token_account foreign key (account_id)
-        references account(id)
-        on delete cascade,
-    index idx_verification_token_account_id (account_id)
-) comment 'Verification and password-reset tokens issued to accounts';
-
-
--- Mandatory Inserts
-insert into role (name) values('ROLE_ADMIN');
-insert into role (name) values('ROLE_USER');
+    foreign key (account_id) references account(id)
+);

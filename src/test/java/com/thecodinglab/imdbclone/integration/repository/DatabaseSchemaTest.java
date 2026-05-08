@@ -15,9 +15,18 @@ class DatabaseSchemaTest extends BaseContainers {
   @Autowired private JdbcTemplate jdbcTemplate;
 
   @Test
+  void flywayAppliedSchemaMigrations() {
+    assertThat(appliedMigrations())
+        .containsExactly("1:create initial schema", "2:insert roles", "3:harden movie schema");
+  }
+
+  @Test
   void movieTypeAndImageTokensUseStableColumnTypes() {
+    assertThat(columnType("movie", "movie_genre")).isEqualTo("bigint");
     assertThat(columnType("movie", "movie_type")).isEqualTo("varchar");
     assertThat(characterLength("movie", "movie_type")).isGreaterThanOrEqualTo(50);
+    assertThat(numericPrecision("movie", "rating")).isEqualTo(3);
+    assertThat(numericScale("movie", "rating")).isEqualTo(1);
     assertThat(characterLength("movie", "image_url_token")).isGreaterThanOrEqualTo(255);
     assertThat(characterLength("account", "image_url_token")).isGreaterThanOrEqualTo(255);
   }
@@ -81,6 +90,34 @@ class DatabaseSchemaTest extends BaseContainers {
         columnName);
   }
 
+  private Long numericPrecision(String tableName, String columnName) {
+    return jdbcTemplate.queryForObject(
+        """
+        select numeric_precision
+        from information_schema.columns
+        where table_schema = database()
+          and table_name = ?
+          and column_name = ?
+        """,
+        Long.class,
+        tableName,
+        columnName);
+  }
+
+  private Long numericScale(String tableName, String columnName) {
+    return jdbcTemplate.queryForObject(
+        """
+        select numeric_scale
+        from information_schema.columns
+        where table_schema = database()
+          and table_name = ?
+          and column_name = ?
+        """,
+        Long.class,
+        tableName,
+        columnName);
+  }
+
   private List<String> deleteRules(String tableName) {
     return jdbcTemplate.queryForList(
         """
@@ -105,5 +142,17 @@ class DatabaseSchemaTest extends BaseContainers {
         """,
         String.class,
         tableName);
+  }
+
+  private List<String> appliedMigrations() {
+    return jdbcTemplate.queryForList(
+        """
+        select concat(version, ':', description)
+        from flyway_schema_history
+        where success = true
+          and type = 'SQL'
+        order by installed_rank
+        """,
+        String.class);
   }
 }

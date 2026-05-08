@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.payload.account;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public record AccountProfile(
         String username,
@@ -9,7 +9,7 @@ public record AccountProfile(
         String lastName,
         String phone,
         String bio,
-        Date birthday,
+        LocalDate birthday,
         String imageUrlToken,
         Long ratingsCount,
         Long watchlistCount,

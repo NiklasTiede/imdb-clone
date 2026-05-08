@@ -71,6 +71,8 @@ dependencies {
 	//-- Rel. Database
 	implementation 'com.mysql:mysql-connector-j:9.7.0'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	runtimeOnly 'org.flywaydb:flyway-mysql'
 
 	//-- SearchEngine
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'

@@ -1,12 +1,9 @@
 package com.thecodinglab.imdbclone.integration;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.sql.Connection;
-import java.sql.Statement;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
@@ -14,7 +11,8 @@ import org.testcontainers.utility.DockerImageName;
 
 /**
  * Provides a consistent Test Data Set across all integration tests. The initial data set for the
- * tests is loaded from the SQL file located at {@code src/test/resources/sql/test-data.sql}.
+ * tests is loaded after Flyway migrations from the SQL file located at {@code
+ * src/test/resources/sql/test-data.sql}.
  *
  * <p>Use the following credentials to connect to the MySQL TestContainer for debugging purposes:
  *
@@ -27,6 +25,7 @@ import org.testcontainers.utility.DockerImageName;
  * </ul>
  */
 @SpringBootTest
+@Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 public class BaseContainers {
 
   private static final DockerImageName mysqlImage = DockerImageName.parse("mysql:9.7.0");
@@ -39,27 +38,13 @@ public class BaseContainers {
       new MySQLContainer<>(mysqlImage)
           .withDatabaseName("movie_db")
           .withUsername("test")
-          .withPassword("test")
-          .withInitScript("sql/1_init_schema.sql");
+          .withPassword("test");
 
   @DynamicPropertySource
   static void mysqlProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", mysqlContainer::getJdbcUrl);
     registry.add("spring.datasource.password", mysqlContainer::getPassword);
     registry.add("spring.datasource.username", mysqlContainer::getUsername);
-  }
-
-  public static void populateTables(String scriptPath) {
-    try {
-      File file = new File(scriptPath);
-      String content = new String(Files.readAllBytes(file.toPath()));
-      try (Connection conn = mysqlContainer.createConnection("?allowMultiQueries=true");
-          Statement statement = conn.createStatement()) {
-        statement.execute(content);
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to execute test data script", e);
-    }
   }
 
   static ElasticsearchContainer elasticContainer = new ElasticsearchContainer(elasticsearchImage);
@@ -89,7 +74,6 @@ public class BaseContainers {
 
   static {
     mysqlContainer.start();
-    populateTables("src/test/resources/sql/test-data.sql");
 
     elasticContainer.withEnv("xpack.security.enabled", "false");
     elasticContainer.start();

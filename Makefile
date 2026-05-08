@@ -5,13 +5,16 @@ DEV_SEED_REQUIREMENTS = infrastructure/minio/dev-seed/requirements.txt
 
 # ------------ Set-up and run MySQL / ElasticSearch / MinIO  ----------------------------------------------------------
 
-.PHONY: pull-db run-db stop-db start-db remove-db-container
+.PHONY: pull-db run-db stop-db start-db remove-db-container seed-mysql-dev-data
 
 docker-compose-dev-up: ## run services for backend
 	docker compose up -d
 
 docker-compose-dev-down: ## stop services for backend
 	docker compose down
+
+seed-mysql-dev-data: ## load lightweight local movie/user data into MySQL
+	docker exec -i imdb-clone-mysql mysql -umyroot -psecret movie_db < src/main/resources/sql/2_init_data.sql
 
 $(DEV_SEED_PYTHON): $(DEV_SEED_REQUIREMENTS)
 	python3 -m venv infrastructure/minio/dev-seed/.venv

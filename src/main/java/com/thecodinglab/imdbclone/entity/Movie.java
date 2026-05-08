@@ -39,7 +39,9 @@ public class Movie extends DateAudit {
 
   @JsonIgnore private Boolean adult;
 
+  @Column(precision = 3, scale = 1)
   private BigDecimal rating;
+
   private Integer ratingCount;
 
   @JsonIgnore private String description;

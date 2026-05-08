@@ -1,5 +1,22 @@
 # test data for local development
 
+set foreign_key_checks = 0;
+
+delete from comment;
+delete from watched_movie;
+delete from rating;
+delete from account_roles;
+delete from verification_token;
+delete from account;
+delete from movie;
+
+set foreign_key_checks = 1;
+
+insert ignore into role(id, name)
+values(1, 'ROLE_ADMIN');
+insert ignore into role(id, name)
+values(2, 'ROLE_USER');
+
 insert into movie(id, primary_title, original_title, start_year, end_year, runtime_minutes, movie_genre, movie_type, imdb_rating, imdb_rating_count, adult, rating, rating_count, description, image_url_token)
 values(2872718,'Nightcrawler','Nightcrawler',2014,null,117, 16409,'MOVIE',7.8,528339,0,null,0,'When Lou Bloom, desperate for work, muscles into the world of L.A. crime journalism, he blurs the line between observer and participant to become the star of his own story. Aiding him in his effort is Nina, a TV-news veteran.','9BGAIYNfdY90aIkV66dIJ6Olee7JGn');
 insert into movie(id, primary_title, original_title, start_year, end_year, runtime_minutes, movie_genre, movie_type, imdb_rating, imdb_rating_count, adult, rating, rating_count, description, image_url_token)
@@ -44,9 +61,9 @@ insert into movie(id, primary_title, original_title, start_year, end_year, runti
 values(5606664, 'Doctor Sleep', 'Doctor Sleep', 2019, NULL, 152, 20483, 'MOVIE', 7.3, 185596, 0, NULL, 0, 'Still irrevocably scarred by the trauma he endured as a child at the Overlook, Dan Torrance has fought to find some semblance of peace. But that peace is shattered when he encounters Abra, a courageous teenager with her own powerful extrasensory gift, known as the ''shine''. Instinctively recognising that Dan shares her power, Abra has sought him out, desperate for his help against the merciless Rose the Hat and her followers.', '88BNOZyP06fSHIBDq8aKlSnrXfqlF8');
 
 insert into account(id,username,email,password,first_name,last_name,bio,phone,birthday,locked,enabled)
-values(1,'les_grossman','tom.cruise@gmail.com','$2a$10$hjtGB7lxHBkTL51MEEsA/Oap2frjDpunlH/njP4xvuiV06RiCWKeW','Tom','Cruise','I will massacre you!','491628264723', '1962-07-03 00:00:00',false,true);
+values(1,'les_grossman','tom.cruise@gmail.com','$2a$10$hjtGB7lxHBkTL51MEEsA/Oap2frjDpunlH/njP4xvuiV06RiCWKeW','Tom','Cruise','I will massacre you!','491628264723', '1962-07-03',false,true);
 insert into account(id,username,email,password,first_name,last_name,bio,phone,birthday,locked,enabled)
-values(2,'jeff_portnoy','jack.black@gmail.com','$2a$10$hjtGB7lxHBkTL51MEEsA/Oap2frjDpunlH/njP4xvuiV06RiCWKeW','jack','black','You go, girl!','4915122973088', '1969-08-28 00:00:00',false,true);
+values(2,'jeff_portnoy','jack.black@gmail.com','$2a$10$hjtGB7lxHBkTL51MEEsA/Oap2frjDpunlH/njP4xvuiV06RiCWKeW','jack','black','You go, girl!','4915122973088', '1969-08-28',false,true);
 
 insert into account_roles(account_id, roles_id)
 values(1, 1);
