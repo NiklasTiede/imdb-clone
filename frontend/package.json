@@ -42,7 +42,7 @@
     "react-router": "7.15.0",
     "redux": "5.0.1",
     "web-vitals": "^3.4.0",
-    "zod": "3.25.76"
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
