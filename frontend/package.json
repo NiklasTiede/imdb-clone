@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@openapitools/openapi-generator-cli": "^2.7.0",
+    "@openapitools/openapi-generator-cli": "2.32.0",
     "@playwright/test": "^1.59.1",
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",

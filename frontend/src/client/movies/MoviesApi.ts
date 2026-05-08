@@ -1,4 +1,8 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from "axios";
+import axios, {
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+  AxiosError,
+} from "axios";
 import {
   Configuration,
   AuthenticationControllerApi,
@@ -16,17 +20,16 @@ import {
  * */
 const customAxiosInstance: AxiosInstance = axios.create();
 customAxiosInstance.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = window.localStorage.getItem("jwtToken");
     if (token) {
-      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error: AxiosError) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 const moviesApiClientConfig: Configuration = new Configuration({
@@ -47,9 +50,9 @@ export const ratingApi = new RatingControllerApi(moviesApiClientConfig);
 export const searchApi = new SearchControllerApi(moviesApiClientConfig);
 
 export const watchlistApi = new WatchedMovieControllerApi(
-  moviesApiClientConfig
+  moviesApiClientConfig,
 );
 
 export const fileStorageApi = new FileStorageControllerApi(
-  moviesApiClientConfig
+  moviesApiClientConfig,
 );
