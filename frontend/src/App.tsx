@@ -13,7 +13,7 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import React from "react";
 import EditMovie from "./components/movies/EditMovie";
 import Messages from "./components/profile/Messages";
-import { RoleNameEnum } from "./client/movies/generator-output";
+import { RoleNameEnum } from "./types/roles";
 import PublicRoute from "./components/routes/PublicRoute";
 import PrivateRoute from "./components/routes/PrivateRoute";
 import NotFound from "./components/routes/NotFound";

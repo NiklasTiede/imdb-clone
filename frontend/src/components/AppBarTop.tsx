@@ -28,7 +28,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { i18n } from "../i18n";
 import { State as AuthenticationStatus } from "../redux/model/authentication";
 import { useNotifier } from "../hooks/useNotifier";
-import { RoleNameEnum } from "../client/movies/generator-output";
+import { RoleNameEnum } from "../types/roles";
 import ClearIcon from "@mui/icons-material/Clear";
 
 let settings = [

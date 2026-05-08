@@ -3,13 +3,13 @@ import { RootModel } from "../models";
 import { searchApi } from "../../client/movies/MoviesApi";
 import { i18n } from "../../i18n";
 import {
-  Movie,
-  PagedResponseMovie,
+  MovieRecord,
+  PagedResponseMovieRecord,
 } from "../../client/movies/generator-output";
 import { AxiosResponse } from "axios";
 
 export type State = {
-  movies: Array<Movie>;
+  movies: Array<MovieRecord>;
 };
 
 export const search = createModel<RootModel>()({
@@ -17,7 +17,7 @@ export const search = createModel<RootModel>()({
     movies: [],
   } as State,
   reducers: {
-    setMovies: (state, payload: Array<Movie>) =>
+    setMovies: (state, payload: Array<MovieRecord>) =>
       reduce(state, {
         movies: payload,
       }),
@@ -26,7 +26,7 @@ export const search = createModel<RootModel>()({
     async searchMovies({ query, requestSearchParams, page, size }) {
       searchApi
         .search(query, requestSearchParams, page, size)
-        .then((response: AxiosResponse<PagedResponseMovie>) => {
+        .then((response: AxiosResponse<PagedResponseMovieRecord>) => {
           if (
             response.status === 200 &&
             response.data !== null &&

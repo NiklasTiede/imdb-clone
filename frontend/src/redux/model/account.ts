@@ -90,7 +90,7 @@ export const account = createModel<RootModel>()({
     },
     async getAccountProfileSettings(username: string) {
       accountApi
-        .getAccountProfile(username)
+        .getCurrentAccountProfile()
         .then((response: AxiosResponse<AccountProfile>) => {
           if (response.status === 200 && response.data !== null) {
             dispatch.account.setAccountProfile(response.data);

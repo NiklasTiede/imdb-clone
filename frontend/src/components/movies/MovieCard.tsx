@@ -9,10 +9,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { tokens } from "../../theme";
-import {
-  Movie,
-  MovieMovieGenreEnum,
-} from "../../client/movies/generator-output";
+import { MovieRecord } from "../../client/movies/generator-output";
 import React from "react";
 import { Link } from "react-router-dom";
 import { getMinioImageUrl, MinioImageSize } from "../../utils/imageUrlParser";
@@ -40,7 +37,7 @@ export function snakeToPascalCase(str: string): string {
   return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
 }
 
-const MovieCard = (movie: Movie) => {
+const MovieCard = (movie: MovieRecord) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -99,7 +96,7 @@ const MovieCard = (movie: Movie) => {
             >
               {movie.movieGenre &&
                 Array.from(movie.movieGenre).map(
-                  (movieGenre: MovieMovieGenreEnum) => (
+                  (movieGenre: string) => (
                     <Item>{snakeToPascalCase(movieGenre)}</Item>
                   )
                 )}

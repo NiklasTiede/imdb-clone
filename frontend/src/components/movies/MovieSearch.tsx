@@ -5,7 +5,7 @@ import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Movie } from "../../client/movies/generator-output";
+import { MovieRecord } from "../../client/movies/generator-output";
 import MovieCard from "./MovieCard";
 import { State as SearchState } from "../../redux/model/search";
 
@@ -19,12 +19,12 @@ const MovieSearch = () => {
   const queryParams = new URLSearchParams(location.search);
   const queryTerm = queryParams.get("query");
 
-  // const movies: Array<Movie> = useSelector(
+  // const movies: Array<MovieRecord> = useSelector(
   //     (state: { search: SearchState }) => state.search.movies,
   //     shallowEqual
   // );
 
-  const movies: Array<Movie> = useSelector(
+  const movies: Array<MovieRecord> = useSelector(
     (state: { search?: SearchState }) => state.search?.movies ?? [],
     shallowEqual
   );

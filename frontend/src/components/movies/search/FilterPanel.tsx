@@ -15,10 +15,7 @@ import {
   styled,
 } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import {
-  MovieMovieGenreEnum,
-  MovieMovieTypeEnum,
-} from "../../../client/movies/generator-output";
+import { MovieSearchRequestMovieTypeEnum } from "../../../client/movies/generator-output";
 import { snakeToPascalCase } from "../MovieCard";
 
 const minDistance = 1.0;
@@ -157,7 +154,7 @@ const FilterPanel = () => {
                     onChange={handleChange3}
                   >
                     <MenuItem value={"None"}>None</MenuItem>
-                    {Object.keys(MovieMovieTypeEnum).map(
+                    {Object.keys(MovieSearchRequestMovieTypeEnum).map(
                       (movieGenre: string) => (
                         <MenuItem value={movieGenre}>{movieGenre}</MenuItem>
                       )

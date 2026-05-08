@@ -1,5 +1,5 @@
 import moment from "moment";
-import { RoleNameEnum } from "../client/movies/generator-output";
+import { RoleNameEnum } from "../types/roles";
 
 export const hasUserRole = (role: RoleNameEnum) => {
   let roles = window.localStorage.getItem("rolesFromJwt");

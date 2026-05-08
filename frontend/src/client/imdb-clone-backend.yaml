@@ -1,41 +1,60 @@
-openapi: 3.0.1
+openapi: 3.1.0
 info:
   title: OpenAPI definition
   version: v0
 servers:
-  - url: http://localhost:8080
-    description: Generated server url
+- url: http://localhost:8080
+  description: Generated server url
 paths:
-  /api/movie/{movieId}:
-    get:
+  /api/watched-movie/{movieId}/watch:
+    put:
       tags:
-        - movie-controller
-      operationId: getMovieById
+      - watched-movie-controller
+      operationId: watchMovie
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WatchedMovieRecord"
+  /api/movie/{movieId}:
+    get:
+      tags:
+      - movie-controller
+      operationId: getMovieById
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MovieRecord"
     put:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: updateMovie
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           application/json:
@@ -46,57 +65,81 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
-                $ref: "#/components/schemas/Movie"
+                $ref: "#/components/schemas/MovieRecord"
     delete:
       tags:
-        - movie-controller
-      operationId: deleteMovieById
+      - movie-controller
+      operationId: deleteMovie
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
+  /api/movie-rating/{movieId}/rating-score/{score}:
+    put:
+      tags:
+      - rating-controller
+      operationId: rateMovie
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: score
+        in: path
+        required: true
+        schema:
+          type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RatingRecord"
   /api/comment/{commentId}:
     get:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: getCommentById
       parameters:
-        - name: commentId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/CommentRecord"
     put:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: updateComment
       parameters:
-        - name: commentId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           application/json:
@@ -107,38 +150,38 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/CommentRecord"
     delete:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: deleteComment
       parameters:
-        - name: commentId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/account/{username}:
     put:
       tags:
-        - account-controller
+      - account-controller
       operationId: updateAccountProfile
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -149,89 +192,89 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/UpdatedAccountProfile"
     delete:
       tags:
-        - account-controller
+      - account-controller
       operationId: deleteAccount
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/account/{username}/take-admin:
     put:
       tags:
-        - account-controller
+      - account-controller
       operationId: takeAdminRole
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/account/{username}/give-admin:
     put:
       tags:
-        - account-controller
+      - account-controller
       operationId: giveAdminRole
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/search/movies:
     post:
       tags:
-        - search-controller
+      - search-controller
       operationId: search
       parameters:
-        - name: query
-          in: query
-          required: true
-          schema:
-            maxLength: 200
-            minLength: 0
-            type: string
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+          maxLength: 200
+          minLength: 0
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       requestBody:
         content:
           application/json:
@@ -242,29 +285,29 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
-                $ref: "#/components/schemas/PagedResponseMovie"
+                $ref: "#/components/schemas/PagedResponseMovieRecord"
   /api/movie/get-movies:
     post:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: getMoviesByIds
       parameters:
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       requestBody:
         content:
           application/json:
@@ -275,13 +318,13 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/PagedResponseMovieRecord"
   /api/movie/create-movie:
     post:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: createMovie
       requestBody:
         content:
@@ -293,107 +336,107 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
-                $ref: "#/components/schemas/Movie"
+                $ref: "#/components/schemas/MovieRecord"
   /api/file-storage/profile-photo:
     post:
       tags:
-        - file-storage-controller
+      - file-storage-controller
       operationId: storeUserProfilePhoto
       requestBody:
         content:
           multipart/form-data:
             schema:
-              required:
-                - image
               type: object
               properties:
                 image:
                   type: string
                   format: binary
+              required:
+              - image
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 type: array
                 items:
                   type: string
     delete:
       tags:
-        - file-storage-controller
+      - file-storage-controller
       operationId: deleteUserProfilePhoto
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/file-storage/movie/{movieId}:
     post:
       tags:
-        - file-storage-controller
+      - file-storage-controller
       operationId: storeMovieImage
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           multipart/form-data:
             schema:
-              required:
-                - image
               type: object
               properties:
                 image:
                   type: string
                   format: binary
+              required:
+              - image
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 type: array
                 items:
                   type: string
     delete:
       tags:
-        - file-storage-controller
+      - file-storage-controller
       operationId: deleteMovieImage
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/comment/{movieId}:
     post:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: createComment
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       requestBody:
         content:
           application/json:
@@ -404,13 +447,13 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/CommentRecord"
   /api/auth/save-new-password:
     post:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: saveNewPassword
       requestBody:
         content:
@@ -422,13 +465,13 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/auth/registration:
     post:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: registerAccount
       requestBody:
         content:
@@ -440,13 +483,13 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/auth/login:
     post:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: authenticateAccount
       requestBody:
         content:
@@ -458,13 +501,13 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/LoginResponse"
   /api/account/add-account:
     post:
       tags:
-        - account-controller
+      - account-controller
       operationId: createAccount
       requestBody:
         content:
@@ -476,432 +519,412 @@ paths:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
-                $ref: "#/components/schemas/Account"
-  /api/watched-movie/{movieId}/watch:
-    get:
-      tags:
-        - watched-movie-controller
-      operationId: watchMovie
-      parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "200":
-          description: OK
-          content:
-            "*/*":
-              schema:
-                $ref: "#/components/schemas/WatchedMovie"
+                $ref: "#/components/schemas/AccountCreated"
   /api/movie/search/{primaryTitle}:
     get:
       tags:
-        - movie-controller
+      - movie-controller
       operationId: searchMoviesByTitle
       parameters:
-        - name: primaryTitle
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: primaryTitle
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
-                $ref: "#/components/schemas/PagedResponseMovie"
-  /api/movie-rating/{movieId}/rating-score/{score}:
-    get:
-      tags:
-        - rating-controller
-      operationId: rateMovie
-      parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: score
-          in: path
-          required: true
-          schema:
-            type: number
-      responses:
-        "200":
-          description: OK
-          content:
-            "*/*":
-              schema:
-                $ref: "#/components/schemas/Rating"
+                $ref: "#/components/schemas/PagedResponseMovieRecord"
+      deprecated: true
   /api/comment/{movieId}/comments:
     get:
       tags:
-        - comment-controller
+      - comment-controller
       operationId: getCommentsByMovieId
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/PagedResponseCommentRecord"
   /api/auth/reset-password:
     get:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: resetPassword
       parameters:
-        - name: email
-          in: query
-          required: true
-          schema:
-            type: string
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
+          format: email
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/auth/confirm-email-address:
     get:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: confirmEmailAddress
       parameters:
-        - name: token
-          in: query
-          required: true
-          schema:
-            type: string
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/auth/check-username-availability:
     get:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: checkUsernameAvailability
       parameters:
-        - name: username
-          in: query
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: query
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/UserIdentityAvailability"
   /api/auth/check-email-availability:
     get:
       tags:
-        - authentication-controller
+      - authentication-controller
       operationId: checkEmailAvailability
       parameters:
-        - name: email
-          in: query
-          required: true
-          schema:
-            type: string
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/UserIdentityAvailability"
   /api/account/{username}/watchlist:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getWatchedMoviesByAccount
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/PagedResponseWatchedMovieRecord"
   /api/account/{username}/ratings:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getRatingsByAccount
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/PagedResponseRatingRecord"
   /api/account/{username}/profile:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getAccountProfile
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
-                $ref: "#/components/schemas/AccountProfile"
+                $ref: "#/components/schemas/PublicAccountProfile"
   /api/account/{username}/comments:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getCommentsByAccount
       parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 0
-        - name: size
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 30
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/PagedResponseCommentRecord"
   /api/account/me:
     get:
       tags:
-        - account-controller
+      - account-controller
       operationId: getCurrentAccount
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/AccountSummaryResponse"
-  /api/watched-movie/{movieId}:
-    delete:
+  /api/account/me/profile:
+    get:
       tags:
-        - watched-movie-controller
-      operationId: deleteWatchedMovie
-      parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - account-controller
+      operationId: getCurrentAccountProfile
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountProfile"
+  /api/watched-movie/{movieId}:
+    delete:
+      tags:
+      - watched-movie-controller
+      operationId: deleteWatchedMovie
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
   /api/movie-rating/{movieId}:
     delete:
       tags:
-        - rating-controller
+      - rating-controller
       operationId: deleteRating
       parameters:
-        - name: movieId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
       responses:
         "200":
           description: OK
           content:
-            "*/*":
+            '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 components:
   schemas:
+    WatchedMovieRecord:
+      type: object
+      properties:
+        accountId:
+          type: integer
+          format: int64
+        movieId:
+          type: integer
+          format: int64
     MovieRequest:
-      required:
-        - originalTitle
       type: object
       properties:
         primaryTitle:
+          type: string
           maxLength: 200
           minLength: 0
-          type: string
         originalTitle:
+          type: string
           maxLength: 200
           minLength: 0
-          type: string
         startYear:
-          maximum: 2030
-          minimum: 1850
           type: integer
           format: int32
+          maximum: 2030
+          minimum: 1850
         endYear:
-          maximum: 2030
-          minimum: 1850
           type: integer
           format: int32
+          maximum: 2030
+          minimum: 1850
         runtimeMinutes:
           type: integer
           format: int32
         movieGenre:
-          uniqueItems: true
           type: array
           items:
             type: string
             enum:
-              - HORROR
-              - MYSTERY
-              - THRILLER
-              - CRIME
-              - WESTERN
-              - WAR
-              - ACTION
-              - ADVENTURE
-              - FAMILY
-              - COMEDY
-              - ANIMATION
-              - FANTASY
-              - SCI_FI
-              - DRAMA
-              - ROMANCE
-              - SPORT
-              - HISTORY
-              - BIOGRAPHY
-              - MUSIC
-              - MUSICAL
-              - DOCUMENTARY
-              - NEWS
-              - ADULT
-              - REALITY_TV
-              - TALK_SHOW
-              - GAME_SHOW
-              - FILM_NOIR
-              - SHORT
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          uniqueItems: true
         movieType:
           type: string
           enum:
-            - SHORT
-            - MOVIE
-            - VIDEO
-            - TV_MOVIE
-            - TV_EPISODE
-            - TV_MINI_SERIES
-            - TV_SPECIAL
-            - TV_SERIES
-            - TV_SHORT
-            - TV_PILOT
-            - VIDEO_GAME
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
         adult:
           type: boolean
-    Movie:
+      required:
+      - originalTitle
+    MovieRecord:
       type: object
       properties:
         id:
@@ -914,77 +937,102 @@ components:
         startYear:
           type: integer
           format: int32
+        endYear:
+          type: integer
+          format: int32
         runtimeMinutes:
           type: integer
           format: int32
+        modifiedAtInUtc:
+          type: string
+          format: date-time
+        createdAtInUtc:
+          type: string
+          format: date-time
         movieGenre:
-          uniqueItems: true
           type: array
           items:
             type: string
             enum:
-              - HORROR
-              - MYSTERY
-              - THRILLER
-              - CRIME
-              - WESTERN
-              - WAR
-              - ACTION
-              - ADVENTURE
-              - FAMILY
-              - COMEDY
-              - ANIMATION
-              - FANTASY
-              - SCI_FI
-              - DRAMA
-              - ROMANCE
-              - SPORT
-              - HISTORY
-              - BIOGRAPHY
-              - MUSIC
-              - MUSICAL
-              - DOCUMENTARY
-              - NEWS
-              - ADULT
-              - REALITY_TV
-              - TALK_SHOW
-              - GAME_SHOW
-              - FILM_NOIR
-              - SHORT
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          uniqueItems: true
         movieType:
           type: string
           enum:
-            - SHORT
-            - MOVIE
-            - VIDEO
-            - TV_MOVIE
-            - TV_EPISODE
-            - TV_MINI_SERIES
-            - TV_SPECIAL
-            - TV_SERIES
-            - TV_SHORT
-            - TV_PILOT
-            - VIDEO_GAME
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
         imdbRating:
           type: number
           format: float
         imdbRatingCount:
           type: integer
           format: int32
+        adult:
+          type: boolean
         rating:
           type: number
+          format: float
         ratingCount:
           type: integer
           format: int32
+        description:
+          type: string
         imageUrlToken:
           type: string
+    RatingRecord:
+      type: object
+      properties:
+        rating:
+          type: number
+        accountId:
+          type: integer
+          format: int64
+        movieId:
+          type: integer
+          format: int64
     UpdateCommentRequest:
       type: object
       properties:
         message:
+          type: string
           maxLength: 1000
           minLength: 0
-          type: string
     CommentRecord:
       type: object
       properties:
@@ -999,25 +1047,29 @@ components:
         movieId:
           type: integer
           format: int64
+        createdAtInUtc:
+          type: string
+          format: date-time
     AccountRecord:
       type: object
       properties:
         username:
+          type: string
           maxLength: 50
           minLength: 2
-          type: string
         password:
           type: string
         email:
           type: string
+          format: email
         firstName:
+          type: string
           maxLength: 35
           minLength: 2
-          type: string
         lastName:
+          type: string
           maxLength: 35
           minLength: 2
-          type: string
         phone:
           type: string
         bio:
@@ -1052,78 +1104,78 @@ components:
       type: object
       properties:
         minStartYear:
-          maximum: 2030
-          minimum: 1850
           type: integer
           format: int32
+          maximum: 2030
+          minimum: 1850
         maxStartYear:
+          type: integer
+          format: int32
           maximum: 2030
           minimum: 1850
-          type: integer
-          format: int32
         minRuntimeMinutes:
+          type: integer
+          format: int32
           minimum: 0
-          type: integer
-          format: int32
         maxRuntimeMinutes:
-          maximum: 5000
           type: integer
           format: int32
+          maximum: 5000
         movieGenre:
-          uniqueItems: true
           type: array
           items:
             type: string
             enum:
-              - HORROR
-              - MYSTERY
-              - THRILLER
-              - CRIME
-              - WESTERN
-              - WAR
-              - ACTION
-              - ADVENTURE
-              - FAMILY
-              - COMEDY
-              - ANIMATION
-              - FANTASY
-              - SCI_FI
-              - DRAMA
-              - ROMANCE
-              - SPORT
-              - HISTORY
-              - BIOGRAPHY
-              - MUSIC
-              - MUSICAL
-              - DOCUMENTARY
-              - NEWS
-              - ADULT
-              - REALITY_TV
-              - TALK_SHOW
-              - GAME_SHOW
-              - FILM_NOIR
-              - SHORT
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          uniqueItems: true
         movieType:
           type: string
           enum:
-            - SHORT
-            - MOVIE
-            - VIDEO
-            - TV_MOVIE
-            - TV_EPISODE
-            - TV_MINI_SERIES
-            - TV_SPECIAL
-            - TV_SERIES
-            - TV_SHORT
-            - TV_PILOT
-            - VIDEO_GAME
-    PagedResponseMovie:
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
+    PagedResponseMovieRecord:
       type: object
       properties:
         content:
           type: array
           items:
-            $ref: "#/components/schemas/Movie"
+            $ref: "#/components/schemas/MovieRecord"
         page:
           type: integer
           format: int32
@@ -1146,154 +1198,51 @@ components:
           items:
             type: integer
             format: int64
-    MovieRecord:
-      type: object
-      properties:
-        primaryTitle:
-          type: string
-        originalTitle:
-          type: string
-        startYear:
-          type: integer
-          format: int32
-        endYear:
-          type: integer
-          format: int32
-        runtimeMinutes:
-          type: integer
-          format: int32
-        modifiedAtInUtc:
-          type: string
-          format: date-time
-        createdAtInUtc:
-          type: string
-          format: date-time
-        movieGenre:
-          uniqueItems: true
-          type: array
-          items:
-            type: string
-            enum:
-              - HORROR
-              - MYSTERY
-              - THRILLER
-              - CRIME
-              - WESTERN
-              - WAR
-              - ACTION
-              - ADVENTURE
-              - FAMILY
-              - COMEDY
-              - ANIMATION
-              - FANTASY
-              - SCI_FI
-              - DRAMA
-              - ROMANCE
-              - SPORT
-              - HISTORY
-              - BIOGRAPHY
-              - MUSIC
-              - MUSICAL
-              - DOCUMENTARY
-              - NEWS
-              - ADULT
-              - REALITY_TV
-              - TALK_SHOW
-              - GAME_SHOW
-              - FILM_NOIR
-              - SHORT
-        movieType:
-          type: string
-          enum:
-            - SHORT
-            - MOVIE
-            - VIDEO
-            - TV_MOVIE
-            - TV_EPISODE
-            - TV_MINI_SERIES
-            - TV_SPECIAL
-            - TV_SERIES
-            - TV_SHORT
-            - TV_PILOT
-            - VIDEO_GAME
-        imdbRating:
-          type: number
-          format: float
-        imdbRatingCount:
-          type: integer
-          format: int32
-        adult:
-          type: boolean
-        rating:
-          type: number
-          format: float
-        ratingCount:
-          type: integer
-          format: int32
-        description:
-          type: string
-        imageUrlToken:
-          type: string
-    PagedResponseMovieRecord:
-      type: object
-      properties:
-        content:
-          type: array
-          items:
-            $ref: "#/components/schemas/MovieRecord"
-        page:
-          type: integer
-          format: int32
-        size:
-          type: integer
-          format: int32
-        totalElements:
-          type: integer
-          format: int64
-        totalPages:
-          type: integer
-          format: int32
-        last:
-          type: boolean
     CreateCommentRequest:
       type: object
       properties:
         message:
+          type: string
           maxLength: 1000
           minLength: 0
-          type: string
     PasswordResetRequest:
       type: object
       properties:
         token:
+          type: string
           maxLength: 36
           minLength: 36
-          type: string
         newPassword:
           type: string
     RegistrationRequest:
-      required:
-        - email
-        - password
-        - username
       type: object
       properties:
         username:
           type: string
+          minLength: 1
         email:
           type: string
+          format: email
+          minLength: 1
         password:
           type: string
-    LoginRequest:
+          minLength: 1
       required:
-        - password
-        - usernameOrEmail
+      - email
+      - password
+      - username
+    LoginRequest:
       type: object
       properties:
         usernameOrEmail:
           type: string
+          minLength: 1
         password:
           type: string
+          minLength: 1
+      required:
+      - password
+      - usernameOrEmail
     LoginResponse:
       type: object
       properties:
@@ -1301,83 +1250,13 @@ components:
           type: string
         tokenType:
           type: string
-    Account:
-      required:
-        - email
-        - username
+    AccountCreated:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
         username:
           type: string
         email:
           type: string
-        firstName:
-          type: string
-        lastName:
-          type: string
-        phone:
-          type: string
-        bio:
-          type: string
-        birthday:
-          type: string
-          format: date-time
-        imageUrlToken:
-          type: string
-        roles:
-          type: array
-          items:
-            $ref: "#/components/schemas/Role"
-    Role:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-          enum:
-            - ROLE_USER
-            - ROLE_ADMIN
-    WatchedMovie:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/WatchedMovieId"
-    WatchedMovieId:
-      required:
-        - accountId
-        - movieId
-      type: object
-      properties:
-        movieId:
-          type: integer
-          format: int64
-        accountId:
-          type: integer
-          format: int64
-    Rating:
-      type: object
-      properties:
-        id:
-          $ref: "#/components/schemas/RatingId"
-        rating:
-          type: number
-    RatingId:
-      required:
-        - accountId
-        - movieId
-      type: object
-      properties:
-        movieId:
-          type: integer
-          format: int64
-        accountId:
-          type: integer
-          format: int64
     PagedResponseCommentRecord:
       type: object
       properties:
@@ -1425,15 +1304,6 @@ components:
           format: int32
         last:
           type: boolean
-    WatchedMovieRecord:
-      type: object
-      properties:
-        accountId:
-          type: integer
-          format: int64
-        movieId:
-          type: integer
-          format: int64
     PagedResponseRatingRecord:
       type: object
       properties:
@@ -1455,17 +1325,42 @@ components:
           format: int32
         last:
           type: boolean
-    RatingRecord:
+    PublicAccountProfile:
       type: object
       properties:
-        rating:
-          type: number
-        accountId:
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        bio:
+          type: string
+        imageUrlToken:
+          type: string
+        ratingsCount:
           type: integer
           format: int64
-        movieId:
+        watchlistCount:
           type: integer
           format: int64
+        commentsCount:
+          type: integer
+          format: int64
+    AccountSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
     AccountProfile:
       type: object
       properties:
@@ -1495,17 +1390,3 @@ components:
         commentsCount:
           type: integer
           format: int64
-    AccountSummaryResponse:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        username:
-          type: string
-        email:
-          type: string
-        firstName:
-          type: string
-        lastName:
-          type: string

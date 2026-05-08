@@ -1,5 +1,5 @@
 import { Container, Paper } from "@mui/material";
-import { RoleNameEnum } from "../../client/movies/generator-output";
+import { RoleNameEnum } from "../../types/roles";
 import Typography from "@mui/material/Typography";
 import { i18n } from "../../i18n";
 import React from "react";
