@@ -9,7 +9,7 @@ const PrivateRoute = ({
   children,
 }: {
   role: RoleNameEnum;
-  children: JSX.Element;
+  children: React.ReactElement;
 }) => {
   const location = useLocation();
   const isLoggedIn: boolean = isJwtNotExpired();

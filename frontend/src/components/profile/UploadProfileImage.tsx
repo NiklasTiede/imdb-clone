@@ -7,7 +7,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
-import ReactCrop, { Crop } from "react-image-crop";
+import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { useDispatch } from "react-redux";
 import { Dispatch } from "../../redux/store";
@@ -17,11 +17,7 @@ const UploadProfileImage: React.FC = () => {
 
   const [open, setOpen] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
-  const [crop, setCrop] = useState<Partial<Crop>>({
-    // unit: "%",
-    aspect: 1.0,
-    // height: 100
-  });
+  const [crop, setCrop] = useState<Crop>();
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
 
@@ -38,16 +34,12 @@ const UploadProfileImage: React.FC = () => {
     }
   };
 
-  const handleCropComplete = (crop: Crop) => {
+  const handleCropComplete = (crop: PixelCrop) => {
     setCrop(crop);
   };
 
-  const handleImageLoaded = (image: HTMLImageElement) => {
-    setImageRef(image);
-  };
-
   const handleUpload = async () => {
-    if (imageRef && crop.width && crop.height && file) {
+    if (imageRef && crop?.width && crop.height && file) {
       const croppedImage = await getCroppedImage(imageRef, crop, file.name);
 
       dispatch.fileStorage.storeUserProfilePhoto(croppedImage);
@@ -118,13 +110,18 @@ const UploadProfileImage: React.FC = () => {
           <DialogTitle>Crop your new profile picture</DialogTitle>
           <DialogContent>
             <ReactCrop
-              src={src}
               crop={crop}
               circularCrop
-              onImageLoaded={handleImageLoaded}
+              aspect={1}
               onComplete={handleCropComplete}
               onChange={handleCropComplete}
-            />
+            >
+              <img
+                src={src}
+                alt="Selected profile"
+                onLoad={(event) => setImageRef(event.currentTarget)}
+              />
+            </ReactCrop>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpen(false)} color="primary">

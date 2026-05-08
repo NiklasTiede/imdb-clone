@@ -2,7 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import React from "react";
 import { isJwtNotExpired } from "../../utils/jwtHelper";
 
-const PublicRoute = ({ children }: { children: JSX.Element }) => {
+const PublicRoute = ({ children }: { children: React.ReactElement }) => {
   const location = useLocation();
   const isLoggedIn: boolean = isJwtNotExpired();
 
