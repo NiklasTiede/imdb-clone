@@ -11,7 +11,9 @@ public interface AccountService {
 
   AccountSummaryResponse getCurrentAccount(UserPrincipal currentAccount);
 
-  AccountProfile getAccountProfile(String username);
+  AccountProfile getCurrentAccountProfile(UserPrincipal currentAccount);
+
+  PublicAccountProfile getAccountProfile(String username);
 
   AccountCreated createAccount(RegistrationRequest request, UserPrincipal currentAccount);
 

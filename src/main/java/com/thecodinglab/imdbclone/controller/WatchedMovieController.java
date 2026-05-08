@@ -21,7 +21,7 @@ public class WatchedMovieController {
     this.watchedMovieService = watchedMovieService;
   }
 
-  @GetMapping("/{movieId}/watch")
+  @PutMapping("/{movieId}/watch")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<WatchedMovieRecord> watchMovie(
       @PathVariable("movieId") Long movieId,

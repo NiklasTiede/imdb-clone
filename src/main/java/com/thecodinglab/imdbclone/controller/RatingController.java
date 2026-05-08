@@ -22,7 +22,7 @@ public class RatingController {
     this.ratingService = ratingService;
   }
 
-  @GetMapping("/{movieId}/rating-score/{score}")
+  @PutMapping("/{movieId}/rating-score/{score}")
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<RatingRecord> rateMovie(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount,

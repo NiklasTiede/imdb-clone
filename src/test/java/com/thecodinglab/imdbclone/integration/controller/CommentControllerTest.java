@@ -119,6 +119,9 @@ class CommentControllerTest extends BaseContainers {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
+                    .jsonPath("$.page").isEqualTo(0)
+                    .jsonPath("$.number").doesNotExist()
+                    .jsonPath("$.pageable").doesNotExist()
                     .jsonPath("$.content[0].message").isEqualTo(TEST_COMMENT_PREFIX + " updated")
                     .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
                     .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));
@@ -133,6 +136,9 @@ class CommentControllerTest extends BaseContainers {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
+                    .jsonPath("$.page").isEqualTo(0)
+                    .jsonPath("$.number").doesNotExist()
+                    .jsonPath("$.pageable").doesNotExist()
                     .jsonPath("$.content[0].message").isEqualTo(TEST_COMMENT_PREFIX + " updated")
                     .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
                     .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));

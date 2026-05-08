@@ -52,7 +52,7 @@ class WatchedMovieControllerTest extends BaseContainers {
   @Test
   void watchListAndDeleteMovie_success() {
     restTestClient
-        .get()
+        .put()
         .uri("/api/watched-movie/{movieId}/watch", MOVIE_ID)
         .header("Authorization", userToken)
         .accept(MediaType.APPLICATION_JSON)
@@ -75,6 +75,9 @@ class WatchedMovieControllerTest extends BaseContainers {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
+                    .jsonPath("$.page").isEqualTo(0)
+                    .jsonPath("$.number").doesNotExist()
+                    .jsonPath("$.pageable").doesNotExist()
                     .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
                     .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));
 
@@ -101,7 +104,7 @@ class WatchedMovieControllerTest extends BaseContainers {
   @Test
   void watchMovie_unauthenticated() {
     restTestClient
-        .get()
+        .put()
         .uri("/api/watched-movie/{movieId}/watch", MOVIE_ID)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()

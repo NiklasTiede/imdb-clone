@@ -12,7 +12,6 @@ import com.thecodinglab.imdbclone.service.*;
 import com.thecodinglab.imdbclone.validation.Pagination;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,13 +50,20 @@ public class AccountController {
   }
 
   @GetMapping("/{username}/profile")
-  public ResponseEntity<AccountProfile> getAccountProfile(
+  public ResponseEntity<PublicAccountProfile> getAccountProfile(
       @PathVariable("username") String username) {
     return new ResponseEntity<>(accountService.getAccountProfile(username), HttpStatus.OK);
   }
 
+  @GetMapping("/me/profile")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<AccountProfile> getCurrentAccountProfile(
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
+    return new ResponseEntity<>(accountService.getCurrentAccountProfile(currentUser), HttpStatus.OK);
+  }
+
   @GetMapping("/{username}/comments")
-  public ResponseEntity<Page<CommentRecord>> getCommentsByAccount(
+  public ResponseEntity<PagedResponse<CommentRecord>> getCommentsByAccount(
       @PathVariable("username") String username,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,
@@ -68,7 +74,7 @@ public class AccountController {
   }
 
   @GetMapping("/{username}/watchlist")
-  public ResponseEntity<Page<WatchedMovieRecord>> getWatchedMoviesByAccount(
+  public ResponseEntity<PagedResponse<WatchedMovieRecord>> getWatchedMoviesByAccount(
       @PathVariable("username") String username,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,
@@ -79,7 +85,7 @@ public class AccountController {
   }
 
   @GetMapping("/{username}/ratings")
-  public ResponseEntity<Page<RatingRecord>> getRatingsByAccount(
+  public ResponseEntity<PagedResponse<RatingRecord>> getRatingsByAccount(
       @PathVariable("username") String username,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,

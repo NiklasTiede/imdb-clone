@@ -52,7 +52,7 @@ class RatingControllerTest extends BaseContainers {
   @Test
   void rateListAndDeleteMovie_success() {
     restTestClient
-        .get()
+        .put()
         .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
         .header("Authorization", userToken)
         .accept(MediaType.APPLICATION_JSON)
@@ -76,6 +76,9 @@ class RatingControllerTest extends BaseContainers {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
+                    .jsonPath("$.page").isEqualTo(0)
+                    .jsonPath("$.number").doesNotExist()
+                    .jsonPath("$.pageable").doesNotExist()
                     .jsonPath("$.content[0].rating").isEqualTo(8.5)
                     .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
                     .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));
@@ -103,7 +106,7 @@ class RatingControllerTest extends BaseContainers {
   @Test
   void rateMovie_rejectsScoreAboveRange() {
     restTestClient
-        .get()
+        .put()
         .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.2")
         .header("Authorization", userToken)
         .accept(MediaType.APPLICATION_JSON)
@@ -120,7 +123,7 @@ class RatingControllerTest extends BaseContainers {
   @Test
   void rateMovie_unauthenticated() {
     restTestClient
-        .get()
+        .put()
         .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()

@@ -37,6 +37,10 @@ class SearchControllerTest extends BaseContainers {
             .expectAll(spec -> spec.expectStatus().isOk(),
                     spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
                     spec -> spec.expectBody()
+                            .jsonPath("$.page").isEqualTo(0)
+                            .jsonPath("$.number").doesNotExist()
+                            .jsonPath("$.pageable").doesNotExist()
+                            .jsonPath("$.content[0].id").isEqualTo(1)
                             .jsonPath("$.content[0].primaryTitle").isEqualTo("testMovieOnePri")
             );
   }

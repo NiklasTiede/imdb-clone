@@ -85,6 +85,28 @@ class AccountControllerTest extends BaseContainers {
             spec ->
                 spec.expectBody()
                     .jsonPath("$.username").isEqualTo("test_user_two")
+                    .jsonPath("$.email").doesNotExist()
+                    .jsonPath("$.phone").doesNotExist()
+                    .jsonPath("$.birthday").doesNotExist()
+                    .jsonPath("$.ratingsCount").isEqualTo(0)
+                    .jsonPath("$.watchlistCount").isEqualTo(0)
+                    .jsonPath("$.commentsCount").isEqualTo(0));
+  }
+
+  @Test
+  void getCurrentAccountProfile_success() {
+    restTestClient
+        .get()
+        .uri("/api/account/me/profile")
+        .header("Authorization", userToken)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.username").isEqualTo("test_user_two")
                     .jsonPath("$.email").isEqualTo("two@web.com")
                     .jsonPath("$.ratingsCount").isEqualTo(0)
                     .jsonPath("$.watchlistCount").isEqualTo(0)

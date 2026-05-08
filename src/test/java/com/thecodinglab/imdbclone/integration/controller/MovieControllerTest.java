@@ -101,6 +101,7 @@ class MovieControllerTest extends BaseContainers {
                     spec -> spec.expectStatus().isOk(),
                     spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
                     spec -> spec.expectBody()
+                            .jsonPath("$.id").isEqualTo(existingMovie)
                             .jsonPath("$.primaryTitle").isEqualTo("testMovieOnePri")
                             .jsonPath("$.startYear").isEqualTo(2010)
             );
@@ -122,6 +123,9 @@ class MovieControllerTest extends BaseContainers {
                     spec -> spec.expectStatus().isOk(),
                     spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
                     spec -> spec.expectBody()
+                            .jsonPath("$.page").isEqualTo(0)
+                            .jsonPath("$.number").doesNotExist()
+                            .jsonPath("$.pageable").doesNotExist()
                             .jsonPath("$.content").exists()
                             .jsonPath("$.content[0].primaryTitle").doesNotExist()
             );
@@ -143,7 +147,12 @@ class MovieControllerTest extends BaseContainers {
                     spec -> spec.expectStatus().isOk(),
                     spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
                     spec -> spec.expectBody()
+                            .jsonPath("$.page").isEqualTo(0)
+                            .jsonPath("$.number").doesNotExist()
+                            .jsonPath("$.pageable").doesNotExist()
+                            .jsonPath("$.content[0].id").isEqualTo(1)
                             .jsonPath("$.content[0].primaryTitle").isEqualTo("testMovieOnePri")
+                            .jsonPath("$.content[1].id").isEqualTo(2)
                             .jsonPath("$.content[1].primaryTitle").isEqualTo("testMovieTwoPri")
             );
   }
@@ -174,6 +183,7 @@ class MovieControllerTest extends BaseContainers {
                     spec -> spec.expectStatus().isCreated(),
                     spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
                     spec -> spec.expectBody()
+                            .jsonPath("$.id").isEqualTo(3)
                             .jsonPath("$.primaryTitle").isEqualTo("test movie")
                             .jsonPath("$.startYear").isEqualTo(2015)
             );

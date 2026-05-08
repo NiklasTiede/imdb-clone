@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Set;
 
 public record MovieRecord(
+        Long id,
         String primaryTitle,
         String originalTitle,
         Integer startYear,

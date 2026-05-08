@@ -52,7 +52,7 @@ public class MovieServiceImpl implements MovieService {
   }
 
   @Override
-  public Page<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size) {
+  public PagedResponse<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size);
     Page<Movie> movies = movieRepository.findByIdIn(movieIds, pageable);
@@ -60,7 +60,7 @@ public class MovieServiceImpl implements MovieService {
         "[{}] movies with movieIds [{}] were retrieved from database",
         v(COUNT, movies.getContent().size()),
         kv(MOVIE_IDS, movies.getContent().stream().map(Movie::getId).toList()));
-    return movies.map(movieMapper::entityToDTO);
+    return PagedResponse.from(movies.map(movieMapper::entityToDTO));
   }
 
   @Override
@@ -95,14 +95,14 @@ public class MovieServiceImpl implements MovieService {
   }
 
   @Override
-  public PagedResponse<Movie> searchMoviesByTitle(String title, int page, int size) {
+  public PagedResponse<MovieRecord> searchMoviesByTitle(String title, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     PagedResponse<Movie> movies = movieSearchDao.findByPrimaryTitleStartsWith(title, page, size);
     logger.info(
         "[{}] movies with movieIds [{}] were retrieved from database",
         v(COUNT, movies.getContent().size()),
         kv(MOVIE_IDS, movies.getContent().stream().map(Movie::getId).toList()));
-    return movies;
+    return movies.map(movieMapper::entityToDTO);
   }
 
   public Movie performSave(Movie movie) {

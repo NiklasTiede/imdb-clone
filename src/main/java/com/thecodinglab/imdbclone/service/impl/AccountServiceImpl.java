@@ -66,14 +66,9 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public AccountProfile getAccountProfile(String username) {
-    Account account = accountRepository.getAccountByUsername(username);
-    Long ratingsCount = ratingRepository.countRatingsByAccount(account);
-    Long watchedMoviesCount = watchedMovieRepository.countWatchedMoviesByAccount(account);
-    Long commentsCount = commentRepository.countCommentsByAccount(account);
-    logger.info(
-        "Account profile with id [{}] was retrieved from database.",
-        v(ACCOUNT_ID, account.getId()));
+  public AccountProfile getCurrentAccountProfile(UserPrincipal currentAccount) {
+    Account account = accountRepository.getAccount(currentAccount);
+    ProfileCounts counts = getProfileCounts(account);
     return new AccountProfile(
         account.getUsername(),
         account.getEmail(),
@@ -83,10 +78,37 @@ public class AccountServiceImpl implements AccountService {
         account.getBio(),
         account.getBirthday(),
         account.getImageUrlToken(),
-        ratingsCount,
-        watchedMoviesCount,
-        commentsCount);
+        counts.ratingsCount(),
+        counts.watchedMoviesCount(),
+        counts.commentsCount());
   }
+
+  @Override
+  public PublicAccountProfile getAccountProfile(String username) {
+    Account account = accountRepository.getAccountByUsername(username);
+    ProfileCounts counts = getProfileCounts(account);
+    return new PublicAccountProfile(
+        account.getUsername(),
+        account.getFirstName(),
+        account.getLastName(),
+        account.getBio(),
+        account.getImageUrlToken(),
+        counts.ratingsCount(),
+        counts.watchedMoviesCount(),
+        counts.commentsCount());
+  }
+
+  private ProfileCounts getProfileCounts(Account account) {
+    Long ratingsCount = ratingRepository.countRatingsByAccount(account);
+    Long watchedMoviesCount = watchedMovieRepository.countWatchedMoviesByAccount(account);
+    Long commentsCount = commentRepository.countCommentsByAccount(account);
+    logger.info(
+        "Account profile with id [{}] was retrieved from database.",
+        v(ACCOUNT_ID, account.getId()));
+    return new ProfileCounts(ratingsCount, watchedMoviesCount, commentsCount);
+  }
+
+  private record ProfileCounts(Long ratingsCount, Long watchedMoviesCount, Long commentsCount) {}
 
   @Override
   public AccountCreated createAccount(RegistrationRequest request, UserPrincipal currentAccount) {

@@ -58,7 +58,7 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
-  public Page<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size) {
+  public PagedResponse<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Movie movie = movieRepository.getMovieById(movieId);
@@ -69,7 +69,7 @@ public class CommentServiceImpl implements CommentService {
         comments.getContent().size(),
         v(COMMENT_IDS, comments.getContent().stream().map(Comment::getId).toList()),
         kv(MOVIE_ID, movieId));
-    return comments.map(commentMapper::entityToDTO);
+    return PagedResponse.from(comments.map(commentMapper::entityToDTO));
   }
 
   @Override
@@ -84,7 +84,7 @@ public class CommentServiceImpl implements CommentService {
   }
 
   @Override
-  public Page<CommentRecord> getCommentsByAccount(String username, int page, int size) {
+  public PagedResponse<CommentRecord> getCommentsByAccount(String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Account account = accountRepository.getAccountByUsername(username);
@@ -95,7 +95,7 @@ public class CommentServiceImpl implements CommentService {
         comments.getContent().size(),
         v(COMMENT_IDS, comments.getContent().stream().map(Comment::getId).toList()),
         username);
-    return comments.map(commentMapper::entityToDTO);
+    return PagedResponse.from(comments.map(commentMapper::entityToDTO));
   }
 
   @Override

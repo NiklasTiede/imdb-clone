@@ -1,6 +1,5 @@
 package com.thecodinglab.imdbclone.controller;
 
-import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.payload.movie.MovieIdsRequest;
 import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
@@ -11,7 +10,6 @@ import com.thecodinglab.imdbclone.service.MovieService;
 import com.thecodinglab.imdbclone.validation.Pagination;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,7 +31,7 @@ public class MovieController {
   }
 
   @PostMapping("/get-movies")
-  public ResponseEntity<Page<MovieRecord>> getMoviesByIds(
+  public ResponseEntity<PagedResponse<MovieRecord>> getMoviesByIds(
       @RequestBody MovieIdsRequest request,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,
@@ -77,7 +75,7 @@ public class MovieController {
    */
   @Deprecated(forRemoval = true)
   @GetMapping("/search/{primaryTitle}")
-  public ResponseEntity<PagedResponse<Movie>> searchMoviesByTitle(
+  public ResponseEntity<PagedResponse<MovieRecord>> searchMoviesByTitle(
       @PathVariable("primaryTitle") String primaryTitle,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,

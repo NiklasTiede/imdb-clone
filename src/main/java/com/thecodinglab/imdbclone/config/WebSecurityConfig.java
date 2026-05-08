@@ -51,12 +51,23 @@ public class WebSecurityConfig {
         .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             ar ->
-                ar.requestMatchers(HttpMethod.GET, "/**")
-                    .permitAll()
-                    .requestMatchers("/api/auth/**")
+                ar.requestMatchers("/api/auth/**")
                     .permitAll()
                     .requestMatchers(
-                        HttpMethod.GET, "/api/movie/**", "/api/comment/**", "/api/account/**")
+                        "/v3/api-docs",
+                        "/v3/api-docs.yaml",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/v3/swagger-ui.html")
+                    .permitAll()
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/movie/**",
+                        "/api/comment/**",
+                        "/api/account/*/profile",
+                        "/api/account/*/comments",
+                        "/api/account/*/watchlist",
+                        "/api/account/*/ratings")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/movie/get-movies", "/api/search/movies")
                     .permitAll()

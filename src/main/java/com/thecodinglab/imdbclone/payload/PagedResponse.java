@@ -1,6 +1,8 @@
 package com.thecodinglab.imdbclone.payload;
 
 import java.util.List;
+import java.util.function.Function;
+import org.springframework.data.domain.Page;
 
 public class PagedResponse<T> {
   private List<T> content;
@@ -20,6 +22,21 @@ public class PagedResponse<T> {
     this.totalElements = totalElements;
     this.totalPages = totalPages;
     this.last = last;
+  }
+
+  public static <T> PagedResponse<T> from(Page<T> page) {
+    return new PagedResponse<>(
+        page.getContent(),
+        page.getNumber(),
+        page.getSize(),
+        page.getTotalElements(),
+        page.getTotalPages(),
+        page.isLast());
+  }
+
+  public <R> PagedResponse<R> map(Function<T, R> mapper) {
+    return new PagedResponse<>(
+        content.stream().map(mapper).toList(), page, size, totalElements, totalPages, last);
   }
 
   public List<T> getContent() {

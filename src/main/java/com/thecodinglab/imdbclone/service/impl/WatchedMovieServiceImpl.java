@@ -8,6 +8,7 @@ import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.entity.WatchedMovie;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
+import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.mapper.CustomWatchedMovieMapper;
 import com.thecodinglab.imdbclone.payload.watchlist.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
@@ -60,20 +61,19 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   }
 
   @Override
-  public Page<WatchedMovieRecord> getWatchedMoviesByAccount(String username, int page, int size) {
+  public PagedResponse<WatchedMovieRecord> getWatchedMoviesByAccount(
+      String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
     Account account = accountRepository.getAccountByUsername(username);
     Page<WatchedMovie> watchedMovies =
         watchedMovieRepository.findAllByAccountIdOrderByCreatedAtInUtcDesc(
             account.getId(), pageable);
-    Page<WatchedMovieRecord> watchedMovieRecordPage =
-        watchedMovies.map(watchedMovieMapper::entityToDTO);
     logger.info(
         "[{}] watchedMovies from account with [{}] were retrieved.",
         watchedMovies.getContent().size(),
         kv(ACCOUNT_ID, account.getId()));
-    return watchedMovieRecordPage;
+    return PagedResponse.from(watchedMovies.map(watchedMovieMapper::entityToDTO));
   }
 
   @Override

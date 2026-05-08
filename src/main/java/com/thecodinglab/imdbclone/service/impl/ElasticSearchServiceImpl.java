@@ -10,6 +10,9 @@ import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.exception.domain.ElasticsearchOperationException;
+import com.thecodinglab.imdbclone.payload.PagedResponse;
+import com.thecodinglab.imdbclone.payload.mapper.MovieMapper;
+import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
 import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
 import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import java.io.IOException;
@@ -18,7 +21,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,10 +32,12 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
 
   private static final Logger logger = LoggerFactory.getLogger(ElasticSearchServiceImpl.class);
   private final ElasticsearchClient esClient;
+  private final MovieMapper movieMapper;
   private static final String MOVIES_INDEX = "movies";
 
-  public ElasticSearchServiceImpl(ElasticsearchClient esClient) {
+  public ElasticSearchServiceImpl(ElasticsearchClient esClient, MovieMapper movieMapper) {
     this.esClient = esClient;
+    this.movieMapper = movieMapper;
   }
 
   @Override
@@ -162,7 +166,8 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
    * Search Movies by Multiple Parameters, highest voted movies scoring is boosted
    */
   @Override
-  public Page<Movie> searchMovies(String query, MovieSearchRequest request, int page, int size) {
+  public PagedResponse<MovieRecord> searchMovies(
+      String query, MovieSearchRequest request, int page, int size) {
     BoolQuery boolQuery = buildBoolQuery(query, request);
     SearchResponse<Movie> response;
 
@@ -192,7 +197,7 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
             .filter(Objects::nonNull)
             .toList();
 
-    return new PageImpl<>(movies, pageable, totalHits);
+    return PagedResponse.from(new PageImpl<>(movies, pageable, totalHits).map(movieMapper::entityToDTO));
   }
 
   @Override
