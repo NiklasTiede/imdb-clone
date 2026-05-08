@@ -3,6 +3,8 @@ name: CI - Build / Test for BE and FE Service
 on:
   push:
     branches: ['*']
+  workflow_dispatch:
+
 
 jobs:
   backend-build-test:

@@ -2,8 +2,7 @@ name: CD - Docker publish for BE and FE Service
 
 on:
   workflow_dispatch:
-    branches:
-      - master
+
 
 jobs:
   deploy-backend:
