@@ -15,7 +15,7 @@ RUN yarn run build:moviesGen \
     && yarn build
 
 # Stage 2: Set up the Nginx server to serve the application
-FROM nginx:1.25-alpine
+FROM nginx:1.30-alpine
 # Copy the built app to the Nginx container
 COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80
