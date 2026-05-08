@@ -27,7 +27,10 @@ public class Account extends DateAudit {
   private String phone;
   private String bio;
   private Date birthday;
+
+  @Column(length = 255)
   private String imageUrlToken;
+
   @JsonIgnore private Boolean locked = false;
   @JsonIgnore private Boolean enabled = false;
 

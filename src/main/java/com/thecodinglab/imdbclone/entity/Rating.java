@@ -10,7 +10,7 @@ public class Rating extends DateAudit {
 
   @EmbeddedId private RatingId id;
 
-  @Column(name = "rating", nullable = false, precision = 2, scale = 1)
+  @Column(name = "rating", nullable = false, precision = 3, scale = 1)
   private BigDecimal rating;
 
   @JsonIgnore

@@ -30,7 +30,8 @@ public class Movie extends DateAudit {
   @Convert(converter = MovieGenreConverterImpl.class)
   private Set<MovieGenreEnum> movieGenre;
 
-  @Enumerated(EnumType.ORDINAL)
+  @Enumerated(EnumType.STRING)
+  @Column(length = 50)
   private MovieTypeEnum movieType;
 
   private Float imdbRating;
@@ -43,6 +44,7 @@ public class Movie extends DateAudit {
 
   @JsonIgnore private String description;
 
+  @Column(length = 255)
   private String imageUrlToken;
 
   @Transient
