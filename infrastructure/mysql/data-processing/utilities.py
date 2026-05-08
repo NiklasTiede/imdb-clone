@@ -40,17 +40,17 @@ class MovieGenreEnum(Enum):
 
 
 class MovieTypeEnum(Enum):
-    SHORT = 0
-    MOVIE = 1
-    VIDEO = 2
-    TV_MOVIE = 3
-    TV_EPISODE = 4
-    TV_MINI_SERIES = 5
-    TV_SPECIAL = 6
-    TV_SERIES = 7
-    TV_SHORT = 8
-    TV_PILOT = 9
-    VIDEO_GAME = 10
+    SHORT = "SHORT"
+    MOVIE = "MOVIE"
+    VIDEO = "VIDEO"
+    TV_MOVIE = "TV_MOVIE"
+    TV_EPISODE = "TV_EPISODE"
+    TV_MINI_SERIES = "TV_MINI_SERIES"
+    TV_SPECIAL = "TV_SPECIAL"
+    TV_SERIES = "TV_SERIES"
+    TV_SHORT = "TV_SHORT"
+    TV_PILOT = "TV_PILOT"
+    VIDEO_GAME = "VIDEO_GAME"
 
 
 movietype_map = {
@@ -106,4 +106,3 @@ def convert_tconst_to_indexnum(field_value):
 def find_string(field_value):
     if len(field_value) > 4 and field_value != "\\N":
         print(field_value)
-
