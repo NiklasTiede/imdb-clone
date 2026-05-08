@@ -79,13 +79,15 @@ const Login = () => {
             <Grid
               container
               spacing={2}
-              direction={"column"}
-              justifyContent={"center"}
-              style={{ minHeight: "80vh" }}
+              sx={{
+                flexDirection: "column",
+                justifyContent: "center",
+                minHeight: "80vh",
+              }}
             >
               <Paper elevation={2} sx={{ padding: 5 }}>
-                <Grid container direction={"column"} spacing={2}>
-                  <Grid item>
+                <Grid container spacing={2} sx={{ flexDirection: "column" }}>
+                  <Grid>
                     <TextField
                       type={"text"}
                       label={"Email / Username"}
@@ -100,7 +102,7 @@ const Login = () => {
                       {...register("usernameOrEmail")}
                     />
                   </Grid>
-                  <Grid item>
+                  <Grid>
                     <TextField
                       type={"password"}
                       label={"Password"}
@@ -113,7 +115,7 @@ const Login = () => {
                       {...register("password")}
                     />
                   </Grid>
-                  <Grid item textAlign="center">
+                  <Grid sx={{ textAlign: "center" }}>
                     <Button
                       sx={{
                         color: colors.primary[100],
@@ -130,7 +132,7 @@ const Login = () => {
                       {i18n.login.login}
                     </Button>
                   </Grid>
-                  <Grid item textAlign="center">
+                  <Grid sx={{ textAlign: "center" }}>
                     Need an account?{" "}
                     <Link
                       to="/registration"

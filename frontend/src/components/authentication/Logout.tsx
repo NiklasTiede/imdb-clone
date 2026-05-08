@@ -16,7 +16,7 @@ const Logout = () => {
       <div>
         <Container maxWidth={"xs"}>
           <Paper elevation={3} sx={{ padding: 4, marginTop: 10, fontSize: 18 }}>
-            <Typography variant={"inherit"} textAlign={"center"}>
+            <Typography variant={"inherit"} sx={{ textAlign: "center" }}>
               {i18n.logout.message}
             </Typography>
           </Paper>

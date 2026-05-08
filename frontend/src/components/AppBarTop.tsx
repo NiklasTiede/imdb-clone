@@ -108,7 +108,7 @@ function AppBarTop() {
   // after isAuthenticated from store is updated -> AppBar comp. is re-rendered
   useSelector(
     (state: { authentication: AuthenticationStatus }) =>
-      state.authentication.isAuthenticated
+      state.authentication.isAuthenticated,
   );
   const isAdmin: boolean = hasUserRole(RoleNameEnum.Admin);
   const isLoggedIn: boolean = isJwtNotExpired();
@@ -187,7 +187,7 @@ function AppBarTop() {
     >
       {settings.map((setting) => (
         <MenuItem key={setting.name} onClick={handleMenuClose}>
-          <Typography textAlign="center">
+          <Typography sx={{ textAlign: "center" }}>
             <Link
               style={{ textDecoration: "none", color: "inherit" }}
               to={`${setting.to}`}
@@ -198,7 +198,7 @@ function AppBarTop() {
         </MenuItem>
       ))}
       <MenuItem key={"Logout"} onClick={handleLogout}>
-        <Typography textAlign="center">
+        <Typography sx={{ textAlign: "center" }}>
           <Link
             style={{ textDecoration: "none", color: "inherit" }}
             to={"/logout"}

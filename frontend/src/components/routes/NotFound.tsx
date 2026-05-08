@@ -11,8 +11,7 @@ const NotFound = () => {
           <Paper elevation={3} sx={{ padding: 6, marginTop: 10 }}>
             <Typography
               variant={"inherit"}
-              textAlign={"center"}
-              sx={{ fontSize: 16 }}
+              sx={{ textAlign: "center", fontSize: 16 }}
             >
               {i18n.notFound.message}
             </Typography>

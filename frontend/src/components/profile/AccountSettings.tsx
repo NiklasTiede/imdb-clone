@@ -19,7 +19,7 @@ import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { State as AccountStatus } from "../../redux/model/account";
 import { State as FileStorageStatus } from "../../redux/model/filestorage";
 import { getUsername } from "../../utils/jwtHelper";
-import moment from "moment";
+import moment, { type Moment } from "moment";
 import { i18n } from "../../i18n";
 import UploadProfileImage from "./UploadProfileImage";
 
@@ -43,7 +43,7 @@ const AccountSettings = () => {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
-  const [birthdayDate, setBirthdayDate] = useState("");
+  const [birthdayDate, setBirthdayDate] = useState<Moment | null>(null);
 
   const [characterCount, setCharacterCount] = useState(0);
   const maxBioLength = 300;
@@ -58,7 +58,9 @@ const AccountSettings = () => {
     setFirstName(accountProfile.firstName ?? "");
     setLastName(accountProfile.lastName ?? "");
     setPhone(accountProfile.phone ?? "");
-    setBirthdayDate(accountProfile.birthday ?? "");
+    setBirthdayDate(
+      accountProfile.birthday ? moment(accountProfile.birthday) : null,
+    );
     setBio(accountProfile.bio ?? "");
     setCharacterCount(accountProfile.bio ? accountProfile.bio.length : 0);
     if (accountProfile.imageUrlToken) {
@@ -84,7 +86,7 @@ const AccountSettings = () => {
         accountRecord: {
           firstName: firstName ? firstName : null,
           lastName: lastName ? lastName : null,
-          birthday: moment(birthdayDate).toISOString(),
+          birthday: birthdayDate ? birthdayDate.toISOString() : null,
           phone: phone,
           bio: bio,
         },
@@ -106,7 +108,7 @@ const AccountSettings = () => {
   // const bla = imageUrlToken ? `http://192.168.178.49:9000/imdb-clone/profile-photos/${imageUrlToken}_size_800x800.jpg` : null;
 
   return (
-    <Box padding={5}>
+    <Box sx={{ p: 5 }}>
       <Paper
         elevation={24}
         sx={{
@@ -124,7 +126,7 @@ const AccountSettings = () => {
         <form onSubmit={handleSubmit} noValidate>
           <Stack spacing={6}>
             <Grid>
-              <Typography gutterBottom fontSize={14}>
+              <Typography gutterBottom sx={{ fontSize: 14 }}>
                 {i18n.accountSettings.username}
               </Typography>
               <TextField
@@ -132,13 +134,13 @@ const AccountSettings = () => {
                 fullWidth
                 variant={"outlined"}
                 autoComplete="off"
-                inputProps={{ spellCheck: "false" }}
+                slotProps={{ htmlInput: { spellCheck: false } }}
                 disabled
                 value={accountProfile.username}
               />
             </Grid>
             <Grid>
-              <Typography gutterBottom fontSize={14}>
+              <Typography gutterBottom sx={{ fontSize: 14 }}>
                 {i18n.accountSettings.email}
               </Typography>
               <TextField
@@ -146,38 +148,38 @@ const AccountSettings = () => {
                 fullWidth
                 variant={"outlined"}
                 autoComplete="off"
-                inputProps={{ spellCheck: "false" }}
+                slotProps={{ htmlInput: { spellCheck: false } }}
                 disabled
                 value={accountProfile.email}
               />
             </Grid>
             <Grid>
-              <Typography gutterBottom fontSize={14}>
+              <Typography gutterBottom sx={{ fontSize: 14 }}>
                 {i18n.accountSettings.firstName}
               </Typography>
               <TextField
                 type={"text"}
                 fullWidth
-                inputProps={{ spellCheck: "false" }}
+                slotProps={{ htmlInput: { spellCheck: false } }}
                 variant={"outlined"}
                 onChange={(e) => setFirstName(e.target.value)}
                 value={firstName}
               />
             </Grid>
             <Grid>
-              <Typography gutterBottom fontSize={14}>
+              <Typography gutterBottom sx={{ fontSize: 14 }}>
                 {i18n.accountSettings.lastName}
               </Typography>
               <TextField
                 type={"text"}
                 fullWidth
-                inputProps={{ spellCheck: "false" }}
+                slotProps={{ htmlInput: { spellCheck: false } }}
                 variant={"outlined"}
                 onChange={(e) => setLastName(e.target.value)}
                 value={lastName}
               />
             </Grid>
-            <Grid container direction={"column"}>
+            <Grid container sx={{ flexDirection: "column" }}>
               <Typography gutterBottom>
                 {i18n.accountSettings.birthday}
               </Typography>
@@ -187,10 +189,10 @@ const AccountSettings = () => {
                   openTo="year"
                   views={["year", "month", "day"]}
                   value={birthdayDate}
-                  onChange={(newValue: any) => {
+                  onChange={(newValue) => {
                     setBirthdayDate(newValue);
                   }}
-                  renderInput={(params) => <TextField {...params} />}
+                  slotProps={{ textField: { variant: "outlined" } }}
                 />
               </LocalizationProvider>
             </Grid>

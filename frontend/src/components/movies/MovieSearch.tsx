@@ -40,7 +40,7 @@ const MovieSearch = () => {
     <Container maxWidth={"md"} sx={{ padding: 3, marginTop: 0 }}>
       <Grid container spacing={1}>
         {movies.map((movie) => (
-          <Grid item key={movie.id} xs={12}>
+          <Grid key={movie.id} size={{ xs: 12 }}>
             <MovieCard {...movie} />
           </Grid>
         ))}

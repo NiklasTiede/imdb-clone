@@ -122,13 +122,15 @@ const Registration = () => {
             <Grid
               container
               spacing={4}
-              direction={"column"}
-              justifyContent={"center"}
-              style={{ minHeight: "80vh" }}
+              sx={{
+                flexDirection: "column",
+                justifyContent: "center",
+                minHeight: "80vh",
+              }}
             >
               <Paper elevation={2} sx={{ padding: 4 }}>
-                <Grid container direction={"column"} spacing={1}>
-                  <Grid item>
+                <Grid container spacing={1} sx={{ flexDirection: "column" }}>
+                  <Grid>
                     <TextField
                       label={"Username"}
                       type={"text"}
@@ -141,7 +143,7 @@ const Registration = () => {
                       {...register("username")}
                     />
                   </Grid>
-                  <Grid item>
+                  <Grid>
                     <TextField
                       label={"Email"}
                       type={"email"}
@@ -152,9 +154,9 @@ const Registration = () => {
                       {...register("email")}
                     />
                   </Grid>
-                  <Grid item>
+                  <Grid>
                     <Grid container spacing={3}>
-                      <Grid item xs={5}>
+                      <Grid size={{ xs: 5 }}>
                         <TextField
                           label={"Password"}
                           type={showPassword ? "text" : "password"}
@@ -167,7 +169,7 @@ const Registration = () => {
                           {...register("password")}
                         />
                       </Grid>
-                      <Grid item xs={5}>
+                      <Grid size={{ xs: 5 }}>
                         <TextField
                           label={"Confirm Password"}
                           type={showPassword ? "text" : "password"}
@@ -182,7 +184,10 @@ const Registration = () => {
                           {...register("confirmPassword")}
                         />
                       </Grid>
-                      <Grid item xs={2} sx={{ marginTop: 1, marginLeft: -1 }}>
+                      <Grid
+                        size={{ xs: 2 }}
+                        sx={{ marginTop: 1, marginLeft: -1 }}
+                      >
                         <FormControlLabel
                           control={
                             <Checkbox
@@ -195,7 +200,7 @@ const Registration = () => {
                       </Grid>
                     </Grid>
                   </Grid>
-                  <Grid item>
+                  <Grid>
                     <Button
                       sx={{
                         color: colors.primary[100],

@@ -43,20 +43,16 @@ const MovieDetail = () => {
               elevation={3}
               sx={{ padding: 4, marginTop: 10, fontSize: 18 }}
             >
-              <Typography variant={"inherit"} textAlign={"center"}>
+              <Typography variant={"inherit"} sx={{ textAlign: "center" }}>
                 {movie.primaryTitle}, {movie.startYear}
               </Typography>
               <CardMedia
                 component="img"
                 alt="movie poster"
                 sx={{ width: 300, height: 450, padding: 1 }}
-                src={
-                  movie.imageUrlToken
-                    ? imageUrl
-                    : placeholderSearch
-                }
+                src={movie.imageUrlToken ? imageUrl : placeholderSearch}
               />
-              <Typography variant={"inherit"} textAlign={"center"}>
+              <Typography variant={"inherit"} sx={{ textAlign: "center" }}>
                 {movie.description}
               </Typography>
             </Paper>
@@ -67,7 +63,7 @@ const MovieDetail = () => {
               elevation={3}
               sx={{ padding: 4, marginTop: 10, fontSize: 18 }}
             >
-              <Typography variant={"inherit"} textAlign={"center"}>
+              <Typography variant={"inherit"} sx={{ textAlign: "center" }}>
                 {i18n.movieDetails.loadingError(movieId)}
               </Typography>
             </Paper>
