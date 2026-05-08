@@ -53,7 +53,7 @@ export const account = createModel<RootModel>()({
           ...state.accountProfile,
           firstName: payload.firstName,
           lastName: payload.lastName,
-          birthday: moment(payload.birthday).toISOString(),
+          birthday: payload.birthday ? moment(payload.birthday).toISOString() : "",
           phone: payload.phone,
           bio: payload.bio,
         },

@@ -34,7 +34,7 @@ Content-Type: application/json
   "lastName": "Lazarus",
   "phone": "0152/8273654",
   "bio": "Man, I don't drop character 'till I done the DVD commentary.",
-  "birthday": "1965-04-04T00:00:00.000"
+  "birthday": "1965-04-04"
 }
 
 

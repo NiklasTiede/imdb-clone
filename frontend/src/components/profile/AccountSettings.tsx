@@ -86,7 +86,7 @@ const AccountSettings = () => {
         accountRecord: {
           firstName: firstName ? firstName : null,
           lastName: lastName ? lastName : null,
-          birthday: birthdayDate ? birthdayDate.toISOString() : null,
+          birthday: birthdayDate ? birthdayDate.format("YYYY-MM-DD") : null,
           phone: phone,
           bio: bio,
         },
