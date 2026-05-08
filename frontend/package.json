@@ -6,6 +6,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "e2e:install": "playwright install chromium",
+    "e2e:ui": "playwright test --ui",
     "eject": "react-scripts eject",
     "lint": "eslint . --ext .tsx,.ts",
     "format": "yarn prettier --write .",
@@ -39,6 +43,7 @@
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.7.0",
+    "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.4.3",
@@ -50,16 +55,27 @@
     "@types/react-redux": "7.1.25",
     "@typescript-eslint/eslint-plugin": "^6.3.0",
     "@typescript-eslint/parser": "^6.3.0",
-    "eslint-config-react-app": "^7.0.1",
     "eslint": "^8.47.0",
+    "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react": "^7.33.1",
     "prettier": "3.0.0",
-    "typescript": "^5.1.6"
+    "typescript": "4.9.5"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "e2e/**/*.ts",
+          "playwright.config.ts"
+        ],
+        "rules": {
+          "testing-library/prefer-screen-queries": "off"
+        }
+      }
     ]
   },
   "browserslist": {
