@@ -26,8 +26,8 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       BROWSER: "none",
-      REACT_APP_IMDB_CLONE_BACKEND_ADDRESS: "http://localhost:8080",
-      REACT_APP_IMDB_CLONE_MINIO_ADDRESS: "http://localhost:9000",
+      VITE_IMDB_CLONE_BACKEND_ADDRESS: "http://localhost:8080",
+      VITE_IMDB_CLONE_MINIO_ADDRESS: "http://localhost:9000",
     },
   },
 });
