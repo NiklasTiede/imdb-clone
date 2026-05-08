@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
 	id 'idea'
-	id 'org.springframework.boot' version "${springBootPluginVersion}"
+	id 'org.springframework.boot' version "${springBootVersion}"
 	id 'jacoco'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'com.github.ben-manes.versions' version '0.54.0'
@@ -35,12 +35,6 @@ repositories {
 	mavenCentral()
 }
 
-dependencyManagement {
-	imports {
-		mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
-	}
-}
-
 spotless {
 	java {
 		target 'src/main/java/**/*.java', 'src/test/java/**/*.java'
@@ -56,56 +50,56 @@ spotless {
 
 dependencies {
 	//-- Improved developing
-	developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 	//-- create persistence containers with startup
-	developmentOnly "org.springframework.boot:spring-boot-docker-compose:${springBootVersion}"
+	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 
 	//-- Servlet
-	implementation "org.springframework.boot:spring-boot-starter-webmvc:${springBootVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
 	//-- Validation
-	implementation "org.springframework.boot:spring-boot-starter-validation:${springBootVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	//-- Documentation - Swagger UI
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 
 	//-- Mapping
-	implementation 'org.mapstruct:mapstruct:1.7.0.Beta1'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.7.0.Beta1'
+	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 
 	//-- Rel. Database
 	implementation 'com.mysql:mysql-connector-j:9.7.0'
-	implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springBootVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
 	//-- SearchEngine
-	implementation "org.springframework.boot:spring-boot-starter-data-elasticsearch:${springBootVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
 	//-- File Storage
 	implementation 'io.minio:minio:9.0.0'
 
 	//-- Email
-	implementation "org.springframework.boot:spring-boot-starter-mail:${springBootVersion}"
-	implementation "org.springframework.boot:spring-boot-starter-thymeleaf:${springBootVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
 	//-- Security: JWT / OAuth2
 	implementation "io.jsonwebtoken:jjwt-api:${jwtVersion}"
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
 	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
 
-	implementation "org.springframework.boot:spring-boot-starter-security:${springBootVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	//-- Monitoring
-	implementation "org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
 	//-- Logging
-	implementation "org.springframework.boot:spring-boot-starter-logging:${springBootVersion}"
+	implementation 'org.springframework.boot:spring-boot-starter-logging'
 	implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
 
 	//-- Testing
-	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-	testImplementation "org.springframework.boot:spring-boot-starter-webmvc-test:${springBootVersion}"
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.assertj:assertj-core:3.26.3'
 
 	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
