@@ -5,6 +5,7 @@ import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.CustomUserDetailsService;
 import jakarta.transaction.Transactional;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,7 +22,7 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService, CustomU
 
   @Override
   @Transactional
-  public UserDetails loadUserByUsername(String usernameOrEmail) {
+  public @NonNull UserDetails loadUserByUsername(String usernameOrEmail) {
     Account account =
         accountRepository
             .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)

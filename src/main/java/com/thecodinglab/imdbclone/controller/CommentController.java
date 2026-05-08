@@ -26,13 +26,13 @@ public class CommentController {
   }
 
   @GetMapping("/{commentId}")
-  public ResponseEntity<CommentRecord> getCommentById(@PathVariable("commentId") Long commentId) {
+  public ResponseEntity<CommentRecord> getCommentById(@PathVariable Long commentId) {
     return new ResponseEntity<>(commentService.getComment(commentId), HttpStatus.OK);
   }
 
   @GetMapping("/{movieId}/comments")
   public ResponseEntity<PagedResponse<CommentRecord>> getCommentsByMovieId(
-      @PathVariable("movieId") Long movieId,
+      @PathVariable Long movieId,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
@@ -44,7 +44,7 @@ public class CommentController {
   @PostMapping("/{movieId}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<CommentRecord> createComment(
-      @PathVariable("movieId") Long movieId,
+      @PathVariable Long movieId,
       @Valid @RequestBody CreateCommentRequest request,
       @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
@@ -54,7 +54,7 @@ public class CommentController {
   @PutMapping("/{commentId}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<CommentRecord> updateComment(
-      @PathVariable("commentId") Long commentId,
+      @PathVariable Long commentId,
       @Valid @RequestBody UpdateCommentRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
@@ -64,7 +64,7 @@ public class CommentController {
   @DeleteMapping("/{commentId}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteComment(
-      @PathVariable("commentId") Long commentId,
+      @PathVariable Long commentId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         commentService.deleteComment(commentId, currentAccount), HttpStatus.NO_CONTENT);

@@ -105,7 +105,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     Account account = new Account(username, email, password);
     List<Role> roles = roleService.giveRoleToRegisteredUser();
     account.setRoles(roles);
-    if (Boolean.FALSE.equals(emailEnabled)) {
+    if (!emailEnabled) {
       account.setEnabled(true);
     }
     Account savedAccount = accountRepository.save(account);

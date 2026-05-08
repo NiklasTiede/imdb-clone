@@ -11,7 +11,9 @@ plugins {
 group = 'com.thecodinglab'
 version = '1.0.0'
 
-compileJava.dependsOn 'spotlessApply'
+tasks.named('check') {
+	dependsOn 'spotlessCheck'
+}
 
 
 idea {
@@ -46,6 +48,7 @@ spotless {
 		targetExclude 'src/main/java/**/payload/*.java', 'src/main/java/**/payload/**/*.java'
 		importOrder()
 		removeUnusedImports()
+		googleJavaFormat()
 		trimTrailingWhitespace()
 		toggleOffOn()
 	}

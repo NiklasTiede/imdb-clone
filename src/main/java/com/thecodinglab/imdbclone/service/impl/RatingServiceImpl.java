@@ -92,7 +92,7 @@ public class RatingServiceImpl implements RatingService {
                         "Rating with movieId [%d] and accountId [%d] not found in database."
                             .formatted(movieId, currentAccount.getId())));
     if (Objects.equals(rating.getAccount().getId(), currentAccount.getId())
-        || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
+        || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       ratingRepository.delete(rating);
       logger.info("rating with [{}] was deleted.", kv(RATING_ID, rating.getId()));
       return new MessageResponse(

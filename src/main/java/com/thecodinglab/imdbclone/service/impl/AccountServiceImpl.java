@@ -130,7 +130,7 @@ public class AccountServiceImpl implements AccountService {
       String username, AccountRecord accountRecord, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     if (Objects.equals(account.getId(), currentAccount.getId())
-        || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
+        || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       String firstName =
           accountRecord.firstName() != null ? accountRecord.firstName().toLowerCase() : null;
       account.setFirstName(firstName);
@@ -157,7 +157,7 @@ public class AccountServiceImpl implements AccountService {
   public MessageResponse deleteAccount(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     if (Objects.equals(account.getId(), currentAccount.getId())
-        || Boolean.TRUE.equals(UserPrincipal.isCurrentAccountAdmin(currentAccount))) {
+        || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       accountRepository.delete(account);
       logger.info("Account with [{}] was deleted.", kv(ACCOUNT_ID, account.getId()));
       return new MessageResponse("Account with id [%d] was deleted.".formatted(account.getId()));

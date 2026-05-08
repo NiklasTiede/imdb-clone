@@ -50,8 +50,7 @@ public class AccountController {
   }
 
   @GetMapping("/{username}/profile")
-  public ResponseEntity<PublicAccountProfile> getAccountProfile(
-      @PathVariable("username") String username) {
+  public ResponseEntity<PublicAccountProfile> getAccountProfile(@PathVariable String username) {
     return new ResponseEntity<>(accountService.getAccountProfile(username), HttpStatus.OK);
   }
 
@@ -59,12 +58,13 @@ public class AccountController {
   @PreAuthorize("hasRole('USER')")
   public ResponseEntity<AccountProfile> getCurrentAccountProfile(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(accountService.getCurrentAccountProfile(currentUser), HttpStatus.OK);
+    return new ResponseEntity<>(
+        accountService.getCurrentAccountProfile(currentUser), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/comments")
   public ResponseEntity<PagedResponse<CommentRecord>> getCommentsByAccount(
-      @PathVariable("username") String username,
+      @PathVariable String username,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
@@ -75,7 +75,7 @@ public class AccountController {
 
   @GetMapping("/{username}/watchlist")
   public ResponseEntity<PagedResponse<WatchedMovieRecord>> getWatchedMoviesByAccount(
-      @PathVariable("username") String username,
+      @PathVariable String username,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
@@ -86,7 +86,7 @@ public class AccountController {
 
   @GetMapping("/{username}/ratings")
   public ResponseEntity<PagedResponse<RatingRecord>> getRatingsByAccount(
-      @PathVariable("username") String username,
+      @PathVariable String username,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
@@ -108,7 +108,7 @@ public class AccountController {
   @PutMapping("/{username}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<UpdatedAccountProfile> updateAccountProfile(
-      @PathVariable("username") String username,
+      @PathVariable String username,
       @Valid @RequestBody AccountRecord accountRecord,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
@@ -118,7 +118,7 @@ public class AccountController {
   @DeleteMapping("/{username}")
   @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteAccount(
-      @PathVariable("username") String username,
+      @PathVariable String username,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
         accountService.deleteAccount(username, currentUser), HttpStatus.NO_CONTENT);
@@ -127,7 +127,7 @@ public class AccountController {
   @PutMapping("/{username}/give-admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> giveAdminRole(
-      @PathVariable("username") String username,
+      @PathVariable String username,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(roleService.giveAdminRole(username, currentUser), HttpStatus.OK);
   }
@@ -135,7 +135,7 @@ public class AccountController {
   @PutMapping("/{username}/take-admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> takeAdminRole(
-      @PathVariable("username") String username,
+      @PathVariable String username,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(roleService.removeAdminRole(username, currentUser), HttpStatus.OK);
   }

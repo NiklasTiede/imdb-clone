@@ -26,7 +26,7 @@ public class MovieController {
   }
 
   @GetMapping("/{movieId}")
-  public ResponseEntity<MovieRecord> getMovieById(@PathVariable("movieId") Long movieId) {
+  public ResponseEntity<MovieRecord> getMovieById(@PathVariable Long movieId) {
     return new ResponseEntity<>(movieService.findMovieById(movieId), HttpStatus.OK);
   }
 
@@ -54,7 +54,7 @@ public class MovieController {
   @PutMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MovieRecord> updateMovie(
-      @PathVariable("movieId") Long movieId,
+      @PathVariable Long movieId,
       @Valid @RequestBody MovieRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
@@ -64,7 +64,7 @@ public class MovieController {
   @DeleteMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteMovie(
-      @PathVariable("movieId") Long movieId,
+      @PathVariable Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
     return new ResponseEntity<>(
         movieService.deleteMovie(movieId, currentAccount), HttpStatus.NO_CONTENT);
@@ -76,7 +76,7 @@ public class MovieController {
   @Deprecated(forRemoval = true)
   @GetMapping("/search/{primaryTitle}")
   public ResponseEntity<PagedResponse<MovieRecord>> searchMoviesByTitle(
-      @PathVariable("primaryTitle") String primaryTitle,
+      @PathVariable String primaryTitle,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
           int page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
