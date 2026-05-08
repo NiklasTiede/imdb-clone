@@ -19,6 +19,22 @@ const nightcrawler = {
   imageUrlToken: "9BGAIYNfdY90aIkV66dIJ6Olee7JGn",
 };
 
+const itFollows = {
+  id: 3235888,
+  movieType: "MOVIE",
+  primaryTitle: "It Follows",
+  originalTitle: "It Follows",
+  adult: false,
+  startYear: 2014,
+  endYear: null,
+  runtimeMinutes: 100,
+  movieGenre: ["HORROR", "MYSTERY", "THRILLER"],
+  imdbRating: 6.8,
+  imdbRatingCount: 293479,
+  description: "A young woman is followed by an unknown supernatural force.",
+  imageUrlToken: "itFollowsPosterToken",
+};
+
 async function stubNightcrawlerSearch(page: Page) {
   await page.route("**/api/search/movies**", async (route) => {
     await route.fulfill({
@@ -33,6 +49,29 @@ async function stubNightcrawlerSearch(page: Page) {
       }),
     });
   });
+}
+
+async function stubItFollowsSearch(page: Page) {
+  let requestedQuery: string | null = null;
+
+  await page.route("**/api/search/movies**", async (route) => {
+    requestedQuery = new URL(route.request().url()).searchParams.get("query");
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        content: [itFollows],
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+        last: true,
+      }),
+    });
+  });
+
+  return {
+    expectRequestedQuery: () => expect(requestedQuery).toBe("it follows"),
+  };
 }
 
 async function stubMoviePosters(page: Page) {
@@ -60,6 +99,23 @@ test("searches movies and renders a seeded poster", async ({ page }) => {
     "src",
     /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_120x180\.jpg/,
   );
+});
+
+test("searches for a multi-word lowercase movie title", async ({ page }) => {
+  const searchRequest = await stubItFollowsSearch(page);
+  await stubMoviePosters(page);
+
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "search" }).fill("it follows");
+  await page.getByRole("textbox", { name: "search" }).press("Enter");
+
+  await expect(page).toHaveURL(/\/movie-search\?query=it%20follows$/);
+  await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
+  await expect(page.getByAltText("movie poster")).toHaveAttribute(
+    "src",
+    /itFollowsPosterToken_size_120x180\.jpg/,
+  );
+  searchRequest.expectRequestedQuery();
 });
 
 test("opens a movie detail page from search results", async ({ page }) => {
