@@ -14,11 +14,10 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Dispatch } from "../../redux/store";
 import { i18n } from "../../i18n";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormSetError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
 import { RegistrationRequest } from "../../client/movies/generator-output";
-import { UseFormSetError } from "react-hook-form/dist/types/form";
 import { State as AuthState } from "../../redux/model/authentication";
 
 export interface FormInputs {
