@@ -5,7 +5,7 @@
 FROM node:24-alpine AS build
 WORKDIR /app
 # Install Java for openapi-generator-cli
-RUN apk add --no-cache openjdk11-jre
+RUN apk add --no-cache openjdk25-jre
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile \
     && yarn cache clean
