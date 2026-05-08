@@ -2,7 +2,7 @@
 # docker run --name imdb-clone-frontend -p 3000:80 --restart=always -d imdb-clone-frontend:latest
 
 # Stage 1: Install dependencies and build the application
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 # Install Java for openapi-generator-cli
 RUN apk add --no-cache openjdk11-jre
