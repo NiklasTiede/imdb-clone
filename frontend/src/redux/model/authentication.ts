@@ -8,7 +8,7 @@ import {
 } from "../../client/movies/generator-output";
 import { authApi } from "../../client/movies/MoviesApi";
 import { AxiosResponse } from "axios";
-import jwt_decode, { JwtPayload } from "jwt-decode";
+import { jwtDecode, JwtPayload } from "jwt-decode";
 import { i18n } from "../../i18n";
 import { RegisterRequest } from "../../components/authentication/Registration";
 
@@ -135,7 +135,7 @@ export const authentication = createModel<RootModel>()({
             response.data.accessToken !== undefined
           ) {
             window.localStorage.setItem("jwtToken", response.data.accessToken);
-            const decoded = jwt_decode<MyJwtPayload>(response.data.accessToken);
+            const decoded = jwtDecode<MyJwtPayload>(response.data.accessToken);
             window.localStorage.setItem("username", decoded.username);
             window.localStorage.setItem("rolesFromJwt", decoded.roles);
             if (decoded.exp !== undefined) {
