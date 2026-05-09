@@ -7,7 +7,6 @@ import {
   Stack,
   TextField,
   Typography,
-  useTheme,
 } from "@mui/material";
 import { tokens } from "../../../theme";
 import React, { useEffect, useState } from "react";
@@ -27,8 +26,7 @@ import { useSnackbar } from "notistack";
 import { ProfileAvatar } from "../../../shared/media";
 
 const AccountSettingsPage = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
+  const colors = tokens();
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
 

@@ -2,12 +2,12 @@ import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { MovieCard } from "../../catalog";
 import { i18n } from "../../../i18n";
 import PageContent from "../../../shared/layout/PageContent";
+import SectionHeading from "../../../shared/layout/SectionHeading";
 import { getUsername } from "../../../utils/jwtHelper";
 import { watchlistQueries } from "../api/watchlistQueries";
 
@@ -25,9 +25,7 @@ const WatchlistPage = () => {
   return (
     <PageContent maxWidth="900px">
       <Stack spacing={2}>
-        <Typography variant="h5" component="h1">
-          {i18n.watchlist.heading}
-        </Typography>
+        <SectionHeading>{i18n.watchlist.heading}</SectionHeading>
 
         {isLoading && <CircularProgress aria-label="Loading watchlist" />}
 

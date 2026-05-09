@@ -1,12 +1,4 @@
-import {
-  Box,
-  Card,
-  Paper,
-  Stack,
-  styled,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, Card, Paper, Stack, styled, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { tokens } from "../../../theme";
 import { MovieRecord } from "../../../client/movies/generator-output";
@@ -22,7 +14,7 @@ export const MovieLink = styled(Link)`
 `;
 
 const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
+  backgroundColor: "#1A2027",
   ...theme.typography.body2,
   padding: theme.spacing(0.5),
   textAlign: "center",
@@ -53,8 +45,7 @@ export function snakeToPascalCase(str: string): string {
 }
 
 const MovieCard = (movie: MovieRecord) => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
+  const colors = tokens();
 
   return (
     <Card sx={movieCardSx}>

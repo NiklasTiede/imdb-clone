@@ -5,18 +5,16 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { i18n } from "../../../i18n";
 import { authSession } from "../../auth/authSession";
 import { useAuthSession } from "../../auth/useAuthSession";
-import { ColorModeContext, tokens } from "../../../theme";
+import { tokens } from "../../../theme";
 import { RoleNameEnum } from "../../../types/roles";
 import AdminEditButton from "./AdminEditButton";
 import LoginButton from "./LoginButton";
 import MovieSearchInput from "./MovieSearchInput";
-import ThemeModeButton from "./ThemeModeButton";
 import UserActions from "./UserActions";
 import UserMobileMenu from "./UserMobileMenu";
 import UserSettingsMenu from "./UserSettingsMenu";
@@ -25,9 +23,7 @@ const menuId = "primary-search-account-menu";
 const mobileMenuId = "primary-search-account-menu-mobile";
 
 function AppBarTop() {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
-  const colorMode = useContext(ColorModeContext);
+  const colors = tokens();
   const navigateTo = useNavigate();
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -117,10 +113,6 @@ function AppBarTop() {
           />
 
           <Box sx={{ flexGrow: 1 }} />
-          <ThemeModeButton
-            mode={theme.palette.mode}
-            onToggle={colorMode.toggleColorMode}
-          />
           {isAdmin ? <AdminEditButton /> : ""}
           {isLoggedIn ? (
             <UserActions

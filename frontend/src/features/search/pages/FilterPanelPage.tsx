@@ -33,7 +33,7 @@ const marks = [
 ];
 
 const IOSSlider = styled(Slider)(({ theme }) => ({
-  color: theme.palette.mode === "dark" ? "#3880ff" : "#3880ff",
+  color: "#3880ff",
   height: 2,
   padding: "15px 0",
   "& .MuiSlider-thumb": {
@@ -52,7 +52,7 @@ const IOSSlider = styled(Slider)(({ theme }) => ({
     },
     "& *": {
       background: "transparent",
-      color: theme.palette.mode === "dark" ? "#fff" : "#000",
+      color: "#fff",
     },
   },
   "& .MuiSlider-track": {

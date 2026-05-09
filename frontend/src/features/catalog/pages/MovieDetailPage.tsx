@@ -1,15 +1,12 @@
 import { useLocation } from "react-router";
-import { Paper, Snackbar, Typography } from "@mui/material";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { Snackbar, Typography } from "@mui/material";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { i18n } from "../../../i18n";
 import { authSession } from "../../../shared/auth/authSession";
 import { useAuthSession } from "../../../shared/auth/useAuthSession";
 import PageContent from "../../../shared/layout/PageContent";
+import Surface from "../../../shared/layout/Surface";
 import { movieQueries } from "../api/movieQueries";
 import { MovieHero } from "../components/MovieHero";
 import { rateMovieMutationOptions } from "../../rating/api/ratingMutations";
@@ -52,11 +49,11 @@ const MovieDetailPage = () => {
   if (!movie) {
     return (
       <PageContent maxWidth="760px">
-        <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 7, fontSize: 18 }}>
+        <Surface sx={{ p: { xs: 2, sm: 4 }, mt: 7, fontSize: 18 }}>
           <Typography sx={{ textAlign: "center" }}>
             {i18n.movieDetails.loadingError(queryParams.get("id"))}
           </Typography>
-        </Paper>
+        </Surface>
       </PageContent>
     );
   }
@@ -83,12 +80,11 @@ const MovieDetailPage = () => {
 
   return (
     <PageContent maxWidth="760px">
-      <Paper
+      <Surface
         elevation={3}
         sx={{
           mt: { xs: 2, sm: 5 },
           overflow: "hidden",
-          backgroundColor: "background.paper",
         }}
       >
         <MovieHero
@@ -99,7 +95,7 @@ const MovieDetailPage = () => {
           userRating={userRating ?? null}
           onRate={handleRate}
         />
-      </Paper>
+      </Surface>
       <Snackbar
         open={errorMessage !== null}
         autoHideDuration={4000}

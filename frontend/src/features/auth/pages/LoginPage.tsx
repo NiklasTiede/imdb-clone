@@ -1,14 +1,7 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { LoginRequest } from "../../../client/movies/generator-output";
-import {
-  Button,
-  Container,
-  Grid,
-  Paper,
-  TextField,
-  useTheme,
-} from "@mui/material";
+import { Button, Container, Grid, Paper, TextField } from "@mui/material";
 import { tokens } from "../../../theme";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,8 +32,7 @@ const schema = zod.object({
 });
 
 const LoginPage = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
+  const colors = tokens();
   const navigateTo = useNavigate();
   const isLoggedIn = useAuthSession();
   const { enqueueSnackbar } = useSnackbar();

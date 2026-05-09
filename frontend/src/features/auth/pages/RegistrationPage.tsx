@@ -6,7 +6,6 @@ import {
   Checkbox,
   Paper,
   TextField,
-  useTheme,
 } from "@mui/material";
 import React, { useState } from "react";
 import { tokens } from "../../../theme";
@@ -71,8 +70,7 @@ export const schema = zod
   });
 
 const RegistrationPage = () => {
-  const theme = useTheme();
-  const colors = tokens(theme.palette.mode);
+  const colors = tokens();
   const navigateTo = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
