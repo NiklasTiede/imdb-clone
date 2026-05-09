@@ -3,10 +3,10 @@ import MyAppBar from "./shared/layout/AppBarTop";
 import Home from "./components/Home";
 import { LoginPage, LogoutPage, RegistrationPage } from "./features/auth";
 import YourRatings from "./components/profile/YourRatings";
-import YourWatchlist from "./components/profile/YourWatchlist";
 import { AccountSettingsPage } from "./features/account";
 import { EditMoviePage, MovieDetailPage } from "./features/catalog";
 import { FilterPanelPage, MovieSearchPage } from "./features/search";
+import { WatchlistPage } from "./features/watchlist";
 import { useMode, ColorModeContext } from "./theme";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import React from "react";
@@ -56,7 +56,7 @@ function App() {
             path="/your-watchlist"
             element={
               <PrivateRoute role={RoleNameEnum.User}>
-                <YourWatchlist />
+                <WatchlistPage />
               </PrivateRoute>
             }
           />

@@ -54,7 +54,9 @@ export const i18n = {
     message: "You are now logged out.",
   },
   watchlist: {
+    empty: "Your watchlist is empty.",
     heading: "Your Movie WatchList",
+    loadingError: "Error while attempting to load your watchlist",
   },
   ratings: {
     heading: "Your Ratings",
