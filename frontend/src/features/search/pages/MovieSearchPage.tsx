@@ -1,9 +1,10 @@
-import { Container, Grid } from "@mui/material";
+import { Grid } from "@mui/material";
 import React from "react";
 import { useLocation } from "react-router";
 import { MovieCard } from "../../catalog";
 import { useQuery } from "@tanstack/react-query";
 import { searchQueries } from "../api/searchQueries";
+import PageContent from "../../../shared/layout/PageContent";
 
 const MovieSearchPage = () => {
   const location = useLocation();
@@ -21,7 +22,7 @@ const MovieSearchPage = () => {
   const movies = data?.content ?? [];
 
   return (
-    <Container maxWidth={"md"} sx={{ padding: 3, marginTop: 0 }}>
+    <PageContent maxWidth="900px">
       <Grid container spacing={1}>
         {movies.map((movie) => (
           <Grid key={movie.id} size={{ xs: 12 }}>
@@ -29,7 +30,7 @@ const MovieSearchPage = () => {
           </Grid>
         ))}
       </Grid>
-    </Container>
+    </PageContent>
   );
 };
 

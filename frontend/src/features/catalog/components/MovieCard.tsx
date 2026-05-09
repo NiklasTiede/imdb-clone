@@ -7,6 +7,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material/styles";
 import { tokens } from "../../../theme";
 import { MovieRecord } from "../../../client/movies/generator-output";
 import React from "react";
@@ -29,6 +30,21 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
+export const movieCardSx = {
+  display: "flex",
+  width: "100%",
+  maxWidth: "100%",
+  minHeight: { xs: 132, sm: 112 },
+  overflow: "hidden",
+} satisfies SxProps<Theme>;
+
+const posterSx = {
+  width: { xs: 82, sm: 80 },
+  minWidth: { xs: 82, sm: 80 },
+  height: { xs: 123, sm: 120 },
+  p: 1,
+} satisfies SxProps<Theme>;
+
 export function snakeToPascalCase(str: string): string {
   const camelCase = str
     .toLowerCase()
@@ -41,74 +57,94 @@ const MovieCard = (movie: MovieRecord) => {
   const colors = tokens(theme.palette.mode);
 
   return (
-    <div>
-      <Card sx={{ display: "flex", width: 600, height: 100 }}>
-        <PosterImage
-          imageUrlToken={movie.imageUrlToken}
-          size={MinioImageSize.Small}
-          sx={{ width: 80, height: 100, padding: 1 }}
-        />
-        <Box
+    <Card sx={movieCardSx}>
+      <PosterImage
+        imageUrlToken={movie.imageUrlToken}
+        size={MinioImageSize.Small}
+        sx={posterSx}
+      />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
+        <Typography
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            width: 470,
+            m: 0.7,
+            fontSize: 17,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
         >
-          <Typography sx={{ margin: 0.7, fontSize: 17 }}>
-            <MovieLink
-              to={`/movie?id=${movie.id}`}
-              sx={{ color: colors.grey[100] }}
-            >
-              {movie.primaryTitle}
-            </MovieLink>
-          </Typography>
-          <Typography
+          <MovieLink
+            to={`/movie?id=${movie.id}`}
+            sx={{ color: colors.grey[100] }}
+          >
+            {movie.primaryTitle}
+          </MovieLink>
+        </Typography>
+        <Typography
+          sx={{
+            marginLeft: 0.6,
+            mb: { xs: 0.5, sm: 1.4 },
+            color: colors.grey[400],
+            fontSize: 12,
+          }}
+        >
+          {movie.startYear +
+            " - " +
+            snakeToPascalCase(
+              movie.movieType !== undefined ? movie.movieType : "",
+            )}
+        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Stack
+            direction="row"
+            spacing={0.75}
+            useFlexGap
             sx={{
-              marginLeft: 0.6,
-              marginBottom: 1.4,
-              color: colors.grey[400],
-              fontSize: 12,
+              m: 0.6,
+              mb: { xs: 1, sm: 2 },
+              flexWrap: "wrap",
+              overflow: "hidden",
             }}
           >
-            {movie.startYear +
-              " - " +
-              snakeToPascalCase(
-                movie.movieType !== undefined ? movie.movieType : "",
-              )}
+            {movie.movieGenre &&
+              Array.from(movie.movieGenre).map((movieGenre) => (
+                <Item key={String(movieGenre)}>
+                  {snakeToPascalCase(String(movieGenre))}
+                </Item>
+              ))}
+          </Stack>
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          minWidth: { xs: 54, sm: 68 },
+        }}
+      >
+        <Box>
+          <Typography sx={{ fontSize: 15, margin: 1 }}>
+            {movie.imdbRating}
           </Typography>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{ margin: 0.6, marginBottom: 3 }}
-            >
-              {movie.movieGenre &&
-                Array.from(movie.movieGenre).map((movieGenre) => (
-                  <Item key={String(movieGenre)}>
-                    {snakeToPascalCase(String(movieGenre))}
-                  </Item>
-                ))}
-            </Stack>
-          </Box>
         </Box>
-        <Box sx={{ display: "flex", flexDirection: "column" }}>
-          <Box>
-            <Typography sx={{ fontSize: 15, margin: 1 }}>
-              {movie.imdbRating}
-            </Typography>
-          </Box>
-          <Box>
-            <Typography sx={{ fontSize: 15, margin: 1 }}>
-              {movie.runtimeMinutes != null
-                ? movie.runtimeMinutes + " min"
-                : movie.runtimeMinutes}
-            </Typography>
-          </Box>
+        <Box>
+          <Typography sx={{ fontSize: 15, margin: 1 }}>
+            {movie.runtimeMinutes != null
+              ? movie.runtimeMinutes + " min"
+              : movie.runtimeMinutes}
+          </Typography>
         </Box>
-      </Card>
-    </div>
+      </Box>
+    </Card>
   );
 };
 
