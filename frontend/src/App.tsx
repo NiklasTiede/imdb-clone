@@ -12,9 +12,7 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import React from "react";
 import Messages from "./components/profile/Messages";
 import { RoleNameEnum } from "./types/roles";
-import PublicRoute from "./components/routes/PublicRoute";
-import PrivateRoute from "./components/routes/PrivateRoute";
-import NotFound from "./components/routes/NotFound";
+import { NotFoundPage, PrivateRoute, PublicRoute } from "./app/routes";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -86,7 +84,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </ThemeProvider>
     </ColorModeContext.Provider>

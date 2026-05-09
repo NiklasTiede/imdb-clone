@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate, useLocation } from "react-router";
 import { RoleNameEnum } from "../../types/roles";
 import { hasUserRole, isJwtNotExpired } from "../../utils/jwtHelper";
-import AccessDenied from "./AccessDenied";
+import AccessDeniedPage from "./AccessDeniedPage";
 
 const PrivateRoute = ({
   role,
@@ -19,7 +19,7 @@ const PrivateRoute = ({
     return <Navigate to="/login" state={{ from: location }} />;
   }
   if (isLoggedIn && !hasRole) {
-    return <AccessDenied role={role} />;
+    return <AccessDeniedPage role={role} />;
   }
   return children;
 };
