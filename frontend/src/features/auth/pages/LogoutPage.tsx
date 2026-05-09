@@ -2,9 +2,9 @@ import { Container, Paper } from "@mui/material";
 import { useNavigate } from "react-router";
 import React, { useEffect } from "react";
 import Typography from "@mui/material/Typography";
-import { i18n } from "../../i18n";
+import { i18n } from "../../../i18n";
 
-const Logout = () => {
+const LogoutPage = () => {
   const navigateTo = useNavigate();
 
   useEffect(() => {
@@ -26,4 +26,4 @@ const Logout = () => {
   );
 };
 
-export default Logout;
+export default LogoutPage;

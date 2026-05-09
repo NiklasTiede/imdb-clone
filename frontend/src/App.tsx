@@ -1,9 +1,7 @@
 import { Route, Routes } from "react-router";
 import MyAppBar from "./components/AppBarTop";
 import Home from "./components/Home";
-import Login from "./components/authentication/Login";
-import Logout from "./components/authentication/Logout";
-import Registration from "./components/authentication/Registration";
+import { LoginPage, LogoutPage, RegistrationPage } from "./features/auth";
 import YourRatings from "./components/profile/YourRatings";
 import YourWatchlist from "./components/profile/YourWatchlist";
 import { AccountSettingsPage } from "./features/account";
@@ -31,12 +29,12 @@ function App() {
           <Route path="/movie-search" element={<MovieSearchPage />} />
           <Route path="/movie" element={<MovieDetailPage />} />
           <Route path="/filter" element={<FilterPanelPage />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route
             path="/registration"
             element={
               <PublicRoute>
-                <Registration />
+                <RegistrationPage />
               </PublicRoute>
             }
           />
@@ -44,7 +42,7 @@ function App() {
             path="/logout"
             element={
               <PublicRoute>
-                <Logout />
+                <LogoutPage />
               </PublicRoute>
             }
           />

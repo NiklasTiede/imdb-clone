@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import { LoginRequest } from "../../client/movies/generator-output";
+import { LoginRequest } from "../../../client/movies/generator-output";
 import { useDispatch, useSelector } from "react-redux";
-import { Dispatch } from "../../redux/store";
+import { Dispatch } from "../../../redux/store";
 import {
   Button,
   Container,
@@ -11,13 +11,13 @@ import {
   TextField,
   useTheme,
 } from "@mui/material";
-import { tokens } from "../../theme";
+import { tokens } from "../../../theme";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
-import { i18n } from "../../i18n";
-import { State as AuthState } from "../../redux/model/authentication";
-import { isJwtNotExpired } from "../../utils/jwtHelper";
+import { i18n } from "../../../i18n";
+import { State as AuthState } from "../../../redux/model/authentication";
+import { isJwtNotExpired } from "../../../utils/jwtHelper";
 
 interface FormInputs {
   usernameOrEmail: string;
@@ -36,7 +36,7 @@ const schema = zod.object({
     .regex(new RegExp(i18n.regex.password.pattern), "Invalid Password"),
 });
 
-const Login = () => {
+const LoginPage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const navigateTo = useNavigate();
@@ -154,4 +154,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginPage;

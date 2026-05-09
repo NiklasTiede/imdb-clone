@@ -9,16 +9,16 @@ import {
   useTheme,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { tokens } from "../../theme";
+import { tokens } from "../../../theme";
 import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { Dispatch } from "../../redux/store";
-import { i18n } from "../../i18n";
+import { Dispatch } from "../../../redux/store";
+import { i18n } from "../../../i18n";
 import { useForm, UseFormSetError } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
-import { RegistrationRequest } from "../../client/movies/generator-output";
-import { State as AuthState } from "../../redux/model/authentication";
+import { RegistrationRequest } from "../../../client/movies/generator-output";
+import { State as AuthState } from "../../../redux/model/authentication";
 
 export interface FormInputs {
   username: string;
@@ -72,7 +72,7 @@ export const schema = zod
     }
   });
 
-const Registration = () => {
+const RegistrationPage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const navigateTo = useNavigate();
@@ -227,4 +227,4 @@ const Registration = () => {
   );
 };
 
-export default Registration;
+export default RegistrationPage;

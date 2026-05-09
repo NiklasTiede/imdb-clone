@@ -10,7 +10,7 @@ import { authApi } from "../../client/movies/MoviesApi";
 import { AxiosResponse } from "axios";
 import { jwtDecode, JwtPayload } from "jwt-decode";
 import { i18n } from "../../i18n";
-import { RegisterRequest } from "../../components/authentication/Registration";
+import { RegisterRequest } from "../../features/auth/pages/RegistrationPage";
 import { authSession } from "../../shared/auth/authSession";
 
 interface MyJwtPayload extends JwtPayload {
