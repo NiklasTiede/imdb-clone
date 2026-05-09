@@ -1,4 +1,3 @@
-import { useSelector } from "react-redux";
 import {
   Box,
   Avatar,
@@ -15,7 +14,6 @@ import { tokens } from "../../theme";
 import React, { useEffect, useState } from "react";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import { State as FileStorageStatus } from "../../redux/model/filestorage";
 import { getUsername } from "../../utils/jwtHelper";
 import moment, { type Moment } from "moment";
 import { i18n } from "../../i18n";
@@ -50,11 +48,6 @@ const AccountSettings = () => {
     },
   });
 
-  const profilePhotoSwitch = useSelector(
-    (state: { fileStorage: FileStorageStatus }) =>
-      state.fileStorage.profilePhotoSwitch,
-  );
-
   // set-able
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -78,6 +71,8 @@ const AccountSettings = () => {
       setImageUrl(
         `http://192.168.178.49:9000/imdb-clone/profile-photos/${accountProfile.imageUrlToken}_size_800x800.jpg`,
       );
+    } else {
+      setImageUrl(undefined);
     }
   }, [accountProfile]);
 
@@ -110,15 +105,7 @@ const AccountSettings = () => {
     }
   };
 
-  useEffect(() => {
-    console.log(profilePhotoSwitch);
-  }, [profilePhotoSwitch]);
-
   const [imageUrl, setImageUrl] = useState<string | undefined>();
-
-  console.log(imageUrl);
-
-  // const bla = imageUrlToken ? `http://192.168.178.49:9000/imdb-clone/profile-photos/${imageUrlToken}_size_800x800.jpg` : null;
 
   return (
     <Box sx={{ p: 5 }}>

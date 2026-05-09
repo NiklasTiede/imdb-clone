@@ -9,11 +9,31 @@ import {
 import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { useDispatch } from "react-redux";
-import { Dispatch } from "../../redux/store";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { mediaMutationKeys, storeUserProfilePhoto } from "../../features/media";
+import { useSnackbar } from "notistack";
+import { i18n } from "../../i18n";
 
 const UploadProfileImage: React.FC = () => {
-  const dispatch = useDispatch<Dispatch>();
+  const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
+  const uploadProfilePhoto = useMutation({
+    mutationFn: storeUserProfilePhoto,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: mediaMutationKeys.currentProfile,
+      });
+      setOpen(false);
+    },
+    onError: () => {
+      enqueueSnackbar(
+        i18n.accountSettings.loadingError("upload profile photo"),
+        {
+          variant: "error",
+        },
+      );
+    },
+  });
 
   const [open, setOpen] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
@@ -42,17 +62,15 @@ const UploadProfileImage: React.FC = () => {
     if (imageRef && crop?.width && crop.height && file) {
       const croppedImage = await getCroppedImage(imageRef, crop, file.name);
 
-      dispatch.fileStorage.storeUserProfilePhoto(croppedImage);
-    } else {
-      console.log("beep");
+      uploadProfilePhoto.mutate(croppedImage);
     }
   };
 
   const getCroppedImage = (
     image: HTMLImageElement,
     crop: Partial<Crop>,
-    fileName: string
-  ): Promise<Blob> => {
+    fileName: string,
+  ): Promise<File> => {
     const canvas = document.createElement("canvas");
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
@@ -69,7 +87,7 @@ const UploadProfileImage: React.FC = () => {
       0,
       0,
       crop.width!,
-      crop.height!
+      crop.height!,
     );
 
     return new Promise((resolve) => {
@@ -127,7 +145,11 @@ const UploadProfileImage: React.FC = () => {
             <Button onClick={() => setOpen(false)} color="primary">
               Cancel
             </Button>
-            <Button onClick={handleUpload} color="primary">
+            <Button
+              onClick={handleUpload}
+              color="primary"
+              disabled={uploadProfilePhoto.isPending}
+            >
               Upload
             </Button>
           </DialogActions>
