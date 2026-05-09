@@ -10,23 +10,23 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { tokens } from "../../theme";
+import { tokens } from "../../../theme";
 import React, { useEffect, useState } from "react";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import { getUsername } from "../../utils/jwtHelper";
+import { getUsername } from "../../../utils/jwtHelper";
 import moment, { type Moment } from "moment";
-import { i18n } from "../../i18n";
-import UploadProfileImage from "./UploadProfileImage";
+import { i18n } from "../../../i18n";
+import ProfileImageUpload from "../components/ProfileImageUpload";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   accountMutationKeys,
-  accountQueries,
   updateAccountProfile,
-} from "../../features/account";
+} from "../api/accountMutations";
+import { accountQueries } from "../api/accountQueries";
 import { useSnackbar } from "notistack";
 
-const AccountSettings = () => {
+const AccountSettingsPage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const queryClient = useQueryClient();
@@ -120,7 +120,7 @@ const AccountSettings = () => {
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Avatar src={imageUrl} sx={{ width: 100, height: 100 }} />
-          <UploadProfileImage />
+          <ProfileImageUpload />
         </Box>
 
         <form onSubmit={handleSubmit} noValidate>
@@ -265,4 +265,4 @@ const emptyAccountProfile = {
   watchlistCount: 0,
 };
 
-export default AccountSettings;
+export default AccountSettingsPage;

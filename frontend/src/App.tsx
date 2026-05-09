@@ -6,7 +6,7 @@ import Logout from "./components/authentication/Logout";
 import Registration from "./components/authentication/Registration";
 import YourRatings from "./components/profile/YourRatings";
 import YourWatchlist from "./components/profile/YourWatchlist";
-import AccountSettings from "./components/profile/AccountSettings";
+import { AccountSettingsPage } from "./features/account";
 import MovieSearch from "./components/movies/MovieSearch";
 import { useMode, ColorModeContext } from "./theme";
 import { CssBaseline, ThemeProvider } from "@mui/material";
@@ -78,7 +78,7 @@ function App() {
             path="/account-settings"
             element={
               <PrivateRoute role={RoleNameEnum.User}>
-                <AccountSettings />
+                <AccountSettingsPage />
               </PrivateRoute>
             }
           />

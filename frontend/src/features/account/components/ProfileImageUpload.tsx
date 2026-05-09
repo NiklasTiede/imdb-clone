@@ -10,11 +10,11 @@ import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { mediaMutationKeys, storeUserProfilePhoto } from "../../features/media";
+import { mediaMutationKeys, storeUserProfilePhoto } from "../../media";
 import { useSnackbar } from "notistack";
-import { i18n } from "../../i18n";
+import { i18n } from "../../../i18n";
 
-const UploadProfileImage: React.FC = () => {
+const ProfileImageUpload: React.FC = () => {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
   const uploadProfilePhoto = useMutation({
@@ -159,4 +159,4 @@ const UploadProfileImage: React.FC = () => {
   );
 };
 
-export default UploadProfileImage;
+export default ProfileImageUpload;
