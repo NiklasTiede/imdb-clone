@@ -1,5 +1,6 @@
 import { useLocation } from "react-router";
 import { Snackbar, Typography } from "@mui/material";
+import Divider from "@mui/material/Divider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { i18n } from "../../../i18n";
@@ -9,6 +10,7 @@ import PageContent from "../../../shared/layout/PageContent";
 import Surface from "../../../shared/layout/Surface";
 import { movieQueries } from "../api/movieQueries";
 import { MovieHero } from "../components/MovieHero";
+import Synopsis from "../components/Synopsis";
 import { rateMovieMutationOptions } from "../../rating/api/ratingMutations";
 import { ratingQueries } from "../../rating/api/ratingQueries";
 import { toggleWatchlistMutationOptions } from "../../watchlist/api/watchlistMutations";
@@ -95,6 +97,8 @@ const MovieDetailPage = () => {
           userRating={userRating ?? null}
           onRate={handleRate}
         />
+        <Divider />
+        <Synopsis text={movie.description} />
       </Surface>
       <Snackbar
         open={errorMessage !== null}

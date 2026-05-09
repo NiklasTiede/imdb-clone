@@ -139,9 +139,13 @@ test("opens a movie detail page from search results", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByText("2014")).toBeVisible();
   await expect(page.getByText("117 min")).toBeVisible();
-  await expect(page.getByText("Crime")).toBeVisible();
+  await expect(page.getByText("Crime", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("IMDb rating")).toBeVisible();
   await expect(page.getByText("7.8")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Synopsis" })).toBeVisible();
+  await expect(
+    page.getByText("A driven freelancer enters the world of crime journalism."),
+  ).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
     /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_600x900\.jpg/,
