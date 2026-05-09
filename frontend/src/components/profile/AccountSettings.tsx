@@ -1,5 +1,4 @@
-import { useDispatch, useSelector } from "react-redux";
-import { Dispatch } from "../../redux/store";
+import { useSelector } from "react-redux";
 import {
   Box,
   Avatar,
@@ -16,22 +15,40 @@ import { tokens } from "../../theme";
 import React, { useEffect, useState } from "react";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import { State as AccountStatus } from "../../redux/model/account";
 import { State as FileStorageStatus } from "../../redux/model/filestorage";
 import { getUsername } from "../../utils/jwtHelper";
 import moment, { type Moment } from "moment";
 import { i18n } from "../../i18n";
 import UploadProfileImage from "./UploadProfileImage";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  accountMutationKeys,
+  accountQueries,
+  updateAccountProfile,
+} from "../../features/account";
+import { useSnackbar } from "notistack";
 
 const AccountSettings = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const dispatch = useDispatch<Dispatch>();
+  const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
 
   const username = getUsername();
-  const accountProfile = useSelector(
-    (state: { account: AccountStatus }) => state.account.accountProfile,
+  const { data: accountProfile = emptyAccountProfile } = useQuery(
+    accountQueries.currentProfile(),
   );
+  const updateAccountProfileMutation = useMutation({
+    mutationFn: updateAccountProfile,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: accountMutationKeys.currentProfile,
+      });
+      enqueueSnackbar(i18n.accountSettings.successfulUpdate, {
+        variant: "info",
+      });
+    },
+  });
 
   const profilePhotoSwitch = useSelector(
     (state: { fileStorage: FileStorageStatus }) =>
@@ -47,12 +64,6 @@ const AccountSettings = () => {
 
   const [characterCount, setCharacterCount] = useState(0);
   const maxBioLength = 300;
-
-  useEffect(() => {
-    if (username) {
-      dispatch.account.getAccountProfileSettings();
-    }
-  }, [dispatch.account, username]);
 
   useEffect(() => {
     setFirstName(accountProfile.firstName ?? "");
@@ -84,14 +95,16 @@ const AccountSettings = () => {
       const payload = {
         username: username,
         accountRecord: {
-          firstName: firstName ? firstName : null,
-          lastName: lastName ? lastName : null,
-          birthday: birthdayDate ? birthdayDate.format("YYYY-MM-DD") : null,
+          firstName: firstName || undefined,
+          lastName: lastName || undefined,
+          birthday: birthdayDate
+            ? birthdayDate.format("YYYY-MM-DD")
+            : undefined,
           phone: phone,
           bio: bio,
         },
       };
-      dispatch.account.updateAccountProfileSettings(payload);
+      updateAccountProfileMutation.mutate(payload);
     } else {
       console.log("Username is not present!");
     }
@@ -249,6 +262,20 @@ const AccountSettings = () => {
       </Paper>
     </Box>
   );
+};
+
+const emptyAccountProfile = {
+  bio: "",
+  birthday: "",
+  commentsCount: 0,
+  email: "",
+  firstName: "",
+  imageUrlToken: "",
+  lastName: "",
+  phone: "",
+  ratingsCount: 0,
+  username: "",
+  watchlistCount: 0,
 };
 
 export default AccountSettings;
