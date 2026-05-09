@@ -16,6 +16,33 @@ describe("authSession", () => {
     expect(authSession.getAccessToken()).toBe("test-token");
   });
 
+  it("stores decoded login session values", () => {
+    authSession.setSession({
+      accessToken: "test-token",
+      roles: "ROLE_USER,ROLE_ADMIN",
+      username: "test_user",
+      expiresAt: 9999999999,
+    });
+
+    expect(authSession.getAccessToken()).toBe("test-token");
+    expect(authSession.getUsername()).toBe("test_user");
+    expect(authSession.hasRole("ROLE_ADMIN")).toBe(true);
+    expect(authSession.hasRole("ROLE_USER")).toBe(true);
+    expect(authSession.hasRole("ROLE_OTHER")).toBe(false);
+    expect(authSession.isAuthenticated()).toBe(true);
+  });
+
+  it("reports expired sessions as unauthenticated", () => {
+    authSession.setSession({
+      accessToken: "test-token",
+      roles: "ROLE_USER",
+      username: "test_user",
+      expiresAt: 1,
+    });
+
+    expect(authSession.isAuthenticated()).toBe(false);
+  });
+
   it("clears all authentication values", () => {
     authSession.setAccessToken("test-token");
     window.localStorage.setItem("rolesFromJwt", "ROLE_USER");

@@ -11,6 +11,7 @@ import { AxiosResponse } from "axios";
 import { jwtDecode, JwtPayload } from "jwt-decode";
 import { i18n } from "../../i18n";
 import { RegisterRequest } from "../../components/authentication/Registration";
+import { authSession } from "../../shared/auth/authSession";
 
 interface MyJwtPayload extends JwtPayload {
   roles: string;
@@ -65,7 +66,7 @@ export const authentication = createModel<RootModel>()({
         .catch((reason: any) => {
           dispatch.notify.error(i18n.registration.loadingError);
           console.log(
-            `Error while validating email, reason: ${JSON.stringify(reason)}`
+            `Error while validating email, reason: ${JSON.stringify(reason)}`,
           );
         });
     },
@@ -79,14 +80,14 @@ export const authentication = createModel<RootModel>()({
             response.data.isAvailable !== undefined
           ) {
             dispatch.authentication.isUsernameAvailable(
-              response.data.isAvailable
+              response.data.isAvailable,
             );
           }
         })
         .catch((reason: any) => {
           dispatch.notify.error(i18n.registration.loadingError);
           console.log(
-            `Error while validating username, reason: ${JSON.stringify(reason)}`
+            `Error while validating username, reason: ${JSON.stringify(reason)}`,
           );
         });
     },
@@ -134,16 +135,13 @@ export const authentication = createModel<RootModel>()({
             response.data.accessToken !== null &&
             response.data.accessToken !== undefined
           ) {
-            window.localStorage.setItem("jwtToken", response.data.accessToken);
             const decoded = jwtDecode<MyJwtPayload>(response.data.accessToken);
-            window.localStorage.setItem("username", decoded.username);
-            window.localStorage.setItem("rolesFromJwt", decoded.roles);
-            if (decoded.exp !== undefined) {
-              window.localStorage.setItem(
-                "jwtExpiresAt",
-                decoded.exp.toString()
-              );
-            }
+            authSession.setSession({
+              accessToken: response.data.accessToken,
+              roles: decoded.roles,
+              username: decoded.username,
+              expiresAt: decoded.exp,
+            });
             dispatch.authentication.setIsAuthenticated(true);
           }
           if (response.status === 401) {
@@ -154,7 +152,7 @@ export const authentication = createModel<RootModel>()({
         .catch((reason: unknown) => {
           dispatch.notify.error(i18n.login.loadingError);
           console.log(
-            `Error while attempting to login, reason: ${JSON.stringify(reason)}`
+            `Error while attempting to login, reason: ${JSON.stringify(reason)}`,
           );
         });
     },

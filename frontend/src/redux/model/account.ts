@@ -6,9 +6,10 @@ import {
   AccountSummaryResponse,
   UpdatedAccountProfile,
 } from "../../client/movies/generator-output";
-import { AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import moment from "moment";
 import { i18n } from "../../i18n";
+import { authSession } from "../../shared/auth/authSession";
 
 export type State = {
   accountProfile: AccountProfile;
@@ -53,7 +54,9 @@ export const account = createModel<RootModel>()({
           ...state.accountProfile,
           firstName: payload.firstName,
           lastName: payload.lastName,
-          birthday: payload.birthday ? moment(payload.birthday).toISOString() : "",
+          birthday: payload.birthday
+            ? moment(payload.birthday).toISOString()
+            : "",
           phone: payload.phone,
           bio: payload.bio,
         },
@@ -74,17 +77,17 @@ export const account = createModel<RootModel>()({
             response.data.username
           ) {
             dispatch.account.setUsername(response.data.username);
-            window.localStorage.setItem("username", response.data.username);
+            authSession.setUsername(response.data.username);
           }
         })
         .catch((reason: any) => {
           dispatch.notify.error(
-            i18n.accountSettings.loadingError("get current User")
+            i18n.accountSettings.loadingError("get current User"),
           );
           console.log(
             `Error while attempting to get current User, reason: ${JSON.stringify(
-              reason
-            )}`
+              reason,
+            )}`,
           );
         });
     },
@@ -98,23 +101,18 @@ export const account = createModel<RootModel>()({
         })
         .catch((reason: any) => {
           dispatch.notify.error(
-            i18n.accountSettings.loadingError("get Account Profile")
+            i18n.accountSettings.loadingError("get Account Profile"),
           );
           console.log(
             `Error while attempting to get current User, reason: ${JSON.stringify(
-              reason
-            )}`
+              reason,
+            )}`,
           );
         });
     },
     async updateAccountProfileSettings(payload) {
-      const options: AxiosRequestConfig = {
-        headers: {
-          Authorization: "Bearer " + window.localStorage.getItem("jwtToken"),
-        },
-      };
       accountApi
-        .updateAccountProfile(payload.username, payload.accountRecord, options)
+        .updateAccountProfile(payload.username, payload.accountRecord)
         .then((response: AxiosResponse<UpdatedAccountProfile>) => {
           if (response.status === 200 && response.data !== null) {
             dispatch.account.setUpdateAccountProfile(response.data);
@@ -123,24 +121,24 @@ export const account = createModel<RootModel>()({
           } else {
             dispatch.notify.error(
               i18n.accountSettings.loadingError(
-                "update Account Profile, http code not 200"
-              )
+                "update Account Profile, http code not 200",
+              ),
             );
             console.log(
               i18n.accountSettings.loadingError(
-                "update Account Profile, http code not 200"
-              )
+                "update Account Profile, http code not 200",
+              ),
             );
           }
         })
         .catch((reason: any) => {
           dispatch.notify.error(
-            i18n.accountSettings.loadingError("update Account Profile")
+            i18n.accountSettings.loadingError("update Account Profile"),
           );
           console.log(
             `Error while attempting to update Account Profile, reason: ${JSON.stringify(
-              reason
-            )}`
+              reason,
+            )}`,
           );
         });
     },

@@ -30,6 +30,7 @@ import { State as AuthenticationStatus } from "../redux/model/authentication";
 import { useNotifier } from "../hooks/useNotifier";
 import { RoleNameEnum } from "../types/roles";
 import ClearIcon from "@mui/icons-material/Clear";
+import { authSession } from "../shared/auth/authSession";
 
 const settings = [
   {
@@ -130,11 +131,7 @@ function AppBarTop() {
     setAnchorEl(null);
     handleMobileMenuClose();
 
-    window.localStorage.removeItem("jwtToken");
-    window.localStorage.removeItem("rolesFromJwt");
-    window.localStorage.removeItem("jwtExpiresAt");
-    window.localStorage.removeItem("username");
-
+    authSession.clear();
     dispatch.authentication.setIsAuthenticated(false);
   };
 
