@@ -30,8 +30,6 @@ export const fileStorage = createModel<RootModel>()({
 
             // turn switch for rerendering
             dispatch.fileStorage.setUpdateProfilePhoto();
-
-            // dispatch.search.setMovies(response.data.content);
           }
         })
         .catch((reason: any) => {
