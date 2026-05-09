@@ -2,13 +2,16 @@ import { useLocation } from "react-router";
 import React from "react";
 import { CardMedia, Container, Paper } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import { i18n } from "../../i18n";
-import { getMinioImageUrl, MinioImageSize } from "../../utils/imageUrlParser";
-import placeholderSearch from "../../assets/img/placeholder_search.png";
+import { i18n } from "../../../i18n";
+import {
+  getMinioImageUrl,
+  MinioImageSize,
+} from "../../../utils/imageUrlParser";
+import placeholderSearch from "../../../assets/img/placeholder_search.png";
 import { useQuery } from "@tanstack/react-query";
-import { movieQueries } from "../../features/catalog";
+import { movieQueries } from "../api/movieQueries";
 
-const MovieDetail = () => {
+const MovieDetailPage = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const movieId = parseMovieId(queryParams.get("id"));
@@ -66,4 +69,4 @@ const parseMovieId = (movieId: string | null) => {
   return Number.isNaN(parsedMovieId) ? null : parsedMovieId;
 };
 
-export default MovieDetail;
+export default MovieDetailPage;

@@ -1,11 +1,11 @@
 import { Container, Grid } from "@mui/material";
 import React from "react";
 import { useLocation } from "react-router";
-import MovieCard from "./MovieCard";
+import { MovieCard } from "../../catalog";
 import { useQuery } from "@tanstack/react-query";
-import { searchQueries } from "../../features/search";
+import { searchQueries } from "../api/searchQueries";
 
-const MovieSearch = () => {
+const MovieSearchPage = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const queryTerm = queryParams.get("query");
@@ -33,4 +33,4 @@ const MovieSearch = () => {
   );
 };
 
-export default MovieSearch;
+export default MovieSearchPage;

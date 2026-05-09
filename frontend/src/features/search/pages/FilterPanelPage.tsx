@@ -73,7 +73,7 @@ const IOSSlider = styled(Slider)(({ theme }) => ({
   },
 }));
 
-const FilterPanel = () => {
+const FilterPanelPage = () => {
   const [ratingRange, setRatingRange] = useState<number[]>([0.0, 10.0]);
 
   const handleChange = (
@@ -174,4 +174,4 @@ const FilterPanel = () => {
   );
 };
 
-export default FilterPanel;
+export default FilterPanelPage;

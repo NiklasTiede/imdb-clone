@@ -7,18 +7,16 @@ import Registration from "./components/authentication/Registration";
 import YourRatings from "./components/profile/YourRatings";
 import YourWatchlist from "./components/profile/YourWatchlist";
 import { AccountSettingsPage } from "./features/account";
-import MovieSearch from "./components/movies/MovieSearch";
+import { EditMoviePage, MovieDetailPage } from "./features/catalog";
+import { FilterPanelPage, MovieSearchPage } from "./features/search";
 import { useMode, ColorModeContext } from "./theme";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import React from "react";
-import EditMovie from "./components/movies/EditMovie";
 import Messages from "./components/profile/Messages";
 import { RoleNameEnum } from "./types/roles";
 import PublicRoute from "./components/routes/PublicRoute";
 import PrivateRoute from "./components/routes/PrivateRoute";
 import NotFound from "./components/routes/NotFound";
-import MovieDetail from "./components/movies/MovieDetail";
-import FilterPanel from "./components/movies/search/FilterPanel";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -30,9 +28,9 @@ function App() {
         <MyAppBar />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/movie-search" element={<MovieSearch />} />
-          <Route path="/movie" element={<MovieDetail />} />
-          <Route path="/filter" element={<FilterPanel />} />
+          <Route path="/movie-search" element={<MovieSearchPage />} />
+          <Route path="/movie" element={<MovieDetailPage />} />
+          <Route path="/filter" element={<FilterPanelPage />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/registration"
@@ -86,7 +84,7 @@ function App() {
             path="/editing"
             element={
               <PrivateRoute role={RoleNameEnum.Admin}>
-                <EditMovie />
+                <EditMoviePage />
               </PrivateRoute>
             }
           />

@@ -8,12 +8,15 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { tokens } from "../../theme";
-import { MovieRecord } from "../../client/movies/generator-output";
+import { tokens } from "../../../theme";
+import { MovieRecord } from "../../../client/movies/generator-output";
 import React from "react";
 import { Link } from "react-router";
-import { getMinioImageUrl, MinioImageSize } from "../../utils/imageUrlParser";
-import placeholderSearch from "../../assets/img/placeholder_search.png";
+import {
+  getMinioImageUrl,
+  MinioImageSize,
+} from "../../../utils/imageUrlParser";
+import placeholderSearch from "../../../assets/img/placeholder_search.png";
 
 export const MovieLink = styled(Link)`
   text-decoration: none;
@@ -53,11 +56,7 @@ const MovieCard = (movie: MovieRecord) => {
           component="img"
           alt="movie poster"
           sx={{ width: 80, height: 100, padding: 1 }}
-          src={
-            movie.imageUrlToken
-              ? imageUrl
-              : placeholderSearch
-          }
+          src={movie.imageUrlToken ? imageUrl : placeholderSearch}
         />
         <Box
           sx={{
