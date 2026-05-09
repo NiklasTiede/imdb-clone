@@ -81,3 +81,50 @@ test("renders protected watchlist for authenticated users", async ({
     /itFollowsPosterToken_size_120x180\.jpg/,
   );
 });
+
+test("renders protected ratings for authenticated users", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("jwtExpiresAt", String(Date.now() / 1000 + 60));
+    window.localStorage.setItem("rolesFromJwt", "ROLE_USER");
+    window.localStorage.setItem("username", "test_user");
+  });
+  await page.route("**/api/account/test_user/ratings**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        content: [{ accountId: 1, movieId: watchlistedMovie.id, rating: 8 }],
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+        last: true,
+      }),
+    });
+  });
+  await page.route("**/api/movie/get-movies**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        content: [watchlistedMovie],
+        page: 0,
+        size: 1,
+        totalElements: 1,
+        totalPages: 1,
+        last: true,
+      }),
+    });
+  });
+  await page.route("**/imdb-clone/movies/*.jpg", async (route) => {
+    await route.fulfill({
+      contentType: "image/jpeg",
+      body: Buffer.from(transparentPixel, "base64"),
+    });
+  });
+
+  await page.goto("/your-ratings");
+
+  await expect(page).toHaveURL(/\/your-ratings$/);
+  await expect(page.getByRole("heading", { name: "Your Ratings" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
+  await expect(page.getByText("Your rating: 8/10")).toBeVisible();
+});

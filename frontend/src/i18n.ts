@@ -59,7 +59,9 @@ export const i18n = {
     loadingError: "Error while attempting to load your watchlist",
   },
   ratings: {
+    empty: "You have not rated any movies yet.",
     heading: "Your Ratings",
+    loadingError: "Error while attempting to load your ratings",
   },
   messages: {
     heading: "Your Messages",

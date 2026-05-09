@@ -2,9 +2,9 @@ import { Route, Routes } from "react-router";
 import MyAppBar from "./shared/layout/AppBarTop";
 import Home from "./components/Home";
 import { LoginPage, LogoutPage, RegistrationPage } from "./features/auth";
-import YourRatings from "./components/profile/YourRatings";
 import { AccountSettingsPage } from "./features/account";
 import { EditMoviePage, MovieDetailPage } from "./features/catalog";
+import { YourRatingsPage } from "./features/rating";
 import { FilterPanelPage, MovieSearchPage } from "./features/search";
 import { WatchlistPage } from "./features/watchlist";
 import { appTheme } from "./theme";
@@ -45,7 +45,7 @@ function App() {
           path="/your-ratings"
           element={
             <PrivateRoute role={RoleNameEnum.User}>
-              <YourRatings />
+              <YourRatingsPage />
             </PrivateRoute>
           }
         />
