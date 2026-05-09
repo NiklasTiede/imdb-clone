@@ -87,6 +87,10 @@ yarn-error.log*
 
 # agentic configs
 .codex/
+.playwright-mcp/
+.superpowers/
+design/
+screenshots/
 
 # local planning docs
 /docs/project-revival-roadmap.md
