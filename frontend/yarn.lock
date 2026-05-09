@@ -904,23 +904,6 @@
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
-"@reduxjs/toolkit@2.11.2":
-  version "2.11.2"
-  resolved "https://registry.yarnpkg.com/@reduxjs/toolkit/-/toolkit-2.11.2.tgz#582225acea567329ca6848583e7dd72580d38e82"
-  integrity sha512-Kd6kAHTA6/nUpp8mySPqj3en3dm0tdMIgbttnQ1xFMVpufoj+ADi8pXLBsd4xzTRHQa7t/Jv8W5UnCuW4kuWMQ==
-  dependencies:
-    "@standard-schema/spec" "^1.0.0"
-    "@standard-schema/utils" "^0.3.0"
-    immer "^11.0.0"
-    redux "^5.0.1"
-    redux-thunk "^3.1.0"
-    reselect "^5.1.0"
-
-"@rematch/core@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.npmjs.org/@rematch/core/-/core-2.2.0.tgz"
-  integrity sha512-Sj3nC/2X+bOBZeOf4jdJ00nhCcx9wLbVK9SOs6eFR4Y1qKXqRY0hGigbQgfTpCdjRFlwTHHfN3m41MlNvMhDgw==
-
 "@rolldown/binding-android-arm64@1.0.0-rc.18":
   version "1.0.0-rc.18"
   resolved "https://registry.yarnpkg.com/@rolldown/binding-android-arm64/-/binding-android-arm64-1.0.0-rc.18.tgz#3af8b2242086125934a85c1915b76e0a6a2054c1"
@@ -1010,7 +993,7 @@
   resolved "https://registry.yarnpkg.com/@rolldown/pluginutils/-/pluginutils-1.0.0-rc.7.tgz#0414869467f0e471a6515d4f506c85fde867e022"
   integrity sha512-qujRfC8sFVInYSPPMLQByRh7zhwkGFS4+tyMQ83srV1qrxL4g8E2tyxVVyxd0+8QeBM1mIk9KbWxkegRr76XzA==
 
-"@standard-schema/spec@^1.0.0", "@standard-schema/spec@^1.1.0":
+"@standard-schema/spec@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@standard-schema/spec/-/spec-1.1.0.tgz#a79b55dbaf8604812f52d140b2c9ab41bc150bb8"
   integrity sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==
@@ -1187,11 +1170,6 @@
   integrity sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==
   dependencies:
     csstype "^3.2.2"
-
-"@types/use-sync-external-store@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@types/use-sync-external-store/-/use-sync-external-store-0.0.6.tgz#60be8d21baab8c305132eb9cb912ed497852aadc"
-  integrity sha512-zFDAD+tlpf2r4asuHEj0XH6pY6i0g5NeAHPn+15wk3BV6JA69eERFXC1gyGThDkVa1zCyKr5jox1+2LbV/AMLg==
 
 "@types/wrap-ansi@^3.0.0":
   version "3.0.0"
@@ -2532,11 +2510,6 @@ ignore@^7.0.5:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-7.0.5.tgz#4cb5f6cd7d4c7ab0365738c7aea888baa6d7efd9"
   integrity sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==
 
-immer@^11.0.0:
-  version "11.1.8"
-  resolved "https://registry.yarnpkg.com/immer/-/immer-11.1.8.tgz#08a6426f7019dbce8d6dff8c4a43bb25c550a575"
-  integrity sha512-/tbkHMW7y10Lx6i1crLjD4/OhNkRG+Fo7byZHtah0547nIeXYcpIXaUh0IAQY6gO5459qpGGYapcEOHtFXkIuA==
-
 import-fresh@^3.2.1:
   version "3.3.0"
   resolved "https://registry.npmjs.org/import-fresh/-/import-fresh-3.3.0.tgz"
@@ -3346,14 +3319,6 @@ react-is@^19.0.0, react-is@^19.2.4:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.2.6.tgz#aeee6159b159eb7f520d672cffcc69e7052d288f"
   integrity sha512-XjBR15BhXuylgWGuslhDKqlSayuqvqBX91BP8pauG8kd1zY8kotkNWbXksTCNRarse4kuGbe2kIY05ARtwNIvw==
 
-react-redux@9.2.0:
-  version "9.2.0"
-  resolved "https://registry.yarnpkg.com/react-redux/-/react-redux-9.2.0.tgz#96c3ab23fb9a3af2cb4654be4b51c989e32366f5"
-  integrity sha512-ROY9fvHhwOD9ySfrF0wmvu//bKCQ6AeZZq1nJNtbDC+kk5DuSuNX/n6YWYF/SYy7bSba4D4FSz8DJeKY/S/r+g==
-  dependencies:
-    "@types/use-sync-external-store" "^0.0.6"
-    use-sync-external-store "^1.4.0"
-
 react-router@7.15.0:
   version "7.15.0"
   resolved "https://registry.yarnpkg.com/react-router/-/react-router-7.15.0.tgz#cb438ff254ab5a1e356ef5a23d7821d8f6fbe652"
@@ -3385,16 +3350,6 @@ redent@^3.0.0:
     indent-string "^4.0.0"
     strip-indent "^3.0.0"
 
-redux-thunk@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/redux-thunk/-/redux-thunk-3.1.0.tgz#94aa6e04977c30e14e892eae84978c1af6058ff3"
-  integrity sha512-NW2r5T6ksUKXCabzhL9z+h206HQw/NJkcLm1GPImRQ8IzfXwRGqjVhKJGauHirT0DAuyy6hjdnMZaRoAcy0Klw==
-
-redux@5.0.1, redux@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/redux/-/redux-5.0.1.tgz#97fa26881ce5746500125585d5642c77b6e9447b"
-  integrity sha512-M9/ELqF6fy8FwmkpnF0S3YKOqMyoWJ4+CS5Efg2ct3oY9daQvd/Pc71FpGZsVsbl3Cpb+IIcjBDUnnyBdQbq4w==
-
 reflect-metadata@0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/reflect-metadata/-/reflect-metadata-0.2.2.tgz#400c845b6cba87a21f2c65c4aeb158f4fa4d9c5b"
@@ -3424,7 +3379,7 @@ require-from-string@^2.0.2:
   resolved "https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz"
   integrity sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==
 
-reselect@^5.1.0, reselect@^5.1.1:
+reselect@^5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/reselect/-/reselect-5.1.1.tgz#c766b1eb5d558291e5e550298adb0becc24bb72e"
   integrity sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==
@@ -3841,7 +3796,7 @@ uri-js@^4.2.2:
   dependencies:
     punycode "^2.1.0"
 
-use-sync-external-store@^1.4.0, use-sync-external-store@^1.6.0:
+use-sync-external-store@^1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz#b174bfa65cb2b526732d9f2ac0a408027876f32d"
   integrity sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==

@@ -24,7 +24,6 @@ import LoginIcon from "@mui/icons-material/Login";
 import EditIcon from "@mui/icons-material/Edit";
 import { authSession } from "../shared/auth/authSession";
 import { i18n } from "../i18n";
-import { useNotifier } from "../hooks/useNotifier";
 import { RoleNameEnum } from "../types/roles";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useAuthSession } from "../shared/auth/useAuthSession";
@@ -91,9 +90,6 @@ function AppBarTop() {
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
   const navigateTo = useNavigate();
-
-  // to use redux-Notifications on all child components
-  useNotifier();
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] =
