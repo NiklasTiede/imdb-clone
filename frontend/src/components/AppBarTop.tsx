@@ -22,15 +22,12 @@ import { ColorModeContext, tokens } from "../theme";
 import { useContext, useState } from "react";
 import LoginIcon from "@mui/icons-material/Login";
 import EditIcon from "@mui/icons-material/Edit";
-import { hasUserRole, isJwtNotExpired } from "../utils/jwtHelper";
-import { Dispatch } from "../redux/store";
-import { useDispatch, useSelector } from "react-redux";
+import { authSession } from "../shared/auth/authSession";
 import { i18n } from "../i18n";
-import { State as AuthenticationStatus } from "../redux/model/authentication";
 import { useNotifier } from "../hooks/useNotifier";
 import { RoleNameEnum } from "../types/roles";
 import ClearIcon from "@mui/icons-material/Clear";
-import { authSession } from "../shared/auth/authSession";
+import { useAuthSession } from "../shared/auth/useAuthSession";
 
 const settings = [
   {
@@ -93,7 +90,6 @@ function AppBarTop() {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const colorMode = useContext(ColorModeContext);
-  const dispatch = useDispatch<Dispatch>();
   const navigateTo = useNavigate();
 
   // to use redux-Notifications on all child components
@@ -106,13 +102,8 @@ function AppBarTop() {
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
-  // after isAuthenticated from store is updated -> AppBar comp. is re-rendered
-  useSelector(
-    (state: { authentication: AuthenticationStatus }) =>
-      state.authentication.isAuthenticated,
-  );
-  const isAdmin: boolean = hasUserRole(RoleNameEnum.Admin);
-  const isLoggedIn: boolean = isJwtNotExpired();
+  const isLoggedIn = useAuthSession();
+  const isAdmin = authSession.hasRole(RoleNameEnum.Admin);
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -132,7 +123,6 @@ function AppBarTop() {
     handleMobileMenuClose();
 
     authSession.clear();
-    dispatch.authentication.setIsAuthenticated(false);
   };
 
   const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {

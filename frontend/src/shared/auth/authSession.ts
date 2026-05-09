@@ -3,6 +3,12 @@ const ROLES_KEY = "rolesFromJwt";
 const EXPIRES_AT_KEY = "jwtExpiresAt";
 const USERNAME_KEY = "username";
 
+const listeners = new Set<() => void>();
+
+const notifyListeners = (): void => {
+  listeners.forEach((listener) => listener());
+};
+
 export type AuthSessionData = {
   accessToken: string;
   roles?: string;
@@ -17,6 +23,7 @@ export const authSession = {
 
   setAccessToken(token: string): void {
     window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    notifyListeners();
   },
 
   setSession(session: AuthSessionData): void {
@@ -30,6 +37,7 @@ export const authSession = {
     if (session.expiresAt !== undefined) {
       window.localStorage.setItem(EXPIRES_AT_KEY, session.expiresAt.toString());
     }
+    notifyListeners();
   },
 
   getUsername(): string | null {
@@ -38,6 +46,7 @@ export const authSession = {
 
   setUsername(username: string): void {
     window.localStorage.setItem(USERNAME_KEY, username);
+    notifyListeners();
   },
 
   hasRole(role: string): boolean {
@@ -57,5 +66,13 @@ export const authSession = {
     window.localStorage.removeItem(ROLES_KEY);
     window.localStorage.removeItem(EXPIRES_AT_KEY);
     window.localStorage.removeItem(USERNAME_KEY);
+    notifyListeners();
+  },
+
+  subscribe(listener: () => void): () => void {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
   },
 };

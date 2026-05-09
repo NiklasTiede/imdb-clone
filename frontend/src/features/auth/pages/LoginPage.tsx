@@ -1,8 +1,6 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { LoginRequest } from "../../../client/movies/generator-output";
-import { useDispatch, useSelector } from "react-redux";
-import { Dispatch } from "../../../redux/store";
 import {
   Button,
   Container,
@@ -16,8 +14,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
 import { i18n } from "../../../i18n";
-import { State as AuthState } from "../../../redux/model/authentication";
-import { isJwtNotExpired } from "../../../utils/jwtHelper";
+import { useMutation } from "@tanstack/react-query";
+import { authenticateAccount } from "../api/authMutations";
+import { authSession } from "../../../shared/auth/authSession";
+import { useAuthSession } from "../../../shared/auth/useAuthSession";
+import { useSnackbar } from "notistack";
+import { AxiosError } from "axios";
 
 interface FormInputs {
   usernameOrEmail: string;
@@ -40,13 +42,24 @@ const LoginPage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const navigateTo = useNavigate();
-  const dispatch = useDispatch<Dispatch>();
-
-  const isAuthenticated = useSelector(
-    (state: { authentication: AuthState }) =>
-      state.authentication.isAuthenticated,
-  );
-  const isLoggedIn: boolean = isJwtNotExpired();
+  const isLoggedIn = useAuthSession();
+  const { enqueueSnackbar } = useSnackbar();
+  const authenticateAccountMutation = useMutation({
+    mutationFn: authenticateAccount,
+    onSuccess: (session) => {
+      authSession.setSession(session);
+      navigateTo("/");
+    },
+    onError: (error: unknown) => {
+      const axiosError = error as AxiosError;
+      enqueueSnackbar(
+        axiosError.response?.status === 401
+          ? i18n.login.badCredentials
+          : i18n.login.loadingError,
+        { variant: "error" },
+      );
+    },
+  });
 
   const {
     register,
@@ -62,14 +75,14 @@ const LoginPage = () => {
       usernameOrEmail: data.usernameOrEmail,
       password: data.password,
     };
-    dispatch.authentication.authenticateAccount(payload);
+    authenticateAccountMutation.mutate(payload);
   };
 
   useEffect(() => {
     if (isLoggedIn) {
       navigateTo("/");
     }
-  }, [isAuthenticated, isLoggedIn, navigateTo]);
+  }, [isLoggedIn, navigateTo]);
 
   return (
     <>
@@ -128,6 +141,7 @@ const LoginPage = () => {
                       variant={"contained"}
                       type={"submit"}
                       fullWidth
+                      disabled={authenticateAccountMutation.isPending}
                     >
                       {i18n.login.login}
                     </Button>

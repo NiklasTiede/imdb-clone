@@ -8,28 +8,26 @@ import {
   TextField,
   useTheme,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { tokens } from "../../../theme";
 import { useNavigate } from "react-router";
-import { useDispatch, useSelector } from "react-redux";
-import { Dispatch } from "../../../redux/store";
 import { i18n } from "../../../i18n";
-import { useForm, UseFormSetError } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
 import { RegistrationRequest } from "../../../client/movies/generator-output";
-import { State as AuthState } from "../../../redux/model/authentication";
+import { useMutation } from "@tanstack/react-query";
+import {
+  getRegistrationInvalidParams,
+  registerAccount,
+} from "../api/authMutations";
+import { useSnackbar } from "notistack";
 
 export interface FormInputs {
   username: string;
   email: string;
   password: string;
   confirmPassword: string;
-}
-
-export interface RegisterRequest {
-  payload: RegistrationRequest;
-  error: UseFormSetError<FormInputs>;
 }
 
 export const schema = zod
@@ -76,14 +74,9 @@ const RegistrationPage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const navigateTo = useNavigate();
-  const dispatch = useDispatch<Dispatch>();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [showPassword, setShowPassword] = useState(false);
-
-  const registeredSuccessfully = useSelector(
-    (state: { authentication: AuthState }) =>
-      state.authentication.registrationCompleted,
-  );
 
   const {
     setError,
@@ -94,25 +87,45 @@ const RegistrationPage = () => {
     mode: "onBlur",
     resolver: zodResolver(schema),
   });
+  const registerAccountMutation = useMutation({
+    mutationFn: registerAccount,
+    onSuccess: () => {
+      enqueueSnackbar(i18n.registration.registrationSuccessful, {
+        variant: "success",
+      });
+      navigateTo("/login");
+    },
+    onError: (error: unknown) => {
+      const invalidParams = getRegistrationInvalidParams(error);
+
+      if (invalidParams.email) {
+        setError("email", {
+          type: "custom",
+          message: invalidParams.email,
+        });
+      }
+      if (invalidParams.username) {
+        setError("username", {
+          type: "custom",
+          message: invalidParams.username,
+        });
+      }
+      if (!invalidParams.email && !invalidParams.username) {
+        enqueueSnackbar(i18n.registration.loadingError, {
+          variant: "error",
+        });
+      }
+    },
+  });
 
   const onSubmit = (data: FormInputs) => {
-    const request: RegisterRequest = {
-      payload: {
-        username: data.username,
-        email: data.email,
-        password: data.password,
-      },
-      error: setError,
+    const request: RegistrationRequest = {
+      username: data.username,
+      email: data.email,
+      password: data.password,
     };
-    dispatch.authentication.registerAccount(request);
+    registerAccountMutation.mutate(request);
   };
-
-  useEffect(() => {
-    if (registeredSuccessfully) {
-      navigateTo("/login");
-      dispatch.authentication.setRegistrationCompleted(false);
-    }
-  }, [dispatch.authentication, navigateTo, registeredSuccessfully]);
 
   return (
     <>
@@ -213,6 +226,7 @@ const RegistrationPage = () => {
                       variant={"contained"}
                       type={"submit"}
                       fullWidth
+                      disabled={registerAccountMutation.isPending}
                     >
                       {i18n.registration.register}
                     </Button>

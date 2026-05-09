@@ -56,4 +56,21 @@ describe("authSession", () => {
     expect(window.localStorage.getItem("jwtExpiresAt")).toBeNull();
     expect(window.localStorage.getItem("username")).toBeNull();
   });
+
+  it("notifies subscribers when the session changes", () => {
+    const listener = vi.fn();
+
+    const unsubscribe = authSession.subscribe(listener);
+    authSession.setSession({
+      accessToken: "test-token",
+      roles: "ROLE_USER",
+      username: "test_user",
+      expiresAt: 9999999999,
+    });
+    authSession.clear();
+    unsubscribe();
+    authSession.setAccessToken("another-token");
+
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
 });
