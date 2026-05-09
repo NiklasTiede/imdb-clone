@@ -1,6 +1,5 @@
 import {
   Box,
-  Avatar,
   Button,
   FormHelperText,
   Grid,
@@ -25,6 +24,7 @@ import {
 } from "../api/accountMutations";
 import { accountQueries } from "../api/accountQueries";
 import { useSnackbar } from "notistack";
+import { ProfileAvatar } from "../../../shared/media";
 
 const AccountSettingsPage = () => {
   const theme = useTheme();
@@ -67,13 +67,6 @@ const AccountSettingsPage = () => {
     );
     setBio(accountProfile.bio ?? "");
     setCharacterCount(accountProfile.bio ? accountProfile.bio.length : 0);
-    if (accountProfile.imageUrlToken) {
-      setImageUrl(
-        `http://192.168.178.49:9000/imdb-clone/profile-photos/${accountProfile.imageUrlToken}_size_800x800.jpg`,
-      );
-    } else {
-      setImageUrl(undefined);
-    }
   }, [accountProfile]);
 
   const handleBioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,8 +98,6 @@ const AccountSettingsPage = () => {
     }
   };
 
-  const [imageUrl, setImageUrl] = useState<string | undefined>();
-
   return (
     <Box sx={{ p: 5 }}>
       <Paper
@@ -119,7 +110,10 @@ const AccountSettingsPage = () => {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Avatar src={imageUrl} sx={{ width: 100, height: 100 }} />
+          <ProfileAvatar
+            imageUrlToken={accountProfile.imageUrlToken}
+            sx={{ width: 100, height: 100 }}
+          />
           <ProfileImageUpload />
         </Box>
 

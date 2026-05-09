@@ -1,25 +1,17 @@
 import { useLocation } from "react-router";
 import React from "react";
-import { CardMedia, Container, Paper } from "@mui/material";
+import { Container, Paper } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import { i18n } from "../../../i18n";
-import {
-  getMinioImageUrl,
-  MinioImageSize,
-} from "../../../utils/imageUrlParser";
-import placeholderSearch from "../../../assets/img/placeholder_search.png";
 import { useQuery } from "@tanstack/react-query";
 import { movieQueries } from "../api/movieQueries";
+import { MinioImageSize, PosterImage } from "../../../shared/media";
 
 const MovieDetailPage = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const movieId = parseMovieId(queryParams.get("id"));
   const { data: movie } = useQuery(movieQueries.detail(movieId));
-
-  const imageUrl = movie?.imageUrlToken
-    ? getMinioImageUrl(movie?.imageUrlToken, MinioImageSize.Large)
-    : undefined;
 
   return (
     <>
@@ -33,11 +25,10 @@ const MovieDetailPage = () => {
               <Typography variant={"inherit"} sx={{ textAlign: "center" }}>
                 {movie.primaryTitle}, {movie.startYear}
               </Typography>
-              <CardMedia
-                component="img"
-                alt="movie poster"
+              <PosterImage
+                imageUrlToken={movie.imageUrlToken}
+                size={MinioImageSize.Large}
                 sx={{ width: 300, height: 450, padding: 1 }}
-                src={movie.imageUrlToken ? imageUrl : placeholderSearch}
               />
               <Typography variant={"inherit"} sx={{ textAlign: "center" }}>
                 {movie.description}

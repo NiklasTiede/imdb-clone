@@ -1,7 +1,6 @@
 import {
   Box,
   Card,
-  CardMedia,
   Paper,
   Stack,
   styled,
@@ -12,11 +11,7 @@ import { tokens } from "../../../theme";
 import { MovieRecord } from "../../../client/movies/generator-output";
 import React from "react";
 import { Link } from "react-router";
-import {
-  getMinioImageUrl,
-  MinioImageSize,
-} from "../../../utils/imageUrlParser";
-import placeholderSearch from "../../../assets/img/placeholder_search.png";
+import { MinioImageSize, PosterImage } from "../../../shared/media";
 
 export const MovieLink = styled(Link)`
   text-decoration: none;
@@ -45,18 +40,13 @@ const MovieCard = (movie: MovieRecord) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
-  const imageUrl = movie?.imageUrlToken
-    ? getMinioImageUrl(movie?.imageUrlToken, MinioImageSize.Small)
-    : undefined;
-
   return (
     <div>
       <Card sx={{ display: "flex", width: 600, height: 100 }}>
-        <CardMedia
-          component="img"
-          alt="movie poster"
+        <PosterImage
+          imageUrlToken={movie.imageUrlToken}
+          size={MinioImageSize.Small}
           sx={{ width: 80, height: 100, padding: 1 }}
-          src={movie.imageUrlToken ? imageUrl : placeholderSearch}
         />
         <Box
           sx={{
