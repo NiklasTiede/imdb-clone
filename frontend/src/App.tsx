@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router";
-import MyAppBar from "./components/AppBarTop";
+import MyAppBar from "./shared/layout/AppBarTop";
 import Home from "./components/Home";
 import { LoginPage, LogoutPage, RegistrationPage } from "./features/auth";
 import YourRatings from "./components/profile/YourRatings";
