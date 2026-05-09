@@ -3,6 +3,7 @@ package com.thecodinglab.imdbclone.integration.repository;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import com.thecodinglab.imdbclone.integration.BaseContainers;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
 import java.util.Optional;
@@ -36,5 +37,21 @@ class AccountRepositoryTest extends BaseContainers {
   }
 
   @Test
-  void getAccountByUsername() {}
+  void getAccountByUsername_success() {
+    var account = accountRepository.getAccountByUsername("test_user_one");
+
+    assertEquals(1L, account.getId());
+    assertEquals("test_user_one", account.getUsername());
+    assertEquals("one@gmail.com", account.getEmail());
+  }
+
+  @Test
+  void getAccountByUsername_notFound() {
+    var exception =
+        assertThrows(
+            NotFoundException.class, () -> accountRepository.getAccountByUsername("missing_user"));
+
+    assertEquals(
+        "User with username [missing_user] not found in database.", exception.getMessage());
+  }
 }

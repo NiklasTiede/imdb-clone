@@ -2,14 +2,19 @@ package com.thecodinglab.imdbclone.integration.controller;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
+import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
 import com.thecodinglab.imdbclone.integration.BaseContainers;
 import com.thecodinglab.imdbclone.payload.authentication.LoginRequest;
 import com.thecodinglab.imdbclone.payload.movie.MovieIdsRequest;
+import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
 import com.thecodinglab.imdbclone.payload.movie.MovieRequest;
 import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.service.AuthenticationService;
 import java.util.List;
+import java.util.Set;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -28,6 +33,8 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MovieControllerTest extends BaseContainers {
 
+  private static final String TEST_MOVIE_PREFIX = "movie-controller-integration-test";
+
   @Autowired private RestTestClient restTestClient;
 
   @Autowired private AuthenticationService authenticationService;
@@ -44,6 +51,18 @@ class MovieControllerTest extends BaseContainers {
     var adminLogin = authenticationService.loginUser(adminRequest);
     adminToken = "%s %s".formatted(adminLogin.getTokenType(), adminLogin.getAccessToken());
     SecurityContextHolder.clearContext();
+  }
+
+  @AfterEach
+  void cleanup() {
+    movieRepository.findAll().stream()
+        .filter(movie -> movie.getPrimaryTitle() != null)
+        .filter(movie -> movie.getPrimaryTitle().startsWith(TEST_MOVIE_PREFIX))
+        .forEach(
+            movie -> {
+              movieElasticSearchRepository.deleteById(movie.getId());
+              movieRepository.delete(movie);
+            });
   }
 
   @Test
@@ -160,48 +179,136 @@ class MovieControllerTest extends BaseContainers {
   @Test
   void createMovie_success() {
     // Arrange
-    var movieRequest = new MovieRequest(
-            "test movie",
-            "test movie",
+    var movieRequest =
+        new MovieRequest(
+            TEST_MOVIE_PREFIX + " create",
+            TEST_MOVIE_PREFIX + " create original",
             2015,
             2015,
             105,
-            null,
-            null,
-            false
-    );
+            Set.of(MovieGenreEnum.ACTION, MovieGenreEnum.THRILLER),
+            MovieTypeEnum.MOVIE,
+            false);
 
     // Act and Assert
-    restTestClient
-            .post()
-            .uri("/api/movie/create-movie")
-            .header("Authorization", adminToken)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(movieRequest)
-            .exchange()
-            .expectAll(
-                    spec -> spec.expectStatus().isCreated(),
-                    spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-                    spec -> spec.expectBody()
-                            .jsonPath("$.id").isEqualTo(3)
-                            .jsonPath("$.primaryTitle").isEqualTo("test movie")
-                            .jsonPath("$.startYear").isEqualTo(2015)
-            );
+    var createdMovie = createMovie(movieRequest);
 
-    var movieEntity = movieRepository.getMovieById(3L);
-    assertThat(movieEntity.getPrimaryTitle()).isEqualTo("test movie");
-    assertThat(movieEntity.getOriginalTitle()).isNotEqualTo("no movie");
+    assertThat(createdMovie.id()).isNotNull();
+    assertThat(createdMovie.primaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " create");
+    assertThat(createdMovie.startYear()).isEqualTo(2015);
 
-    var movieDocument = movieElasticSearchRepository.findById(3L);
+    var movieEntity = movieRepository.getMovieById(createdMovie.id());
+    assertThat(movieEntity.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " create");
+    assertThat(movieEntity.getOriginalTitle()).isEqualTo(TEST_MOVIE_PREFIX + " create original");
+
+    var movieDocument = movieElasticSearchRepository.findById(createdMovie.id());
     assertThat(movieDocument).isPresent();
-    movieDocument.ifPresent(r -> assertThat(r.getPrimaryTitle()).isEqualTo("test movie"));
+    movieDocument.ifPresent(
+        r -> assertThat(r.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " create"));
     movieDocument.ifPresent(r -> assertThat(r.getPrimaryTitle()).isNotEqualTo("no movie"));
   }
 
   @Test
-  void updateMovie() {}
+  void updateMovie_success() {
+    var createdMovie =
+        createMovie(
+            new MovieRequest(
+                TEST_MOVIE_PREFIX + " update",
+                TEST_MOVIE_PREFIX + " update original",
+                2010,
+                2010,
+                95,
+                Set.of(MovieGenreEnum.DRAMA),
+                MovieTypeEnum.MOVIE,
+                false));
+
+    var updateRequest =
+        new MovieRequest(
+            TEST_MOVIE_PREFIX + " updated",
+            TEST_MOVIE_PREFIX + " updated original",
+            2020,
+            2020,
+            111,
+            Set.of(MovieGenreEnum.SCI_FI),
+            MovieTypeEnum.TV_MOVIE,
+            false);
+
+    restTestClient
+        .put()
+        .uri("/api/movie/{movieId}", createdMovie.id())
+        .header("Authorization", adminToken)
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .body(updateRequest)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.id").isEqualTo(createdMovie.id())
+                    .jsonPath("$.primaryTitle").isEqualTo(TEST_MOVIE_PREFIX + " updated")
+                    .jsonPath("$.originalTitle").isEqualTo(TEST_MOVIE_PREFIX + " updated original")
+                    .jsonPath("$.startYear").isEqualTo(2020)
+                    .jsonPath("$.runtimeMinutes").isEqualTo(111)
+                    .jsonPath("$.movieType").isEqualTo("TV_MOVIE"));
+
+    var movieEntity = movieRepository.getMovieById(createdMovie.id());
+    assertThat(movieEntity.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " updated");
+    assertThat(movieEntity.getRuntimeMinutes()).isEqualTo(111);
+    assertThat(movieEntity.getMovieType()).isEqualTo(MovieTypeEnum.TV_MOVIE);
+
+    var movieDocument = movieElasticSearchRepository.findById(createdMovie.id());
+    assertThat(movieDocument).isPresent();
+    movieDocument.ifPresent(
+        r -> assertThat(r.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " updated"));
+  }
 
   @Test
-  void deleteMovie() {}
+  void deleteMovie_success() {
+    var createdMovie =
+        createMovie(
+            new MovieRequest(
+                TEST_MOVIE_PREFIX + " delete",
+                TEST_MOVIE_PREFIX + " delete original",
+                2012,
+                2012,
+                102,
+                Set.of(MovieGenreEnum.COMEDY),
+                MovieTypeEnum.MOVIE,
+                false));
+
+    restTestClient
+        .delete()
+        .uri("/api/movie/{movieId}", createdMovie.id())
+        .header("Authorization", adminToken)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .isNoContent();
+
+    assertThat(movieRepository.findById(createdMovie.id())).isEmpty();
+    assertThat(movieElasticSearchRepository.findById(createdMovie.id())).isEmpty();
+  }
+
+  private MovieRecord createMovie(MovieRequest movieRequest) {
+    var response =
+        restTestClient
+            .post()
+            .uri("/api/movie/create-movie")
+            .header("Authorization", adminToken)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .body(movieRequest)
+            .exchange()
+            .expectAll(
+                spec -> spec.expectStatus().isCreated(),
+                spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON))
+            .expectBody(MovieRecord.class)
+            .returnResult()
+            .getResponseBody();
+    assertThat(response).isNotNull();
+    return response;
+  }
 }
 // spotless:on
