@@ -11,3 +11,7 @@ export const storeUserProfilePhoto = async (
   const response = await fileStorageApi.storeUserProfilePhoto(image);
   return response.data;
 };
+
+export const deleteUserProfilePhoto = async (): Promise<void> => {
+  await fileStorageApi.deleteUserProfilePhoto();
+};

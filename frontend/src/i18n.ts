@@ -25,6 +25,7 @@ export const i18n = {
     logout: "Logout",
   },
   accountSettings: {
+    accountSaved: "Account saved",
     username: "Username",
     email: "Email Address",
     firstName: "First Name",
@@ -32,6 +33,8 @@ export const i18n = {
     birthday: "Birthday",
     phone: "Phone Number",
     bio: "Biography",
+    profilePhotoRemoved: "Profile photo removed",
+    profileSaved: "Profile saved",
     submit: "Update",
     successfulUpdate: "Account Profile was updated successfully",
     loadingError: (action: string) => `Error while attempting to ${action}`,

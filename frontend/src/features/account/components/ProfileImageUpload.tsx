@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {
   Button,
+  ButtonProps,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -14,7 +15,13 @@ import { mediaMutationKeys, storeUserProfilePhoto } from "../../media";
 import { useSnackbar } from "notistack";
 import { i18n } from "../../../i18n";
 
-const ProfileImageUpload: React.FC = () => {
+type ProfileImageUploadProps = {
+  buttonVariant?: ButtonProps["variant"];
+};
+
+const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
+  buttonVariant = "contained",
+}) => {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
   const uploadProfilePhoto = useMutation({
@@ -110,7 +117,7 @@ const ProfileImageUpload: React.FC = () => {
       />
       <label htmlFor="raised-button-file">
         <Button
-          variant="contained"
+          variant={buttonVariant}
           color="primary"
           component="span"
           startIcon={<CloudUploadIcon />}

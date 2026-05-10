@@ -1,21 +1,10 @@
 import {
   Box,
-  Button,
-  FormHelperText,
-  Grid,
-  Paper,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
-import { tokens } from "../../../theme";
 import React, { useEffect, useState } from "react";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
-import { getUsername } from "../../../utils/jwtHelper";
-import moment, { type Moment } from "moment";
 import { i18n } from "../../../i18n";
-import ProfileImageUpload from "../components/ProfileImageUpload";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   accountMutationKeys,
@@ -23,223 +12,149 @@ import {
 } from "../api/accountMutations";
 import { accountQueries } from "../api/accountQueries";
 import { useSnackbar } from "notistack";
-import { ProfileAvatar } from "../../../shared/media";
+import PageContent from "../../../shared/layout/PageContent";
+import AccountSectionCard from "../components/AccountSectionCard";
+import ProfileHeaderCard from "../components/ProfileHeaderCard";
+import ProfileSectionCard from "../components/ProfileSectionCard";
+import {
+  AccountSectionForm,
+  buildAccountSectionPayload,
+  buildProfileSectionPayload,
+  ProfileSectionForm,
+} from "../utils/accountSettingsForm";
+import { deleteUserProfilePhoto } from "../../media";
 
 const AccountSettingsPage = () => {
-  const colors = tokens();
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
 
-  const username = getUsername();
   const { data: accountProfile = emptyAccountProfile } = useQuery(
     accountQueries.currentProfile(),
   );
-  const updateAccountProfileMutation = useMutation({
+  const updateProfileSection = useMutation({
     mutationFn: updateAccountProfile,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: accountMutationKeys.currentProfile,
       });
-      enqueueSnackbar(i18n.accountSettings.successfulUpdate, {
+      enqueueSnackbar(i18n.accountSettings.profileSaved, {
         variant: "info",
+      });
+    },
+    onError: () => {
+      enqueueSnackbar(i18n.accountSettings.loadingError("save profile"), {
+        variant: "error",
       });
     },
   });
 
-  // set-able
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [bio, setBio] = useState("");
-  const [birthdayDate, setBirthdayDate] = useState<Moment | null>(null);
+  const updateAccountSection = useMutation({
+    mutationFn: updateAccountProfile,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: accountMutationKeys.currentProfile,
+      });
+      enqueueSnackbar(i18n.accountSettings.accountSaved, {
+        variant: "info",
+      });
+    },
+    onError: () => {
+      enqueueSnackbar(i18n.accountSettings.loadingError("save account"), {
+        variant: "error",
+      });
+    },
+  });
 
-  const [characterCount, setCharacterCount] = useState(0);
-  const maxBioLength = 300;
+  const removeProfilePhoto = useMutation({
+    mutationFn: deleteUserProfilePhoto,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: accountMutationKeys.currentProfile,
+      });
+      enqueueSnackbar(i18n.accountSettings.profilePhotoRemoved, {
+        variant: "info",
+      });
+    },
+    onError: () => {
+      enqueueSnackbar(i18n.accountSettings.loadingError("remove profile photo"), {
+        variant: "error",
+      });
+    },
+  });
+
+  const [profileForm, setProfileForm] = useState<ProfileSectionForm>({
+    bio: "",
+    firstName: "",
+    lastName: "",
+  });
+  const [accountForm, setAccountForm] = useState<AccountSectionForm>({
+    birthday: null,
+  });
 
   useEffect(() => {
-    setFirstName(accountProfile.firstName ?? "");
-    setLastName(accountProfile.lastName ?? "");
-    setPhone(accountProfile.phone ?? "");
-    setBirthdayDate(
-      accountProfile.birthday ? moment(accountProfile.birthday) : null,
-    );
-    setBio(accountProfile.bio ?? "");
-    setCharacterCount(accountProfile.bio ? accountProfile.bio.length : 0);
+    setProfileForm({
+      bio: accountProfile.bio ?? "",
+      firstName: accountProfile.firstName ?? "",
+      lastName: accountProfile.lastName ?? "",
+    });
+    setAccountForm({
+      birthday: accountProfile.birthday ?? null,
+    });
   }, [accountProfile]);
 
-  const handleBioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.value.length <= maxBioLength) {
-      setBio(event.target.value);
-      setCharacterCount(event.target.value.length);
+  const saveProfileSection = () => {
+    if (accountProfile.username) {
+      updateProfileSection.mutate({
+        accountRecord: buildProfileSectionPayload(accountProfile, profileForm),
+        username: accountProfile.username,
+      });
     }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (username) {
-      const payload = {
-        username: username,
-        accountRecord: {
-          firstName: firstName || undefined,
-          lastName: lastName || undefined,
-          birthday: birthdayDate
-            ? birthdayDate.format("YYYY-MM-DD")
-            : undefined,
-          phone: phone,
-          bio: bio,
-        },
-      };
-      updateAccountProfileMutation.mutate(payload);
-    } else {
-      console.log("Username is not present!");
+  const saveAccountSection = () => {
+    if (accountProfile.username) {
+      updateAccountSection.mutate({
+        accountRecord: buildAccountSectionPayload(accountProfile, accountForm),
+        username: accountProfile.username,
+      });
     }
   };
 
   return (
-    <Box sx={{ p: 5 }}>
-      <Paper
-        elevation={24}
-        sx={{
-          padding: 5,
-          backgroundColor: colors.primary["900"],
-          maxWidth: 500,
-          margin: "auto",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <ProfileAvatar
-            imageUrlToken={accountProfile.imageUrlToken}
-            sx={{ width: 100, height: 100 }}
-          />
-          <ProfileImageUpload />
+    <PageContent maxWidth="760px">
+      <Stack spacing={2}>
+        <Box>
+          <Typography component="h1" sx={{ fontSize: 24, fontWeight: 600 }}>
+            Account settings
+          </Typography>
+          <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
+            Manage your profile and account details
+          </Typography>
         </Box>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <Stack spacing={6}>
-            <Grid>
-              <Typography gutterBottom sx={{ fontSize: 14 }}>
-                {i18n.accountSettings.username}
-              </Typography>
-              <TextField
-                type={"email"}
-                fullWidth
-                variant={"outlined"}
-                autoComplete="off"
-                slotProps={{ htmlInput: { spellCheck: false } }}
-                disabled
-                value={accountProfile.username}
-              />
-            </Grid>
-            <Grid>
-              <Typography gutterBottom sx={{ fontSize: 14 }}>
-                {i18n.accountSettings.email}
-              </Typography>
-              <TextField
-                type={"email"}
-                fullWidth
-                variant={"outlined"}
-                autoComplete="off"
-                slotProps={{ htmlInput: { spellCheck: false } }}
-                disabled
-                value={accountProfile.email}
-              />
-            </Grid>
-            <Grid>
-              <Typography gutterBottom sx={{ fontSize: 14 }}>
-                {i18n.accountSettings.firstName}
-              </Typography>
-              <TextField
-                type={"text"}
-                fullWidth
-                slotProps={{ htmlInput: { spellCheck: false } }}
-                variant={"outlined"}
-                onChange={(e) => setFirstName(e.target.value)}
-                value={firstName}
-              />
-            </Grid>
-            <Grid>
-              <Typography gutterBottom sx={{ fontSize: 14 }}>
-                {i18n.accountSettings.lastName}
-              </Typography>
-              <TextField
-                type={"text"}
-                fullWidth
-                slotProps={{ htmlInput: { spellCheck: false } }}
-                variant={"outlined"}
-                onChange={(e) => setLastName(e.target.value)}
-                value={lastName}
-              />
-            </Grid>
-            <Grid container sx={{ flexDirection: "column" }}>
-              <Typography gutterBottom>
-                {i18n.accountSettings.birthday}
-              </Typography>
-              <LocalizationProvider dateAdapter={AdapterMoment}>
-                <DatePicker
-                  disableFuture
-                  openTo="year"
-                  views={["year", "month", "day"]}
-                  value={birthdayDate}
-                  onChange={(newValue) => {
-                    setBirthdayDate(newValue);
-                  }}
-                  slotProps={{ textField: { variant: "outlined" } }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            <Grid>
-              <Typography gutterBottom>{i18n.accountSettings.phone}</Typography>
-              <TextField
-                type={"text"}
-                fullWidth
-                variant={"outlined"}
-                autoComplete={"false"}
-                onChange={(e) => setPhone(e.target.value)}
-                value={phone}
-              />
-            </Grid>
-            <Grid>
-              <Typography gutterBottom>{i18n.accountSettings.bio}</Typography>
-              <TextField
-                type={"text"}
-                fullWidth
-                variant={"outlined"}
-                autoComplete={"false"}
-                onChange={handleBioChange}
-                value={bio}
-                multiline
-              />
-              <FormHelperText
-                sx={{
-                  textAlign: "right",
-                  marginRight: 0.5,
-                  color: colors.primary[200],
-                }}
-              >
-                {characterCount} / {maxBioLength}
-              </FormHelperText>
-            </Grid>
-            <Button
-              sx={{
-                marginTop: 5,
-                color: colors.primary[100],
-                backgroundColor: colors.blueAccent[700],
-                ":hover": {
-                  color: colors.primary[100],
-                  backgroundColor: colors.blueAccent[600],
-                },
-              }}
-              variant={"contained"}
-              type={"submit"}
-              fullWidth
-            >
-              {i18n.accountSettings.submit}
-            </Button>
-          </Stack>
-        </form>
-      </Paper>
-    </Box>
+        <ProfileHeaderCard
+          accountProfile={accountProfile}
+          isRemovingPhoto={removeProfilePhoto.isPending}
+          onRemovePhoto={() => removeProfilePhoto.mutate()}
+        />
+
+        <ProfileSectionCard
+          accountProfile={accountProfile}
+          form={profileForm}
+          isSaving={updateProfileSection.isPending}
+          onFormChange={setProfileForm}
+          onSave={saveProfileSection}
+        />
+
+        <AccountSectionCard
+          accountProfile={accountProfile}
+          form={accountForm}
+          isSaving={updateAccountSection.isPending}
+          onFormChange={setAccountForm}
+          onSave={saveAccountSection}
+        />
+      </Stack>
+    </PageContent>
   );
 };
 
