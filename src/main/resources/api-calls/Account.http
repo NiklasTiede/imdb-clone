@@ -15,7 +15,7 @@ Content-Type: application/json
 
 
 ### get watchlist of user
-GET {{protocol}}{{host}}:{{port}}/api/account/les_grossman/watchlist
+GET {{protocol}}{{host}}:{{port}}/api/account/les_grossman/watchlist?page=0&size=30
 Content-Type: application/json
 
 

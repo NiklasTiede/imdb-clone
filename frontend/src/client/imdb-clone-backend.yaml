@@ -839,91 +839,6 @@ paths:
                 $ref: "#/components/schemas/MessageResponse"
 components:
   schemas:
-    WatchedMovieRecord:
-      type: object
-      properties:
-        accountId:
-          type: integer
-          format: int64
-        movieId:
-          type: integer
-          format: int64
-    MovieRequest:
-      type: object
-      properties:
-        primaryTitle:
-          type: string
-          maxLength: 200
-          minLength: 0
-        originalTitle:
-          type: string
-          maxLength: 200
-          minLength: 0
-        startYear:
-          type: integer
-          format: int32
-          maximum: 2030
-          minimum: 1850
-        endYear:
-          type: integer
-          format: int32
-          maximum: 2030
-          minimum: 1850
-        runtimeMinutes:
-          type: integer
-          format: int32
-        movieGenre:
-          type: array
-          items:
-            type: string
-            enum:
-            - HORROR
-            - MYSTERY
-            - THRILLER
-            - CRIME
-            - WESTERN
-            - WAR
-            - ACTION
-            - ADVENTURE
-            - FAMILY
-            - COMEDY
-            - ANIMATION
-            - FANTASY
-            - SCI_FI
-            - DRAMA
-            - ROMANCE
-            - SPORT
-            - HISTORY
-            - BIOGRAPHY
-            - MUSIC
-            - MUSICAL
-            - DOCUMENTARY
-            - NEWS
-            - ADULT
-            - REALITY_TV
-            - TALK_SHOW
-            - GAME_SHOW
-            - FILM_NOIR
-            - SHORT
-          uniqueItems: true
-        movieType:
-          type: string
-          enum:
-          - SHORT
-          - MOVIE
-          - VIDEO
-          - TV_MOVIE
-          - TV_EPISODE
-          - TV_MINI_SERIES
-          - TV_SPECIAL
-          - TV_SERIES
-          - TV_SHORT
-          - TV_PILOT
-          - VIDEO_GAME
-        adult:
-          type: boolean
-      required:
-      - originalTitle
     MovieRecord:
       type: object
       properties:
@@ -1015,6 +930,96 @@ components:
           type: string
         imageUrlToken:
           type: string
+    WatchedMovieRecord:
+      type: object
+      properties:
+        accountId:
+          type: integer
+          format: int64
+        movieId:
+          type: integer
+          format: int64
+        addedAt:
+          type: string
+          format: date-time
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+    MovieRequest:
+      type: object
+      properties:
+        primaryTitle:
+          type: string
+          maxLength: 200
+          minLength: 0
+        originalTitle:
+          type: string
+          maxLength: 200
+          minLength: 0
+        startYear:
+          type: integer
+          format: int32
+          maximum: 2030
+          minimum: 1850
+        endYear:
+          type: integer
+          format: int32
+          maximum: 2030
+          minimum: 1850
+        runtimeMinutes:
+          type: integer
+          format: int32
+        movieGenre:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          uniqueItems: true
+        movieType:
+          type: string
+          enum:
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
+        adult:
+          type: boolean
+      required:
+      - originalTitle
     RatingRecord:
       type: object
       properties:
@@ -1076,7 +1081,7 @@ components:
           type: string
         birthday:
           type: string
-          format: date-time
+          format: date
     UpdatedAccountProfile:
       type: object
       properties:
@@ -1094,7 +1099,7 @@ components:
           type: string
         birthday:
           type: string
-          format: date-time
+          format: date
     MessageResponse:
       type: object
       properties:
@@ -1378,7 +1383,7 @@ components:
           type: string
         birthday:
           type: string
-          format: date-time
+          format: date
         imageUrlToken:
           type: string
         ratingsCount:

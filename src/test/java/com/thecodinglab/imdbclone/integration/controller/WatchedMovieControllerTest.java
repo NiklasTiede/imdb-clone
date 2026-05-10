@@ -63,7 +63,10 @@ class WatchedMovieControllerTest extends BaseContainers {
             spec ->
                 spec.expectBody()
                     .jsonPath("$.accountId").isEqualTo(ACCOUNT_ID)
-                    .jsonPath("$.movieId").isEqualTo(MOVIE_ID));
+                    .jsonPath("$.movieId").isEqualTo(MOVIE_ID)
+                    .jsonPath("$.addedAt").exists()
+                    .jsonPath("$.movie.id").isEqualTo(MOVIE_ID)
+                    .jsonPath("$.movie.primaryTitle").isEqualTo("testMovieTwoPri"));
 
     restTestClient
         .get()
@@ -79,7 +82,10 @@ class WatchedMovieControllerTest extends BaseContainers {
                     .jsonPath("$.number").doesNotExist()
                     .jsonPath("$.pageable").doesNotExist()
                     .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
-                    .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));
+                    .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID)
+                    .jsonPath("$.content[0].addedAt").exists()
+                    .jsonPath("$.content[0].movie.id").isEqualTo(MOVIE_ID)
+                    .jsonPath("$.content[0].movie.primaryTitle").isEqualTo("testMovieTwoPri"));
 
     restTestClient
         .delete()

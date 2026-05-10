@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class WatchedMovieServiceImpl implements WatchedMovieService {
@@ -47,20 +48,21 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   }
 
   @Override
+  @Transactional
   public WatchedMovieRecord watchMovie(Long movieId, UserPrincipal currentAccount) {
     Movie movie = movieRepository.getMovieById(movieId);
     Account account = accountRepository.getAccount(currentAccount);
     WatchedMovie watchedMovie = WatchedMovie.create(movie, account);
-    WatchedMovie savedWatchedMovie = watchedMovieRepository.save(watchedMovie);
+    WatchedMovie savedWatchedMovie = watchedMovieRepository.saveAndFlush(watchedMovie);
     logger.info(
         "Movie with [{}] is watched by account with id [{}].",
         kv(WATCHED_MOVIE_ID, savedWatchedMovie.getId()),
         savedWatchedMovie.getId().getAccountId());
-    return new WatchedMovieRecord(
-        savedWatchedMovie.getAccount().getId(), savedWatchedMovie.getMovie().getId());
+    return watchedMovieMapper.entityToDTO(savedWatchedMovie);
   }
 
   @Override
+  @Transactional(readOnly = true)
   public PagedResponse<WatchedMovieRecord> getWatchedMoviesByAccount(
       String username, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
@@ -77,6 +79,7 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   }
 
   @Override
+  @Transactional
   public MessageResponse deleteWatchedMovie(Long movieId, UserPrincipal currentAccount) {
     WatchedMovie watchedMovie =
         watchedMovieRepository
