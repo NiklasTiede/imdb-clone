@@ -94,10 +94,17 @@ test("searches movies and renders a seeded poster", async ({ page }) => {
   await page.getByRole("textbox", { name: "search" }).press("Enter");
 
   await expect(page).toHaveURL(/\/movie-search\?query=Nightcrawler$/);
+  await expect(
+    page.getByRole("heading", { name: 'Results for "Nightcrawler"' }),
+  ).toBeVisible();
+  await expect(page.getByText("1 movie")).toBeVisible();
+  await expect(page.getByRole("grid", { name: "Search results" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Nightcrawler" })).toBeVisible();
+  await expect(page.getByText("7.8")).toBeVisible();
+  await expect(page.getByText("2014 · 117 min")).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
-    /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_120x180\.jpg/,
+    /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_600x900\.jpg/,
   );
 });
 
@@ -110,10 +117,14 @@ test("searches for a multi-word lowercase movie title", async ({ page }) => {
   await page.getByRole("textbox", { name: "search" }).press("Enter");
 
   await expect(page).toHaveURL(/\/movie-search\?query=it%20follows$/);
+  await expect(
+    page.getByRole("heading", { name: 'Results for "it follows"' }),
+  ).toBeVisible();
+  await expect(page.getByRole("grid", { name: "Search results" })).toBeVisible();
   await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
-    /itFollowsPosterToken_size_120x180\.jpg/,
+    /itFollowsPosterToken_size_600x900\.jpg/,
   );
   searchRequest.expectRequestedQuery();
 });
