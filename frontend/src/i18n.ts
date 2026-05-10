@@ -58,7 +58,7 @@ export const i18n = {
   },
   watchlist: {
     empty: "Your watchlist is empty.",
-    heading: "Your Movie WatchList",
+    heading: "Your watchlist",
     loadingError: "Error while attempting to load your watchlist",
   },
   ratings: {

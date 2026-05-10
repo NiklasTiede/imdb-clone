@@ -1,8 +1,7 @@
 import {
-  PagedResponseMovieRecord,
   PagedResponseWatchedMovieRecord,
 } from "../../../client/movies/generator-output";
-import { accountApi, moviesApi } from "../../../shared/api/moviesApi";
+import { accountApi } from "../../../shared/api/moviesApi";
 
 type CurrentUserWatchlistParams = {
   page: number;
@@ -23,11 +22,11 @@ const getWatchlistMovieIds = (
     .map((watchedMovie) => watchedMovie.movieId)
     .filter((movieId): movieId is number => movieId !== undefined);
 
-const getCurrentUserWatchlistMovies = async ({
+const getCurrentUserWatchlistItems = async ({
   page,
   size,
   username,
-}: CurrentUserWatchlistParams): Promise<PagedResponseMovieRecord> => {
+}: CurrentUserWatchlistParams): Promise<PagedResponseWatchedMovieRecord> => {
   const normalizedUsername = username?.trim();
 
   if (!normalizedUsername) {
@@ -39,34 +38,7 @@ const getCurrentUserWatchlistMovies = async ({
     page,
     size,
   );
-  const watchlist = watchlistResponse.data;
-  const movieIds = getWatchlistMovieIds(watchlist);
-
-  if (movieIds.length === 0) {
-    return {
-      content: [],
-      last: watchlist.last,
-      page: watchlist.page,
-      size: watchlist.size,
-      totalElements: watchlist.totalElements,
-      totalPages: watchlist.totalPages,
-    };
-  }
-
-  const moviesResponse = await moviesApi.getMoviesByIds(
-    { movieIds },
-    0,
-    movieIds.length,
-  );
-
-  return {
-    ...moviesResponse.data,
-    last: watchlist.last,
-    page: watchlist.page,
-    size: watchlist.size,
-    totalElements: watchlist.totalElements,
-    totalPages: watchlist.totalPages,
-  };
+  return watchlistResponse.data;
 };
 
 const fetchCurrentUserWatchedMovieIds = async (
@@ -89,13 +61,13 @@ const fetchCurrentUserWatchedMovieIds = async (
 };
 
 export const watchlistQueries = {
-  currentUserMovies: ({ page, size, username }: CurrentUserWatchlistParams) => {
+  currentUserItems: ({ page, size, username }: CurrentUserWatchlistParams) => {
     const normalizedUsername = username?.trim() || null;
 
     return {
       enabled: normalizedUsername !== null,
       queryFn: () =>
-        getCurrentUserWatchlistMovies({
+        getCurrentUserWatchlistItems({
           page,
           size,
           username: normalizedUsername,

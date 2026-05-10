@@ -18,3 +18,11 @@ export const toggleWatchlistMutationOptions = (queryClient?: QueryClient) => ({
     queryClient?.invalidateQueries({ queryKey: ["watchlist"] });
   },
 });
+
+export const addToWatchlist = async (movieId: number) => {
+  await watchlistApi.watchMovie(movieId);
+};
+
+export const removeFromWatchlist = async (movieId: number) => {
+  await watchlistApi.deleteWatchedMovie(movieId);
+};

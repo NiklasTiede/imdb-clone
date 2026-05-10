@@ -4,7 +4,7 @@ import { watchlistQueries } from "./watchlistQueries";
 describe("watchlistQueries", () => {
   test("builds a stable query key for the current user's watchlist", () => {
     expect(
-      watchlistQueries.currentUserMovies({
+      watchlistQueries.currentUserItems({
         page: 0,
         size: 20,
         username: "test_user",
@@ -14,7 +14,7 @@ describe("watchlistQueries", () => {
 
   test("does not run without a username", () => {
     expect(
-      watchlistQueries.currentUserMovies({
+      watchlistQueries.currentUserItems({
         page: 0,
         size: 20,
         username: null,

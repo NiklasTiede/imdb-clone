@@ -37,25 +37,20 @@ test("renders protected watchlist for authenticated users", async ({
     window.localStorage.setItem("username", "test_user");
   });
   await page.route("**/api/account/test_user/watchlist**", async (route) => {
+    expect(new URL(route.request().url()).searchParams.get("size")).toBe("30");
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
-        content: [{ accountId: 1, movieId: watchlistedMovie.id }],
+        content: [
+          {
+            accountId: 1,
+            movieId: watchlistedMovie.id,
+            addedAt: "2026-05-08T12:00:00Z",
+            movie: watchlistedMovie,
+          },
+        ],
         page: 0,
-        size: 20,
-        totalElements: 1,
-        totalPages: 1,
-        last: true,
-      }),
-    });
-  });
-  await page.route("**/api/movie/get-movies**", async (route) => {
-    await route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        content: [watchlistedMovie],
-        page: 0,
-        size: 1,
+        size: 30,
         totalElements: 1,
         totalPages: 1,
         last: true,
@@ -73,13 +68,15 @@ test("renders protected watchlist for authenticated users", async ({
 
   await expect(page).toHaveURL(/\/your-watchlist$/);
   await expect(
-    page.getByRole("heading", { name: "Your Movie WatchList" }),
+    page.getByRole("heading", { name: "Your watchlist" }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
-    /itFollowsPosterToken_size_120x180\.jpg/,
+    /itFollowsPosterToken_size_600x900\.jpg/,
   );
+  await expect(page.getByText("Movies", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pick for me" })).toBeVisible();
 });
 
 test("renders protected ratings for authenticated users", async ({ page }) => {
