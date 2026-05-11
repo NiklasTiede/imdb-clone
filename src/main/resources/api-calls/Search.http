@@ -20,3 +20,13 @@ POST {{protocol}}{{host}}:{{port}}/api/search/movies?query=Smultronstället&page
 Content-Type: application/json
 
 {}
+
+
+### homepage drama carousel
+POST {{protocol}}{{host}}:{{port}}/api/search/movies?query=&page=0&size=20
+Content-Type: application/json
+
+{
+  "movieGenre": ["DRAMA"],
+  "minStartYear": 1990
+}

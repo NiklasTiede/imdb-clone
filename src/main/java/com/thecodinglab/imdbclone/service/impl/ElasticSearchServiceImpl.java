@@ -203,15 +203,20 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
   @Override
   public BoolQuery buildBoolQuery(String query, MovieSearchRequest request) {
     BoolQuery.Builder search = QueryBuilders.bool();
+    String normalizedQuery = query == null ? "" : query.trim();
+    Query textQuery =
+        normalizedQuery.isBlank()
+            ? QueryBuilders.matchAll().build()._toQuery()
+            : QueryBuilders
+                .multiMatch(m -> m
+                    .query(normalizedQuery)
+                    .type(TextQueryType.MostFields)
+                    .fields(List.of("primaryTitle", "originalTitle")));
 
     // -- highest voted movies scoring is boosted
     search.must(QueryBuilders
         .functionScore(fs -> fs
-            .query(QueryBuilders
-                .multiMatch(m -> m
-                    .query(query)
-                    .type(TextQueryType.MostFields)
-                    .fields(List.of("primaryTitle", "originalTitle"))))
+            .query(textQuery)
             .functions(FunctionScore
                 .of(f -> f
                     .fieldValueFactor(FunctionScoreBuilders
@@ -236,21 +241,21 @@ public class ElasticSearchServiceImpl implements ElasticSearchService {
               .field("movieType")
               .query(request.movieType().toString())));
     }
-    if (request.minStartYear() != null && request.maxStartYear() != null) {
+    if (request.minStartYear() != null || request.maxStartYear() != null) {
       search.filter(
           QueryBuilders.range(r -> r
               .number(n -> n
                   .field("startYear")
-                  .gte(request.minStartYear().doubleValue())
-                  .lte(request.maxStartYear().doubleValue()))));
+                  .gte(request.minStartYear() == null ? null : request.minStartYear().doubleValue())
+                  .lte(request.maxStartYear() == null ? null : request.maxStartYear().doubleValue()))));
     }
-    if (request.minRuntimeMinutes() != null && request.maxRuntimeMinutes() != null) {
+    if (request.minRuntimeMinutes() != null || request.maxRuntimeMinutes() != null) {
       search.filter(
           QueryBuilders.range(r -> r
               .number(n -> n
                   .field("runtimeMinutes")
-                  .gte(request.minRuntimeMinutes().doubleValue())
-                  .lte(request.maxRuntimeMinutes().doubleValue()))));
+                  .gte(request.minRuntimeMinutes() == null ? null : request.minRuntimeMinutes().doubleValue())
+                  .lte(request.maxRuntimeMinutes() == null ? null : request.maxRuntimeMinutes().doubleValue()))));
     }
     return search.build();
   }

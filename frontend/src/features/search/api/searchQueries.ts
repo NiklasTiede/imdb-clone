@@ -14,15 +14,16 @@ export type MovieSearchQueryParams = {
 export const searchQueries = {
   movies: ({ filters, page, query, size }: MovieSearchQueryParams) => {
     const normalizedQuery = query?.trim() || null;
+    const hasFilters = Object.keys(filters).length > 0;
 
     return {
-      enabled: normalizedQuery !== null,
+      enabled: normalizedQuery !== null || hasFilters,
       queryFn: async (): Promise<PagedResponseMovieRecord> => {
-        if (normalizedQuery === null) {
-          throw new Error("Search query is required.");
+        if (normalizedQuery === null && !hasFilters) {
+          throw new Error("Search query or filters are required.");
         }
         const response = await searchApi.search(
-          normalizedQuery,
+          normalizedQuery ?? "",
           filters,
           page,
           size,

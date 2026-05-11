@@ -1,4 +1,8 @@
 import { searchQueries } from "./searchQueries";
+import {
+  MovieSearchRequestMovieGenreEnum,
+  type MovieSearchRequest,
+} from "../../../client/movies/generator-output";
 
 describe("searchQueries", () => {
   it("builds a stable movie search query key", () => {
@@ -32,5 +36,21 @@ describe("searchQueries", () => {
         size: 20,
       }).enabled,
     ).toBe(false);
+  });
+
+  it("enables movie search for filter-only homepage view-all links", () => {
+    const filters: MovieSearchRequest = {
+      minStartYear: 2016,
+      movieGenre: new Set([MovieSearchRequestMovieGenreEnum.Horror]),
+    };
+
+    expect(
+      searchQueries.movies({
+        filters,
+        page: 0,
+        query: null,
+        size: 20,
+      }).enabled,
+    ).toBe(true);
   });
 });

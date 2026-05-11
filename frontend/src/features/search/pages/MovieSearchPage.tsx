@@ -10,6 +10,8 @@ import SearchHeader from "../components/SearchHeader";
 import SearchMovieGrid from "../components/SearchMovieGrid";
 import { parseSearchUrlState } from "../utils/searchUrlState";
 import PageContent from "../../../shared/layout/PageContent";
+import type { MovieRecord } from "../../../client/movies/generator-output";
+import type { SearchUrlState } from "../utils/searchUrlState";
 
 export const SEARCH_RESULTS_MAX_WIDTH_PX = 1320;
 
@@ -19,15 +21,16 @@ const MovieSearchPage = () => {
 
   const { data, isError, isFetching } = useQuery(
     searchQueries.movies({
-      filters: {},
+      filters: searchState.filters,
       page: searchState.page,
       query: searchState.query,
       size: 24,
     }),
   );
-  const movies = data?.content ?? [];
-  const hasSearchQuery = searchState.query !== null;
-  const showEmptyState = hasSearchQuery && !isFetching && movies.length === 0;
+  const movies = sortSearchMovies(data?.content ?? [], searchState.sort);
+  const hasSearchCriteria =
+    searchState.query !== null || Object.keys(searchState.filters).length > 0;
+  const showEmptyState = hasSearchCriteria && !isFetching && movies.length === 0;
 
   return (
     <PageContent maxWidth={`${SEARCH_RESULTS_MAX_WIDTH_PX}px`}>
@@ -50,6 +53,19 @@ const MovieSearchPage = () => {
         {movies.length > 0 && <SearchMovieGrid movies={movies} />}
       </Stack>
     </PageContent>
+  );
+};
+
+export const sortSearchMovies = (
+  movies: MovieRecord[],
+  sort: SearchUrlState["sort"],
+): MovieRecord[] => {
+  if (sort !== "rating_desc") {
+    return movies;
+  }
+
+  return [...movies].sort(
+    (left, right) => (right.imdbRating ?? 0) - (left.imdbRating ?? 0),
   );
 };
 

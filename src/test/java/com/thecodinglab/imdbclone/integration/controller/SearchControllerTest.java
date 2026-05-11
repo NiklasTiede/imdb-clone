@@ -1,10 +1,12 @@
 package com.thecodinglab.imdbclone.integration.controller;
 
 import com.thecodinglab.imdbclone.integration.BaseContainers;
+import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
 import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.repository.MovieRepository;
 import java.util.Collections;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +35,7 @@ class SearchControllerTest extends BaseContainers {
   }
 
   @Test
-  void search_success() {
+  void search_withTitleQuery_returnsMatchingMovie() {
     // Arrange
     var request = new MovieSearchRequest(null, null, null, null, Collections.emptySet(), null);
 
@@ -56,6 +58,39 @@ class SearchControllerTest extends BaseContainers {
                             .jsonPath("$.content[0].id").isEqualTo(1)
                             .jsonPath("$.content[0].primaryTitle").isEqualTo("testMovieOnePri")
             );
+  }
+
+  @Test
+  void search_withBlankQueryAndFilters_returnsMatchingMovies() {
+    // Arrange
+    var request =
+        new MovieSearchRequest(2011, null, null, null, Set.of(MovieGenreEnum.DRAMA), null);
+
+    // Act and Assert
+    restTestClient
+        .post()
+        .uri(
+            uriBuilder ->
+                uriBuilder
+                    .path("/api/search/movies")
+                    .queryParam("query", "")
+                    .queryParam("page", 0)
+                    .queryParam("size", 20)
+                    .build())
+        .body(request)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.totalElements")
+                    .isEqualTo(1)
+                    .jsonPath("$.content[0].id")
+                    .isEqualTo(2)
+                    .jsonPath("$.content[0].primaryTitle")
+                    .isEqualTo("testMovieTwoPri"));
   }
 }
 // spotless:on
