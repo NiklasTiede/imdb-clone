@@ -1,87 +1,52 @@
 @startuml
 
+!pragma layout smetana
+
+title IMDB Clone Conceptual Data Model
+
+left to right direction
+skinparam shadowing false
 skinparam linetype ortho
 hide circle
 
-namespace entities {
-
-  class Movie #b8d5fc {
-    - id : long
-    - primaryTitle : String
-    - originalTitle : String
-    - startYear : int
-    - endYear : int
-    - runtimeMinutes : int
-    - genre : MovieGenreEnum
-    - movieType : MovieTypeEnum
-    - adult : boolean
-    - imdbRating : float
-    - imdbRatingCount : int
-    - rating : float
-    - ratingCount : int
-    - description : String
-    - imageUrlToken : String
-  }
-
-  class Account #b8d5fc {
-    - id : long
-    - username : String
-    - email : String
-    - password : String
-    - firstName : String
-    - lastName : String
-    - bio : String
-    - phone : String
-    - birthday : Date
-    - imageUrlToken : String
-  }
-
-  class Role #c8eafa {
-    - id : long
-    - name : RoleNameEnum
-  }
-
-  class Rating #c8eafa {
-    - movieId : long
-    - accountId : long
-    - ratingScore : BigDecimal
-  }
-
-  class Comment #c8eafa {
-    - id : long
-    - message : String
-    - accountId : long
-    - movieId : long
-  }
-
-  class Watchlist #c8eafa {
-    - accountId : long
-    - movieId : long
-  }
-
-  class AccountRoles #c8eafa {
-    - accountId : long
-    - roleId : long
-  }
-
-  class VerificationToken #c8eafa {
-    - id : long
-    - verificationType : VerTypeEnum
-    - token : String
-    - expiryDateInUtc : Instant
-    - confirmedAtInUtc : Instant
-    - accountId : long
-  }
+skinparam rectangle {
+  BorderColor #5a6f89
+  RoundCorner 8
 }
 
-Account ||-right-|{ VerificationToken
-Account ||-down-|{ Rating
-Movie ||-right-|{ Rating
-Account ||-left-|{ Watchlist
-Account ||-right-|{ Comment
-Account ||-right-|{ AccountRoles
-Role ||-up-|{ AccountRoles
-Movie ||-down-|{ Comment
-Movie ||-up-|{ Watchlist
+rectangle "Account" as account #b8d5fc
+rectangle "Movie" as movie #b8d5fc
+
+rectangle "Rating\none score per account/movie" as rating #c8eafa
+rectangle "WatchedMovie\nmovies saved by users" as watched_movie #c8eafa
+rectangle "Comment\nmovie discussion entries" as comment #c8eafa
+
+rectangle "AccountRoles\naccount-to-role join" as account_roles #d7edf7
+rectangle "Role\nROLE_USER, ROLE_ADMIN" as role #d7edf7
+rectangle "VerificationToken\nemail confirmation / password reset" as verification_token #d7edf7
+
+account ||--o{ rating
+rating }o--|| movie
+
+account ||--o{ watched_movie
+watched_movie }o--|| movie
+
+account ||--o{ comment
+comment }o--|| movie
+
+account ||--o{ account_roles
+account_roles }o--|| role
+
+account ||--o{ verification_token
+
+note bottom of movie
+  Movie.id stores the IMDb title id
+  without the "tt" prefix.
+end note
+
+note bottom of rating
+  rating, watched_movie, and comment
+  are the main user/movie interaction tables.
+end note
 
 @enduml

@@ -1,0 +1,126 @@
+@startuml
+
+!pragma layout smetana
+
+title IMDB Clone Physical Database Schema
+
+skinparam linetype ortho
+skinparam shadowing false
+hide circle
+
+entity "movie" as movie #b8d5fc {
+  * id : bigint <<PK>>
+  --
+  primary_title : varchar(1000)
+  original_title : varchar(1000)
+  start_year : int
+  end_year : int
+  runtime_minutes : int
+  created_at_in_utc : timestamp
+  modified_at_in_utc : timestamp
+  movie_genre : bigint
+  movie_type : varchar(50)
+  imdb_rating : float
+  imdb_rating_count : int
+  adult : boolean
+  rating : decimal(3,1)
+  rating_count : int
+  description : text
+  image_url_token : varchar(255)
+}
+
+entity "account" as account #b8d5fc {
+  * id : bigint <<PK>>
+  --
+  username : varchar(255) <<UQ>>
+  email : varchar(255) <<UQ>>
+  password : varchar(255)
+  first_name : varchar(255)
+  last_name : varchar(255)
+  bio : text
+  phone : varchar(20)
+  birthday : date
+  image_url_token : varchar(255)
+  created_at_in_utc : timestamp
+  modified_at_in_utc : timestamp
+  locked : boolean
+  enabled : boolean
+}
+
+entity "role" as role #c8eafa {
+  * id : bigint <<PK>>
+  --
+  name : varchar(255) <<UQ>>
+  created_at_in_utc : timestamp
+}
+
+entity "account_roles" as account_roles #c8eafa {
+  * account_id : bigint <<PK, FK>>
+  * roles_id : bigint <<PK, FK>>
+  --
+  created_at_in_utc : timestamp
+}
+
+entity "rating" as rating #c8eafa {
+  * movie_id : bigint <<PK, FK>>
+  * account_id : bigint <<PK, FK>>
+  --
+  rating : decimal(3,1)
+  created_at_in_utc : timestamp
+  modified_at_in_utc : timestamp
+}
+
+entity "watched_movie" as watched_movie #c8eafa {
+  * movie_id : bigint <<PK, FK>>
+  * account_id : bigint <<PK, FK>>
+  --
+  created_at_in_utc : timestamp
+}
+
+entity "comment" as comment #c8eafa {
+  * id : bigint <<PK>>
+  --
+  movie_id : bigint <<FK>>
+  account_id : bigint <<FK>>
+  message : text
+  created_at_in_utc : timestamp
+  modified_at_in_utc : timestamp
+}
+
+entity "verification_token" as verification_token #c8eafa {
+  * id : bigint <<PK>>
+  --
+  account_id : bigint <<FK>>
+  verification_type : varchar(100)
+  token : varchar(36)
+  expiry_date_in_utc : timestamp
+  confirmed_at_in_utc : timestamp
+}
+
+note right of movie
+  id stores the IMDb title id without
+  the "tt" prefix, for example
+  tt3235888 -> 3235888.
+
+  movie_genre is a bitmask of
+  MovieGenreEnum values, not a FK.
+
+  movie_type stores the MovieTypeEnum
+  name as text.
+end note
+
+account ||--o{ account_roles
+role ||--o{ account_roles
+
+account ||--o{ rating
+movie ||--o{ rating
+
+account ||--o{ watched_movie
+movie ||--o{ watched_movie
+
+account ||--o{ comment
+movie ||--o{ comment
+
+account ||--o{ verification_token
+
+@enduml
