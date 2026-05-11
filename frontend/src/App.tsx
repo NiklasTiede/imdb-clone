@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router";
 import MyAppBar from "./shared/layout/AppBarTop";
-import Home from "./components/Home";
+import HomePage from "./pages/HomePage";
 import { LoginPage, LogoutPage, RegistrationPage } from "./features/auth";
 import { AccountSettingsPage } from "./features/account";
 import { EditMoviePage, MovieDetailPage } from "./features/catalog";
@@ -20,7 +20,7 @@ function App() {
       <CssBaseline />
       <MyAppBar />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/movie-search" element={<MovieSearchPage />} />
         <Route path="/movie" element={<MovieDetailPage />} />
         <Route path="/filter" element={<FilterPanelPage />} />
