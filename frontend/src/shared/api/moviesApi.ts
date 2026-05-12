@@ -1,4 +1,5 @@
 import {
+  AccountEngagementControllerApi,
   AccountControllerApi,
   AuthenticationControllerApi,
   CommentControllerApi,
@@ -22,6 +23,12 @@ export const authApi = new AuthenticationControllerApi(
 );
 
 export const accountApi = new AccountControllerApi(
+  moviesApiClientConfig,
+  undefined,
+  apiHttpClient,
+);
+
+export const accountEngagementApi = new AccountEngagementControllerApi(
   moviesApiClientConfig,
   undefined,
   apiHttpClient,

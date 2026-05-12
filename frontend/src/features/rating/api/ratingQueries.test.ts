@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { accountApi, moviesApi } from "../../../shared/api/moviesApi";
+import { accountEngagementApi, moviesApi } from "../../../shared/api/moviesApi";
 import { ratingQueries } from "./ratingQueries";
 
 describe("ratingQueries", () => {
@@ -32,7 +32,7 @@ describe("ratingQueries", () => {
 
   test("loads rated movies and keeps the user's rating next to each movie", async () => {
     const ratingsSpy = vi
-      .spyOn(accountApi, "getRatingsByAccount")
+      .spyOn(accountEngagementApi, "getRatingsByAccount")
       .mockResolvedValue({
         data: {
           content: [

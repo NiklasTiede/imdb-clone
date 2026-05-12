@@ -1,7 +1,7 @@
 import {
   PagedResponseWatchedMovieRecord,
 } from "../../../client/movies/generator-output";
-import { accountApi } from "../../../shared/api/moviesApi";
+import { accountEngagementApi } from "../../../shared/api/moviesApi";
 
 type CurrentUserWatchlistParams = {
   page: number;
@@ -33,11 +33,12 @@ const getCurrentUserWatchlistItems = async ({
     throw new Error("Username is required to load the watchlist.");
   }
 
-  const watchlistResponse = await accountApi.getWatchedMoviesByAccount(
-    normalizedUsername,
-    page,
-    size,
-  );
+  const watchlistResponse =
+    await accountEngagementApi.getWatchedMoviesByAccount(
+      normalizedUsername,
+      page,
+      size,
+    );
   return watchlistResponse.data;
 };
 
@@ -48,7 +49,7 @@ const fetchCurrentUserWatchedMovieIds = async (
   let page = 0;
   let isLast = false;
   while (!isLast) {
-    const response = await accountApi.getWatchedMoviesByAccount(
+    const response = await accountEngagementApi.getWatchedMoviesByAccount(
       username,
       page,
       MOVIE_IDS_PAGE_SIZE,

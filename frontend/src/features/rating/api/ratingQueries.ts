@@ -2,7 +2,7 @@ import {
   MovieRecord,
   PagedResponseRatingRecord,
 } from "../../../client/movies/generator-output";
-import { accountApi } from "../../../shared/api/moviesApi";
+import { accountEngagementApi } from "../../../shared/api/moviesApi";
 import { moviesApi } from "../../../shared/api/moviesApi";
 
 type UserRatingForMovieParams = {
@@ -37,7 +37,7 @@ const fetchUserRatingForMovie = async ({
   let page = 0;
   let isLast = false;
   while (!isLast) {
-    const response = await accountApi.getRatingsByAccount(
+    const response = await accountEngagementApi.getRatingsByAccount(
       username,
       page,
       RATINGS_PAGE_SIZE,
@@ -65,7 +65,7 @@ const getCurrentUserRatedMovies = async ({
     throw new Error("Username is required to load rated movies.");
   }
 
-  const ratingsResponse = await accountApi.getRatingsByAccount(
+  const ratingsResponse = await accountEngagementApi.getRatingsByAccount(
     normalizedUsername,
     page,
     size,

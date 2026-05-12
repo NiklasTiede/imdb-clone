@@ -664,7 +664,7 @@ paths:
   /api/account/{username}/watchlist:
     get:
       tags:
-      - account-controller
+      - account-engagement-controller
       operationId: getWatchedMoviesByAccount
       parameters:
       - name: username
@@ -696,7 +696,7 @@ paths:
   /api/account/{username}/ratings:
     get:
       tags:
-      - account-controller
+      - account-engagement-controller
       operationId: getRatingsByAccount
       parameters:
       - name: username
@@ -746,7 +746,7 @@ paths:
   /api/account/{username}/comments:
     get:
       tags:
-      - account-controller
+      - account-engagement-controller
       operationId: getCommentsByAccount
       parameters:
       - name: username
