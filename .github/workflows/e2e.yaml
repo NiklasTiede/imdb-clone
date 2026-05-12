@@ -1,0 +1,164 @@
+name: E2E - Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: Playwright project to run
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - desktop-chromium
+          - mobile-chromium
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      mysql:
+        image: mysql:9.7.0
+        env:
+          MYSQL_DATABASE: movie_db
+          MYSQL_ROOT_PASSWORD: supersecret
+          MYSQL_USER: myroot
+          MYSQL_PASSWORD: secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -umyroot -psecret"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:9.3.4
+        env:
+          xpack.security.enabled: "false"
+          discovery.type: single-node
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd="curl -fsS http://127.0.0.1:9200/_cluster/health || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=18
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: temurin
+          cache: gradle
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright browser
+        working-directory: frontend
+        run: yarn playwright install --with-deps chromium
+
+      - name: Start MinIO
+        run: |
+          docker run -d \
+            --name imdb-clone-minio \
+            -p 9000:9000 \
+            -p 9090:9090 \
+            -e MINIO_ROOT_USER=ROOTNAME \
+            -e MINIO_ROOT_PASSWORD=CHANGEME123 \
+            minio/minio:RELEASE.2025-09-07T16-13-09Z \
+            server --console-address :9090 /data
+
+      - name: Wait for MinIO
+        run: |
+          for attempt in {1..60}; do
+            if curl -fsS http://127.0.0.1:9000/minio/health/ready >/dev/null; then
+              exit 0
+            fi
+            echo "Waiting for MinIO (${attempt}/60)"
+            sleep 2
+          done
+          docker logs imdb-clone-minio
+          exit 1
+
+      - name: Start backend
+        run: |
+          nohup ./gradlew bootRun --no-daemon > backend.log 2>&1 &
+          echo $! > backend.pid
+        env:
+          SPRING_PROFILES_ACTIVE: dev
+
+      - name: Wait for backend
+        run: |
+          for attempt in {1..90}; do
+            if curl -fsS http://127.0.0.1:8080/v3/api-docs >/dev/null; then
+              exit 0
+            fi
+            echo "Waiting for backend (${attempt}/90)"
+            sleep 2
+          done
+          cat backend.log
+          exit 1
+
+      - name: Run Playwright e2e tests
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_PROJECT: ${{ inputs.project }}
+        run: |
+          if [ "$PLAYWRIGHT_PROJECT" = "all" ]; then
+            yarn e2e
+          else
+            yarn playwright test --project="$PLAYWRIGHT_PROJECT"
+          fi
+
+      - name: Collect service logs
+        if: failure()
+        run: |
+          mkdir -p e2e-logs
+          cp backend.log e2e-logs/backend.log || true
+          docker logs imdb-clone-minio > e2e-logs/minio.log 2>&1 || true
+          docker logs "${{ job.services.mysql.id }}" > e2e-logs/mysql.log 2>&1 || true
+          docker logs "${{ job.services.elasticsearch.id }}" > e2e-logs/elasticsearch.log 2>&1 || true
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore
+
+      - name: Upload e2e logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: e2e-logs
+          if-no-files-found: ignore
+
+      - name: Stop background services
+        if: always()
+        run: |
+          if [ -f backend.pid ]; then
+            kill "$(cat backend.pid)" || true
+          fi
+          docker rm -f imdb-clone-minio || true
