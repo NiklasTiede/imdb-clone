@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RatingRepository extends JpaRepository<Rating, RatingId> {
 
-  List<Rating> findRatingsByMovieId(Long movieId);
+  List<Rating> findRatingsByIdMovieId(Long movieId);
 
   Page<Rating> findRatingsByIdAccountId(Long accountId, Pageable pageable);
 

@@ -43,8 +43,8 @@ public class RatingAggregateScheduler {
 
     List<List<Rating>> ratingsOfMovies =
         recentlyCreatedRatings.stream()
-            .map(rating -> rating.getMovie().getId())
-            .map(ratingRepository::findRatingsByMovieId)
+            .map(Rating::getMovieId)
+            .map(ratingRepository::findRatingsByIdMovieId)
             .toList();
 
     for (List<Rating> movieRating : ratingsOfMovies) {
@@ -58,7 +58,7 @@ public class RatingAggregateScheduler {
 
       MovieRecord savedMovie =
           movieService.updateRatingAggregate(
-              movieRating.getFirst().getMovie().getId(), newRating, countOfAllRatings);
+              movieRating.getFirst().getMovieId(), newRating, countOfAllRatings);
 
       logger.info(
           "movie [{}] was updated. The new average rating is [{}] with [{}] counts",

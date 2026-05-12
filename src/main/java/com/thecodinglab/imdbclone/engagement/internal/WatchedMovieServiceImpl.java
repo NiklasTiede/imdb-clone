@@ -4,7 +4,6 @@ import static com.thecodinglab.imdbclone.utility.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.WatchedMovieMapper;
@@ -15,7 +14,6 @@ import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.validation.Pagination;
-import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -32,17 +30,14 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
 
   private final WatchedMovieRepository watchedMovieRepository;
   private final MovieService movieService;
-  private final EntityManager entityManager;
   private final WatchedMovieMapper watchedMovieMapper;
 
   public WatchedMovieServiceImpl(
       WatchedMovieRepository watchedMovieRepository,
       MovieService movieService,
-      EntityManager entityManager,
       WatchedMovieMapper watchedMovieMapper) {
     this.watchedMovieRepository = watchedMovieRepository;
     this.movieService = movieService;
-    this.entityManager = entityManager;
     this.watchedMovieMapper = watchedMovieMapper;
   }
 
@@ -50,8 +45,7 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   @Transactional
   public WatchedMovieRecord watchMovie(Long movieId, UserPrincipal currentAccount) {
     movieService.findMovieById(movieId);
-    Movie movie = entityManager.getReference(Movie.class, movieId);
-    WatchedMovie watchedMovie = WatchedMovie.create(movie, currentAccount.getId());
+    WatchedMovie watchedMovie = WatchedMovie.create(movieId, currentAccount.getId());
     WatchedMovie savedWatchedMovie = watchedMovieRepository.saveAndFlush(watchedMovie);
     logger.info(
         "Movie with [{}] is watched by account with id [{}].",

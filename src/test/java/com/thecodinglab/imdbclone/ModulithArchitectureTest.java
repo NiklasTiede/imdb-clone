@@ -270,6 +270,15 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void engagementDoesNotUseCatalogPersistence() throws Exception {
+    try (Stream<Path> engagementSources =
+        Files.walk(Path.of("src/main/java/com/thecodinglab/imdbclone/engagement"))) {
+      assertThat(engagementSources.filter(Files::isRegularFile).map(this::readString))
+          .noneMatch(source -> source.contains("catalog.internal.persistence"));
+    }
+  }
+
+  @Test
   void fileStorageBelongsToMediaModule() {
     assertThat(classIfPresent("com.thecodinglab.imdbclone.media.web.FileStorageController"))
         .isPresent();

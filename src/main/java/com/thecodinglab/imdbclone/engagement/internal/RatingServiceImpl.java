@@ -5,7 +5,6 @@ import static com.thecodinglab.imdbclone.utility.Log.RATING_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.RatingMapper;
@@ -18,7 +17,6 @@ import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.validation.Pagination;
-import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -35,17 +33,12 @@ public class RatingServiceImpl implements RatingService {
   private static final Logger logger = LoggerFactory.getLogger(RatingServiceImpl.class);
 
   private final MovieService movieService;
-  private final EntityManager entityManager;
   private final RatingRepository ratingRepository;
   private final RatingMapper ratingMapper;
 
   public RatingServiceImpl(
-      MovieService movieService,
-      EntityManager entityManager,
-      RatingRepository ratingRepository,
-      RatingMapper ratingMapper) {
+      MovieService movieService, RatingRepository ratingRepository, RatingMapper ratingMapper) {
     this.movieService = movieService;
-    this.entityManager = entityManager;
     this.ratingRepository = ratingRepository;
     this.ratingMapper = ratingMapper;
   }
@@ -56,12 +49,10 @@ public class RatingServiceImpl implements RatingService {
       throw new BadRequestException("Score must be between 0 and 10");
     } else {
       movieService.findMovieById(movieId);
-      Movie movie = entityManager.getReference(Movie.class, movieId);
-      Rating rating = Rating.create(score, movie, currentAccount.getId());
+      Rating rating = Rating.create(score, movieId, currentAccount.getId());
       Rating savedRating = ratingRepository.save(rating);
       logger.info("rating with [{}] was created.", kv(RATING_ID, savedRating.getId()));
-      return new RatingRecord(
-          savedRating.getRating(), savedRating.getAccountId(), savedRating.getMovie().getId());
+      return ratingMapper.entityToDTO(savedRating);
     }
   }
 

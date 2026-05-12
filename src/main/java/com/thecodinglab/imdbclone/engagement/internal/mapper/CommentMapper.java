@@ -13,7 +13,7 @@ public class CommentMapper {
         comment.getId(),
         comment.getMessage(),
         comment.getAccountId(),
-        comment.getMovie().getId(),
+        comment.getMovieId(),
         comment.getCreatedAtInUtc());
   }
 

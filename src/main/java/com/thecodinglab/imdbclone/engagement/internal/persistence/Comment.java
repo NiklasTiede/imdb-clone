@@ -1,6 +1,5 @@
 package com.thecodinglab.imdbclone.engagement.internal.persistence;
 
-import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import jakarta.persistence.*;
 
@@ -15,16 +14,15 @@ public class Comment extends DateAudit {
   @Column(name = "account_id")
   private Long accountId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "movie_id")
-  private Movie movie;
+  @Column(name = "movie_id")
+  private Long movieId;
 
   public Comment() {}
 
-  public Comment(String message, Long accountId, Movie movie) {
+  public Comment(String message, Long accountId, Long movieId) {
     this.message = message;
     this.accountId = accountId;
-    this.movie = movie;
+    this.movieId = movieId;
   }
 
   public Long getId() {
@@ -51,11 +49,11 @@ public class Comment extends DateAudit {
     this.accountId = accountId;
   }
 
-  public Movie getMovie() {
-    return movie;
+  public Long getMovieId() {
+    return movieId;
   }
 
-  public void setMovie(Movie movie) {
-    this.movie = movie;
+  public void setMovieId(Long movieId) {
+    this.movieId = movieId;
   }
 }

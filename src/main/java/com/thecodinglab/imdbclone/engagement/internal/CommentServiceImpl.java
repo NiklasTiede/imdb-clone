@@ -5,7 +5,6 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.engagement.api.CommentRecord;
 import com.thecodinglab.imdbclone.engagement.api.CommentService;
 import com.thecodinglab.imdbclone.engagement.api.CreateCommentRequest;
@@ -18,7 +17,6 @@ import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.validation.Pagination;
-import jakarta.persistence.EntityManager;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,17 +33,12 @@ public class CommentServiceImpl implements CommentService {
 
   private final CommentRepository commentRepository;
   private final MovieService movieService;
-  private final EntityManager entityManager;
   private final CommentMapper commentMapper;
 
   public CommentServiceImpl(
-      CommentRepository commentRepository,
-      MovieService movieService,
-      EntityManager entityManager,
-      CommentMapper commentMapper) {
+      CommentRepository commentRepository, MovieService movieService, CommentMapper commentMapper) {
     this.commentRepository = commentRepository;
     this.movieService = movieService;
-    this.entityManager = entityManager;
     this.commentMapper = commentMapper;
   }
 
@@ -76,8 +69,7 @@ public class CommentServiceImpl implements CommentService {
   public CommentRecord createComment(
       Long movieId, CreateCommentRequest request, UserPrincipal currentAccount) {
     movieService.findMovieById(movieId);
-    Movie movie = entityManager.getReference(Movie.class, movieId);
-    Comment comment = new Comment(request.message(), currentAccount.getId(), movie);
+    Comment comment = new Comment(request.message(), currentAccount.getId(), movieId);
     Comment savedComment = commentRepository.save(comment);
     logger.info("Comment with [{}] was created", kv(COMMENT_ID, savedComment.getId()));
     return commentMapper.entityToDTO(comment);

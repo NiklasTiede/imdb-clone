@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class RatingMapper {
 
   public RatingRecord entityToDTO(Rating rating) {
-    return new RatingRecord(rating.getRating(), rating.getAccountId(), rating.getMovie().getId());
+    return new RatingRecord(rating.getRating(), rating.getAccountId(), rating.getMovieId());
   }
 
   public List<RatingRecord> entityToDTO(List<Rating> ratings) {
