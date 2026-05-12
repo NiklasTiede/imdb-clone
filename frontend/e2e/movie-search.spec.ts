@@ -98,8 +98,11 @@ test("searches movies and renders a seeded poster", async ({ page }) => {
     page.getByRole("heading", { name: 'Results for "Nightcrawler"' }),
   ).toBeVisible();
   await expect(page.getByText("1 movie")).toBeVisible();
-  await expect(page.getByRole("grid", { name: "Search results" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Nightcrawler" })).toBeVisible();
+  const searchResults = page.getByRole("grid", { name: "Search results" });
+  await expect(searchResults).toBeVisible();
+  await expect(
+    searchResults.getByRole("link", { name: "Nightcrawler" }),
+  ).toBeVisible();
   await expect(page.getByText("7.8")).toBeVisible();
   await expect(page.getByText("2014 · 117 min")).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
@@ -120,8 +123,11 @@ test("searches for a multi-word lowercase movie title", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: 'Results for "it follows"' }),
   ).toBeVisible();
-  await expect(page.getByRole("grid", { name: "Search results" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
+  const searchResults = page.getByRole("grid", { name: "Search results" });
+  await expect(searchResults).toBeVisible();
+  await expect(
+    searchResults.getByRole("link", { name: "It Follows" }),
+  ).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
     /itFollowsPosterToken_size_600x900\.jpg/,
@@ -142,7 +148,10 @@ test("opens a movie detail page from search results", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("textbox", { name: "search" }).fill("Nightcrawler");
   await page.getByRole("textbox", { name: "search" }).press("Enter");
-  await page.getByRole("link", { name: "Nightcrawler" }).click();
+  await page
+    .getByRole("grid", { name: "Search results" })
+    .getByRole("link", { name: "Nightcrawler" })
+    .click();
 
   await expect(page).toHaveURL(/\/movie\?id=2872718$/);
   await expect(
