@@ -15,7 +15,7 @@ Content-Type: application/json
 
 ### add new movie to db
 POST {{protocol}}{{host}}:{{port}}/api/movie/create-movie
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTkxMzQ1NCwiZXhwIjoxNzE0NTA1NDU0fQ.gYnFt18MWiyMnbwAZD4N1rmhr4I1MHq57LWDwdO0Sb8HbFGKvsoqfCLqxQR2J8IrlfDg5g4ELe1rJui8DBCrnA
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -32,7 +32,7 @@ Content-Type: application/json
 
 ### update existing movie
 PUT {{protocol}}{{host}}:{{port}}/api/movie/5606665
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTkxMzQ1NCwiZXhwIjoxNzE0NTA1NDU0fQ.gYnFt18MWiyMnbwAZD4N1rmhr4I1MHq57LWDwdO0Sb8HbFGKvsoqfCLqxQR2J8IrlfDg5g4ELe1rJui8DBCrnA
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -49,7 +49,7 @@ Content-Type: application/json
 
 ### delete movie
 DELETE {{protocol}}{{host}}:{{port}}/api/movie/5606665
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTkxMzQ1NCwiZXhwIjoxNzE0NTA1NDU0fQ.gYnFt18MWiyMnbwAZD4N1rmhr4I1MHq57LWDwdO0Sb8HbFGKvsoqfCLqxQR2J8IrlfDg5g4ELe1rJui8DBCrnA
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 

@@ -6,31 +6,30 @@ Content-Type: application/json
 
 ### get all comments of a movie
 GET {{protocol}}{{host}}:{{port}}/api/comment/120382/comments
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTk2Mzg5NywiZXhwIjoxNzE0NTU1ODk3fQ.zFbNOSxfFQttqIxahFk827kApdbNQTIohxXc3SdgtB1QzmRutiOZA5SrKofr8Y5dxk1CsN4bTS0-53tO0OLV2w
 Content-Type: application/json
 
 
 ### comment a movie
 POST {{protocol}}{{host}}:{{port}}/api/comment/120382
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTk2Mzg5NywiZXhwIjoxNzE0NTU1ODk3fQ.zFbNOSxfFQttqIxahFk827kApdbNQTIohxXc3SdgtB1QzmRutiOZA5SrKofr8Y5dxk1CsN4bTS0-53tO0OLV2w
+Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
 {
-  "message": "Jm Carrrrey's best moe!"
+  "message": "Jim Carrey's best movie!"
 }
 
 
 ### update existing comment
 PUT {{protocol}}{{host}}:{{port}}/api/comment/1
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX1VTRVIiXSwidXNlcm5hbWUiOiJqZWZmX3BvcnRub3kiLCJzdWIiOiIyIiwiaWF0IjoxNzExOTY2NTY0LCJleHAiOjE3MTQ1NTg1NjR9.IwljCrFCtus9SKvo5B4FNxxliXVLlMGn671JeaE45CxtDEaRiAClOls553qZV805M_IsY_t8KjX_BQxcRiBlvg
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
-  "message": "blubbbb"
+  "message": "Updated comment text"
 }
 
 
 ### delete comment by id
 DELETE {{protocol}}{{host}}:{{port}}/api/comment/6
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTk2Mzg5NywiZXhwIjoxNzE0NTU1ODk3fQ.zFbNOSxfFQttqIxahFk827kApdbNQTIohxXc3SdgtB1QzmRutiOZA5SrKofr8Y5dxk1CsN4bTS0-53tO0OLV2w
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json

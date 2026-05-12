@@ -1,7 +1,12 @@
 
 ### get current user
 GET {{protocol}}{{host}}:{{port}}/api/account/me
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTg0NDYyNCwiZXhwIjoxNzE0NDM2NjI0fQ.KAlfHvE4GsmBnGqzUxxMmO1FaJo5mfctTa5zlJQ-0gKsUOopgZWuaUkEMO5h92QnLQQzFYy8doQqXRgTC9kMvg
+Authorization: Bearer {{userToken}}
+
+
+### get current user's editable profile
+GET {{protocol}}{{host}}:{{port}}/api/account/me/profile
+Authorization: Bearer {{userToken}}
 
 
 ### get account-profile
@@ -26,7 +31,7 @@ Content-Type: application/json
 
 ### update account data
 PUT {{protocol}}{{host}}:{{port}}/api/account/kirk_lazarus
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTg0NDYyNCwiZXhwIjoxNzE0NDM2NjI0fQ.KAlfHvE4GsmBnGqzUxxMmO1FaJo5mfctTa5zlJQ-0gKsUOopgZWuaUkEMO5h92QnLQQzFYy8doQqXRgTC9kMvg
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -40,13 +45,13 @@ Content-Type: application/json
 
 ### delete account
 DELETE {{protocol}}{{host}}:{{port}}/api/account/kirk_lazarus
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTg0NDYyNCwiZXhwIjoxNzE0NDM2NjI0fQ.KAlfHvE4GsmBnGqzUxxMmO1FaJo5mfctTa5zlJQ-0gKsUOopgZWuaUkEMO5h92QnLQQzFYy8doQqXRgTC9kMvg
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 
 ### create new account, without email confirmation (simple test acc generation)
 POST {{protocol}}{{host}}:{{port}}/api/account/add-account
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTg0NDYyNCwiZXhwIjoxNzE0NDM2NjI0fQ.KAlfHvE4GsmBnGqzUxxMmO1FaJo5mfctTa5zlJQ-0gKsUOopgZWuaUkEMO5h92QnLQQzFYy8doQqXRgTC9kMvg
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -58,11 +63,11 @@ Content-Type: application/json
 
 ### give account ADMIN permission
 PUT {{protocol}}{{host}}:{{port}}/api/account/kirk_lazarus/give-admin
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTg0NDYyNCwiZXhwIjoxNzE0NDM2NjI0fQ.KAlfHvE4GsmBnGqzUxxMmO1FaJo5mfctTa5zlJQ-0gKsUOopgZWuaUkEMO5h92QnLQQzFYy8doQqXRgTC9kMvg
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 
 ### remove ADMIN permission of an account
 PUT {{protocol}}{{host}}:{{port}}/api/account/kirk_lazarus/take-admin
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl0sInVzZXJuYW1lIjoibGVzX2dyb3NzbWFuIiwic3ViIjoiMSIsImlhdCI6MTcxMTg0NDYyNCwiZXhwIjoxNzE0NDM2NjI0fQ.KAlfHvE4GsmBnGqzUxxMmO1FaJo5mfctTa5zlJQ-0gKsUOopgZWuaUkEMO5h92QnLQQzFYy8doQqXRgTC9kMvg
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
