@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.payload.authentication;
+package com.thecodinglab.imdbclone.identity.api;
 
 import com.thecodinglab.imdbclone.validation.AvailableEmail;
 import com.thecodinglab.imdbclone.validation.AvailableUsername;
@@ -7,17 +7,6 @@ import com.thecodinglab.imdbclone.validation.ValidUsername;
 import jakarta.validation.constraints.*;
 
 public record RegistrationRequest(
-    @NotBlank
-    @ValidUsername
-    @AvailableUsername
-    String username,
-
-    @NotBlank
-    @Email
-    @AvailableEmail
-    String email,
-
-    @NotBlank
-    @ValidPassword
-    String password
-) {}
+    @NotBlank @ValidUsername @AvailableUsername String username,
+    @NotBlank @Email @AvailableEmail String email,
+    @NotBlank @ValidPassword String password) {}

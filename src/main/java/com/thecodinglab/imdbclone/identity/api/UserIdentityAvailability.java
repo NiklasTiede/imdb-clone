@@ -1,5 +1,3 @@
-package com.thecodinglab.imdbclone.payload.authentication;
+package com.thecodinglab.imdbclone.identity.api;
 
-public record UserIdentityAvailability(
-        Boolean isAvailable
-) {}
+public record UserIdentityAvailability(Boolean isAvailable) {}

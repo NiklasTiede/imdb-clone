@@ -3,6 +3,7 @@ package com.thecodinglab.imdbclone;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
+import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,10 +26,22 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void detectsIdentityModule() {
+    assertThat(ApplicationModules.of(Application.class).getModuleByName("identity")).isPresent();
+  }
+
+  @Test
   void catalogApiDoesNotExposeInternalTypes() {
     assertThat(Arrays.stream(MovieService.class.getMethods()).flatMap(this::methodTypes))
         .extracting(Class::getName)
         .noneMatch(typeName -> typeName.contains(".catalog.internal."));
+  }
+
+  @Test
+  void identityApiDoesNotExposeInternalTypes() {
+    assertThat(Arrays.stream(AuthenticationService.class.getMethods()).flatMap(this::methodTypes))
+        .extracting(Class::getName)
+        .noneMatch(typeName -> typeName.contains(".identity.internal."));
   }
 
   @Test
@@ -44,6 +57,38 @@ class ModulithArchitectureTest {
             Files.exists(
                 Path.of(
                     "src/main/java/com/thecodinglab/imdbclone/service/ElasticSearchService.java")))
+        .isFalse();
+  }
+
+  @Test
+  void authenticationBelongsToIdentityModule() {
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.identity.web.AuthenticationController"))
+        .isPresent();
+    assertThat(
+            classIfPresent(
+                "com.thecodinglab.imdbclone.identity.internal.security.WebSecurityConfig"))
+        .isPresent();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/controller/AuthenticationController.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/service/AuthenticationService.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/security/JwtTokenProvider.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/config/WebSecurityConfig.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/entity/VerificationToken.java")))
         .isFalse();
   }
 

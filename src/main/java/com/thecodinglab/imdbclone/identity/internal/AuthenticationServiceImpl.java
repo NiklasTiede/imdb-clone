@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.service.impl;
+package com.thecodinglab.imdbclone.identity.internal;
 
 import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
 import static com.thecodinglab.imdbclone.utility.Log.TOKEN;
@@ -6,15 +6,19 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.Role;
-import com.thecodinglab.imdbclone.entity.VerificationToken;
-import com.thecodinglab.imdbclone.enums.VerificationTypeEnum;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
-import com.thecodinglab.imdbclone.payload.*;
-import com.thecodinglab.imdbclone.payload.authentication.*;
+import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
+import com.thecodinglab.imdbclone.identity.api.LoginRequest;
+import com.thecodinglab.imdbclone.identity.api.LoginResponse;
+import com.thecodinglab.imdbclone.identity.api.PasswordResetRequest;
+import com.thecodinglab.imdbclone.identity.api.RegistrationRequest;
+import com.thecodinglab.imdbclone.identity.api.UserIdentityAvailability;
+import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToken;
+import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTokenRepository;
+import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
+import com.thecodinglab.imdbclone.identity.internal.security.JwtTokenProvider;
+import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
-import com.thecodinglab.imdbclone.repository.VerificationTokenRepository;
-import com.thecodinglab.imdbclone.security.JwtTokenProvider;
-import com.thecodinglab.imdbclone.service.AuthenticationService;
 import com.thecodinglab.imdbclone.service.EmailService;
 import com.thecodinglab.imdbclone.service.RoleService;
 import java.time.Instant;
@@ -116,8 +120,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             : "Email verification is turned off: no verification email was sent but account was activated!");
   }
 
-  @Override
-  public String createAndSendEmailConfirmationToken(Account account) {
+  private String createAndSendEmailConfirmationToken(Account account) {
     String token = UUID.randomUUID().toString();
 
     VerificationToken verificationToken =
@@ -167,8 +170,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     return createAndSendPasswordResetToken(account);
   }
 
-  @Override
-  public MessageResponse createAndSendPasswordResetToken(Account account) {
+  private MessageResponse createAndSendPasswordResetToken(Account account) {
     String token = UUID.randomUUID().toString();
     VerificationToken verificationToken =
         new VerificationToken(

@@ -1,6 +1,6 @@
-package com.thecodinglab.imdbclone.entity;
+package com.thecodinglab.imdbclone.identity.internal.persistence;
 
-import com.thecodinglab.imdbclone.enums.VerificationTypeEnum;
+import com.thecodinglab.imdbclone.entity.Account;
 import jakarta.persistence.*;
 import java.time.Instant;
 

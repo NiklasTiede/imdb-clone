@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.security;
+package com.thecodinglab.imdbclone.identity.internal.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

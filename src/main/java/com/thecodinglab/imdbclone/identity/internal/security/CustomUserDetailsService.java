@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.service;
+package com.thecodinglab.imdbclone.identity.internal.security;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

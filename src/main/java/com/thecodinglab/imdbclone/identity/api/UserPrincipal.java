@@ -1,17 +1,16 @@
-package com.thecodinglab.imdbclone.security;
+package com.thecodinglab.imdbclone.identity.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thecodinglab.imdbclone.entity.Account;
-import com.thecodinglab.imdbclone.enums.RoleNameEnum;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public class UserPrincipal implements UserDetails {
+
+  private static final String ADMIN_ROLE = "ROLE_ADMIN";
 
   private final Long id;
   private final String firstName;
@@ -47,24 +46,6 @@ public class UserPrincipal implements UserDetails {
     } else {
       this.authorities = new ArrayList<>(authorities);
     }
-  }
-
-  public static UserPrincipal create(Account account) {
-    List<SimpleGrantedAuthority> authorities =
-        account.getRoles().stream()
-            .map(role -> new SimpleGrantedAuthority(role.getName().name()))
-            .toList();
-
-    return new UserPrincipal(
-        account.getId(),
-        account.getFirstName(),
-        account.getLastName(),
-        account.getUsername(),
-        account.getEmail(),
-        account.getPassword(),
-        account.getLocked(),
-        account.getEnabled(),
-        authorities);
   }
 
   public Long getId() {
@@ -130,8 +111,6 @@ public class UserPrincipal implements UserDetails {
   }
 
   public static boolean isCurrentAccountAdmin(UserPrincipal currentAccount) {
-    return currentAccount
-        .getAuthorities()
-        .contains(new SimpleGrantedAuthority(RoleNameEnum.ROLE_ADMIN.toString()));
+    return currentAccount.getAuthorities().contains(new SimpleGrantedAuthority(ADMIN_ROLE));
   }
 }

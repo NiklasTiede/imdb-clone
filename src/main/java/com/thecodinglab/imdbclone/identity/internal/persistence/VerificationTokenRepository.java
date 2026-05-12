@@ -1,6 +1,5 @@
-package com.thecodinglab.imdbclone.repository;
+package com.thecodinglab.imdbclone.identity.internal.persistence;
 
-import com.thecodinglab.imdbclone.entity.VerificationToken;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;

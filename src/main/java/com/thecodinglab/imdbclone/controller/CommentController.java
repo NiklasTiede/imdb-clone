@@ -1,11 +1,11 @@
 package com.thecodinglab.imdbclone.controller;
 
+import com.thecodinglab.imdbclone.identity.api.CurrentUser;
+import com.thecodinglab.imdbclone.identity.api.UserPrincipal;
 import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.payload.comment.CommentRecord;
 import com.thecodinglab.imdbclone.payload.comment.CreateCommentRequest;
 import com.thecodinglab.imdbclone.payload.comment.UpdateCommentRequest;
-import com.thecodinglab.imdbclone.security.CurrentUser;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.CommentService;
 import com.thecodinglab.imdbclone.validation.Pagination;
 import io.swagger.v3.oas.annotations.Parameter;

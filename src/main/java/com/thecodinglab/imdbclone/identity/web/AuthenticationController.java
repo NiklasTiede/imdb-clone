@@ -1,8 +1,7 @@
-package com.thecodinglab.imdbclone.controller;
+package com.thecodinglab.imdbclone.identity.web;
 
-import com.thecodinglab.imdbclone.payload.*;
-import com.thecodinglab.imdbclone.payload.authentication.*;
-import com.thecodinglab.imdbclone.service.AuthenticationService;
+import com.thecodinglab.imdbclone.identity.api.*;
+import com.thecodinglab.imdbclone.payload.MessageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import org.springframework.http.HttpStatus;

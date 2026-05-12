@@ -1,5 +1,6 @@
-package com.thecodinglab.imdbclone.security;
+package com.thecodinglab.imdbclone.identity.internal.security;
 
+import com.thecodinglab.imdbclone.identity.api.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

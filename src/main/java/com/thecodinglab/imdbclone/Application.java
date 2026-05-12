@@ -1,11 +1,9 @@
 package com.thecodinglab.imdbclone;
 
-import com.thecodinglab.imdbclone.security.JwtAuthenticationFilter;
 import jakarta.annotation.PostConstruct;
 import java.util.TimeZone;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -33,10 +31,5 @@ public class Application {
   @PostConstruct
   void init() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-  }
-
-  @Bean
-  public JwtAuthenticationFilter jwtAuthenticationFilter() {
-    return new JwtAuthenticationFilter();
   }
 }

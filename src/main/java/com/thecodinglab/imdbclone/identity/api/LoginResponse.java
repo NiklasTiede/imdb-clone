@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.payload.authentication;
+package com.thecodinglab.imdbclone.identity.api;
 
 public class LoginResponse {
   private String accessToken;

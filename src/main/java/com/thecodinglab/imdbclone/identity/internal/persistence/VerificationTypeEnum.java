@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.enums;
+package com.thecodinglab.imdbclone.identity.internal.persistence;
 
 public enum VerificationTypeEnum {
   EMAIL_CONFIRMATION,

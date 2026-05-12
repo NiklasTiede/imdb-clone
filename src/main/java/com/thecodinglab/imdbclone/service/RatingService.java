@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.service;
 
+import com.thecodinglab.imdbclone.identity.api.UserPrincipal;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
 import java.math.BigDecimal;
 
 public interface RatingService {

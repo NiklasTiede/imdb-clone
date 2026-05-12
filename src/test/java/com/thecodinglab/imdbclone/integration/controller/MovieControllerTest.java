@@ -9,9 +9,9 @@ import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearc
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
+import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
+import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.integration.BaseContainers;
-import com.thecodinglab.imdbclone.payload.authentication.LoginRequest;
-import com.thecodinglab.imdbclone.service.AuthenticationService;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;

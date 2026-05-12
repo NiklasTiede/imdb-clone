@@ -1,8 +1,8 @@
 package com.thecodinglab.imdbclone.service;
 
 import com.thecodinglab.imdbclone.entity.Role;
+import com.thecodinglab.imdbclone.identity.api.UserPrincipal;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
 import java.util.List;
 
 public interface RoleService {

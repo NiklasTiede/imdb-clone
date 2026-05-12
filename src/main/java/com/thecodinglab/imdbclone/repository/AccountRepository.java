@@ -2,7 +2,7 @@ package com.thecodinglab.imdbclone.repository;
 
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.identity.api.UserPrincipal;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
