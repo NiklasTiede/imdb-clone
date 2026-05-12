@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.integration;
+package com.thecodinglab.imdbclone.support;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;

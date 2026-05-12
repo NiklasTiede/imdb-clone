@@ -461,6 +461,30 @@ class ModulithArchitectureTest {
     assertThat(Files.exists(Path.of("src/main/java/com/thecodinglab/imdbclone/rest"))).isFalse();
   }
 
+  @Test
+  void integrationTestsAreOrganizedByModule() {
+    assertThat(Files.exists(Path.of("src/test/java/com/thecodinglab/imdbclone/support"))).isTrue();
+    assertThat(Files.exists(Path.of("src/test/java/com/thecodinglab/imdbclone/integration")))
+        .isFalse();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.AccountControllerTest"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.AccountRepositoryTest"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.catalog.MovieControllerTest"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.catalog.SearchControllerTest"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.CommentControllerTest"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.RatingControllerTest"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.WatchedMovieControllerTest"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.identity.AuthenticationControllerTest"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.DatabaseSchemaTest")).isPresent();
+  }
+
   private Stream<Class<?>> methodTypes(Method method) {
     return Stream.concat(
         Stream.of(method.getReturnType()), Arrays.stream(method.getParameterTypes()));

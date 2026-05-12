@@ -1,10 +1,10 @@
-package com.thecodinglab.imdbclone.integration.controller;
+package com.thecodinglab.imdbclone.catalog;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
-import com.thecodinglab.imdbclone.integration.BaseContainers;
+import com.thecodinglab.imdbclone.support.BaseContainers;
 import java.util.Collections;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;

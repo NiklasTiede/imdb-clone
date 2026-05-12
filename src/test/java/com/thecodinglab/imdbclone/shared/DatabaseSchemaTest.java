@@ -1,9 +1,9 @@
-package com.thecodinglab.imdbclone.integration.repository;
+package com.thecodinglab.imdbclone.shared;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
-import com.thecodinglab.imdbclone.integration.BaseContainers;
+import com.thecodinglab.imdbclone.support.BaseContainers;
 import jakarta.persistence.Column;
 import java.util.List;
 import org.junit.jupiter.api.Test;

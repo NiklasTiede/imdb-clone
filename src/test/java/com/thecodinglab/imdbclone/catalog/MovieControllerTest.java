@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.integration.controller;
+package com.thecodinglab.imdbclone.catalog;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -11,7 +11,7 @@ import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearc
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
-import com.thecodinglab.imdbclone.integration.BaseContainers;
+import com.thecodinglab.imdbclone.support.BaseContainers;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;

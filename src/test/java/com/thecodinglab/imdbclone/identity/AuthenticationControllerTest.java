@@ -1,7 +1,7 @@
-package com.thecodinglab.imdbclone.integration.controller;
+package com.thecodinglab.imdbclone.identity;
 
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
-import com.thecodinglab.imdbclone.integration.BaseContainers;
+import com.thecodinglab.imdbclone.support.BaseContainers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;

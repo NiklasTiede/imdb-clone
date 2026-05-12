@@ -1,8 +1,8 @@
-package com.thecodinglab.imdbclone.integration.controller;
+package com.thecodinglab.imdbclone.account;
 
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
-import com.thecodinglab.imdbclone.integration.BaseContainers;
+import com.thecodinglab.imdbclone.support.BaseContainers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
