@@ -1,5 +1,6 @@
 package com.thecodinglab.imdbclone.identity.internal.security;
 
+import com.thecodinglab.imdbclone.identity.internal.IdentityProperties;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -12,7 +13,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -22,16 +22,16 @@ public class JwtTokenProvider {
 
   private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
 
-  @Value(value = "${jwt.secret}")
-  private String jwtSecret;
+  private final IdentityProperties identityProperties;
 
-  @Value(value = "${jwt.expiration-in-ms}")
-  private long jwtExpirationInMs;
+  public JwtTokenProvider(IdentityProperties identityProperties) {
+    this.identityProperties = identityProperties;
+  }
 
   public String generateToken(Authentication authentication) {
     UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
     SecretKey key = createSigningKey();
-    Date expiryDate = new Date((new Date()).getTime() + jwtExpirationInMs);
+    Date expiryDate = new Date((new Date()).getTime() + identityProperties.jwt().expirationInMs());
 
     return Jwts.builder()
         .claims(createClaims(userPrincipal))
@@ -72,6 +72,7 @@ public class JwtTokenProvider {
   }
 
   private SecretKey createSigningKey() {
-    return new SecretKeySpec(Base64.getDecoder().decode(jwtSecret), "HmacSHA512");
+    return new SecretKeySpec(
+        Base64.getDecoder().decode(identityProperties.jwt().secret()), "HmacSHA512");
   }
 }

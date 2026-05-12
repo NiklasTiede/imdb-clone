@@ -73,6 +73,7 @@ dependencies {
 	//-- Mapping
 	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
 	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
 	//-- Rel. Database
 	implementation 'com.mysql:mysql-connector-j:9.7.0'

@@ -24,7 +24,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -43,15 +42,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private final AccountIdentityService accountIdentityService;
   private final VerificationTokenRepository verificationTokenRepository;
   private final NotificationService notificationService;
-
-  @Value("${spring.mail.properties.mail.smtp.starttls.enable}")
-  private boolean emailEnabled;
-
-  @Value("${imdb-clone.backend.host}")
-  private String imdbCloneBackendHost;
-
-  @Value("${imdb-clone.frontend.host}")
-  private String imdbCloneFrontendHost;
+  private final IdentityProperties identityProperties;
 
   public AuthenticationServiceImpl(
       AuthenticationManager authenticationManager,
@@ -59,13 +50,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
       PasswordEncoder passwordEncoder,
       AccountIdentityService accountIdentityService,
       VerificationTokenRepository verificationTokenRepository,
-      NotificationService notificationService) {
+      NotificationService notificationService,
+      IdentityProperties identityProperties) {
     this.authenticationManager = authenticationManager;
     this.jwtTokenProvider = jwtTokenProvider;
     this.passwordEncoder = passwordEncoder;
     this.accountIdentityService = accountIdentityService;
     this.verificationTokenRepository = verificationTokenRepository;
     this.notificationService = notificationService;
+    this.identityProperties = identityProperties;
   }
 
   @Override
@@ -101,10 +94,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     String password = passwordEncoder.encode(request.password());
 
     AccountIdentity savedAccount =
-        accountIdentityService.createAccountForIdentity(username, email, password, !emailEnabled);
+        accountIdentityService.createAccountForIdentity(
+            username, email, password, !identityProperties.emailVerificationEnabled());
     logger.info("Account with [{}] was registered", kv(ACCOUNT_ID, savedAccount.id()));
     return new MessageResponse(
-        emailEnabled
+        identityProperties.emailVerificationEnabled()
             ? createAndSendEmailConfirmationToken(savedAccount)
             : "Email verification is turned off: no verification email was sent but account was activated!");
   }
@@ -120,7 +114,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             account.id());
     verificationTokenRepository.save(verificationToken);
 
-    String link = imdbCloneBackendHost + "/api/auth/confirm-email-address?token=" + token;
+    String link =
+        identityProperties.backendHost() + "/api/auth/confirm-email-address?token=" + token;
     String confirmationEmail = notificationService.buildConfirmationEmail(account.username(), link);
     notificationService.sendEmail(account.email(), "Confirming Email Address", confirmationEmail);
     logger.info(
@@ -162,7 +157,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     verificationToken.setConfirmedAtInUtc(Instant.now());
     verificationTokenRepository.save(verificationToken);
 
-    String link = imdbCloneFrontendHost + "/reset-password?token=" + token;
+    String link = identityProperties.frontendHost() + "/reset-password?token=" + token;
     String passwordResetEmail =
         notificationService.buildPasswordResetEmail(account.username(), link);
     notificationService.sendEmail(account.email(), "Reset Password", passwordResetEmail);

@@ -64,13 +64,13 @@ public class BaseContainers {
   @DynamicPropertySource
   static void minioProperties(DynamicPropertyRegistry registry) {
     registry.add(
-        "minio.rest.uri",
+        "imdb-clone.media.storage.uri",
         () ->
             String.format(
                 "http://%s:%d", minioContainer.getHost(), minioContainer.getMappedPort(9000)));
-    registry.add("minio.rest.access-key", () -> "minioadmin");
-    registry.add("minio.rest.secret-key", () -> "minioadmin");
-    registry.add("minio.rest.bucket-name", () -> "imdb-clone");
+    registry.add("imdb-clone.media.storage.access-key", () -> "minioadmin");
+    registry.add("imdb-clone.media.storage.secret-key", () -> "minioadmin");
+    registry.add("imdb-clone.media.storage.bucket-name", () -> "imdb-clone");
   }
 
   static {

@@ -1,22 +1,17 @@
 package com.thecodinglab.imdbclone.media.internal;
 
 import io.minio.MinioClient;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MinioClientConfig {
 
-  @Value("${minio.rest.uri}")
-  public String minioUrl;
-
-  @Value("${minio.rest.access-key}")
-  public String accessKey;
-
-  @Value("${minio.rest.secret-key}")
-  public String secretKey;
-
-  public MinioClient getClient() {
-    return MinioClient.builder().endpoint(minioUrl).credentials(accessKey, secretKey).build();
+  @Bean
+  MinioClient minioClient(MediaStorageProperties properties) {
+    return MinioClient.builder()
+        .endpoint(properties.uri())
+        .credentials(properties.accessKey(), properties.secretKey())
+        .build();
   }
 }

@@ -1,8 +1,8 @@
 package com.thecodinglab.imdbclone.identity.internal.security;
 
+import com.thecodinglab.imdbclone.identity.internal.IdentityProperties;
 import java.util.Arrays;
 import java.util.Collections;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -29,16 +29,16 @@ public class WebSecurityConfig {
 
   private final JwtAuthenticationEntryPoint unauthorizedHandler;
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
-  private final String[] allowedOrigins;
+  private final IdentityProperties identityProperties;
   private static final long MAX_AGE_SECS = 3600;
 
   public WebSecurityConfig(
-      @Value("${cors.allowed-origins}") final String[] allowedOrigins,
       JwtAuthenticationEntryPoint unauthorizedHandler,
-      JwtAuthenticationFilter jwtAuthenticationFilter) {
-    this.allowedOrigins = allowedOrigins;
+      JwtAuthenticationFilter jwtAuthenticationFilter,
+      IdentityProperties identityProperties) {
     this.unauthorizedHandler = unauthorizedHandler;
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    this.identityProperties = identityProperties;
   }
 
   @Bean
@@ -79,7 +79,7 @@ public class WebSecurityConfig {
   @Bean
   CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
+    configuration.setAllowedOrigins(identityProperties.cors().allowedOrigins());
     configuration.setAllowedMethods(
         Arrays.asList(
             HttpMethod.GET.name(),

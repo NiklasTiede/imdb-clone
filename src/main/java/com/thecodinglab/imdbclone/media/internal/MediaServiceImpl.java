@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,18 +27,18 @@ public class MediaServiceImpl implements MediaService {
 
   private static final Logger logger = LoggerFactory.getLogger(MediaServiceImpl.class);
 
-  @Value("${minio.rest.bucket-name}")
-  public String bucketName;
-
   private final MinioClient minioClient;
+  private final MediaStorageProperties storageProperties;
   private final AccountImageService accountImageService;
   private final MovieService movieService;
 
   public MediaServiceImpl(
-      MinioClientConfig minioClient,
+      MinioClient minioClient,
+      MediaStorageProperties storageProperties,
       AccountImageService accountImageService,
       MovieService movieService) {
-    this.minioClient = minioClient.getClient();
+    this.minioClient = minioClient;
+    this.storageProperties = storageProperties;
     this.accountImageService = accountImageService;
     this.movieService = movieService;
   }
@@ -153,7 +152,7 @@ public class MediaServiceImpl implements MediaService {
       ObjectWriteResponse resp =
           minioClient.putObject(
               PutObjectArgs.builder()
-                  .bucket(bucketName)
+                  .bucket(storageProperties.bucketName())
                   .contentType(contentType)
                   .object(fileName)
                   .stream(file, (long) fileSize, -1L)
@@ -167,7 +166,10 @@ public class MediaServiceImpl implements MediaService {
   private void deleteFile(String imageName) {
     try {
       minioClient.removeObject(
-          RemoveObjectArgs.builder().bucket(bucketName).object(imageName).build());
+          RemoveObjectArgs.builder()
+              .bucket(storageProperties.bucketName())
+              .object(imageName)
+              .build());
     } catch (Exception ex) {
       throw new MinioOperationException("Error while deleting file in MinIO", ex);
     }
@@ -175,17 +177,21 @@ public class MediaServiceImpl implements MediaService {
 
   void setUpBucket() {
     try {
-      if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
+      if (!minioClient.bucketExists(
+          BucketExistsArgs.builder().bucket(storageProperties.bucketName()).build())) {
         // create bucket
-        minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+        minioClient.makeBucket(
+            MakeBucketArgs.builder().bucket(storageProperties.bucketName()).build());
       }
       // set policy
       String bucketPolicy = "config/minio-policy.json";
       createBucketPolicyFrom(bucketPolicy);
-      logger.info("bucket [{}] was created and bucketPolicy set successfully", bucketName);
+      logger.info(
+          "bucket [{}] was created and bucketPolicy set successfully",
+          storageProperties.bucketName());
 
     } catch (Exception ex) {
-      logger.error("Creation of bucket [{}] failed", bucketName);
+      logger.error("Creation of bucket [{}] failed", storageProperties.bucketName());
       throw new MinioOperationException("Error while creating bucket in MinIO", ex);
     }
   }
@@ -194,7 +200,10 @@ public class MediaServiceImpl implements MediaService {
     String policyConfig = readResourceFile(bucketPolicy);
     try {
       minioClient.setBucketPolicy(
-          SetBucketPolicyArgs.builder().bucket(bucketName).config(policyConfig).build());
+          SetBucketPolicyArgs.builder()
+              .bucket(storageProperties.bucketName())
+              .config(policyConfig)
+              .build());
     } catch (Exception ex) {
       logger.error("Creation of bucket policy failed");
       throw new MinioOperationException("Error while creating bucket policy in MinIO", ex);
@@ -230,7 +239,7 @@ public class MediaServiceImpl implements MediaService {
       presignedUrl =
           minioClient.getPresignedObjectUrl(
               GetPresignedObjectUrlArgs.builder()
-                  .bucket(bucketName)
+                  .bucket(storageProperties.bucketName())
                   .method(Method.GET)
                   .object(imageName)
                   .expiry(60 * 60 * 24)

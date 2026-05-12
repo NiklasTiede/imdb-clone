@@ -13,7 +13,6 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -28,9 +27,6 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
   private final MovieElasticSearchRepository movieSearchRepository;
   private final ElasticsearchOperations elasticsearchOperations;
   private final ElasticsearchClient elasticsearchClient;
-
-  @Value("${minio.rest.bucket-name}")
-  public String bucketName;
 
   public InfrastructureSetup(
       MovieRepository movieRepository,

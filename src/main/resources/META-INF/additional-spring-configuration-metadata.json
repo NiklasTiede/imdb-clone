@@ -1,9 +1,64 @@
 {
   "properties": [
     {
-      "name": "jwt.refresh-token.secret",
+      "name": "imdb-clone.identity.backend-host",
       "type": "java.lang.String",
-      "description": "Description for jwt.refresh-token.secret."
+      "description": "Public backend host used to build identity links such as email confirmation URLs."
+    },
+    {
+      "name": "imdb-clone.identity.frontend-host",
+      "type": "java.lang.String",
+      "description": "Public frontend host used to build user-facing identity links such as password reset URLs."
+    },
+    {
+      "name": "imdb-clone.identity.email-verification-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether new accounts must confirm their email address before they are enabled."
+    },
+    {
+      "name": "imdb-clone.identity.jwt.secret",
+      "type": "java.lang.String",
+      "description": "Base64 encoded secret used to sign JWT access tokens."
+    },
+    {
+      "name": "imdb-clone.identity.jwt.expiration-in-ms",
+      "type": "java.lang.Long",
+      "description": "JWT access token lifetime in milliseconds."
+    },
+    {
+      "name": "imdb-clone.identity.cors.allowed-origins",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Origins allowed to call the backend with credentials."
+    },
+    {
+      "name": "imdb-clone.media.storage.uri",
+      "type": "java.lang.String",
+      "description": "MinIO endpoint URI used by the media module."
+    },
+    {
+      "name": "imdb-clone.media.storage.access-key",
+      "type": "java.lang.String",
+      "description": "MinIO access key used by the media module."
+    },
+    {
+      "name": "imdb-clone.media.storage.secret-key",
+      "type": "java.lang.String",
+      "description": "MinIO secret key used by the media module."
+    },
+    {
+      "name": "imdb-clone.media.storage.bucket-name",
+      "type": "java.lang.String",
+      "description": "MinIO bucket containing movie images and profile photos."
+    },
+    {
+      "name": "imdb-clone.notification.email.sender",
+      "type": "java.lang.String",
+      "description": "Email address used as the sender for notification emails."
+    },
+    {
+      "name": "imdb-clone.recommendation.open-trivia.base-url",
+      "type": "java.lang.String",
+      "description": "Base URL for the Open Trivia recommendation support client."
     }
   ]
 }
