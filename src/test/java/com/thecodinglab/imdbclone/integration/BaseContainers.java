@@ -47,7 +47,8 @@ public class BaseContainers {
     registry.add("spring.datasource.username", mysqlContainer::getUsername);
   }
 
-  static ElasticsearchContainer elasticContainer = new ElasticsearchContainer(elasticsearchImage);
+  static ElasticsearchContainer elasticContainer =
+      new ElasticsearchContainer(elasticsearchImage).withEnv("ES_JAVA_OPTS", "-Xms512m -Xmx512m");
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
