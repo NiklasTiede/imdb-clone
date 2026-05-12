@@ -1,6 +1,6 @@
-package com.thecodinglab.imdbclone.service;
+package com.thecodinglab.imdbclone.notification.api;
 
-public interface EmailService {
+public interface NotificationService {
 
   void sendEmail(String emailReceiverAddress, String subject, String emailText);
 

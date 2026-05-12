@@ -17,8 +17,8 @@ import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToke
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTokenRepository;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
 import com.thecodinglab.imdbclone.identity.internal.security.JwtTokenProvider;
+import com.thecodinglab.imdbclone.notification.api.NotificationService;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.service.EmailService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -42,7 +42,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private final PasswordEncoder passwordEncoder;
   private final AccountIdentityService accountIdentityService;
   private final VerificationTokenRepository verificationTokenRepository;
-  private final EmailService emailService;
+  private final NotificationService notificationService;
 
   @Value("${spring.mail.properties.mail.smtp.starttls.enable}")
   private boolean emailEnabled;
@@ -59,13 +59,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
       PasswordEncoder passwordEncoder,
       AccountIdentityService accountIdentityService,
       VerificationTokenRepository verificationTokenRepository,
-      EmailService emailService) {
+      NotificationService notificationService) {
     this.authenticationManager = authenticationManager;
     this.jwtTokenProvider = jwtTokenProvider;
     this.passwordEncoder = passwordEncoder;
     this.accountIdentityService = accountIdentityService;
     this.verificationTokenRepository = verificationTokenRepository;
-    this.emailService = emailService;
+    this.notificationService = notificationService;
   }
 
   @Override
@@ -121,8 +121,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     verificationTokenRepository.save(verificationToken);
 
     String link = imdbCloneBackendHost + "/api/auth/confirm-email-address?token=" + token;
-    String confirmationEmail = emailService.buildConfirmationEmail(account.username(), link);
-    emailService.sendEmail(account.email(), "Confirming Email Address", confirmationEmail);
+    String confirmationEmail = notificationService.buildConfirmationEmail(account.username(), link);
+    notificationService.sendEmail(account.email(), "Confirming Email Address", confirmationEmail);
     logger.info(
         "confirmation email containing activation token for account with [{}] was send",
         kv(ACCOUNT_ID, account.id()));
@@ -163,8 +163,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     verificationTokenRepository.save(verificationToken);
 
     String link = imdbCloneFrontendHost + "/reset-password?token=" + token;
-    String passwordResetEmail = emailService.buildPasswordResetEmail(account.username(), link);
-    emailService.sendEmail(account.email(), "Reset Password", passwordResetEmail);
+    String passwordResetEmail =
+        notificationService.buildPasswordResetEmail(account.username(), link);
+    notificationService.sendEmail(account.email(), "Reset Password", passwordResetEmail);
     logger.info(
         "confirmation email containing activation token for account with [{}] was send",
         kv(ACCOUNT_ID, account.id()));

@@ -12,6 +12,7 @@ import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.media.api.MediaService;
+import com.thecodinglab.imdbclone.notification.api.NotificationService;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,6 +55,12 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void detectsNotificationModule() {
+    assertThat(ApplicationModules.of(Application.class).getModuleByName("notification"))
+        .isPresent();
+  }
+
+  @Test
   void catalogApiDoesNotExposeInternalTypes() {
     assertThat(Arrays.stream(MovieService.class.getMethods()).flatMap(this::methodTypes))
         .extracting(Class::getName)
@@ -92,6 +99,13 @@ class ModulithArchitectureTest {
     assertThat(apiTypes(MediaService.class))
         .extracting(Class::getName)
         .noneMatch(typeName -> typeName.contains(".media.internal."));
+  }
+
+  @Test
+  void notificationApiDoesNotExposeInternalTypes() {
+    assertThat(apiTypes(NotificationService.class))
+        .extracting(Class::getName)
+        .noneMatch(typeName -> typeName.contains(".notification.internal."));
   }
 
   @Test
@@ -246,6 +260,23 @@ class ModulithArchitectureTest {
     assertThat(
             Files.exists(
                 Path.of("src/main/java/com/thecodinglab/imdbclone/utility/images/Image.java")))
+        .isFalse();
+  }
+
+  @Test
+  void emailNotificationsBelongToNotificationModule() {
+    assertThat(
+            classIfPresent(
+                "com.thecodinglab.imdbclone.notification.internal.EmailNotificationService"))
+        .isPresent();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/service/EmailService.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/service/impl/EmailServiceImpl.java")))
         .isFalse();
   }
 

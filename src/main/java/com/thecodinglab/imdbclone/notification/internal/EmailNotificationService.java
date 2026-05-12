@@ -1,9 +1,9 @@
-package com.thecodinglab.imdbclone.service.impl;
+package com.thecodinglab.imdbclone.notification.internal;
 
 import static com.thecodinglab.imdbclone.utility.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.thecodinglab.imdbclone.service.EmailService;
+import com.thecodinglab.imdbclone.notification.api.NotificationService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -17,9 +17,9 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 @Service
-public class EmailServiceImpl implements EmailService {
+public class EmailNotificationService implements NotificationService {
 
-  private static final Logger logger = LoggerFactory.getLogger(EmailServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(EmailNotificationService.class);
 
   private final JavaMailSender mailSender;
 
@@ -28,7 +28,7 @@ public class EmailServiceImpl implements EmailService {
 
   private final TemplateEngine templateEngine;
 
-  public EmailServiceImpl(JavaMailSender mailSender, TemplateEngine templateEngine) {
+  public EmailNotificationService(JavaMailSender mailSender, TemplateEngine templateEngine) {
     this.mailSender = mailSender;
     this.templateEngine = templateEngine;
   }
