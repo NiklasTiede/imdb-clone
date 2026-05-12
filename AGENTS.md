@@ -5,7 +5,7 @@
 Full-stack IMDB clone with a Spring Boot backend and React frontend.
 
 - Backend: Java 25, Spring Boot 4, MySQL, Elasticsearch, MinIO, JWT auth.
-- Frontend: React 18, TypeScript, Material UI 5, Redux/Rematch, generated Axios client.
+- Frontend: React 19, TypeScript, Material UI 9, TanStack React Query, generated Axios client.
 - Backend source: `src/main/java/com/thecodinglab/imdbclone`
 - Frontend source: `frontend/src`
 
@@ -28,7 +28,7 @@ Frontend:
 - Start frontend: `cd frontend && yarn start`
 - Build frontend: `cd frontend && yarn build`
 - Lint frontend: `cd frontend && yarn run lint`
-- Run frontend tests once: `cd frontend && CI=true yarn test --watchAll=false`
+- Run frontend tests once: `cd frontend && yarn test`
 
 Infrastructure:
 
@@ -56,12 +56,14 @@ The frontend API client is generated from the backend OpenAPI spec.
 
 - Prefer existing Material UI patterns and components.
 - Use the generated API client through `frontend/src/client/movies/MoviesApi.ts`.
-- Keep Redux/Rematch state changes in `frontend/src/redux/model`.
+- Keep server-state fetching and mutations in TanStack React Query wrappers under feature `api` folders.
+- Keep feature-specific UI behavior inside `frontend/src/features/<feature>` and genuinely shared UI/hooks under `frontend/src/shared`.
 - Keep reusable UI behavior in hooks or focused components.
 
 ## Database
 
-- Current local schema/data initialization uses SQL files in `src/main/resources/sql`.
+- Flyway owns schema migrations in `src/main/resources/db/migration`.
+- Local seed/test data uses SQL files in `src/main/resources/sql` and `src/test/resources/sql`.
 - Do not modify existing database initialization or migration files unless explicitly asked.
 - Do not introduce or rely on Liquibase unless the build and Spring config are wired for it.
 
