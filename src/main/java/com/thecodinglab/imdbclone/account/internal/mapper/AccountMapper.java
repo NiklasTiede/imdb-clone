@@ -1,10 +1,9 @@
-package com.thecodinglab.imdbclone.payload.mapper;
+package com.thecodinglab.imdbclone.account.internal.mapper;
 
+import com.thecodinglab.imdbclone.account.api.AccountRecord;
+import com.thecodinglab.imdbclone.account.api.UpdatedAccountProfile;
 import com.thecodinglab.imdbclone.entity.Account;
-import com.thecodinglab.imdbclone.payload.account.AccountRecord;
 import java.util.List;
-
-import com.thecodinglab.imdbclone.payload.account.UpdatedAccountProfile;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

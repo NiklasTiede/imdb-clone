@@ -1,24 +1,19 @@
-package com.thecodinglab.imdbclone.service.impl;
+package com.thecodinglab.imdbclone.account.internal;
 
 import static com.thecodinglab.imdbclone.utility.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
+import com.thecodinglab.imdbclone.account.api.*;
+import com.thecodinglab.imdbclone.account.internal.mapper.AccountMapper;
 import com.thecodinglab.imdbclone.entity.Account;
-import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
-import com.thecodinglab.imdbclone.identity.api.RegistrationRequest;
-import com.thecodinglab.imdbclone.identity.api.UserPrincipal;
-import com.thecodinglab.imdbclone.payload.*;
-import com.thecodinglab.imdbclone.payload.account.*;
-import com.thecodinglab.imdbclone.payload.mapper.AccountMapper;
+import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.repository.CommentRepository;
 import com.thecodinglab.imdbclone.repository.RatingRepository;
 import com.thecodinglab.imdbclone.repository.WatchedMovieRepository;
-import com.thecodinglab.imdbclone.service.AccountService;
-import com.thecodinglab.imdbclone.service.RoleService;
-import java.util.List;
+import com.thecodinglab.imdbclone.security.UserPrincipal;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +30,7 @@ public class AccountServiceImpl implements AccountService {
   private final RatingRepository ratingRepository;
   private final CommentRepository commentRepository;
   private final PasswordEncoder passwordEncoder;
-  private final RoleService roleService;
+  private final RegisteredUserRoleProvider registeredUserRoleProvider;
   private final AccountMapper accountMapper;
 
   public AccountServiceImpl(
@@ -44,14 +39,14 @@ public class AccountServiceImpl implements AccountService {
       RatingRepository ratingRepository,
       CommentRepository commentRepository,
       PasswordEncoder passwordEncoder,
-      RoleService roleService,
+      RegisteredUserRoleProvider registeredUserRoleProvider,
       AccountMapper accountMapper) {
     this.accountRepository = accountRepository;
     this.watchedMovieRepository = watchedMovieRepository;
     this.ratingRepository = ratingRepository;
     this.commentRepository = commentRepository;
     this.passwordEncoder = passwordEncoder;
-    this.roleService = roleService;
+    this.registeredUserRoleProvider = registeredUserRoleProvider;
     this.accountMapper = accountMapper;
   }
 
@@ -117,8 +112,7 @@ public class AccountServiceImpl implements AccountService {
     String password = passwordEncoder.encode(request.password());
     Account account = new Account(username, email, password);
     account.setEnabled(true);
-    List<Role> roles = roleService.giveRoleToRegisteredUser();
-    account.setRoles(roles);
+    account.setRoles(registeredUserRoleProvider.rolesForRegisteredUser());
     Account savedAccount = accountRepository.save(account);
     logger.info(
         "Account with [{}] was created and activated.", kv(ACCOUNT_ID, savedAccount.getId()));

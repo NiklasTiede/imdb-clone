@@ -1,15 +1,15 @@
 package com.thecodinglab.imdbclone.validation;
 
-import com.thecodinglab.imdbclone.repository.AccountRepository;
+import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public class AvailableEmailImpl implements ConstraintValidator<AvailableEmail, String> {
 
-  private final AccountRepository accountRepository;
+  private final AccountIdentityService accountIdentityService;
 
-  public AvailableEmailImpl(AccountRepository accountRepository) {
-    this.accountRepository = accountRepository;
+  public AvailableEmailImpl(AccountIdentityService accountIdentityService) {
+    this.accountIdentityService = accountIdentityService;
   }
 
   @Override
@@ -19,6 +19,6 @@ public class AvailableEmailImpl implements ConstraintValidator<AvailableEmail, S
 
   @Override
   public boolean isValid(String email, ConstraintValidatorContext context) {
-    return !accountRepository.existsByEmail(email);
+    return accountIdentityService.isEmailAvailable(email);
   }
 }

@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.controller;
 
-import com.thecodinglab.imdbclone.identity.api.CurrentUser;
-import com.thecodinglab.imdbclone.identity.api.UserPrincipal;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
+import com.thecodinglab.imdbclone.security.CurrentUser;
+import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.RatingService;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.math.BigDecimal;

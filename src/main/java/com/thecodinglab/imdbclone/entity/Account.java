@@ -2,7 +2,6 @@ package com.thecodinglab.imdbclone.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
-import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToken;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -50,10 +49,6 @@ public class Account extends DateAudit {
   @JsonIgnore
   @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
   private Collection<Rating> ratings;
-
-  @JsonIgnore
-  @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Collection<VerificationToken> verificationTokens;
 
   public Account() {}
 
@@ -189,13 +184,5 @@ public class Account extends DateAudit {
 
   public void setRatings(Collection<Rating> ratings) {
     this.ratings = ratings;
-  }
-
-  public Collection<VerificationToken> getVerificationTokens() {
-    return verificationTokens;
-  }
-
-  public void setVerificationTokens(Collection<VerificationToken> verificationTokens) {
-    this.verificationTokens = verificationTokens;
   }
 }

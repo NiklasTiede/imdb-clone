@@ -1,15 +1,15 @@
 package com.thecodinglab.imdbclone.validation;
 
-import com.thecodinglab.imdbclone.repository.AccountRepository;
+import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public class AvailableUsernameImpl implements ConstraintValidator<AvailableUsername, String> {
 
-  private final AccountRepository accountRepository;
+  private final AccountIdentityService accountIdentityService;
 
-  public AvailableUsernameImpl(AccountRepository accountRepository) {
-    this.accountRepository = accountRepository;
+  public AvailableUsernameImpl(AccountIdentityService accountIdentityService) {
+    this.accountIdentityService = accountIdentityService;
   }
 
   @Override
@@ -19,6 +19,6 @@ public class AvailableUsernameImpl implements ConstraintValidator<AvailableUsern
 
   @Override
   public boolean isValid(String username, ConstraintValidatorContext context) {
-    return !accountRepository.existsByUsername(username);
+    return accountIdentityService.isUsernameAvailable(username);
   }
 }

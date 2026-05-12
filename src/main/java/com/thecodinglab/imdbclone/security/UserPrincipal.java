@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.identity.api;
+package com.thecodinglab.imdbclone.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;

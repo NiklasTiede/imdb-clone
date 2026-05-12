@@ -2,6 +2,8 @@ package com.thecodinglab.imdbclone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
+import com.thecodinglab.imdbclone.account.api.AccountService;
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import java.lang.reflect.Method;
@@ -31,6 +33,11 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void detectsAccountModule() {
+    assertThat(ApplicationModules.of(Application.class).getModuleByName("account")).isPresent();
+  }
+
+  @Test
   void catalogApiDoesNotExposeInternalTypes() {
     assertThat(Arrays.stream(MovieService.class.getMethods()).flatMap(this::methodTypes))
         .extracting(Class::getName)
@@ -42,6 +49,13 @@ class ModulithArchitectureTest {
     assertThat(Arrays.stream(AuthenticationService.class.getMethods()).flatMap(this::methodTypes))
         .extracting(Class::getName)
         .noneMatch(typeName -> typeName.contains(".identity.internal."));
+  }
+
+  @Test
+  void accountApiDoesNotExposeInternalTypes() {
+    assertThat(apiTypes(AccountService.class, AccountIdentityService.class))
+        .extracting(Class::getName)
+        .noneMatch(typeName -> typeName.contains(".account.internal."));
   }
 
   @Test
@@ -92,9 +106,46 @@ class ModulithArchitectureTest {
         .isFalse();
   }
 
+  @Test
+  void accountManagementBelongsToAccountModule() {
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.web.AccountController"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.internal.AccountServiceImpl"))
+        .isPresent();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/controller/AccountController.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/service/AccountService.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/service/RoleService.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/service/impl/AccountServiceImpl.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/service/impl/RoleServiceImpl.java")))
+        .isFalse();
+  }
+
   private Stream<Class<?>> methodTypes(Method method) {
     return Stream.concat(
         Stream.of(method.getReturnType()), Arrays.stream(method.getParameterTypes()));
+  }
+
+  private Stream<Class<?>> apiTypes(Class<?>... apiTypes) {
+    return Arrays.stream(apiTypes)
+        .flatMap(type -> Arrays.stream(type.getMethods()))
+        .flatMap(this::methodTypes);
   }
 
   private Optional<Class<?>> classIfPresent(String className) {

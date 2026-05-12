@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.identity.api;
+package com.thecodinglab.imdbclone.account.api;
 
 import com.thecodinglab.imdbclone.validation.AvailableEmail;
 import com.thecodinglab.imdbclone.validation.AvailableUsername;

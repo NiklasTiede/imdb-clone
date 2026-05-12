@@ -1,9 +1,7 @@
-package com.thecodinglab.imdbclone.service;
+package com.thecodinglab.imdbclone.account.api;
 
-import com.thecodinglab.imdbclone.identity.api.RegistrationRequest;
-import com.thecodinglab.imdbclone.identity.api.UserPrincipal;
-import com.thecodinglab.imdbclone.payload.*;
-import com.thecodinglab.imdbclone.payload.account.*;
+import com.thecodinglab.imdbclone.payload.MessageResponse;
+import com.thecodinglab.imdbclone.security.UserPrincipal;
 
 public interface AccountService {
 

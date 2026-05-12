@@ -1,6 +1,5 @@
 package com.thecodinglab.imdbclone.identity.internal.persistence;
 
-import com.thecodinglab.imdbclone.entity.Account;
 import jakarta.persistence.*;
 import java.time.Instant;
 
@@ -23,19 +22,18 @@ public class VerificationToken {
 
   private Instant confirmedAtInUtc;
 
-  @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(nullable = false)
-  private Account account;
+  @Column(name = "account_id", nullable = false)
+  private Long accountId;
 
   public VerificationToken(
       VerificationTypeEnum verificationType,
       String token,
       Instant expiryDateInUtc,
-      Account account) {
+      Long accountId) {
     this.verificationType = verificationType;
     this.token = token;
     this.expiryDateInUtc = expiryDateInUtc;
-    this.account = account;
+    this.accountId = accountId;
   }
 
   public VerificationToken() {}
@@ -72,12 +70,12 @@ public class VerificationToken {
     this.expiryDateInUtc = expiryDateInUtc;
   }
 
-  public Account getAccount() {
-    return account;
+  public Long getAccountId() {
+    return accountId;
   }
 
-  public void setAccount(Account account) {
-    this.account = account;
+  public void setAccountId(Long accountId) {
+    this.accountId = accountId;
   }
 
   public Instant getConfirmedAtInUtc() {
@@ -102,8 +100,8 @@ public class VerificationToken {
         + expiryDateInUtc
         + ", confirmedAtInUtc="
         + confirmedAtInUtc
-        + ", account="
-        + account
+        + ", accountId="
+        + accountId
         + '}';
   }
 }
