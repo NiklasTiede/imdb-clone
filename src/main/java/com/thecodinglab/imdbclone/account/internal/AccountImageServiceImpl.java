@@ -2,9 +2,9 @@ package com.thecodinglab.imdbclone.account.internal;
 
 import com.thecodinglab.imdbclone.account.api.AccountImageService;
 import com.thecodinglab.imdbclone.account.api.AccountImageToken;
-import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.account.internal.persistence.Account;
+import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
-import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;

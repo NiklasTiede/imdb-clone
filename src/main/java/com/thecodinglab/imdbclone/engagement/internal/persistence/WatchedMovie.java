@@ -2,7 +2,6 @@ package com.thecodinglab.imdbclone.engagement.internal.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
-import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.audit.CreatedAtAudit;
 import jakarta.persistence.*;
 
@@ -16,30 +15,20 @@ public class WatchedMovie extends CreatedAtAudit {
   @MapsId("movieId")
   private Movie movie;
 
-  @JsonIgnore
-  @ManyToOne(fetch = FetchType.LAZY)
-  @MapsId("accountId")
-  private Account account;
-
   public WatchedMovie() {}
 
-  public WatchedMovie(WatchedMovieId id, Movie movie, Account account) {
+  public WatchedMovie(WatchedMovieId id, Movie movie) {
     this.id = id;
     this.movie = movie;
-    this.account = account;
   }
 
-  public static WatchedMovie create(Movie movie, Account account) {
-    WatchedMovieId watchedMovieId = new WatchedMovieId(movie.getId(), account.getId());
-    return new WatchedMovie(watchedMovieId, movie, account);
+  public static WatchedMovie create(Movie movie, Long accountId) {
+    WatchedMovieId watchedMovieId = new WatchedMovieId(movie.getId(), accountId);
+    return new WatchedMovie(watchedMovieId, movie);
   }
 
-  public Account getAccount() {
-    return account;
-  }
-
-  public void setAccount(Account account) {
-    this.account = account;
+  public Long getAccountId() {
+    return id.getAccountId();
   }
 
   public Movie getMovie() {

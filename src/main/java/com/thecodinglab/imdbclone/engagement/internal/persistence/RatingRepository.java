@@ -11,11 +11,11 @@ public interface RatingRepository extends JpaRepository<Rating, RatingId> {
 
   List<Rating> findRatingsByMovieId(Long movieId);
 
-  Page<Rating> findRatingsByAccountId(Long accountId, Pageable pageable);
+  Page<Rating> findRatingsByIdAccountId(Long accountId, Pageable pageable);
 
-  Optional<Rating> findRatingByAccountIdAndMovieId(Long accountId, Long movieId);
+  Optional<Rating> findByIdAccountIdAndIdMovieId(Long accountId, Long movieId);
 
   List<Rating> findAllByModifiedAtInUtcAfter(Instant modifiedAt);
 
-  Long countRatingsByAccountId(Long accountId);
+  Long countByIdAccountId(Long accountId);
 }

@@ -9,7 +9,7 @@ public interface RatingService {
 
   RatingRecord rateMovie(UserPrincipal currentAccount, Long movieId, BigDecimal score);
 
-  PagedResponse<RatingRecord> getRatingsByAccount(String username, int page, int size);
+  PagedResponse<RatingRecord> getRatingsByAccountId(Long accountId, int page, int size);
 
   MessageResponse deleteRating(UserPrincipal currentAccount, Long movieId);
 }

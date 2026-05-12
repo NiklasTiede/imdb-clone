@@ -45,7 +45,7 @@ class WatchedMovieControllerTest extends BaseContainers {
   @AfterEach
   void cleanup() {
     watchedMovieRepository
-        .findWatchedMovieByMovieIdAndAccountId(MOVIE_ID, ACCOUNT_ID)
+        .findByIdMovieIdAndIdAccountId(MOVIE_ID, ACCOUNT_ID)
         .ifPresent(watchedMovieRepository::delete);
   }
 

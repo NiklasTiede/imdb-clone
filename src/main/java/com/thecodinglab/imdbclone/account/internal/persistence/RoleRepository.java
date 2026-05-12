@@ -1,6 +1,5 @@
-package com.thecodinglab.imdbclone.repository;
+package com.thecodinglab.imdbclone.account.internal.persistence;
 
-import com.thecodinglab.imdbclone.entity.Role;
 import com.thecodinglab.imdbclone.enums.RoleNameEnum;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import java.util.Optional;

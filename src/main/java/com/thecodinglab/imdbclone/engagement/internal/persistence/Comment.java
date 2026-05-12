@@ -1,7 +1,6 @@
 package com.thecodinglab.imdbclone.engagement.internal.persistence;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
-import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import jakarta.persistence.*;
 
@@ -13,9 +12,8 @@ public class Comment extends DateAudit {
 
   private String message;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "account_id")
-  private Account account;
+  @Column(name = "account_id")
+  private Long accountId;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "movie_id")
@@ -23,9 +21,9 @@ public class Comment extends DateAudit {
 
   public Comment() {}
 
-  public Comment(String message, Account account, Movie movie) {
+  public Comment(String message, Long accountId, Movie movie) {
     this.message = message;
-    this.account = account;
+    this.accountId = accountId;
     this.movie = movie;
   }
 
@@ -45,12 +43,12 @@ public class Comment extends DateAudit {
     this.message = message;
   }
 
-  public Account getAccount() {
-    return account;
+  public Long getAccountId() {
+    return accountId;
   }
 
-  public void setAccount(Account account) {
-    this.account = account;
+  public void setAccountId(Long accountId) {
+    this.accountId = accountId;
   }
 
   public Movie getMovie() {

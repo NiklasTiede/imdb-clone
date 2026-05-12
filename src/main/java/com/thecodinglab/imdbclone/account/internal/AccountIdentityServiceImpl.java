@@ -3,9 +3,9 @@ package com.thecodinglab.imdbclone.account.internal;
 import com.thecodinglab.imdbclone.account.api.AccountCredentials;
 import com.thecodinglab.imdbclone.account.api.AccountIdentity;
 import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
-import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.account.internal.persistence.Account;
+import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
-import com.thecodinglab.imdbclone.repository.AccountRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +50,11 @@ public class AccountIdentityServiceImpl implements AccountIdentityService {
             () ->
                 new NotFoundException(
                     "Account with email address [%s] not found in database.".formatted(email)));
+  }
+
+  @Override
+  public AccountIdentity findByUsername(String username) {
+    return toIdentity(accountRepository.getAccountByUsername(username));
   }
 
   @Override

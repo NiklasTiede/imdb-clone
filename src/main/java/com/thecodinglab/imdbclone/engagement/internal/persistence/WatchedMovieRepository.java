@@ -7,9 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface WatchedMovieRepository extends JpaRepository<WatchedMovie, WatchedMovieId> {
 
-  Optional<WatchedMovie> findWatchedMovieByMovieIdAndAccountId(Long movieId, Long accountId);
+  Optional<WatchedMovie> findByIdMovieIdAndIdAccountId(Long movieId, Long accountId);
 
-  Page<WatchedMovie> findAllByAccountIdOrderByCreatedAtInUtcDesc(Long accountId, Pageable pageable);
+  Page<WatchedMovie> findAllByIdAccountIdOrderByCreatedAtInUtcDesc(
+      Long accountId, Pageable pageable);
 
-  Long countWatchedMoviesByAccountId(Long accountId);
+  Long countByIdAccountId(Long accountId);
 }

@@ -8,7 +8,7 @@ public interface WatchedMovieService {
 
   WatchedMovieRecord watchMovie(Long movieId, UserPrincipal currentAccount);
 
-  PagedResponse<WatchedMovieRecord> getWatchedMoviesByAccount(String username, int page, int size);
+  PagedResponse<WatchedMovieRecord> getWatchedMoviesByAccountId(Long accountId, int page, int size);
 
   MessageResponse deleteWatchedMovie(Long movieId, UserPrincipal currentAccount);
 }

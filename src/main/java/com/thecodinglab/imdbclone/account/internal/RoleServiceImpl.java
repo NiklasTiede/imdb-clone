@@ -4,12 +4,12 @@ import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.account.api.RoleService;
-import com.thecodinglab.imdbclone.entity.Account;
-import com.thecodinglab.imdbclone.entity.Role;
+import com.thecodinglab.imdbclone.account.internal.persistence.Account;
+import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
+import com.thecodinglab.imdbclone.account.internal.persistence.Role;
+import com.thecodinglab.imdbclone.account.internal.persistence.RoleRepository;
 import com.thecodinglab.imdbclone.enums.RoleNameEnum;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.repository.AccountRepository;
-import com.thecodinglab.imdbclone.repository.RoleRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import jakarta.transaction.Transactional;
 import java.util.Collection;

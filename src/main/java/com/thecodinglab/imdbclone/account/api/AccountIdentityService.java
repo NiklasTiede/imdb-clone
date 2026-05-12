@@ -11,6 +11,8 @@ public interface AccountIdentityService {
 
   AccountIdentity findByEmail(String email);
 
+  AccountIdentity findByUsername(String username);
+
   AccountIdentity enableAccount(Long accountId);
 
   void updatePassword(Long accountId, String passwordHash);

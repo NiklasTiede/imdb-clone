@@ -26,8 +26,8 @@ public class EngagementStatsServiceImpl implements EngagementStatsService {
   @Override
   public EngagementStats getStatsForAccount(Long accountId) {
     return new EngagementStats(
-        ratingRepository.countRatingsByAccountId(accountId),
-        watchedMovieRepository.countWatchedMoviesByAccountId(accountId),
+        ratingRepository.countByIdAccountId(accountId),
+        watchedMovieRepository.countByIdAccountId(accountId),
         commentRepository.countCommentsByAccountId(accountId));
   }
 }

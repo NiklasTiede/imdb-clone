@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.entity;
+package com.thecodinglab.imdbclone.account.internal.persistence;
 
 import com.thecodinglab.imdbclone.enums.RoleNameEnum;
 import jakarta.persistence.*;

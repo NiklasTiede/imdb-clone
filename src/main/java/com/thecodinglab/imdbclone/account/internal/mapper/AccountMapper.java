@@ -2,7 +2,7 @@ package com.thecodinglab.imdbclone.account.internal.mapper;
 
 import com.thecodinglab.imdbclone.account.api.AccountRecord;
 import com.thecodinglab.imdbclone.account.api.UpdatedAccountProfile;
-import com.thecodinglab.imdbclone.entity.Account;
+import com.thecodinglab.imdbclone.account.internal.persistence.Account;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

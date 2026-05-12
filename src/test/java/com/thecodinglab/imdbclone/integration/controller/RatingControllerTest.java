@@ -45,7 +45,7 @@ class RatingControllerTest extends BaseContainers {
   @AfterEach
   void cleanup() {
     ratingRepository
-        .findRatingByAccountIdAndMovieId(ACCOUNT_ID, MOVIE_ID)
+        .findByIdAccountIdAndIdMovieId(ACCOUNT_ID, MOVIE_ID)
         .ifPresent(ratingRepository::delete);
   }
 

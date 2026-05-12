@@ -12,7 +12,7 @@ public class CommentMapper {
     return new CommentRecord(
         comment.getId(),
         comment.getMessage(),
-        comment.getAccount().getId(),
+        comment.getAccountId(),
         comment.getMovie().getId(),
         comment.getCreatedAtInUtc());
   }

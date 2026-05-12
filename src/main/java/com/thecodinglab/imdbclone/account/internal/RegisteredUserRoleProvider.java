@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.account.internal;
 
-import com.thecodinglab.imdbclone.entity.Role;
+import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
+import com.thecodinglab.imdbclone.account.internal.persistence.Role;
+import com.thecodinglab.imdbclone.account.internal.persistence.RoleRepository;
 import com.thecodinglab.imdbclone.enums.RoleNameEnum;
-import com.thecodinglab.imdbclone.repository.AccountRepository;
-import com.thecodinglab.imdbclone.repository.RoleRepository;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;

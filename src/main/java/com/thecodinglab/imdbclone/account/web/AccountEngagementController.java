@@ -1,5 +1,7 @@
-package com.thecodinglab.imdbclone.engagement.web;
+package com.thecodinglab.imdbclone.account.web;
 
+import com.thecodinglab.imdbclone.account.api.AccountIdentity;
+import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
 import com.thecodinglab.imdbclone.engagement.api.CommentRecord;
 import com.thecodinglab.imdbclone.engagement.api.CommentService;
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
@@ -25,14 +27,17 @@ public class AccountEngagementController {
   private final CommentService commentService;
   private final WatchedMovieService watchedMovieService;
   private final RatingService ratingService;
+  private final AccountIdentityService accountIdentityService;
 
   public AccountEngagementController(
       CommentService commentService,
       WatchedMovieService watchedMovieService,
-      RatingService ratingService) {
+      RatingService ratingService,
+      AccountIdentityService accountIdentityService) {
     this.commentService = commentService;
     this.watchedMovieService = watchedMovieService;
     this.ratingService = ratingService;
+    this.accountIdentityService = accountIdentityService;
   }
 
   @GetMapping("/{username}/comments")
@@ -42,8 +47,9 @@ public class AccountEngagementController {
           int page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
           int size) {
+    AccountIdentity account = accountIdentityService.findByUsername(username);
     return new ResponseEntity<>(
-        commentService.getCommentsByAccount(username, page, size), HttpStatus.OK);
+        commentService.getCommentsByAccountId(account.id(), page, size), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/watchlist")
@@ -53,8 +59,9 @@ public class AccountEngagementController {
           int page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
           int size) {
+    AccountIdentity account = accountIdentityService.findByUsername(username);
     return new ResponseEntity<>(
-        watchedMovieService.getWatchedMoviesByAccount(username, page, size), HttpStatus.OK);
+        watchedMovieService.getWatchedMoviesByAccountId(account.id(), page, size), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/ratings")
@@ -64,7 +71,8 @@ public class AccountEngagementController {
           int page,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
           int size) {
+    AccountIdentity account = accountIdentityService.findByUsername(username);
     return new ResponseEntity<>(
-        ratingService.getRatingsByAccount(username, page, size), HttpStatus.OK);
+        ratingService.getRatingsByAccountId(account.id(), page, size), HttpStatus.OK);
   }
 }

@@ -6,12 +6,12 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 
 import com.thecodinglab.imdbclone.account.api.*;
 import com.thecodinglab.imdbclone.account.internal.mapper.AccountMapper;
+import com.thecodinglab.imdbclone.account.internal.persistence.Account;
+import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.engagement.api.EngagementStats;
 import com.thecodinglab.imdbclone.engagement.api.EngagementStatsService;
-import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import java.util.Objects;
 import org.slf4j.Logger;

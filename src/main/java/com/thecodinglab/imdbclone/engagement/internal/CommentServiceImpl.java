@@ -13,11 +13,9 @@ import com.thecodinglab.imdbclone.engagement.api.UpdateCommentRequest;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.CommentMapper;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.Comment;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.CommentRepository;
-import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.validation.Pagination;
 import jakarta.persistence.EntityManager;
@@ -37,19 +35,16 @@ public class CommentServiceImpl implements CommentService {
 
   private final CommentRepository commentRepository;
   private final MovieService movieService;
-  private final AccountRepository accountRepository;
   private final EntityManager entityManager;
   private final CommentMapper commentMapper;
 
   public CommentServiceImpl(
       CommentRepository commentRepository,
       MovieService movieService,
-      AccountRepository accountRepository,
       EntityManager entityManager,
       CommentMapper commentMapper) {
     this.commentRepository = commentRepository;
     this.movieService = movieService;
-    this.accountRepository = accountRepository;
     this.entityManager = entityManager;
     this.commentMapper = commentMapper;
   }
@@ -82,25 +77,23 @@ public class CommentServiceImpl implements CommentService {
       Long movieId, CreateCommentRequest request, UserPrincipal currentAccount) {
     movieService.findMovieById(movieId);
     Movie movie = entityManager.getReference(Movie.class, movieId);
-    Account account = entityManager.getReference(Account.class, currentAccount.getId());
-    Comment comment = new Comment(request.message(), account, movie);
+    Comment comment = new Comment(request.message(), currentAccount.getId(), movie);
     Comment savedComment = commentRepository.save(comment);
     logger.info("Comment with [{}] was created", kv(COMMENT_ID, savedComment.getId()));
     return commentMapper.entityToDTO(comment);
   }
 
   @Override
-  public PagedResponse<CommentRecord> getCommentsByAccount(String username, int page, int size) {
+  public PagedResponse<CommentRecord> getCommentsByAccountId(Long accountId, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
-    Account account = accountRepository.getAccountByUsername(username);
     Page<Comment> comments =
-        commentRepository.findCommentsByAccountIdOrderByCreatedAtInUtc(account.getId(), pageable);
+        commentRepository.findCommentsByAccountIdOrderByCreatedAtInUtc(accountId, pageable);
     logger.info(
         "[{}] comments with commentIds [{}] of account [{}] were retrieved from database.",
         comments.getContent().size(),
         v(COMMENT_IDS, comments.getContent().stream().map(Comment::getId).toList()),
-        username);
+        kv(ACCOUNT_ID, accountId));
     return PagedResponse.from(comments.map(commentMapper::entityToDTO));
   }
 
@@ -108,7 +101,7 @@ public class CommentServiceImpl implements CommentService {
   public CommentRecord updateComment(
       Long commentId, UpdateCommentRequest request, UserPrincipal currentAccount) {
     Comment comment = commentRepository.getCommentById(commentId);
-    if (Objects.equals(comment.getAccount().getId(), currentAccount.getId())
+    if (Objects.equals(comment.getAccountId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       comment.setMessage(request.message());
       Comment updatedComment = commentRepository.save(comment);
@@ -124,7 +117,7 @@ public class CommentServiceImpl implements CommentService {
   @Override
   public MessageResponse deleteComment(Long commentId, UserPrincipal currentAccount) {
     Comment comment = commentRepository.getCommentById(commentId);
-    if (Objects.equals(comment.getAccount().getId(), currentAccount.getId())
+    if (Objects.equals(comment.getAccountId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       commentRepository.delete(comment);
       logger.info("comment with [{}] was deleted.", kv(COMMENT_ID, comment.getId()));

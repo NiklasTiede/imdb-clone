@@ -11,13 +11,11 @@ import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.RatingMapper;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
-import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.repository.AccountRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.validation.Pagination;
 import jakarta.persistence.EntityManager;
@@ -37,19 +35,16 @@ public class RatingServiceImpl implements RatingService {
   private static final Logger logger = LoggerFactory.getLogger(RatingServiceImpl.class);
 
   private final MovieService movieService;
-  private final AccountRepository accountRepository;
   private final EntityManager entityManager;
   private final RatingRepository ratingRepository;
   private final RatingMapper ratingMapper;
 
   public RatingServiceImpl(
       MovieService movieService,
-      AccountRepository accountRepository,
       EntityManager entityManager,
       RatingRepository ratingRepository,
       RatingMapper ratingMapper) {
     this.movieService = movieService;
-    this.accountRepository = accountRepository;
     this.entityManager = entityManager;
     this.ratingRepository = ratingRepository;
     this.ratingMapper = ratingMapper;
@@ -62,27 +57,23 @@ public class RatingServiceImpl implements RatingService {
     } else {
       movieService.findMovieById(movieId);
       Movie movie = entityManager.getReference(Movie.class, movieId);
-      Account account = entityManager.getReference(Account.class, currentAccount.getId());
-      Rating rating = Rating.create(score, movie, account);
+      Rating rating = Rating.create(score, movie, currentAccount.getId());
       Rating savedRating = ratingRepository.save(rating);
       logger.info("rating with [{}] was created.", kv(RATING_ID, savedRating.getId()));
       return new RatingRecord(
-          savedRating.getRating(),
-          savedRating.getAccount().getId(),
-          savedRating.getMovie().getId());
+          savedRating.getRating(), savedRating.getAccountId(), savedRating.getMovie().getId());
     }
   }
 
   @Override
-  public PagedResponse<RatingRecord> getRatingsByAccount(String username, int page, int size) {
+  public PagedResponse<RatingRecord> getRatingsByAccountId(Long accountId, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
-    Account account = accountRepository.getAccountByUsername(username);
-    Page<Rating> ratings = ratingRepository.findRatingsByAccountId(account.getId(), pageable);
+    Page<Rating> ratings = ratingRepository.findRatingsByIdAccountId(accountId, pageable);
     logger.info(
         "[{}] ratings from account with [{}] were retrieved.",
         ratings.getContent().size(),
-        kv(ACCOUNT_ID, account.getId()));
+        kv(ACCOUNT_ID, accountId));
     return PagedResponse.from(ratings.map(ratingMapper::entityToDTO));
   }
 
@@ -90,13 +81,13 @@ public class RatingServiceImpl implements RatingService {
   public MessageResponse deleteRating(UserPrincipal currentAccount, Long movieId) {
     Rating rating =
         ratingRepository
-            .findRatingByAccountIdAndMovieId(currentAccount.getId(), movieId)
+            .findByIdAccountIdAndIdMovieId(currentAccount.getId(), movieId)
             .orElseThrow(
                 () ->
                     new NotFoundException(
                         "Rating with movieId [%d] and accountId [%d] not found in database."
                             .formatted(movieId, currentAccount.getId())));
-    if (Objects.equals(rating.getAccount().getId(), currentAccount.getId())
+    if (Objects.equals(rating.getAccountId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       ratingRepository.delete(rating);
       logger.info("rating with [{}] was deleted.", kv(RATING_ID, rating.getId()));

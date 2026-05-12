@@ -188,11 +188,43 @@ class ModulithArchitectureTest {
   }
 
   @Test
-  void engagementBelongsToEngagementModule() {
-    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.web.CommentController"))
+  void accountPersistenceBelongsToAccountModule() throws Exception {
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.internal.persistence.Account"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.internal.persistence.Role"))
         .isPresent();
     assertThat(
-            classIfPresent("com.thecodinglab.imdbclone.engagement.web.AccountEngagementController"))
+            classIfPresent(
+                "com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository"))
+        .isPresent();
+    assertThat(
+            classIfPresent(
+                "com.thecodinglab.imdbclone.account.internal.persistence.RoleRepository"))
+        .isPresent();
+    assertThat(
+            Files.exists(Path.of("src/main/java/com/thecodinglab/imdbclone/entity/Account.java")))
+        .isFalse();
+    assertThat(Files.exists(Path.of("src/main/java/com/thecodinglab/imdbclone/entity/Role.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/repository/AccountRepository.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/repository/RoleRepository.java")))
+        .isFalse();
+    try (Stream<Path> engagementSources =
+        Files.walk(Path.of("src/main/java/com/thecodinglab/imdbclone/engagement"))) {
+      assertThat(engagementSources.filter(Files::isRegularFile).map(this::readString))
+          .noneMatch(source -> source.contains("account.internal.persistence"));
+    }
+  }
+
+  @Test
+  void engagementBelongsToEngagementModule() {
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.web.CommentController"))
         .isPresent();
     assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.web.RatingController"))
         .isPresent();
@@ -230,6 +262,11 @@ class ModulithArchitectureTest {
                 Path.of(
                     "src/main/java/com/thecodinglab/imdbclone/service/WatchedMovieService.java")))
         .isFalse();
+    assertThat(
+            classIfPresent("com.thecodinglab.imdbclone.engagement.web.AccountEngagementController"))
+        .isEmpty();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.web.AccountEngagementController"))
+        .isPresent();
   }
 
   @Test
@@ -296,6 +333,14 @@ class ModulithArchitectureTest {
       return Optional.of(Class.forName(className));
     } catch (ClassNotFoundException ex) {
       return Optional.empty();
+    }
+  }
+
+  private String readString(Path path) {
+    try {
+      return Files.readString(path);
+    } catch (Exception ex) {
+      throw new IllegalStateException("Could not read " + path, ex);
     }
   }
 }

@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.entity;
+package com.thecodinglab.imdbclone.account.internal.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;

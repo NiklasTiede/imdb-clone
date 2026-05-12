@@ -17,7 +17,7 @@ public class WatchedMovieMapper {
 
   public WatchedMovieRecord entityToDTO(WatchedMovie watchedMovie) {
     return new WatchedMovieRecord(
-        watchedMovie.getAccount().getId(),
+        watchedMovie.getAccountId(),
         watchedMovie.getMovie().getId(),
         watchedMovie.getCreatedAtInUtc(),
         movieService.findMovieById(watchedMovie.getMovie().getId()));

@@ -13,7 +13,7 @@ public interface CommentService {
   CommentRecord createComment(
       Long movieId, CreateCommentRequest request, UserPrincipal currentAccount);
 
-  PagedResponse<CommentRecord> getCommentsByAccount(String username, int page, int size);
+  PagedResponse<CommentRecord> getCommentsByAccountId(Long accountId, int page, int size);
 
   CommentRecord updateComment(
       Long commentId, UpdateCommentRequest request, UserPrincipal currentAccount);

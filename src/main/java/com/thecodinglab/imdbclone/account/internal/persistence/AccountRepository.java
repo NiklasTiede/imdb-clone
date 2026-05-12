@@ -1,6 +1,5 @@
-package com.thecodinglab.imdbclone.repository;
+package com.thecodinglab.imdbclone.account.internal.persistence;
 
-import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import java.util.Optional;
