@@ -61,6 +61,17 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void detectsSharedModule() {
+    assertThat(ApplicationModules.of(Application.class).getModuleByName("shared")).isPresent();
+  }
+
+  @Test
+  void detectsRecommendationModule() {
+    assertThat(ApplicationModules.of(Application.class).getModuleByName("recommendation"))
+        .isPresent();
+  }
+
+  @Test
   void catalogApiDoesNotExposeInternalTypes() {
     assertThat(Arrays.stream(MovieService.class.getMethods()).flatMap(this::methodTypes))
         .extracting(Class::getName)
@@ -106,6 +117,51 @@ class ModulithArchitectureTest {
     assertThat(apiTypes(NotificationService.class))
         .extracting(Class::getName)
         .noneMatch(typeName -> typeName.contains(".notification.internal."));
+  }
+
+  @Test
+  void sharedKernelTypesBelongToSharedModule() {
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.api.MessageResponse")).isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.api.PagedResponse")).isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.security.CurrentUser"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.security.UserPrincipal"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.validation.Pagination"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.validation.ValidPassword"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.validation.ValidUsername"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.persistence.DateAudit"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.persistence.CreatedAtAudit"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.error.NotFoundException"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.shared.logging.Log")).isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.payload.MessageResponse")).isEmpty();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.security.UserPrincipal")).isEmpty();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.validation.Pagination")).isEmpty();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.entity.audit.DateAudit")).isEmpty();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.exception.domain.NotFoundException"))
+        .isEmpty();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.utility.Log")).isEmpty();
+  }
+
+  @Test
+  void sharedApiDoesNotExposeInternalTypes() {
+    assertThat(
+            Stream.of(
+                    "com.thecodinglab.imdbclone.shared.api.MessageResponse",
+                    "com.thecodinglab.imdbclone.shared.api.PagedResponse",
+                    "com.thecodinglab.imdbclone.shared.security.UserPrincipal")
+                .map(this::classIfPresent)
+                .flatMap(Optional::stream)
+                .flatMap(type -> Arrays.stream(type.getMethods()))
+                .flatMap(this::methodTypes))
+        .extracting(Class::getName)
+        .noneMatch(typeName -> typeName.contains(".shared.internal."));
   }
 
   @Test
@@ -269,6 +325,15 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void accountValidationBelongsToAccountModule() {
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.api.AvailableEmail")).isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.api.AvailableUsername"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.validation.AvailableEmail")).isEmpty();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.validation.AvailableUsername")).isEmpty();
+  }
+
+  @Test
   void engagementBelongsToEngagementModule() {
     assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.web.CommentController"))
         .isPresent();
@@ -376,6 +441,24 @@ class ModulithArchitectureTest {
                 Path.of(
                     "src/main/java/com/thecodinglab/imdbclone/service/impl/EmailServiceImpl.java")))
         .isFalse();
+  }
+
+  @Test
+  void openTriviaClientBelongsToRecommendationModule() {
+    assertThat(
+            classIfPresent(
+                "com.thecodinglab.imdbclone.recommendation.internal.trivia.OpenTriviaService"))
+        .isPresent();
+    assertThat(
+            classIfPresent(
+                "com.thecodinglab.imdbclone.recommendation.internal.trivia.OpenTriviaClientConfig"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.rest.OpenTriviaService")).isEmpty();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/config/RestClientConfig.java")))
+        .isFalse();
+    assertThat(Files.exists(Path.of("src/main/java/com/thecodinglab/imdbclone/rest"))).isFalse();
   }
 
   private Stream<Class<?>> methodTypes(Method method) {
