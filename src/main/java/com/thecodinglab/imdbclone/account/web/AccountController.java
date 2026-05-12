@@ -2,16 +2,8 @@ package com.thecodinglab.imdbclone.account.web;
 
 import com.thecodinglab.imdbclone.account.api.*;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.payload.comment.CommentRecord;
-import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
-import com.thecodinglab.imdbclone.payload.watchlist.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
-import com.thecodinglab.imdbclone.service.CommentService;
-import com.thecodinglab.imdbclone.service.RatingService;
-import com.thecodinglab.imdbclone.service.WatchedMovieService;
-import com.thecodinglab.imdbclone.validation.Pagination;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -26,21 +18,10 @@ import org.springframework.web.bind.annotation.*;
 public class AccountController {
 
   private final AccountService accountService;
-  private final CommentService commentService;
-  private final WatchedMovieService watchedMovieService;
-  private final RatingService ratingService;
   private final RoleService roleService;
 
-  public AccountController(
-      AccountService accountService,
-      CommentService commentService,
-      WatchedMovieService watchedMovieService,
-      RatingService ratingService,
-      RoleService roleService) {
+  public AccountController(AccountService accountService, RoleService roleService) {
     this.accountService = accountService;
-    this.commentService = commentService;
-    this.watchedMovieService = watchedMovieService;
-    this.ratingService = ratingService;
     this.roleService = roleService;
   }
 
@@ -62,39 +43,6 @@ public class AccountController {
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
         accountService.getCurrentAccountProfile(currentUser), HttpStatus.OK);
-  }
-
-  @GetMapping("/{username}/comments")
-  public ResponseEntity<PagedResponse<CommentRecord>> getCommentsByAccount(
-      @PathVariable String username,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
-          int page,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
-          int size) {
-    return new ResponseEntity<>(
-        commentService.getCommentsByAccount(username, page, size), HttpStatus.OK);
-  }
-
-  @GetMapping("/{username}/watchlist")
-  public ResponseEntity<PagedResponse<WatchedMovieRecord>> getWatchedMoviesByAccount(
-      @PathVariable String username,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
-          int page,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
-          int size) {
-    return new ResponseEntity<>(
-        watchedMovieService.getWatchedMoviesByAccount(username, page, size), HttpStatus.OK);
-  }
-
-  @GetMapping("/{username}/ratings")
-  public ResponseEntity<PagedResponse<RatingRecord>> getRatingsByAccount(
-      @PathVariable String username,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
-          int page,
-      @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size")
-          int size) {
-    return new ResponseEntity<>(
-        ratingService.getRatingsByAccount(username, page, size), HttpStatus.OK);
   }
 
   /** Simple generation of Test Accounts */

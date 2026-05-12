@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.integration.controller;
 
+import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovieRepository;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.integration.BaseContainers;
-import com.thecodinglab.imdbclone.repository.WatchedMovieRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

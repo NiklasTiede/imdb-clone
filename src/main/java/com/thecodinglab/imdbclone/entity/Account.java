@@ -38,18 +38,6 @@ public class Account extends DateAudit {
   @ManyToMany(fetch = FetchType.LAZY)
   private Collection<Role> roles;
 
-  @JsonIgnore
-  @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Collection<WatchedMovie> watchedMovies;
-
-  @JsonIgnore
-  @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Collection<Comment> comments;
-
-  @JsonIgnore
-  @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Collection<Rating> ratings;
-
   public Account() {}
 
   public Account(String username, String email, String password) {
@@ -160,29 +148,5 @@ public class Account extends DateAudit {
 
   public void setRoles(Collection<Role> roles) {
     this.roles = roles;
-  }
-
-  public Collection<WatchedMovie> getWatchedMovies() {
-    return watchedMovies;
-  }
-
-  public void setWatchedMovies(Collection<WatchedMovie> watchedMovies) {
-    this.watchedMovies = watchedMovies;
-  }
-
-  public Collection<Comment> getComments() {
-    return comments;
-  }
-
-  public void setComments(Collection<Comment> comments) {
-    this.comments = comments;
-  }
-
-  public Collection<Rating> getRatings() {
-    return ratings;
-  }
-
-  public void setRatings(Collection<Rating> ratings) {
-    this.ratings = ratings;
   }
 }

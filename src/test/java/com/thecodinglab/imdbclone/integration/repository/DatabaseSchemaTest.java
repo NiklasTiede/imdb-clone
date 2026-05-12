@@ -2,7 +2,7 @@ package com.thecodinglab.imdbclone.integration.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.thecodinglab.imdbclone.entity.Rating;
+import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
 import com.thecodinglab.imdbclone.integration.BaseContainers;
 import jakarta.persistence.Column;
 import java.util.List;

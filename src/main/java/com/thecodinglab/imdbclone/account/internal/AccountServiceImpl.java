@@ -6,13 +6,12 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 
 import com.thecodinglab.imdbclone.account.api.*;
 import com.thecodinglab.imdbclone.account.internal.mapper.AccountMapper;
+import com.thecodinglab.imdbclone.engagement.api.EngagementStats;
+import com.thecodinglab.imdbclone.engagement.api.EngagementStatsService;
 import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
-import com.thecodinglab.imdbclone.repository.CommentRepository;
-import com.thecodinglab.imdbclone.repository.RatingRepository;
-import com.thecodinglab.imdbclone.repository.WatchedMovieRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import java.util.Objects;
 import org.slf4j.Logger;
@@ -26,25 +25,19 @@ public class AccountServiceImpl implements AccountService {
   private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   private final AccountRepository accountRepository;
-  private final WatchedMovieRepository watchedMovieRepository;
-  private final RatingRepository ratingRepository;
-  private final CommentRepository commentRepository;
+  private final EngagementStatsService engagementStatsService;
   private final PasswordEncoder passwordEncoder;
   private final RegisteredUserRoleProvider registeredUserRoleProvider;
   private final AccountMapper accountMapper;
 
   public AccountServiceImpl(
       AccountRepository accountRepository,
-      WatchedMovieRepository watchedMovieRepository,
-      RatingRepository ratingRepository,
-      CommentRepository commentRepository,
+      EngagementStatsService engagementStatsService,
       PasswordEncoder passwordEncoder,
       RegisteredUserRoleProvider registeredUserRoleProvider,
       AccountMapper accountMapper) {
     this.accountRepository = accountRepository;
-    this.watchedMovieRepository = watchedMovieRepository;
-    this.ratingRepository = ratingRepository;
-    this.commentRepository = commentRepository;
+    this.engagementStatsService = engagementStatsService;
     this.passwordEncoder = passwordEncoder;
     this.registeredUserRoleProvider = registeredUserRoleProvider;
     this.accountMapper = accountMapper;
@@ -94,13 +87,12 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private ProfileCounts getProfileCounts(Account account) {
-    Long ratingsCount = ratingRepository.countRatingsByAccount(account);
-    Long watchedMoviesCount = watchedMovieRepository.countWatchedMoviesByAccount(account);
-    Long commentsCount = commentRepository.countCommentsByAccount(account);
+    EngagementStats stats = engagementStatsService.getStatsForAccount(account.getId());
     logger.info(
         "Account profile with id [{}] was retrieved from database.",
         v(ACCOUNT_ID, account.getId()));
-    return new ProfileCounts(ratingsCount, watchedMoviesCount, commentsCount);
+    return new ProfileCounts(
+        stats.ratingsCount(), stats.watchedMoviesCount(), stats.commentsCount());
   }
 
   private record ProfileCounts(Long ratingsCount, Long watchedMoviesCount, Long commentsCount) {}

@@ -1,12 +1,12 @@
 package com.thecodinglab.imdbclone.integration.controller;
 
+import com.thecodinglab.imdbclone.engagement.api.CommentRecord;
+import com.thecodinglab.imdbclone.engagement.api.CreateCommentRequest;
+import com.thecodinglab.imdbclone.engagement.api.UpdateCommentRequest;
+import com.thecodinglab.imdbclone.engagement.internal.persistence.CommentRepository;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.integration.BaseContainers;
-import com.thecodinglab.imdbclone.payload.comment.CommentRecord;
-import com.thecodinglab.imdbclone.payload.comment.CreateCommentRequest;
-import com.thecodinglab.imdbclone.payload.comment.UpdateCommentRequest;
-import com.thecodinglab.imdbclone.repository.CommentRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

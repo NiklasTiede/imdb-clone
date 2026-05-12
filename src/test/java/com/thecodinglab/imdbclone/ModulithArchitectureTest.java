@@ -5,6 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
 import com.thecodinglab.imdbclone.account.api.AccountService;
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
+import com.thecodinglab.imdbclone.engagement.api.CommentService;
+import com.thecodinglab.imdbclone.engagement.api.EngagementStatsService;
+import com.thecodinglab.imdbclone.engagement.api.RatingService;
+import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -38,6 +42,11 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void detectsEngagementModule() {
+    assertThat(ApplicationModules.of(Application.class).getModuleByName("engagement")).isPresent();
+  }
+
+  @Test
   void catalogApiDoesNotExposeInternalTypes() {
     assertThat(Arrays.stream(MovieService.class.getMethods()).flatMap(this::methodTypes))
         .extracting(Class::getName)
@@ -56,6 +65,18 @@ class ModulithArchitectureTest {
     assertThat(apiTypes(AccountService.class, AccountIdentityService.class))
         .extracting(Class::getName)
         .noneMatch(typeName -> typeName.contains(".account.internal."));
+  }
+
+  @Test
+  void engagementApiDoesNotExposeInternalTypes() {
+    assertThat(
+            apiTypes(
+                CommentService.class,
+                RatingService.class,
+                WatchedMovieService.class,
+                EngagementStatsService.class))
+        .extracting(Class::getName)
+        .noneMatch(typeName -> typeName.contains(".engagement.internal."));
   }
 
   @Test
@@ -134,6 +155,51 @@ class ModulithArchitectureTest {
             Files.exists(
                 Path.of(
                     "src/main/java/com/thecodinglab/imdbclone/service/impl/RoleServiceImpl.java")))
+        .isFalse();
+  }
+
+  @Test
+  void engagementBelongsToEngagementModule() {
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.web.CommentController"))
+        .isPresent();
+    assertThat(
+            classIfPresent("com.thecodinglab.imdbclone.engagement.web.AccountEngagementController"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.web.RatingController"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.web.WatchedMovieController"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.internal.CommentServiceImpl"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.engagement.internal.RatingServiceImpl"))
+        .isPresent();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/controller/CommentController.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/controller/RatingController.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/controller/WatchedMovieController.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/service/CommentService.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/service/RatingService.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/service/WatchedMovieService.java")))
         .isFalse();
   }
 

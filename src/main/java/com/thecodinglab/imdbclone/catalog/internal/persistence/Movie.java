@@ -1,9 +1,6 @@
 package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thecodinglab.imdbclone.entity.Comment;
-import com.thecodinglab.imdbclone.entity.Rating;
-import com.thecodinglab.imdbclone.entity.WatchedMovie;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
@@ -51,21 +48,6 @@ public class Movie extends DateAudit {
 
   @Column(length = 255)
   private String imageUrlToken;
-
-  @Transient
-  @JsonIgnore
-  @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Collection<Comment> comments;
-
-  @Transient
-  @JsonIgnore
-  @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Collection<WatchedMovie> watchedMovies;
-
-  @Transient
-  @JsonIgnore
-  @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Collection<Rating> ratings;
 
   public Movie() {}
 
@@ -195,29 +177,5 @@ public class Movie extends DateAudit {
 
   public void setImageUrlToken(String imageUrlToken) {
     this.imageUrlToken = imageUrlToken;
-  }
-
-  public Collection<Comment> getComments() {
-    return comments;
-  }
-
-  public void setComments(Collection<Comment> comments) {
-    this.comments = comments;
-  }
-
-  public Collection<WatchedMovie> getWatchedMovies() {
-    return watchedMovies;
-  }
-
-  public void setWatchedMovies(Collection<WatchedMovie> watchedMovies) {
-    this.watchedMovies = watchedMovies;
-  }
-
-  public Collection<Rating> getRatings() {
-    return ratings;
-  }
-
-  public void setRatings(Collection<Rating> ratings) {
-    this.ratings = ratings;
   }
 }
