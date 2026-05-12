@@ -106,6 +106,7 @@ jobs:
           echo $! > backend.pid
         env:
           SPRING_PROFILES_ACTIVE: dev
+          SPRING_DOCKER_COMPOSE_ENABLED: "false"
 
       - name: Wait for backend
         run: |
