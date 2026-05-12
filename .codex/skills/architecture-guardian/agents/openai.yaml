@@ -1,0 +1,7 @@
+interface:
+  display_name: "Architecture Guardian"
+  short_description: "Review this repo for architectural drift."
+  default_prompt: "Use $architecture-guardian to review this repository architecture and produce a read-only guardian report."
+
+policy:
+  allow_implicit_invocation: false

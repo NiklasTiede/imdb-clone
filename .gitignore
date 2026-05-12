@@ -86,7 +86,11 @@ yarn-error.log*
 /data/.ipynb_checkpoints/**
 
 # agentic configs
-.codex/
+.codex/*
+!.codex/skills/
+.codex/skills/*
+!.codex/skills/architecture-guardian/
+!.codex/skills/architecture-guardian/**
 .playwright-mcp/
 .superpowers/
 design/
