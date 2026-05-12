@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.enums.attributeconverter;
+package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

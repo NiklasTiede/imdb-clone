@@ -1,7 +1,5 @@
 package com.thecodinglab.imdbclone.catalog.api;
 
-import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
-import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
 import java.time.Instant;
 import java.util.Set;
 
@@ -14,8 +12,8 @@ public record MovieRecord(
     Integer runtimeMinutes,
     Instant modifiedAtInUtc,
     Instant createdAtInUtc,
-    Set<MovieGenreEnum> movieGenre,
-    MovieTypeEnum movieType,
+    Set<MovieGenre> movieGenre,
+    MovieType movieType,
     Float imdbRating,
     Integer imdbRatingCount,
     Boolean adult,

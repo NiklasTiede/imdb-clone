@@ -1,6 +1,5 @@
 package com.thecodinglab.imdbclone.account.internal.persistence;
 
-import com.thecodinglab.imdbclone.enums.RoleNameEnum;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,7 +11,7 @@ public class Role {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private RoleNameEnum name;
+  private RoleName name;
 
   public Long getId() {
     return id;
@@ -22,11 +21,11 @@ public class Role {
     this.id = id;
   }
 
-  public RoleNameEnum getName() {
+  public RoleName getName() {
     return name;
   }
 
-  public void setName(RoleNameEnum name) {
+  public void setName(RoleName name) {
     this.name = name;
   }
 }

@@ -1,7 +1,7 @@
-package com.thecodinglab.imdbclone.enums;
+package com.thecodinglab.imdbclone.catalog.api;
 
-/** Sets of MovieGenreEnums are persisted as bit values */
-public enum MovieGenreEnum {
+/** Sets of MovieGenres are persisted as bit values. */
+public enum MovieGenre {
   HORROR(1 << 1),
   MYSTERY(1 << 2),
   THRILLER(1 << 3),
@@ -33,7 +33,7 @@ public enum MovieGenreEnum {
 
   private final int id;
 
-  MovieGenreEnum(int id) {
+  MovieGenre(int id) {
     this.id = id;
   }
 

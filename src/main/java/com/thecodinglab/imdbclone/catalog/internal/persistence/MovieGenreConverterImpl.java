@@ -1,6 +1,6 @@
-package com.thecodinglab.imdbclone.enums.attributeconverter;
+package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
-import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
+import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import jakarta.persistence.Converter;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,23 +11,23 @@ import java.util.stream.Collectors;
 public class MovieGenreConverterImpl implements MovieGenreConverter {
 
   @Override
-  public Long convertToDatabaseColumn(Set<MovieGenreEnum> movieGenreEnumSet) {
-    if (movieGenreEnumSet == null || movieGenreEnumSet.isEmpty()) {
+  public Long convertToDatabaseColumn(Set<MovieGenre> movieGenres) {
+    if (movieGenres == null || movieGenres.isEmpty()) {
       return null;
     }
     long bitValue = 1L;
-    for (MovieGenreEnum e : movieGenreEnumSet) {
+    for (MovieGenre e : movieGenres) {
       bitValue |= e.getId();
     }
     return bitValue;
   }
 
   @Override
-  public Set<MovieGenreEnum> convertToEntityAttribute(Long bitValue) {
+  public Set<MovieGenre> convertToEntityAttribute(Long bitValue) {
     if (bitValue == null) {
       return Collections.emptySet();
     }
-    return Arrays.stream(MovieGenreEnum.values())
+    return Arrays.stream(MovieGenre.values())
         .filter(singleEnum -> (bitValue & singleEnum.getId()) != 0)
         .collect(Collectors.toSet());
   }

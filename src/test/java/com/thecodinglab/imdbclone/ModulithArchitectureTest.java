@@ -125,6 +125,45 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void catalogDomainTypesBelongToCatalogModule() {
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.catalog.api.MovieGenre")).isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.catalog.api.MovieType")).isPresent();
+    assertThat(
+            classIfPresent(
+                "com.thecodinglab.imdbclone.catalog.internal.persistence.MovieGenreConverter"))
+        .isPresent();
+    assertThat(
+            classIfPresent(
+                "com.thecodinglab.imdbclone.catalog.internal.persistence.MovieGenreConverterImpl"))
+        .isPresent();
+    assertThat(
+            classIfPresent(
+                "com.thecodinglab.imdbclone.catalog.internal.persistence.StartYearConverter"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.enums.MovieGenreEnum")).isEmpty();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.enums.MovieTypeEnum")).isEmpty();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/enums/MovieGenreEnum.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/enums/MovieTypeEnum.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/enums/attributeconverter/MovieGenreConverter.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/enums/attributeconverter/MovieGenreConverterImpl.java")))
+        .isFalse();
+    assertThat(Files.exists(Path.of("src/main/java/com/thecodinglab/imdbclone/enums"))).isFalse();
+  }
+
+  @Test
   void authenticationBelongsToIdentityModule() {
     assertThat(classIfPresent("com.thecodinglab.imdbclone.identity.web.AuthenticationController"))
         .isPresent();
@@ -201,6 +240,8 @@ class ModulithArchitectureTest {
             classIfPresent(
                 "com.thecodinglab.imdbclone.account.internal.persistence.RoleRepository"))
         .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.account.internal.persistence.RoleName"))
+        .isPresent();
     assertThat(
             Files.exists(Path.of("src/main/java/com/thecodinglab/imdbclone/entity/Account.java")))
         .isFalse();
@@ -214,6 +255,11 @@ class ModulithArchitectureTest {
     assertThat(
             Files.exists(
                 Path.of("src/main/java/com/thecodinglab/imdbclone/repository/RoleRepository.java")))
+        .isFalse();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.enums.RoleNameEnum")).isEmpty();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/enums/RoleNameEnum.java")))
         .isFalse();
     try (Stream<Path> engagementSources =
         Files.walk(Path.of("src/main/java/com/thecodinglab/imdbclone/engagement"))) {
@@ -284,6 +330,8 @@ class ModulithArchitectureTest {
         .isPresent();
     assertThat(classIfPresent("com.thecodinglab.imdbclone.media.internal.MediaServiceImpl"))
         .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.media.internal.MinioClientConfig"))
+        .isPresent();
     assertThat(
             Files.exists(
                 Path.of(
@@ -302,6 +350,10 @@ class ModulithArchitectureTest {
     assertThat(
             Files.exists(
                 Path.of("src/main/java/com/thecodinglab/imdbclone/validation/ImageSize.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/config/MinioClientConfig.java")))
         .isFalse();
     assertThat(
             Files.exists(

@@ -7,8 +7,8 @@ import com.thecodinglab.imdbclone.account.api.RoleService;
 import com.thecodinglab.imdbclone.account.internal.persistence.Account;
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.account.internal.persistence.Role;
+import com.thecodinglab.imdbclone.account.internal.persistence.RoleName;
 import com.thecodinglab.imdbclone.account.internal.persistence.RoleRepository;
-import com.thecodinglab.imdbclone.enums.RoleNameEnum;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import jakarta.transaction.Transactional;
@@ -35,7 +35,7 @@ public class RoleServiceImpl implements RoleService {
   public MessageResponse giveAdminRole(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     Collection<Role> roles = account.getRoles();
-    Role adminRole = roleRepository.getRoleByRoleEnum(RoleNameEnum.ROLE_ADMIN);
+    Role adminRole = roleRepository.getRoleByRoleName(RoleName.ROLE_ADMIN);
     roles.add(adminRole);
     account.setRoles(roles);
     Account updatedAccount = accountRepository.save(account);
@@ -50,7 +50,7 @@ public class RoleServiceImpl implements RoleService {
   public MessageResponse removeAdminRole(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     Collection<Role> roles = account.getRoles();
-    Role adminRole = roleRepository.getRoleByRoleEnum(RoleNameEnum.ROLE_ADMIN);
+    Role adminRole = roleRepository.getRoleByRoleName(RoleName.ROLE_ADMIN);
     roles.remove(adminRole);
     account.setRoles(roles);
     Account updatedAccount = accountRepository.save(account);

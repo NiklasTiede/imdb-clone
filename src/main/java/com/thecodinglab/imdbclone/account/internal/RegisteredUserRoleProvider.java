@@ -2,8 +2,8 @@ package com.thecodinglab.imdbclone.account.internal;
 
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.account.internal.persistence.Role;
+import com.thecodinglab.imdbclone.account.internal.persistence.RoleName;
 import com.thecodinglab.imdbclone.account.internal.persistence.RoleRepository;
-import com.thecodinglab.imdbclone.enums.RoleNameEnum;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -26,11 +26,11 @@ class RegisteredUserRoleProvider {
   List<Role> rolesForRegisteredUser() {
     List<Role> roles = new ArrayList<>();
     if (accountRepository.count() == 0) {
-      roles.add(roleRepository.getRoleByRoleEnum(RoleNameEnum.ROLE_USER));
-      roles.add(roleRepository.getRoleByRoleEnum(RoleNameEnum.ROLE_ADMIN));
+      roles.add(roleRepository.getRoleByRoleName(RoleName.ROLE_USER));
+      roles.add(roleRepository.getRoleByRoleName(RoleName.ROLE_ADMIN));
       logger.info("First user was created and admin role was added.");
     } else {
-      roles.add(roleRepository.getRoleByRoleEnum(RoleNameEnum.ROLE_USER));
+      roles.add(roleRepository.getRoleByRoleName(RoleName.ROLE_USER));
     }
     return roles;
   }

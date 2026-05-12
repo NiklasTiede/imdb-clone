@@ -2,13 +2,13 @@ package com.thecodinglab.imdbclone.integration.controller;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieIdsRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
+import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
-import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
-import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.integration.BaseContainers;
@@ -186,8 +186,8 @@ class MovieControllerTest extends BaseContainers {
             2015,
             2015,
             105,
-            Set.of(MovieGenreEnum.ACTION, MovieGenreEnum.THRILLER),
-            MovieTypeEnum.MOVIE,
+            Set.of(MovieGenre.ACTION, MovieGenre.THRILLER),
+            MovieType.MOVIE,
             false);
 
     // Act and Assert
@@ -218,8 +218,8 @@ class MovieControllerTest extends BaseContainers {
                 2010,
                 2010,
                 95,
-                Set.of(MovieGenreEnum.DRAMA),
-                MovieTypeEnum.MOVIE,
+                Set.of(MovieGenre.DRAMA),
+                MovieType.MOVIE,
                 false));
 
     var updateRequest =
@@ -229,8 +229,8 @@ class MovieControllerTest extends BaseContainers {
             2020,
             2020,
             111,
-            Set.of(MovieGenreEnum.SCI_FI),
-            MovieTypeEnum.TV_MOVIE,
+            Set.of(MovieGenre.SCI_FI),
+            MovieType.TV_MOVIE,
             false);
 
     restTestClient
@@ -256,7 +256,7 @@ class MovieControllerTest extends BaseContainers {
     var movieEntity = movieRepository.getMovieById(createdMovie.id());
     assertThat(movieEntity.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " updated");
     assertThat(movieEntity.getRuntimeMinutes()).isEqualTo(111);
-    assertThat(movieEntity.getMovieType()).isEqualTo(MovieTypeEnum.TV_MOVIE);
+    assertThat(movieEntity.getMovieType()).isEqualTo(MovieType.TV_MOVIE);
 
     var movieDocument = movieElasticSearchRepository.findById(createdMovie.id());
     assertThat(movieDocument).isPresent();
@@ -274,8 +274,8 @@ class MovieControllerTest extends BaseContainers {
                 2012,
                 2012,
                 102,
-                Set.of(MovieGenreEnum.COMEDY),
-                MovieTypeEnum.MOVIE,
+                Set.of(MovieGenre.COMEDY),
+                MovieType.MOVIE,
                 false));
 
     restTestClient

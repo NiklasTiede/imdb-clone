@@ -1,10 +1,9 @@
 package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
+import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
-import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
-import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
-import com.thecodinglab.imdbclone.enums.attributeconverter.MovieGenreConverterImpl;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.*;
@@ -28,11 +27,11 @@ public class Movie extends DateAudit {
   private Integer runtimeMinutes;
 
   @Convert(converter = MovieGenreConverterImpl.class)
-  private Set<MovieGenreEnum> movieGenre;
+  private Set<MovieGenre> movieGenre;
 
   @Enumerated(EnumType.STRING)
   @Column(length = 50)
-  private MovieTypeEnum movieType;
+  private MovieType movieType;
 
   private Float imdbRating;
   private Integer imdbRatingCount;
@@ -52,7 +51,7 @@ public class Movie extends DateAudit {
   public Movie() {}
 
   public Movie(
-      String primaryTitle, String originalTitle, MovieTypeEnum movieType, Integer runtimeMinutes) {
+      String primaryTitle, String originalTitle, MovieType movieType, Integer runtimeMinutes) {
     this.primaryTitle = primaryTitle;
     this.originalTitle = originalTitle;
     this.movieType = movieType;
@@ -107,19 +106,19 @@ public class Movie extends DateAudit {
     this.runtimeMinutes = runtimeMinutes;
   }
 
-  public Set<MovieGenreEnum> getMovieGenre() {
+  public Set<MovieGenre> getMovieGenre() {
     return movieGenre;
   }
 
-  public void setMovieGenre(Set<MovieGenreEnum> movieGenre) {
+  public void setMovieGenre(Set<MovieGenre> movieGenre) {
     this.movieGenre = movieGenre;
   }
 
-  public MovieTypeEnum getMovieType() {
+  public MovieType getMovieType() {
     return movieType;
   }
 
-  public void setMovieType(MovieTypeEnum movieType) {
+  public void setMovieType(MovieType movieType) {
     this.movieType = movieType;
   }
 

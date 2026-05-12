@@ -1,7 +1,5 @@
 package com.thecodinglab.imdbclone.catalog.api;
 
-import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
-import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
 import jakarta.validation.constraints.*;
 import java.util.Set;
 
@@ -11,6 +9,6 @@ public record MovieRequest(
     @Min(1850) @Max(2030) Integer startYear,
     @Min(1850) @Max(2030) Integer endYear,
     Integer runtimeMinutes,
-    Set<MovieGenreEnum> movieGenre,
-    MovieTypeEnum movieType,
+    Set<MovieGenre> movieGenre,
+    MovieType movieType,
     Boolean adult) {}

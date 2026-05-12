@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.integration.controller;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
-import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.integration.BaseContainers;
 import java.util.Collections;
 import java.util.Set;
@@ -64,7 +64,7 @@ class SearchControllerTest extends BaseContainers {
   void search_withBlankQueryAndFilters_returnsMatchingMovies() {
     // Arrange
     var request =
-        new MovieSearchRequest(2011, null, null, null, Set.of(MovieGenreEnum.DRAMA), null);
+        new MovieSearchRequest(2011, null, null, null, Set.of(MovieGenre.DRAMA), null);
 
     // Act and Assert
     restTestClient

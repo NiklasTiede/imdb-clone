@@ -4,7 +4,6 @@ import com.thecodinglab.imdbclone.account.api.AccountImageService;
 import com.thecodinglab.imdbclone.account.api.AccountImageToken;
 import com.thecodinglab.imdbclone.catalog.api.MovieImageToken;
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
-import com.thecodinglab.imdbclone.config.MinioClientConfig;
 import com.thecodinglab.imdbclone.exception.domain.MinioOperationException;
 import com.thecodinglab.imdbclone.media.api.MediaService;
 import com.thecodinglab.imdbclone.media.internal.images.Image;

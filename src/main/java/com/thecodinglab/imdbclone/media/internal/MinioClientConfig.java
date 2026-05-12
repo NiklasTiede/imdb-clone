@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.config;
+package com.thecodinglab.imdbclone.media.internal;
 
 import io.minio.MinioClient;
 import org.springframework.beans.factory.annotation.Value;

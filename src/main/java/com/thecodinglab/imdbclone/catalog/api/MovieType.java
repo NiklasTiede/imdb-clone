@@ -1,6 +1,6 @@
-package com.thecodinglab.imdbclone.enums;
+package com.thecodinglab.imdbclone.catalog.api;
 
-public enum MovieTypeEnum {
+public enum MovieType {
   SHORT,
   MOVIE,
   VIDEO,
