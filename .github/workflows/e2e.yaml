@@ -120,6 +120,12 @@ jobs:
           cat backend.log
           exit 1
 
+      - name: Generate frontend API client
+        working-directory: frontend
+        run: |
+          yarn run updateOpenApiSpec
+          yarn run build:moviesGen
+
       - name: Run Playwright e2e tests
         working-directory: frontend
         env:
