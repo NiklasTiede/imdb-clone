@@ -44,6 +44,7 @@ public class RatingAggregateScheduler {
     List<List<Rating>> ratingsOfMovies =
         recentlyCreatedRatings.stream()
             .map(Rating::getMovieId)
+            .distinct()
             .map(ratingRepository::findRatingsByIdMovieId)
             .toList();
 
