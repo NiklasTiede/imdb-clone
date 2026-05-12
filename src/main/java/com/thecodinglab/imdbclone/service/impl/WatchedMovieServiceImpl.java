@@ -3,8 +3,9 @@ package com.thecodinglab.imdbclone.service.impl;
 import static com.thecodinglab.imdbclone.utility.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
+import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.entity.Account;
-import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.entity.WatchedMovie;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
@@ -12,7 +13,6 @@ import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.mapper.CustomWatchedMovieMapper;
 import com.thecodinglab.imdbclone.payload.watchlist.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
-import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.repository.WatchedMovieRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.WatchedMovieService;

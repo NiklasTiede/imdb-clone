@@ -1,20 +1,21 @@
-package com.thecodinglab.imdbclone.service.impl;
+package com.thecodinglab.imdbclone.catalog.internal;
 
 import static com.thecodinglab.imdbclone.utility.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.*;
 
-import com.thecodinglab.imdbclone.entity.Movie;
+import com.thecodinglab.imdbclone.catalog.api.MovieImageToken;
+import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
+import com.thecodinglab.imdbclone.catalog.api.MovieService;
+import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieSearchDao;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.payload.mapper.MovieMapper;
-import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
-import com.thecodinglab.imdbclone.payload.movie.MovieRequest;
-import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
-import com.thecodinglab.imdbclone.repository.MovieRepository;
-import com.thecodinglab.imdbclone.repository.MovieSearchDao;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
-import com.thecodinglab.imdbclone.service.MovieService;
 import com.thecodinglab.imdbclone.validation.Pagination;
+import java.math.BigDecimal;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,15 +65,14 @@ public class MovieServiceImpl implements MovieService {
   }
 
   @Override
-  public MovieRecord createMovie(MovieRequest movieRequest, UserPrincipal currentAccount) {
+  public MovieRecord createMovie(MovieRequest movieRequest) {
     Movie movie = movieMapper.dtoToEntity(movieRequest);
     Movie savedMovie = performSave(movie);
     return movieMapper.entityToDTO(savedMovie);
   }
 
   @Override
-  public MovieRecord updateMovie(
-      Long movieId, MovieRequest movieRequest, UserPrincipal currentAccount) {
+  public MovieRecord updateMovie(Long movieId, MovieRequest movieRequest) {
     Movie movie = movieRepository.getMovieById(movieId);
     movie.setPrimaryTitle(movieRequest.primaryTitle());
     movie.setOriginalTitle(movieRequest.originalTitle());
@@ -87,7 +87,7 @@ public class MovieServiceImpl implements MovieService {
   }
 
   @Override
-  public MessageResponse deleteMovie(Long movieId, UserPrincipal currentAccount) {
+  public MessageResponse deleteMovie(Long movieId) {
     Movie movie = movieRepository.getMovieById(movieId);
     performDelete(movie);
     return new MessageResponse(
@@ -105,7 +105,29 @@ public class MovieServiceImpl implements MovieService {
     return movies.map(movieMapper::entityToDTO);
   }
 
-  public Movie performSave(Movie movie) {
+  @Override
+  public MovieRecord updateRatingAggregate(Long movieId, BigDecimal rating, int ratingCount) {
+    Movie movie = movieRepository.getMovieById(movieId);
+    movie.setRating(rating);
+    movie.setRatingCount(ratingCount);
+    return movieMapper.entityToDTO(performSave(movie));
+  }
+
+  @Override
+  public MovieImageToken getMovieImageToken(Long movieId) {
+    Movie movie = movieRepository.getMovieById(movieId);
+    return new MovieImageToken(movie.getId(), movie.getImageUrlToken());
+  }
+
+  @Override
+  public MovieImageToken updateMovieImageToken(Long movieId, String imageUrlToken) {
+    Movie movie = movieRepository.getMovieById(movieId);
+    movie.setImageUrlToken(imageUrlToken);
+    Movie savedMovie = performSave(movie);
+    return new MovieImageToken(savedMovie.getId(), savedMovie.getImageUrlToken());
+  }
+
+  private Movie performSave(Movie movie) {
     Movie updatedMovie = movieRepository.save(movie);
     elasticSearchRepository.save(updatedMovie);
     logger.info(
@@ -115,7 +137,7 @@ public class MovieServiceImpl implements MovieService {
     return updatedMovie;
   }
 
-  public void performDelete(Movie movie) {
+  private void performDelete(Movie movie) {
     movieRepository.delete(movie);
     elasticSearchRepository.delete(movie);
     logger.info(

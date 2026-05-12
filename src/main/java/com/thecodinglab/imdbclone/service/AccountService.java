@@ -4,9 +4,7 @@ import com.thecodinglab.imdbclone.payload.*;
 import com.thecodinglab.imdbclone.payload.account.*;
 import com.thecodinglab.imdbclone.payload.authentication.RegistrationRequest;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
-import org.springframework.stereotype.Service;
 
-@Service
 public interface AccountService {
 
   AccountSummaryResponse getCurrentAccount(UserPrincipal currentAccount);

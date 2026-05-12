@@ -1,8 +1,8 @@
 package com.thecodinglab.imdbclone.controller;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
-import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
 import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import com.thecodinglab.imdbclone.validation.Pagination;
 import jakarta.validation.Valid;

@@ -1,5 +1,6 @@
 package com.thecodinglab.imdbclone.payload.mapper;
 
+import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.entity.WatchedMovie;
 import com.thecodinglab.imdbclone.payload.watchlist.WatchedMovieRecord;
 import java.util.List;

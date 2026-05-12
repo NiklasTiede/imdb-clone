@@ -1,8 +1,8 @@
-package com.thecodinglab.imdbclone.payload.mapper;
+package com.thecodinglab.imdbclone.catalog.internal.mapper;
 
-import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
-import com.thecodinglab.imdbclone.payload.movie.MovieRequest;
+import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

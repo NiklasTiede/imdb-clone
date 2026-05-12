@@ -1,14 +1,12 @@
 package com.thecodinglab.imdbclone.service;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import com.thecodinglab.imdbclone.entity.Movie;
+import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
-import com.thecodinglab.imdbclone.payload.movie.MovieSearchRequest;
 import java.util.List;
-import org.springframework.stereotype.Service;
 
-@Service
 public interface ElasticSearchService {
 
   void indexMovie(Movie movie);

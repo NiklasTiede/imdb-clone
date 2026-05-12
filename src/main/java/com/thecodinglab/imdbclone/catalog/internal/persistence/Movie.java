@@ -1,6 +1,9 @@
-package com.thecodinglab.imdbclone.entity;
+package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thecodinglab.imdbclone.entity.Comment;
+import com.thecodinglab.imdbclone.entity.Rating;
+import com.thecodinglab.imdbclone.entity.WatchedMovie;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.enums.MovieTypeEnum;

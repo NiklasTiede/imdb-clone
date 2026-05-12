@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone;
+package com.thecodinglab.imdbclone.catalog.internal;
 
 import static com.thecodinglab.imdbclone.utility.Log.COUNT;
 import static net.logstash.logback.argument.StructuredArguments.v;
@@ -6,9 +6,9 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import com.google.common.collect.Lists;
-import com.thecodinglab.imdbclone.entity.Movie;
-import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
-import com.thecodinglab.imdbclone.repository.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.service.FileStorageService;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;

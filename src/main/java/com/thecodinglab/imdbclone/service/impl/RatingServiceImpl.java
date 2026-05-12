@@ -4,8 +4,9 @@ import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
 import static com.thecodinglab.imdbclone.utility.Log.RATING_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
+import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.entity.Account;
-import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.entity.Rating;
 import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
@@ -15,7 +16,6 @@ import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.mapper.CustomRatingMapper;
 import com.thecodinglab.imdbclone.payload.rating.RatingRecord;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
-import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.repository.RatingRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.RatingService;

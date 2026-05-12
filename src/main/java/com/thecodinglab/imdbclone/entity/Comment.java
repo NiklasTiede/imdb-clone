@@ -1,5 +1,6 @@
 package com.thecodinglab.imdbclone.entity;
 
+import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.entity.audit.DateAudit;
 import jakarta.persistence.*;
 

@@ -4,9 +4,7 @@ import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import com.thecodinglab.imdbclone.payload.watchlist.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
-import org.springframework.stereotype.Service;
 
-@Service
 public interface WatchedMovieService {
 
   WatchedMovieRecord watchMovie(Long movieId, UserPrincipal currentAccount);

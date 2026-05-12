@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.entity.audit.CreatedAtAudit;
 import jakarta.persistence.*;
 

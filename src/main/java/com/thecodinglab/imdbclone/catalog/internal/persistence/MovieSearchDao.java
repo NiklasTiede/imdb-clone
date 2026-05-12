@@ -1,6 +1,5 @@
-package com.thecodinglab.imdbclone.repository;
+package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
-import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
 import jakarta.persistence.EntityManager;

@@ -1,14 +1,13 @@
 package com.thecodinglab.imdbclone.service.impl;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieImageToken;
+import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.config.MinioClientConfig;
 import com.thecodinglab.imdbclone.entity.Account;
-import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.exception.domain.MinioOperationException;
 import com.thecodinglab.imdbclone.repository.AccountRepository;
-import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
 import com.thecodinglab.imdbclone.service.FileStorageService;
-import com.thecodinglab.imdbclone.service.MovieService;
 import com.thecodinglab.imdbclone.utility.images.Image;
 import com.thecodinglab.imdbclone.utility.images.MovieImageConstants;
 import com.thecodinglab.imdbclone.utility.images.ProfilePhotoConstants;
@@ -34,17 +33,14 @@ public class FileStorageServiceImpl implements FileStorageService {
   public String bucketName;
 
   private final MinioClient minioClient;
-  private final MovieRepository movieRepository;
   private final AccountRepository accountRepository;
   private final MovieService movieService;
 
   public FileStorageServiceImpl(
       MinioClientConfig minioClient,
-      MovieRepository movieRepository,
       AccountRepository accountRepository,
       MovieService movieService) {
     this.minioClient = minioClient.getClient();
-    this.movieRepository = movieRepository;
     this.accountRepository = accountRepository;
     this.movieService = movieService;
   }
@@ -105,14 +101,14 @@ public class FileStorageServiceImpl implements FileStorageService {
   public List<String> storeMovieImage(MultipartFile file, Long movieId) {
 
     // validation
-    Movie movie = movieRepository.getMovieById(movieId);
+    MovieImageToken movieImageToken = movieService.getMovieImageToken(movieId);
     ImageSize.validateMovieImage(file);
 
     String imageUrlToken;
-    if (movie.getImageUrlToken() == null) {
+    if (movieImageToken.imageUrlToken() == null) {
       imageUrlToken = Image.generateToken();
     } else {
-      imageUrlToken = movie.getImageUrlToken();
+      imageUrlToken = movieImageToken.imageUrlToken();
     }
 
     // generate 2 images of size 600x900 and 120x180
@@ -125,8 +121,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             imageUrlToken);
 
     // save in DB and ES
-    movie.setImageUrlToken(imageUrlToken);
-    movieService.performSave(movie);
+    movieService.updateMovieImageToken(movieId, imageUrlToken);
 
     // store images
     return movieImages.stream()
@@ -143,13 +138,14 @@ public class FileStorageServiceImpl implements FileStorageService {
   @Override
   public String deleteMovieImage(Long movieId) {
     // find / validate movie
-    Movie movie = movieRepository.getMovieById(movieId);
+    MovieImageToken movieImageToken = movieService.getMovieImageToken(movieId);
 
     // delete images
-    deleteFile(MovieImageConstants.getDetailViewImageName(movie.getImageUrlToken()));
-    deleteFile(MovieImageConstants.getThumbNailImageName(movie.getImageUrlToken()));
+    deleteFile(MovieImageConstants.getDetailViewImageName(movieImageToken.imageUrlToken()));
+    deleteFile(MovieImageConstants.getThumbNailImageName(movieImageToken.imageUrlToken()));
 
-    return "Movie images of movie with movieId [%d] were deleted".formatted(movie.getId());
+    return "Movie images of movie with movieId [%d] were deleted"
+        .formatted(movieImageToken.movieId());
   }
 
   @Override

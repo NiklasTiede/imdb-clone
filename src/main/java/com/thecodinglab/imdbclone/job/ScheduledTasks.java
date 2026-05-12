@@ -1,12 +1,11 @@
 package com.thecodinglab.imdbclone.job;
 
-import com.thecodinglab.imdbclone.entity.Movie;
+import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.entity.Rating;
 import com.thecodinglab.imdbclone.entity.VerificationToken;
-import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.repository.RatingRepository;
 import com.thecodinglab.imdbclone.repository.VerificationTokenRepository;
-import com.thecodinglab.imdbclone.service.MovieService;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -24,17 +23,14 @@ public class ScheduledTasks {
   private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
 
   private final RatingRepository ratingRepository;
-  private final MovieRepository movieRepository;
   private final VerificationTokenRepository verificationTokenRepository;
   private final MovieService movieService;
 
   public ScheduledTasks(
       RatingRepository ratingRepository,
-      MovieRepository movieRepository,
       VerificationTokenRepository verificationTokenRepository,
       MovieService movieService) {
     this.ratingRepository = ratingRepository;
-    this.movieRepository = movieRepository;
     this.verificationTokenRepository = verificationTokenRepository;
     this.movieService = movieService;
   }
@@ -66,16 +62,15 @@ public class ScheduledTasks {
             new BigDecimal(
                 String.valueOf(averageRating), new MathContext(2, RoundingMode.HALF_EVEN));
 
-        Movie movie = movieRepository.getMovieById(movieRating.getFirst().getMovie().getId());
-        movie.setRating(newRating);
-        movie.setRatingCount(countOfAllRatings);
-        Movie savedMovie = movieService.performSave(movie);
+        MovieRecord savedMovie =
+            movieService.updateRatingAggregate(
+                movieRating.getFirst().getMovie().getId(), newRating, countOfAllRatings);
 
         logger.info(
             "movie [{}] was updated. The new average rating is [{}] with [{}] counts",
-            savedMovie.getPrimaryTitle(),
-            savedMovie.getRating(),
-            savedMovie.getRatingCount());
+            savedMovie.primaryTitle(),
+            savedMovie.rating(),
+            savedMovie.ratingCount());
       }
       logger.info("The rating / ratingCount of [{}] movie(s) were updated", ratingsOfMovies.size());
     }

@@ -1,14 +1,11 @@
-package com.thecodinglab.imdbclone.controller;
+package com.thecodinglab.imdbclone.catalog.web;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieIdsRequest;
+import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
+import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.payload.*;
-import com.thecodinglab.imdbclone.payload.movie.MovieIdsRequest;
-import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
-import com.thecodinglab.imdbclone.payload.movie.MovieRequest;
-import com.thecodinglab.imdbclone.security.CurrentUser;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
-import com.thecodinglab.imdbclone.service.MovieService;
 import com.thecodinglab.imdbclone.validation.Pagination;
-import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,30 +41,21 @@ public class MovieController {
 
   @PostMapping("/create-movie")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<MovieRecord> createMovie(
-      @Valid @RequestBody MovieRequest request,
-      @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(
-        movieService.createMovie(request, currentAccount), HttpStatus.CREATED);
+  public ResponseEntity<MovieRecord> createMovie(@Valid @RequestBody MovieRequest request) {
+    return new ResponseEntity<>(movieService.createMovie(request), HttpStatus.CREATED);
   }
 
   @PutMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MovieRecord> updateMovie(
-      @PathVariable Long movieId,
-      @Valid @RequestBody MovieRequest request,
-      @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(
-        movieService.updateMovie(movieId, request, currentAccount), HttpStatus.OK);
+      @PathVariable Long movieId, @Valid @RequestBody MovieRequest request) {
+    return new ResponseEntity<>(movieService.updateMovie(movieId, request), HttpStatus.OK);
   }
 
   @DeleteMapping("/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> deleteMovie(
-      @PathVariable Long movieId,
-      @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(
-        movieService.deleteMovie(movieId, currentAccount), HttpStatus.NO_CONTENT);
+  public ResponseEntity<MessageResponse> deleteMovie(@PathVariable Long movieId) {
+    return new ResponseEntity<>(movieService.deleteMovie(movieId), HttpStatus.NO_CONTENT);
   }
 
   /**

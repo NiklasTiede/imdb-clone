@@ -2,15 +2,15 @@ package com.thecodinglab.imdbclone.integration.controller;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieIdsRequest;
+import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.enums.MovieGenreEnum;
 import com.thecodinglab.imdbclone.enums.MovieTypeEnum;
 import com.thecodinglab.imdbclone.integration.BaseContainers;
 import com.thecodinglab.imdbclone.payload.authentication.LoginRequest;
-import com.thecodinglab.imdbclone.payload.movie.MovieIdsRequest;
-import com.thecodinglab.imdbclone.payload.movie.MovieRecord;
-import com.thecodinglab.imdbclone.payload.movie.MovieRequest;
-import com.thecodinglab.imdbclone.repository.MovieElasticSearchRepository;
-import com.thecodinglab.imdbclone.repository.MovieRepository;
 import com.thecodinglab.imdbclone.service.AuthenticationService;
 import java.util.List;
 import java.util.Set;

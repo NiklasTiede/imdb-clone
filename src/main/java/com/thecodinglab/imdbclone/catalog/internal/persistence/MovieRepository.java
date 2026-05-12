@@ -1,6 +1,5 @@
-package com.thecodinglab.imdbclone.repository;
+package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
-import com.thecodinglab.imdbclone.entity.Movie;
 import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import java.util.List;
 import org.springframework.data.domain.Page;

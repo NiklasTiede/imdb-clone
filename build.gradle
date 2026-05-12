@@ -35,6 +35,12 @@ repositories {
 	mavenCentral()
 }
 
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+	}
+}
+
 spotless {
 	java {
 		target 'src/main/java/**/*.java', 'src/test/java/**/*.java'
@@ -95,6 +101,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
 
+	//-- Modular architecture
+	implementation 'org.springframework.modulith:spring-modulith-starter-core'
+
 	//-- Logging
 	implementation 'org.springframework.boot:spring-boot-starter-logging'
 	implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
@@ -103,6 +112,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.assertj:assertj-core:3.26.3'
+	testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
 
 	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
 	testImplementation "org.testcontainers:testcontainers-junit-jupiter:${testContainersVersion}"

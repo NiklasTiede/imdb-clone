@@ -1,6 +1,5 @@
-package com.thecodinglab.imdbclone.repository;
+package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
-import com.thecodinglab.imdbclone.entity.Movie;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;

@@ -5,9 +5,7 @@ import com.thecodinglab.imdbclone.payload.comment.CommentRecord;
 import com.thecodinglab.imdbclone.payload.comment.CreateCommentRequest;
 import com.thecodinglab.imdbclone.payload.comment.UpdateCommentRequest;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
-import org.springframework.stereotype.Service;
 
-@Service
 public interface CommentService {
 
   CommentRecord getComment(Long commentId);
