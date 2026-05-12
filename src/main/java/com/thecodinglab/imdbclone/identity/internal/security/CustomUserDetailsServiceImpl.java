@@ -2,7 +2,7 @@ package com.thecodinglab.imdbclone.identity.internal.security;
 
 import com.thecodinglab.imdbclone.account.api.AccountCredentials;
 import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import jakarta.transaction.Transactional;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.engagement.internal;
 
-import static com.thecodinglab.imdbclone.utility.Log.*;
+import static com.thecodinglab.imdbclone.shared.logging.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
@@ -12,11 +12,11 @@ import com.thecodinglab.imdbclone.engagement.api.UpdateCommentRequest;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.CommentMapper;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.Comment;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.CommentRepository;
-import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
-import com.thecodinglab.imdbclone.validation.Pagination;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.api.PagedResponse;
+import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
+import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
+import com.thecodinglab.imdbclone.shared.validation.Pagination;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

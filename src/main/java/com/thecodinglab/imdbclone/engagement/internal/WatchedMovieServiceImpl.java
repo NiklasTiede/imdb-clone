@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.engagement.internal;
 
-import static com.thecodinglab.imdbclone.utility.Log.*;
+import static com.thecodinglab.imdbclone.shared.logging.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
@@ -9,11 +9,11 @@ import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.WatchedMovieMapper;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovie;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovieRepository;
-import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
-import com.thecodinglab.imdbclone.validation.Pagination;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.api.PagedResponse;
+import com.thecodinglab.imdbclone.shared.error.NotFoundException;
+import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
+import com.thecodinglab.imdbclone.shared.validation.Pagination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;

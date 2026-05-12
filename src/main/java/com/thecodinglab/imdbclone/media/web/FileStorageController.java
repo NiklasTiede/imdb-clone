@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.media.web;
 
 import com.thecodinglab.imdbclone.media.api.MediaService;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.security.CurrentUser;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.security.CurrentUser;
+import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 import org.springframework.http.HttpStatus;

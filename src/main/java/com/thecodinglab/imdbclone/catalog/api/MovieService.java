@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.catalog.api;
 
-import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import java.math.BigDecimal;
 import java.util.List;
 

@@ -3,7 +3,7 @@ package com.thecodinglab.imdbclone.catalog.internal.persistence;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
-import com.thecodinglab.imdbclone.entity.audit.DateAudit;
+import com.thecodinglab.imdbclone.shared.persistence.DateAudit;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.*;

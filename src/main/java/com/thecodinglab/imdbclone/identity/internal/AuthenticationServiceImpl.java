@@ -1,13 +1,12 @@
 package com.thecodinglab.imdbclone.identity.internal;
 
-import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
-import static com.thecodinglab.imdbclone.utility.Log.TOKEN;
+import static com.thecodinglab.imdbclone.shared.logging.Log.ACCOUNT_ID;
+import static com.thecodinglab.imdbclone.shared.logging.Log.TOKEN;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.account.api.AccountIdentity;
 import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
 import com.thecodinglab.imdbclone.account.api.RegistrationRequest;
-import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.identity.api.LoginResponse;
@@ -18,7 +17,8 @@ import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToke
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
 import com.thecodinglab.imdbclone.identity.internal.security.JwtTokenProvider;
 import com.thecodinglab.imdbclone.notification.api.NotificationService;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;

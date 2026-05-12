@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.catalog.internal.search;
 
-import static com.thecodinglab.imdbclone.utility.Log.MOVIE_ID;
+import static com.thecodinglab.imdbclone.shared.logging.Log.MOVIE_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -12,8 +12,8 @@ import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
-import com.thecodinglab.imdbclone.exception.domain.ElasticsearchOperationException;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
+import com.thecodinglab.imdbclone.shared.api.PagedResponse;
+import com.thecodinglab.imdbclone.shared.error.ElasticsearchOperationException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;

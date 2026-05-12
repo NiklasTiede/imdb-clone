@@ -2,9 +2,9 @@ package com.thecodinglab.imdbclone.engagement.web;
 
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.security.CurrentUser;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.security.CurrentUser;
+import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.math.BigDecimal;
 import org.springframework.http.HttpStatus;

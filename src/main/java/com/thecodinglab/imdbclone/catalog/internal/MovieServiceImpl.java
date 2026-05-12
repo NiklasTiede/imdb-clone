@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.catalog.internal;
 
-import static com.thecodinglab.imdbclone.utility.Log.*;
+import static com.thecodinglab.imdbclone.shared.logging.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.*;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieImageToken;
@@ -12,9 +12,9 @@ import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieSearchDao;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.validation.Pagination;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.api.PagedResponse;
+import com.thecodinglab.imdbclone.shared.validation.Pagination;
 import java.math.BigDecimal;
 import java.util.List;
 import org.slf4j.Logger;

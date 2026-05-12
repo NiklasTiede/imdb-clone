@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.account.internal.persistence;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.thecodinglab.imdbclone.entity.audit.DateAudit;
+import com.thecodinglab.imdbclone.shared.persistence.DateAudit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;

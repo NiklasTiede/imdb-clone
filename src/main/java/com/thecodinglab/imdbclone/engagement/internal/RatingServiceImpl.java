@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.engagement.internal;
 
-import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
-import static com.thecodinglab.imdbclone.utility.Log.RATING_ID;
+import static com.thecodinglab.imdbclone.shared.logging.Log.ACCOUNT_ID;
+import static com.thecodinglab.imdbclone.shared.logging.Log.RATING_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
@@ -10,13 +10,13 @@ import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.RatingMapper;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
-import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
-import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
-import com.thecodinglab.imdbclone.exception.domain.UnauthorizedException;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
-import com.thecodinglab.imdbclone.validation.Pagination;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.api.PagedResponse;
+import com.thecodinglab.imdbclone.shared.error.BadRequestException;
+import com.thecodinglab.imdbclone.shared.error.NotFoundException;
+import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
+import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
+import com.thecodinglab.imdbclone.shared.validation.Pagination;
 import java.math.BigDecimal;
 import java.util.Objects;
 import org.slf4j.Logger;

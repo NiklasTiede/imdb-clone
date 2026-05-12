@@ -1,9 +1,7 @@
 package com.thecodinglab.imdbclone.account.api;
 
-import com.thecodinglab.imdbclone.validation.AvailableEmail;
-import com.thecodinglab.imdbclone.validation.AvailableUsername;
-import com.thecodinglab.imdbclone.validation.ValidPassword;
-import com.thecodinglab.imdbclone.validation.ValidUsername;
+import com.thecodinglab.imdbclone.shared.validation.ValidPassword;
+import com.thecodinglab.imdbclone.shared.validation.ValidUsername;
 import jakarta.validation.constraints.*;
 
 public record RegistrationRequest(

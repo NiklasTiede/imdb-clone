@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.engagement.internal.persistence;
 
-import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
+import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

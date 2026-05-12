@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.identity.api;
 
 import com.thecodinglab.imdbclone.account.api.RegistrationRequest;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 
 public interface AuthenticationService {
 

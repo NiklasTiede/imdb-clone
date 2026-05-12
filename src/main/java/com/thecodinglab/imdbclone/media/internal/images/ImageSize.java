@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.media.internal.images;
 
-import com.thecodinglab.imdbclone.exception.domain.BadRequestException;
+import com.thecodinglab.imdbclone.shared.error.BadRequestException;
 import java.awt.image.BufferedImage;
 import org.springframework.web.multipart.MultipartFile;
 

@@ -2,9 +2,9 @@ package com.thecodinglab.imdbclone.engagement.web;
 
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.security.CurrentUser;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.security.CurrentUser;
+import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

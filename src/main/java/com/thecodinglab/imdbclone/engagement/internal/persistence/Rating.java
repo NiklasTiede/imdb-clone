@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.engagement.internal.persistence;
 
-import com.thecodinglab.imdbclone.entity.audit.DateAudit;
+import com.thecodinglab.imdbclone.shared.persistence.DateAudit;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 

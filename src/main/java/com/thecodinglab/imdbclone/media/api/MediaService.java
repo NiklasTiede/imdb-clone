@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.media.api;
 
-import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 

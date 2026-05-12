@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
-import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
+import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

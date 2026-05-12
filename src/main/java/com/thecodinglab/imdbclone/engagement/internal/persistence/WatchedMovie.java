@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.engagement.internal.persistence;
 
-import com.thecodinglab.imdbclone.entity.audit.CreatedAtAudit;
+import com.thecodinglab.imdbclone.shared.persistence.CreatedAtAudit;
 import jakarta.persistence.*;
 
 @Entity

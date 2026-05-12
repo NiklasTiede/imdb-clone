@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.catalog.internal;
 
-import static com.thecodinglab.imdbclone.utility.Log.COUNT;
+import static com.thecodinglab.imdbclone.shared.logging.Log.COUNT;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;

@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.notification.internal;
 
-import static com.thecodinglab.imdbclone.utility.Log.*;
+import static com.thecodinglab.imdbclone.shared.logging.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.notification.api.NotificationService;

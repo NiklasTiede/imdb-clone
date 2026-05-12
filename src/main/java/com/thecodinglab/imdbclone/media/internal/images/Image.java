@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.media.internal.images;
 
-import com.thecodinglab.imdbclone.exception.domain.ImageProcessingException;
+import com.thecodinglab.imdbclone.shared.error.ImageProcessingException;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

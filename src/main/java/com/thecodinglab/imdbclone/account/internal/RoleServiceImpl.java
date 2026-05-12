@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.account.internal;
 
-import static com.thecodinglab.imdbclone.utility.Log.ACCOUNT_ID;
+import static com.thecodinglab.imdbclone.shared.logging.Log.ACCOUNT_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.account.api.RoleService;
@@ -9,8 +9,8 @@ import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository
 import com.thecodinglab.imdbclone.account.internal.persistence.Role;
 import com.thecodinglab.imdbclone.account.internal.persistence.RoleName;
 import com.thecodinglab.imdbclone.account.internal.persistence.RoleRepository;
-import com.thecodinglab.imdbclone.payload.MessageResponse;
-import com.thecodinglab.imdbclone.security.UserPrincipal;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
+import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import jakarta.transaction.Transactional;
 import java.util.Collection;
 import org.slf4j.Logger;

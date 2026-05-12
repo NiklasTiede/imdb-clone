@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.identity.api;
 
-import com.thecodinglab.imdbclone.validation.ValidPassword;
+import com.thecodinglab.imdbclone.shared.validation.ValidPassword;
 import jakarta.validation.constraints.*;
 
 public record PasswordResetRequest(

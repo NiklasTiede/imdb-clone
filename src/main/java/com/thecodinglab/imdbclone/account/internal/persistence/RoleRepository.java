@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.account.internal.persistence;
 
-import com.thecodinglab.imdbclone.exception.domain.NotFoundException;
+import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
