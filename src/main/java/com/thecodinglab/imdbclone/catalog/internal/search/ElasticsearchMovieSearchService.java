@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.service.impl;
+package com.thecodinglab.imdbclone.catalog.internal.search;
 
 import static com.thecodinglab.imdbclone.utility.Log.MOVIE_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -14,7 +14,6 @@ import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.exception.domain.ElasticsearchOperationException;
 import com.thecodinglab.imdbclone.payload.PagedResponse;
-import com.thecodinglab.imdbclone.service.ElasticSearchService;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -28,14 +27,14 @@ import org.springframework.stereotype.Service;
 
 // spotless:off
 @Service
-public class ElasticSearchServiceImpl implements ElasticSearchService {
+public class ElasticsearchMovieSearchService implements MovieSearchService {
 
-  private static final Logger logger = LoggerFactory.getLogger(ElasticSearchServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(ElasticsearchMovieSearchService.class);
   private final ElasticsearchClient esClient;
   private final MovieMapper movieMapper;
   private static final String MOVIES_INDEX = "movies";
 
-  public ElasticSearchServiceImpl(ElasticsearchClient esClient, MovieMapper movieMapper) {
+  public ElasticsearchMovieSearchService(ElasticsearchClient esClient, MovieMapper movieMapper) {
     this.esClient = esClient;
     this.movieMapper = movieMapper;
   }

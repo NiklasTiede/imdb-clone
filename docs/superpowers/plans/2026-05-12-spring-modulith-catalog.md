@@ -88,11 +88,13 @@ Expected: pass, or report unrelated environmental failures with exact output.
 The catalog migration is intentionally incremental. `catalog` is the first explicitly annotated
 Spring Modulith module, while the rest of the backend still uses the legacy package layout.
 
+Completed follow-up work:
+
+- Movie search/indexing now lives inside the catalog module. Elasticsearch remains an internal
+  catalog adapter rather than a root-level service seam.
+
 Known follow-up work:
 
-- Move movie search/indexing behind the catalog module or introduce a dedicated search module with
-  a catalog-owned adapter. The current Elasticsearch service still exposes catalog implementation
-  types.
 - Migrate comments, ratings, and watched movies into their own modules. Their JPA entities currently
   reference `catalog.internal.persistence.Movie`; a cleaner module shape should use `movieId` across
   module seams and query catalog through its public API when movie details are needed.
