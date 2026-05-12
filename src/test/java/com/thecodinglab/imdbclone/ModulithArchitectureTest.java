@@ -3,6 +3,7 @@ package com.thecodinglab.imdbclone;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
+import com.thecodinglab.imdbclone.account.api.AccountImageService;
 import com.thecodinglab.imdbclone.account.api.AccountService;
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.engagement.api.CommentService;
@@ -10,6 +11,7 @@ import com.thecodinglab.imdbclone.engagement.api.EngagementStatsService;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
+import com.thecodinglab.imdbclone.media.api.MediaService;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,6 +49,11 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void detectsMediaModule() {
+    assertThat(ApplicationModules.of(Application.class).getModuleByName("media")).isPresent();
+  }
+
+  @Test
   void catalogApiDoesNotExposeInternalTypes() {
     assertThat(Arrays.stream(MovieService.class.getMethods()).flatMap(this::methodTypes))
         .extracting(Class::getName)
@@ -62,7 +69,8 @@ class ModulithArchitectureTest {
 
   @Test
   void accountApiDoesNotExposeInternalTypes() {
-    assertThat(apiTypes(AccountService.class, AccountIdentityService.class))
+    assertThat(
+            apiTypes(AccountService.class, AccountIdentityService.class, AccountImageService.class))
         .extracting(Class::getName)
         .noneMatch(typeName -> typeName.contains(".account.internal."));
   }
@@ -77,6 +85,13 @@ class ModulithArchitectureTest {
                 EngagementStatsService.class))
         .extracting(Class::getName)
         .noneMatch(typeName -> typeName.contains(".engagement.internal."));
+  }
+
+  @Test
+  void mediaApiDoesNotExposeInternalTypes() {
+    assertThat(apiTypes(MediaService.class))
+        .extracting(Class::getName)
+        .noneMatch(typeName -> typeName.contains(".media.internal."));
   }
 
   @Test
@@ -200,6 +215,37 @@ class ModulithArchitectureTest {
             Files.exists(
                 Path.of(
                     "src/main/java/com/thecodinglab/imdbclone/service/WatchedMovieService.java")))
+        .isFalse();
+  }
+
+  @Test
+  void fileStorageBelongsToMediaModule() {
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.media.web.FileStorageController"))
+        .isPresent();
+    assertThat(classIfPresent("com.thecodinglab.imdbclone.media.internal.MediaServiceImpl"))
+        .isPresent();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/controller/FileStorageController.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/service/FileStorageService.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of(
+                    "src/main/java/com/thecodinglab/imdbclone/service/impl/FileStorageServiceImpl.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/validation/ImageSize.java")))
+        .isFalse();
+    assertThat(
+            Files.exists(
+                Path.of("src/main/java/com/thecodinglab/imdbclone/utility/images/Image.java")))
         .isFalse();
   }
 

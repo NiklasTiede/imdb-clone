@@ -1,11 +1,10 @@
-package com.thecodinglab.imdbclone.service;
+package com.thecodinglab.imdbclone.media.api;
 
 import com.thecodinglab.imdbclone.security.UserPrincipal;
-import java.io.InputStream;
 import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
-public interface FileStorageService {
+public interface MediaService {
 
   List<String> storeProfilePhoto(MultipartFile file, UserPrincipal currentUser);
 
@@ -14,10 +13,4 @@ public interface FileStorageService {
   List<String> storeMovieImage(MultipartFile file, Long movieId);
 
   String deleteMovieImage(Long movieId);
-
-  String storeFile(InputStream file, int fileSize, String fileName, String contentType);
-
-  void deleteFile(String imageName);
-
-  void setUpBucket();
 }

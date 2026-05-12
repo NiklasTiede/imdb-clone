@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
-import com.thecodinglab.imdbclone.service.FileStorageService;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -29,7 +28,6 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
   private final MovieElasticSearchRepository movieSearchRepository;
   private final ElasticsearchOperations elasticsearchOperations;
   private final ElasticsearchClient elasticsearchClient;
-  private final FileStorageService fileStorageService;
 
   @Value("${minio.rest.bucket-name}")
   public String bucketName;
@@ -38,13 +36,11 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
       MovieRepository movieRepository,
       MovieElasticSearchRepository movieSearchRepository,
       ElasticsearchOperations elasticsearchOperations,
-      ElasticsearchClient elasticsearchClient,
-      FileStorageService fileStorageService) {
+      ElasticsearchClient elasticsearchClient) {
     this.movieRepository = movieRepository;
     this.movieSearchRepository = movieSearchRepository;
     this.elasticsearchOperations = elasticsearchOperations;
     this.elasticsearchClient = elasticsearchClient;
-    this.fileStorageService = fileStorageService;
   }
 
   @Override
@@ -59,10 +55,7 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
       partitions.forEach(movieSearchRepository::saveAll);
     }
 
-    // create bucket/directories and set bucket policy in minIO if not existent
-    fileStorageService.setUpBucket();
-
-    logger.info("Application is ready: MinIO bucket created and elasticsearch Data loaded");
+    logger.info("Application is ready: Elasticsearch data loaded");
   }
 
   private void createMoviesIndexIfMissing() {

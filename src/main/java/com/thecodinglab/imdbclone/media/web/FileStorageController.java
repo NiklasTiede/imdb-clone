@@ -1,9 +1,9 @@
-package com.thecodinglab.imdbclone.controller;
+package com.thecodinglab.imdbclone.media.web;
 
+import com.thecodinglab.imdbclone.media.api.MediaService;
 import com.thecodinglab.imdbclone.payload.MessageResponse;
 import com.thecodinglab.imdbclone.security.CurrentUser;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
-import com.thecodinglab.imdbclone.service.FileStorageService;
 import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -19,10 +19,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/file-storage")
 public class FileStorageController {
 
-  private final FileStorageService fileStorageService;
+  private final MediaService mediaService;
 
-  public FileStorageController(FileStorageService fileStorageService) {
-    this.fileStorageService = fileStorageService;
+  public FileStorageController(MediaService mediaService) {
+    this.mediaService = mediaService;
   }
 
   /**
@@ -36,7 +36,7 @@ public class FileStorageController {
       @RequestParam("image") MultipartFile multipartFile,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
-        fileStorageService.storeProfilePhoto(multipartFile, currentUser), HttpStatus.CREATED);
+        mediaService.storeProfilePhoto(multipartFile, currentUser), HttpStatus.CREATED);
   }
 
   @DeleteMapping("/profile-photo")
@@ -44,8 +44,7 @@ public class FileStorageController {
   public ResponseEntity<MessageResponse> deleteUserProfilePhoto(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
-        new MessageResponse(fileStorageService.deleteProfilePhoto(currentUser)),
-        HttpStatus.NO_CONTENT);
+        new MessageResponse(mediaService.deleteProfilePhoto(currentUser)), HttpStatus.NO_CONTENT);
   }
 
   /**
@@ -58,13 +57,13 @@ public class FileStorageController {
   public ResponseEntity<List<String>> storeMovieImage(
       @PathVariable Long movieId, @RequestParam("image") MultipartFile multipartFile) {
     return new ResponseEntity<>(
-        fileStorageService.storeMovieImage(multipartFile, movieId), HttpStatus.CREATED);
+        mediaService.storeMovieImage(multipartFile, movieId), HttpStatus.CREATED);
   }
 
   @DeleteMapping("/movie/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> deleteMovieImage(@PathVariable Long movieId) {
     return new ResponseEntity<>(
-        new MessageResponse(fileStorageService.deleteMovieImage(movieId)), HttpStatus.NO_CONTENT);
+        new MessageResponse(mediaService.deleteMovieImage(movieId)), HttpStatus.NO_CONTENT);
   }
 }

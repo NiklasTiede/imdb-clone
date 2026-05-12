@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.utility.images;
+package com.thecodinglab.imdbclone.media.internal.images;
 
 import java.text.MessageFormat;
 import java.util.List;

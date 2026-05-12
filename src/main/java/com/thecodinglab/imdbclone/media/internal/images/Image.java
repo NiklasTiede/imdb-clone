@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.utility.images;
+package com.thecodinglab.imdbclone.media.internal.images;
 
 import com.thecodinglab.imdbclone.exception.domain.ImageProcessingException;
 import java.awt.image.BufferedImage;

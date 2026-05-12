@@ -1,17 +1,17 @@
-package com.thecodinglab.imdbclone.service.impl;
+package com.thecodinglab.imdbclone.media.internal;
 
+import com.thecodinglab.imdbclone.account.api.AccountImageService;
+import com.thecodinglab.imdbclone.account.api.AccountImageToken;
 import com.thecodinglab.imdbclone.catalog.api.MovieImageToken;
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.config.MinioClientConfig;
-import com.thecodinglab.imdbclone.entity.Account;
 import com.thecodinglab.imdbclone.exception.domain.MinioOperationException;
-import com.thecodinglab.imdbclone.repository.AccountRepository;
+import com.thecodinglab.imdbclone.media.api.MediaService;
+import com.thecodinglab.imdbclone.media.internal.images.Image;
+import com.thecodinglab.imdbclone.media.internal.images.ImageSize;
+import com.thecodinglab.imdbclone.media.internal.images.MovieImageConstants;
+import com.thecodinglab.imdbclone.media.internal.images.ProfilePhotoConstants;
 import com.thecodinglab.imdbclone.security.UserPrincipal;
-import com.thecodinglab.imdbclone.service.FileStorageService;
-import com.thecodinglab.imdbclone.utility.images.Image;
-import com.thecodinglab.imdbclone.utility.images.MovieImageConstants;
-import com.thecodinglab.imdbclone.utility.images.ProfilePhotoConstants;
-import com.thecodinglab.imdbclone.validation.ImageSize;
 import io.minio.*;
 import io.minio.Http.Method;
 import jakarta.transaction.Transactional;
@@ -25,23 +25,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class FileStorageServiceImpl implements FileStorageService {
+public class MediaServiceImpl implements MediaService {
 
-  private static final Logger logger = LoggerFactory.getLogger(FileStorageServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(MediaServiceImpl.class);
 
   @Value("${minio.rest.bucket-name}")
   public String bucketName;
 
   private final MinioClient minioClient;
-  private final AccountRepository accountRepository;
+  private final AccountImageService accountImageService;
   private final MovieService movieService;
 
-  public FileStorageServiceImpl(
+  public MediaServiceImpl(
       MinioClientConfig minioClient,
-      AccountRepository accountRepository,
+      AccountImageService accountImageService,
       MovieService movieService) {
     this.minioClient = minioClient.getClient();
-    this.accountRepository = accountRepository;
+    this.accountImageService = accountImageService;
     this.movieService = movieService;
   }
 
@@ -52,10 +52,12 @@ public class FileStorageServiceImpl implements FileStorageService {
     //    ImageSize.validateProfilePhoto(file);
 
     // persist image-url-token in database
-    Account account = accountRepository.getAccount(currentUser);
+    AccountImageToken accountImageToken = accountImageService.getProfileImageToken(currentUser);
 
     String imageUrlToken =
-        (account.getImageUrlToken() != null) ? account.getImageUrlToken() : Image.generateToken();
+        (accountImageToken.imageUrlToken() != null)
+            ? accountImageToken.imageUrlToken()
+            : Image.generateToken();
 
     // better: create new token, each time new image is created. token change is used for
     // rerendering!
@@ -69,8 +71,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             ProfilePhotoConstants.BUCKET_DIRECTORY_NAME,
             imageUrlToken);
 
-    account.setImageUrlToken(imageUrlToken);
-    accountRepository.save(account);
+    accountImageService.updateProfileImageToken(accountImageToken.accountId(), imageUrlToken);
 
     // store photos in bucket
     return profilePhotos.stream()
@@ -87,13 +88,13 @@ public class FileStorageServiceImpl implements FileStorageService {
   @Override
   public String deleteProfilePhoto(UserPrincipal currentUser) {
 
-    Account account = accountRepository.getAccount(currentUser);
+    AccountImageToken accountImageToken = accountImageService.getProfileImageToken(currentUser);
 
-    deleteFile(ProfilePhotoConstants.getDetailViewImageName(account.getImageUrlToken()));
-    deleteFile(ProfilePhotoConstants.getThumbnailImageName(account.getImageUrlToken()));
+    deleteFile(ProfilePhotoConstants.getDetailViewImageName(accountImageToken.imageUrlToken()));
+    deleteFile(ProfilePhotoConstants.getThumbnailImageName(accountImageToken.imageUrlToken()));
 
     return "Profile Photos of User with accountId [%d] and imageUrlToken [%s] were deleted"
-        .formatted(account.getId(), account.getImageUrlToken());
+        .formatted(accountImageToken.accountId(), accountImageToken.imageUrlToken());
   }
 
   @Override
@@ -148,8 +149,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         .formatted(movieImageToken.movieId());
   }
 
-  @Override
-  public String storeFile(InputStream file, int fileSize, String fileName, String contentType) {
+  private String storeFile(InputStream file, int fileSize, String fileName, String contentType) {
     try {
       ObjectWriteResponse resp =
           minioClient.putObject(
@@ -165,8 +165,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
   }
 
-  @Override
-  public void deleteFile(String imageName) {
+  private void deleteFile(String imageName) {
     try {
       minioClient.removeObject(
           RemoveObjectArgs.builder().bucket(bucketName).object(imageName).build());
@@ -175,8 +174,7 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
   }
 
-  @Override
-  public void setUpBucket() {
+  void setUpBucket() {
     try {
       if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
         // create bucket
