@@ -88,7 +88,7 @@ test("searches movies and renders a seeded poster", async ({ page }) => {
   await stubMoviePosters(page);
 
   await page.goto("/");
-  await expect(page.getByText("Home Page")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Top drama" })).toBeVisible();
 
   await page.getByRole("textbox", { name: "search" }).fill("Nightcrawler");
   await page.getByRole("textbox", { name: "search" }).press("Enter");
