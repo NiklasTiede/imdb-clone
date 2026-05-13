@@ -10,12 +10,12 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AccountIdentityServiceImpl implements AccountIdentityService {
+public class AccountIdentities implements AccountIdentityService {
 
   private final AccountRepository accountRepository;
   private final RegisteredUserRoleProvider registeredUserRoleProvider;
 
-  public AccountIdentityServiceImpl(
+  public AccountIdentities(
       AccountRepository accountRepository, RegisteredUserRoleProvider registeredUserRoleProvider) {
     this.accountRepository = accountRepository;
     this.registeredUserRoleProvider = registeredUserRoleProvider;

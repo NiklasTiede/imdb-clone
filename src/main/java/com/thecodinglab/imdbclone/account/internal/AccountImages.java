@@ -10,11 +10,11 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AccountImageServiceImpl implements AccountImageService {
+public class AccountImages implements AccountImageService {
 
   private final AccountRepository accountRepository;
 
-  public AccountImageServiceImpl(AccountRepository accountRepository) {
+  public AccountImages(AccountRepository accountRepository) {
     this.accountRepository = accountRepository;
   }
 

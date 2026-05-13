@@ -139,6 +139,17 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void concreteImplementationsUseDomainNames() throws IOException {
+    try (Stream<Path> sources = javaSources()) {
+      assertThat(
+              sources
+                  .filter(path -> path.getFileName().toString().endsWith("ServiceImpl.java"))
+                  .toList())
+          .isEmpty();
+    }
+  }
+
+  @Test
   void apiPackagesDoNotDependOnModuleInternals() throws IOException {
     try (Stream<Path> sources = javaSources()) {
       assertThat(

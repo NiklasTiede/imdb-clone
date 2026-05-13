@@ -22,16 +22,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class MediaServiceImpl implements MediaService {
+public class MediaFiles implements MediaService {
 
-  private static final Logger logger = LoggerFactory.getLogger(MediaServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(MediaFiles.class);
 
   private final MinioClient minioClient;
   private final MediaStorageProperties storageProperties;
   private final AccountImageService accountImageService;
   private final MovieImageService movieImageService;
 
-  public MediaServiceImpl(
+  public MediaFiles(
       MinioClient minioClient,
       MediaStorageProperties storageProperties,
       AccountImageService accountImageService,

@@ -20,9 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AccountServiceImpl implements AccountService {
+public class AccountManagement implements AccountService {
 
-  private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(AccountManagement.class);
 
   private final AccountRepository accountRepository;
   private final AccountActivityService accountActivityService;
@@ -30,7 +30,7 @@ public class AccountServiceImpl implements AccountService {
   private final RegisteredUserRoleProvider registeredUserRoleProvider;
   private final AccountMapper accountMapper;
 
-  public AccountServiceImpl(
+  public AccountManagement(
       AccountRepository accountRepository,
       AccountActivityService accountActivityService,
       PasswordEncoder passwordEncoder,

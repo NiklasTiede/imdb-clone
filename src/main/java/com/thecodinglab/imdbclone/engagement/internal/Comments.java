@@ -27,15 +27,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CommentServiceImpl implements CommentService {
+public class Comments implements CommentService {
 
-  private static final Logger logger = LoggerFactory.getLogger(CommentServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(Comments.class);
 
   private final CommentRepository commentRepository;
   private final MovieReferenceService movieReferenceService;
   private final CommentMapper commentMapper;
 
-  public CommentServiceImpl(
+  public Comments(
       CommentRepository commentRepository,
       MovieReferenceService movieReferenceService,
       CommentMapper commentMapper) {

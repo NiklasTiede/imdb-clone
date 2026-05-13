@@ -32,9 +32,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AuthenticationServiceImpl implements AuthenticationService {
+public class IdentityAccess implements AuthenticationService {
 
-  private static final Logger logger = LoggerFactory.getLogger(AuthenticationServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(IdentityAccess.class);
 
   private final AuthenticationManager authenticationManager;
   private final JwtTokenProvider jwtTokenProvider;
@@ -44,7 +44,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private final NotificationService notificationService;
   private final IdentityProperties identityProperties;
 
-  public AuthenticationServiceImpl(
+  public IdentityAccess(
       AuthenticationManager authenticationManager,
       JwtTokenProvider jwtTokenProvider,
       PasswordEncoder passwordEncoder,

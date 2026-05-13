@@ -28,15 +28,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RatingServiceImpl implements RatingService {
+public class Ratings implements RatingService {
 
-  private static final Logger logger = LoggerFactory.getLogger(RatingServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(Ratings.class);
 
   private final MovieReferenceService movieReferenceService;
   private final RatingRepository ratingRepository;
   private final RatingMapper ratingMapper;
 
-  public RatingServiceImpl(
+  public Ratings(
       MovieReferenceService movieReferenceService,
       RatingRepository ratingRepository,
       RatingMapper ratingMapper) {

@@ -24,15 +24,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class WatchedMovieServiceImpl implements WatchedMovieService {
+public class Watchlist implements WatchedMovieService {
 
-  private static final Logger logger = LoggerFactory.getLogger(WatchedMovieServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(Watchlist.class);
 
   private final WatchedMovieRepository watchedMovieRepository;
   private final MovieReferenceService movieReferenceService;
   private final WatchedMovieMapper watchedMovieMapper;
 
-  public WatchedMovieServiceImpl(
+  public Watchlist(
       WatchedMovieRepository watchedMovieRepository,
       MovieReferenceService movieReferenceService,
       WatchedMovieMapper watchedMovieMapper) {

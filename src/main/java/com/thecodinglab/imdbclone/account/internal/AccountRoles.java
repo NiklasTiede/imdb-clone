@@ -18,14 +18,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RoleServiceImpl implements RoleService {
+public class AccountRoles implements RoleService {
 
-  private static final Logger logger = LoggerFactory.getLogger(RoleServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(AccountRoles.class);
 
   private final AccountRepository accountRepository;
   private final RoleRepository roleRepository;
 
-  public RoleServiceImpl(AccountRepository accountRepository, RoleRepository roleRepository) {
+  public AccountRoles(AccountRepository accountRepository, RoleRepository roleRepository) {
     this.accountRepository = accountRepository;
     this.roleRepository = roleRepository;
   }

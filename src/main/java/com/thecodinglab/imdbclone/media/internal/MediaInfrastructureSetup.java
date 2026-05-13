@@ -8,14 +8,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class MediaInfrastructureSetup implements ApplicationListener<ApplicationReadyEvent> {
 
-  private final MediaServiceImpl mediaService;
+  private final MediaFiles mediaFiles;
 
-  public MediaInfrastructureSetup(MediaServiceImpl mediaService) {
-    this.mediaService = mediaService;
+  public MediaInfrastructureSetup(MediaFiles mediaFiles) {
+    this.mediaFiles = mediaFiles;
   }
 
   @Override
   public void onApplicationEvent(@NotNull ApplicationReadyEvent event) {
-    mediaService.setUpBucket();
+    mediaFiles.setUpBucket();
   }
 }

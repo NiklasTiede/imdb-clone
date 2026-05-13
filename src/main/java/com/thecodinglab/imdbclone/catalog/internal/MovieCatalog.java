@@ -25,16 +25,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
-public class MovieServiceImpl implements MovieService {
+public class MovieCatalog implements MovieService {
 
-  private static final Logger logger = LoggerFactory.getLogger(MovieServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(MovieCatalog.class);
 
   private final MovieRepository movieRepository;
   private final MovieElasticSearchRepository elasticSearchRepository;
   private final MovieSearchDao movieSearchDao;
   private final MovieMapper movieMapper;
 
-  public MovieServiceImpl(
+  public MovieCatalog(
       final MovieRepository movieRepository,
       MovieElasticSearchRepository elasticSearchRepository,
       MovieSearchDao movieSearchDao,

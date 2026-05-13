@@ -8,13 +8,13 @@ import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovieRe
 import org.springframework.stereotype.Service;
 
 @Service
-public class EngagementStatsServiceImpl implements EngagementStatsService {
+public class AccountEngagementStats implements EngagementStatsService {
 
   private final RatingRepository ratingRepository;
   private final WatchedMovieRepository watchedMovieRepository;
   private final CommentRepository commentRepository;
 
-  public EngagementStatsServiceImpl(
+  public AccountEngagementStats(
       RatingRepository ratingRepository,
       WatchedMovieRepository watchedMovieRepository,
       CommentRepository commentRepository) {

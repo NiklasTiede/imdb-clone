@@ -13,14 +13,14 @@ import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AccountActivityServiceImpl implements AccountActivityService {
+public class AccountActivity implements AccountActivityService {
 
   private final CommentService commentService;
   private final WatchedMovieService watchedMovieService;
   private final RatingService ratingService;
   private final EngagementStatsService engagementStatsService;
 
-  public AccountActivityServiceImpl(
+  public AccountActivity(
       CommentService commentService,
       WatchedMovieService watchedMovieService,
       RatingService ratingService,
