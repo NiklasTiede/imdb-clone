@@ -32,12 +32,12 @@
 </p>
 
 ## Techstack
-- Languages: Java 25 / TypeScript 5.1.6
-- Frameworks: Spring Boot 4.0.6 / React 18.2.0 / Material UI 5.14.3
-- Rel. Database: MySQL 9.7.0
-- SearchEngine: Elasticsearch 9.3.4
+- Languages: Java 25 / TypeScript 6
+- Frameworks: Spring Boot 4 / React 19 / Material UI 9
+- Rel. Database: MySQL 9
+- SearchEngine: Elasticsearch 9
 - File Storage: MinIO RELEASE.2024-03-26T22-10-45Z
-- Build / test tooling: Gradle 9.5.0 / Testcontainers 2.0.5
+- Build / test tooling: Gradle 9.5.0 / Testcontainers 2
 
 The app is secured with JWT authentication. The techstack is kept up-to-date. 
 
@@ -133,12 +133,12 @@ we use during development.
 - [ ] Create React Frontend
   - [x] Account Settings Page
   - [x] Movie Search Page
-  - [ ] Movie Detail View with Rating / Watchlist Feature
-  - [ ] Watchlist Page
+  - [x] Movie Detail View with Rating / Watchlist Feature
+  - [x] Watchlist Page
   - [ ] Edit / Create Movies Page
-  - [ ] Home Page
+  - [x] Home Page
   - [ ] Detail View: Comments Feature
-  - [ ] Make Mobile Compatible
+  - [x] Make Mobile Compatible
 
 ### Future Ideas
 - [ ] Deploy on HA K3s Home Server
