@@ -9,8 +9,8 @@ Primary files:
 - `src/main/resources/db/migration/*.sql`
 - `src/main/resources/sql/*.sql`
 - `src/test/resources/sql/test-data.sql`
-- `src/main/java/com/thecodinglab/imdbclone/entity`
-- `src/main/java/com/thecodinglab/imdbclone/repository`
+- `src/main/java/com/thecodinglab/imdbclone/*/internal/persistence`
+- `src/main/java/com/thecodinglab/imdbclone/shared/persistence`
 - `src/test/java/com/thecodinglab/imdbclone/integration/repository`
 
 ## Checks
@@ -20,6 +20,7 @@ Primary files:
 - Flyway owns schema evolution. New schema changes should be new `V...__description.sql` migrations.
 - Dataset imports and MinIO image imports are not schema migrations. Check `docs/database.md` before criticizing this split.
 - Existing migrations should not be rewritten after they have been applied unless the user explicitly asks.
+- Persistence types and repositories belong inside their owning Spring Modulith module's `internal/persistence` package.
 
 ### Entity to Schema Consistency
 
@@ -65,8 +66,9 @@ For lookup performance:
 - pageable queries have deterministic ordering where the UI expects stable pages
 - custom queries do not bypass domain invariants
 - write paths update aggregate counters consistently, especially ratings and counts
+- cross-module persistence access is a Modulith violation unless it goes through an allowed named interface
 
-### Tests and Future Hard Checks
+### Tests and Hard Checks
 
 Look for existing tests such as `DatabaseSchemaTest`. Suggest extending them before suggesting manual review-only rules.
 

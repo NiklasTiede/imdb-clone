@@ -2,28 +2,42 @@
 
 ## Scope
 
-Use this mode for Spring Modulith readiness now and module-boundary verification after Modulith is introduced.
+Use this mode for the current Spring Modulith architecture: application modules, named interfaces, allowed dependencies, and hard architecture checks.
 
 Primary files:
 
 - `build.gradle`
+- `src/main/resources/config/application.properties`
 - `src/main/java/com/thecodinglab/imdbclone`
-- future `package-info.java` files with Modulith annotations
-- future Modulith tests and generated docs
+- module `package-info.java` files with `@ApplicationModule`
+- named interface `package-info.java` files and type-level `@NamedInterface`
+- `src/test/java/com/thecodinglab/imdbclone/ModulithArchitectureTest.java`
 
-## Current Baseline to Check
+## Current Baseline
 
-Before Modulith exists, report readiness gaps:
+This repository has introduced a clean Modulith baseline. Treat these as the expected backend application modules unless the implementation or an ADR says otherwise:
 
-- backend packages are currently technical layers (`controller`, `service`, `repository`, `entity`, `payload`)
-- future Modulith modules should become domain/business packages under the application root
-- package moves should be planned around domain language, not around framework types
+- `account`
+- `catalog`
+- `engagement`
+- `identity`
+- `media`
+- `notification`
+- `recommendation`
+- `shared`
 
-Do not mark absence of Modulith as a finding unless the user asked for Modulith readiness.
+The app uses explicit module detection. Do not treat unannotated direct subpackages as implicit modules unless the configuration changes.
+
+Package roles:
+
+- `api`: module public API and named interfaces
+- `web`: REST controllers and request entrypoints
+- `internal`: module implementation, persistence, security, infrastructure, schedulers, mappers, and search adapters
+- `shared`: shared kernel only; keep it small and stable
 
 ## Official Concepts to Apply
 
-Spring Modulith discovers application modules from direct sub-packages of the application package. It verifies module structure with `ApplicationModules.of(Application.class).verify()`.
+Spring Modulith can discover application modules from direct sub-packages of the application package, or from explicitly annotated packages when configured that way. This repo should be verified with `ApplicationModules.of(Application.class).verify()`.
 
 Important concepts:
 
@@ -37,37 +51,49 @@ Important concepts:
 
 If syntax or version details matter, consult current Spring Modulith documentation before making exact recommendations.
 
-## Candidate Modules for This Repo
+## Module Dependency Expectations
 
-Use these only as hypotheses until the project has an explicit module plan:
+Use actual `package-info.java` files as the source of truth, then compare them with these intended dependency shapes:
 
-- `account`: account profile, public profile, registration identity, roles
-- `auth`: login, JWT, registration, password reset, verification tokens
-- `catalog`: movies, movie details, catalog reads/writes
-- `search`: Elasticsearch-backed search and projection synchronization
-- `rating`: user ratings and rating aggregates
-- `watchlist`: watched/favorite movies per account
-- `comment`: movie comments
-- `media`: MinIO image storage and image token handling
+- `account` may use engagement profile APIs plus shared kernel interfaces.
+- `catalog` should not depend on other business modules.
+- `engagement` may use narrow catalog reference and ratings interfaces.
+- `identity` may use account APIs and should publish notification events instead of calling notification internals.
+- `media` may use account APIs and narrow catalog media interfaces.
+- `notification` may consume identity events, not identity internals.
+- `recommendation` should stay isolated until it has an explicit integration.
+- `shared` should not depend on business modules.
 
-Watch for accidental modules that are too technical, such as `repository` or `payload`.
+Watch for broad dependencies where a narrow named interface already exists, such as `catalog::api` instead of `catalog::reference`, `catalog::ratings`, or `catalog::media`.
 
 ## Boundary Checks
 
-For each proposed or existing module:
+For each module:
 
-- module has a small public API and hides persistence details
+- module has a small public API and hides internal details
 - module does not expose JPA entities to unrelated modules unless that is an explicit decision
-- controllers call application/service APIs, not repositories from other modules
-- repositories stay inside their owning module
+- controllers stay in `web` and call owning module APIs or internal application services
+- repositories, entities, mappers, infrastructure adapters, and schedulers stay in `internal`
 - events carry stable IDs or value data, not mutable entity graphs
 - named interfaces expose only what other modules need
 - dependencies flow through allowed module APIs
 - no cyclic dependencies between modules
+- no module imports another module's `internal` package
+- `api` packages do not depend on their own `internal` package
+- concrete implementations use domain names, not generic `*ServiceImpl` names
+- new cross-module dependencies update `allowedDependencies` deliberately and narrowly
 
 ## Verification Recommendations
 
-Suggest adding deterministic checks when Modulith is introduced:
+Prefer the existing hard check:
+
+```bash
+./gradlew test --tests "com.thecodinglab.imdbclone.ModulithArchitectureTest"
+```
+
+It should verify the discovered modules, allowed dependency declarations, named-interface conventions, and selected repo-specific dependency rules.
+
+The core Modulith verification pattern is:
 
 ```java
 class ModulithArchitectureTest {
@@ -79,4 +105,4 @@ class ModulithArchitectureTest {
 }
 ```
 
-Suggest module tests only after modules have a clear API and meaningful behavior to test.
+Suggest `@ApplicationModuleTest` only when a module has a clear public API and behavior worth testing in isolation. Do not replace module-boundary tests with broader integration tests.

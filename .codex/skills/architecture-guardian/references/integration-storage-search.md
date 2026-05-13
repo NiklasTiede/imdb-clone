@@ -6,12 +6,14 @@ Review cross-system behavior between MySQL, Elasticsearch, MinIO, JWT/security, 
 
 Primary files:
 
-- `src/main/java/com/thecodinglab/imdbclone/service/impl`
-- `src/main/java/com/thecodinglab/imdbclone/repository/MovieElasticSearchRepository.java`
-- `src/main/java/com/thecodinglab/imdbclone/repository/MovieSearchDao.java`
-- `src/main/java/com/thecodinglab/imdbclone/config`
-- `src/main/java/com/thecodinglab/imdbclone/security`
-- `src/main/java/com/thecodinglab/imdbclone/job`
+- `src/main/java/com/thecodinglab/imdbclone/*/internal`
+- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/persistence/MovieElasticSearchRepository.java`
+- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/persistence/MovieSearchDao.java`
+- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search`
+- `src/main/java/com/thecodinglab/imdbclone/identity/internal/security`
+- `src/main/java/com/thecodinglab/imdbclone/media/internal`
+- `src/main/java/com/thecodinglab/imdbclone/engagement/internal/RatingAggregateScheduler.java`
+- `src/main/java/com/thecodinglab/imdbclone/identity/internal/VerificationTokenCleanupScheduler.java`
 - `infrastructure`
 - `compose.yaml`
 
@@ -26,7 +28,7 @@ Primary files:
 
 ### Consistency and Failure Modes
 
-- service methods define what happens when MySQL succeeds but Elasticsearch or MinIO fails
+- write flows define what happens when MySQL succeeds but Elasticsearch or MinIO fails
 - retries, exceptions, and logs preserve enough information to repair state
 - delete flows clean up relation rows, search documents, and object references according to ownership rules
 - scheduled jobs do not hide core consistency responsibilities

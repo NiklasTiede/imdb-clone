@@ -20,7 +20,7 @@ Checks run: <commands or "none">
 
 1. <Title>
    Evidence: <file links and observations>
-   Needed before: <future architecture goal>
+   Needed before: <architecture goal, hard check, or explicit decision>
    Suggested next step: <small next action>
 
 **Cross-System Risks**

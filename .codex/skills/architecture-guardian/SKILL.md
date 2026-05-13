@@ -1,6 +1,6 @@
 ---
 name: architecture-guardian
-description: Use when reviewing this IMDB clone for architectural drift, module boundary erosion, persistence/schema mismatch, API/frontend contract mismatch, or readiness for Spring Modulith.
+description: Use when reviewing this IMDB clone for architectural drift, Spring Modulith boundary erosion, persistence/schema mismatch, API/frontend contract mismatch, or frontend feature-module drift.
 ---
 
 # Architecture Guardian
@@ -16,9 +16,11 @@ Build outputs from checks are allowed. Source changes are not.
 - Backend: Spring Boot, Java, JPA, Flyway, MySQL, Elasticsearch, MinIO, JWT.
 - Frontend: React, TypeScript, Material UI, React Query, generated Axios client.
 - Backend source: `src/main/java/com/thecodinglab/imdbclone`.
+- Backend modules are Spring Modulith application modules under the root package, with `api`, `web`, and `internal` package roles.
 - Flyway migrations: `src/main/resources/db/migration`.
 - Test data: `src/test/resources/sql/test-data.sql`.
 - Frontend source: `frontend/src`.
+- Frontend feature modules mirror backend domain vocabulary where practical.
 - Generated frontend client: `frontend/src/client/movies/generator-output`.
 
 Respect `AGENTS.md`. If repo metadata disagrees with implementation files, report it as project metadata drift instead of silently choosing one source.
@@ -31,7 +33,7 @@ Choose the narrowest mode that satisfies the request:
 | --- | --- | --- |
 | `quick` | Fast drift scan before or after a change | This file, then relevant references only if a concern appears |
 | `persistence` | MySQL, Flyway, JPA entities, repositories, constraints, indexes | `references/persistence-jpa-mysql.md` |
-| `backend-modulith` | Spring Modulith readiness or module boundary review | `references/spring-modulith.md` |
+| `backend-modulith` | Spring Modulith module model, named interfaces, dependency rules, and architecture tests | `references/spring-modulith.md` |
 | `api-contract` | REST/OpenAPI/generated client/frontend API usage | `references/api-contract.md` |
 | `frontend` | React feature architecture, shared modules, state/data ownership | `references/frontend-architecture.md` |
 | `integration` | MySQL, Elasticsearch, MinIO, security, jobs, and source-of-truth flows | `references/integration-storage-search.md` |
@@ -46,8 +48,11 @@ If the user does not specify a mode, default to `quick`. If they name a concern,
 3. Inspect the repo before forming conclusions. Prefer `rg`, `find`, `sed`, Gradle/Yarn metadata, and existing tests.
 4. Run narrow non-mutating checks when they add confidence. Examples:
    - `./gradlew test --tests "com.thecodinglab.imdbclone.integration.repository.DatabaseSchemaTest"`
+   - `./gradlew test --tests "com.thecodinglab.imdbclone.ModulithArchitectureTest"`
    - `./gradlew test`
    - `cd frontend && yarn run lint`
+   - `cd frontend && yarn test frontendArchitecture.test.ts`
+   - `cd frontend && yarn test`
    - `cd frontend && yarn build`
 5. Produce a report using `references/report-format.md`.
 6. Keep findings evidence-backed. Include file links, line numbers when available, risk, suggested fix, and verification.
@@ -71,13 +76,14 @@ Specialists return findings only. The coordinator owns severity, deduplication, 
 - `High`: real architectural drift that will cause bugs, migration failures, module erosion, or contract breakage.
 - `Medium`: maintainability or testability risk with clear evidence.
 - `Low`: cleanup, documentation drift, naming inconsistency, or early warning.
-- `Readiness gap`: missing prerequisite for a planned architecture direction, especially Spring Modulith.
+- `Readiness gap`: missing prerequisite, hard check, or explicit decision needed before the architecture can be trusted.
 
 ## Guardrails
 
 - Do not change code while reviewing.
 - Do not regenerate OpenAPI clients.
 - Do not create migrations.
+- Do not weaken existing architecture tests to make drift disappear.
 - Do not suggest broad rewrites when a focused seam, test, or rule would protect the architecture.
 - Do not report generic best practices without evidence from this repo.
 - Prefer deterministic follow-up checks when possible: ArchUnit, Spring Modulith verification, schema integration tests, OpenAPI generation checks, frontend lint/build/tests.

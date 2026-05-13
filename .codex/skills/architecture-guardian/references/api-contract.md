@@ -6,11 +6,13 @@ Review backend REST controllers, DTOs, OpenAPI output, generated frontend client
 
 Primary files:
 
-- `src/main/java/com/thecodinglab/imdbclone/controller`
-- `src/main/java/com/thecodinglab/imdbclone/payload`
-- `src/main/java/com/thecodinglab/imdbclone/exception`
+- `src/main/java/com/thecodinglab/imdbclone/*/web`
+- `src/main/java/com/thecodinglab/imdbclone/*/api`
+- `src/main/java/com/thecodinglab/imdbclone/shared/api`
+- `src/main/java/com/thecodinglab/imdbclone/shared/error`
 - `frontend/src/client/imdb-clone-backend.yaml`
 - `frontend/src/client/movies/MoviesApi.ts`
+- `frontend/src/shared/api/moviesApi.ts`
 - `frontend/src/client/movies/generator-output`
 - `frontend/src/features/**/api`
 - `docs/frontend-data-contract.md`
@@ -20,23 +22,25 @@ Primary files:
 ### Backend Contract
 
 - controllers are thin and delegate business behavior
-- DTOs are explicit API shapes, not accidental entity exposure
+- request/response records in module `api` packages are explicit API shapes, not accidental entity exposure
 - request validation is applied where invalid input would reach services
 - pagination shape is consistent
 - auth requirements match route semantics and frontend expectations
 - ProblemDetail/global exception style is consistent
 - endpoint naming is stable and not leaking persistence names unnecessarily
+- controllers live in module `web` packages, not a global technical-layer controller package
 
 ### OpenAPI and Generated Client
 
 - backend contract changes are reflected in `frontend/src/client/imdb-clone-backend.yaml`
 - generated files under `frontend/src/client/movies/generator-output` are not manually edited
-- `MoviesApi.ts` remains the frontend entrypoint over generated Axios code
-- generated types are not copied into feature-local duplicates without reason
+- `shared/api/moviesApi.ts` owns generated Axios API class construction and HTTP client wiring
+- `MoviesApi.ts` remains a compatibility entrypoint over the shared API wrappers
+- generated DTO and enum types are not copied into feature-local duplicates without reason
 
 ### Frontend Usage
 
-- feature API wrappers call `MoviesApi.ts` rather than raw generated internals
+- feature API wrappers call the shared API wrapper exports rather than constructing raw generated API clients
 - auth token handling is centralized
 - frontend does not rely on backend implementation details not present in OpenAPI
 - UI limits match backend constraints, especially page size and public/private route behavior
