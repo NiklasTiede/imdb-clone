@@ -3,11 +3,13 @@ package com.thecodinglab.imdbclone.notification.internal;
 import static com.thecodinglab.imdbclone.shared.logging.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.thecodinglab.imdbclone.notification.api.NotificationService;
+import com.thecodinglab.imdbclone.identity.api.events.EmailConfirmationRequested;
+import com.thecodinglab.imdbclone.identity.api.events.PasswordResetRequested;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -16,7 +18,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 @Service
-public class EmailNotificationService implements NotificationService {
+public class EmailNotificationService {
 
   private static final Logger logger = LoggerFactory.getLogger(EmailNotificationService.class);
 
@@ -31,18 +33,26 @@ public class EmailNotificationService implements NotificationService {
     this.properties = properties;
   }
 
-  @Override
+  @EventListener
   @Async
-  public void sendEmailConfirmation(String emailReceiverAddress, String name, String link) {
+  public void on(EmailConfirmationRequested event) {
+    sendEmailConfirmation(event.emailAddress(), event.username(), event.link());
+  }
+
+  @EventListener
+  @Async
+  public void on(PasswordResetRequested event) {
+    sendPasswordReset(event.emailAddress(), event.username(), event.link());
+  }
+
+  private void sendEmailConfirmation(String emailReceiverAddress, String name, String link) {
     sendEmail(
         emailReceiverAddress,
         "Confirming Email Address",
         buildEmail("confirmationEmail", name, link));
   }
 
-  @Override
-  @Async
-  public void sendPasswordReset(String emailReceiverAddress, String name, String link) {
+  private void sendPasswordReset(String emailReceiverAddress, String name, String link) {
     sendEmail(emailReceiverAddress, "Reset Password", buildEmail("passwordResetEmail", name, link));
   }
 

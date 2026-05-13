@@ -3,7 +3,6 @@
     displayName = "Identity",
     allowedDependencies = {
       "account::api",
-      "notification::api",
       "shared::api",
       "shared::error",
       "shared::security",

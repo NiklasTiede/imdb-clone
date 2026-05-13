@@ -96,7 +96,16 @@ class ModulithArchitectureTest {
   }
 
   @Test
-  void identityUsesIntentBasedNotificationInterface() throws IOException {
+  void identityPublishesNotificationEventsInsteadOfCallingNotificationModule() throws IOException {
+    assertThat(readString(MODULE_ROOT.resolve("identity/package-info.java")))
+        .doesNotContain("notification");
+    assertThat(readString(MODULE_ROOT.resolve("identity/api/events/package-info.java")))
+        .contains("@NamedInterface(\"events\")");
+    assertThat(readString(MODULE_ROOT.resolve("notification/package-info.java")))
+        .contains("identity::events")
+        .doesNotContain("identity::api");
+    assertThat(Files.exists(MODULE_ROOT.resolve("notification/api/NotificationService.java")))
+        .isFalse();
     try (Stream<Path> identitySources = Files.walk(MODULE_ROOT.resolve("identity"))) {
       assertThat(
               identitySources
@@ -104,7 +113,9 @@ class ModulithArchitectureTest {
                   .map(this::readString)
                   .filter(
                       source ->
-                          source.contains("buildConfirmationEmail")
+                          source.contains("com.thecodinglab.imdbclone.notification")
+                              || source.contains("NotificationService")
+                              || source.contains("buildConfirmationEmail")
                               || source.contains("buildPasswordResetEmail")
                               || source.contains("sendEmail("))
                   .toList())

@@ -12,11 +12,12 @@ import com.thecodinglab.imdbclone.identity.api.LoginResponse;
 import com.thecodinglab.imdbclone.identity.api.PasswordResetRequest;
 import com.thecodinglab.imdbclone.identity.api.RegistrationRequest;
 import com.thecodinglab.imdbclone.identity.api.UserIdentityAvailability;
+import com.thecodinglab.imdbclone.identity.api.events.EmailConfirmationRequested;
+import com.thecodinglab.imdbclone.identity.api.events.PasswordResetRequested;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToken;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTokenRepository;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
 import com.thecodinglab.imdbclone.identity.internal.security.JwtTokenProvider;
-import com.thecodinglab.imdbclone.notification.api.NotificationService;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import java.time.Instant;
@@ -24,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -41,7 +43,7 @@ public class IdentityAccess implements AuthenticationService {
   private final PasswordEncoder passwordEncoder;
   private final AccountIdentityService accountIdentityService;
   private final VerificationTokenRepository verificationTokenRepository;
-  private final NotificationService notificationService;
+  private final ApplicationEventPublisher events;
   private final IdentityProperties identityProperties;
 
   public IdentityAccess(
@@ -50,14 +52,14 @@ public class IdentityAccess implements AuthenticationService {
       PasswordEncoder passwordEncoder,
       AccountIdentityService accountIdentityService,
       VerificationTokenRepository verificationTokenRepository,
-      NotificationService notificationService,
+      ApplicationEventPublisher events,
       IdentityProperties identityProperties) {
     this.authenticationManager = authenticationManager;
     this.jwtTokenProvider = jwtTokenProvider;
     this.passwordEncoder = passwordEncoder;
     this.accountIdentityService = accountIdentityService;
     this.verificationTokenRepository = verificationTokenRepository;
-    this.notificationService = notificationService;
+    this.events = events;
     this.identityProperties = identityProperties;
   }
 
@@ -116,9 +118,9 @@ public class IdentityAccess implements AuthenticationService {
 
     String link =
         identityProperties.backendHost() + "/api/auth/confirm-email-address?token=" + token;
-    notificationService.sendEmailConfirmation(account.email(), account.username(), link);
+    events.publishEvent(new EmailConfirmationRequested(account.email(), account.username(), link));
     logger.info(
-        "confirmation email containing activation token for account with [{}] was send",
+        "confirmation email containing activation token for account with [{}] was requested",
         kv(ACCOUNT_ID, account.id()));
     return "Confirmation email was send";
   }
@@ -157,10 +159,9 @@ public class IdentityAccess implements AuthenticationService {
     verificationTokenRepository.save(verificationToken);
 
     String link = identityProperties.frontendHost() + "/reset-password?token=" + token;
-    notificationService.sendPasswordReset(account.email(), account.username(), link);
+    events.publishEvent(new PasswordResetRequested(account.email(), account.username(), link));
     logger.info(
-        "confirmation email containing activation token for account with [{}] was send",
-        kv(ACCOUNT_ID, account.id()));
+        "password reset email for account with [{}] was requested", kv(ACCOUNT_ID, account.id()));
     return new MessageResponse("Email was send successfully");
   }
 

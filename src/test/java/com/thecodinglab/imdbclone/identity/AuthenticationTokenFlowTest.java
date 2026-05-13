@@ -1,27 +1,30 @@
 package com.thecodinglab.imdbclone.identity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 
 import com.thecodinglab.imdbclone.account.internal.persistence.Account;
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.PasswordResetRequest;
 import com.thecodinglab.imdbclone.identity.api.RegistrationRequest;
+import com.thecodinglab.imdbclone.identity.api.events.EmailConfirmationRequested;
+import com.thecodinglab.imdbclone.identity.api.events.PasswordResetRequested;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToken;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTokenRepository;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
-import com.thecodinglab.imdbclone.notification.api.NotificationService;
+import com.thecodinglab.imdbclone.notification.internal.EmailNotificationService;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.modulith.test.AssertablePublishedEvents;
+import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(properties = "imdb-clone.identity.email-verification-enabled=true")
+@ExtendWith(PublishedEventsExtension.class)
 class AuthenticationTokenFlowTest extends BaseContainers {
 
   @Autowired private AuthenticationService authenticationService;
@@ -32,10 +35,11 @@ class AuthenticationTokenFlowTest extends BaseContainers {
 
   @Autowired private PasswordEncoder passwordEncoder;
 
-  @MockitoBean private NotificationService notificationService;
+  @MockitoBean private EmailNotificationService emailNotifications;
 
   @Test
-  void registerUser_withEmailVerificationEnabled_createsDisabledAccountAndConfirmationToken() {
+  void registerUser_withEmailVerificationEnabled_createsDisabledAccountAndConfirmationToken(
+      AssertablePublishedEvents events) {
     authenticationService.registerUser(
         new RegistrationRequest(
             "Needs_Confirmation", "Needs.Confirmation@example.com", "Encrypted!Pa55worD"));
@@ -48,11 +52,15 @@ class AuthenticationTokenFlowTest extends BaseContainers {
     assertThat(token.getConfirmedAtInUtc()).isNull();
     assertThat(token.getExpiryDateInUtc()).isNotNull();
 
-    verify(notificationService)
-        .sendEmailConfirmation(
-            eq("needs.confirmation@example.com"),
-            eq("needs_confirmation"),
-            contains("/api/auth/confirm-email-address?token="));
+    assertThat(
+            events
+                .ofType(EmailConfirmationRequested.class)
+                .matching(
+                    event ->
+                        event.emailAddress().equals("needs.confirmation@example.com")
+                            && event.username().equals("needs_confirmation")
+                            && event.link().contains(token.getToken())))
+        .hasSize(1);
   }
 
   @Test
@@ -74,14 +82,21 @@ class AuthenticationTokenFlowTest extends BaseContainers {
   }
 
   @Test
-  void resetAndSaveNewPassword_createsResetTokenAndUpdatesPassword() {
+  void resetAndSaveNewPassword_createsResetTokenAndUpdatesPassword(
+      AssertablePublishedEvents events) {
     authenticationService.resetPassword("two@web.com");
 
     VerificationToken token = onlyTokenForAccount(2L, VerificationTypeEnum.PASSWORD_RESET);
     assertThat(token.getConfirmedAtInUtc()).isNotNull();
-    verify(notificationService)
-        .sendPasswordReset(
-            eq("two@web.com"), eq("test_user_two"), contains("/reset-password?token="));
+    assertThat(
+            events
+                .ofType(PasswordResetRequested.class)
+                .matching(
+                    event ->
+                        event.emailAddress().equals("two@web.com")
+                            && event.username().equals("test_user_two")
+                            && event.link().contains(token.getToken())))
+        .hasSize(1);
 
     authenticationService.saveNewPassword(
         new PasswordResetRequest(token.getToken(), "Changed!Pa55worD"));
