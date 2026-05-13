@@ -8,8 +8,8 @@ import com.thecodinglab.imdbclone.account.api.*;
 import com.thecodinglab.imdbclone.account.internal.mapper.AccountMapper;
 import com.thecodinglab.imdbclone.account.internal.persistence.Account;
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
+import com.thecodinglab.imdbclone.engagement.api.AccountActivityService;
 import com.thecodinglab.imdbclone.engagement.api.EngagementStats;
-import com.thecodinglab.imdbclone.engagement.api.EngagementStatsService;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
@@ -25,19 +25,19 @@ public class AccountServiceImpl implements AccountService {
   private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
   private final AccountRepository accountRepository;
-  private final EngagementStatsService engagementStatsService;
+  private final AccountActivityService accountActivityService;
   private final PasswordEncoder passwordEncoder;
   private final RegisteredUserRoleProvider registeredUserRoleProvider;
   private final AccountMapper accountMapper;
 
   public AccountServiceImpl(
       AccountRepository accountRepository,
-      EngagementStatsService engagementStatsService,
+      AccountActivityService accountActivityService,
       PasswordEncoder passwordEncoder,
       RegisteredUserRoleProvider registeredUserRoleProvider,
       AccountMapper accountMapper) {
     this.accountRepository = accountRepository;
-    this.engagementStatsService = engagementStatsService;
+    this.accountActivityService = accountActivityService;
     this.passwordEncoder = passwordEncoder;
     this.registeredUserRoleProvider = registeredUserRoleProvider;
     this.accountMapper = accountMapper;
@@ -87,7 +87,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private ProfileCounts getProfileCounts(Account account) {
-    EngagementStats stats = engagementStatsService.getStatsForAccount(account.getId());
+    EngagementStats stats = accountActivityService.getStatsForAccount(account.getId());
     logger.info(
         "Account profile with id [{}] was retrieved from database.",
         v(ACCOUNT_ID, account.getId()));
@@ -98,7 +98,7 @@ public class AccountServiceImpl implements AccountService {
   private record ProfileCounts(Long ratingsCount, Long watchedMoviesCount, Long commentsCount) {}
 
   @Override
-  public AccountCreated createAccount(RegistrationRequest request, UserPrincipal currentAccount) {
+  public AccountCreated createAccount(CreateAccountRequest request, UserPrincipal currentAccount) {
     String username = request.username().toLowerCase();
     String email = request.email().toLowerCase();
     String password = passwordEncoder.encode(request.password());

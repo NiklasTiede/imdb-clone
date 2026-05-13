@@ -2,9 +2,8 @@ package com.thecodinglab.imdbclone.media.internal;
 
 import com.thecodinglab.imdbclone.account.api.AccountImageService;
 import com.thecodinglab.imdbclone.account.api.AccountImageToken;
+import com.thecodinglab.imdbclone.catalog.api.MovieImageService;
 import com.thecodinglab.imdbclone.catalog.api.MovieImageToken;
-import com.thecodinglab.imdbclone.catalog.api.MovieService;
-import com.thecodinglab.imdbclone.media.api.MediaService;
 import com.thecodinglab.imdbclone.media.internal.images.Image;
 import com.thecodinglab.imdbclone.media.internal.images.ImageSize;
 import com.thecodinglab.imdbclone.media.internal.images.MovieImageConstants;
@@ -30,17 +29,17 @@ public class MediaServiceImpl implements MediaService {
   private final MinioClient minioClient;
   private final MediaStorageProperties storageProperties;
   private final AccountImageService accountImageService;
-  private final MovieService movieService;
+  private final MovieImageService movieImageService;
 
   public MediaServiceImpl(
       MinioClient minioClient,
       MediaStorageProperties storageProperties,
       AccountImageService accountImageService,
-      MovieService movieService) {
+      MovieImageService movieImageService) {
     this.minioClient = minioClient;
     this.storageProperties = storageProperties;
     this.accountImageService = accountImageService;
-    this.movieService = movieService;
+    this.movieImageService = movieImageService;
   }
 
   @Override
@@ -100,7 +99,7 @@ public class MediaServiceImpl implements MediaService {
   public List<String> storeMovieImage(MultipartFile file, Long movieId) {
 
     // validation
-    MovieImageToken movieImageToken = movieService.getMovieImageToken(movieId);
+    MovieImageToken movieImageToken = movieImageService.getMovieImageToken(movieId);
     ImageSize.validateMovieImage(file);
 
     String imageUrlToken;
@@ -120,7 +119,7 @@ public class MediaServiceImpl implements MediaService {
             imageUrlToken);
 
     // save in DB and ES
-    movieService.updateMovieImageToken(movieId, imageUrlToken);
+    movieImageService.updateMovieImageToken(movieId, imageUrlToken);
 
     // store images
     return movieImages.stream()
@@ -137,7 +136,7 @@ public class MediaServiceImpl implements MediaService {
   @Override
   public String deleteMovieImage(Long movieId) {
     // find / validate movie
-    MovieImageToken movieImageToken = movieService.getMovieImageToken(movieId);
+    MovieImageToken movieImageToken = movieImageService.getMovieImageToken(movieId);
 
     // delete images
     deleteFile(MovieImageConstants.getDetailViewImageName(movieImageToken.imageUrlToken()));

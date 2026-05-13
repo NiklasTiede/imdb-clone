@@ -6,11 +6,11 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.account.api.AccountIdentity;
 import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
-import com.thecodinglab.imdbclone.account.api.RegistrationRequest;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.identity.api.LoginResponse;
 import com.thecodinglab.imdbclone.identity.api.PasswordResetRequest;
+import com.thecodinglab.imdbclone.identity.api.RegistrationRequest;
 import com.thecodinglab.imdbclone.identity.api.UserIdentityAvailability;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToken;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTokenRepository;
@@ -116,8 +116,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     String link =
         identityProperties.backendHost() + "/api/auth/confirm-email-address?token=" + token;
-    String confirmationEmail = notificationService.buildConfirmationEmail(account.username(), link);
-    notificationService.sendEmail(account.email(), "Confirming Email Address", confirmationEmail);
+    notificationService.sendEmailConfirmation(account.email(), account.username(), link);
     logger.info(
         "confirmation email containing activation token for account with [{}] was send",
         kv(ACCOUNT_ID, account.id()));
@@ -158,9 +157,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     verificationTokenRepository.save(verificationToken);
 
     String link = identityProperties.frontendHost() + "/reset-password?token=" + token;
-    String passwordResetEmail =
-        notificationService.buildPasswordResetEmail(account.username(), link);
-    notificationService.sendEmail(account.email(), "Reset Password", passwordResetEmail);
+    notificationService.sendPasswordReset(account.email(), account.username(), link);
     logger.info(
         "confirmation email containing activation token for account with [{}] was send",
         kv(ACCOUNT_ID, account.id()));

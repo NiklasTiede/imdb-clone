@@ -1,7 +1,7 @@
 package com.thecodinglab.imdbclone.engagement.internal;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieRatingAggregateService;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
-import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
 import java.math.BigDecimal;
@@ -21,11 +21,12 @@ public class RatingAggregateScheduler {
   private static final Logger logger = LoggerFactory.getLogger(RatingAggregateScheduler.class);
 
   private final RatingRepository ratingRepository;
-  private final MovieService movieService;
+  private final MovieRatingAggregateService movieRatingAggregateService;
 
-  public RatingAggregateScheduler(RatingRepository ratingRepository, MovieService movieService) {
+  public RatingAggregateScheduler(
+      RatingRepository ratingRepository, MovieRatingAggregateService movieRatingAggregateService) {
     this.ratingRepository = ratingRepository;
-    this.movieService = movieService;
+    this.movieRatingAggregateService = movieRatingAggregateService;
   }
 
   /**
@@ -58,7 +59,7 @@ public class RatingAggregateScheduler {
           new BigDecimal(String.valueOf(averageRating), new MathContext(2, RoundingMode.HALF_EVEN));
 
       MovieRecord savedMovie =
-          movieService.updateRatingAggregate(
+          movieRatingAggregateService.updateRatingAggregate(
               movieRating.getFirst().getMovieId(), newRating, countOfAllRatings);
 
       logger.info(

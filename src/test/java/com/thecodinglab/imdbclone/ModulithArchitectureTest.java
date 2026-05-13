@@ -45,6 +45,16 @@ class ModulithArchitectureTest {
   }
 
   @Test
+  void applicationModulesDeclareAllowedDependencies() {
+    assertThat(EXPECTED_MODULES)
+        .allSatisfy(
+            module ->
+                assertThat(readString(MODULE_ROOT.resolve(module).resolve("package-info.java")))
+                    .as(module)
+                    .contains("allowedDependencies"));
+  }
+
+  @Test
   void apiPackagesAreNamedInterfaces() throws IOException {
     try (Stream<Path> packageInfos = Files.walk(MODULE_ROOT)) {
       assertThat(
@@ -64,6 +74,65 @@ class ModulithArchitectureTest {
                   .filter(path -> path.getFileName().toString().equals("package-info.java"))
                   .filter(path -> path.toString().contains("/internal/"))
                   .filter(path -> readString(path).contains("@NamedInterface"))
+                  .toList())
+          .isEmpty();
+    }
+  }
+
+  @Test
+  void registrationRequestBelongsToIdentityModule() {
+    assertThat(Files.exists(MODULE_ROOT.resolve("identity/api/RegistrationRequest.java"))).isTrue();
+    assertThat(Files.exists(MODULE_ROOT.resolve("account/api/RegistrationRequest.java"))).isFalse();
+  }
+
+  @Test
+  void catalogConsumersUseNarrowNamedInterfaces() {
+    assertThat(readString(MODULE_ROOT.resolve("engagement/package-info.java")))
+        .contains("catalog::reference", "catalog::ratings")
+        .doesNotContain("catalog::api");
+    assertThat(readString(MODULE_ROOT.resolve("media/package-info.java")))
+        .contains("catalog::media")
+        .doesNotContain("catalog::api");
+  }
+
+  @Test
+  void identityUsesIntentBasedNotificationInterface() throws IOException {
+    try (Stream<Path> identitySources = Files.walk(MODULE_ROOT.resolve("identity"))) {
+      assertThat(
+              identitySources
+                  .filter(Files::isRegularFile)
+                  .map(this::readString)
+                  .filter(
+                      source ->
+                          source.contains("buildConfirmationEmail")
+                              || source.contains("buildPasswordResetEmail")
+                              || source.contains("sendEmail("))
+                  .toList())
+          .isEmpty();
+    }
+  }
+
+  @Test
+  void mediaDoesNotExposeUploadInterfaceAsModuleApi() {
+    assertThat(Files.exists(MODULE_ROOT.resolve("media/api/MediaService.java"))).isFalse();
+  }
+
+  @Test
+  void accountUsesSingleEngagementProfileInterface() throws IOException {
+    assertThat(readString(MODULE_ROOT.resolve("account/package-info.java")))
+        .contains("engagement::profile")
+        .doesNotContain("engagement::api");
+    try (Stream<Path> accountSources = Files.walk(MODULE_ROOT.resolve("account"))) {
+      assertThat(
+              accountSources
+                  .filter(Files::isRegularFile)
+                  .map(this::readString)
+                  .filter(
+                      source ->
+                          source.contains("CommentService")
+                              || source.contains("RatingService")
+                              || source.contains("WatchedMovieService")
+                              || source.contains("EngagementStatsService"))
                   .toList())
           .isEmpty();
     }

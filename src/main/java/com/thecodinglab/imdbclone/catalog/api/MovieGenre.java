@@ -1,6 +1,9 @@
 package com.thecodinglab.imdbclone.catalog.api;
 
+import org.springframework.modulith.NamedInterface;
+
 /** Sets of MovieGenres are persisted as bit values. */
+@NamedInterface({"reference", "ratings"})
 public enum MovieGenre {
   HORROR(1 << 1),
   MYSTERY(1 << 2),

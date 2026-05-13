@@ -49,7 +49,7 @@ public class AccountController {
   @PostMapping("/add-account")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<AccountCreated> createAccount(
-      @Valid @RequestBody RegistrationRequest request,
+      @Valid @RequestBody CreateAccountRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
         accountService.createAccount(request, currentUser), HttpStatus.CREATED);

@@ -1,6 +1,5 @@
 package com.thecodinglab.imdbclone.identity.web;
 
-import com.thecodinglab.imdbclone.account.api.RegistrationRequest;
 import com.thecodinglab.imdbclone.identity.api.*;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import jakarta.validation.Valid;

@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.engagement.internal.mapper;
 
-import com.thecodinglab.imdbclone.catalog.api.MovieService;
+import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovie;
 import java.util.List;
@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class WatchedMovieMapper {
 
-  private final MovieService movieService;
+  private final MovieReferenceService movieReferenceService;
 
-  public WatchedMovieMapper(MovieService movieService) {
-    this.movieService = movieService;
+  public WatchedMovieMapper(MovieReferenceService movieReferenceService) {
+    this.movieReferenceService = movieReferenceService;
   }
 
   public WatchedMovieRecord entityToDTO(WatchedMovie watchedMovie) {
@@ -20,7 +20,7 @@ public class WatchedMovieMapper {
         watchedMovie.getAccountId(),
         watchedMovie.getMovieId(),
         watchedMovie.getCreatedAtInUtc(),
-        movieService.findMovieById(watchedMovie.getMovieId()));
+        movieReferenceService.findMovieById(watchedMovie.getMovieId()));
   }
 
   public List<WatchedMovieRecord> entityToDTO(List<WatchedMovie> watchedMovies) {

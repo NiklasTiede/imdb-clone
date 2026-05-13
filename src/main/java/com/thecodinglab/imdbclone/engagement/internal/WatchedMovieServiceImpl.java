@@ -3,7 +3,7 @@ package com.thecodinglab.imdbclone.engagement.internal;
 import static com.thecodinglab.imdbclone.shared.logging.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.thecodinglab.imdbclone.catalog.api.MovieService;
+import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.WatchedMovieMapper;
@@ -29,22 +29,22 @@ public class WatchedMovieServiceImpl implements WatchedMovieService {
   private static final Logger logger = LoggerFactory.getLogger(WatchedMovieServiceImpl.class);
 
   private final WatchedMovieRepository watchedMovieRepository;
-  private final MovieService movieService;
+  private final MovieReferenceService movieReferenceService;
   private final WatchedMovieMapper watchedMovieMapper;
 
   public WatchedMovieServiceImpl(
       WatchedMovieRepository watchedMovieRepository,
-      MovieService movieService,
+      MovieReferenceService movieReferenceService,
       WatchedMovieMapper watchedMovieMapper) {
     this.watchedMovieRepository = watchedMovieRepository;
-    this.movieService = movieService;
+    this.movieReferenceService = movieReferenceService;
     this.watchedMovieMapper = watchedMovieMapper;
   }
 
   @Override
   @Transactional
   public WatchedMovieRecord watchMovie(Long movieId, UserPrincipal currentAccount) {
-    movieService.findMovieById(movieId);
+    movieReferenceService.findMovieById(movieId);
     WatchedMovie watchedMovie = WatchedMovie.create(movieId, currentAccount.getId());
     WatchedMovie savedWatchedMovie = watchedMovieRepository.saveAndFlush(watchedMovie);
     logger.info(

@@ -6,8 +6,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieRatingAggregateService;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
-import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.engagement.internal.RatingAggregateScheduler;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
@@ -24,7 +24,7 @@ class RatingAggregateSchedulerTest {
 
   @Mock private RatingRepository ratingRepository;
 
-  @Mock private MovieService movieService;
+  @Mock private MovieRatingAggregateService movieRatingAggregateService;
 
   @InjectMocks private RatingAggregateScheduler scheduler;
 
@@ -34,7 +34,7 @@ class RatingAggregateSchedulerTest {
 
     scheduler.updateMovieRatings();
 
-    verify(movieService, never()).updateRatingAggregate(any(), any(), anyInt());
+    verify(movieRatingAggregateService, never()).updateRatingAggregate(any(), any(), anyInt());
   }
 
   @Test
@@ -50,12 +50,12 @@ class RatingAggregateSchedulerTest {
                 Rating.create(new BigDecimal("7.0"), 1L, 1L),
                 Rating.create(new BigDecimal("9.0"), 1L, 2L),
                 Rating.create(new BigDecimal("10.0"), 1L, 3L)));
-    when(movieService.updateRatingAggregate(1L, new BigDecimal("8.7"), 3))
+    when(movieRatingAggregateService.updateRatingAggregate(1L, new BigDecimal("8.7"), 3))
         .thenReturn(movieRecord(1L, "testMovieOnePri", 8.7F, 3));
 
     scheduler.updateMovieRatings();
 
-    verify(movieService).updateRatingAggregate(1L, new BigDecimal("8.7"), 3);
+    verify(movieRatingAggregateService).updateRatingAggregate(1L, new BigDecimal("8.7"), 3);
   }
 
   private MovieRecord movieRecord(Long id, String primaryTitle, Float rating, Integer ratingCount) {

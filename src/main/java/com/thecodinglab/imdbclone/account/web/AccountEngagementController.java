@@ -2,12 +2,10 @@ package com.thecodinglab.imdbclone.account.web;
 
 import com.thecodinglab.imdbclone.account.api.AccountIdentity;
 import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
+import com.thecodinglab.imdbclone.engagement.api.AccountActivityService;
 import com.thecodinglab.imdbclone.engagement.api.CommentRecord;
-import com.thecodinglab.imdbclone.engagement.api.CommentService;
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
-import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieRecord;
-import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
 import org.springframework.http.HttpStatus;
@@ -24,19 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(("/api/account"))
 public class AccountEngagementController {
 
-  private final CommentService commentService;
-  private final WatchedMovieService watchedMovieService;
-  private final RatingService ratingService;
+  private final AccountActivityService accountActivityService;
   private final AccountIdentityService accountIdentityService;
 
   public AccountEngagementController(
-      CommentService commentService,
-      WatchedMovieService watchedMovieService,
-      RatingService ratingService,
+      AccountActivityService accountActivityService,
       AccountIdentityService accountIdentityService) {
-    this.commentService = commentService;
-    this.watchedMovieService = watchedMovieService;
-    this.ratingService = ratingService;
+    this.accountActivityService = accountActivityService;
     this.accountIdentityService = accountIdentityService;
   }
 
@@ -49,7 +41,7 @@ public class AccountEngagementController {
           int size) {
     AccountIdentity account = accountIdentityService.findByUsername(username);
     return new ResponseEntity<>(
-        commentService.getCommentsByAccountId(account.id(), page, size), HttpStatus.OK);
+        accountActivityService.getCommentsByAccountId(account.id(), page, size), HttpStatus.OK);
   }
 
   @GetMapping("/{username}/watchlist")
@@ -61,7 +53,8 @@ public class AccountEngagementController {
           int size) {
     AccountIdentity account = accountIdentityService.findByUsername(username);
     return new ResponseEntity<>(
-        watchedMovieService.getWatchedMoviesByAccountId(account.id(), page, size), HttpStatus.OK);
+        accountActivityService.getWatchedMoviesByAccountId(account.id(), page, size),
+        HttpStatus.OK);
   }
 
   @GetMapping("/{username}/ratings")
@@ -73,6 +66,6 @@ public class AccountEngagementController {
           int size) {
     AccountIdentity account = accountIdentityService.findByUsername(username);
     return new ResponseEntity<>(
-        ratingService.getRatingsByAccountId(account.id(), page, size), HttpStatus.OK);
+        accountActivityService.getRatingsByAccountId(account.id(), page, size), HttpStatus.OK);
   }
 }

@@ -2,7 +2,9 @@ package com.thecodinglab.imdbclone.catalog.api;
 
 import java.time.Instant;
 import java.util.Set;
+import org.springframework.modulith.NamedInterface;
 
+@NamedInterface({"reference", "ratings"})
 public record MovieRecord(
     Long id,
     String primaryTitle,

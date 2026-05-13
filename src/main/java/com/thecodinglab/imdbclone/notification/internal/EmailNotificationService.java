@@ -33,7 +33,20 @@ public class EmailNotificationService implements NotificationService {
 
   @Override
   @Async
-  public void sendEmail(String emailReceiverAddress, String subject, String emailText) {
+  public void sendEmailConfirmation(String emailReceiverAddress, String name, String link) {
+    sendEmail(
+        emailReceiverAddress,
+        "Confirming Email Address",
+        buildEmail("confirmationEmail", name, link));
+  }
+
+  @Override
+  @Async
+  public void sendPasswordReset(String emailReceiverAddress, String name, String link) {
+    sendEmail(emailReceiverAddress, "Reset Password", buildEmail("passwordResetEmail", name, link));
+  }
+
+  private void sendEmail(String emailReceiverAddress, String subject, String emailText) {
     try {
       MimeMessage mimeMessage = mailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
@@ -48,19 +61,10 @@ public class EmailNotificationService implements NotificationService {
     }
   }
 
-  @Override
-  public String buildConfirmationEmail(String name, String link) {
+  private String buildEmail(String templateName, String name, String link) {
     Context context = new Context();
     context.setVariable("name", name);
     context.setVariable("link", link);
-    return templateEngine.process("confirmationEmail", context);
-  }
-
-  @Override
-  public String buildPasswordResetEmail(String name, String link) {
-    Context context = new Context();
-    context.setVariable("name", name);
-    context.setVariable("link", link);
-    return templateEngine.process("passwordResetEmail", context);
+    return templateEngine.process(templateName, context);
   }
 }

@@ -2,9 +2,7 @@ package com.thecodinglab.imdbclone.notification.api;
 
 public interface NotificationService {
 
-  void sendEmail(String emailReceiverAddress, String subject, String emailText);
+  void sendEmailConfirmation(String emailReceiverAddress, String name, String link);
 
-  String buildConfirmationEmail(String name, String link);
-
-  String buildPasswordResetEmail(String name, String link);
+  void sendPasswordReset(String emailReceiverAddress, String name, String link);
 }

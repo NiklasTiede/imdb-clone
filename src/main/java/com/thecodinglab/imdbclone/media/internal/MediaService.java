@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.media.api;
+package com.thecodinglab.imdbclone.media.internal;
 
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import java.util.List;

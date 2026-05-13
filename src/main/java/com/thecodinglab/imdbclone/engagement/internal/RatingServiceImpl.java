@@ -4,7 +4,7 @@ import static com.thecodinglab.imdbclone.shared.logging.Log.ACCOUNT_ID;
 import static com.thecodinglab.imdbclone.shared.logging.Log.RATING_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.thecodinglab.imdbclone.catalog.api.MovieService;
+import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.RatingMapper;
@@ -32,13 +32,15 @@ public class RatingServiceImpl implements RatingService {
 
   private static final Logger logger = LoggerFactory.getLogger(RatingServiceImpl.class);
 
-  private final MovieService movieService;
+  private final MovieReferenceService movieReferenceService;
   private final RatingRepository ratingRepository;
   private final RatingMapper ratingMapper;
 
   public RatingServiceImpl(
-      MovieService movieService, RatingRepository ratingRepository, RatingMapper ratingMapper) {
-    this.movieService = movieService;
+      MovieReferenceService movieReferenceService,
+      RatingRepository ratingRepository,
+      RatingMapper ratingMapper) {
+    this.movieReferenceService = movieReferenceService;
     this.ratingRepository = ratingRepository;
     this.ratingMapper = ratingMapper;
   }
@@ -48,7 +50,7 @@ public class RatingServiceImpl implements RatingService {
     if (score.floatValue() < 0 || score.floatValue() > 10.1) {
       throw new BadRequestException("Score must be between 0 and 10");
     } else {
-      movieService.findMovieById(movieId);
+      movieReferenceService.findMovieById(movieId);
       Rating rating = Rating.create(score, movieId, currentAccount.getId());
       Rating savedRating = ratingRepository.save(rating);
       logger.info("rating with [{}] was created.", kv(RATING_ID, savedRating.getId()));

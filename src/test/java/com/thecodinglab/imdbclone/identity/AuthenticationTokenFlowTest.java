@@ -1,17 +1,15 @@
 package com.thecodinglab.imdbclone.identity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import com.thecodinglab.imdbclone.account.api.RegistrationRequest;
 import com.thecodinglab.imdbclone.account.internal.persistence.Account;
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.PasswordResetRequest;
+import com.thecodinglab.imdbclone.identity.api.RegistrationRequest;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToken;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTokenRepository;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
@@ -38,9 +36,6 @@ class AuthenticationTokenFlowTest extends BaseContainers {
 
   @Test
   void registerUser_withEmailVerificationEnabled_createsDisabledAccountAndConfirmationToken() {
-    when(notificationService.buildConfirmationEmail(anyString(), anyString()))
-        .thenReturn("confirmation email");
-
     authenticationService.registerUser(
         new RegistrationRequest(
             "Needs_Confirmation", "Needs.Confirmation@example.com", "Encrypted!Pa55worD"));
@@ -54,19 +49,14 @@ class AuthenticationTokenFlowTest extends BaseContainers {
     assertThat(token.getExpiryDateInUtc()).isNotNull();
 
     verify(notificationService)
-        .buildConfirmationEmail(
-            eq("needs_confirmation"), contains("/api/auth/confirm-email-address?token="));
-    verify(notificationService)
-        .sendEmail(
+        .sendEmailConfirmation(
             eq("needs.confirmation@example.com"),
-            eq("Confirming Email Address"),
-            eq("confirmation email"));
+            eq("needs_confirmation"),
+            contains("/api/auth/confirm-email-address?token="));
   }
 
   @Test
   void confirmEmailAddress_enablesAccountAndMarksTokenConfirmed() {
-    when(notificationService.buildConfirmationEmail(anyString(), anyString()))
-        .thenReturn("confirmation email");
     authenticationService.registerUser(
         new RegistrationRequest(
             "Confirmable_User", "confirmable@example.com", "Encrypted!Pa55worD"));
@@ -85,17 +75,13 @@ class AuthenticationTokenFlowTest extends BaseContainers {
 
   @Test
   void resetAndSaveNewPassword_createsResetTokenAndUpdatesPassword() {
-    when(notificationService.buildPasswordResetEmail(anyString(), anyString()))
-        .thenReturn("password reset email");
-
     authenticationService.resetPassword("two@web.com");
 
     VerificationToken token = onlyTokenForAccount(2L, VerificationTypeEnum.PASSWORD_RESET);
     assertThat(token.getConfirmedAtInUtc()).isNotNull();
     verify(notificationService)
-        .buildPasswordResetEmail(eq("test_user_two"), contains("/reset-password?token="));
-    verify(notificationService)
-        .sendEmail(eq("two@web.com"), eq("Reset Password"), eq("password reset email"));
+        .sendPasswordReset(
+            eq("two@web.com"), eq("test_user_two"), contains("/reset-password?token="));
 
     authenticationService.saveNewPassword(
         new PasswordResetRequest(token.getToken(), "Changed!Pa55worD"));

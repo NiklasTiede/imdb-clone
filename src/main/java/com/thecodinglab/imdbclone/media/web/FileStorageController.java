@@ -1,6 +1,6 @@
 package com.thecodinglab.imdbclone.media.web;
 
-import com.thecodinglab.imdbclone.media.api.MediaService;
+import com.thecodinglab.imdbclone.media.internal.MediaService;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.security.CurrentUser;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;

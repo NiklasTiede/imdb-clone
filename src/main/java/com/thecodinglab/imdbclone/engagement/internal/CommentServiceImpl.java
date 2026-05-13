@@ -4,7 +4,7 @@ import static com.thecodinglab.imdbclone.shared.logging.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
-import com.thecodinglab.imdbclone.catalog.api.MovieService;
+import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
 import com.thecodinglab.imdbclone.engagement.api.CommentRecord;
 import com.thecodinglab.imdbclone.engagement.api.CommentService;
 import com.thecodinglab.imdbclone.engagement.api.CreateCommentRequest;
@@ -32,13 +32,15 @@ public class CommentServiceImpl implements CommentService {
   private static final Logger logger = LoggerFactory.getLogger(CommentServiceImpl.class);
 
   private final CommentRepository commentRepository;
-  private final MovieService movieService;
+  private final MovieReferenceService movieReferenceService;
   private final CommentMapper commentMapper;
 
   public CommentServiceImpl(
-      CommentRepository commentRepository, MovieService movieService, CommentMapper commentMapper) {
+      CommentRepository commentRepository,
+      MovieReferenceService movieReferenceService,
+      CommentMapper commentMapper) {
     this.commentRepository = commentRepository;
-    this.movieService = movieService;
+    this.movieReferenceService = movieReferenceService;
     this.commentMapper = commentMapper;
   }
 
@@ -54,7 +56,7 @@ public class CommentServiceImpl implements CommentService {
   public PagedResponse<CommentRecord> getCommentsByMovieId(Long movieId, int page, int size) {
     Pagination.validatePageNumberAndSize(page, size);
     Pageable pageable = PageRequest.of(page, size, Sort.by("createdAtInUtc").descending());
-    movieService.findMovieById(movieId);
+    movieReferenceService.findMovieById(movieId);
     Page<Comment> comments =
         commentRepository.findCommentsByMovieIdOrderByCreatedAtInUtc(movieId, pageable);
     logger.info(
@@ -68,7 +70,7 @@ public class CommentServiceImpl implements CommentService {
   @Override
   public CommentRecord createComment(
       Long movieId, CreateCommentRequest request, UserPrincipal currentAccount) {
-    movieService.findMovieById(movieId);
+    movieReferenceService.findMovieById(movieId);
     Comment comment = new Comment(request.message(), currentAccount.getId(), movieId);
     Comment savedComment = commentRepository.save(comment);
     logger.info("Comment with [{}] was created", kv(COMMENT_ID, savedComment.getId()));

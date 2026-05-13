@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
-import com.thecodinglab.imdbclone.media.api.MediaService;
+import com.thecodinglab.imdbclone.media.internal.MediaService;
 import com.thecodinglab.imdbclone.media.internal.MediaStorageProperties;
 import com.thecodinglab.imdbclone.media.internal.images.MovieImageConstants;
 import com.thecodinglab.imdbclone.media.internal.images.ProfilePhotoConstants;
