@@ -1,12 +1,11 @@
 import { Route, Routes } from "react-router";
 import MyAppBar from "./shared/layout/AppBarTop";
 import HomePage from "./pages/HomePage";
-import { LoginPage, LogoutPage, RegistrationPage } from "./features/auth";
+import { LoginPage, LogoutPage, RegistrationPage } from "./features/identity";
 import { AccountSettingsPage } from "./features/account";
 import { EditMoviePage, MovieDetailPage } from "./features/catalog";
-import { YourRatingsPage } from "./features/rating";
+import { WatchlistPage, YourRatingsPage } from "./features/engagement";
 import { FilterPanelPage, MovieSearchPage } from "./features/search";
-import { WatchlistPage } from "./features/watchlist";
 import { appTheme } from "./theme";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import React from "react";

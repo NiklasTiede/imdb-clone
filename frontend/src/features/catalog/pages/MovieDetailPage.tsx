@@ -11,10 +11,12 @@ import Surface from "../../../shared/layout/Surface";
 import { movieQueries } from "../api/movieQueries";
 import { MovieHero } from "../components/MovieHero";
 import Synopsis from "../components/Synopsis";
-import { rateMovieMutationOptions } from "../../rating/api/ratingMutations";
-import { ratingQueries } from "../../rating/api/ratingQueries";
-import { toggleWatchlistMutationOptions } from "../../watchlist/api/watchlistMutations";
-import { watchlistQueries } from "../../watchlist/api/watchlistQueries";
+import {
+  rateMovieMutationOptions,
+  ratingQueries,
+  toggleWatchlistMutationOptions,
+  watchlistQueries,
+} from "../../engagement";
 
 const MovieDetailPage = () => {
   const location = useLocation();

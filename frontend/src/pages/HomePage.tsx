@@ -9,8 +9,10 @@ import { useAuthSession } from "../shared/auth/useAuthSession";
 import { authSession } from "../shared/auth/authSession";
 import { useFeaturedMovie } from "../hooks/useFeaturedMovie";
 import { useMoviesByGenre } from "../hooks/useMoviesByGenre";
-import { toggleWatchlistMutationOptions } from "../features/watchlist/api/watchlistMutations";
-import { watchlistQueries } from "../features/watchlist/api/watchlistQueries";
+import {
+  toggleWatchlistMutationOptions,
+  watchlistQueries,
+} from "../features/engagement";
 import { useNavigate } from "react-router";
 import { useState } from "react";
 
