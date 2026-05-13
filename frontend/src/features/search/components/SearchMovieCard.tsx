@@ -1,5 +1,5 @@
 import { MovieRecord } from "../../../client/movies/generator-output";
-import MovieCard from "../../../components/common/MovieCard";
+import { PosterMovieCard } from "../../catalog";
 
 type SearchMovieCardProps = {
   movie: MovieRecord;
@@ -7,7 +7,7 @@ type SearchMovieCardProps = {
 };
 
 const SearchMovieCard = ({ movie, onToggleBookmark }: SearchMovieCardProps) => {
-  return <MovieCard movie={movie} onToggleBookmark={onToggleBookmark} />;
+  return <PosterMovieCard movie={movie} onToggleBookmark={onToggleBookmark} />;
 };
 
 export default SearchMovieCard;

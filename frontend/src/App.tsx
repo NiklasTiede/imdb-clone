@@ -1,16 +1,16 @@
 import { Route, Routes } from "react-router";
 import MyAppBar from "./shared/layout/AppBarTop";
-import HomePage from "./pages/HomePage";
+import { HomePage } from "./features/home";
 import { LoginPage, LogoutPage, RegistrationPage } from "./features/identity";
 import { AccountSettingsPage } from "./features/account";
 import { EditMoviePage, MovieDetailPage } from "./features/catalog";
 import { WatchlistPage, YourRatingsPage } from "./features/engagement";
+import { MessagesPage } from "./features/notification";
 import { FilterPanelPage, MovieSearchPage } from "./features/search";
 import { appTheme } from "./theme";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import React from "react";
-import Messages from "./components/profile/Messages";
-import { RoleNameEnum } from "./types/roles";
+import { RoleNameEnum } from "./shared/auth";
 import { NotFoundPage, PrivateRoute, PublicRoute } from "./app/routes";
 
 function App() {
@@ -60,7 +60,7 @@ function App() {
           path="/your-messages"
           element={
             <PrivateRoute role={RoleNameEnum.User}>
-              <Messages />
+              <MessagesPage />
             </PrivateRoute>
           }
         />

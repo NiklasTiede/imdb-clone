@@ -2,17 +2,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Snackbar from "@mui/material/Snackbar";
-import { MovieSearchRequestMovieGenreEnum } from "../client/movies/generator-output";
-import Hero from "../components/home/Hero";
-import MovieCarousel from "../components/common/MovieCarousel";
-import { useAuthSession } from "../shared/auth/useAuthSession";
-import { authSession } from "../shared/auth/authSession";
-import { useFeaturedMovie } from "../hooks/useFeaturedMovie";
-import { useMoviesByGenre } from "../hooks/useMoviesByGenre";
+import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generator-output";
+import FeaturedMovieHero from "../components/FeaturedMovieHero";
+import MovieCarousel from "../components/MovieCarousel";
+import { useAuthSession } from "../../../shared/auth/useAuthSession";
+import { authSession } from "../../../shared/auth/authSession";
+import { useFeaturedMovie } from "../api/useFeaturedMovie";
+import { useMoviesByGenre } from "../api/useMoviesByGenre";
 import {
   toggleWatchlistMutationOptions,
   watchlistQueries,
-} from "../features/engagement";
+} from "../../engagement";
 import { useNavigate } from "react-router";
 import { useState } from "react";
 
@@ -103,7 +103,7 @@ const HomePage = () => {
         sx={{ px: { xs: 0, md: 4 }, py: { xs: 3, md: 4 } }}
       >
         <Box sx={{ px: { xs: 2, md: 0 } }}>
-          <Hero
+          <FeaturedMovieHero
             movie={featuredMovie}
             loading={isFeaturedLoading}
             isBookmarked={isFeaturedBookmarked}

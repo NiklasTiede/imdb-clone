@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router";
 import React from "react";
-import { isJwtNotExpired } from "../../utils/jwtHelper";
+import { isJwtNotExpired } from "../../shared/auth";
 
 const PublicRoute = ({ children }: { children: React.ReactElement }) => {
   const location = useLocation();

@@ -15,8 +15,10 @@ describe("frontend feature architecture", () => {
       "account",
       "catalog",
       "engagement",
+      "home",
       "identity",
       "media",
+      "notification",
       "search",
     ]);
     expect(existsSync(path.join(featuresRoot, "auth"))).toBe(false);
@@ -32,6 +34,10 @@ describe("frontend feature architecture", () => {
 
   test("cross-feature imports use public feature interfaces", () => {
     expect(crossFeatureInternalImports()).toEqual([]);
+  });
+
+  test("keeps domain code out of legacy top-level folders", () => {
+    expect(legacyDomainFolders()).toEqual([]);
   });
 });
 
@@ -63,6 +69,11 @@ const crossFeatureInternalImports = (): string[] =>
       ({ sourceFile, specifier }) =>
         `${path.relative(srcRoot, sourceFile)} imports ${specifier}`,
     )
+    .sort();
+
+const legacyDomainFolders = (): string[] =>
+  ["components", "hooks", "pages", "types", "utils"]
+    .filter((entry) => existsSync(path.join(srcRoot, entry)))
     .sort();
 
 const sourceFiles = (directory: string): string[] =>

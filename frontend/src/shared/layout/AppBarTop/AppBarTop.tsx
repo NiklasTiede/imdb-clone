@@ -11,7 +11,7 @@ import { i18n } from "../../../i18n";
 import { authSession } from "../../auth/authSession";
 import { useAuthSession } from "../../auth/useAuthSession";
 import { tokens } from "../../../theme";
-import { RoleNameEnum } from "../../../types/roles";
+import { RoleNameEnum } from "../../auth";
 import AdminEditButton from "./AdminEditButton";
 import LoginButton from "./LoginButton";
 import MovieSearchInput from "./MovieSearchInput";

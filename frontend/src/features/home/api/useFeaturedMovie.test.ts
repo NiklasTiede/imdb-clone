@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
-import type { MovieRecord } from "../client/movies/generator-output";
-import { moviesApi } from "../shared/api/moviesApi";
+import type { MovieRecord } from "../../../client/movies/generator-output";
+import { moviesApi } from "../../../shared/api/moviesApi";
 import { featuredMovieQuery } from "./useFeaturedMovie";
 
 describe("featuredMovieQuery", () => {

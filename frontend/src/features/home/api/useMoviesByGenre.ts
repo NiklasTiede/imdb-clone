@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   MovieSearchRequestMovieGenreEnum,
   type MovieRecord,
-} from "../client/movies/generator-output";
-import { searchApi } from "../shared/api/moviesApi";
+} from "../../../client/movies/generator-output";
+import { searchApi } from "../../../shared/api/moviesApi";
 
 const GENRE_PAGE_SIZE = 20;
 const GENRE_MOVIE_LIMIT = 15;

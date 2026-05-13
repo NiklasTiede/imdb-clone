@@ -1,5 +1,5 @@
-import { RoleNameEnum } from "../types/roles";
-import { authSession } from "../shared/auth/authSession";
+import { authSession } from "./authSession";
+import { RoleNameEnum } from "./roles";
 
 export const hasUserRole = (role: RoleNameEnum) => {
   return authSession.hasRole(role);

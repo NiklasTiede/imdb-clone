@@ -14,8 +14,8 @@ import {
   useRef,
   useState,
 } from "react";
-import type { MovieRecord } from "../../client/movies/generator-output";
-import MovieCard from "./MovieCard";
+import type { MovieRecord } from "../../../client/movies/generator-output";
+import { PosterMovieCard } from "../../catalog";
 
 type MovieCarouselProps = {
   title: string;
@@ -199,7 +199,7 @@ const MovieCarousel = ({
                   width: movieCarouselCardWidthSx,
                 }}
               >
-                <MovieCard movie={movie} />
+                <PosterMovieCard movie={movie} />
               </Box>
             ))}
       </Box>

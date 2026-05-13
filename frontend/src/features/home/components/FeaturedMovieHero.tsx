@@ -8,10 +8,9 @@ import Chip from "@mui/material/Chip";
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import type { MovieRecord } from "../../client/movies/generator-output";
-import { IMDB_GOLD } from "../../features/catalog";
-import { MinioImageSize, PosterImage } from "../../shared/media";
-import { formatRatingCount } from "../../utils/formatRatingCount";
+import type { MovieRecord } from "../../../client/movies/generator-output";
+import { formatRatingCount, IMDB_GOLD } from "../../catalog";
+import { MinioImageSize, PosterImage } from "../../../shared/media";
 
 type HeroProps = {
   movie: MovieRecord | null;

@@ -1,7 +1,6 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router";
-import { RoleNameEnum } from "../../types/roles";
-import { hasUserRole, isJwtNotExpired } from "../../utils/jwtHelper";
+import { hasUserRole, isJwtNotExpired, RoleNameEnum } from "../../shared/auth";
 import AccessDeniedPage from "./AccessDeniedPage";
 
 const PrivateRoute = ({

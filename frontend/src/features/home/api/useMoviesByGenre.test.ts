@@ -2,8 +2,8 @@ import { describe, expect, test, vi } from "vitest";
 import {
   MovieSearchRequestMovieGenreEnum,
   type MovieRecord,
-} from "../client/movies/generator-output";
-import { searchApi } from "../shared/api/moviesApi";
+} from "../../../client/movies/generator-output";
+import { searchApi } from "../../../shared/api/moviesApi";
 import { genreMoviesQuery } from "./useMoviesByGenre";
 
 describe("genreMoviesQuery", () => {

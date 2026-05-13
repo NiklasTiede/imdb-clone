@@ -11,7 +11,7 @@ import {
 import { i18n } from "../../../../i18n";
 import { useLocalStorageState } from "../../../../shared/hooks/useLocalStorageState";
 import PageContent from "../../../../shared/layout/PageContent";
-import { getUsername } from "../../../../utils/jwtHelper";
+import { getUsername } from "../../../../shared/auth";
 import EmptyWatchlist from "../components/EmptyWatchlist";
 import PickForMeDialog from "../components/PickForMeDialog";
 import WatchlistGrid from "../components/WatchlistGrid";

@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router";
 import { describe, expect, test, vi } from "vitest";
 import YourRatingsPage from "./YourRatingsPage";
 
-vi.mock("../../../../utils/jwtHelper", () => ({
+vi.mock("../../../../shared/auth", () => ({
   getUsername: () => "ada",
 }));
 

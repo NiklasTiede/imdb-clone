@@ -7,9 +7,9 @@ import CardActionArea from "@mui/material/CardActionArea";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
-import type { MovieRecord } from "../../client/movies/generator-output";
-import { IMDB_GOLD } from "../../features/catalog";
-import { MinioImageSize, PosterImage } from "../../shared/media";
+import type { MovieRecord } from "../../../client/movies/generator-output";
+import { IMDB_GOLD } from "./RatingPill";
+import { MinioImageSize, PosterImage } from "../../../shared/media";
 
 type MovieCardProps = {
   movie: MovieRecord;

@@ -1,16 +1,16 @@
 import { Container, Paper } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import { i18n } from "../i18n";
+import { i18n } from "../../../i18n";
 import React from "react";
 
-const Home = () => {
+const Messages = () => {
   return (
     <>
       <div>
         <Container maxWidth={"xs"}>
           <Paper elevation={3} sx={{ padding: 4, marginTop: 10, fontSize: 18 }}>
             <Typography variant={"inherit"} sx={{ textAlign: "center" }}>
-              {i18n.home.heading}
+              {i18n.messages.heading}
             </Typography>
           </Paper>
         </Container>
@@ -19,4 +19,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Messages;

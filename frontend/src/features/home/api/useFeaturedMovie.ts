@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import type { MovieRecord } from "../client/movies/generator-output";
-import { moviesApi } from "../shared/api/moviesApi";
+import type { MovieRecord } from "../../../client/movies/generator-output";
+import { moviesApi } from "../../../shared/api/moviesApi";
 import { pickDailyIndex } from "../utils/pickDailyIndex";
 
 const FEATURED_MOVIE_POOL_SIZE = 30;

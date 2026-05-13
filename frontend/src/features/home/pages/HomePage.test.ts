@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { MovieSearchRequestMovieGenreEnum } from "../client/movies/generator-output";
+import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generator-output";
 import { getHomeMinStartYear, homeGenreRows } from "./HomePage";
 
 describe("homeGenreRows", () => {

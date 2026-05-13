@@ -10,7 +10,7 @@ import { MovieCard } from "../../../catalog";
 import { i18n } from "../../../../i18n";
 import PageContent from "../../../../shared/layout/PageContent";
 import SectionHeading from "../../../../shared/layout/SectionHeading";
-import { getUsername } from "../../../../utils/jwtHelper";
+import { getUsername } from "../../../../shared/auth";
 import { RatedMovie, ratingQueries } from "../api/ratingQueries";
 
 const YourRatingsPage = () => {
