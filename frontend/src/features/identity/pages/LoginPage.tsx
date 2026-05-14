@@ -1,17 +1,30 @@
-import React, { useEffect } from "react";
-import { Link, useNavigate } from "react-router";
-import type { LoginRequest } from "../model/identityRequests";
-import { Button, Container, Grid, Paper, TextField } from "@mui/material";
-import { tokens } from "../../../theme";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as zod from "zod";
-import { i18n } from "../../../i18n";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import {
+  Box,
+  Button,
+  Grid,
+  IconButton,
+  InputAdornment,
+  Link,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { authenticateAccount } from "../api/identityMutations";
-import { authSession, useAuthSession } from "../../../shared/auth";
-import { useSnackbar } from "notistack";
 import { AxiosError } from "axios";
+import { useSnackbar } from "notistack";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link as RouterLink, useNavigate } from "react-router";
+import * as zod from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { i18n } from "../../../i18n";
+import { authSession, useAuthSession } from "../../../shared/auth";
+import { authenticateAccount } from "../api/identityMutations";
+import AuthVisualPane from "../components/AuthVisualPane";
+import { authTextFieldSx } from "../components/authFormStyles";
+import type { LoginRequest } from "../model/identityRequests";
 
 interface FormInputs {
   usernameOrEmail: string;
@@ -19,22 +32,16 @@ interface FormInputs {
 }
 
 const schema = zod.object({
-  usernameOrEmail: zod
-    .string()
-    .regex(new RegExp(i18n.regex.username.pattern), "Invalid Email / Username")
-    .or(zod.string().regex(new RegExp(i18n.regex.email.pattern))),
-  password: zod
-    .string()
-    .min(8, "Password must contain at least 8 characters")
-    .max(30, "Password must contain at most 30 characters")
-    .regex(new RegExp(i18n.regex.password.pattern), "Invalid Password"),
+  usernameOrEmail: zod.string().min(1, "Email or username is required"),
+  password: zod.string().min(1, "Password is required"),
 });
 
 const LoginPage = () => {
-  const colors = tokens();
   const navigateTo = useNavigate();
   const isLoggedIn = useAuthSession();
   const { enqueueSnackbar } = useSnackbar();
+  const [showPassword, setShowPassword] = useState(false);
+
   const authenticateAccountMutation = useMutation({
     mutationFn: authenticateAccount,
     onSuccess: (session) => {
@@ -76,86 +83,136 @@ const LoginPage = () => {
   }, [isLoggedIn, navigateTo]);
 
   return (
-    <>
-      <div>
-        <Container maxWidth={"sm"}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Grid
-              container
-              spacing={2}
+    <Grid container sx={{ minHeight: "calc(100vh - 55px)" }}>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <AuthVisualPane variant="login" />
+      </Grid>
+      <Grid
+        size={{ xs: 12, md: 6 }}
+        sx={{
+          alignItems: "center",
+          display: "flex",
+          justifyContent: "center",
+          px: { xs: 2.5, sm: 5, md: 7 },
+          py: { xs: 4, md: 6 },
+        }}
+      >
+        <Box
+          component="form"
+          onSubmit={handleSubmit(onSubmit)}
+          sx={{ maxWidth: 440, width: "100%" }}
+        >
+          <Box sx={{ mb: 3.5 }}>
+            <Typography
+              component="h1"
               sx={{
-                flexDirection: "column",
-                justifyContent: "center",
-                minHeight: "80vh",
+                color: "common.white",
+                fontSize: { xs: 24, sm: 26 },
+                fontWeight: 500,
+                mb: 0.75,
               }}
             >
-              <Paper elevation={2} sx={{ padding: 5 }}>
-                <Grid container spacing={2} sx={{ flexDirection: "column" }}>
-                  <Grid>
-                    <TextField
-                      type={"text"}
-                      label={"Email / Username"}
-                      variant={"outlined"}
-                      error={!!errors.usernameOrEmail}
-                      helperText={
-                        errors.usernameOrEmail
-                          ? errors.usernameOrEmail?.message
-                          : " "
-                      }
-                      fullWidth
-                      {...register("usernameOrEmail")}
-                    />
-                  </Grid>
-                  <Grid>
-                    <TextField
-                      type={"password"}
-                      label={"Password"}
-                      variant={"outlined"}
-                      error={!!errors.password}
-                      helperText={
-                        errors.password ? errors.password?.message : " "
-                      }
-                      fullWidth
-                      {...register("password")}
-                    />
-                  </Grid>
-                  <Grid sx={{ textAlign: "center" }}>
-                    <Button
-                      sx={{
-                        color: colors.primary[100],
-                        backgroundColor: colors.blueAccent[700],
-                        ":hover": {
-                          color: colors.primary[100],
-                          backgroundColor: colors.blueAccent[600],
-                        },
-                      }}
-                      variant={"contained"}
-                      type={"submit"}
-                      fullWidth
-                      disabled={authenticateAccountMutation.isPending}
-                    >
-                      {i18n.login.login}
-                    </Button>
-                  </Grid>
-                  <Grid sx={{ textAlign: "center" }}>
-                    Need an account?{" "}
-                    <Link
-                      to="/registration"
-                      style={{
-                        textDecoration: "none",
-                        color: colors.redAccent[300],
-                      }}
-                    >
-                      {i18n.login.registration}
-                    </Link>
-                  </Grid>
-                </Grid>
-              </Paper>
-            </Grid>
-          </form>
-        </Container>
-      </div>
-    </>
+              Sign in
+            </Typography>
+            <Typography color="text.secondary" variant="body2">
+              Enter your credentials to continue.
+            </Typography>
+          </Box>
+
+          <Stack spacing={2}>
+            <TextField
+              autoComplete="username"
+              autoFocus
+              error={!!errors.usernameOrEmail}
+              fullWidth
+              helperText={
+                errors.usernameOrEmail ? errors.usernameOrEmail?.message : " "
+              }
+              label="Email or username"
+              type="text"
+              {...register("usernameOrEmail")}
+              sx={authTextFieldSx}
+            />
+
+            <Box>
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "baseline",
+                  justifyContent: "space-between",
+                  mb: 0.75,
+                }}
+              >
+                <Typography
+                  color="text.secondary"
+                  component="label"
+                  htmlFor="password"
+                  variant="caption"
+                >
+                  Password
+                </Typography>
+                <Link
+                  component={RouterLink}
+                  sx={{
+                    color: "#f5c518",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                  to="/reset-password"
+                >
+                  Forgot password?
+                </Link>
+              </Stack>
+
+              <TextField
+                autoComplete="current-password"
+                error={!!errors.password}
+                fullWidth
+                helperText={errors.password ? errors.password?.message : " "}
+                id="password"
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                          edge="end"
+                          onClick={() => setShowPassword((current) => !current)}
+                          size="small"
+                        >
+                          {showPassword ? (
+                            <VisibilityOffIcon fontSize="small" />
+                          ) : (
+                            <VisibilityIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+                type={showPassword ? "text" : "password"}
+                {...register("password")}
+                sx={authTextFieldSx}
+              />
+            </Box>
+
+            <Button
+              disabled={authenticateAccountMutation.isPending}
+              fullWidth
+              sx={{ py: 1.5, textTransform: "none" }}
+              type="submit"
+              variant="contained"
+            >
+              Sign in
+            </Button>
+          </Stack>
+        </Box>
+      </Grid>
+    </Grid>
   );
 };
 

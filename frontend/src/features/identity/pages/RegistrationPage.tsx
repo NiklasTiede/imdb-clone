@@ -30,6 +30,7 @@ import {
   checkUsernameAvailability,
 } from "../api/identityAvailability";
 import AuthVisualPane from "../components/AuthVisualPane";
+import { authTextFieldSx } from "../components/authFormStyles";
 import { useAvailability } from "../hooks/useAvailability";
 import { useSnackbar } from "notistack";
 
@@ -328,16 +329,6 @@ const RegistrationPage = () => {
       </Grid>
     </Grid>
   );
-};
-
-const authTextFieldSx = {
-  "& .MuiOutlinedInput-root": {
-    bgcolor: "#0d1b2a",
-    "& fieldset": { borderColor: "rgba(255,255,255,0.12)" },
-    "&:hover fieldset": { borderColor: "rgba(255,255,255,0.24)" },
-    "&.Mui-focused fieldset": { borderColor: "#4dabf7" },
-    "&.Mui-error fieldset": { borderColor: "#f87171" },
-  },
 };
 
 type AvailabilityAdornmentProps = {

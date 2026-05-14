@@ -32,15 +32,30 @@ const UserActions = ({
         </Badge>
       </IconButton>
     </Tooltip>
-    <Tooltip title="Account menu">
+    <Tooltip
+      placement="bottom-end"
+      slotProps={{
+        popper: {
+          modifiers: [
+            {
+              name: "preventOverflow",
+              options: {
+                boundary: "viewport",
+                padding: 8,
+              },
+            },
+          ],
+        },
+      }}
+      title="Account menu"
+    >
       <IconButton
-        size="large"
-        edge="end"
         aria-label="account of current user"
         aria-controls={menuId}
         aria-haspopup="true"
-        onClick={onProfileMenuOpen}
         color="inherit"
+        onClick={onProfileMenuOpen}
+        size="large"
         sx={{ p: 0.5 }}
       >
         <Avatar

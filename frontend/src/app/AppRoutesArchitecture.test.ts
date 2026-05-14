@@ -53,4 +53,8 @@ describe("app route architecture", () => {
   test("keeps sign out as an action instead of a route", () => {
     expect(routeRegistrySource()).not.toContain('path: "/logout"');
   });
+
+  test("provides a reset password destination for auth links", () => {
+    expect(routeRegistrySource()).toContain('path: "/reset-password"');
+  });
 });

@@ -18,135 +18,182 @@ const posters = [
   { title: "ARRIVAL", bg: "#0a1410", fg: "#86efac" },
 ];
 
-const features: Array<{
-  description: string;
-  icon: ReactNode;
-  label: string;
-}> = [
-  {
-    description: "Save movies for movie night.",
-    icon: <BookmarkBorderIcon fontSize="small" />,
-    label: "Build your watchlist",
-  },
-  {
-    description: "Build a personal taste profile.",
-    icon: <StarBorderIcon fontSize="small" />,
-    label: "Rate what you watch",
-  },
-  {
-    description: "Comment on movies and discover other fans.",
-    icon: <ChatBubbleOutlineIcon fontSize="small" />,
-    label: "Join the conversation",
-  },
-];
+type AuthVisualPaneVariant = "login" | "signup";
 
-const AuthVisualPane = () => (
-  <Box
-    sx={{
-      background: "linear-gradient(135deg, #0a1a2e 0%, #16243a 100%)",
-      display: { xs: "none", md: "flex" },
-      flexDirection: "column",
-      justifyContent: "space-between",
-      overflow: "hidden",
-      p: 6,
-      position: "relative",
-    }}
-  >
+const copyByVariant: Record<
+  AuthVisualPaneVariant,
+  {
+    features: Array<{
+      description: string;
+      icon: ReactNode;
+      label: string;
+    }>;
+    subtitle: string;
+    title: string;
+  }
+> = {
+  signup: {
+    title: "Track your taste in cinema.",
+    subtitle:
+      "Join thousands of movie lovers cataloguing, rating, and discussing the films that matter to them.",
+    features: [
+      {
+        description: "Save movies for movie night.",
+        icon: <BookmarkBorderIcon fontSize="small" />,
+        label: "Build your watchlist",
+      },
+      {
+        description: "Build a personal taste profile.",
+        icon: <StarBorderIcon fontSize="small" />,
+        label: "Rate what you watch",
+      },
+      {
+        description: "Comment on movies and discover other fans.",
+        icon: <ChatBubbleOutlineIcon fontSize="small" />,
+        label: "Join the conversation",
+      },
+    ],
+  },
+  login: {
+    title: "Welcome back.",
+    subtitle:
+      "Pick up where you left off - your watchlist, ratings, and discussions are waiting.",
+    features: [
+      {
+        description: "The movies you've saved.",
+        icon: <BookmarkBorderIcon fontSize="small" />,
+        label: "Your watchlist",
+      },
+      {
+        description: "The judgments you've made.",
+        icon: <StarBorderIcon fontSize="small" />,
+        label: "Your ratings",
+      },
+      {
+        description: "Replies to your comments.",
+        icon: <ChatBubbleOutlineIcon fontSize="small" />,
+        label: "Your conversations",
+      },
+    ],
+  },
+};
+
+type AuthVisualPaneProps = {
+  variant?: AuthVisualPaneVariant;
+};
+
+const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
+  const copy = copyByVariant[variant];
+
+  return (
     <Box
-      aria-hidden
       sx={{
-        display: "grid",
-        gap: 1,
-        gridTemplateColumns: "repeat(3, 1fr)",
-        inset: 0,
-        opacity: 0.15,
-        p: 1.5,
-        position: "absolute",
-        transform: "rotate(-8deg) scale(1.4)",
-        transformOrigin: "center",
+        background: "linear-gradient(135deg, #0a1a2e 0%, #16243a 100%)",
+        display: { xs: "none", md: "flex" },
+        flexDirection: "column",
+        justifyContent: "space-between",
+        overflow: "hidden",
+        p: 6,
+        position: "relative",
       }}
     >
-      {posters.map((poster) => (
-        <Box
-          key={poster.title}
-          sx={{
-            alignItems: "flex-end",
-            aspectRatio: "2 / 3",
-            bgcolor: poster.bg,
-            borderRadius: 0.5,
-            color: poster.fg,
-            display: "flex",
-            fontSize: 9,
-            fontWeight: 500,
-            justifyContent: "center",
-            letterSpacing: 1,
-            pb: 0.75,
-            textAlign: "center",
-          }}
-        >
-          {poster.title}
-        </Box>
-      ))}
-    </Box>
-
-    <Box sx={{ position: "relative", zIndex: 1 }}>
-      <Typography
-        component="h2"
-        sx={{ color: "common.white", fontSize: 28, fontWeight: 500, mb: 1.5 }}
-      >
-        Track your taste in cinema.
-      </Typography>
-      <Typography
+      <Box
+        aria-hidden
         sx={{
-          color: "rgba(255,255,255,0.65)",
-          fontSize: 14,
-          lineHeight: 1.6,
-          maxWidth: 340,
+          display: "grid",
+          gap: 1,
+          gridTemplateColumns: "repeat(3, 1fr)",
+          inset: 0,
+          opacity: 0.15,
+          p: 1.5,
+          position: "absolute",
+          transform: "rotate(-8deg) scale(1.4)",
+          transformOrigin: "center",
         }}
       >
-        Join thousands of movie lovers cataloguing, rating, and discussing the
-        films that matter to them.
-      </Typography>
-    </Box>
-
-    <Stack component="ul" spacing={1.75} sx={{ m: 0, p: 0, zIndex: 1 }}>
-      {features.map((feature) => (
-        <Stack
-          component="li"
-          direction="row"
-          key={feature.label}
-          spacing={1.5}
-          sx={{ color: "rgba(255,255,255,0.85)", listStyle: "none" }}
-        >
+        {posters.map((poster) => (
           <Box
+            key={poster.title}
             sx={{
-              alignItems: "center",
-              bgcolor: "rgba(77,171,247,0.12)",
-              borderRadius: 1,
-              color: "#4dabf7",
+              alignItems: "flex-end",
+              aspectRatio: "2 / 3",
+              bgcolor: poster.bg,
+              borderRadius: 0.5,
+              color: poster.fg,
               display: "flex",
-              flexShrink: 0,
-              height: 28,
+              fontSize: 9,
+              fontWeight: 500,
               justifyContent: "center",
-              width: 28,
+              letterSpacing: 1,
+              pb: 0.75,
+              textAlign: "center",
             }}
           >
-            {feature.icon}
+            {poster.title}
           </Box>
-          <Box>
-            <Typography
-              sx={{ color: "common.white", fontSize: 13, fontWeight: 500 }}
+        ))}
+      </Box>
+
+      <Box sx={{ position: "relative", zIndex: 1 }}>
+        <Typography
+          component="h2"
+          sx={{ color: "common.white", fontSize: 28, fontWeight: 500, mb: 1.5 }}
+        >
+          {copy.title}
+        </Typography>
+        <Typography
+          sx={{
+            color: "rgba(255,255,255,0.65)",
+            fontSize: 14,
+            lineHeight: 1.6,
+            maxWidth: 340,
+          }}
+        >
+          {copy.subtitle}
+        </Typography>
+      </Box>
+
+      <Stack component="ul" spacing={1.75} sx={{ m: 0, p: 0, zIndex: 1 }}>
+        {copy.features.map((feature) => (
+          <Stack
+            component="li"
+            direction="row"
+            key={feature.label}
+            spacing={1.5}
+            sx={{ color: "rgba(255,255,255,0.85)", listStyle: "none" }}
+          >
+            <Box
+              sx={{
+                alignItems: "center",
+                bgcolor: "rgba(77,171,247,0.12)",
+                borderRadius: 1,
+                color: "#4dabf7",
+                display: "flex",
+                flexShrink: 0,
+                height: 28,
+                justifyContent: "center",
+                width: 28,
+              }}
             >
-              {feature.label}
-            </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>
-              {feature.description}
-            </Typography>
-          </Box>
-        </Stack>
-      ))}
-    </Stack>
-  </Box>
-);
+              {feature.icon}
+            </Box>
+            <Box>
+              <Typography
+                sx={{ color: "common.white", fontSize: 13, fontWeight: 500 }}
+              >
+                {feature.label}
+              </Typography>
+              <Typography
+                sx={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}
+              >
+                {feature.description}
+              </Typography>
+            </Box>
+          </Stack>
+        ))}
+      </Stack>
+    </Box>
+  );
+};
 
 export default AuthVisualPane;

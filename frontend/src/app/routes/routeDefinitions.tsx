@@ -25,6 +25,10 @@ const RegistrationPage = lazyRoute(
   () => import("../../features/identity"),
   "RegistrationPage",
 );
+const ResetPasswordPage = lazyRoute(
+  () => import("../../features/identity"),
+  "ResetPasswordPage",
+);
 const AccountSettingsPage = lazyRoute(
   () => import("../../features/account"),
   "AccountSettingsPage",
@@ -113,6 +117,15 @@ export const routeDefinitions: RouteDefinition[] = [
       altLabel: "Already have an account?",
       altTo: "/login",
       element: <RegistrationPage />,
+    }),
+  },
+  {
+    path: "/reset-password",
+    element: authRoute({
+      altActionLabel: "Sign in",
+      altLabel: "Remember your password?",
+      altTo: "/login",
+      element: <ResetPasswordPage />,
     }),
   },
   {
