@@ -20,6 +20,7 @@ Backend:
 - Start backend: `./gradlew bootRun`
 - Run backend tests: `./gradlew test`
 - Run one backend test: `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"`
+- Format backend code: `./gradlew spotlessApply`
 - CI-equivalent backend check: `./gradlew build jacocoTestReport`
 
 Frontend:
@@ -71,6 +72,7 @@ The frontend API client is generated from the backend OpenAPI spec.
 
 - Prefer small, focused commits.
 - Run the narrowest relevant check first, then broader checks before reporting completion.
+- Before committing Java, Kotlin, Gradle, or backend test changes, run `./gradlew spotlessApply`.
 - Add or update tests for behavior changes.
 - Do not commit secrets from local config files.
 - Avoid unrelated refactors and formatting churn.

@@ -149,8 +149,7 @@ class MediaServiceIntegrationTest extends BaseContainers {
 
     assertObjectDoesNotExist(detailImageName);
     assertObjectDoesNotExist(thumbnailImageName);
-    assertThat(accountRepository.getAccountByUsername("test_user_two").getImageUrlToken())
-        .isNull();
+    assertThat(accountRepository.getAccountByUsername("test_user_two").getImageUrlToken()).isNull();
   }
 
   @Test
@@ -162,8 +161,7 @@ class MediaServiceIntegrationTest extends BaseContainers {
     String message = mediaService.deleteProfilePhoto(currentUser());
 
     assertThat(message).contains("No profile photo");
-    assertThat(accountRepository.getAccountByUsername("test_user_two").getImageUrlToken())
-        .isNull();
+    assertThat(accountRepository.getAccountByUsername("test_user_two").getImageUrlToken()).isNull();
   }
 
   private UserPrincipal currentUser() {

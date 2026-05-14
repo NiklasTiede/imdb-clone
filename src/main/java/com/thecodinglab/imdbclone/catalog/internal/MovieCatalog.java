@@ -108,14 +108,14 @@ public class MovieCatalog implements MovieService {
 
   @Override
   @Transactional
-  public void applyRatingAggregateDelta(Long movieId, BigDecimal ratingSumDelta, int ratingCountDelta) {
+  public void applyRatingAggregateDelta(
+      Long movieId, BigDecimal ratingSumDelta, int ratingCountDelta) {
     int updatedMovies =
         movieRepository.applyRatingAggregateDelta(movieId, ratingSumDelta, ratingCountDelta);
     if (updatedMovies == 0) {
       movieRepository.getMovieById(movieId);
       throw new IllegalStateException(
-          "Movie rating aggregate for movieId [%d] would become inconsistent."
-              .formatted(movieId));
+          "Movie rating aggregate for movieId [%d] would become inconsistent.".formatted(movieId));
     }
     Movie movie = movieRepository.getMovieById(movieId);
     elasticSearchRepository.save(movie);

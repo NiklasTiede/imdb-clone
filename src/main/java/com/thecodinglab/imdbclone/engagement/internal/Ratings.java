@@ -4,8 +4,8 @@ import static com.thecodinglab.imdbclone.shared.logging.Log.ACCOUNT_ID;
 import static com.thecodinglab.imdbclone.shared.logging.Log.RATING_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
-import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
 import com.thecodinglab.imdbclone.catalog.api.MovieRatingAggregateService;
+import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.RatingMapper;
