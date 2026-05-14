@@ -1,34 +1,38 @@
-import AccountCircle from "@mui/icons-material/AccountCircle";
-import MailIcon from "@mui/icons-material/Mail";
-import MoreIcon from "@mui/icons-material/MoreVert";
+import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
+import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import type React from "react";
-import { Link } from "react-router";
+import { Link as RouterLink } from "react-router";
 
 type UserActionsProps = {
   menuId: string;
-  mobileMenuId: string;
-  onMobileMenuOpen: (event: React.MouseEvent<HTMLElement>) => void;
   onProfileMenuOpen: (event: React.MouseEvent<HTMLElement>) => void;
+  username?: string | null;
 };
 
 const UserActions = ({
   menuId,
-  mobileMenuId,
-  onMobileMenuOpen,
   onProfileMenuOpen,
+  username,
 }: UserActionsProps) => (
-  <div>
-    <Box sx={{ display: { xs: "none", md: "flex" } }}>
-      <Link style={{ color: "inherit" }} to="your-messages">
-        <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-          <Badge badgeContent={4} color="error">
-            <MailIcon />
-          </Badge>
-        </IconButton>
-      </Link>
+  <Box sx={{ alignItems: "center", display: "inline-flex", gap: 0.75 }}>
+    <Tooltip title="Messages">
+      <IconButton
+        aria-label="messages and notifications"
+        color="inherit"
+        component={RouterLink}
+        size="large"
+        to="/your-messages"
+      >
+        <Badge badgeContent={4} color="error">
+          <NotificationsOutlinedIcon />
+        </Badge>
+      </IconButton>
+    </Tooltip>
+    <Tooltip title="Account menu">
       <IconButton
         size="large"
         edge="end"
@@ -37,23 +41,24 @@ const UserActions = ({
         aria-haspopup="true"
         onClick={onProfileMenuOpen}
         color="inherit"
+        sx={{ p: 0.5 }}
       >
-        <AccountCircle />
+        <Avatar
+          sx={{
+            bgcolor: "rgba(245,197,24,0.18)",
+            border: "1px solid rgba(245,197,24,0.36)",
+            color: "#f5c518",
+            fontSize: 13,
+            fontWeight: 800,
+            height: 34,
+            width: 34,
+          }}
+        >
+          {(username?.slice(0, 2) || "IM").toUpperCase()}
+        </Avatar>
       </IconButton>
-    </Box>
-    <Box sx={{ display: { xs: "flex", md: "none" } }}>
-      <IconButton
-        size="large"
-        aria-label="show more"
-        aria-controls={mobileMenuId}
-        aria-haspopup="true"
-        onClick={onMobileMenuOpen}
-        color="inherit"
-      >
-        <MoreIcon />
-      </IconButton>
-    </Box>
-  </div>
+    </Tooltip>
+  </Box>
 );
 
 export default UserActions;

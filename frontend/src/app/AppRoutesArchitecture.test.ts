@@ -49,4 +49,8 @@ describe("app route architecture", () => {
     expect(routeRegistry).toContain("AppLayout");
     expect(appSource()).not.toContain("<MyAppBar");
   });
+
+  test("keeps sign out as an action instead of a route", () => {
+    expect(routeRegistrySource()).not.toContain('path: "/logout"');
+  });
 });

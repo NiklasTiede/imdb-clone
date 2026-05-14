@@ -21,10 +21,6 @@ const LoginPage = lazyRoute(
   () => import("../../features/identity"),
   "LoginPage",
 );
-const LogoutPage = lazyRoute(
-  () => import("../../features/identity"),
-  "LogoutPage",
-);
 const RegistrationPage = lazyRoute(
   () => import("../../features/identity"),
   "RegistrationPage",
@@ -119,7 +115,6 @@ export const routeDefinitions: RouteDefinition[] = [
       element: <RegistrationPage />,
     }),
   },
-  { path: "/logout", element: authRoute({ element: <LogoutPage /> }) },
   {
     path: "/your-ratings",
     element: appRoute(privateRoute(RoleNameEnum.User, <YourRatingsPage />)),

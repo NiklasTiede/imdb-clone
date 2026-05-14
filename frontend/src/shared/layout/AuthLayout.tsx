@@ -1,9 +1,8 @@
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
+import BrandLogo from "./BrandLogo";
 
 type AuthLayoutProps = {
   altActionLabel?: string;
@@ -23,7 +22,8 @@ const AuthLayout = ({
       component="header"
       sx={{
         alignItems: "center",
-        bgcolor: "#16243a",
+        backdropFilter: "blur(18px)",
+        bgcolor: "rgba(13, 27, 42, 0.94)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         display: "flex",
         justifyContent: "space-between",
@@ -31,29 +31,7 @@ const AuthLayout = ({
         py: 1.75,
       }}
     >
-      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-        <Box
-          sx={{
-            alignItems: "center",
-            background: "linear-gradient(135deg, #1976d2 0%, #4dabf7 100%)",
-            borderRadius: 1,
-            color: "common.white",
-            display: "flex",
-            fontSize: 14,
-            fontWeight: 700,
-            height: 26,
-            justifyContent: "center",
-            width: 26,
-          }}
-        >
-          IM
-        </Box>
-        <Typography
-          sx={{ color: "common.white", fontSize: 16, fontWeight: 500 }}
-        >
-          IMDb clone
-        </Typography>
-      </Stack>
+      <BrandLogo compact sx={{ color: "common.white" }} />
 
       {altTo && altLabel && altActionLabel && (
         <Link

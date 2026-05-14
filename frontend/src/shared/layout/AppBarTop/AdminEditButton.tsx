@@ -1,13 +1,20 @@
 import EditIcon from "@mui/icons-material/Edit";
 import IconButton from "@mui/material/IconButton";
-import { Link } from "react-router";
+import Tooltip from "@mui/material/Tooltip";
+import { Link as RouterLink } from "react-router";
 
 const AdminEditButton = () => (
-  <Link style={{ color: "inherit" }} to="editing">
-    <IconButton size="large" aria-haspopup="true" color="inherit">
+  <Tooltip title="Edit movies">
+    <IconButton
+      aria-label="edit movies"
+      color="inherit"
+      component={RouterLink}
+      size="large"
+      to="/editing"
+    >
       <EditIcon />
     </IconButton>
-  </Link>
+  </Tooltip>
 );
 
 export default AdminEditButton;

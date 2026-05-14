@@ -1,4 +1,6 @@
+import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import MovieSearchInput from "./MovieSearchInput";
 
@@ -17,7 +19,7 @@ describe("MovieSearchInput", () => {
       />,
     );
 
-    fireEvent.keyDown(screen.getByRole("textbox", { name: "search" }), {
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "search movies" }), {
       key: "Enter",
       target: { value: "it follows" },
     });
@@ -25,5 +27,24 @@ describe("MovieSearchInput", () => {
 
     expect(onSearch).toHaveBeenCalledWith("it follows");
     expect(onClear).toHaveBeenCalledOnce();
+  });
+
+  it("focuses the search input with the keyboard shortcut", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MovieSearchInput
+        query=""
+        onQueryChange={vi.fn()}
+        onSearch={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    await user.keyboard("{Control>}k{/Control}");
+
+    expect(
+      screen.getByRole("textbox", { name: "search movies" }),
+    ).toHaveFocus();
   });
 });
