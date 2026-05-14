@@ -10,6 +10,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { formatRatingCount, IMDB_GOLD, type Movie } from "../../catalog";
 import { MinioImageSize, PosterImage } from "../../../shared/media";
+import { movieColors } from "../../../theme";
 
 type HeroProps = {
   movie: Movie | null;
@@ -21,9 +22,8 @@ type HeroProps = {
   onViewMovie: () => void;
 };
 
-const FEATURED_BADGE_BG = "rgba(77,171,247,0.15)";
-const FEATURED_BADGE_FG = "#4dabf7";
-const HERO_BACKGROUND = "#0a1a14";
+const FEATURED_BADGE_BG = "rgba(245,197,24,0.14)";
+const HERO_BACKGROUND = movieColors.surface;
 
 const Hero = ({
   movie,
@@ -46,13 +46,11 @@ const Hero = ({
     return null;
   }
 
-  const posterColor = HERO_BACKGROUND;
-
   return (
     <Box
       component="section"
       sx={{
-        backgroundColor: posterColor,
+        backgroundColor: HERO_BACKGROUND,
         border: "1px solid",
         borderColor: "divider",
         borderRadius: 2,
@@ -65,7 +63,7 @@ const Hero = ({
       <Box
         aria-hidden
         sx={{
-          background: `linear-gradient(90deg, ${posterColor} 0%, ${posterColor}cc 50%, ${posterColor}66 100%)`,
+          background: `linear-gradient(135deg, rgba(245,197,24,0.11) 0%, rgba(77,171,247,0.07) 44%, rgba(13,27,42,0) 74%), linear-gradient(90deg, ${movieColors.surface} 0%, rgba(13,27,42,0.86) 58%, rgba(30,42,58,0.64) 100%)`,
           inset: 0,
           position: "absolute",
         }}
@@ -106,7 +104,7 @@ const Hero = ({
             size="small"
             sx={{
               backgroundColor: FEATURED_BADGE_BG,
-              color: FEATURED_BADGE_FG,
+              color: "primary.main",
               fontSize: 10,
               fontWeight: 500,
               height: 22,

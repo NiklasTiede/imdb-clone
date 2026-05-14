@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router";
 import { i18n } from "../../i18n";
+import { movieColors } from "../../theme";
 
 type BrandLogoProps = {
   compact?: boolean;
@@ -28,10 +29,10 @@ const BrandLogo = ({ compact = false, sx }: BrandLogoProps) => (
       aria-hidden="true"
       sx={{
         alignItems: "center",
-        bgcolor: "#f5c518",
+        bgcolor: movieColors.brand,
         borderRadius: 1,
         boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.24)",
-        color: "#101010",
+        color: movieColors.brandInk,
         display: "flex",
         flex: "0 0 auto",
         fontSize: compact ? 13 : 14,

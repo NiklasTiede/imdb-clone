@@ -1,11 +1,11 @@
 import DeleteIcon from "@mui/icons-material/DeleteSharp";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { AccountProfile } from "../model/accountProfile";
 import { ProfileAvatar } from "../../../shared/media";
+import AppSurface from "../../../shared/layout/AppSurface";
 import ProfileImageUpload from "./ProfileImageUpload";
 
 type ProfileHeaderCardProps = {
@@ -30,15 +30,7 @@ const ProfileHeaderCard = ({
   ].join(" · ");
 
   return (
-    <Card
-      sx={{
-        backgroundColor: "background.paper",
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 1,
-        p: 2,
-      }}
-    >
+    <AppSurface accent="brand" sx={{ p: 2 }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={2}
@@ -69,7 +61,7 @@ const ProfileHeaderCard = ({
           </Button>
         </Stack>
       </Stack>
-    </Card>
+    </AppSurface>
   );
 };
 

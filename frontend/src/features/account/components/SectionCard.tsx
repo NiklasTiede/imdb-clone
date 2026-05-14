@@ -1,8 +1,8 @@
-import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import type { ReactNode } from "react";
+import AppSurface from "../../../shared/layout/AppSurface";
 
 type SectionCardProps = {
   actions?: ReactNode;
@@ -12,14 +12,7 @@ type SectionCardProps = {
 };
 
 const SectionCard = ({ actions, children, subtitle, title }: SectionCardProps) => (
-  <Card
-    sx={{
-      backgroundColor: "background.paper",
-      border: "1px solid",
-      borderColor: "divider",
-      borderRadius: 1,
-    }}
-  >
+  <AppSurface accent="info">
     <CardHeader
       title={title}
       subheader={subtitle}
@@ -35,7 +28,7 @@ const SectionCard = ({ actions, children, subtitle, title }: SectionCardProps) =
         {actions}
       </CardActions>
     )}
-  </Card>
+  </AppSurface>
 );
 
 export default SectionCard;

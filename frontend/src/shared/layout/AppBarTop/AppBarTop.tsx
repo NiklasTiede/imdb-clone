@@ -13,6 +13,7 @@ import LoginButton from "./LoginButton";
 import MovieSearchInput from "./MovieSearchInput";
 import UserActions from "./UserActions";
 import UserSettingsMenu from "./UserSettingsMenu";
+import { movieColors } from "../../../theme";
 
 const menuId = "primary-search-account-menu";
 
@@ -72,7 +73,7 @@ function AppBarTop() {
         position="sticky"
         sx={{
           backdropFilter: "blur(18px)",
-          bgcolor: "rgba(13, 27, 42, 0.92)",
+          bgcolor: `${movieColors.surface}eb`,
           borderBottom: "1px solid rgba(255,255,255,0.08)",
           color: "common.white",
         }}

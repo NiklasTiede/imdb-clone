@@ -1,9 +1,5 @@
-import {
-  Box,
-  Stack,
-  Typography,
-} from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { Stack } from "@mui/material";
+import { useEffect, useState } from "react";
 import { i18n } from "../../../i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -13,6 +9,7 @@ import {
 import { accountQueries } from "../api/accountQueries";
 import { useSnackbar } from "notistack";
 import PageContent from "../../../shared/layout/PageContent";
+import PageHeader from "../../../shared/layout/PageHeader";
 import AccountSectionCard from "../components/AccountSectionCard";
 import ProfileHeaderCard from "../components/ProfileHeaderCard";
 import ProfileSectionCard from "../components/ProfileSectionCard";
@@ -123,14 +120,11 @@ const AccountSettingsPage = () => {
   return (
     <PageContent maxWidth="760px">
       <Stack spacing={2}>
-        <Box>
-          <Typography component="h1" sx={{ fontSize: 24, fontWeight: 600 }}>
-            Account settings
-          </Typography>
-          <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
-            Manage your profile and account details
-          </Typography>
-        </Box>
+        <PageHeader
+          eyebrow="Account"
+          title="Account settings"
+          subtitle="Manage your profile and account details"
+        />
 
         <ProfileHeaderCard
           accountProfile={accountProfile}

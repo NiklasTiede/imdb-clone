@@ -4,8 +4,10 @@ import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import { alpha } from "@mui/material/styles";
 import type React from "react";
 import { Link as RouterLink } from "react-router";
+import { movieColors } from "../../../theme";
 
 type UserActionsProps = {
   menuId: string;
@@ -60,9 +62,9 @@ const UserActions = ({
       >
         <Avatar
           sx={{
-            bgcolor: "rgba(245,197,24,0.18)",
-            border: "1px solid rgba(245,197,24,0.36)",
-            color: "#f5c518",
+            bgcolor: alpha(movieColors.brand, 0.18),
+            border: `1px solid ${alpha(movieColors.brand, 0.36)}`,
+            color: movieColors.brand,
             fontSize: 13,
             fontWeight: 800,
             height: 34,

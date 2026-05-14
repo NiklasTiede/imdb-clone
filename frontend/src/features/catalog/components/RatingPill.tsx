@@ -1,9 +1,10 @@
 import { Box, Stack, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
+import { movieColors } from "../../../theme";
 import { formatRatingCount } from "../utils/formatRatingCount";
 
-export const IMDB_GOLD = "#ffb700";
-export const COMMUNITY_BLUE = "#4dabf7";
+export const IMDB_GOLD = movieColors.rating;
+export const COMMUNITY_BLUE = movieColors.info;
 
 type RatingPillProps = {
   label: string;
@@ -14,7 +15,7 @@ type RatingPillProps = {
 };
 
 const containerSx: SxProps<Theme> = {
-  backgroundColor: "#1e2a3a",
+  backgroundColor: movieColors.surfaceElevated,
   border: "1px solid rgba(255,255,255,0.06)",
   borderRadius: 1.5,
   px: 1.5,
@@ -39,7 +40,7 @@ export const RatingPill = ({
         sx={{
           fontSize: 11,
           color: "rgba(255,255,255,0.5)",
-          letterSpacing: 0.5,
+          letterSpacing: 0,
           mb: 0.4,
         }}
       >

@@ -9,7 +9,9 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
+import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router";
+import { movieColors } from "../../../theme";
 
 const settings = [
   {
@@ -87,8 +89,8 @@ const UserSettingsMenu = ({
     >
       <Avatar
         sx={{
-          bgcolor: "rgba(245,197,24,0.18)",
-          color: "#f5c518",
+          bgcolor: alpha(movieColors.brand, 0.18),
+          color: movieColors.brand,
           fontSize: 13,
           fontWeight: 800,
           height: 40,

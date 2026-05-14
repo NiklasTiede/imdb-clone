@@ -1,11 +1,16 @@
 import { createTheme } from "@mui/material/styles";
 
 export const movieColors = {
-  backdrop: "#102236",
+  backdrop: "#101624",
+  brand: "#f5c518",
+  brandInk: "#101010",
   communityBlue: "#4dabf7",
   gold: "#ffb700",
+  info: "#4dabf7",
+  rating: "#ffb700",
   surface: "#0d1b2a",
   surfaceElevated: "#1e2a3a",
+  surfaceInset: "#080b12",
 };
 
 export const tokens = () => ({
@@ -74,10 +79,12 @@ export const themeSettings = () => {
     palette: {
       mode: "dark" as const,
       primary: {
-        main: colors.primary[200],
+        main: movieColors.brand,
+        contrastText: movieColors.brandInk,
       },
       secondary: {
-        main: colors.greenAccent[500],
+        main: movieColors.info,
+        contrastText: "#ffffff",
       },
       neutral: {
         dark: colors.grey[900],
@@ -86,7 +93,7 @@ export const themeSettings = () => {
       },
       background: {
         default: colors.primary[500],
-        paper: colors.primary[700],
+        paper: movieColors.surface,
       },
       text: {
         primary: "#ffffff",

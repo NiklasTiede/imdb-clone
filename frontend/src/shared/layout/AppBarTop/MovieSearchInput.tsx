@@ -6,6 +6,7 @@ import InputBase from "@mui/material/InputBase";
 import { alpha, styled } from "@mui/material/styles";
 import type React from "react";
 import { useEffect, useRef } from "react";
+import { movieColors } from "../../../theme";
 
 type MovieSearchInputProps = {
   onClear: () => void;
@@ -27,8 +28,8 @@ const Search = styled("div")(({ theme }) => ({
     backgroundColor: alpha(theme.palette.common.white, 0.12),
   },
   "&:focus-within": {
-    borderColor: alpha("#f5c518", 0.78),
-    boxShadow: `0 0 0 3px ${alpha("#f5c518", 0.14)}`,
+    borderColor: alpha(movieColors.brand, 0.78),
+    boxShadow: `0 0 0 3px ${alpha(movieColors.brand, 0.14)}`,
   },
   margin: 0,
   width: "100%",
