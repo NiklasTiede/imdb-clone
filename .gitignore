@@ -92,6 +92,7 @@ yarn-error.log*
 !.codex/skills/architecture-guardian/
 !.codex/skills/architecture-guardian/**
 .playwright-mcp/
+.playwright-cli/
 .superpowers/
 design/
 screenshots/

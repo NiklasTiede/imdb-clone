@@ -1,82 +1,115 @@
 import Alert from "@mui/material/Alert";
-import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
-import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
-import { useQuery } from "@tanstack/react-query";
-import React from "react";
-import { MovieCard } from "../../../catalog";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { i18n } from "../../../../i18n";
-import PageContent from "../../../../shared/layout/PageContent";
-import SectionHeading from "../../../../shared/layout/SectionHeading";
 import { getUsername } from "../../../../shared/auth";
-import { RatedMovie, ratingQueries } from "../api/ratingQueries";
+import { useLocalStorageState } from "../../../../shared/hooks/useLocalStorageState";
+import PageContent from "../../../../shared/layout/PageContent";
+import { rateMovieMutationOptions } from "../api/ratingMutations";
+import { ratingQueries } from "../api/ratingQueries";
+import EmptyRatings from "../components/EmptyRatings";
+import RatingsGrid from "../components/RatingsGrid";
+import RatingsHeader from "../components/RatingsHeader";
+import RatingsList from "../components/RatingsList";
+import RatingsStats from "../components/RatingsStats";
+import RatingsToolbar, { type RatingsView } from "../components/RatingsToolbar";
+import {
+  allScoresRange,
+  filterRatedMovies,
+  type RatingSort,
+  type ScoreRange,
+  sortRatedMovies,
+} from "../utils/ratingsSorting";
+
+const RATINGS_PAGE_SIZE = 30;
 
 const YourRatingsPage = () => {
   const username = getUsername();
-  const { data, isError, isLoading } = useQuery(
-    ratingQueries.currentUserMovies({
-      page: 0,
-      size: 20,
-      username,
-    }),
+  const queryClient = useQueryClient();
+  const [sortBy, setSortBy] = useState<RatingSort>("score_desc");
+  const [scoreRange, setScoreRange] = useState<ScoreRange>(allScoresRange);
+  const [view, setView] = useLocalStorageState<RatingsView>(
+    "ratings.view",
+    "grid",
+    ["grid", "list"],
   );
-  const ratedMovies = data?.content ?? [];
+  const ratingsQuery = ratingQueries.currentUserMovies({
+    page: 0,
+    size: RATINGS_PAGE_SIZE,
+    username,
+  });
+  const { data, isError, isLoading } = useQuery(ratingsQuery);
+  const ratedMovies = useMemo(() => data?.content ?? [], [data?.content]);
+  const visibleMovies = useMemo(
+    () => sortRatedMovies(filterRatedMovies(ratedMovies, scoreRange), sortBy),
+    [ratedMovies, scoreRange, sortBy],
+  );
+
+  const removeRating = useMutation({
+    ...rateMovieMutationOptions(queryClient),
+  });
 
   return (
-    <PageContent maxWidth="900px">
-      <Stack spacing={2}>
-        <SectionHeading>{i18n.ratings.heading}</SectionHeading>
+    <PageContent maxWidth="1320px">
+      <Stack spacing={2.5}>
+        <RatingsHeader />
 
         {isLoading && <CircularProgress aria-label="Loading ratings" />}
 
         {isError && <Alert severity="error">{i18n.ratings.loadingError}</Alert>}
 
-        {!isLoading && !isError && ratedMovies.length === 0 && (
-          <Alert severity="info">{i18n.ratings.empty}</Alert>
-        )}
+        {!isLoading && !isError && ratedMovies.length === 0 && <EmptyRatings />}
 
         {ratedMovies.length > 0 && (
-          <Grid container spacing={1}>
-            {ratedMovies.map((ratedMovie) => (
-              <Grid key={ratedMovie.movie.id} size={{ xs: 12 }}>
-                <RatedMovieCard ratedMovie={ratedMovie} />
-              </Grid>
-            ))}
-          </Grid>
+          <>
+            <RatingsStats items={ratedMovies} />
+            <RatingsToolbar
+              scoreRange={scoreRange}
+              sortBy={sortBy}
+              view={view}
+              onScoreRangeChange={setScoreRange}
+              onSortChange={setSortBy}
+              onViewChange={setView}
+            />
+            {visibleMovies.length === 0 ? (
+              <Alert
+                action={
+                  <Button
+                    color="inherit"
+                    onClick={() => setScoreRange(allScoresRange)}
+                    size="small"
+                    type="button"
+                  >
+                    Clear filter
+                  </Button>
+                }
+                severity="info"
+              >
+                No ratings in this range.
+              </Alert>
+            ) : view === "grid" ? (
+              <RatingsGrid
+                items={visibleMovies}
+                onRemove={(movieId) =>
+                  removeRating.mutate({ movieId, score: null })
+                }
+              />
+            ) : (
+              <RatingsList
+                items={visibleMovies}
+                onRemove={(movieId) =>
+                  removeRating.mutate({ movieId, score: null })
+                }
+              />
+            )}
+          </>
         )}
       </Stack>
     </PageContent>
   );
 };
-
-type RatedMovieCardProps = {
-  ratedMovie: RatedMovie;
-};
-
-const RatedMovieCard = ({ ratedMovie }: RatedMovieCardProps) => (
-  <Box sx={{ position: "relative" }}>
-    <Box
-      sx={{
-        position: { xs: "static", sm: "absolute" },
-        display: "flex",
-        justifyContent: { xs: "flex-start", sm: "flex-end" },
-        top: 8,
-        right: 8,
-        zIndex: 1,
-        mb: { xs: 0.5, sm: 0 },
-      }}
-    >
-      <Chip
-        label={`Your rating: ${ratedMovie.rating}/10`}
-        color="primary"
-        size="small"
-        sx={{ fontWeight: 600 }}
-      />
-    </Box>
-    <MovieCard {...ratedMovie.movie} />
-  </Box>
-);
 
 export default YourRatingsPage;
