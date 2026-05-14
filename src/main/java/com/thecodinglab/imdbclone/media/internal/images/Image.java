@@ -1,6 +1,8 @@
 package com.thecodinglab.imdbclone.media.internal.images;
 
 import com.thecodinglab.imdbclone.shared.error.ImageProcessingException;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,30 +35,24 @@ public class Image {
       double aspectRatio,
       String targetDirectory,
       String imageUrlToken) {
+    BufferedImage image = readImage(file);
     return scalingSizes.stream()
-        .map(size -> createImage(file, size, aspectRatio, targetDirectory, imageUrlToken))
+        .map(size -> createImage(image, size, aspectRatio, targetDirectory, imageUrlToken))
         .toList();
   }
 
   private static Image createImage(
-      MultipartFile file,
+      BufferedImage image,
       Integer scalingSize,
       double aspectRatio,
       String targetDirectory,
       String imageUrlToken) {
 
-    // read image
-    BufferedImage image = readImage(file);
-
-    // normalize to aspectRatio
     BufferedImage normalizedImage = normalizeImage(image, aspectRatio);
-
-    // rescale to provided size
     int targetWidth = scalingSize;
     int targetHeight = (int) (scalingSize / aspectRatio);
     ByteArrayOutputStream scaledImage = rescaleImage(normalizedImage, targetWidth, targetHeight);
 
-    // set properties
     int streamSize = scaledImage.size();
     InputStream inputStream = new ByteArrayInputStream(scaledImage.toByteArray());
     String imageName =
@@ -69,7 +65,11 @@ public class Image {
 
   public static BufferedImage readImage(MultipartFile image) {
     try {
-      return ImageIO.read(image.getInputStream());
+      BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+      if (bufferedImage == null) {
+        throw new ImageProcessingException("Failed to read image: unsupported image content");
+      }
+      return bufferedImage;
     } catch (IOException ex) {
       throw new ImageProcessingException("Failed to read image: " + ex.getMessage());
     }
@@ -96,16 +96,15 @@ public class Image {
     BufferedImage resized =
         new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
 
-    resized
-        .createGraphics()
-        .drawImage(
-            normalizedImage.getScaledInstance(
-                targetWidth, targetHeight, java.awt.Image.SCALE_SMOOTH),
-            0,
-            0,
-            null);
+    Graphics2D graphics = resized.createGraphics();
+    try {
+      graphics.setRenderingHint(
+          RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+      graphics.drawImage(normalizedImage, 0, 0, targetWidth, targetHeight, null);
+    } finally {
+      graphics.dispose();
+    }
 
-    // Write images to output streams
     ByteArrayOutputStream originalStream = new ByteArrayOutputStream();
     try {
       ImageIO.write(resized, Image.IMAGE_TYPE, originalStream);

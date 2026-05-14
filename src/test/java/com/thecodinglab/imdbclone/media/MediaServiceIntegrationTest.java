@@ -56,6 +56,23 @@ class MediaServiceIntegrationTest extends BaseContainers {
   }
 
   @Test
+  void storeMovieImage_replacesExistingImagesWithNewToken() throws Exception {
+    mediaService.storeMovieImage(imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE), 1L);
+    String oldToken = movieRepository.getMovieById(1L).getImageUrlToken();
+    String oldDetailImageName = MovieImageConstants.getDetailViewImageName(oldToken);
+    String oldThumbnailImageName = MovieImageConstants.getThumbNailImageName(oldToken);
+
+    mediaService.storeMovieImage(imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE), 1L);
+
+    String newToken = movieRepository.getMovieById(1L).getImageUrlToken();
+    assertThat(newToken).isNotBlank().isNotEqualTo(oldToken);
+    assertObjectDoesNotExist(oldDetailImageName);
+    assertObjectDoesNotExist(oldThumbnailImageName);
+    assertObjectExists(MovieImageConstants.getDetailViewImageName(newToken));
+    assertObjectExists(MovieImageConstants.getThumbNailImageName(newToken));
+  }
+
+  @Test
   void deleteMovieImage_clearsMovieTokenAndDeletesObjects() throws Exception {
     var upload = imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE);
     mediaService.storeMovieImage(upload, 1L);
@@ -72,19 +89,21 @@ class MediaServiceIntegrationTest extends BaseContainers {
   }
 
   @Test
+  void deleteMovieImage_withoutExistingImageIsCleanNoOp() {
+    var movie = movieRepository.getMovieById(2L);
+    movie.setImageUrlToken(null);
+    movieRepository.save(movie);
+
+    String message = mediaService.deleteMovieImage(2L);
+
+    assertThat(message).contains("No movie image");
+    assertThat(movieRepository.getMovieById(2L).getImageUrlToken()).isNull();
+  }
+
+  @Test
   void storeProfilePhoto_updatesAccountTokenAndStoresExpectedObjects() throws Exception {
     var upload = imageUpload("image", "raw-profile-photo.jpeg", PROFILE_PHOTO);
-    var currentUser =
-        new UserPrincipal(
-            2L,
-            null,
-            null,
-            "test_user_two",
-            "two@web.com",
-            "password",
-            false,
-            true,
-            List.of(new SimpleGrantedAuthority("ROLE_USER")));
+    var currentUser = currentUser();
 
     List<String> storedImages = mediaService.storeProfilePhoto(upload, currentUser);
 
@@ -96,19 +115,29 @@ class MediaServiceIntegrationTest extends BaseContainers {
   }
 
   @Test
+  void storeProfilePhoto_replacesExistingImagesWithNewToken() throws Exception {
+    UserPrincipal currentUser = currentUser();
+    mediaService.storeProfilePhoto(
+        imageUpload("image", "raw-profile-photo.jpeg", PROFILE_PHOTO), currentUser);
+    String oldToken = accountRepository.getAccountByUsername("test_user_two").getImageUrlToken();
+    String oldDetailImageName = ProfilePhotoConstants.getDetailViewImageName(oldToken);
+    String oldThumbnailImageName = ProfilePhotoConstants.getThumbnailImageName(oldToken);
+
+    mediaService.storeProfilePhoto(
+        imageUpload("image", "raw-profile-photo.jpeg", PROFILE_PHOTO), currentUser);
+
+    String newToken = accountRepository.getAccountByUsername("test_user_two").getImageUrlToken();
+    assertThat(newToken).isNotBlank().isNotEqualTo(oldToken);
+    assertObjectDoesNotExist(oldDetailImageName);
+    assertObjectDoesNotExist(oldThumbnailImageName);
+    assertObjectExists(ProfilePhotoConstants.getDetailViewImageName(newToken));
+    assertObjectExists(ProfilePhotoConstants.getThumbnailImageName(newToken));
+  }
+
+  @Test
   void deleteProfilePhoto_clearsAccountTokenAndDeletesObjects() throws Exception {
     var upload = imageUpload("image", "raw-profile-photo.jpeg", PROFILE_PHOTO);
-    var currentUser =
-        new UserPrincipal(
-            2L,
-            null,
-            null,
-            "test_user_two",
-            "two@web.com",
-            "password",
-            false,
-            true,
-            List.of(new SimpleGrantedAuthority("ROLE_USER")));
+    var currentUser = currentUser();
     mediaService.storeProfilePhoto(upload, currentUser);
 
     String imageUrlToken =
@@ -122,6 +151,32 @@ class MediaServiceIntegrationTest extends BaseContainers {
     assertObjectDoesNotExist(thumbnailImageName);
     assertThat(accountRepository.getAccountByUsername("test_user_two").getImageUrlToken())
         .isNull();
+  }
+
+  @Test
+  void deleteProfilePhoto_withoutExistingImageIsCleanNoOp() {
+    var account = accountRepository.getAccountByUsername("test_user_two");
+    account.setImageUrlToken(null);
+    accountRepository.save(account);
+
+    String message = mediaService.deleteProfilePhoto(currentUser());
+
+    assertThat(message).contains("No profile photo");
+    assertThat(accountRepository.getAccountByUsername("test_user_two").getImageUrlToken())
+        .isNull();
+  }
+
+  private UserPrincipal currentUser() {
+    return new UserPrincipal(
+        2L,
+        null,
+        null,
+        "test_user_two",
+        "two@web.com",
+        "password",
+        false,
+        true,
+        List.of(new SimpleGrantedAuthority("ROLE_USER")));
   }
 
   private MockMultipartFile imageUpload(String name, String fileName, Path image)

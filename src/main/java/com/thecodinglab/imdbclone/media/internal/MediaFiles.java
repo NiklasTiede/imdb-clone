@@ -45,21 +45,11 @@ public class MediaFiles implements MediaService {
   @Override
   @Transactional
   public List<String> storeProfilePhoto(MultipartFile file, UserPrincipal currentUser) {
-    // validation
-    //    ImageSize.validateProfilePhoto(file);
-
-    // persist image-url-token in database
+    ImageSize.validateProfilePhoto(file);
     AccountImageToken accountImageToken = accountImageService.getProfileImageToken(currentUser);
+    String oldImageUrlToken = accountImageToken.imageUrlToken();
+    String imageUrlToken = Image.generateToken();
 
-    String imageUrlToken =
-        (accountImageToken.imageUrlToken() != null)
-            ? accountImageToken.imageUrlToken()
-            : Image.generateToken();
-
-    // better: create new token, each time new image is created. token change is used for
-    // rerendering!
-
-    // generate 2 photos of size 800x800 and 120x120
     List<Image> profilePhotos =
         Image.createImages(
             file,
@@ -68,27 +58,22 @@ public class MediaFiles implements MediaService {
             ProfilePhotoConstants.BUCKET_DIRECTORY_NAME,
             imageUrlToken);
 
+    List<String> storedImages = storeFiles(profilePhotos);
     accountImageService.updateProfileImageToken(accountImageToken.accountId(), imageUrlToken);
-
-    // store photos in bucket
-    return profilePhotos.stream()
-        .map(
-            photo ->
-                storeFile(
-                    photo.getInputStream(),
-                    photo.getStreamSize(),
-                    photo.getImageName(),
-                    photo.getContentType()))
-        .toList();
+    deleteProfilePhotoObjectsBestEffort(oldImageUrlToken);
+    return storedImages;
   }
 
   @Override
   public String deleteProfilePhoto(UserPrincipal currentUser) {
 
     AccountImageToken accountImageToken = accountImageService.getProfileImageToken(currentUser);
+    if (accountImageToken.imageUrlToken() == null) {
+      return "No profile photo of User with accountId [%d] exists"
+          .formatted(accountImageToken.accountId());
+    }
 
-    deleteFile(ProfilePhotoConstants.getDetailViewImageName(accountImageToken.imageUrlToken()));
-    deleteFile(ProfilePhotoConstants.getThumbnailImageName(accountImageToken.imageUrlToken()));
+    deleteProfilePhotoObjects(accountImageToken.imageUrlToken());
     accountImageService.clearProfileImageToken(accountImageToken.accountId());
 
     return "Profile Photos of User with accountId [%d] and imageUrlToken [%s] were deleted"
@@ -99,18 +84,11 @@ public class MediaFiles implements MediaService {
   @Transactional
   public List<String> storeMovieImage(MultipartFile file, Long movieId) {
 
-    // validation
     MovieImageToken movieImageToken = movieImageService.getMovieImageToken(movieId);
     ImageSize.validateMovieImage(file);
+    String oldImageUrlToken = movieImageToken.imageUrlToken();
+    String imageUrlToken = Image.generateToken();
 
-    String imageUrlToken;
-    if (movieImageToken.imageUrlToken() == null) {
-      imageUrlToken = Image.generateToken();
-    } else {
-      imageUrlToken = movieImageToken.imageUrlToken();
-    }
-
-    // generate 2 images of size 600x900 and 120x180
     List<Image> movieImages =
         Image.createImages(
             file,
@@ -119,11 +97,29 @@ public class MediaFiles implements MediaService {
             MovieImageConstants.BUCKET_DIRECTORY_NAME,
             imageUrlToken);
 
-    // save in DB and ES
+    List<String> storedImages = storeFiles(movieImages);
     movieImageService.updateMovieImageToken(movieId, imageUrlToken);
+    deleteMovieImageObjectsBestEffort(oldImageUrlToken);
+    return storedImages;
+  }
 
-    // store images
-    return movieImages.stream()
+  @Override
+  public String deleteMovieImage(Long movieId) {
+    MovieImageToken movieImageToken = movieImageService.getMovieImageToken(movieId);
+    if (movieImageToken.imageUrlToken() == null) {
+      return "No movie image of movie with movieId [%d] exists"
+          .formatted(movieImageToken.movieId());
+    }
+
+    deleteMovieImageObjects(movieImageToken.imageUrlToken());
+    movieImageService.clearMovieImageToken(movieImageToken.movieId());
+
+    return "Movie images of movie with movieId [%d] were deleted"
+        .formatted(movieImageToken.movieId());
+  }
+
+  private List<String> storeFiles(List<Image> images) {
+    return images.stream()
         .map(
             image ->
                 storeFile(
@@ -134,18 +130,36 @@ public class MediaFiles implements MediaService {
         .toList();
   }
 
-  @Override
-  public String deleteMovieImage(Long movieId) {
-    // find / validate movie
-    MovieImageToken movieImageToken = movieImageService.getMovieImageToken(movieId);
+  private void deleteProfilePhotoObjects(String imageUrlToken) {
+    if (imageUrlToken == null) {
+      return;
+    }
+    deleteFile(ProfilePhotoConstants.getDetailViewImageName(imageUrlToken));
+    deleteFile(ProfilePhotoConstants.getThumbnailImageName(imageUrlToken));
+  }
 
-    // delete images
-    deleteFile(MovieImageConstants.getDetailViewImageName(movieImageToken.imageUrlToken()));
-    deleteFile(MovieImageConstants.getThumbNailImageName(movieImageToken.imageUrlToken()));
-    movieImageService.clearMovieImageToken(movieImageToken.movieId());
+  private void deleteMovieImageObjects(String imageUrlToken) {
+    if (imageUrlToken == null) {
+      return;
+    }
+    deleteFile(MovieImageConstants.getDetailViewImageName(imageUrlToken));
+    deleteFile(MovieImageConstants.getThumbNailImageName(imageUrlToken));
+  }
 
-    return "Movie images of movie with movieId [%d] were deleted"
-        .formatted(movieImageToken.movieId());
+  private void deleteProfilePhotoObjectsBestEffort(String imageUrlToken) {
+    try {
+      deleteProfilePhotoObjects(imageUrlToken);
+    } catch (MinioOperationException ex) {
+      logger.warn("Could not delete previous profile photo objects for token [{}]", imageUrlToken);
+    }
+  }
+
+  private void deleteMovieImageObjectsBestEffort(String imageUrlToken) {
+    try {
+      deleteMovieImageObjects(imageUrlToken);
+    } catch (MinioOperationException ex) {
+      logger.warn("Could not delete previous movie image objects for token [{}]", imageUrlToken);
+    }
   }
 
   private String storeFile(InputStream file, int fileSize, String fileName, String contentType) {
@@ -180,11 +194,9 @@ public class MediaFiles implements MediaService {
     try {
       if (!minioClient.bucketExists(
           BucketExistsArgs.builder().bucket(storageProperties.bucketName()).build())) {
-        // create bucket
         minioClient.makeBucket(
             MakeBucketArgs.builder().bucket(storageProperties.bucketName()).build());
       }
-      // set policy
       String bucketPolicy = "config/minio-policy.json";
       createBucketPolicyFrom(bucketPolicy);
       logger.info(
