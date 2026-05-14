@@ -1,5 +1,4 @@
 import { Route, Routes } from "react-router";
-import MyAppBar from "./shared/layout/AppBarTop";
 import { appTheme } from "./theme";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { Suspense } from "react";
@@ -11,7 +10,6 @@ function App() {
   return (
     <ThemeProvider theme={appTheme}>
       <CssBaseline />
-      <MyAppBar />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           {routeDefinitions.map((route) => (

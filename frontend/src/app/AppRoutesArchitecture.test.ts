@@ -38,4 +38,15 @@ describe("app route architecture", () => {
     expect(existsSync(routeRegistryPath)).toBe(true);
     expect(source).toContain("routeDefinitions.map");
   });
+
+  test("auth routes use the auth layout instead of global app chrome", () => {
+    const routeRegistry = routeRegistrySource();
+
+    expect(routeRegistry).toContain("authRoute");
+    expect(routeRegistry).toContain('path: "/registration"');
+    expect(routeRegistry).toContain('path: "/login"');
+    expect(routeRegistry).toContain("AuthLayout");
+    expect(routeRegistry).toContain("AppLayout");
+    expect(appSource()).not.toContain("<MyAppBar");
+  });
 });

@@ -2,6 +2,8 @@ import React, { lazy } from "react";
 import type { ReactElement } from "react";
 
 import { RoleNameEnum } from "../../shared/auth";
+import AppLayout from "../../shared/layout/AppLayout";
+import AuthLayout from "../../shared/layout/AuthLayout";
 import NotFoundPage from "./NotFoundPage";
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
@@ -74,33 +76,69 @@ const publicRoute = (element: ReactElement): ReactElement => (
   <PublicRoute>{element}</PublicRoute>
 );
 
+const appRoute = (element: ReactElement): ReactElement => (
+  <AppLayout>{element}</AppLayout>
+);
+
+const authRoute = ({
+  altActionLabel,
+  altLabel,
+  altTo,
+  element,
+}: {
+  altActionLabel?: string;
+  altLabel?: string;
+  altTo?: string;
+  element: ReactElement;
+}): ReactElement => (
+  <AuthLayout altActionLabel={altActionLabel} altLabel={altLabel} altTo={altTo}>
+    {publicRoute(element)}
+  </AuthLayout>
+);
+
 export const routeDefinitions: RouteDefinition[] = [
-  { path: "/", element: <HomePage /> },
-  { path: "/movie-search", element: <MovieSearchPage /> },
-  { path: "/movie", element: <MovieDetailPage /> },
-  { path: "/filter", element: <FilterPanelPage /> },
-  { path: "/login", element: <LoginPage /> },
-  { path: "/registration", element: publicRoute(<RegistrationPage />) },
-  { path: "/logout", element: publicRoute(<LogoutPage />) },
+  { path: "/", element: appRoute(<HomePage />) },
+  { path: "/movie-search", element: appRoute(<MovieSearchPage />) },
+  { path: "/movie", element: appRoute(<MovieDetailPage />) },
+  { path: "/filter", element: appRoute(<FilterPanelPage />) },
+  {
+    path: "/login",
+    element: authRoute({
+      altActionLabel: "Sign up",
+      altLabel: "Need an account?",
+      altTo: "/registration",
+      element: <LoginPage />,
+    }),
+  },
+  {
+    path: "/registration",
+    element: authRoute({
+      altActionLabel: "Sign in",
+      altLabel: "Already have an account?",
+      altTo: "/login",
+      element: <RegistrationPage />,
+    }),
+  },
+  { path: "/logout", element: authRoute({ element: <LogoutPage /> }) },
   {
     path: "/your-ratings",
-    element: privateRoute(RoleNameEnum.User, <YourRatingsPage />),
+    element: appRoute(privateRoute(RoleNameEnum.User, <YourRatingsPage />)),
   },
   {
     path: "/your-watchlist",
-    element: privateRoute(RoleNameEnum.User, <WatchlistPage />),
+    element: appRoute(privateRoute(RoleNameEnum.User, <WatchlistPage />)),
   },
   {
     path: "/your-messages",
-    element: privateRoute(RoleNameEnum.User, <MessagesPage />),
+    element: appRoute(privateRoute(RoleNameEnum.User, <MessagesPage />)),
   },
   {
     path: "/account-settings",
-    element: privateRoute(RoleNameEnum.User, <AccountSettingsPage />),
+    element: appRoute(privateRoute(RoleNameEnum.User, <AccountSettingsPage />)),
   },
   {
     path: "/editing",
-    element: privateRoute(RoleNameEnum.Admin, <EditMoviePage />),
+    element: appRoute(privateRoute(RoleNameEnum.Admin, <EditMoviePage />)),
   },
-  { path: "*", element: <NotFoundPage /> },
+  { path: "*", element: appRoute(<NotFoundPage />) },
 ];
