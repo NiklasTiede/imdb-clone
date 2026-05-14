@@ -1,8 +1,7 @@
-import { MovieRecord } from "../../../client/movies/generator-output";
-import { PosterMovieCard } from "../../catalog";
+import { PosterMovieCard, type Movie } from "../../catalog";
 
 type SearchMovieCardProps = {
-  movie: MovieRecord;
+  movie: Movie;
   onToggleBookmark?: (movieId: number) => void;
 };
 

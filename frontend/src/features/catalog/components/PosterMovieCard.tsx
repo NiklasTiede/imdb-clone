@@ -7,12 +7,12 @@ import CardActionArea from "@mui/material/CardActionArea";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
-import type { MovieRecord } from "../../../client/movies/generator-output";
+import type { Movie } from "../model/movie";
 import { IMDB_GOLD } from "./RatingPill";
 import { MinioImageSize, PosterImage } from "../../../shared/media";
 
 type MovieCardProps = {
-  movie: MovieRecord;
+  movie: Movie;
   isBookmarked?: boolean;
   onToggleBookmark?: (movieId: number) => void;
 };
@@ -157,7 +157,7 @@ const MovieCard = ({
   );
 };
 
-export const formatMovieMeta = (movie: MovieRecord): string =>
+export const formatMovieMeta = (movie: Movie): string =>
   [movie.startYear, movie.runtimeMinutes ? `${movie.runtimeMinutes} min` : null]
     .filter(Boolean)
     .join(" · ");

@@ -8,19 +8,13 @@ import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import type { MovieRecord } from "../../../client/movies/generator-output";
-import { PosterMovieCard } from "../../catalog";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { PosterMovieCard, type Movie } from "../../catalog";
 
 type MovieCarouselProps = {
   title: string;
   subtitle?: string;
-  movies: MovieRecord[];
+  movies: Movie[];
   onViewAll?: () => void;
   loading?: boolean;
 };

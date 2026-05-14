@@ -1,10 +1,7 @@
-import { MovieRecord } from "../../../../client/movies/generator-output";
+import type { Movie } from "../../../catalog";
 
-export const formatMovieMeta = (movie: MovieRecord): string =>
-  [
-    movie.startYear,
-    movie.runtimeMinutes ? `${movie.runtimeMinutes} min` : null,
-  ]
+export const formatMovieMeta = (movie: Movie): string =>
+  [movie.startYear, movie.runtimeMinutes ? `${movie.runtimeMinutes} min` : null]
     .filter(Boolean)
     .join(" · ");
 

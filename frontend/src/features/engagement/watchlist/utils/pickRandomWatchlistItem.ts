@@ -1,9 +1,9 @@
-import { WatchedMovieRecord } from "../../../../client/movies/generator-output";
+import type { WatchlistItem } from "../model/watchlist";
 
 export const pickRandomWatchlistItem = (
-  items: WatchedMovieRecord[],
+  items: WatchlistItem[],
   previousMovieId?: number,
-): WatchedMovieRecord | null => {
+): WatchlistItem | null => {
   if (items.length === 0) {
     return null;
   }

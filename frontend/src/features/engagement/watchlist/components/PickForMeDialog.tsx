@@ -7,12 +7,12 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
-import { WatchedMovieRecord } from "../../../../client/movies/generator-output";
 import { MinioImageSize, PosterImage } from "../../../../shared/media";
+import type { WatchlistItem } from "../model/watchlist";
 import { formatMovieMeta } from "../utils/watchlistFormat";
 
 type PickForMeDialogProps = {
-  movie: WatchedMovieRecord | null;
+  movie: WatchlistItem | null;
   open: boolean;
   onClose: () => void;
   onPickAnother: () => void;

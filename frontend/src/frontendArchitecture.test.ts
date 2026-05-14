@@ -63,6 +63,10 @@ describe("frontend feature architecture", () => {
     expect(watchlistPage).not.toContain("onMutate");
     expect(watchlistPage).not.toContain("PagedResponseWatchedMovieRecord");
   });
+
+  test("feature pages and components use feature-owned model types", () => {
+    expect(generatedClientUiImports()).toEqual([]);
+  });
 });
 
 const featureDirectoryNames = (): string[] =>
@@ -138,6 +142,31 @@ const hardCodedWatchlistQueryKeys = (): string[] =>
       readFileSync(sourceFile, "utf8").includes('queryKey: ["watchlist"]'),
     )
     .map((sourceFile) => path.relative(srcRoot, sourceFile))
+    .sort();
+
+const generatedClientUiImports = (): string[] =>
+  sourceFiles(srcRoot)
+    .flatMap((sourceFile) =>
+      importSpecifiers(sourceFile).map((specifier) => ({
+        sourceFile,
+        specifier,
+      })),
+    )
+    .filter(({ sourceFile }) => {
+      const relativePath = path.relative(srcRoot, sourceFile);
+      return (
+        relativePath.startsWith("features") &&
+        (relativePath.includes(`${path.sep}pages${path.sep}`) ||
+          relativePath.includes(`${path.sep}components${path.sep}`))
+      );
+    })
+    .filter(({ specifier }) =>
+      specifier.includes("client/movies/generator-output"),
+    )
+    .map(
+      ({ sourceFile, specifier }) =>
+        `${path.relative(srcRoot, sourceFile)} imports ${specifier}`,
+    )
     .sort();
 
 const sourceFiles = (directory: string): string[] =>

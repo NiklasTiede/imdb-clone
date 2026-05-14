@@ -5,11 +5,9 @@ import CheckIcon from "@mui/icons-material/Check";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import {
-  MovieRecord,
-  MovieRecordMovieTypeEnum,
-} from "../../../client/movies/generator-output";
 import { MinioImageSize, PosterImage } from "../../../shared/media";
+import type { Movie } from "../model/movie";
+import { MovieType } from "../model/movie";
 import { COMMUNITY_BLUE, IMDB_GOLD, RatingPill } from "./RatingPill";
 
 const humanizeEnum = (value: string): string =>
@@ -23,12 +21,12 @@ const humanizeEnum = (value: string): string =>
 const HERO_BACKDROP = "#102236";
 
 const SERIES_TYPES = new Set<string>([
-  MovieRecordMovieTypeEnum.TvSeries,
-  MovieRecordMovieTypeEnum.TvMiniSeries,
+  MovieType.TvSeries,
+  MovieType.TvMiniSeries,
 ]);
 
 type MovieHeroProps = {
-  movie: MovieRecord;
+  movie: Movie;
   isBookmarked: boolean;
   onToggleBookmark: () => void;
   isBookmarkLoading?: boolean;
@@ -36,7 +34,7 @@ type MovieHeroProps = {
   onRate: (score: number) => void;
 };
 
-const formatYearRange = (movie: MovieRecord): string => {
+const formatYearRange = (movie: Movie): string => {
   if (
     movie.movieType &&
     SERIES_TYPES.has(movie.movieType) &&

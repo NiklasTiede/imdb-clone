@@ -2,12 +2,12 @@ import StarIcon from "@mui/icons-material/Star";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { WatchedMovieRecord } from "../../../../client/movies/generator-output";
 import { movieColors } from "../../../../theme";
+import type { WatchlistItem } from "../model/watchlist";
 import { buildWatchlistStats } from "../utils/watchlistStats";
 
 type WatchlistStatsProps = {
-  items: WatchedMovieRecord[];
+  items: WatchlistItem[];
 };
 
 const WatchlistStats = ({ items }: WatchlistStatsProps) => {
@@ -59,7 +59,9 @@ const WatchlistStats = ({ items }: WatchlistStatsProps) => {
           >
             {tile.label}
           </Typography>
-          <Box sx={{ alignItems: "center", display: "flex", gap: 0.5, mt: 0.5 }}>
+          <Box
+            sx={{ alignItems: "center", display: "flex", gap: 0.5, mt: 0.5 }}
+          >
             {tile.icon}
             <Typography sx={{ fontSize: 18, fontWeight: 600 }}>
               {tile.value}

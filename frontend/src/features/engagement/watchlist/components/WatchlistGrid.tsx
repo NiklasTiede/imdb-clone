@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
-import { WatchedMovieRecord } from "../../../../client/movies/generator-output";
+import type { WatchlistItem } from "../model/watchlist";
 import WatchlistMovieCard from "./WatchlistMovieCard";
 
 type WatchlistGridProps = {
-  items: WatchedMovieRecord[];
+  items: WatchlistItem[];
   onRemove: (movieId: number) => void;
 };
 

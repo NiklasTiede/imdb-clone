@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import { LoginRequest } from "../../../client/movies/generator-output";
+import type { LoginRequest } from "../model/identityRequests";
 import { Button, Container, Grid, Paper, TextField } from "@mui/material";
 import { tokens } from "../../../theme";
 import { useForm } from "react-hook-form";

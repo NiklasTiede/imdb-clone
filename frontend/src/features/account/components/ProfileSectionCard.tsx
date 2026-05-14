@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
-import type { AccountProfile } from "../../../client/movies/generator-output";
+import type { AccountProfile } from "../model/accountProfile";
 import { i18n } from "../../../i18n";
 import {
   hasProfileSectionChanges,

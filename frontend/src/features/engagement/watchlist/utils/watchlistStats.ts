@@ -1,4 +1,4 @@
-import { WatchedMovieRecord } from "../../../../client/movies/generator-output";
+import type { WatchlistItem } from "../model/watchlist";
 import { formatGenre } from "./watchlistFormat";
 
 export type WatchlistStats = {
@@ -21,9 +21,7 @@ export const formatRuntime = (minutes: number): string => {
   return `${hours}h ${remainingMinutes}m`;
 };
 
-export const buildWatchlistStats = (
-  items: WatchedMovieRecord[],
-): WatchlistStats => {
+export const buildWatchlistStats = (items: WatchlistItem[]): WatchlistStats => {
   const runtime = items.reduce(
     (sum, item) => sum + (item.movie?.runtimeMinutes ?? 0),
     0,

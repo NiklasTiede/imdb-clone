@@ -10,7 +10,7 @@ import SearchHeader from "../components/SearchHeader";
 import SearchMovieGrid from "../components/SearchMovieGrid";
 import { parseSearchUrlState } from "../utils/searchUrlState";
 import PageContent from "../../../shared/layout/PageContent";
-import type { MovieRecord } from "../../../client/movies/generator-output";
+import type { Movie } from "../../catalog";
 import type { SearchUrlState } from "../utils/searchUrlState";
 
 export const SEARCH_RESULTS_MAX_WIDTH_PX = 1320;
@@ -30,7 +30,8 @@ const MovieSearchPage = () => {
   const movies = sortSearchMovies(data?.content ?? [], searchState.sort);
   const hasSearchCriteria =
     searchState.query !== null || Object.keys(searchState.filters).length > 0;
-  const showEmptyState = hasSearchCriteria && !isFetching && movies.length === 0;
+  const showEmptyState =
+    hasSearchCriteria && !isFetching && movies.length === 0;
 
   return (
     <PageContent maxWidth={`${SEARCH_RESULTS_MAX_WIDTH_PX}px`}>
@@ -57,9 +58,9 @@ const MovieSearchPage = () => {
 };
 
 export const sortSearchMovies = (
-  movies: MovieRecord[],
+  movies: Movie[],
   sort: SearchUrlState["sort"],
-): MovieRecord[] => {
+): Movie[] => {
   if (sort !== "rating_desc") {
     return movies;
   }

@@ -1,10 +1,10 @@
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
-import { MovieRecord } from "../../../client/movies/generator-output";
+import type { Movie } from "../../catalog";
 import SearchMovieCard from "./SearchMovieCard";
 
 type SearchMovieGridProps = {
-  movies: MovieRecord[];
+  movies: Movie[];
 };
 
 export const searchMovieGridSx = {
@@ -19,11 +19,7 @@ export const searchMovieGridSx = {
 } satisfies SxProps<Theme>;
 
 const SearchMovieGrid = ({ movies }: SearchMovieGridProps) => (
-  <Box
-    aria-label="Search results"
-    role="grid"
-    sx={searchMovieGridSx}
-  >
+  <Box aria-label="Search results" role="grid" sx={searchMovieGridSx}>
     {movies.map((movie) => (
       <Box key={movie.id} role="gridcell">
         <SearchMovieCard movie={movie} />

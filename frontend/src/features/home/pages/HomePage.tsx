@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Snackbar from "@mui/material/Snackbar";
-import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generator-output";
 import FeaturedMovieHero from "../components/FeaturedMovieHero";
 import MovieCarousel from "../components/MovieCarousel";
 import { authSession, useAuthSession } from "../../../shared/auth";
@@ -12,6 +11,7 @@ import {
   toggleWatchlistMutationOptions,
   watchlistQueries,
 } from "../../engagement";
+import { MovieSearchGenre } from "../../catalog";
 import { useNavigate } from "react-router";
 import { useState } from "react";
 
@@ -22,19 +22,19 @@ export const getHomeMinStartYear = (date = new Date()) =>
 
 export const homeGenreRows = [
   {
-    genre: MovieSearchRequestMovieGenreEnum.Drama,
+    genre: MovieSearchGenre.Drama,
     subtitle: "Highest-rated drama from the last 30 years",
     title: "Top drama",
     viewAllGenre: "DRAMA",
   },
   {
-    genre: MovieSearchRequestMovieGenreEnum.Thriller,
+    genre: MovieSearchGenre.Thriller,
     subtitle: "Edge-of-your-seat picks",
     title: "Top thrillers",
     viewAllGenre: "THRILLER",
   },
   {
-    genre: MovieSearchRequestMovieGenreEnum.SciFi,
+    genre: MovieSearchGenre.SciFi,
     subtitle: "Worlds beyond our own",
     title: "Top sci-fi",
     viewAllGenre: "SCI_FI",

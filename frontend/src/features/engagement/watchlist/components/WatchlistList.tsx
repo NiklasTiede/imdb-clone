@@ -5,13 +5,13 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
-import { WatchedMovieRecord } from "../../../../client/movies/generator-output";
 import { MinioImageSize, PosterImage } from "../../../../shared/media";
 import { movieColors } from "../../../../theme";
+import type { WatchlistItem } from "../model/watchlist";
 import { formatMovieMeta, formatRelativeDate } from "../utils/watchlistFormat";
 
 type WatchlistListProps = {
-  items: WatchedMovieRecord[];
+  items: WatchlistItem[];
   onRemove: (movieId: number) => void;
 };
 

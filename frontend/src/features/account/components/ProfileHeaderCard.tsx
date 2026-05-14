@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import type { AccountProfile } from "../../../client/movies/generator-output";
+import type { AccountProfile } from "../model/accountProfile";
 import { ProfileAvatar } from "../../../shared/media";
 import ProfileImageUpload from "./ProfileImageUpload";
 

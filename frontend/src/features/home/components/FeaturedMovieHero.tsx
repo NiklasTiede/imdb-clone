@@ -8,12 +8,11 @@ import Chip from "@mui/material/Chip";
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import type { MovieRecord } from "../../../client/movies/generator-output";
-import { formatRatingCount, IMDB_GOLD } from "../../catalog";
+import { formatRatingCount, IMDB_GOLD, type Movie } from "../../catalog";
 import { MinioImageSize, PosterImage } from "../../../shared/media";
 
 type HeroProps = {
-  movie: MovieRecord | null;
+  movie: Movie | null;
   loading?: boolean;
   isBookmarked?: boolean;
   isBookmarkLoading?: boolean;
@@ -190,7 +189,7 @@ const Hero = ({
   );
 };
 
-const HeroMeta = ({ movie }: { movie: MovieRecord }) => {
+const HeroMeta = ({ movie }: { movie: Movie }) => {
   const metaItems = [
     movie.startYear ? String(movie.startYear) : null,
     movie.runtimeMinutes ? `${movie.runtimeMinutes} min` : null,

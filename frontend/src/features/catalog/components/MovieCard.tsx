@@ -1,7 +1,7 @@
 import { Box, Card, Paper, Stack, styled, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { tokens } from "../../../theme";
-import { MovieRecord } from "../../../client/movies/generator-output";
+import type { Movie } from "../model/movie";
 import React from "react";
 import { Link } from "react-router";
 import { MinioImageSize, PosterImage } from "../../../shared/media";
@@ -44,7 +44,7 @@ export function snakeToPascalCase(str: string): string {
   return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
 }
 
-const MovieCard = (movie: MovieRecord) => {
+const MovieCard = (movie: Movie) => {
   const colors = tokens();
 
   return (

@@ -14,7 +14,7 @@ import {
   styled,
 } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import { MovieSearchRequestMovieTypeEnum } from "../../../client/movies/generator-output";
+import { MovieSearchType } from "../../catalog";
 
 const minDistance = 1.0;
 
@@ -150,11 +150,9 @@ const FilterPanelPage = () => {
                     onChange={handleChange3}
                   >
                     <MenuItem value={"None"}>None</MenuItem>
-                    {Object.keys(MovieSearchRequestMovieTypeEnum).map(
-                      (movieGenre: string) => (
-                        <MenuItem value={movieGenre}>{movieGenre}</MenuItem>
-                      ),
-                    )}
+                    {Object.keys(MovieSearchType).map((movieGenre: string) => (
+                      <MenuItem value={movieGenre}>{movieGenre}</MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Box>

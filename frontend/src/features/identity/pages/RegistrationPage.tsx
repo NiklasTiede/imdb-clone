@@ -14,7 +14,7 @@ import { i18n } from "../../../i18n";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
-import { RegistrationRequest } from "../../../client/movies/generator-output";
+import type { RegistrationRequest } from "../model/identityRequests";
 import { useMutation } from "@tanstack/react-query";
 import {
   getRegistrationInvalidParams,

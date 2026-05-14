@@ -1,4 +1,4 @@
-import { WatchedMovieRecord } from "../../../../client/movies/generator-output";
+import type { WatchlistItem } from "../model/watchlist";
 
 export type WatchlistSort =
   | "addedAt_desc"
@@ -20,9 +20,9 @@ export const sortLabels: Record<WatchlistSort, string> = {
 };
 
 export const sortWatchlistItems = (
-  items: WatchedMovieRecord[],
+  items: WatchlistItem[],
   sortBy: WatchlistSort,
-): WatchedMovieRecord[] =>
+): WatchlistItem[] =>
   [...items].sort((left, right) => {
     switch (sortBy) {
       case "addedAt_asc":

@@ -4,7 +4,6 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
-import { WatchedMovieRecord } from "../../../../client/movies/generator-output";
 import { i18n } from "../../../../i18n";
 import { useLocalStorageState } from "../../../../shared/hooks/useLocalStorageState";
 import PageContent from "../../../../shared/layout/PageContent";
@@ -23,6 +22,7 @@ import {
   removeFromWatchlistMutationOptions,
 } from "../api/watchlistMutations";
 import { watchlistQueries, watchlistQueryKeys } from "../api/watchlistQueries";
+import type { WatchlistItem } from "../model/watchlist";
 import { pickRandomWatchlistItem } from "../utils/pickRandomWatchlistItem";
 import { sortWatchlistItems, WatchlistSort } from "../utils/watchlistSorting";
 import { useSnackbar } from "notistack";
@@ -39,9 +39,7 @@ const WatchlistPage = () => {
     "grid",
     ["grid", "list"],
   );
-  const [pickedMovie, setPickedMovie] = useState<WatchedMovieRecord | null>(
-    null,
-  );
+  const [pickedMovie, setPickedMovie] = useState<WatchlistItem | null>(null);
   const [pickDialogOpen, setPickDialogOpen] = useState(false);
   const watchlistQuery = watchlistQueries.currentUserItems({
     page: 0,
