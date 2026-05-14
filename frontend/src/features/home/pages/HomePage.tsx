@@ -5,8 +5,7 @@ import Snackbar from "@mui/material/Snackbar";
 import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generator-output";
 import FeaturedMovieHero from "../components/FeaturedMovieHero";
 import MovieCarousel from "../components/MovieCarousel";
-import { useAuthSession } from "../../../shared/auth/useAuthSession";
-import { authSession } from "../../../shared/auth/authSession";
+import { authSession, useAuthSession } from "../../../shared/auth";
 import { useFeaturedMovie } from "../api/useFeaturedMovie";
 import { useMoviesByGenre } from "../api/useMoviesByGenre";
 import {

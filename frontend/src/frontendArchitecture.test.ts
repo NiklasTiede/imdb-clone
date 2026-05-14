@@ -27,9 +27,9 @@ describe("frontend feature architecture", () => {
     expect(existsSync(path.join(featuresRoot, "engagement", "rating"))).toBe(
       true,
     );
-    expect(
-      existsSync(path.join(featuresRoot, "engagement", "watchlist")),
-    ).toBe(true);
+    expect(existsSync(path.join(featuresRoot, "engagement", "watchlist"))).toBe(
+      true,
+    );
   });
 
   test("cross-feature imports use public feature interfaces", () => {
@@ -38,6 +38,30 @@ describe("frontend feature architecture", () => {
 
   test("keeps domain code out of legacy top-level folders", () => {
     expect(legacyDomainFolders()).toEqual([]);
+  });
+
+  test("feature modules use the public auth interface", () => {
+    expect(internalAuthImports()).toEqual([]);
+  });
+
+  test("watchlist cache keys are not hard-coded outside watchlist api modules", () => {
+    expect(hardCodedWatchlistQueryKeys()).toEqual([]);
+  });
+
+  test("watchlist page keeps mutation cache behavior behind the api seam", () => {
+    const watchlistPage = readFileSync(
+      path.join(
+        featuresRoot,
+        "engagement",
+        "watchlist",
+        "pages",
+        "WatchlistPage.tsx",
+      ),
+      "utf8",
+    );
+
+    expect(watchlistPage).not.toContain("onMutate");
+    expect(watchlistPage).not.toContain("PagedResponseWatchedMovieRecord");
   });
 });
 
@@ -74,6 +98,46 @@ const crossFeatureInternalImports = (): string[] =>
 const legacyDomainFolders = (): string[] =>
   ["components", "hooks", "pages", "types", "utils"]
     .filter((entry) => existsSync(path.join(srcRoot, entry)))
+    .sort();
+
+const internalAuthImports = (): string[] =>
+  sourceFiles(srcRoot)
+    .flatMap((sourceFile) =>
+      importSpecifiers(sourceFile).map((specifier) => ({
+        sourceFile,
+        specifier,
+      })),
+    )
+    .filter(({ sourceFile }) =>
+      path.relative(srcRoot, sourceFile).startsWith("features"),
+    )
+    .filter(({ specifier }) => specifier.includes("shared/auth/"))
+    .map(
+      ({ sourceFile, specifier }) =>
+        `${path.relative(srcRoot, sourceFile)} imports ${specifier}`,
+    )
+    .sort();
+
+const hardCodedWatchlistQueryKeys = (): string[] =>
+  sourceFiles(srcRoot)
+    .filter(
+      (sourceFile) =>
+        !path
+          .relative(srcRoot, sourceFile)
+          .endsWith(
+            path.join(
+              "features",
+              "engagement",
+              "watchlist",
+              "api",
+              "watchlistQueries.ts",
+            ),
+          ),
+    )
+    .filter((sourceFile) =>
+      readFileSync(sourceFile, "utf8").includes('queryKey: ["watchlist"]'),
+    )
+    .map((sourceFile) => path.relative(srcRoot, sourceFile))
     .sort();
 
 const sourceFiles = (directory: string): string[] =>
@@ -115,8 +179,9 @@ type SourceImport = ResolvedImport & {
   targetFile: string;
 };
 
-const hasResolvedTarget = (sourceImport: ResolvedImport): sourceImport is SourceImport =>
-  sourceImport.targetFile !== null;
+const hasResolvedTarget = (
+  sourceImport: ResolvedImport,
+): sourceImport is SourceImport => sourceImport.targetFile !== null;
 
 const resolveSourceImport = (
   sourceFile: string,

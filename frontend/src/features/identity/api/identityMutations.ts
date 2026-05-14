@@ -7,7 +7,7 @@ import {
   RegistrationRequest,
 } from "../../../client/movies/generator-output";
 import { authApi } from "../../../shared/api/moviesApi";
-import { AuthSessionData } from "../../../shared/auth/authSession";
+import { AuthSessionData } from "../../../shared/auth";
 
 interface ImdbJwtPayload extends JwtPayload {
   roles?: string;

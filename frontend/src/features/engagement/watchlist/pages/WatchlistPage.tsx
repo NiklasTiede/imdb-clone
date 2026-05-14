@@ -4,10 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
-import {
-  PagedResponseWatchedMovieRecord,
-  WatchedMovieRecord,
-} from "../../../../client/movies/generator-output";
+import { WatchedMovieRecord } from "../../../../client/movies/generator-output";
 import { i18n } from "../../../../i18n";
 import { useLocalStorageState } from "../../../../shared/hooks/useLocalStorageState";
 import PageContent from "../../../../shared/layout/PageContent";
@@ -21,13 +18,13 @@ import WatchlistStats from "../components/WatchlistStats";
 import WatchlistToolbar, {
   WatchlistView,
 } from "../components/WatchlistToolbar";
-import { addToWatchlist, removeFromWatchlist } from "../api/watchlistMutations";
-import { watchlistQueries } from "../api/watchlistQueries";
-import { pickRandomWatchlistItem } from "../utils/pickRandomWatchlistItem";
 import {
-  sortWatchlistItems,
-  WatchlistSort,
-} from "../utils/watchlistSorting";
+  addToWatchlist,
+  removeFromWatchlistMutationOptions,
+} from "../api/watchlistMutations";
+import { watchlistQueries, watchlistQueryKeys } from "../api/watchlistQueries";
+import { pickRandomWatchlistItem } from "../utils/pickRandomWatchlistItem";
+import { sortWatchlistItems, WatchlistSort } from "../utils/watchlistSorting";
 import { useSnackbar } from "notistack";
 
 const WATCHLIST_PAGE_SIZE = 30;
@@ -51,9 +48,7 @@ const WatchlistPage = () => {
     size: WATCHLIST_PAGE_SIZE,
     username,
   });
-  const { data, isError, isLoading } = useQuery(
-    watchlistQuery,
-  );
+  const { data, isError, isLoading } = useQuery(watchlistQuery);
   const items = useMemo(() => data?.content ?? [], [data?.content]);
   const sortedItems = useMemo(
     () => sortWatchlistItems(items, sortBy),
@@ -68,61 +63,37 @@ const WatchlistPage = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["watchlist"] });
+      queryClient.invalidateQueries({ queryKey: watchlistQueryKeys.all });
     },
   });
 
   const removeMutation = useMutation({
-    mutationFn: removeFromWatchlist,
-    onMutate: async (movieId: number) => {
-      await queryClient.cancelQueries({ queryKey: watchlistQuery.queryKey });
-      const previous =
-        queryClient.getQueryData<PagedResponseWatchedMovieRecord>(
-          watchlistQuery.queryKey,
-        );
-      queryClient.setQueryData<PagedResponseWatchedMovieRecord>(
-        watchlistQuery.queryKey,
-        (current) =>
-          current
-            ? {
-                ...current,
-                content: current.content?.filter(
-                  (item) => (item.movieId ?? item.movie?.id) !== movieId,
-                ),
-                totalElements: Math.max((current.totalElements ?? 1) - 1, 0),
-              }
-            : current,
-      );
-      return { previous };
-    },
-    onError: (_error, _movieId, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(watchlistQuery.queryKey, context.previous);
-      }
-      enqueueSnackbar("Could not remove movie from watchlist", {
-        variant: "error",
-      });
-    },
-    onSuccess: (_data, movieId) => {
-      enqueueSnackbar("Removed from watchlist", {
-        action: (snackbarId) => (
-          <Button
-            color="inherit"
-            onClick={() => {
-              addMutation.mutate(movieId);
-              closeSnackbar(snackbarId);
-            }}
-            size="small"
-          >
-            Undo
-          </Button>
-        ),
-        variant: "info",
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["watchlist"] });
-    },
+    ...removeFromWatchlistMutationOptions({
+      onRemoveError: () => {
+        enqueueSnackbar("Could not remove movie from watchlist", {
+          variant: "error",
+        });
+      },
+      onRemoved: (movieId) => {
+        enqueueSnackbar("Removed from watchlist", {
+          action: (snackbarId) => (
+            <Button
+              color="inherit"
+              onClick={() => {
+                addMutation.mutate(movieId);
+                closeSnackbar(snackbarId);
+              }}
+              size="small"
+            >
+              Undo
+            </Button>
+          ),
+          variant: "info",
+        });
+      },
+      queryClient,
+      watchlistQueryKey: watchlistQuery.queryKey,
+    }),
   });
 
   const pickForMe = () => {

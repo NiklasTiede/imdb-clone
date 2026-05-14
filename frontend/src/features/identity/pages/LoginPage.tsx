@@ -9,8 +9,7 @@ import * as zod from "zod";
 import { i18n } from "../../../i18n";
 import { useMutation } from "@tanstack/react-query";
 import { authenticateAccount } from "../api/identityMutations";
-import { authSession } from "../../../shared/auth/authSession";
-import { useAuthSession } from "../../../shared/auth/useAuthSession";
+import { authSession, useAuthSession } from "../../../shared/auth";
 import { useSnackbar } from "notistack";
 import { AxiosError } from "axios";
 

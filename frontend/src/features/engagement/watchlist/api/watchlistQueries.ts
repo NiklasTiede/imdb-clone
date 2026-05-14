@@ -1,6 +1,4 @@
-import {
-  PagedResponseWatchedMovieRecord,
-} from "../../../../client/movies/generator-output";
+import { PagedResponseWatchedMovieRecord } from "../../../../client/movies/generator-output";
 import { accountEngagementApi } from "../../../../shared/api/moviesApi";
 
 type CurrentUserWatchlistParams = {
@@ -14,6 +12,23 @@ type WatchlistMovieIdsParams = {
 };
 
 const MOVIE_IDS_PAGE_SIZE = 30;
+
+export const watchlistQueryKeys = {
+  all: ["watchlist"] as const,
+  currentUser: (username: string | null) =>
+    [...watchlistQueryKeys.all, "current-user", username] as const,
+  currentUserItems: ({
+    page,
+    size,
+    username,
+  }: {
+    page: number;
+    size: number;
+    username: string | null;
+  }) => [...watchlistQueryKeys.currentUser(username), page, size] as const,
+  currentUserMovieIds: (username: string | null) =>
+    [...watchlistQueryKeys.currentUser(username), "movie-ids"] as const,
+};
 
 const getWatchlistMovieIds = (
   watchlist: PagedResponseWatchedMovieRecord,
@@ -73,13 +88,11 @@ export const watchlistQueries = {
           size,
           username: normalizedUsername,
         }),
-      queryKey: [
-        "watchlist",
-        "current-user",
-        normalizedUsername,
+      queryKey: watchlistQueryKeys.currentUserItems({
         page,
         size,
-      ] as const,
+        username: normalizedUsername,
+      }),
     };
   },
 
@@ -94,12 +107,7 @@ export const watchlistQueries = {
         }
         return fetchCurrentUserWatchedMovieIds(normalizedUsername);
       },
-      queryKey: [
-        "watchlist",
-        "current-user",
-        normalizedUsername,
-        "movie-ids",
-      ] as const,
+      queryKey: watchlistQueryKeys.currentUserMovieIds(normalizedUsername),
     };
   },
 };
