@@ -33,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class Ratings implements RatingService {
 
   private static final Logger logger = LoggerFactory.getLogger(Ratings.class);
+  private static final BigDecimal MIN_SCORE = BigDecimal.ZERO;
+  private static final BigDecimal MAX_SCORE = BigDecimal.TEN;
 
   private final MovieReferenceService movieReferenceService;
   private final MovieRatingAggregateService movieRatingAggregateService;
@@ -53,7 +55,7 @@ public class Ratings implements RatingService {
   @Override
   @Transactional
   public RatingRecord rateMovie(UserPrincipal currentAccount, Long movieId, BigDecimal score) {
-    if (score.floatValue() < 0 || score.floatValue() > 10.1) {
+    if (score.compareTo(MIN_SCORE) < 0 || score.compareTo(MAX_SCORE) > 0) {
       throw new BadRequestException("Score must be between 0 and 10");
     } else {
       movieReferenceService.findMovieById(movieId);

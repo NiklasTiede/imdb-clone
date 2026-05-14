@@ -115,10 +115,58 @@ class RatingControllerTest extends BaseContainers {
   }
 
   @Test
-  void rateMovie_rejectsScoreAboveRange() {
+  void rateMovie_acceptsTenPointZeroScore() {
     restTestClient
         .put()
-        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.2")
+        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.0")
+        .header("Authorization", userToken)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isCreated(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec -> spec.expectBody().jsonPath("$.rating").isEqualTo(10.0));
+  }
+
+  @Test
+  void rateMovie_rejectsTenPointOneScore() {
+    restTestClient
+        .put()
+        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.1")
+        .header("Authorization", userToken)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isBadRequest(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.detail")
+                    .isEqualTo("Score must be between 0 and 10"));
+  }
+
+  @Test
+  void rateMovie_rejectsScoreSlightlyAboveTen() {
+    restTestClient
+        .put()
+        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.05")
+        .header("Authorization", userToken)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isBadRequest(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.detail")
+                    .isEqualTo("Score must be between 0 and 10"));
+  }
+
+  @Test
+  void rateMovie_rejectsNegativeScore() {
+    restTestClient
+        .put()
+        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "-0.1")
         .header("Authorization", userToken)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()

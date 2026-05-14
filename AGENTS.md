@@ -47,16 +47,19 @@ The frontend API client is generated from the backend OpenAPI spec.
 
 ## Backend Conventions
 
-- Controllers expose REST endpoints and should keep business logic in services.
-- Services use interfaces plus implementations under `service/impl`.
-- Persistence uses JPA repositories and Elasticsearch repositories.
+- Public module contracts live in `api` packages; concrete application services live under
+  each module's `internal` package with domain names such as `MovieCatalog`, `Ratings`, or
+  `MediaFiles`.
+- Controllers expose REST endpoints and delegate business behavior to module services.
+- Persistence uses JPA repositories and Elasticsearch repositories owned by the same module as
+  their tables/documents.
 - API errors should use the existing `ProblemDetail`/global exception handling style.
 - Integration tests use Testcontainers and shared fixtures from `src/test/resources/sql/test-data.sql`.
 
 ## Frontend Conventions
 
 - Prefer existing Material UI patterns and components.
-- Use the generated API client through `frontend/src/client/movies/MoviesApi.ts`.
+- Use generated API clients through the shared wrappers in `frontend/src/shared/api/moviesApi.ts`.
 - Keep server-state fetching and mutations in TanStack React Query wrappers under feature `api` folders.
 - Keep feature-specific UI behavior inside `frontend/src/features/<feature>` and genuinely shared UI/hooks under `frontend/src/shared`.
 - Keep reusable UI behavior in hooks or focused components.
