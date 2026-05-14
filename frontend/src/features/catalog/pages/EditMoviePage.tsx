@@ -1,21 +1,26 @@
-import { Container, Paper } from "@mui/material";
-import Typography from "@mui/material/Typography";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import Button from "@mui/material/Button";
+import { Link as RouterLink } from "react-router";
 import { i18n } from "../../../i18n";
-import React from "react";
+import PageContent from "../../../shared/layout/PageContent";
+import StatusState from "../../../shared/layout/StatusState";
 
 const EditMoviePage = () => {
   return (
-    <>
-      <div>
-        <Container maxWidth={"xs"}>
-          <Paper elevation={3} sx={{ padding: 4, marginTop: 10, fontSize: 18 }}>
-            <Typography variant={"inherit"} sx={{ textAlign: "center" }}>
-              {i18n.editMovie.heading}
-            </Typography>
-          </Paper>
-        </Container>
-      </div>
-    </>
+    <PageContent maxWidth="760px">
+      <StatusState
+        action={
+          <Button component={RouterLink} to="/movie-search" variant="contained">
+            Search catalog
+          </Button>
+        }
+        icon={<EditNoteIcon />}
+        title={i18n.editMovie.heading}
+      >
+        Admin editing tools will live here. For now this route uses the shared
+        app surface so it does not look detached from the rest of the product.
+      </StatusState>
+    </PageContent>
   );
 };
 

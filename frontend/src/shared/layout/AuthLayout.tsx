@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
+import { movieColors } from "../../theme";
 import BrandLogo from "./BrandLogo";
 
 type AuthLayoutProps = {
@@ -23,7 +24,7 @@ const AuthLayout = ({
       sx={{
         alignItems: "center",
         backdropFilter: "blur(18px)",
-        bgcolor: "rgba(13, 27, 42, 0.94)",
+        bgcolor: `${movieColors.surface}f0`,
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         display: "flex",
         justifyContent: "space-between",
@@ -46,7 +47,10 @@ const AuthLayout = ({
           to={altTo}
         >
           {altLabel}{" "}
-          <Box component="span" sx={{ color: "#4dabf7", fontWeight: 500 }}>
+          <Box
+            component="span"
+            sx={{ color: movieColors.info, fontWeight: 500 }}
+          >
             {altActionLabel}
           </Box>
         </Link>

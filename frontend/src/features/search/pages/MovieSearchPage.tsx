@@ -30,8 +30,12 @@ const MovieSearchPage = () => {
   const movies = sortSearchMovies(data?.content ?? [], searchState.sort);
   const hasSearchCriteria =
     searchState.query !== null || Object.keys(searchState.filters).length > 0;
-  const showEmptyState =
-    hasSearchCriteria && !isFetching && movies.length === 0;
+  const showEmptyState = shouldShowSearchEmptyState({
+    hasSearchCriteria,
+    isError,
+    isFetching,
+    movieCount: movies.length,
+  });
 
   return (
     <PageContent maxWidth={`${SEARCH_RESULTS_MAX_WIDTH_PX}px`}>
@@ -69,5 +73,17 @@ export const sortSearchMovies = (
     (left, right) => (right.imdbRating ?? 0) - (left.imdbRating ?? 0),
   );
 };
+
+export const shouldShowSearchEmptyState = ({
+  hasSearchCriteria,
+  isError,
+  isFetching,
+  movieCount,
+}: {
+  hasSearchCriteria: boolean;
+  isError: boolean;
+  isFetching: boolean;
+  movieCount: number;
+}): boolean => hasSearchCriteria && !isError && !isFetching && movieCount === 0;
 
 export default MovieSearchPage;

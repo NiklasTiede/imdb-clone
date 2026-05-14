@@ -17,7 +17,7 @@ const RatingsStats = ({ items }: RatingsStatsProps) => {
     {
       label: "Your average",
       value: stats.averageRating,
-      icon: <StarIcon sx={{ color: "#4dabf7", fontSize: 18 }} />,
+      icon: <StarIcon sx={{ color: movieColors.info, fontSize: 18 }} />,
     },
     { label: "Top genre", value: stats.topGenre },
     { label: "Top decade", value: stats.topDecade },

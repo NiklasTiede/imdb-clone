@@ -1,5 +1,5 @@
 import type { RatedMovie } from "../api/ratingQueries";
-import { formatGenre } from "../../watchlist/utils/watchlistFormat";
+import { formatGenre } from "../../watchlist";
 
 export type RatingsStats = {
   averageRating: string;

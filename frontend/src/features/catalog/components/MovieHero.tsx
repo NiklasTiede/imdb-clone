@@ -6,6 +6,7 @@ import IosShareIcon from "@mui/icons-material/IosShare";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { MinioImageSize, PosterImage } from "../../../shared/media";
+import { movieColors } from "../../../theme";
 import type { Movie } from "../model/movie";
 import { MovieType } from "../model/movie";
 import { COMMUNITY_BLUE, IMDB_GOLD, RatingPill } from "./RatingPill";
@@ -17,8 +18,6 @@ const humanizeEnum = (value: string): string =>
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
-
-const HERO_BACKDROP = "#102236";
 
 const SERIES_TYPES = new Set<string>([
   MovieType.TvSeries,
@@ -72,8 +71,8 @@ export const MovieHero = ({
         position: "relative",
         px: { xs: 2, sm: 3 },
         py: { xs: 3, sm: 3.5 },
-        backgroundColor: "#0d1b2a",
-        color: "#fff",
+        backgroundColor: movieColors.surface,
+        color: "common.white",
       }}
     >
       <Box
@@ -82,7 +81,7 @@ export const MovieHero = ({
           position: "absolute",
           inset: 0,
           height: { xs: 160, sm: 200 },
-          backgroundColor: HERO_BACKDROP,
+          background: `linear-gradient(135deg, rgba(245,197,24,0.08) 0%, rgba(77,171,247,0.08) 44%, ${movieColors.backdrop} 100%)`,
           zIndex: 0,
         }}
       />
@@ -107,7 +106,7 @@ export const MovieHero = ({
               aspectRatio: "2 / 3",
               borderRadius: 1,
               border: "1px solid rgba(255,255,255,0.05)",
-              backgroundColor: "#050a14",
+              backgroundColor: movieColors.surfaceInset,
             }}
           />
         </Box>
@@ -157,7 +156,7 @@ export const MovieHero = ({
                   label={humanizeEnum(String(genre))}
                   size="small"
                   sx={{
-                    backgroundColor: "#283548",
+                    backgroundColor: movieColors.surfaceElevated,
                     color: "rgba(255,255,255,0.85)",
                     fontSize: 12,
                     height: 24,
@@ -202,11 +201,11 @@ export const MovieHero = ({
           disabled={isBookmarkLoading}
           sx={{
             textTransform: "none",
-            fontWeight: 500,
-            color: "#fff",
-            backgroundColor: isBookmarked ? "#2e7d32" : "#1976d2",
+            fontWeight: 700,
+            color: isBookmarked ? "common.white" : movieColors.brandInk,
+            backgroundColor: isBookmarked ? "success.main" : movieColors.brand,
             "&:hover": {
-              backgroundColor: isBookmarked ? "#256528" : "#1565c0",
+              backgroundColor: isBookmarked ? "success.dark" : movieColors.gold,
             },
           }}
         >
@@ -292,7 +291,7 @@ const UserRatingStars = ({ value, onRate }: UserRatingStarsProps) => {
       data-testid="user-rating-stars"
       sx={{
         alignItems: { xs: "flex-start", sm: "center" },
-        backgroundColor: "#1e2a3a",
+        backgroundColor: movieColors.surfaceElevated,
         border: "1px solid rgba(255,255,255,0.06)",
         borderRadius: 1,
         px: 1.5,

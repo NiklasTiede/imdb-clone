@@ -1,36 +1,26 @@
-import { Container, Paper } from "@mui/material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import Button from "@mui/material/Button";
+import { Link as RouterLink } from "react-router";
 import { RoleNameEnum } from "../../shared/auth";
-import Typography from "@mui/material/Typography";
 import { i18n } from "../../i18n";
-import React from "react";
+import PageContent from "../../shared/layout/PageContent";
+import StatusState from "../../shared/layout/StatusState";
 
 const AccessDeniedPage = ({ role }: { role: RoleNameEnum }) => {
   return (
-    <>
-      <div>
-        <Container maxWidth={"xs"}>
-          <Paper elevation={3} sx={{ padding: 6, marginTop: 10 }}>
-            <Typography
-              variant={"inherit"}
-              sx={{
-                textAlign: "center",
-                fontSize: 20,
-                fontWeight: "bold",
-                marginBottom: 3,
-              }}
-            >
-              {i18n.accessDenied.warning}
-            </Typography>
-            <Typography
-              variant={"inherit"}
-              sx={{ textAlign: "center", fontSize: 16 }}
-            >
-              {i18n.accessDenied.message(role)}
-            </Typography>
-          </Paper>
-        </Container>
-      </div>
-    </>
+    <PageContent maxWidth="760px">
+      <StatusState
+        action={
+          <Button component={RouterLink} to="/" variant="contained">
+            Go home
+          </Button>
+        }
+        icon={<LockOutlinedIcon />}
+        title={i18n.accessDenied.warning}
+      >
+        {i18n.accessDenied.message(role)}
+      </StatusState>
+    </PageContent>
   );
 };
 

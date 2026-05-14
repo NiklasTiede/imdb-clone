@@ -1,6 +1,7 @@
 import {
   MovieSearchRequest,
   MovieSearchRequestMovieGenreEnum,
+  MovieSearchRequestMovieTypeEnum,
 } from "../../../client/movies/generator-output";
 
 export type SearchUrlState = {
@@ -15,10 +16,12 @@ export const parseSearchUrlState = (search: string): SearchUrlState => {
   const query = params.get("q") ?? params.get("query");
   const pageParam = Number.parseInt(params.get("page") ?? "1", 10);
   const genre = parseGenre(params.get("genre"));
+  const movieType = parseMovieType(params.get("type"));
   const minYear = parseMinYear(params.get("minYear"));
   const sort = params.get("sort") === "rating_desc" ? "rating_desc" : null;
   const filters: MovieSearchRequest = {
     ...(genre ? { movieGenre: new Set([genre]) } : {}),
+    ...(movieType ? { movieType } : {}),
     ...(minYear !== null ? { minStartYear: minYear } : {}),
   };
 
@@ -28,6 +31,19 @@ export const parseSearchUrlState = (search: string): SearchUrlState => {
     query: query?.trim() || null,
     sort,
   };
+};
+
+const parseMovieType = (
+  movieType: string | null,
+): MovieSearchRequestMovieTypeEnum | null => {
+  if (!movieType) {
+    return null;
+  }
+
+  const movieTypes = Object.values(MovieSearchRequestMovieTypeEnum);
+  return movieTypes.includes(movieType as MovieSearchRequestMovieTypeEnum)
+    ? (movieType as MovieSearchRequestMovieTypeEnum)
+    : null;
 };
 
 const parseGenre = (

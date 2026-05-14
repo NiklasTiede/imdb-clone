@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   SEARCH_RESULTS_MAX_WIDTH_PX,
+  shouldShowSearchEmptyState,
   sortSearchMovies,
 } from "./MovieSearchPage";
 
@@ -26,5 +27,27 @@ describe("MovieSearchPage layout", () => {
         "rating_desc",
       ).map((movie) => movie.primaryTitle),
     ).toEqual(["High", "Low", "Missing"]);
+  });
+
+  test("does not show the empty state while an error is visible", () => {
+    expect(
+      shouldShowSearchEmptyState({
+        hasSearchCriteria: true,
+        isError: true,
+        isFetching: false,
+        movieCount: 0,
+      }),
+    ).toBe(false);
+  });
+
+  test("shows the empty state for a successful empty search", () => {
+    expect(
+      shouldShowSearchEmptyState({
+        hasSearchCriteria: true,
+        isError: false,
+        isFetching: false,
+        movieCount: 0,
+      }),
+    ).toBe(true);
   });
 });

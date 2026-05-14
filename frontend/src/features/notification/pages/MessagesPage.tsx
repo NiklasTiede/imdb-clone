@@ -1,21 +1,26 @@
-import { Container, Paper } from "@mui/material";
-import Typography from "@mui/material/Typography";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
+import Button from "@mui/material/Button";
+import { Link as RouterLink } from "react-router";
 import { i18n } from "../../../i18n";
-import React from "react";
+import PageContent from "../../../shared/layout/PageContent";
+import StatusState from "../../../shared/layout/StatusState";
 
 const Messages = () => {
   return (
-    <>
-      <div>
-        <Container maxWidth={"xs"}>
-          <Paper elevation={3} sx={{ padding: 4, marginTop: 10, fontSize: 18 }}>
-            <Typography variant={"inherit"} sx={{ textAlign: "center" }}>
-              {i18n.messages.heading}
-            </Typography>
-          </Paper>
-        </Container>
-      </div>
-    </>
+    <PageContent maxWidth="760px">
+      <StatusState
+        action={
+          <Button component={RouterLink} to="/movie-search" variant="contained">
+            Browse movies
+          </Button>
+        }
+        icon={<InboxOutlinedIcon />}
+        title={i18n.messages.heading}
+      >
+        Conversations and replies will appear here once the community features
+        are active.
+      </StatusState>
+    </PageContent>
   );
 };
 

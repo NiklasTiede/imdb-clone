@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { watchlistGridSx } from "../../watchlist/components/WatchlistGrid";
+import { watchlistGridSx } from "../../watchlist";
 import type { RatedMovie } from "../api/ratingQueries";
 import RatingsMovieCard from "./RatingsMovieCard";
 

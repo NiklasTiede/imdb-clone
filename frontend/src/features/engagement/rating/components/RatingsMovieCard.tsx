@@ -8,8 +8,8 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
 import { MinioImageSize, PosterImage } from "../../../../shared/media";
 import { movieColors } from "../../../../theme";
+import { formatMovieMeta } from "../../watchlist";
 import type { RatedMovie } from "../api/ratingQueries";
-import { formatMovieMeta } from "../../watchlist/utils/watchlistFormat";
 
 type RatingsMovieCardProps = {
   item: RatedMovie;

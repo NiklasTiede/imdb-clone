@@ -1,174 +1,263 @@
-import React, { useState } from "react";
+import TuneIcon from "@mui/icons-material/Tune";
 import {
   Box,
-  Checkbox,
-  Container,
+  Button,
   FormControl,
-  FormControlLabel,
+  Grid,
   InputLabel,
   MenuItem,
-  Paper,
   Select,
-  SelectChangeEvent,
   Slider,
-  styled,
+  Stack,
+  Typography,
 } from "@mui/material";
-import Typography from "@mui/material/Typography";
-import { MovieSearchType } from "../../catalog";
+import type { SelectChangeEvent } from "@mui/material";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
+import { MovieSearchGenre, MovieSearchType } from "../../catalog";
+import { movieColors } from "../../../theme";
+import AppSurface from "../../../shared/layout/AppSurface";
+import PageContent from "../../../shared/layout/PageContent";
+import PageHeader from "../../../shared/layout/PageHeader";
 
-const minDistance = 1.0;
-
-const marks = [
-  { value: 0 },
-  { value: 1 },
-  { value: 2 },
-  { value: 3 },
-  { value: 4 },
-  { value: 5 },
-  { value: 6 },
-  { value: 7 },
-  { value: 8 },
-  { value: 9 },
-  { value: 10 },
+const yearMarks = [
+  { label: "1950", value: 1950 },
+  { label: "1980", value: 1980 },
+  { label: "2010", value: 2010 },
+  { label: "2026", value: 2026 },
 ];
 
-const IOSSlider = styled(Slider)(({ theme }) => ({
-  color: "#3880ff",
-  height: 2,
-  padding: "15px 0",
-  "& .MuiSlider-thumb": {
-    height: 18,
-    width: 18,
-    backgroundColor: "#fff",
-  },
-  "& .MuiSlider-valueLabel": {
-    fontSize: 12,
-    fontWeight: "normal",
-    top: -2,
-    backgroundColor: "unset",
-    color: theme.palette.text.primary,
-    "&:before": {
-      display: "none",
-    },
-    "& *": {
-      background: "transparent",
-      color: "#fff",
-    },
-  },
-  "& .MuiSlider-track": {
-    border: "none",
-  },
-  "& .MuiSlider-rail": {
-    opacity: 0.5,
-    backgroundColor: "#bfbfbf",
-  },
-  "& .MuiSlider-mark": {
-    backgroundColor: "#bfbfbf",
-    height: 6,
-    width: 1,
-    "&.MuiSlider-markActive": {
-      opacity: 1,
-      backgroundColor: "currentColor",
-    },
-  },
-}));
+const humanizeEnum = (value: string): string =>
+  value
+    .toLowerCase()
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 
 const FilterPanelPage = () => {
-  const [ratingRange, setRatingRange] = useState<number[]>([0.0, 10.0]);
-
-  const handleChange = (
-    event: Event,
-    newRatingRange: number | number[],
-    activeThumb: number,
-  ) => {
-    if (!Array.isArray(newRatingRange)) {
-      return;
-    }
-    const [minRating, maxRating] = newRatingRange;
-    if (maxRating - minRating < minDistance) {
-      if (activeThumb === 0) {
-        const clamped = Math.min(minRating, 10 - minDistance);
-        setRatingRange([
-          clamped,
-          Math.round((clamped + minDistance) * 10) / 10,
-        ]);
-      } else {
-        const clamped = Math.max(maxRating, minDistance);
-        setRatingRange([
-          Math.round((clamped - minDistance) * 10) / 10,
-          clamped,
-        ]);
-      }
-    } else {
-      setRatingRange(newRatingRange as number[]);
-    }
-  };
-
+  const navigate = useNavigate();
+  const [genre, setGenre] = useState("");
   const [movieType, setMovieType] = useState("");
+  const [minYear, setMinYear] = useState(1990);
+  const [sort, setSort] = useState("rating_desc");
 
-  const handleChange3 = (event: SelectChangeEvent<typeof movieType>) => {
-    setMovieType(event.target.value);
+  const selectedSummary = useMemo(() => {
+    const items = [
+      genre ? humanizeEnum(genre) : "Any genre",
+      movieType ? humanizeEnum(movieType) : "Any format",
+      `From ${minYear}`,
+    ];
+    return items.join(" / ");
+  }, [genre, minYear, movieType]);
+
+  const handleSubmit = () => {
+    const params = new URLSearchParams();
+
+    if (genre) {
+      params.set("genre", genre);
+    }
+    if (movieType) {
+      params.set("type", movieType);
+    }
+    if (minYear > 1950) {
+      params.set("minYear", String(minYear));
+    }
+    if (sort) {
+      params.set("sort", sort);
+    }
+
+    navigate(`/movie-search?${params.toString()}`);
   };
-
-  // http://localhost:3000/filter
 
   return (
-    <>
-      <div>
-        <Container maxWidth={"xs"}>
-          <Paper elevation={3} sx={{ padding: 4, marginTop: 10, fontSize: 18 }}>
-            <Box sx={{ width: 200 }}>
-              <Typography id="non-linear-slider" gutterBottom>
-                FilterPanel <br />
-                <br />
-              </Typography>
-              <IOSSlider
-                aria-label="ios slider"
-                value={ratingRange}
-                min={0}
-                step={0.1}
-                max={10}
-                onChange={handleChange}
-                getAriaLabel={() => "Temperature range"}
-                marks={marks}
-                valueLabelDisplay="on"
-              />
+    <PageContent maxWidth="1120px">
+      <Stack spacing={2.5}>
+        <PageHeader
+          eyebrow="Advanced search"
+          title="Find your next movie"
+          subtitle="Shape the catalog by release window, genre, and format."
+        />
 
-              <br />
-              <br />
-
-              <Box sx={{ minWidth: 50 }}>
-                <FormControl fullWidth>
-                  <InputLabel id="demo-simple-select-label">
-                    Movie Type
-                  </InputLabel>
-                  <Select
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                    value={movieType}
-                    label="Movie Type"
-                    onChange={handleChange3}
+        <Grid container spacing={2.5}>
+          <Grid size={{ xs: 12, md: 7 }}>
+            <AppSurface accent="brand" sx={{ p: { xs: 2, sm: 3 } }}>
+              <Stack spacing={3}>
+                <Stack
+                  direction="row"
+                  spacing={1.25}
+                  sx={{ alignItems: "center" }}
+                >
+                  <Box
+                    sx={{
+                      alignItems: "center",
+                      backgroundColor: "rgba(245,197,24,0.14)",
+                      border: "1px solid rgba(245,197,24,0.24)",
+                      borderRadius: 1,
+                      color: movieColors.brand,
+                      display: "inline-flex",
+                      height: 38,
+                      justifyContent: "center",
+                      width: 38,
+                    }}
                   >
-                    <MenuItem value={"None"}>None</MenuItem>
-                    {Object.keys(MovieSearchType).map((movieGenre: string) => (
-                      <MenuItem value={movieGenre}>{movieGenre}</MenuItem>
-                    ))}
+                    <TuneIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ fontSize: 18, fontWeight: 700 }}>
+                      Filter catalog
+                    </Typography>
+                    <Typography sx={{ color: "text.secondary", fontSize: 13 }}>
+                      Start broad, then narrow down from the results page.
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                <Box>
+                  <Typography
+                    component="label"
+                    htmlFor="min-year"
+                    sx={{
+                      display: "block",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      mb: 1,
+                    }}
+                  >
+                    Minimum start year
+                  </Typography>
+                  <Slider
+                    aria-label="Minimum start year"
+                    id="min-year"
+                    marks={yearMarks}
+                    max={2026}
+                    min={1950}
+                    onChange={(_event, value) =>
+                      setMinYear(Array.isArray(value) ? value[0] : value)
+                    }
+                    step={1}
+                    value={minYear}
+                    valueLabelDisplay="auto"
+                    sx={{
+                      color: movieColors.brand,
+                      maxWidth: 620,
+                      "& .MuiSlider-rail": {
+                        color: "rgba(255,255,255,0.28)",
+                      },
+                      "& .MuiSlider-thumb": {
+                        border: `2px solid ${movieColors.surface}`,
+                      },
+                    }}
+                  />
+                </Box>
+
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <FormControl fullWidth>
+                      <InputLabel id="genre-filter-label">Genre</InputLabel>
+                      <Select
+                        label="Genre"
+                        labelId="genre-filter-label"
+                        onChange={(event: SelectChangeEvent) =>
+                          setGenre(event.target.value)
+                        }
+                        value={genre}
+                      >
+                        <MenuItem value="">Any genre</MenuItem>
+                        {Object.values(MovieSearchGenre).map((item) => (
+                          <MenuItem key={item} value={item}>
+                            {humanizeEnum(item)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <FormControl fullWidth>
+                      <InputLabel id="movie-type-filter-label">
+                        Movie type
+                      </InputLabel>
+                      <Select
+                        label="Movie type"
+                        labelId="movie-type-filter-label"
+                        onChange={(event: SelectChangeEvent) =>
+                          setMovieType(event.target.value)
+                        }
+                        value={movieType}
+                      >
+                        <MenuItem value="">Any format</MenuItem>
+                        {Object.values(MovieSearchType).map((item) => (
+                          <MenuItem key={item} value={item}>
+                            {humanizeEnum(item)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+
+                <FormControl fullWidth>
+                  <InputLabel id="sort-filter-label">Sort results</InputLabel>
+                  <Select
+                    label="Sort results"
+                    labelId="sort-filter-label"
+                    onChange={(event: SelectChangeEvent) =>
+                      setSort(event.target.value)
+                    }
+                    value={sort}
+                  >
+                    <MenuItem value="rating_desc">Highest IMDb rating</MenuItem>
+                    <MenuItem value="">Backend default</MenuItem>
                   </Select>
                 </FormControl>
-              </Box>
 
-              <FormControlLabel
-                control={<Checkbox checked={true} name="gilad" />}
-                label="Gilad Gray"
-              />
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+                  <Button onClick={handleSubmit} variant="contained">
+                    Search movies
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setGenre("");
+                      setMovieType("");
+                      setMinYear(1990);
+                      setSort("rating_desc");
+                    }}
+                    variant="outlined"
+                  >
+                    Reset
+                  </Button>
+                </Stack>
+              </Stack>
+            </AppSurface>
+          </Grid>
 
-              <Checkbox checked={true} name="Horror" />
-              <Checkbox checked={false} name="Action" />
-            </Box>
-          </Paper>
-        </Container>
-      </div>
-    </>
+          <Grid size={{ xs: 12, md: 5 }}>
+            <AppSurface
+              accent="info"
+              sx={{ p: { xs: 2, sm: 3 }, height: "100%" }}
+            >
+              <Stack
+                spacing={2}
+                sx={{ height: "100%", justifyContent: "space-between" }}
+              >
+                <Stack spacing={1}>
+                  <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
+                    Current search shape
+                  </Typography>
+                  <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
+                    {selectedSummary}
+                  </Typography>
+                </Stack>
+                <Typography sx={{ color: "text.secondary", fontSize: 13 }}>
+                  These filters feed the same results grid as the topbar search,
+                  keeping discovery in one place.
+                </Typography>
+              </Stack>
+            </AppSurface>
+          </Grid>
+        </Grid>
+      </Stack>
+    </PageContent>
   );
 };
 

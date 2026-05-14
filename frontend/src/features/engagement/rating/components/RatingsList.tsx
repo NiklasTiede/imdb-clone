@@ -7,8 +7,8 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
 import { MinioImageSize, PosterImage } from "../../../../shared/media";
 import { movieColors } from "../../../../theme";
+import { formatMovieMeta } from "../../watchlist";
 import type { RatedMovie } from "../api/ratingQueries";
-import { formatMovieMeta } from "../../watchlist/utils/watchlistFormat";
 
 type RatingsListProps = {
   items: RatedMovie[];
@@ -75,7 +75,7 @@ const RatingsList = ({ items, onRemove }: RatingsListProps) => (
           <Typography
             sx={{
               alignItems: "center",
-              color: "#4dabf7",
+              color: movieColors.info,
               display: { xs: "none", sm: "inline-flex" },
               fontSize: 13,
               fontWeight: 700,

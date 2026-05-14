@@ -89,7 +89,7 @@ const Hero = ({
             size={MinioImageSize.Large}
             sx={{
               aspectRatio: "2 / 3",
-              backgroundColor: "#050a14",
+              backgroundColor: movieColors.surfaceInset,
               border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: 1,
               height: "auto",

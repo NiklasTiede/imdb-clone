@@ -23,7 +23,7 @@ const EmptyWatchlist = () => (
     <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
       Bookmark movies to save them for later
     </Typography>
-    <Button component={Link} to="/search" variant="contained">
+    <Button component={Link} to="/movie-search" variant="contained">
       Browse movies
     </Button>
   </Stack>

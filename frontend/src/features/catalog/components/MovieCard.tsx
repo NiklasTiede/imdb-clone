@@ -1,6 +1,6 @@
 import { Box, Card, Paper, Stack, styled, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
-import { tokens } from "../../../theme";
+import { movieColors, tokens } from "../../../theme";
 import type { Movie } from "../model/movie";
 import React from "react";
 import { Link } from "react-router";
@@ -14,7 +14,7 @@ export const MovieLink = styled(Link)`
 `;
 
 const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#1A2027",
+  backgroundColor: movieColors.surfaceElevated,
   ...theme.typography.body2,
   padding: theme.spacing(0.5),
   textAlign: "center",

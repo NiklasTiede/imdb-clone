@@ -21,6 +21,7 @@ import * as zod from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { i18n } from "../../../i18n";
 import { authSession, useAuthSession } from "../../../shared/auth";
+import { movieColors } from "../../../theme";
 import { authenticateAccount } from "../api/identityMutations";
 import AuthVisualPane from "../components/AuthVisualPane";
 import { authTextFieldSx } from "../components/authFormStyles";
@@ -154,7 +155,7 @@ const LoginPage = () => {
                 <Link
                   component={RouterLink}
                   sx={{
-                    color: "#f5c518",
+                    color: movieColors.brand,
                     fontSize: 12,
                     fontWeight: 600,
                     textDecoration: "none",

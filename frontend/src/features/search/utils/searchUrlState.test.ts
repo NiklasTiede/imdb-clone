@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generator-output";
+import {
+  MovieSearchRequestMovieGenreEnum,
+  MovieSearchRequestMovieTypeEnum,
+} from "../../../client/movies/generator-output";
 import { parseSearchUrlState } from "./searchUrlState";
 
 describe("parseSearchUrlState", () => {
@@ -32,9 +35,7 @@ describe("parseSearchUrlState", () => {
 
   test("parses homepage view-all genre filters", () => {
     expect(
-      parseSearchUrlState(
-        "?genre=HORROR&minYear=2016&sort=rating_desc&page=2",
-      ),
+      parseSearchUrlState("?genre=HORROR&minYear=2016&sort=rating_desc&page=2"),
     ).toEqual({
       filters: {
         minStartYear: 2016,
@@ -43,6 +44,18 @@ describe("parseSearchUrlState", () => {
       page: 1,
       query: null,
       sort: "rating_desc",
+    });
+  });
+
+  test("parses movie type filters from the filter page", () => {
+    expect(parseSearchUrlState("?type=TV_SERIES&minYear=1995")).toEqual({
+      filters: {
+        minStartYear: 1995,
+        movieType: MovieSearchRequestMovieTypeEnum.TvSeries,
+      },
+      page: 0,
+      query: null,
+      sort: null,
     });
   });
 });

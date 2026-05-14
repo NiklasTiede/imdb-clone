@@ -1,24 +1,25 @@
-import { Container, Paper } from "@mui/material";
-import Typography from "@mui/material/Typography";
+import SearchOffIcon from "@mui/icons-material/SearchOff";
+import Button from "@mui/material/Button";
+import { Link as RouterLink } from "react-router";
 import { i18n } from "../../i18n";
-import React from "react";
+import PageContent from "../../shared/layout/PageContent";
+import StatusState from "../../shared/layout/StatusState";
 
 const NotFoundPage = () => {
   return (
-    <>
-      <div>
-        <Container maxWidth={"xs"}>
-          <Paper elevation={3} sx={{ padding: 6, marginTop: 10 }}>
-            <Typography
-              variant={"inherit"}
-              sx={{ textAlign: "center", fontSize: 16 }}
-            >
-              {i18n.notFound.message}
-            </Typography>
-          </Paper>
-        </Container>
-      </div>
-    </>
+    <PageContent maxWidth="760px">
+      <StatusState
+        action={
+          <Button component={RouterLink} to="/" variant="contained">
+            Go home
+          </Button>
+        }
+        icon={<SearchOffIcon />}
+        title="Page not found"
+      >
+        {i18n.notFound.message}
+      </StatusState>
+    </PageContent>
   );
 };
 

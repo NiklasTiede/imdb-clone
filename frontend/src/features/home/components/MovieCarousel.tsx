@@ -9,6 +9,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { movieColors } from "../../../theme";
 import { PosterMovieCard, type Movie } from "../../catalog";
 
 type MovieCarouselProps = {
@@ -124,7 +125,7 @@ const MovieCarousel = ({
                 backgroundColor: "background.paper",
                 border: "1px solid",
                 borderColor: "divider",
-                "&:hover": { backgroundColor: "#283548" },
+                "&:hover": { backgroundColor: movieColors.surfaceElevated },
                 "&.Mui-disabled": { opacity: 0.3 },
               }}
             >
@@ -139,7 +140,7 @@ const MovieCarousel = ({
                 backgroundColor: "background.paper",
                 border: "1px solid",
                 borderColor: "divider",
-                "&:hover": { backgroundColor: "#283548" },
+                "&:hover": { backgroundColor: movieColors.surfaceElevated },
                 "&.Mui-disabled": { opacity: 0.3 },
               }}
             >
