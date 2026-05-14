@@ -1,6 +1,6 @@
 ---
 name: architecture-guardian
-description: Use when reviewing this IMDB clone for architectural drift, Spring Modulith boundary erosion, persistence/schema mismatch, API/frontend contract mismatch, or frontend feature-module drift.
+description: Use when reviewing this IMDB clone for architectural drift, Spring Modulith boundary erosion, persistence/schema mismatch, API/frontend contract mismatch, frontend feature-module drift, Kubernetes readiness, stateless container behavior, or multi-replica safety.
 ---
 
 # Architecture Guardian
@@ -37,6 +37,7 @@ Choose the narrowest mode that satisfies the request:
 | `api-contract` | REST/OpenAPI/generated client/frontend API usage | `references/api-contract.md` |
 | `frontend` | React feature architecture, shared modules, state/data ownership | `references/frontend-architecture.md` |
 | `integration` | MySQL, Elasticsearch, MinIO, security, jobs, and source-of-truth flows | `references/integration-storage-search.md` |
+| `kubernetes` | Stateless containers, multi-replica safety, probes, config/secrets, shutdown, and runtime state | `references/kubernetes-readiness.md` |
 | `full` | Broad architecture review across the whole system | All references, but summarize aggressively |
 
 If the user does not specify a mode, default to `quick`. If they name a concern, choose the matching focused mode.
@@ -67,6 +68,7 @@ Use subagents only when the user explicitly asks for parallel/delegated review o
 - API contract specialist
 - Frontend specialist
 - Integration specialist
+- Kubernetes readiness specialist
 
 Specialists return findings only. The coordinator owns severity, deduplication, cross-system conclusions, and the final report.
 
