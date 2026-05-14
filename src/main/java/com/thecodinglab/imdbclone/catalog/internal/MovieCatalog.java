@@ -7,6 +7,7 @@ import com.thecodinglab.imdbclone.catalog.api.MovieImageToken;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
+import com.thecodinglab.imdbclone.catalog.api.events.MovieDeleted;
 import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,16 +36,19 @@ public class MovieCatalog implements MovieService {
   private final MovieSearchDao movieSearchDao;
   private final MovieMapper movieMapper;
   private final MovieSearchProjectionTasks movieSearchProjectionTasks;
+  private final ApplicationEventPublisher events;
 
   public MovieCatalog(
       final MovieRepository movieRepository,
       MovieSearchDao movieSearchDao,
       MovieMapper movieMapper,
-      MovieSearchProjectionTasks movieSearchProjectionTasks) {
+      MovieSearchProjectionTasks movieSearchProjectionTasks,
+      ApplicationEventPublisher events) {
     this.movieRepository = movieRepository;
     this.movieSearchDao = movieSearchDao;
     this.movieMapper = movieMapper;
     this.movieSearchProjectionTasks = movieSearchProjectionTasks;
+    this.events = events;
   }
 
   @Override
@@ -159,8 +164,10 @@ public class MovieCatalog implements MovieService {
   }
 
   private void performDelete(Movie movie) {
+    String imageUrlToken = movie.getImageUrlToken();
     movieRepository.delete(movie);
     movieSearchProjectionTasks.enqueueDelete(movie.getId());
+    events.publishEvent(new MovieDeleted(movie.getId(), imageUrlToken));
     logger.info(
         "the movie [{}] with [{}] was deleted from Mysql and scheduled for ES projection delete",
         movie.getOriginalTitle(),

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
+import com.thecodinglab.imdbclone.catalog.api.events.MovieDeleted;
 import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class MovieCatalogTest {
@@ -28,13 +30,15 @@ class MovieCatalogTest {
   @Mock private MovieSearchDao movieSearchDao;
   @Mock private MovieMapper movieMapper;
   @Mock private MovieSearchProjectionTasks movieSearchProjectionTasks;
+  @Mock private ApplicationEventPublisher events;
 
   private MovieCatalog movieCatalog;
 
   @BeforeEach
   void setUp() {
     movieCatalog =
-        new MovieCatalog(movieRepository, movieSearchDao, movieMapper, movieSearchProjectionTasks);
+        new MovieCatalog(
+            movieRepository, movieSearchDao, movieMapper, movieSearchProjectionTasks, events);
   }
 
   @Test
@@ -62,6 +66,7 @@ class MovieCatalogTest {
   @Test
   void deleteMovie_deletesMovieAndEnqueuesSearchDelete() {
     Movie movie = movieWithId(43L);
+    movie.setImageUrlToken("movie-image-token");
     when(movieRepository.getMovieById(43L)).thenReturn(movie);
 
     movieCatalog.deleteMovie(43L);
@@ -69,6 +74,7 @@ class MovieCatalogTest {
     InOrder inOrder = inOrder(movieRepository, movieSearchProjectionTasks);
     inOrder.verify(movieRepository).delete(movie);
     inOrder.verify(movieSearchProjectionTasks).enqueueDelete(43L);
+    verify(events).publishEvent(new MovieDeleted(43L, "movie-image-token"));
   }
 
   @Test

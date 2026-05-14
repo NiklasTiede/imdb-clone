@@ -2,8 +2,10 @@ package com.thecodinglab.imdbclone.media.internal;
 
 import com.thecodinglab.imdbclone.account.api.AccountImageService;
 import com.thecodinglab.imdbclone.account.api.AccountImageToken;
+import com.thecodinglab.imdbclone.account.api.events.AccountDeleted;
 import com.thecodinglab.imdbclone.catalog.api.MovieImageService;
 import com.thecodinglab.imdbclone.catalog.api.MovieImageToken;
+import com.thecodinglab.imdbclone.catalog.api.events.MovieDeleted;
 import com.thecodinglab.imdbclone.media.internal.images.Image;
 import com.thecodinglab.imdbclone.media.internal.images.ImageSize;
 import com.thecodinglab.imdbclone.media.internal.images.MovieImageConstants;
@@ -19,6 +21,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -116,6 +119,16 @@ public class MediaFiles implements MediaService {
 
     return "Movie images of movie with movieId [%d] were deleted"
         .formatted(movieImageToken.movieId());
+  }
+
+  @TransactionalEventListener
+  public void on(AccountDeleted event) {
+    deleteProfilePhotoObjectsBestEffort(event.imageUrlToken());
+  }
+
+  @TransactionalEventListener
+  public void on(MovieDeleted event) {
+    deleteMovieImageObjectsBestEffort(event.imageUrlToken());
   }
 
   private List<String> storeFiles(List<Image> images) {

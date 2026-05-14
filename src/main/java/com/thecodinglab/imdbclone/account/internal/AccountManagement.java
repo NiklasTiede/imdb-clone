@@ -5,6 +5,7 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 import static net.logstash.logback.argument.StructuredArguments.v;
 
 import com.thecodinglab.imdbclone.account.api.*;
+import com.thecodinglab.imdbclone.account.api.events.AccountDeleted;
 import com.thecodinglab.imdbclone.account.internal.mapper.AccountMapper;
 import com.thecodinglab.imdbclone.account.internal.persistence.Account;
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
@@ -16,8 +17,10 @@ import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AccountManagement implements AccountService {
@@ -29,18 +32,21 @@ public class AccountManagement implements AccountService {
   private final PasswordEncoder passwordEncoder;
   private final RegisteredUserRoleProvider registeredUserRoleProvider;
   private final AccountMapper accountMapper;
+  private final ApplicationEventPublisher events;
 
   public AccountManagement(
       AccountRepository accountRepository,
       AccountActivityService accountActivityService,
       PasswordEncoder passwordEncoder,
       RegisteredUserRoleProvider registeredUserRoleProvider,
-      AccountMapper accountMapper) {
+      AccountMapper accountMapper,
+      ApplicationEventPublisher events) {
     this.accountRepository = accountRepository;
     this.accountActivityService = accountActivityService;
     this.passwordEncoder = passwordEncoder;
     this.registeredUserRoleProvider = registeredUserRoleProvider;
     this.accountMapper = accountMapper;
+    this.events = events;
   }
 
   @Override
@@ -140,11 +146,14 @@ public class AccountManagement implements AccountService {
   }
 
   @Override
+  @Transactional
   public MessageResponse deleteAccount(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     if (Objects.equals(account.getId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
+      String imageUrlToken = account.getImageUrlToken();
       accountRepository.delete(account);
+      events.publishEvent(new AccountDeleted(account.getId(), imageUrlToken));
       logger.info("Account with [{}] was deleted.", kv(ACCOUNT_ID, account.getId()));
       return new MessageResponse("Account with id [%d] was deleted.".formatted(account.getId()));
     } else {

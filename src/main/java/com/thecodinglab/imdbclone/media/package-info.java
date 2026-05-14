@@ -3,6 +3,8 @@
     displayName = "Media",
     allowedDependencies = {
       "account::api",
+      "account::events",
+      "catalog::events",
       "catalog::media",
       "shared::api",
       "shared::error",

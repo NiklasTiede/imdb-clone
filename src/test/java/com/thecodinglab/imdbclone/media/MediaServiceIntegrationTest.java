@@ -3,7 +3,12 @@ package com.thecodinglab.imdbclone.media;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.thecodinglab.imdbclone.account.api.AccountService;
+import com.thecodinglab.imdbclone.account.internal.persistence.Account;
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
+import com.thecodinglab.imdbclone.catalog.api.MovieService;
+import com.thecodinglab.imdbclone.catalog.api.MovieType;
+import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.media.internal.MediaService;
 import com.thecodinglab.imdbclone.media.internal.MediaStorageProperties;
@@ -33,6 +38,10 @@ class MediaServiceIntegrationTest extends BaseContainers {
       Path.of("src/main/resources/api-calls/minio/raw-profile-photo.jpeg");
 
   @Autowired private MediaService mediaService;
+
+  @Autowired private AccountService accountService;
+
+  @Autowired private MovieService movieService;
 
   @Autowired private MovieRepository movieRepository;
 
@@ -164,6 +173,44 @@ class MediaServiceIntegrationTest extends BaseContainers {
     assertThat(accountRepository.getAccountByUsername("test_user_two").getImageUrlToken()).isNull();
   }
 
+  @Test
+  void deleteAccount_deletesProfilePhotoObjects() throws Exception {
+    Account account =
+        accountRepository.save(
+            new Account("media_delete_user", "media-delete@example.com", "password"));
+    var currentUser = currentUser(account.getId(), account.getUsername(), account.getEmail());
+    mediaService.storeProfilePhoto(
+        imageUpload("image", "raw-profile-photo.jpeg", PROFILE_PHOTO), currentUser);
+
+    String imageUrlToken =
+        accountRepository.getAccountByUsername(account.getUsername()).getImageUrlToken();
+    String detailImageName = ProfilePhotoConstants.getDetailViewImageName(imageUrlToken);
+    String thumbnailImageName = ProfilePhotoConstants.getThumbnailImageName(imageUrlToken);
+
+    accountService.deleteAccount(account.getUsername(), currentUser);
+
+    assertObjectDoesNotExist(detailImageName);
+    assertObjectDoesNotExist(thumbnailImageName);
+  }
+
+  @Test
+  void deleteMovie_deletesMovieImageObjects() throws Exception {
+    Movie movie =
+        movieRepository.save(
+            new Movie("Media delete movie", "Media delete movie", MovieType.MOVIE, 100));
+    mediaService.storeMovieImage(
+        imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE), movie.getId());
+
+    String imageUrlToken = movieRepository.getMovieById(movie.getId()).getImageUrlToken();
+    String detailImageName = MovieImageConstants.getDetailViewImageName(imageUrlToken);
+    String thumbnailImageName = MovieImageConstants.getThumbNailImageName(imageUrlToken);
+
+    movieService.deleteMovie(movie.getId());
+
+    assertObjectDoesNotExist(detailImageName);
+    assertObjectDoesNotExist(thumbnailImageName);
+  }
+
   private UserPrincipal currentUser() {
     return new UserPrincipal(
         2L,
@@ -171,6 +218,19 @@ class MediaServiceIntegrationTest extends BaseContainers {
         null,
         "test_user_two",
         "two@web.com",
+        "password",
+        false,
+        true,
+        List.of(new SimpleGrantedAuthority("ROLE_USER")));
+  }
+
+  private UserPrincipal currentUser(Long accountId, String username, String email) {
+    return new UserPrincipal(
+        accountId,
+        null,
+        null,
+        username,
+        email,
         "password",
         false,
         true,
