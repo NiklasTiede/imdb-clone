@@ -26,13 +26,24 @@ public class AccountImages implements AccountImageService {
   @Override
   @Transactional
   public AccountImageToken updateProfileImageToken(Long accountId, String imageUrlToken) {
-    Account account =
-        accountRepository
-            .findById(accountId)
-            .orElseThrow(
-                () -> new NotFoundException("User not found with id: %s".formatted(accountId)));
+    Account account = getAccount(accountId);
     account.setImageUrlToken(imageUrlToken);
     return toImageToken(accountRepository.save(account));
+  }
+
+  @Override
+  @Transactional
+  public void clearProfileImageToken(Long accountId) {
+    Account account = getAccount(accountId);
+    account.setImageUrlToken(null);
+    accountRepository.save(account);
+  }
+
+  private Account getAccount(Long accountId) {
+    return accountRepository
+        .findById(accountId)
+        .orElseThrow(
+            () -> new NotFoundException("User not found with id: %s".formatted(accountId)));
   }
 
   private AccountImageToken toImageToken(Account account) {

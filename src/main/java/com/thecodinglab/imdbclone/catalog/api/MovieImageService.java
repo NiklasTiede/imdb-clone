@@ -8,4 +8,6 @@ public interface MovieImageService {
   MovieImageToken getMovieImageToken(Long movieId);
 
   MovieImageToken updateMovieImageToken(Long movieId, String imageUrlToken);
+
+  void clearMovieImageToken(Long movieId);
 }

@@ -7,4 +7,6 @@ public interface AccountImageService {
   AccountImageToken getProfileImageToken(UserPrincipal currentUser);
 
   AccountImageToken updateProfileImageToken(Long accountId, String imageUrlToken);
+
+  void clearProfileImageToken(Long accountId);
 }

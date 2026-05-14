@@ -89,6 +89,7 @@ public class MediaFiles implements MediaService {
 
     deleteFile(ProfilePhotoConstants.getDetailViewImageName(accountImageToken.imageUrlToken()));
     deleteFile(ProfilePhotoConstants.getThumbnailImageName(accountImageToken.imageUrlToken()));
+    accountImageService.clearProfileImageToken(accountImageToken.accountId());
 
     return "Profile Photos of User with accountId [%d] and imageUrlToken [%s] were deleted"
         .formatted(accountImageToken.accountId(), accountImageToken.imageUrlToken());
@@ -141,6 +142,7 @@ public class MediaFiles implements MediaService {
     // delete images
     deleteFile(MovieImageConstants.getDetailViewImageName(movieImageToken.imageUrlToken()));
     deleteFile(MovieImageConstants.getThumbNailImageName(movieImageToken.imageUrlToken()));
+    movieImageService.clearMovieImageToken(movieImageToken.movieId());
 
     return "Movie images of movie with movieId [%d] were deleted"
         .formatted(movieImageToken.movieId());

@@ -139,6 +139,13 @@ public class MovieCatalog implements MovieService {
     return new MovieImageToken(savedMovie.getId(), savedMovie.getImageUrlToken());
   }
 
+  @Override
+  public void clearMovieImageToken(Long movieId) {
+    Movie movie = movieRepository.getMovieById(movieId);
+    movie.setImageUrlToken(null);
+    performSave(movie);
+  }
+
   private Movie performSave(Movie movie) {
     Movie updatedMovie = movieRepository.save(movie);
     elasticSearchRepository.save(updatedMovie);

@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.media;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
@@ -12,6 +13,7 @@ import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import io.minio.MinioClient;
 import io.minio.StatObjectArgs;
+import io.minio.errors.ErrorResponseException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,6 +56,22 @@ class MediaServiceIntegrationTest extends BaseContainers {
   }
 
   @Test
+  void deleteMovieImage_clearsMovieTokenAndDeletesObjects() throws Exception {
+    var upload = imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE);
+    mediaService.storeMovieImage(upload, 1L);
+
+    String imageUrlToken = movieRepository.getMovieById(1L).getImageUrlToken();
+    String detailImageName = MovieImageConstants.getDetailViewImageName(imageUrlToken);
+    String thumbnailImageName = MovieImageConstants.getThumbNailImageName(imageUrlToken);
+
+    mediaService.deleteMovieImage(1L);
+
+    assertObjectDoesNotExist(detailImageName);
+    assertObjectDoesNotExist(thumbnailImageName);
+    assertThat(movieRepository.getMovieById(1L).getImageUrlToken()).isNull();
+  }
+
+  @Test
   void storeProfilePhoto_updatesAccountTokenAndStoresExpectedObjects() throws Exception {
     var upload = imageUpload("image", "raw-profile-photo.jpeg", PROFILE_PHOTO);
     var currentUser =
@@ -77,6 +95,35 @@ class MediaServiceIntegrationTest extends BaseContainers {
     assertObjectExists(ProfilePhotoConstants.getThumbnailImageName(account.getImageUrlToken()));
   }
 
+  @Test
+  void deleteProfilePhoto_clearsAccountTokenAndDeletesObjects() throws Exception {
+    var upload = imageUpload("image", "raw-profile-photo.jpeg", PROFILE_PHOTO);
+    var currentUser =
+        new UserPrincipal(
+            2L,
+            null,
+            null,
+            "test_user_two",
+            "two@web.com",
+            "password",
+            false,
+            true,
+            List.of(new SimpleGrantedAuthority("ROLE_USER")));
+    mediaService.storeProfilePhoto(upload, currentUser);
+
+    String imageUrlToken =
+        accountRepository.getAccountByUsername("test_user_two").getImageUrlToken();
+    String detailImageName = ProfilePhotoConstants.getDetailViewImageName(imageUrlToken);
+    String thumbnailImageName = ProfilePhotoConstants.getThumbnailImageName(imageUrlToken);
+
+    mediaService.deleteProfilePhoto(currentUser);
+
+    assertObjectDoesNotExist(detailImageName);
+    assertObjectDoesNotExist(thumbnailImageName);
+    assertThat(accountRepository.getAccountByUsername("test_user_two").getImageUrlToken())
+        .isNull();
+  }
+
   private MockMultipartFile imageUpload(String name, String fileName, Path image)
       throws IOException {
     return new MockMultipartFile(name, fileName, "image/jpeg", Files.newInputStream(image));
@@ -91,5 +138,20 @@ class MediaServiceIntegrationTest extends BaseContainers {
                 .build());
     assertThat(stat.object()).isEqualTo(objectName);
     assertThat(stat.size()).isPositive();
+  }
+
+  private void assertObjectDoesNotExist(String objectName) {
+    assertThatThrownBy(
+            () ->
+                minioClient.statObject(
+                    StatObjectArgs.builder()
+                        .bucket(storageProperties.bucketName())
+                        .object(objectName)
+                        .build()))
+        .isInstanceOf(ErrorResponseException.class)
+        .satisfies(
+            ex ->
+                assertThat(((ErrorResponseException) ex).errorResponse().code())
+                    .isEqualTo("NoSuchKey"));
   }
 }
