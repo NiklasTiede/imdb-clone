@@ -5,6 +5,7 @@ import static com.thecodinglab.imdbclone.shared.logging.Log.RATING_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
+import com.thecodinglab.imdbclone.catalog.api.MovieRatingAggregateService;
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.RatingMapper;
@@ -26,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class Ratings implements RatingService {
@@ -33,26 +35,39 @@ public class Ratings implements RatingService {
   private static final Logger logger = LoggerFactory.getLogger(Ratings.class);
 
   private final MovieReferenceService movieReferenceService;
+  private final MovieRatingAggregateService movieRatingAggregateService;
   private final RatingRepository ratingRepository;
   private final RatingMapper ratingMapper;
 
   public Ratings(
       MovieReferenceService movieReferenceService,
+      MovieRatingAggregateService movieRatingAggregateService,
       RatingRepository ratingRepository,
       RatingMapper ratingMapper) {
     this.movieReferenceService = movieReferenceService;
+    this.movieRatingAggregateService = movieRatingAggregateService;
     this.ratingRepository = ratingRepository;
     this.ratingMapper = ratingMapper;
   }
 
   @Override
+  @Transactional
   public RatingRecord rateMovie(UserPrincipal currentAccount, Long movieId, BigDecimal score) {
     if (score.floatValue() < 0 || score.floatValue() > 10.1) {
       throw new BadRequestException("Score must be between 0 and 10");
     } else {
       movieReferenceService.findMovieById(movieId);
+      Rating existingRating =
+          ratingRepository
+              .findByIdAccountIdAndIdMovieId(currentAccount.getId(), movieId)
+              .orElse(null);
+      BigDecimal ratingSumDelta =
+          existingRating == null ? score : score.subtract(existingRating.getRating());
+      int ratingCountDelta = existingRating == null ? 1 : 0;
       Rating rating = Rating.create(score, movieId, currentAccount.getId());
       Rating savedRating = ratingRepository.save(rating);
+      movieRatingAggregateService.applyRatingAggregateDelta(
+          movieId, ratingSumDelta, ratingCountDelta);
       logger.info("rating with [{}] was created.", kv(RATING_ID, savedRating.getId()));
       return ratingMapper.entityToDTO(savedRating);
     }
@@ -71,6 +86,7 @@ public class Ratings implements RatingService {
   }
 
   @Override
+  @Transactional
   public MessageResponse deleteRating(UserPrincipal currentAccount, Long movieId) {
     Rating rating =
         ratingRepository
@@ -83,6 +99,8 @@ public class Ratings implements RatingService {
     if (Objects.equals(rating.getAccountId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       ratingRepository.delete(rating);
+      movieRatingAggregateService.applyRatingAggregateDelta(
+          movieId, rating.getRating().negate(), -1);
       logger.info("rating with [{}] was deleted.", kv(RATING_ID, rating.getId()));
       return new MessageResponse(
           "WatchedMovie with movieId [%d] and accountId [%d] was deleted"

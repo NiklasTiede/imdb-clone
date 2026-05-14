@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MovieCatalog implements MovieService {
@@ -106,11 +107,22 @@ public class MovieCatalog implements MovieService {
   }
 
   @Override
-  public MovieRecord updateRatingAggregate(Long movieId, BigDecimal rating, int ratingCount) {
+  @Transactional
+  public void applyRatingAggregateDelta(Long movieId, BigDecimal ratingSumDelta, int ratingCountDelta) {
+    int updatedMovies =
+        movieRepository.applyRatingAggregateDelta(movieId, ratingSumDelta, ratingCountDelta);
+    if (updatedMovies == 0) {
+      movieRepository.getMovieById(movieId);
+      throw new IllegalStateException(
+          "Movie rating aggregate for movieId [%d] would become inconsistent."
+              .formatted(movieId));
+    }
     Movie movie = movieRepository.getMovieById(movieId);
-    movie.setRating(rating);
-    movie.setRatingCount(ratingCount);
-    return movieMapper.entityToDTO(performSave(movie));
+    elasticSearchRepository.save(movie);
+    logger.info(
+        "the rating aggregate of movie [{}] with movieId [{}] was updated",
+        movie.getOriginalTitle(),
+        v(MOVIE_ID, movie.getId()));
   }
 
   @Override

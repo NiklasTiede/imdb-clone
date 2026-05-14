@@ -17,7 +17,11 @@ class DatabaseSchemaTest extends BaseContainers {
   @Test
   void flywayAppliedSchemaMigrations() {
     assertThat(appliedMigrations())
-        .containsExactly("1:create initial schema", "2:insert roles", "3:harden movie schema");
+        .containsExactly(
+            "1:create initial schema",
+            "2:insert roles",
+            "3:harden movie schema",
+            "4:store movie rating sum");
   }
 
   @Test
@@ -27,6 +31,8 @@ class DatabaseSchemaTest extends BaseContainers {
     assertThat(characterLength("movie", "movie_type")).isGreaterThanOrEqualTo(50);
     assertThat(numericPrecision("movie", "rating")).isEqualTo(3);
     assertThat(numericScale("movie", "rating")).isEqualTo(1);
+    assertThat(numericPrecision("movie", "rating_sum")).isEqualTo(19);
+    assertThat(numericScale("movie", "rating_sum")).isEqualTo(1);
     assertThat(characterLength("movie", "image_url_token")).isGreaterThanOrEqualTo(255);
     assertThat(characterLength("account", "image_url_token")).isGreaterThanOrEqualTo(255);
   }

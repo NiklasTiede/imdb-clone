@@ -41,7 +41,10 @@ public class Movie extends DateAudit {
   @Column(precision = 3, scale = 1)
   private BigDecimal rating;
 
-  private Integer ratingCount;
+  private Integer ratingCount = 0;
+
+  @Column(nullable = false, precision = 19, scale = 1)
+  private BigDecimal ratingSum = BigDecimal.ZERO;
 
   @JsonIgnore private String description;
 
@@ -160,6 +163,14 @@ public class Movie extends DateAudit {
 
   public void setRatingCount(Integer ratingCount) {
     this.ratingCount = ratingCount;
+  }
+
+  public BigDecimal getRatingSum() {
+    return ratingSum;
+  }
+
+  public void setRatingSum(BigDecimal ratingSum) {
+    this.ratingSum = ratingSum;
   }
 
   public String getDescription() {

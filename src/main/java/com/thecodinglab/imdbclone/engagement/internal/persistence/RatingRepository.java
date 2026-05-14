@@ -1,6 +1,5 @@
 package com.thecodinglab.imdbclone.engagement.internal.persistence;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -14,8 +13,6 @@ public interface RatingRepository extends JpaRepository<Rating, RatingId> {
   Page<Rating> findRatingsByIdAccountId(Long accountId, Pageable pageable);
 
   Optional<Rating> findByIdAccountIdAndIdMovieId(Long accountId, Long movieId);
-
-  List<Rating> findAllByModifiedAtInUtcAfter(Instant modifiedAt);
 
   Long countByIdAccountId(Long accountId);
 }

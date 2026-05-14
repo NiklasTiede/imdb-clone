@@ -1,9 +1,13 @@
 package com.thecodinglab.imdbclone.engagement;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,6 +36,8 @@ class RatingControllerTest extends BaseContainers {
 
   @Autowired private RatingRepository ratingRepository;
 
+  @Autowired private MovieRepository movieRepository;
+
   private String userToken;
 
   @BeforeAll
@@ -47,6 +53,11 @@ class RatingControllerTest extends BaseContainers {
     ratingRepository
         .findByIdAccountIdAndIdMovieId(ACCOUNT_ID, MOVIE_ID)
         .ifPresent(ratingRepository::delete);
+    var movie = movieRepository.getMovieById(MOVIE_ID);
+    movie.setRating(null);
+    movie.setRatingCount(0);
+    movie.setRatingSum(BigDecimal.ZERO);
+    movieRepository.save(movie);
   }
 
   @Test
@@ -118,6 +129,48 @@ class RatingControllerTest extends BaseContainers {
                 spec.expectBody()
                     .jsonPath("$.detail")
                     .isEqualTo("Score must be between 0 and 10"));
+  }
+
+  @Test
+  void rateUpdateAndDeleteMovie_updatesMovieRatingAggregateImmediately() {
+    restTestClient
+        .put()
+        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
+        .header("Authorization", userToken)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .isCreated();
+
+    var movieAfterCreate = movieRepository.getMovieById(MOVIE_ID);
+    assertThat(movieAfterCreate.getRating()).isEqualByComparingTo(new BigDecimal("8.5"));
+    assertThat(movieAfterCreate.getRatingCount()).isEqualTo(1);
+
+    restTestClient
+        .put()
+        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "6.5")
+        .header("Authorization", userToken)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .isCreated();
+
+    var movieAfterUpdate = movieRepository.getMovieById(MOVIE_ID);
+    assertThat(movieAfterUpdate.getRating()).isEqualByComparingTo(new BigDecimal("6.5"));
+    assertThat(movieAfterUpdate.getRatingCount()).isEqualTo(1);
+
+    restTestClient
+        .delete()
+        .uri("/api/movie-rating/{movieId}", MOVIE_ID)
+        .header("Authorization", userToken)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .isNoContent();
+
+    var movieAfterDelete = movieRepository.getMovieById(MOVIE_ID);
+    assertThat(movieAfterDelete.getRating()).isNull();
+    assertThat(movieAfterDelete.getRatingCount()).isZero();
   }
 
   @Test

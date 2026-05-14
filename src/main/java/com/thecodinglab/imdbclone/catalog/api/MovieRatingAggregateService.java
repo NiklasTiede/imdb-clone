@@ -6,5 +6,5 @@ import org.springframework.modulith.NamedInterface;
 @NamedInterface("ratings")
 public interface MovieRatingAggregateService {
 
-  MovieRecord updateRatingAggregate(Long movieId, BigDecimal rating, int ratingCount);
+  void applyRatingAggregateDelta(Long movieId, BigDecimal ratingSumDelta, int ratingCountDelta);
 }
