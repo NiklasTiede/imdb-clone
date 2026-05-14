@@ -3,11 +3,11 @@ import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generat
 import { getHomeMinStartYear, homeGenreRows } from "./HomePage";
 
 describe("homeGenreRows", () => {
-  test("uses drama as the first homepage carousel", () => {
+  test("uses horror as the first homepage carousel", () => {
     expect(homeGenreRows[0]).toMatchObject({
-      genre: MovieSearchRequestMovieGenreEnum.Drama,
-      title: "Top drama",
-      viewAllGenre: "DRAMA",
+      genre: MovieSearchRequestMovieGenreEnum.Horror,
+      title: "Top horror",
+      viewAllGenre: "HORROR",
     });
   });
 

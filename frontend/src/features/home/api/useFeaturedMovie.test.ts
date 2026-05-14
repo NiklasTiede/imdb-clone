@@ -1,6 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
-import type { MovieRecord } from "../../../client/movies/generator-output";
-import { moviesApi } from "../../../shared/api/moviesApi";
+import {
+  MovieSearchRequestMovieTypeEnum,
+  type MovieRecord,
+} from "../../../client/movies/generator-output";
+import { moviesApi, searchApi } from "../../../shared/api/moviesApi";
 import { featuredMovieQuery } from "./useFeaturedMovie";
 
 describe("featuredMovieQuery", () => {
@@ -20,27 +23,47 @@ describe("featuredMovieQuery", () => {
         imageUrlToken: "low-poster",
       },
     ];
-    const moviesSpy = vi.spyOn(moviesApi, "getMoviesByIds").mockResolvedValue({
+    const searchSpy = vi.spyOn(searchApi, "search").mockResolvedValue({
       data: { content: movies },
-    } as Awaited<ReturnType<typeof moviesApi.getMoviesByIds>>);
+    } as Awaited<ReturnType<typeof searchApi.search>>);
+    const movieSpy = vi.spyOn(moviesApi, "getMovieById").mockResolvedValue({
+      data: {
+        id: 2,
+        primaryTitle: "Featured",
+        description: "Full synopsis from movie details.",
+        imdbRating: 8.1,
+        imageUrlToken: "featured-poster",
+      },
+    } as Awaited<ReturnType<typeof moviesApi.getMovieById>>);
 
     const query = featuredMovieQuery(new Date("2026-05-10T00:00:00Z"));
     const result = await query.queryFn();
 
-    expect(moviesSpy).toHaveBeenCalledWith({}, 0, 30);
+    expect(searchSpy).toHaveBeenCalledWith(
+      "",
+      {
+        minStartYear: 1996,
+        movieType: MovieSearchRequestMovieTypeEnum.Movie,
+      },
+      0,
+      30,
+    );
+    expect(movieSpy).toHaveBeenCalledWith(2);
     expect(result?.primaryTitle).toBe("Featured");
+    expect(result?.description).toBe("Full synopsis from movie details.");
 
-    moviesSpy.mockRestore();
+    searchSpy.mockRestore();
+    movieSpy.mockRestore();
   });
 
   test("returns null when no eligible featured movie exists", async () => {
-    const moviesSpy = vi.spyOn(moviesApi, "getMoviesByIds").mockResolvedValue({
+    const searchSpy = vi.spyOn(searchApi, "search").mockResolvedValue({
       data: { content: [{ id: 1, primaryTitle: "No poster", imdbRating: 9 }] },
-    } as Awaited<ReturnType<typeof moviesApi.getMoviesByIds>>);
+    } as Awaited<ReturnType<typeof searchApi.search>>);
 
     const query = featuredMovieQuery(new Date("2026-05-10T00:00:00Z"));
 
     await expect(query.queryFn()).resolves.toBeNull();
-    moviesSpy.mockRestore();
+    searchSpy.mockRestore();
   });
 });

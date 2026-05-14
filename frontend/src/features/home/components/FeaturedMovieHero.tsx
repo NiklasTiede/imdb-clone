@@ -13,6 +13,7 @@ import { MinioImageSize, PosterImage } from "../../../shared/media";
 
 type HeroProps = {
   movie: Movie | null;
+  error?: boolean;
   loading?: boolean;
   isBookmarked?: boolean;
   isBookmarkLoading?: boolean;
@@ -26,6 +27,7 @@ const HERO_BACKGROUND = "#0a1a14";
 
 const Hero = ({
   movie,
+  error = false,
   loading = false,
   isBookmarked = false,
   isBookmarkLoading = false,
@@ -34,6 +36,10 @@ const Hero = ({
 }: HeroProps) => {
   if (loading) {
     return <HeroSkeleton />;
+  }
+
+  if (error) {
+    return <HeroFallback />;
   }
 
   if (!movie) {
@@ -104,7 +110,7 @@ const Hero = ({
               fontSize: 10,
               fontWeight: 500,
               height: 22,
-              letterSpacing: 0.5,
+              letterSpacing: 0,
               mb: 1.5,
             }}
           />
@@ -269,6 +275,28 @@ const HeroSkeleton = () => (
         <Skeleton variant="text" width="72%" />
       </Box>
     </Stack>
+  </Box>
+);
+
+const HeroFallback = () => (
+  <Box
+    component="section"
+    sx={{
+      backgroundColor: HERO_BACKGROUND,
+      border: "1px solid",
+      borderColor: "divider",
+      borderRadius: 2,
+      mb: 5,
+      overflow: "hidden",
+      p: { xs: 3, md: 4 },
+    }}
+  >
+    <Typography component="h1" sx={{ fontSize: 24, fontWeight: 600, mb: 1 }}>
+      Featured movie unavailable
+    </Typography>
+    <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
+      The homepage is still ready to explore below.
+    </Typography>
   </Box>
 );
 

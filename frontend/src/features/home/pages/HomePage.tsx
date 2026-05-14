@@ -22,10 +22,10 @@ export const getHomeMinStartYear = (date = new Date()) =>
 
 export const homeGenreRows = [
   {
-    genre: MovieSearchGenre.Drama,
-    subtitle: "Highest-rated drama from the last 30 years",
-    title: "Top drama",
-    viewAllGenre: "DRAMA",
+    genre: MovieSearchGenre.Horror,
+    subtitle: "Highest-rated horror from the last 30 years",
+    title: "Top horror",
+    viewAllGenre: "HORROR",
   },
   {
     genre: MovieSearchGenre.Thriller,
@@ -49,9 +49,12 @@ const HomePage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const minStartYear = getHomeMinStartYear();
 
-  const { data: featuredMovie = null, isLoading: isFeaturedLoading } =
-    useFeaturedMovie();
-  const dramaMovies = useMoviesByGenre({
+  const {
+    data: featuredMovie = null,
+    isError: isFeaturedError,
+    isLoading: isFeaturedLoading,
+  } = useFeaturedMovie();
+  const horrorMovies = useMoviesByGenre({
     genre: homeGenreRows[0].genre,
     minStartYear,
   });
@@ -103,6 +106,7 @@ const HomePage = () => {
       >
         <Box sx={{ px: { xs: 2, md: 0 } }}>
           <FeaturedMovieHero
+            error={isFeaturedError}
             movie={featuredMovie}
             loading={isFeaturedLoading}
             isBookmarked={isFeaturedBookmarked}
@@ -115,13 +119,13 @@ const HomePage = () => {
         <MovieCarousel
           title={homeGenreRows[0].title}
           subtitle={homeGenreRows[0].subtitle}
-          movies={dramaMovies.data ?? []}
+          movies={horrorMovies.data ?? []}
           onViewAll={() =>
             navigate(
               `/movie-search?genre=${homeGenreRows[0].viewAllGenre}&minYear=${minStartYear}&sort=rating_desc`,
             )
           }
-          loading={dramaMovies.isLoading}
+          loading={horrorMovies.isLoading}
         />
 
         <MovieCarousel
