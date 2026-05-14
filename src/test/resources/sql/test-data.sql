@@ -3,6 +3,7 @@ set foreign_key_checks = 0;
 delete from comment;
 delete from watched_movie;
 delete from rating;
+delete from movie_search_projection_task;
 delete from account_roles;
 delete from verification_token;
 delete from account;

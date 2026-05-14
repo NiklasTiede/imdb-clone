@@ -9,9 +9,9 @@ import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieSearchDao;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchProjectionTasks;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
@@ -31,19 +31,19 @@ public class MovieCatalog implements MovieService {
   private static final Logger logger = LoggerFactory.getLogger(MovieCatalog.class);
 
   private final MovieRepository movieRepository;
-  private final MovieElasticSearchRepository elasticSearchRepository;
   private final MovieSearchDao movieSearchDao;
   private final MovieMapper movieMapper;
+  private final MovieSearchProjectionTasks movieSearchProjectionTasks;
 
   public MovieCatalog(
       final MovieRepository movieRepository,
-      MovieElasticSearchRepository elasticSearchRepository,
       MovieSearchDao movieSearchDao,
-      MovieMapper movieMapper) {
+      MovieMapper movieMapper,
+      MovieSearchProjectionTasks movieSearchProjectionTasks) {
     this.movieRepository = movieRepository;
-    this.elasticSearchRepository = elasticSearchRepository;
     this.movieSearchDao = movieSearchDao;
     this.movieMapper = movieMapper;
+    this.movieSearchProjectionTasks = movieSearchProjectionTasks;
   }
 
   @Override
@@ -66,6 +66,7 @@ public class MovieCatalog implements MovieService {
   }
 
   @Override
+  @Transactional
   public MovieRecord createMovie(MovieRequest movieRequest) {
     Movie movie = movieMapper.dtoToEntity(movieRequest);
     Movie savedMovie = performSave(movie);
@@ -73,6 +74,7 @@ public class MovieCatalog implements MovieService {
   }
 
   @Override
+  @Transactional
   public MovieRecord updateMovie(Long movieId, MovieRequest movieRequest) {
     Movie movie = movieRepository.getMovieById(movieId);
     movie.setPrimaryTitle(movieRequest.primaryTitle());
@@ -88,6 +90,7 @@ public class MovieCatalog implements MovieService {
   }
 
   @Override
+  @Transactional
   public MessageResponse deleteMovie(Long movieId) {
     Movie movie = movieRepository.getMovieById(movieId);
     performDelete(movie);
@@ -117,12 +120,9 @@ public class MovieCatalog implements MovieService {
       throw new IllegalStateException(
           "Movie rating aggregate for movieId [%d] would become inconsistent.".formatted(movieId));
     }
-    Movie movie = movieRepository.getMovieById(movieId);
-    elasticSearchRepository.save(movie);
+    movieSearchProjectionTasks.enqueueUpsert(movieId);
     logger.info(
-        "the rating aggregate of movie [{}] with movieId [{}] was updated",
-        movie.getOriginalTitle(),
-        v(MOVIE_ID, movie.getId()));
+        "the rating aggregate of movie with movieId [{}] was updated", v(MOVIE_ID, movieId));
   }
 
   @Override
@@ -132,6 +132,7 @@ public class MovieCatalog implements MovieService {
   }
 
   @Override
+  @Transactional
   public MovieImageToken updateMovieImageToken(Long movieId, String imageUrlToken) {
     Movie movie = movieRepository.getMovieById(movieId);
     movie.setImageUrlToken(imageUrlToken);
@@ -140,6 +141,7 @@ public class MovieCatalog implements MovieService {
   }
 
   @Override
+  @Transactional
   public void clearMovieImageToken(Long movieId) {
     Movie movie = movieRepository.getMovieById(movieId);
     movie.setImageUrlToken(null);
@@ -148,9 +150,9 @@ public class MovieCatalog implements MovieService {
 
   private Movie performSave(Movie movie) {
     Movie updatedMovie = movieRepository.save(movie);
-    elasticSearchRepository.save(updatedMovie);
+    movieSearchProjectionTasks.enqueueUpsert(updatedMovie.getId());
     logger.info(
-        "the movie [{}] with movieId [{}] was created and/or updated from Mysql and ES",
+        "the movie [{}] with movieId [{}] was created and/or updated in Mysql and scheduled for ES projection",
         updatedMovie.getOriginalTitle(),
         v(MOVIE_ID, updatedMovie.getId()));
     return updatedMovie;
@@ -158,9 +160,9 @@ public class MovieCatalog implements MovieService {
 
   private void performDelete(Movie movie) {
     movieRepository.delete(movie);
-    elasticSearchRepository.delete(movie);
+    movieSearchProjectionTasks.enqueueDelete(movie.getId());
     logger.info(
-        "the movie [{}] with [{}] was deleted from Mysql and ES",
+        "the movie [{}] with [{}] was deleted from Mysql and scheduled for ES projection delete",
         movie.getOriginalTitle(),
         kv(MOVIE_ID, movie.getId()));
   }

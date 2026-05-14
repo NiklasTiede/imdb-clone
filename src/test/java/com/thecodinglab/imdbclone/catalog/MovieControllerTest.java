@@ -9,6 +9,8 @@ import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchProjectionScheduler;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchProjectionTaskRepository;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
@@ -43,6 +45,10 @@ class MovieControllerTest extends BaseContainers {
 
   @Autowired private MovieElasticSearchRepository movieElasticSearchRepository;
 
+  @Autowired private MovieSearchProjectionScheduler movieSearchProjectionScheduler;
+
+  @Autowired private MovieSearchProjectionTaskRepository movieSearchProjectionTaskRepository;
+
   private String adminToken;
 
   @BeforeAll
@@ -55,6 +61,7 @@ class MovieControllerTest extends BaseContainers {
 
   @AfterEach
   void cleanup() {
+    movieSearchProjectionTaskRepository.deleteAll();
     movieRepository.findAll().stream()
         .filter(movie -> movie.getPrimaryTitle() != null)
         .filter(movie -> movie.getPrimaryTitle().startsWith(TEST_MOVIE_PREFIX))
@@ -201,6 +208,8 @@ class MovieControllerTest extends BaseContainers {
     assertThat(movieEntity.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " create");
     assertThat(movieEntity.getOriginalTitle()).isEqualTo(TEST_MOVIE_PREFIX + " create original");
 
+    movieSearchProjectionScheduler.processPendingProjectionTasks();
+
     var movieDocument = movieElasticSearchRepository.findById(createdMovie.id());
     assertThat(movieDocument).isPresent();
     movieDocument.ifPresent(
@@ -258,6 +267,8 @@ class MovieControllerTest extends BaseContainers {
     assertThat(movieEntity.getRuntimeMinutes()).isEqualTo(111);
     assertThat(movieEntity.getMovieType()).isEqualTo(MovieType.TV_MOVIE);
 
+    movieSearchProjectionScheduler.processPendingProjectionTasks();
+
     var movieDocument = movieElasticSearchRepository.findById(createdMovie.id());
     assertThat(movieDocument).isPresent();
     movieDocument.ifPresent(
@@ -278,6 +289,9 @@ class MovieControllerTest extends BaseContainers {
                 MovieType.MOVIE,
                 false));
 
+    movieSearchProjectionScheduler.processPendingProjectionTasks();
+    assertThat(movieElasticSearchRepository.findById(createdMovie.id())).isPresent();
+
     restTestClient
         .delete()
         .uri("/api/movie/{movieId}", createdMovie.id())
@@ -286,6 +300,8 @@ class MovieControllerTest extends BaseContainers {
         .exchange()
         .expectStatus()
         .isNoContent();
+
+    movieSearchProjectionScheduler.processPendingProjectionTasks();
 
     assertThat(movieRepository.findById(createdMovie.id())).isEmpty();
     assertThat(movieElasticSearchRepository.findById(createdMovie.id())).isEmpty();

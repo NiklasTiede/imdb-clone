@@ -21,7 +21,8 @@ class DatabaseSchemaTest extends BaseContainers {
             "1:create initial schema",
             "2:insert roles",
             "3:harden movie schema",
-            "4:store movie rating sum");
+            "4:store movie rating sum",
+            "5:create movie search projection task");
   }
 
   @Test
@@ -58,6 +59,19 @@ class DatabaseSchemaTest extends BaseContainers {
     assertThat(indexesFor("watched_movie"))
         .contains("idx_watched_movie_movie_id:movie_id")
         .contains("idx_watched_movie_account_id:account_id");
+  }
+
+  @Test
+  void movieSearchProjectionTasksAreDurableWithoutMovieForeignKey() {
+    assertThat(columnType("movie_search_projection_task", "movie_id")).isEqualTo("bigint");
+    assertThat(columnType("movie_search_projection_task", "operation")).isEqualTo("varchar");
+    assertThat(characterLength("movie_search_projection_task", "operation"))
+        .isGreaterThanOrEqualTo(20);
+    assertThat(columnType("movie_search_projection_task", "attempts")).isEqualTo("int");
+    assertThat(deleteRules("movie_search_projection_task")).isEmpty();
+    assertThat(indexesFor("movie_search_projection_task"))
+        .contains("PRIMARY:movie_id")
+        .contains("idx_movie_search_projection_task_requested_at:requested_at_in_utc");
   }
 
   @Test
