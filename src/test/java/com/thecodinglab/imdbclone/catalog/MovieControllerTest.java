@@ -9,8 +9,7 @@ import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
-import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchProjectionScheduler;
-import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchProjectionTaskRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchProjectionTaskHandler;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
@@ -25,6 +24,7 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTe
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
@@ -45,9 +45,9 @@ class MovieControllerTest extends BaseContainers {
 
   @Autowired private MovieElasticSearchRepository movieElasticSearchRepository;
 
-  @Autowired private MovieSearchProjectionScheduler movieSearchProjectionScheduler;
+  @Autowired private MovieSearchProjectionTaskHandler movieSearchProjectionTaskHandler;
 
-  @Autowired private MovieSearchProjectionTaskRepository movieSearchProjectionTaskRepository;
+  @Autowired private JdbcTemplate jdbcTemplate;
 
   private String adminToken;
 
@@ -61,7 +61,7 @@ class MovieControllerTest extends BaseContainers {
 
   @AfterEach
   void cleanup() {
-    movieSearchProjectionTaskRepository.deleteAll();
+    jdbcTemplate.update("delete from scheduled_tasks where task_name = ?", "movie-search-projection");
     movieRepository.findAll().stream()
         .filter(movie -> movie.getPrimaryTitle() != null)
         .filter(movie -> movie.getPrimaryTitle().startsWith(TEST_MOVIE_PREFIX))
@@ -208,7 +208,7 @@ class MovieControllerTest extends BaseContainers {
     assertThat(movieEntity.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " create");
     assertThat(movieEntity.getOriginalTitle()).isEqualTo(TEST_MOVIE_PREFIX + " create original");
 
-    movieSearchProjectionScheduler.processPendingProjectionTasks();
+    movieSearchProjectionTaskHandler.projectUpsert(createdMovie.id());
 
     var movieDocument = movieElasticSearchRepository.findById(createdMovie.id());
     assertThat(movieDocument).isPresent();
@@ -267,7 +267,7 @@ class MovieControllerTest extends BaseContainers {
     assertThat(movieEntity.getRuntimeMinutes()).isEqualTo(111);
     assertThat(movieEntity.getMovieType()).isEqualTo(MovieType.TV_MOVIE);
 
-    movieSearchProjectionScheduler.processPendingProjectionTasks();
+    movieSearchProjectionTaskHandler.projectUpsert(createdMovie.id());
 
     var movieDocument = movieElasticSearchRepository.findById(createdMovie.id());
     assertThat(movieDocument).isPresent();
@@ -289,7 +289,7 @@ class MovieControllerTest extends BaseContainers {
                 MovieType.MOVIE,
                 false));
 
-    movieSearchProjectionScheduler.processPendingProjectionTasks();
+    movieSearchProjectionTaskHandler.projectUpsert(createdMovie.id());
     assertThat(movieElasticSearchRepository.findById(createdMovie.id())).isPresent();
 
     restTestClient
@@ -301,7 +301,7 @@ class MovieControllerTest extends BaseContainers {
         .expectStatus()
         .isNoContent();
 
-    movieSearchProjectionScheduler.processPendingProjectionTasks();
+    movieSearchProjectionTaskHandler.projectDelete(createdMovie.id());
 
     assertThat(movieRepository.findById(createdMovie.id())).isEmpty();
     assertThat(movieElasticSearchRepository.findById(createdMovie.id())).isEmpty();

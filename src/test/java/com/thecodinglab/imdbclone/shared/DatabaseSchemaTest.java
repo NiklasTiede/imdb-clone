@@ -22,7 +22,7 @@ class DatabaseSchemaTest extends BaseContainers {
             "2:insert roles",
             "3:harden movie schema",
             "4:store movie rating sum",
-            "5:create movie search projection task");
+            "5:create scheduled tasks");
   }
 
   @Test
@@ -62,16 +62,17 @@ class DatabaseSchemaTest extends BaseContainers {
   }
 
   @Test
-  void movieSearchProjectionTasksAreDurableWithoutMovieForeignKey() {
-    assertThat(columnType("movie_search_projection_task", "movie_id")).isEqualTo("bigint");
-    assertThat(columnType("movie_search_projection_task", "operation")).isEqualTo("varchar");
-    assertThat(characterLength("movie_search_projection_task", "operation"))
-        .isGreaterThanOrEqualTo(20);
-    assertThat(columnType("movie_search_projection_task", "attempts")).isEqualTo("int");
-    assertThat(deleteRules("movie_search_projection_task")).isEmpty();
-    assertThat(indexesFor("movie_search_projection_task"))
-        .contains("PRIMARY:movie_id")
-        .contains("idx_movie_search_projection_task_requested_at:requested_at_in_utc");
+  void schedulerTasksAreDurableAndCoalescedByTaskInstance() {
+    assertThat(columnType("scheduled_tasks", "task_name")).isEqualTo("varchar");
+    assertThat(columnType("scheduled_tasks", "task_instance")).isEqualTo("varchar");
+    assertThat(columnType("scheduled_tasks", "task_data")).isEqualTo("blob");
+    assertThat(columnType("scheduled_tasks", "execution_time")).isEqualTo("timestamp");
+    assertThat(columnType("scheduled_tasks", "picked")).isEqualTo("tinyint");
+    assertThat(deleteRules("scheduled_tasks")).isEmpty();
+    assertThat(indexesFor("scheduled_tasks"))
+        .contains("PRIMARY:task_name,task_instance")
+        .contains("execution_time_idx:execution_time")
+        .contains("last_heartbeat_idx:last_heartbeat");
   }
 
   @Test

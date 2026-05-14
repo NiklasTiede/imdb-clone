@@ -37,7 +37,7 @@ repositories {
 
 dependencyManagement {
 	imports {
-		mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+		mavenBom 'org.springframework.modulith:spring-modulith-bom:2.0.6'
 	}
 }
 
@@ -104,6 +104,9 @@ dependencies {
 
 	//-- Modular architecture
 	implementation 'org.springframework.modulith:spring-modulith-starter-core'
+
+	//-- Durable task scheduling
+	implementation 'com.github.kagkarlsson:db-scheduler-spring-boot-4-starter:16.8.1'
 
 	//-- Logging
 	implementation 'org.springframework.boot:spring-boot-starter-logging'
