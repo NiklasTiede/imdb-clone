@@ -1,16 +1,16 @@
 import { createTheme } from "@mui/material/styles";
 
 export const movieColors = {
-  backdrop: "#101624",
+  backdrop: "#0b111d",
   brand: "#f5c518",
   brandInk: "#101010",
-  communityBlue: "#4dabf7",
+  communityBlue: "#7ab8ff",
   gold: "#ffb700",
-  info: "#4dabf7",
+  info: "#7ab8ff",
   rating: "#ffb700",
-  surface: "#0d1b2a",
-  surfaceElevated: "#1e2a3a",
-  surfaceInset: "#080b12",
+  surface: "#101827",
+  surfaceElevated: "#172132",
+  surfaceInset: "#070b12",
 };
 
 export const tokens = () => ({
@@ -26,15 +26,15 @@ export const tokens = () => ({
     900: "#141414",
   },
   primary: {
-    100: "#d0d1d5",
-    200: "#a1a4ab",
-    300: "#727681",
-    400: "#434957",
-    500: "#141b2d",
-    600: "#101624",
-    700: "#0c101b",
-    800: "#080b12",
-    900: "#040509",
+    100: "#cdd0d6",
+    200: "#9ba1ad",
+    300: "#687284",
+    400: "#36435b",
+    500: movieColors.backdrop,
+    600: "#080d17",
+    700: "#060a12",
+    800: movieColors.surfaceInset,
+    900: "#03050a",
   },
   greenAccent: {
     100: "#dbf5ee",

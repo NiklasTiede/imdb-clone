@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { movieColors } from "../../../theme";
 
 const posters = [
   { title: "HEREDITARY", bg: "#2a1a1a", fg: "#d4a574" },
@@ -165,9 +166,9 @@ const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
             <Box
               sx={{
                 alignItems: "center",
-                bgcolor: "rgba(77,171,247,0.12)",
+                bgcolor: "rgba(122,184,255,0.12)",
                 borderRadius: 1,
-                color: "#4dabf7",
+                color: movieColors.info,
                 display: "flex",
                 flexShrink: 0,
                 height: 28,

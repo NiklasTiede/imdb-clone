@@ -31,7 +31,7 @@ describe("RatingPill", () => {
     expect(screen.getByText("Community")).toBeTruthy();
     expect(screen.getByText("—")).toBeTruthy();
     const star = screen.getByTestId("rating-pill-star") as HTMLElement;
-    expect(star.style.color).toBe("rgb(77, 171, 247)");
-    expect(COMMUNITY_BLUE).toBe("#4dabf7");
+    expect(star.style.color).toBe("rgb(122, 184, 255)");
+    expect(COMMUNITY_BLUE).toBe("#7ab8ff");
   });
 });
