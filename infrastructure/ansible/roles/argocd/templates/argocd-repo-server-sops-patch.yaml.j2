@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-repo-server
+spec:
+  template:
+    metadata:
+      annotations:
+        imdb-clone.the-coding-lab.com/sops-age-key-checksum: "{{ lookup('ansible.builtin.file', sops_age_key_file) | hash('sha256') }}"
+        imdb-clone.the-coding-lab.com/sops-plugin-checksum: "{{ lookup('ansible.builtin.template', 'sops-kustomize-plugin.yaml.j2') | hash('sha256') }}"
+    spec:
+      containers:
+        - name: {{ sops_kustomize_plugin_name }}
+          command:
+            - /var/run/argocd/argocd-cmp-server
+          env:
+            - name: SOPS_AGE_KEY_FILE
+              value: /home/argocd/.config/sops/age/keys.txt
+            - name: PATH
+              value: /custom-tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          image: quay.io/argoproj/argocd:{{ argocd_version }}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /var/run/argocd
+              name: var-files
+            - mountPath: /home/argocd/cmp-server/plugins
+              name: plugins
+            - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+              name: sops-kustomize-plugin-config
+              subPath: plugin.yaml
+            - mountPath: /home/argocd/.config/sops/age/keys.txt
+              name: sops-age-key
+              readOnly: true
+              subPath: keys.txt
+            - mountPath: /custom-tools
+              name: custom-tools
+            - mountPath: /tmp
+              name: sops-kustomize-plugin-tmp
+      initContainers:
+        - name: install-sops
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              set -eu
+              wget -qO /custom-tools/sops https://github.com/getsops/sops/releases/download/{{ sops_version }}/sops-{{ sops_version }}.linux.amd64
+              chmod +x /custom-tools/sops
+          image: alpine:3.20
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /custom-tools
+              name: custom-tools
+            - mountPath: /tmp
+              name: sops-installer-tmp
+      volumes:
+        - configMap:
+            name: {{ sops_kustomize_plugin_config_name }}
+          name: sops-kustomize-plugin-config
+        - name: sops-age-key
+          secret:
+            secretName: {{ sops_age_key_secret_name }}
+        - emptyDir: {}
+          name: custom-tools
+        - emptyDir: {}
+          name: sops-installer-tmp
+        - emptyDir: {}
+          name: sops-kustomize-plugin-tmp

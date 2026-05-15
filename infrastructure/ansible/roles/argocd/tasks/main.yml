@@ -44,6 +44,69 @@
   environment:
     KUBECONFIG: "{{ k3s_kubeconfig }}"
 
+- name: Verify local SOPS age key exists
+  ansible.builtin.stat:
+    path: "{{ sops_age_key_file }}"
+  delegate_to: localhost
+  become: false
+  register: sops_age_key_file_status
+
+- name: Require local SOPS age key before configuring Argo CD decryption
+  ansible.builtin.assert:
+    that:
+      - sops_age_key_file_status.stat.exists
+    fail_msg: "Missing local SOPS age key: {{ sops_age_key_file }}"
+
+- name: Apply SOPS age key secret for Argo CD
+  ansible.builtin.shell: |
+    set -o pipefail
+    /usr/local/bin/kubectl -n {{ argocd_namespace }} create secret generic {{ sops_age_key_secret_name }} \
+      --from-file=keys.txt=/dev/stdin \
+      --dry-run=client \
+      -o yaml \
+      | /usr/local/bin/kubectl apply -f -
+  args:
+    executable: /bin/bash
+    stdin: "{{ lookup('ansible.builtin.file', sops_age_key_file) }}"
+  no_log: true
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+
+- name: Apply SOPS Kustomize plugin config
+  ansible.builtin.shell: |
+    set -o pipefail
+    /usr/local/bin/kubectl -n {{ argocd_namespace }} create configmap {{ sops_kustomize_plugin_config_name }} \
+      --from-file=plugin.yaml=/dev/stdin \
+      --dry-run=client \
+      -o yaml \
+      | /usr/local/bin/kubectl apply -f -
+  args:
+    executable: /bin/bash
+    stdin: "{{ lookup('ansible.builtin.template', 'sops-kustomize-plugin.yaml.j2') }}"
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+
+- name: Patch Argo CD repo-server with SOPS Kustomize plugin sidecar
+  ansible.builtin.command: >
+    /usr/local/bin/kubectl
+    -n {{ argocd_namespace }}
+    patch deployment argocd-repo-server
+    --type=strategic
+    --patch-file -
+  args:
+    stdin: "{{ lookup('ansible.builtin.template', 'argocd-repo-server-sops-patch.yaml.j2') }}"
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+
+- name: Wait for Argo CD repo-server with SOPS plugin
+  ansible.builtin.command: >
+    /usr/local/bin/kubectl
+    -n {{ argocd_namespace }}
+    rollout status deployment/argocd-repo-server --timeout=300s
+  changed_when: false
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+
 - name: Apply Argo CD root application from this repository
   ansible.builtin.command: /usr/local/bin/kubectl apply -f -
   args:

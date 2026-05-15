@@ -37,3 +37,28 @@ Then open `https://localhost:8080` locally. The initial admin password can be re
 sudo kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath='{.data.password}' | base64 -d
 ```
+
+## GitOps Secrets
+
+SOPS with age is used for encrypted Kubernetes secrets committed to Git.
+
+- The age private key lives locally at `.secrets/sops/age/keys.txt`.
+- `.secrets/` is ignored by Git and must be backed up in a private password/secret manager.
+- Ansible uploads that key into the `argocd` namespace as the `sops-age-key` Secret.
+- Argo CD repo-server uses the `sops-kustomize` config management plugin to decrypt
+  `*.sops.yaml` files during sync.
+
+Generate a local age key if it does not exist:
+
+```bash
+mkdir -p .secrets/sops/age
+docker run --rm -v "$PWD/.secrets/sops/age:/keys" alpine:3.20 \
+  sh -c "apk add --no-cache age >/dev/null && age-keygen -o /keys/keys.txt"
+```
+
+After changing the age key or plugin config, rerun:
+
+```bash
+cd infrastructure/ansible
+ansible-playbook site.yml
+```

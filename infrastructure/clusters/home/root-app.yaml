@@ -9,6 +9,8 @@ spec:
     repoURL: https://github.com/NiklasTiede/imdb-clone
     targetRevision: master
     path: infrastructure/clusters/home/apps
+    plugin:
+      name: sops-kustomize
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

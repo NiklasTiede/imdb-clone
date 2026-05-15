@@ -9,6 +9,8 @@ spec:
     repoURL: {{ gitops_repo_url }}
     targetRevision: {{ gitops_repo_revision }}
     path: {{ gitops_root_path }}
+    plugin:
+      name: {{ sops_kustomize_plugin_name }}
   destination:
     server: https://kubernetes.default.svc
     namespace: {{ argocd_namespace }}
