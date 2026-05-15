@@ -56,6 +56,7 @@ describe("MovieListView", () => {
         <MovieListView
           ariaLabel="Watchlist movies"
           columns={{ primaryRating: "IMDb" }}
+          hasRowActions
         >
           <MovieListRow
             action={{

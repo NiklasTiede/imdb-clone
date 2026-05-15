@@ -109,7 +109,8 @@ const MovieListRow = ({
   timestamp,
   to,
 }: MovieListRowProps) => {
-  const { columns, gridTemplateColumns } = useMovieListLayout();
+  const { columns, gridTemplateColumns, hasRowActions, rowGridTemplateColumns } =
+    useMovieListLayout();
   const movieId = movie.id;
   const movieLink =
     to ?? (movieId === undefined ? "#" : `/movie?id=${movieId}`);
@@ -125,11 +126,17 @@ const MovieListRow = ({
     <Box
       component="li"
       sx={{
+        alignItems: "center",
+        borderRadius: 1,
+        display: "grid",
+        gap: { xs: 1.25, md: 1.75 },
+        gridTemplateColumns: rowGridTemplateColumns,
         listStyle: "none",
-        position: "relative",
-        "&:hover .movie-list-row-link": {
-          backgroundColor: "rgba(255,255,255,0.035)",
-        },
+        minHeight: { xs: 76, md: 96 },
+        px: { xs: 1.25, sm: 1.75 },
+        py: { xs: 1, md: 1.25 },
+        transition: "background-color 120ms ease",
+        "&:hover": { backgroundColor: "rgba(255,255,255,0.035)" },
         "&:hover .movie-list-row-action": {
           opacity: 1,
         },
@@ -142,17 +149,13 @@ const MovieListRow = ({
         to={movieLink}
         sx={{
           alignItems: "center",
-          borderRadius: 1,
           color: "inherit",
           display: "grid",
           gap: { xs: 1.25, md: 1.75 },
+          gridColumn: hasRowActions ? "1 / -2" : "1 / -1",
           gridTemplateColumns,
-          minHeight: { xs: 76, md: 96 },
-          px: { xs: 1.25, sm: 1.75 },
-          py: { xs: 1, md: 1.25 },
-          pr: action ? { xs: 5, md: 1.75 } : { xs: 1.25, sm: 1.75 },
+          minWidth: 0,
           textDecoration: "none",
-          transition: "background-color 120ms ease",
         }}
       >
         <PosterImage
@@ -258,7 +261,7 @@ const MovieListRow = ({
         )}
       </Box>
 
-      {action && (
+      {action ? (
         <IconButton
           aria-label={action.ariaLabel}
           className="movie-list-row-action"
@@ -270,10 +273,7 @@ const MovieListRow = ({
             color: "text.secondary",
             height: 28,
             opacity: 0,
-            position: "absolute",
-            right: 10,
-            top: "50%",
-            transform: "translateY(-50%)",
+            justifySelf: "end",
             transition: "opacity 120ms ease, background-color 120ms ease",
             width: 28,
             "&:hover":
@@ -292,6 +292,8 @@ const MovieListRow = ({
         >
           {renderActionIcon(action.icon)}
         </IconButton>
+      ) : (
+        hasRowActions && <Box aria-hidden />
       )}
     </Box>
   );

@@ -16,6 +16,7 @@ const WatchlistList = ({ items, onRemove }: WatchlistListProps) => (
       runtime: "Runtime",
       timestamp: "Added",
     }}
+    hasRowActions
   >
     {items.map((item) => {
       const movie: Movie = item.movie ?? {

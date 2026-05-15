@@ -15,6 +15,7 @@ const RatingsList = ({ items, onRemove }: RatingsListProps) => (
       runtime: "Runtime",
       secondaryRating: "IMDb",
     }}
+    hasRowActions={Boolean(onRemove)}
   >
     {items.map((item) => {
       const movie = item.movie;

@@ -13,7 +13,12 @@ export type MovieListColumns = {
 
 type MovieListLayout = {
   columns: MovieListColumns;
+  hasRowActions: boolean;
   gridTemplateColumns: {
+    md: string;
+    xs: string;
+  };
+  rowGridTemplateColumns: {
     md: string;
     xs: string;
   };
@@ -23,6 +28,7 @@ type MovieListViewProps = {
   ariaLabel: string;
   children: ReactNode;
   columns: MovieListColumns;
+  hasRowActions?: boolean;
 };
 
 const defaultLayout: MovieListLayout = {
@@ -31,7 +37,12 @@ const defaultLayout: MovieListLayout = {
     primaryRating: "Rating",
     runtime: "Runtime",
   },
+  hasRowActions: false,
   gridTemplateColumns: {
+    xs: "44px minmax(0, 1fr) auto",
+    md: "52px minmax(0, 1fr) 160px 64px 86px",
+  },
+  rowGridTemplateColumns: {
     xs: "44px minmax(0, 1fr) auto",
     md: "52px minmax(0, 1fr) 160px 64px 86px",
   },
@@ -41,7 +52,10 @@ const MovieListLayoutContext = createContext<MovieListLayout>(defaultLayout);
 
 export const useMovieListLayout = () => useContext(MovieListLayoutContext);
 
-const createGridTemplate = (columns: MovieListColumns) => {
+const createGridTemplate = (
+  columns: MovieListColumns,
+  hasRowActions: boolean,
+) => {
   const desktopColumns = [
     "52px",
     "minmax(0, 1fr)",
@@ -60,8 +74,18 @@ const createGridTemplate = (columns: MovieListColumns) => {
   ].filter(Boolean);
 
   return {
-    xs: mobileColumns.join(" "),
-    md: desktopColumns.join(" "),
+    content: {
+      xs: mobileColumns.join(" "),
+      md: desktopColumns.join(" "),
+    },
+    row: {
+      xs: [...mobileColumns, hasRowActions ? "32px" : null]
+        .filter(Boolean)
+        .join(" "),
+      md: [...desktopColumns, hasRowActions ? "32px" : null]
+        .filter(Boolean)
+        .join(" "),
+    },
   };
 };
 
@@ -97,9 +121,15 @@ const MovieListView = ({
   ariaLabel,
   children,
   columns,
+  hasRowActions = false,
 }: MovieListViewProps) => {
-  const gridTemplateColumns = createGridTemplate(columns);
-  const layout = { columns, gridTemplateColumns };
+  const gridTemplates = createGridTemplate(columns, hasRowActions);
+  const layout = {
+    columns,
+    gridTemplateColumns: gridTemplates.content,
+    hasRowActions,
+    rowGridTemplateColumns: gridTemplates.row,
+  };
 
   return (
     <MovieListLayoutContext.Provider value={layout}>
@@ -116,7 +146,7 @@ const MovieListView = ({
             alignItems: "center",
             display: "grid",
             gap: { xs: 1.25, md: 1.75 },
-            gridTemplateColumns,
+            gridTemplateColumns: gridTemplates.row,
             px: { xs: 1.25, sm: 1.75 },
             py: 1,
           }}
@@ -140,6 +170,7 @@ const MovieListView = ({
               {columns.timestamp}
             </HeaderCell>
           )}
+          {hasRowActions && <span />}
         </Box>
 
         <Stack
