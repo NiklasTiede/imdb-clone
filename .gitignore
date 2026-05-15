@@ -98,6 +98,3 @@ yarn-error.log*
 .superpowers/
 design/
 screenshots/
-
-# local planning docs
-/docs/project-revival-roadmap.md
