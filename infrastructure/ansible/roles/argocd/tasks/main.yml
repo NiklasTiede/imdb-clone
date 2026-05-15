@@ -1,0 +1,52 @@
+---
+- name: Install Argo CD CLI
+  ansible.builtin.get_url:
+    url: "https://github.com/argoproj/argo-cd/releases/download/{{ argocd_version }}/argocd-linux-amd64"
+    dest: /usr/local/bin/argocd
+    mode: "0755"
+
+- name: Create Argo CD namespace
+  ansible.builtin.shell: |
+    set -o pipefail
+    /usr/local/bin/kubectl create namespace {{ argocd_namespace }} --dry-run=client -o yaml \
+      | /usr/local/bin/kubectl apply -f -
+  args:
+    executable: /bin/bash
+  changed_when: false
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+
+- name: Install pinned Argo CD manifests
+  ansible.builtin.command: >
+    /usr/local/bin/kubectl apply
+    --server-side
+    --force-conflicts
+    -n {{ argocd_namespace }}
+    -f https://raw.githubusercontent.com/argoproj/argo-cd/{{ argocd_version }}/manifests/install.yaml
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+
+- name: Wait for Argo CD deployments
+  ansible.builtin.command: >
+    /usr/local/bin/kubectl
+    -n {{ argocd_namespace }}
+    wait --for=condition=available --timeout=300s deployment --all
+  changed_when: false
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+
+- name: Wait for Argo CD application controller
+  ansible.builtin.command: >
+    /usr/local/bin/kubectl
+    -n {{ argocd_namespace }}
+    rollout status statefulset/argocd-application-controller --timeout=300s
+  changed_when: false
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+
+- name: Apply Argo CD root application from this repository
+  ansible.builtin.command: /usr/local/bin/kubectl apply -f -
+  args:
+    stdin: "{{ lookup('ansible.builtin.template', 'root-app.yaml.j2') }}"
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"

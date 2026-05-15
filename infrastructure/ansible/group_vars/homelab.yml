@@ -1,0 +1,16 @@
+---
+k3s_version: "v1.34.7+k3s1"
+k3s_node_name: "homelab-um560"
+k3s_kubeconfig: "/etc/rancher/k3s/k3s.yaml"
+k3s_install_script_url: "https://get.k3s.io"
+
+argocd_version: "v3.4.1"
+argocd_namespace: "argocd"
+argocd_root_app_name: "home-root"
+
+gitops_repo_url: "https://github.com/NiklasTiede/imdb-clone"
+gitops_repo_revision: "master"
+gitops_root_path: "infrastructure/clusters/home/apps"
+
+homelab_domain: "the-coding-lab.com"
+imdb_clone_domain: "imdb-clone.the-coding-lab.com"

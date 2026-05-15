@@ -1,0 +1,9 @@
+---
+- name: Bootstrap homelab Kubernetes control plane
+  hosts: homelab
+  become: true
+  gather_facts: true
+  roles:
+    - common
+    - k3s
+    - argocd

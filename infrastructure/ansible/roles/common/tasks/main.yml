@@ -1,0 +1,26 @@
+---
+- name: Update apt package cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages for Kubernetes bootstrap
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - git
+      - gnupg
+      - iptables
+      - nfs-common
+      - open-iscsi
+      - python3
+      - python3-apt
+      - unzip
+    state: present
+
+- name: Ensure iSCSI service is enabled for future storage integrations
+  ansible.builtin.systemd:
+    name: iscsid
+    enabled: true
+    state: started

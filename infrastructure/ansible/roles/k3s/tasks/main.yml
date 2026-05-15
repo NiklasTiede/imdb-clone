@@ -1,0 +1,41 @@
+---
+- name: Download pinned k3s install script
+  ansible.builtin.get_url:
+    url: "{{ k3s_install_script_url }}"
+    dest: /tmp/install-k3s.sh
+    mode: "0755"
+
+- name: Install k3s server
+  ansible.builtin.command: /tmp/install-k3s.sh
+  args:
+    creates: /usr/local/bin/k3s
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+    INSTALL_K3S_EXEC: "server --node-name {{ k3s_node_name }} --write-kubeconfig-mode 644"
+    K3S_KUBECONFIG_MODE: "644"
+
+- name: Ensure k3s service is enabled and running
+  ansible.builtin.systemd:
+    name: k3s
+    enabled: true
+    state: started
+
+- name: Wait for Kubernetes API
+  ansible.builtin.command: /usr/local/bin/kubectl get nodes
+  register: kubectl_get_nodes
+  changed_when: false
+  retries: 30
+  delay: 5
+  until: kubectl_get_nodes.rc == 0
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
+
+- name: Wait for k3s node to become Ready
+  ansible.builtin.command: >
+    /usr/local/bin/kubectl wait
+    --for=condition=Ready
+    node/{{ k3s_node_name }}
+    --timeout=180s
+  changed_when: false
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig }}"
