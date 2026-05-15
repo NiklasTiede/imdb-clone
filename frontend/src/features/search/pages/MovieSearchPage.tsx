@@ -1,5 +1,4 @@
 import Alert from "@mui/material/Alert";
-import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
 import { useLocation, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -7,6 +6,7 @@ import { searchQueries } from "../api/searchQueries";
 import SearchEmptyState from "../components/SearchEmptyState";
 import SearchFilterBar from "../components/SearchFilterBar";
 import SearchHeader from "../components/SearchHeader";
+import SearchLoadingSlot from "../components/SearchLoadingSlot";
 import SearchMovieGrid from "../components/SearchMovieGrid";
 import SearchMovieList from "../components/SearchMovieList";
 import SearchResultsPagination from "../components/SearchResultsPagination";
@@ -83,7 +83,7 @@ const MovieSearchPage = () => {
           onClear={clearFilters}
         />
 
-        {isFetching && <LinearProgress aria-label="Loading search results" />}
+        <SearchLoadingSlot loading={isFetching} />
 
         {isError && (
           <Alert severity="error">
