@@ -3,7 +3,7 @@ import {
   MovieSearchRequestMovieGenreEnum,
   MovieSearchRequestMovieTypeEnum,
 } from "../../../client/movies/generator-output";
-import { parseSearchUrlState } from "./searchUrlState";
+import { createSearchUrl, parseSearchUrlState } from "./searchUrlState";
 
 describe("parseSearchUrlState", () => {
   test("reads the current query parameter used by the app", () => {
@@ -11,7 +11,7 @@ describe("parseSearchUrlState", () => {
       filters: {},
       page: 0,
       query: "Nightcrawler",
-      sort: null,
+      sort: "relevance",
     });
   });
 
@@ -20,7 +20,7 @@ describe("parseSearchUrlState", () => {
       filters: {},
       page: 2,
       query: "it follows",
-      sort: null,
+      sort: "relevance",
     });
   });
 
@@ -29,7 +29,7 @@ describe("parseSearchUrlState", () => {
       filters: {},
       page: 0,
       query: null,
-      sort: null,
+      sort: "relevance",
     });
   });
 
@@ -48,14 +48,39 @@ describe("parseSearchUrlState", () => {
   });
 
   test("parses movie type filters from the filter page", () => {
-    expect(parseSearchUrlState("?type=TV_SERIES&minYear=1995")).toEqual({
+    expect(
+      parseSearchUrlState(
+        "?type=TV_SERIES&minYear=1995&maxYear=2018&minRuntime=80&maxRuntime=140",
+      ),
+    ).toEqual({
       filters: {
+        maxRuntimeMinutes: 140,
+        maxStartYear: 2018,
+        minRuntimeMinutes: 80,
         minStartYear: 1995,
         movieType: MovieSearchRequestMovieTypeEnum.TvSeries,
       },
       page: 0,
       query: null,
-      sort: null,
+      sort: "relevance",
     });
+  });
+
+  test("updates filter params and resets pagination", () => {
+    expect(
+      createSearchUrl("?q=the&page=4&type=TV_SERIES", {
+        genre: MovieSearchRequestMovieGenreEnum.Horror,
+      }),
+    ).toBe("?q=the&type=TV_SERIES&genre=HORROR");
+  });
+
+  test("removes empty filter params and keeps explicit page changes", () => {
+    expect(
+      createSearchUrl("?q=the&genre=HORROR&sort=rating_desc", {
+        genre: null,
+        page: 3,
+        sort: "relevance",
+      }),
+    ).toBe("?q=the&page=3");
   });
 });

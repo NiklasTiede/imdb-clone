@@ -1,8 +1,23 @@
 import SearchOffIcon from "@mui/icons-material/SearchOff";
+import Button from "@mui/material/Button";
 import StatusState from "../../../shared/layout/StatusState";
 
-const SearchEmptyState = () => (
-  <StatusState icon={<SearchOffIcon />} title="No movies found">
+type SearchEmptyStateProps = {
+  onClearFilters?: () => void;
+};
+
+const SearchEmptyState = ({ onClearFilters }: SearchEmptyStateProps) => (
+  <StatusState
+    action={
+      onClearFilters ? (
+        <Button onClick={onClearFilters} variant="outlined">
+          Clear filters
+        </Button>
+      ) : undefined
+    }
+    icon={<SearchOffIcon />}
+    title="No movies found"
+  >
     Try adjusting your search term or filters.
   </StatusState>
 );

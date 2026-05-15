@@ -1,22 +1,20 @@
 import Alert from "@mui/material/Alert";
 import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import ViewListIcon from "@mui/icons-material/ViewListSharp";
-import ViewModuleIcon from "@mui/icons-material/ViewModuleSharp";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { searchQueries } from "../api/searchQueries";
 import SearchEmptyState from "../components/SearchEmptyState";
+import SearchFilterBar from "../components/SearchFilterBar";
 import SearchHeader from "../components/SearchHeader";
 import SearchMovieGrid from "../components/SearchMovieGrid";
 import SearchMovieList from "../components/SearchMovieList";
-import { parseSearchUrlState } from "../utils/searchUrlState";
+import SearchResultsPagination from "../components/SearchResultsPagination";
+import { createSearchUrl, parseSearchUrlState } from "../utils/searchUrlState";
 import { useLocalStorageState } from "../../../shared/hooks/useLocalStorageState";
 import PageContent from "../../../shared/layout/PageContent";
 import type { Movie } from "../../catalog";
-import type { SearchUrlState } from "../utils/searchUrlState";
+import type { SearchSort, SearchUrlPatch } from "../utils/searchUrlState";
 
 export const SEARCH_RESULTS_MAX_WIDTH_PX = 1320;
 export type SearchView = "grid" | "list";
@@ -24,6 +22,7 @@ export const SEARCH_VIEW_STORAGE_KEY = "search.view";
 
 const MovieSearchPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const searchState = parseSearchUrlState(location.search);
   const [view, setView] = useLocalStorageState<SearchView>(
     SEARCH_VIEW_STORAGE_KEY,
@@ -48,13 +47,40 @@ const MovieSearchPage = () => {
     isFetching,
     movieCount: movies.length,
   });
+  const updateSearchUrl = (patch: SearchUrlPatch) => {
+    navigate({
+      pathname: location.pathname,
+      search: createSearchUrl(location.search, patch),
+    });
+  };
+  const clearFilters = () => {
+    updateSearchUrl({
+      genre: null,
+      maxRuntime: null,
+      maxYear: null,
+      minRuntime: null,
+      minYear: null,
+      type: null,
+    });
+  };
+  const hasActiveFilters = Object.keys(searchState.filters).length > 0;
 
   return (
     <PageContent maxWidth={`${SEARCH_RESULTS_MAX_WIDTH_PX}px`}>
       <Stack spacing={2.5}>
         <SearchHeader
+          onSortChange={(sort: SearchSort) => updateSearchUrl({ sort })}
+          onViewChange={setView}
           query={searchState.query}
+          sort={searchState.sort}
           totalCount={data?.totalElements}
+          view={view}
+        />
+
+        <SearchFilterBar
+          filters={searchState.filters}
+          onChange={updateSearchUrl}
+          onClear={clearFilters}
         />
 
         {isFetching && <LinearProgress aria-label="Loading search results" />}
@@ -65,34 +91,24 @@ const MovieSearchPage = () => {
           </Alert>
         )}
 
-        {showEmptyState && <SearchEmptyState />}
+        {showEmptyState && (
+          <SearchEmptyState
+            onClearFilters={hasActiveFilters ? clearFilters : undefined}
+          />
+        )}
 
         {movies.length > 0 && (
           <>
-            <Stack direction="row" sx={{ justifyContent: "flex-end" }}>
-              <ToggleButtonGroup
-                exclusive
-                onChange={(_, nextView: SearchView | null) => {
-                  if (nextView) {
-                    setView(nextView);
-                  }
-                }}
-                size="small"
-                value={view}
-              >
-                <ToggleButton aria-label="Grid view" value="grid">
-                  <ViewModuleIcon fontSize="small" />
-                </ToggleButton>
-                <ToggleButton aria-label="List view" value="list">
-                  <ViewListIcon fontSize="small" />
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Stack>
             {view === "grid" ? (
               <SearchMovieGrid movies={movies} />
             ) : (
               <SearchMovieList movies={movies} />
             )}
+            <SearchResultsPagination
+              onPageChange={(page) => updateSearchUrl({ page })}
+              page={searchState.page}
+              pageCount={data?.totalPages}
+            />
           </>
         )}
       </Stack>
@@ -102,7 +118,7 @@ const MovieSearchPage = () => {
 
 export const sortSearchMovies = (
   movies: Movie[],
-  sort: SearchUrlState["sort"],
+  sort: SearchSort,
 ): Movie[] => {
   if (sort !== "rating_desc") {
     return movies;
