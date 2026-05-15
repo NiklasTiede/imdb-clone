@@ -25,7 +25,7 @@ test("redirects anonymous users from protected routes to login", async ({
   await page.goto("/your-watchlist");
 
   await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
 });
 
 test("renders protected watchlist for authenticated users", async ({
@@ -123,5 +123,5 @@ test("renders protected ratings for authenticated users", async ({ page }) => {
   await expect(page).toHaveURL(/\/your-ratings$/);
   await expect(page.getByRole("heading", { name: "Your Ratings" })).toBeVisible();
   await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
-  await expect(page.getByText("Your rating: 8/10")).toBeVisible();
+  await expect(page.getByLabel("Your rating 8 out of 10")).toBeVisible();
 });

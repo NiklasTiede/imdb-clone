@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   SEARCH_RESULTS_MAX_WIDTH_PX,
+  SEARCH_VIEW_STORAGE_KEY,
   shouldShowSearchEmptyState,
   sortSearchMovies,
 } from "./MovieSearchPage";
@@ -14,6 +15,10 @@ describe("MovieSearchPage layout", () => {
     expect(SEARCH_RESULTS_MAX_WIDTH_PX).toBeGreaterThanOrEqual(
       cardsPerRow * cardWidth + (cardsPerRow - 1) * gapWidth,
     );
+  });
+
+  test("uses a stable local storage key for the preferred results view", () => {
+    expect(SEARCH_VIEW_STORAGE_KEY).toBe("search.view");
   });
 
   test("sorts filter-only result rows by IMDb rating descending", () => {
