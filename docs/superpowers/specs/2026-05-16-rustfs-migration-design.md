@@ -31,19 +31,25 @@ Runtime MinIO references exist in these areas:
 The backend only uses simple S3 operations through `io.minio:minio`: create or
 check bucket, set bucket policy, put object, remove object, stat object in tests,
 and generate presigned GET URLs. That keeps the protocol compatibility risk
-small, but public bucket policy and browser URL behavior must be verified.
+small. The long-term client target is AWS SDK for Java 2.x because it is the
+maintained general Java S3 client; AWS SDK for Java 1.x is end-of-support and
+must not be introduced.
 
 ## Decision
 
-Migrate runtime object storage from MinIO to RustFS while keeping the existing
-MinIO Java SDK as the first-step S3 client. Rename project-facing concepts from
-"MinIO" to "object storage" or "RustFS" where the name describes runtime
-infrastructure, but avoid a broad Java SDK migration in the same change.
+Migrate runtime object storage from MinIO to RustFS in two phases:
+
+1. Replace the MinIO runtime with RustFS and keep the existing MinIO Java SDK as
+   the first-step S3 client.
+2. Replace the MinIO Java SDK with AWS SDK for Java 2.x after RustFS runtime
+   compatibility is proven.
+
+Rename project-facing concepts from "MinIO" to "object storage" or "RustFS"
+where the name describes runtime infrastructure.
 
 This gives the project an actively maintained storage runtime with the smallest
-possible application behavior change. A later, separate cleanup can replace the
-MinIO Java SDK with AWS SDK S3 if we decide dependency naming matters enough to
-justify the churn.
+possible first-step application behavior change, then removes the remaining
+MinIO-branded Java dependency in a separate, testable phase.
 
 ## Architecture
 
@@ -62,6 +68,16 @@ Backend application properties keep the stable prefix
 `imdb-clone.media.storage.*`. These properties describe the application contract,
 not the product implementation. Metadata and comments should describe the values
 as S3-compatible object storage instead of MinIO-specific storage.
+
+The final backend client implementation should use AWS SDK for Java 2.x:
+
+- `software.amazon.awssdk:s3` as the Gradle dependency
+- `S3Client` for bucket, policy, put, delete, and stat operations
+- `S3Presigner` for temporary GET URLs
+- `endpointOverride(URI.create(properties.uri()))` for RustFS
+- `forcePathStyle(true)` for local and S3-compatible endpoint compatibility
+- a fixed signing region such as `us-east-1`, because AWS SDK v2 requires a
+  region even when using a custom endpoint
 
 The frontend should move from `VITE_IMDB_CLONE_MINIO_ADDRESS` to
 `VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`. During migration, the helper should
@@ -122,6 +138,11 @@ Add or update frontend tests so image URL helpers prefer
 `VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`, still support the old MinIO env var as
 a temporary fallback, and fall back to `http://localhost:9000`.
 
+After the AWS SDK v2 client migration, media integration tests should assert
+object existence through `S3Client.headObject`. Missing-object assertions should
+expect an AWS SDK `S3Exception` with an S3 error code equivalent to `NoSuchKey`
+or a `404` status code, depending on what RustFS returns through AWS SDK v2.
+
 Manual verification should start the compose stack, upload or seed objects,
 confirm the backend can apply the bucket policy, and confirm a browser can load
 a direct public object URL.
@@ -132,6 +153,7 @@ In scope:
 
 - Runtime replacement from MinIO to RustFS in local and deployment compose files
 - Testcontainers replacement for media integration tests
+- Java storage client replacement from MinIO Java SDK to AWS SDK for Java 2.x
 - Seed command updates while keeping the existing object key layout
 - Vendor-neutral naming in app-facing config comments, metadata, frontend env
   variables, exceptions, and docs
@@ -140,7 +162,6 @@ In scope:
 Out of scope:
 
 - In-place conversion of the existing MinIO volume
-- Replacing the MinIO Java SDK with AWS SDK S3
 - Changing bucket names or object key layout
 - Changing image processing behavior
 - Introducing RustFS distributed or multi-node deployment topology
@@ -150,11 +171,15 @@ Out of scope:
 
 1. Update local compose and media integration tests to RustFS.
 2. Verify backend media integration behavior against RustFS.
-3. Rename project-facing storage names to object storage while keeping backward
-   compatible frontend env fallback.
-4. Update development and production deployment compose files and seed jobs.
-5. Update documentation and generated credential names.
-6. Recreate or remove old MinIO volumes and reseed RustFS.
+3. Rename Java error handling and project-facing storage names to object storage.
+4. Replace MinIO Java SDK usage with AWS SDK for Java 2.x.
+5. Verify media integration behavior still passes against RustFS through AWS SDK
+   v2.
+6. Rename frontend media URL helpers while keeping backward compatible frontend
+   env fallback.
+7. Update development and production deployment compose files and seed jobs.
+8. Update documentation and generated credential names.
+9. Recreate or remove old MinIO volumes and reseed RustFS.
 
 ## Open Risks
 
@@ -165,3 +190,6 @@ Out of scope:
   starts depending on seeded objects.
 - Testcontainers startup may need a wait strategy based on RustFS logs or HTTP
   readiness instead of the MinIO-specific container helper.
+- AWS SDK v2 may expose RustFS error responses differently than the MinIO Java
+  SDK, so tests should assert stable S3 semantics instead of exact SDK exception
+  classes wherever possible.
