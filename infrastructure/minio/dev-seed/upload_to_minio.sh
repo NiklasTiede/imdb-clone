@@ -38,6 +38,6 @@ elif command -v docker >/dev/null 2>&1; then
         mc anonymous set download "rustfs/$OBJECT_STORAGE_BUCKET/movies" &&
         mc cp --recursive /seed-movies/ "rustfs/$OBJECT_STORAGE_BUCKET/movies/"'
 else
-  echo "Neither mc nor docker is available. Install the MinIO client or run Docker."
+  echo "Neither mc nor docker is available. Install the mc client or run Docker."
   exit 1
 fi

@@ -36,7 +36,7 @@
 - Frameworks: Spring Boot 4 / React 19 / Material UI 9
 - Rel. Database: MySQL 9
 - SearchEngine: Elasticsearch 9
-- File Storage: MinIO RELEASE.2024-03-26T22-10-45Z
+- File Storage: RustFS S3-compatible object storage
 - Build / test tooling: Gradle 9.5.0 / Testcontainers 2
 
 The app is secured with JWT authentication. The techstack is kept up-to-date. 
@@ -67,15 +67,15 @@ Here's a diagram of the setup:
 
 The app can be built in 2 steps:
 
-1. Run the Spring Boot Backend with `./gradlew bootRun` (this will automatically spin up mysql/elastic/minio containers)
+1. Run the Spring Boot Backend with `./gradlew bootRun` (this will automatically spin up MySQL, Elasticsearch, and RustFS containers)
 2. Run the React Frontend with `yarn install` & `yarn start`
 
 ---
 
-### 1. Set Up Stateful Services: MySQL, Elasticsearch and MinIO
+### 1. Set Up Stateful Services: MySQL, Elasticsearch and Object Storage
 
 At first, we have to run the with data preloaded stateful services (MySQL, Elasticsearch and 
-MinIO) which are used by the backend. I created a docker image of each service preloaded with 
+RustFS object storage) which are used by the backend. I created a docker image of each service preloaded with 
 data, so we just have to execute the `docker-compose.yaml`.
 
 For more information on how data were collected, processed and imported look into 
@@ -83,7 +83,7 @@ the [infrastructure](./infrastructure/README.md)-folder.
 
 --- 
 
-### 1. Set Up Spring Boot Backend and Stateful Services: MySQL, Elasticsearch and MinIO
+### 1. Set Up Spring Boot Backend and Stateful Services: MySQL, Elasticsearch and Object Storage
 
 Now we can start the Spring Boot app:
 

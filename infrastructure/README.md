@@ -7,7 +7,7 @@ These are the containers I'm running:
 - Spring Boot (Backend) Container
 - MySQL (preloaded Database) Container
 - Elasticsearch (SearchEngine) Container
-- MinIO (preloaded FileStorage) Container
+- RustFS (S3-compatible object storage) Container
 - Traefik (reverse proxy) Container
 
 For CI / CD I use GitHub Workflows.

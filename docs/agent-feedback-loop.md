@@ -14,9 +14,9 @@ Run from the repository root.
 
 Notes:
 
-- The backend test suite uses Testcontainers for MySQL, Elasticsearch, and MinIO.
+- The backend test suite uses Testcontainers for MySQL, Elasticsearch, and RustFS object storage.
 - The backend uses Java 25, Gradle 9.5.0, Spring Boot 4.0.6, and Testcontainers 2.0.5.
-- The local service baseline is MySQL 9.7.0, Elasticsearch 9.3.4, and MinIO RELEASE.2024-03-26T22-10-45Z.
+- The local service baseline is MySQL 9.7.0, Elasticsearch 9.3.4, and RustFS 1.0.0-beta.2.
 - Gradle 9 requires `org.junit.platform:junit-platform-launcher` on the test runtime classpath.
 - The Gradle launcher may print Java native-access warnings when Gradle runs on Java 25.
 
@@ -54,8 +54,8 @@ Expected local URLs:
 - Actuator: `http://localhost:8081/actuator/health`
 - OpenAPI: `http://localhost:8080/v3/api-docs.yaml`
 - Frontend: `http://localhost:3000`
-- MinIO API: `http://localhost:9000`
-- MinIO console: `http://localhost:9090`
+- Object storage API: `http://localhost:9000`
+- RustFS console: `http://localhost:9001`
 - Elasticsearch: `http://localhost:9200`
 
 ## Generated API Client

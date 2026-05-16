@@ -4,7 +4,7 @@
 
 Full-stack IMDB clone with a Spring Boot backend and React frontend.
 
-- Backend: Java 25, Spring Boot 4, MySQL, Elasticsearch, MinIO, JWT auth.
+- Backend: Java 25, Spring Boot 4, MySQL, Elasticsearch, RustFS/S3-compatible object storage, JWT auth.
 - Frontend: React 19, TypeScript, Material UI 9, TanStack React Query, generated Axios client.
 - Backend source: `src/main/java/com/thecodinglab/imdbclone`
 - Frontend source: `frontend/src`

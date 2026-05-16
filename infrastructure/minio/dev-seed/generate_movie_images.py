@@ -128,7 +128,7 @@ def generate_images(manifest_path: Path, output_dir: Path, skip_existing: bool) 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Download and process lightweight dev movie posters for MinIO."
+        description="Download and process lightweight dev movie posters for object storage."
     )
     parser.add_argument(
         "--manifest",
@@ -140,7 +140,7 @@ def parse_args() -> argparse.Namespace:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help=f"Directory for generated MinIO movie objects. Default: {DEFAULT_OUTPUT_DIR}",
+        help=f"Directory for generated object storage movie objects. Default: {DEFAULT_OUTPUT_DIR}",
     )
     parser.add_argument(
         "--overwrite",

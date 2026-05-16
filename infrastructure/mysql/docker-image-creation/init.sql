@@ -25,7 +25,7 @@ create table movie (
     rating decimal(3,1),
     rating_count int default 0,
     description text,
-    image_url_token varchar(255) comment 'MinIO object-name token used to derive movie image object keys',
+    image_url_token varchar(255) comment 'Object-storage token used to derive movie image object keys',
     primary key (id)
 );
 
@@ -39,7 +39,7 @@ create table account (
     bio text,
     phone varchar(20),
     birthday date,
-    image_url_token varchar(255) comment 'MinIO object-name token used to derive profile image object keys',
+    image_url_token varchar(255) comment 'Object-storage token used to derive profile image object keys',
     created_at_in_utc timestamp default (utc_timestamp),
     modified_at_in_utc timestamp,
     locked boolean not null,

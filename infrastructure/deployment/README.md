@@ -6,7 +6,7 @@ containers.
  
 - MySQL - Rel. Database
 - Elasticsearch - SearchEngine
-- MinIO - FileStorage
+- RustFS - S3-compatible object storage
 
 For normal local development, run the root `compose.yaml`.
 

@@ -1,6 +1,6 @@
 # Lightweight Movie Image Seed
 
-This folder creates MinIO poster objects for the movies in
+This folder creates object-storage poster objects for the movies in
 `src/main/resources/sql/2_init_data.sql`.
 
 The database stores only `movie.image_url_token`. The frontend builds URLs with
@@ -26,7 +26,7 @@ infrastructure/minio/dev-seed/movies/{token}_size_120x180.jpg
 
 Generated images are local dev artifacts and are ignored by git.
 
-## Upload Images to Local MinIO
+## Upload Images to Local Object Storage
 
 Start the local infrastructure first:
 
@@ -41,4 +41,4 @@ infrastructure/minio/dev-seed/upload_to_minio.sh
 ```
 
 The upload script uses the local `mc` command if available. Otherwise it falls
-back to a Dockerized MinIO client on the `imdb-clone-network` network.
+back to a Dockerized `mc` client on the `imdb-clone-network` network.

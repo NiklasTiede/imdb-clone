@@ -382,7 +382,7 @@
       },
       "id": 6,
       "panels": [],
-      "title": "MinIO",
+      "title": "RustFS",
       "type": "row"
     },
     {
