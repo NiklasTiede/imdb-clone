@@ -6,6 +6,11 @@ import CardActionArea from "@mui/material/CardActionArea";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import {
+  posterHoverContainerSx,
+  posterHoverTargetClassName,
+  posterHoverTargetSx,
+} from "../../../catalog/components/posterHover";
 import { MinioImageSize, PosterImage } from "../../../../shared/media";
 import { movieColors } from "../../../../theme";
 import { formatMovieMeta } from "../../watchlist";
@@ -68,7 +73,6 @@ const RatingsMovieCard = ({ item, onRemove }: RatingsMovieCardProps) => {
         overflow: "visible",
         position: "relative",
         "&:hover .ratings-remove": { opacity: 1 },
-        "&:hover .ratings-poster": { transform: "translateY(-2px)" },
       }}
     >
       <CardActionArea
@@ -80,10 +84,11 @@ const RatingsMovieCard = ({ item, onRemove }: RatingsMovieCardProps) => {
           display: "block",
           textAlign: "left",
           textDecoration: "none",
+          ...posterHoverContainerSx,
         }}
       >
         <Box
-          className="ratings-poster"
+          className={posterHoverTargetClassName}
           sx={{
             aspectRatio: "2 / 3",
             backgroundColor: "background.paper",
@@ -92,7 +97,7 @@ const RatingsMovieCard = ({ item, onRemove }: RatingsMovieCardProps) => {
             borderRadius: 1,
             overflow: "hidden",
             position: "relative",
-            transition: "transform 150ms ease",
+            ...posterHoverTargetSx,
           }}
         >
           <PosterImage

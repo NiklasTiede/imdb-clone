@@ -6,6 +6,11 @@ import CardActionArea from "@mui/material/CardActionArea";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
+import {
+  posterHoverContainerSx,
+  posterHoverTargetClassName,
+  posterHoverTargetSx,
+} from "../../../catalog/components/posterHover";
 import { MinioImageSize, PosterImage } from "../../../../shared/media";
 import { movieColors } from "../../../../theme";
 import type { WatchlistItem } from "../model/watchlist";
@@ -29,7 +34,6 @@ const WatchlistMovieCard = ({ item, onRemove }: WatchlistMovieCardProps) => {
         overflow: "visible",
         position: "relative",
         "&:hover .watchlist-remove": { opacity: 1 },
-        "&:hover .watchlist-poster": { transform: "translateY(-2px)" },
       }}
     >
       <CardActionArea
@@ -41,10 +45,11 @@ const WatchlistMovieCard = ({ item, onRemove }: WatchlistMovieCardProps) => {
           display: "block",
           textAlign: "left",
           textDecoration: "none",
+          ...posterHoverContainerSx,
         }}
       >
         <Box
-          className="watchlist-poster"
+          className={posterHoverTargetClassName}
           sx={{
             aspectRatio: "2 / 3",
             backgroundColor: "background.paper",
@@ -53,7 +58,7 @@ const WatchlistMovieCard = ({ item, onRemove }: WatchlistMovieCardProps) => {
             borderRadius: 1,
             overflow: "hidden",
             position: "relative",
-            transition: "transform 150ms ease",
+            ...posterHoverTargetSx,
           }}
         >
           <PosterImage

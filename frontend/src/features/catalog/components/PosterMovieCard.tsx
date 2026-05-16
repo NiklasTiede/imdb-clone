@@ -9,6 +9,11 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
 import type { Movie } from "../model/movie";
 import { IMDB_GOLD } from "./RatingPill";
+import {
+  posterHoverContainerSx,
+  posterHoverTargetClassName,
+  posterHoverTargetSx,
+} from "./posterHover";
 import { MinioImageSize, PosterImage } from "../../../shared/media";
 
 type MovieCardProps = {
@@ -42,17 +47,15 @@ const MovieCard = ({
           display: "block",
           textAlign: "left",
           textDecoration: "none",
+          ...posterHoverContainerSx,
           "& .MuiCardActionArea-focusHighlight": { display: "none" },
-          "&:hover .movie-card-poster": {
-            transform: "translateY(-2px)",
-          },
           "&:hover .movie-card-bookmark": {
             opacity: 1,
           },
         }}
       >
         <Box
-          className="movie-card-poster"
+          className={posterHoverTargetClassName}
           sx={{
             aspectRatio: "2 / 3",
             backgroundColor: "background.paper",
@@ -61,7 +64,7 @@ const MovieCard = ({
             borderRadius: 1,
             overflow: "hidden",
             position: "relative",
-            transition: "transform 150ms ease",
+            ...posterHoverTargetSx,
           }}
         >
           <PosterImage

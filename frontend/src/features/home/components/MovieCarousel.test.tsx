@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
-import MovieCarousel, { movieCarouselCardWidthSx } from "./MovieCarousel";
+import MovieCarousel, {
+  movieCarouselCardWidthSx,
+  movieCarouselScrollSx,
+} from "./MovieCarousel";
 
 describe("MovieCarousel", () => {
   test("renders carousel headings, view-all action, and movie cards", () => {
@@ -34,6 +37,11 @@ describe("MovieCarousel", () => {
 
   test("uses fixed responsive card widths for stable horizontal scrolling", () => {
     expect(movieCarouselCardWidthSx).toEqual({ xs: 130, sm: 150, md: 170 });
+  });
+
+  test("keeps scroll clipping edges outside the aligned movie cards", () => {
+    expect(movieCarouselScrollSx.mx).toEqual({ xs: 0, md: "-8px" });
+    expect(movieCarouselScrollSx.px).toEqual({ xs: 2, md: "8px" });
   });
 
   test("shows six skeleton cards while loading", () => {

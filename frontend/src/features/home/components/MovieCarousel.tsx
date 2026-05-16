@@ -26,6 +26,21 @@ export const movieCarouselCardWidthSx = {
   md: 170,
 } satisfies SxProps<Theme>;
 
+export const movieCarouselScrollSx = {
+  display: "flex",
+  gap: 2,
+  mx: { xs: 0, md: "-8px" },
+  my: -2,
+  overflowX: "auto",
+  overflowY: "hidden",
+  overscrollBehaviorX: "contain",
+  px: { xs: 2, md: "8px" },
+  py: 2,
+  scrollSnapType: "x mandatory",
+  scrollbarWidth: "none",
+  "&::-webkit-scrollbar": { display: "none" },
+} satisfies SxProps<Theme>;
+
 const MovieCarousel = ({
   title,
   subtitle,
@@ -153,18 +168,7 @@ const MovieCarousel = ({
       <Box
         ref={scrollRef}
         onScroll={handleScroll}
-        sx={{
-          display: "flex",
-          gap: 2,
-          overflowX: "auto",
-          overflowY: "hidden",
-          overscrollBehaviorX: "contain",
-          pb: 1,
-          px: { xs: 2, md: 0 },
-          scrollSnapType: "x mandatory",
-          scrollbarWidth: "none",
-          "&::-webkit-scrollbar": { display: "none" },
-        }}
+        sx={movieCarouselScrollSx}
       >
         {loading
           ? Array.from({ length: 6 }).map((_, index) => (
