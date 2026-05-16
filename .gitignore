@@ -6,11 +6,11 @@ todo.txt
 /infrastructure/mysql/data-processing/__pycache__
 /infrastructure/mysql/data-processing/imdb-dataset
 /infrastructure/mysql/docker-image-creation/processed_imdb_movies*
-/infrastructure/minio/original_movie_images/
-/infrastructure/minio/processed_movie_images/
-/infrastructure/minio/dev-seed/__pycache__/
-/infrastructure/minio/dev-seed/.venv/
-/infrastructure/minio/dev-seed/movies/
+/infrastructure/object-storage/original_movie_images/
+/infrastructure/object-storage/processed_movie_images/
+/infrastructure/object-storage/dev-seed/__pycache__/
+/infrastructure/object-storage/dev-seed/.venv/
+/infrastructure/object-storage/dev-seed/movies/
 # credentials for prod on homeserver
 /infrastructure/deployment/production/.env
 /infrastructure/deployment/production/docker-swarm-deploy
