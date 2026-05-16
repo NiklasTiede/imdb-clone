@@ -16,9 +16,6 @@ import com.thecodinglab.imdbclone.media.internal.images.MovieImageConstants;
 import com.thecodinglab.imdbclone.media.internal.images.ProfilePhotoConstants;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import com.thecodinglab.imdbclone.support.BaseContainers;
-import io.minio.MinioClient;
-import io.minio.StatObjectArgs;
-import io.minio.errors.ErrorResponseException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,6 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @SpringBootTest
 class MediaServiceIntegrationTest extends BaseContainers {
@@ -47,7 +47,7 @@ class MediaServiceIntegrationTest extends BaseContainers {
 
   @Autowired private AccountRepository accountRepository;
 
-  @Autowired private MinioClient minioClient;
+  @Autowired private S3Client s3Client;
 
   @Autowired private MediaStorageProperties storageProperties;
 
@@ -242,29 +242,31 @@ class MediaServiceIntegrationTest extends BaseContainers {
     return new MockMultipartFile(name, fileName, "image/jpeg", Files.newInputStream(image));
   }
 
-  private void assertObjectExists(String objectName) throws Exception {
+  private void assertObjectExists(String objectName) {
     var stat =
-        minioClient.statObject(
-            StatObjectArgs.builder()
+        s3Client.headObject(
+            HeadObjectRequest.builder()
                 .bucket(storageProperties.bucketName())
-                .object(objectName)
+                .key(objectName)
                 .build());
-    assertThat(stat.object()).isEqualTo(objectName);
-    assertThat(stat.size()).isPositive();
+    assertThat(stat.contentLength()).isPositive();
   }
 
   private void assertObjectDoesNotExist(String objectName) {
     assertThatThrownBy(
             () ->
-                minioClient.statObject(
-                    StatObjectArgs.builder()
+                s3Client.headObject(
+                    HeadObjectRequest.builder()
                         .bucket(storageProperties.bucketName())
-                        .object(objectName)
+                        .key(objectName)
                         .build()))
-        .isInstanceOf(ErrorResponseException.class)
+        .isInstanceOf(S3Exception.class)
         .satisfies(
-            ex ->
-                assertThat(((ErrorResponseException) ex).errorResponse().code())
-                    .isEqualTo("NoSuchKey"));
+            ex -> {
+              S3Exception s3Exception = (S3Exception) ex;
+              assertThat(s3Exception.statusCode()).isEqualTo(404);
+              assertThat(s3Exception.awsErrorDetails().errorCode())
+                  .isIn("NoSuchKey", "NotFound", "404");
+            });
   }
 }

@@ -5,12 +5,10 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import com.google.common.collect.Lists;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import java.util.List;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -22,6 +20,7 @@ import org.springframework.stereotype.Component;
 public class InfrastructureSetup implements ApplicationListener<ApplicationReadyEvent> {
 
   private static final Logger logger = LoggerFactory.getLogger(InfrastructureSetup.class);
+  private static final int INDEX_BATCH_SIZE = 1000;
 
   private final MovieRepository movieRepository;
   private final MovieElasticSearchRepository movieSearchRepository;
@@ -40,15 +39,17 @@ public class InfrastructureSetup implements ApplicationListener<ApplicationReady
   }
 
   @Override
-  public void onApplicationEvent(@NotNull ApplicationReadyEvent event) {
+  public void onApplicationEvent(ApplicationReadyEvent event) {
     createMoviesIndexIfMissing();
 
     // indexing a set of movies if no movies can be found in Elasticsearch
     if (movieSearchRepository.count() < 100) {
       List<Movie> popularMovies = movieRepository.findByImdbRatingCountBetween(20000, 20000000);
       logger.info("Number of popular movies to be indexed: [{}]", v(COUNT, popularMovies.size()));
-      List<List<Movie>> partitions = Lists.partition(popularMovies, 1000);
-      partitions.forEach(movieSearchRepository::saveAll);
+      for (int fromIndex = 0; fromIndex < popularMovies.size(); fromIndex += INDEX_BATCH_SIZE) {
+        int toIndex = Math.min(fromIndex + INDEX_BATCH_SIZE, popularMovies.size());
+        movieSearchRepository.saveAll(popularMovies.subList(fromIndex, toIndex));
+      }
     }
 
     logger.info("Application is ready: Elasticsearch data loaded");

@@ -38,6 +38,7 @@ repositories {
 dependencyManagement {
 	imports {
 		mavenBom 'org.springframework.modulith:spring-modulith-bom:2.0.6'
+		mavenBom "software.amazon.awssdk:bom:${awsSdkVersion}"
 	}
 }
 
@@ -85,7 +86,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 
 	//-- File Storage
-	implementation 'io.minio:minio:9.0.0'
+	implementation 'software.amazon.awssdk:s3'
+	implementation 'software.amazon.awssdk:url-connection-client'
 
 	//-- Email
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
@@ -122,7 +124,6 @@ dependencies {
 	testImplementation "org.testcontainers:testcontainers-junit-jupiter:${testContainersVersion}"
 	testImplementation "org.testcontainers:testcontainers-mysql:${testContainersVersion}"
 	testImplementation "org.testcontainers:testcontainers-elasticsearch:${testContainersVersion}"
-	testImplementation "org.testcontainers:testcontainers-minio:${testContainersVersion}"
 
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 

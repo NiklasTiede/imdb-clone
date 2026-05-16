@@ -12,34 +12,49 @@ import com.thecodinglab.imdbclone.media.internal.images.MovieImageConstants;
 import com.thecodinglab.imdbclone.media.internal.images.ProfilePhotoConstants;
 import com.thecodinglab.imdbclone.shared.error.ObjectStorageOperationException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
-import io.minio.*;
-import io.minio.Http.Method;
 import jakarta.transaction.Transactional;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.PutBucketPolicyRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 @Service
 public class MediaFiles implements MediaService {
 
   private static final Logger logger = LoggerFactory.getLogger(MediaFiles.class);
 
-  private final MinioClient minioClient;
+  private final S3Client s3Client;
+  private final S3Presigner s3Presigner;
   private final MediaStorageProperties storageProperties;
   private final AccountImageService accountImageService;
   private final MovieImageService movieImageService;
 
   public MediaFiles(
-      MinioClient minioClient,
+      S3Client s3Client,
+      S3Presigner s3Presigner,
       MediaStorageProperties storageProperties,
       AccountImageService accountImageService,
       MovieImageService movieImageService) {
-    this.minioClient = minioClient;
+    this.s3Client = s3Client;
+    this.s3Presigner = s3Presigner;
     this.storageProperties = storageProperties;
     this.accountImageService = accountImageService;
     this.movieImageService = movieImageService;
@@ -177,15 +192,15 @@ public class MediaFiles implements MediaService {
 
   private String storeFile(InputStream file, int fileSize, String fileName, String contentType) {
     try {
-      ObjectWriteResponse resp =
-          minioClient.putObject(
-              PutObjectArgs.builder()
+      PutObjectResponse response =
+          s3Client.putObject(
+              PutObjectRequest.builder()
                   .bucket(storageProperties.bucketName())
                   .contentType(contentType)
-                  .object(fileName)
-                  .stream(file, (long) fileSize, -1L)
-                  .build());
-      return "Image was stored with etag [" + resp.etag() + "]";
+                  .key(fileName)
+                  .build(),
+              RequestBody.fromInputStream(file, fileSize));
+      return "Image was stored with etag [" + response.eTag() + "]";
     } catch (Exception ex) {
       throw new ObjectStorageOperationException("Error while storing file in object storage", ex);
     }
@@ -193,10 +208,10 @@ public class MediaFiles implements MediaService {
 
   private void deleteFile(String imageName) {
     try {
-      minioClient.removeObject(
-          RemoveObjectArgs.builder()
+      s3Client.deleteObject(
+          DeleteObjectRequest.builder()
               .bucket(storageProperties.bucketName())
-              .object(imageName)
+              .key(imageName)
               .build());
     } catch (Exception ex) {
       throw new ObjectStorageOperationException("Error while deleting file in object storage", ex);
@@ -205,10 +220,9 @@ public class MediaFiles implements MediaService {
 
   void setUpBucket() {
     try {
-      if (!minioClient.bucketExists(
-          BucketExistsArgs.builder().bucket(storageProperties.bucketName()).build())) {
-        minioClient.makeBucket(
-            MakeBucketArgs.builder().bucket(storageProperties.bucketName()).build());
+      if (!bucketExists()) {
+        s3Client.createBucket(
+            CreateBucketRequest.builder().bucket(storageProperties.bucketName()).build());
       }
       String bucketPolicy = "config/object-storage-public-read-policy.json";
       createBucketPolicyFrom(bucketPolicy);
@@ -223,13 +237,28 @@ public class MediaFiles implements MediaService {
     }
   }
 
+  private boolean bucketExists() {
+    try {
+      s3Client.headBucket(
+          HeadBucketRequest.builder().bucket(storageProperties.bucketName()).build());
+      return true;
+    } catch (NoSuchBucketException ex) {
+      return false;
+    } catch (S3Exception ex) {
+      if (ex.statusCode() == 404) {
+        return false;
+      }
+      throw ex;
+    }
+  }
+
   private void createBucketPolicyFrom(String bucketPolicy) {
     String policyConfig = readResourceFile(bucketPolicy);
     try {
-      minioClient.setBucketPolicy(
-          SetBucketPolicyArgs.builder()
+      s3Client.putBucketPolicy(
+          PutBucketPolicyRequest.builder()
               .bucket(storageProperties.bucketName())
-              .config(policyConfig)
+              .policy(policyConfig)
               .build());
     } catch (Exception ex) {
       logger.error("Creation of bucket policy failed");
@@ -261,18 +290,15 @@ public class MediaFiles implements MediaService {
   }
 
   public String generateUrl(String imageName) {
-    String presignedUrl;
-
     try {
-      presignedUrl =
-          minioClient.getPresignedObjectUrl(
-              GetPresignedObjectUrlArgs.builder()
-                  .bucket(storageProperties.bucketName())
-                  .method(Method.GET)
-                  .object(imageName)
-                  .expiry(60 * 60 * 24)
-                  .build());
-      return presignedUrl;
+      GetObjectRequest getObjectRequest =
+          GetObjectRequest.builder().bucket(storageProperties.bucketName()).key(imageName).build();
+      GetObjectPresignRequest presignRequest =
+          GetObjectPresignRequest.builder()
+              .signatureDuration(Duration.ofDays(1))
+              .getObjectRequest(getObjectRequest)
+              .build();
+      return s3Presigner.presignGetObject(presignRequest).url().toString();
     } catch (Exception ex) {
       logger.error("Generate presigned object URL file with image name [{}] failed", imageName);
       throw new ObjectStorageOperationException(
