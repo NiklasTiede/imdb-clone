@@ -1,11 +1,13 @@
 package com.thecodinglab.imdbclone.support;
 
+import java.time.Duration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
-import org.testcontainers.containers.MinIOContainer;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -31,8 +33,7 @@ public class BaseContainers {
   private static final DockerImageName mysqlImage = DockerImageName.parse("mysql:9.7.0");
   private static final DockerImageName elasticsearchImage =
       DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:9.3.4");
-  private static final DockerImageName minioImage =
-      DockerImageName.parse("minio/minio:RELEASE.2025-09-07T16-13-09Z");
+  private static final DockerImageName rustfsImage = DockerImageName.parse("rustfs/rustfs:latest");
 
   public static MySQLContainer<?> mysqlContainer =
       new MySQLContainer<>(mysqlImage)
@@ -55,19 +56,23 @@ public class BaseContainers {
     registry.add("spring.elasticsearch.uris", elasticContainer::getHttpHostAddress);
   }
 
-  public static MinIOContainer minioContainer =
-      new MinIOContainer(minioImage)
-          .withEnv("MINIO_ACCESS_KEY", "minioadmin")
-          .withEnv("MINIO_SECRET_KEY", "minioadmin")
-          .withCommand("server /data");
+  public static GenericContainer<?> rustfsContainer =
+      new GenericContainer<>(rustfsImage)
+          .withExposedPorts(9000)
+          .withEnv("RUSTFS_ACCESS_KEY", "minioadmin")
+          .withEnv("RUSTFS_SECRET_KEY", "minioadmin")
+          .withEnv("RUSTFS_CONSOLE_ENABLE", "false")
+          .withCommand("/data")
+          .waitingFor(Wait.forListeningPort())
+          .withStartupTimeout(Duration.ofMinutes(2));
 
   @DynamicPropertySource
-  static void minioProperties(DynamicPropertyRegistry registry) {
+  static void objectStorageProperties(DynamicPropertyRegistry registry) {
     registry.add(
         "imdb-clone.media.storage.uri",
         () ->
             String.format(
-                "http://%s:%d", minioContainer.getHost(), minioContainer.getMappedPort(9000)));
+                "http://%s:%d", rustfsContainer.getHost(), rustfsContainer.getMappedPort(9000)));
     registry.add("imdb-clone.media.storage.access-key", () -> "minioadmin");
     registry.add("imdb-clone.media.storage.secret-key", () -> "minioadmin");
     registry.add("imdb-clone.media.storage.bucket-name", () -> "imdb-clone");
@@ -79,6 +84,6 @@ public class BaseContainers {
     elasticContainer.withEnv("xpack.security.enabled", "false");
     elasticContainer.start();
 
-    minioContainer.start();
+    rustfsContainer.start();
   }
 }
