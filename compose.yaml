@@ -35,7 +35,7 @@ services:
   ### ----------------------- RustFS ----------------------- ###
   imdb-clone-rustfs:
     container_name: imdb-clone-rustfs
-    image: rustfs/rustfs:latest
+    image: rustfs/rustfs:1.0.0-beta.2
     restart: unless-stopped
     user: root
     environment:
