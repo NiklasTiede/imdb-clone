@@ -13,7 +13,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./src/main/resources/sql:/docker-entrypoint-initdb.d
+      - imdb-clone-mysql-data:/var/lib/mysql
     networks:
       - imdb-clone-network
 
@@ -52,6 +52,8 @@ services:
     command: /data
 
 volumes:
+  imdb-clone-mysql-data:
+    name: imdb-clone-mysql-data
   imdb-clone-elasticsearch-data:
     name: imdb-clone-elasticsearch-data
   imdb-clone-rustfs-data:
