@@ -10,7 +10,7 @@ import com.thecodinglab.imdbclone.media.internal.images.Image;
 import com.thecodinglab.imdbclone.media.internal.images.ImageSize;
 import com.thecodinglab.imdbclone.media.internal.images.MovieImageConstants;
 import com.thecodinglab.imdbclone.media.internal.images.ProfilePhotoConstants;
-import com.thecodinglab.imdbclone.shared.error.MinioOperationException;
+import com.thecodinglab.imdbclone.shared.error.ObjectStorageOperationException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import io.minio.*;
 import io.minio.Http.Method;
@@ -162,7 +162,7 @@ public class MediaFiles implements MediaService {
   private void deleteProfilePhotoObjectsBestEffort(String imageUrlToken) {
     try {
       deleteProfilePhotoObjects(imageUrlToken);
-    } catch (MinioOperationException ex) {
+    } catch (ObjectStorageOperationException ex) {
       logger.warn("Could not delete previous profile photo objects for token [{}]", imageUrlToken);
     }
   }
@@ -170,7 +170,7 @@ public class MediaFiles implements MediaService {
   private void deleteMovieImageObjectsBestEffort(String imageUrlToken) {
     try {
       deleteMovieImageObjects(imageUrlToken);
-    } catch (MinioOperationException ex) {
+    } catch (ObjectStorageOperationException ex) {
       logger.warn("Could not delete previous movie image objects for token [{}]", imageUrlToken);
     }
   }
@@ -187,7 +187,7 @@ public class MediaFiles implements MediaService {
                   .build());
       return "Image was stored with etag [" + resp.etag() + "]";
     } catch (Exception ex) {
-      throw new MinioOperationException("Error while storing file in MinIO", ex);
+      throw new ObjectStorageOperationException("Error while storing file in object storage", ex);
     }
   }
 
@@ -199,7 +199,7 @@ public class MediaFiles implements MediaService {
               .object(imageName)
               .build());
     } catch (Exception ex) {
-      throw new MinioOperationException("Error while deleting file in MinIO", ex);
+      throw new ObjectStorageOperationException("Error while deleting file in object storage", ex);
     }
   }
 
@@ -210,7 +210,7 @@ public class MediaFiles implements MediaService {
         minioClient.makeBucket(
             MakeBucketArgs.builder().bucket(storageProperties.bucketName()).build());
       }
-      String bucketPolicy = "config/minio-policy.json";
+      String bucketPolicy = "config/object-storage-public-read-policy.json";
       createBucketPolicyFrom(bucketPolicy);
       logger.info(
           "bucket [{}] was created and bucketPolicy set successfully",
@@ -218,7 +218,8 @@ public class MediaFiles implements MediaService {
 
     } catch (Exception ex) {
       logger.error("Creation of bucket [{}] failed", storageProperties.bucketName());
-      throw new MinioOperationException("Error while creating bucket in MinIO", ex);
+      throw new ObjectStorageOperationException(
+          "Error while creating bucket in object storage", ex);
     }
   }
 
@@ -232,7 +233,8 @@ public class MediaFiles implements MediaService {
               .build());
     } catch (Exception ex) {
       logger.error("Creation of bucket policy failed");
-      throw new MinioOperationException("Error while creating bucket policy in MinIO", ex);
+      throw new ObjectStorageOperationException(
+          "Error while creating bucket policy in object storage", ex);
     }
   }
 
@@ -254,7 +256,7 @@ public class MediaFiles implements MediaService {
       }
     } catch (IOException ex) {
       logger.error("Reading file with path [{}] failed", resourcePath);
-      throw new MinioOperationException("Error while reading policy config", ex);
+      throw new ObjectStorageOperationException("Error while reading policy config", ex);
     }
   }
 
@@ -273,7 +275,8 @@ public class MediaFiles implements MediaService {
       return presignedUrl;
     } catch (Exception ex) {
       logger.error("Generate presigned object URL file with image name [{}] failed", imageName);
-      throw new MinioOperationException("Error while generating presigned URL in MinIO", ex);
+      throw new ObjectStorageOperationException(
+          "Error while generating presigned URL in object storage", ex);
     }
   }
 }

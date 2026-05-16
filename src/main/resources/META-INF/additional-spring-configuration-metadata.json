@@ -33,22 +33,22 @@
     {
       "name": "imdb-clone.media.storage.uri",
       "type": "java.lang.String",
-      "description": "MinIO endpoint URI used by the media module."
+      "description": "S3-compatible object storage endpoint URI used by the media module."
     },
     {
       "name": "imdb-clone.media.storage.access-key",
       "type": "java.lang.String",
-      "description": "MinIO access key used by the media module."
+      "description": "S3-compatible object storage access key used by the media module."
     },
     {
       "name": "imdb-clone.media.storage.secret-key",
       "type": "java.lang.String",
-      "description": "MinIO secret key used by the media module."
+      "description": "S3-compatible object storage secret key used by the media module."
     },
     {
       "name": "imdb-clone.media.storage.bucket-name",
       "type": "java.lang.String",
-      "description": "MinIO bucket containing movie images and profile photos."
+      "description": "S3-compatible object storage bucket containing movie images and profile photos."
     },
     {
       "name": "imdb-clone.notification.email.sender",

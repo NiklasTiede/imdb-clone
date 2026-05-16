@@ -81,11 +81,11 @@ public class GlobalExceptionHandler {
     return problemDetail;
   }
 
-  @ExceptionHandler(MinioOperationException.class)
-  protected final ProblemDetail resolveMinioOperationException(
-      MinioOperationException ex, WebRequest request) {
+  @ExceptionHandler(ObjectStorageOperationException.class)
+  protected final ProblemDetail resolveObjectStorageOperationException(
+      ObjectStorageOperationException ex, WebRequest request) {
     logger.warn(
-        "While interacting with MinIO an error occurred with message: '{}' and '{}' on resource '{}' ",
+        "While interacting with object storage an error occurred with message: '{}' and '{}' on resource '{}' ",
         v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
         v(EXCEPTION_MESSAGE, ex.getException().getMessage()),
         v(HTTP_RESOURCE_PATH, request.getDescription(true)));
