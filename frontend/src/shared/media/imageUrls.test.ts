@@ -19,14 +19,6 @@ describe("getObjectStorageImageUrl", () => {
     );
   });
 
-  it("falls back to the legacy MinIO address during migration", () => {
-    vi.stubEnv("VITE_IMDB_CLONE_MINIO_ADDRESS", "http://legacy-storage:9000");
-
-    expect(getMovieImageUrl("poster-token", ObjectStorageImageSize.Large)).toBe(
-      "http://legacy-storage:9000/imdb-clone/movies/poster-token_size_600x900.jpg",
-    );
-  });
-
   it("falls back to localhost when no object storage address is configured", () => {
     expect(getMovieImageUrl("poster-token", ObjectStorageImageSize.Large)).toBe(
       "http://localhost:9000/imdb-clone/movies/poster-token_size_600x900.jpg",

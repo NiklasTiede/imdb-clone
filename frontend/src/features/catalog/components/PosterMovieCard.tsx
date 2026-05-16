@@ -14,7 +14,7 @@ import {
   posterHoverTargetClassName,
   posterHoverTargetSx,
 } from "./posterHover";
-import { MinioImageSize, PosterImage } from "../../../shared/media";
+import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
 
 type MovieCardProps = {
   movie: Movie;
@@ -69,7 +69,7 @@ const MovieCard = ({
         >
           <PosterImage
             imageUrlToken={movie.imageUrlToken}
-            size={MinioImageSize.Large}
+            size={ObjectStorageImageSize.Large}
             sx={{
               height: "100%",
               objectFit: "cover",

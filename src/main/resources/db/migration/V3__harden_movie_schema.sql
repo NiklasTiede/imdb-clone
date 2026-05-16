@@ -7,7 +7,7 @@ alter table movie
         comment 'MovieTypeEnum name stored as text to avoid enum ordinal drift',
     modify rating decimal(3,1),
     modify image_url_token varchar(255)
-        comment 'MinIO object-name token used to derive movie image object keys';
+        comment 'Object Storage object-name token used to derive movie image object keys';
 
 update movie
 set movie_type = case movie_type
@@ -27,7 +27,7 @@ end;
 
 alter table account
     modify image_url_token varchar(255)
-        comment 'MinIO object-name token used to derive profile image object keys';
+        comment 'Object Storage object-name token used to derive profile image object keys';
 
 set @constraint_name = (
     select constraint_name

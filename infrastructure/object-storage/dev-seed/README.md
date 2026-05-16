@@ -20,8 +20,8 @@ The script downloads posters from TMDB image URLs listed in `movies.csv` and
 writes:
 
 ```text
-infrastructure/minio/dev-seed/movies/{token}_size_600x900.jpg
-infrastructure/minio/dev-seed/movies/{token}_size_120x180.jpg
+infrastructure/object-storage/dev-seed/movies/{token}_size_600x900.jpg
+infrastructure/object-storage/dev-seed/movies/{token}_size_120x180.jpg
 ```
 
 Generated images are local dev artifacts and are ignored by git.
@@ -37,8 +37,8 @@ make docker-compose-dev-up
 Then upload the generated images:
 
 ```bash
-infrastructure/minio/dev-seed/upload_to_minio.sh
+infrastructure/object-storage/dev-seed/upload_to_object_storage.sh
 ```
 
-The upload script uses the local `mc` command if available. Otherwise it falls
+The upload script uses the local `mc` command if available. Otherwise, it falls
 back to a Dockerized `mc` client on the `imdb-clone-network` network.

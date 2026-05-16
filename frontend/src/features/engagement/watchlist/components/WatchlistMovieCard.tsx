@@ -10,8 +10,8 @@ import {
   posterHoverContainerSx,
   posterHoverTargetClassName,
   posterHoverTargetSx,
-} from "../../../catalog/components/posterHover";
-import { MinioImageSize, PosterImage } from "../../../../shared/media";
+} from "../../../catalog";
+import { ObjectStorageImageSize, PosterImage } from "../../../../shared/media";
 import { movieColors } from "../../../../theme";
 import type { WatchlistItem } from "../model/watchlist";
 import { formatMovieMeta, formatRelativeDate } from "../utils/watchlistFormat";
@@ -63,7 +63,7 @@ const WatchlistMovieCard = ({ item, onRemove }: WatchlistMovieCardProps) => {
         >
           <PosterImage
             imageUrlToken={movie?.imageUrlToken}
-            size={MinioImageSize.Large}
+            size={ObjectStorageImageSize.Large}
             sx={{ height: "100%", objectFit: "cover", width: "100%" }}
           />
           {movie?.imdbRating !== undefined && (

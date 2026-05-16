@@ -2,7 +2,7 @@
 
 ## Scope
 
-Review cross-system behavior between MySQL, Elasticsearch, MinIO, JWT/security, scheduled jobs, and infrastructure scripts.
+Review cross-system behavior between MySQL, Elasticsearch, RustFS, JWT/security, scheduled jobs, and infrastructure scripts.
 
 Primary files:
 
@@ -23,12 +23,12 @@ Primary files:
 
 - MySQL remains the source of truth for transactional data unless documented otherwise
 - Elasticsearch documents are projections/search indexes with rebuild or repair paths
-- MinIO stores binary objects addressed by stable tokens, not business state
+- RustFS stores binary objects addressed by stable tokens, not business state
 - frontend image URLs derive from tokens consistently
 
 ### Consistency and Failure Modes
 
-- write flows define what happens when MySQL succeeds but Elasticsearch or MinIO fails
+- write flows define what happens when MySQL succeeds but Elasticsearch or RustFS fails
 - retries, exceptions, and logs preserve enough information to repair state
 - delete flows clean up relation rows, search documents, and object references according to ownership rules
 - scheduled jobs do not hide core consistency responsibilities
@@ -50,6 +50,6 @@ Primary files:
 ## Verification Recommendations
 
 - integration tests with Testcontainers for cross-system write/delete behavior
-- focused tests for MinIO object naming and image-token contracts
+- focused tests for RustFS object naming and image-token contracts
 - search tests proving projection updates after catalog/rating changes
 - security tests for public/private endpoint access

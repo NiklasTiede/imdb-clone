@@ -10,8 +10,8 @@ import {
   posterHoverContainerSx,
   posterHoverTargetClassName,
   posterHoverTargetSx,
-} from "../../../catalog/components/posterHover";
-import { MinioImageSize, PosterImage } from "../../../../shared/media";
+} from "../../../catalog";
+import { ObjectStorageImageSize, PosterImage } from "../../../../shared/media";
 import { movieColors } from "../../../../theme";
 import { formatMovieMeta } from "../../watchlist";
 import type { RatedMovie } from "../api/ratingQueries";
@@ -102,7 +102,7 @@ const RatingsMovieCard = ({ item, onRemove }: RatingsMovieCardProps) => {
         >
           <PosterImage
             imageUrlToken={movie.imageUrlToken}
-            size={MinioImageSize.Large}
+            size={ObjectStorageImageSize.Large}
             sx={{ height: "100%", objectFit: "cover", width: "100%" }}
           />
           <Box

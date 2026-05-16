@@ -7,7 +7,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
-import { MinioImageSize, PosterImage } from "../../../../shared/media";
+import { ObjectStorageImageSize, PosterImage } from "../../../../shared/media";
 import type { WatchlistItem } from "../model/watchlist";
 import { formatMovieMeta } from "../utils/watchlistFormat";
 
@@ -37,7 +37,7 @@ const PickForMeDialog = ({
           <Stack spacing={1.5}>
             <PosterImage
               imageUrlToken={selectedMovie.imageUrlToken}
-              size={MinioImageSize.Large}
+              size={ObjectStorageImageSize.Large}
               sx={{
                 aspectRatio: "2 / 3",
                 borderRadius: 1,

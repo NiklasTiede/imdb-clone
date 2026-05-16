@@ -69,8 +69,8 @@ public class BaseContainers {
   public static GenericContainer<?> rustfsContainer =
       new GenericContainer<>(rustfsImage)
           .withExposedPorts(9000)
-          .withEnv("RUSTFS_ACCESS_KEY", "minioadmin")
-          .withEnv("RUSTFS_SECRET_KEY", "minioadmin")
+          .withEnv("RUSTFS_ACCESS_KEY", "rustfsadmin")
+          .withEnv("RUSTFS_SECRET_KEY", "rustfsadmin")
           .withEnv("RUSTFS_CONSOLE_ENABLE", "false")
           .withCommand("/data")
           .waitingFor(rustfsReadyWait())
@@ -83,8 +83,8 @@ public class BaseContainers {
         () ->
             String.format(
                 "http://%s:%d", rustfsContainer.getHost(), rustfsContainer.getMappedPort(9000)));
-    registry.add("imdb-clone.media.storage.access-key", () -> "minioadmin");
-    registry.add("imdb-clone.media.storage.secret-key", () -> "minioadmin");
+    registry.add("imdb-clone.media.storage.access-key", () -> "rustfsadmin");
+    registry.add("imdb-clone.media.storage.secret-key", () -> "rustfsadmin");
     registry.add("imdb-clone.media.storage.bucket-name", () -> "imdb-clone");
   }
 

@@ -8,7 +8,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { MouseEvent, ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
-import { MinioImageSize, PosterImage } from "../../../shared/media";
+import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
 import { movieColors } from "../../../theme";
 import type { Movie } from "../model/movie";
 import { useMovieListLayout } from "./MovieListView";
@@ -160,7 +160,7 @@ const MovieListRow = ({
       >
         <PosterImage
           imageUrlToken={movie.imageUrlToken}
-          size={MinioImageSize.Small}
+          size={ObjectStorageImageSize.Small}
           sx={{
             aspectRatio: "2 / 3",
             backgroundColor: movieColors.surfaceInset,

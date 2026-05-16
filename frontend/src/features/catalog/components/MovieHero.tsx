@@ -5,7 +5,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import { MinioImageSize, PosterImage } from "../../../shared/media";
+import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
 import { movieColors } from "../../../theme";
 import type { Movie } from "../model/movie";
 import { MovieType } from "../model/movie";
@@ -100,7 +100,7 @@ export const MovieHero = ({
         >
           <PosterImage
             imageUrlToken={movie.imageUrlToken}
-            size={MinioImageSize.Large}
+            size={ObjectStorageImageSize.Large}
             sx={{
               width: "100%",
               aspectRatio: "2 / 3",

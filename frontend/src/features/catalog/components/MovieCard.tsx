@@ -4,7 +4,7 @@ import { movieColors, tokens } from "../../../theme";
 import type { Movie } from "../model/movie";
 import React from "react";
 import { Link } from "react-router";
-import { MinioImageSize, PosterImage } from "../../../shared/media";
+import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
 
 export const MovieLink = styled(Link)`
   text-decoration: none;
@@ -51,7 +51,7 @@ const MovieCard = (movie: Movie) => {
     <Card sx={movieCardSx}>
       <PosterImage
         imageUrlToken={movie.imageUrlToken}
-        size={MinioImageSize.Small}
+        size={ObjectStorageImageSize.Small}
         sx={posterSx}
       />
       <Box

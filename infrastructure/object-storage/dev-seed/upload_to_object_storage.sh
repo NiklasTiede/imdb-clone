@@ -14,7 +14,7 @@ DOCKER_OBJECT_STORAGE_ENDPOINT="${DOCKER_OBJECT_STORAGE_ENDPOINT:-http://imdb-cl
 
 if [[ ! -d "$MOVIES_DIR" ]]; then
   echo "Movie image directory does not exist: $MOVIES_DIR"
-  echo "Generate it first with: python3 infrastructure/minio/dev-seed/generate_movie_images.py"
+  echo "Generate it first with: python3 infrastructure/object-storage/dev-seed/generate_movie_images.py"
   exit 1
 fi
 

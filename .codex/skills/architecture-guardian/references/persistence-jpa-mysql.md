@@ -18,7 +18,7 @@ Primary files:
 ### Schema Ownership
 
 - Flyway owns schema evolution. New schema changes should be new `V...__description.sql` migrations.
-- Dataset imports and MinIO image imports are not schema migrations. Check `docs/database.md` before criticizing this split.
+- Dataset imports and RustFS image imports are not schema migrations. Check `docs/database.md` before criticizing this split.
 - Existing migrations should not be rewritten after they have been applied unless the user explicitly asks.
 - Persistence types and repositories belong inside their owning Spring Modulith module's `internal/persistence` package.
 

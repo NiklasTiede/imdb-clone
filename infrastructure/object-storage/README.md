@@ -89,10 +89,10 @@ Next we will transfer the scraped images into our bucket using the `mc` client. 
 ```bash
 curl https://dl.min.io/client/mc/release/linux-amd64/mc \
   --create-dirs \
-  -o $HOME/minio-binaries/mc
+  -o $HOME/rustfs-binaries/mc
 
-chmod +x $HOME/minio-binaries/mc
-export PATH=$PATH:$HOME/minio-binaries/
+chmod +x $HOME/rustfs-binaries/mc
+export PATH=$PATH:$HOME/rustfs-binaries/
 ```
 
 Now we connect the `mc` client with our container.

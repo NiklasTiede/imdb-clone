@@ -28,8 +28,8 @@ Primary files:
 ### Stateless Containers
 
 - backend instances do not rely on durable local filesystem writes
-- uploaded images and generated media are stored in MinIO or another external object store
-- database, Elasticsearch, MinIO, mail, and external APIs are treated as external services
+- uploaded images and generated media are stored in RustFS or another external object store
+- database, Elasticsearch, RustFS, mail, and external APIs are treated as external services
 - no feature requires sticky sessions or pod-local auth/session state
 - startup can run repeatedly without mutating shared state outside controlled migrations or seed jobs
 
@@ -68,7 +68,7 @@ Primary files:
 
 - MySQL remains the transactional source of truth
 - Elasticsearch is treated as rebuildable projection state
-- MinIO object lifecycle is tied to DB tokens or durable owner events
+- RustFS object lifecycle is tied to DB tokens or durable owner events
 - cross-system updates have repair paths when downstream services are unavailable
 - queue/task tables are observable enough to diagnose stuck or failing work
 
@@ -89,7 +89,7 @@ Look for:
 - startup hooks: `CommandLineRunner`, `ApplicationRunner`, `@PostConstruct`, Flyway callbacks
 - profiles/config: `application*.properties`, `@Profile`, `${...}` placeholders
 - probes/management: `management.endpoint.health`, health groups, actuator exposure
-- external clients: `DataSource`, Elasticsearch repositories/clients, MinIO, mail, REST clients
+- external clients: `DataSource`, Elasticsearch repositories/clients, RustFS, mail, REST clients
 
 ## Report Guidance
 

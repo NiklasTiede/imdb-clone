@@ -7,7 +7,7 @@ Content-Type: multipart/form-data; boundary=boundary
 --boundary
 Content-Disposition: form-data; name="image"; filename="raw-movie-image.jpg"
 
-< ./minio/raw-movie-image.jpg
+< ./object-storage/raw-movie-image.jpg
 --boundary--
 
 
@@ -24,7 +24,7 @@ Content-Type: multipart/form-data; boundary=boundary
 --boundary
 Content-Disposition: form-data; name="image"; filename="raw-profile-photo.jpeg"
 
-< ./minio/raw-profile-photo.jpeg
+< ./object-storage/raw-profile-photo.jpeg
 --boundary--
 
 

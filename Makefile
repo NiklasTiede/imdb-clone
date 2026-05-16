@@ -1,7 +1,7 @@
 # This file serves also as a cheat sheet
 
-DEV_SEED_PYTHON = infrastructure/minio/dev-seed/.venv/bin/python
-DEV_SEED_REQUIREMENTS = infrastructure/minio/dev-seed/requirements.txt
+DEV_SEED_PYTHON = infrastructure/object-storage/dev-seed/.venv/bin/python
+DEV_SEED_REQUIREMENTS = infrastructure/object-storage/dev-seed/requirements.txt
 
 # ------------ Set-up and run MySQL / ElasticSearch / Object Storage  -------------------------------------------------
 
@@ -17,16 +17,16 @@ seed-mysql-dev-data: ## load lightweight local movie/user data into MySQL
 	docker exec -i imdb-clone-mysql mysql -umyroot -psecret movie_db < src/main/resources/sql/2_init_data.sql
 
 $(DEV_SEED_PYTHON): $(DEV_SEED_REQUIREMENTS)
-	python3 -m venv infrastructure/minio/dev-seed/.venv
+	python3 -m venv infrastructure/object-storage/dev-seed/.venv
 	$(DEV_SEED_PYTHON) -m pip install -r $(DEV_SEED_REQUIREMENTS)
 
 generate-dev-movie-images: $(DEV_SEED_PYTHON) ## generate lightweight movie images for local object storage seed
-	$(DEV_SEED_PYTHON) infrastructure/minio/dev-seed/generate_movie_images.py
+	$(DEV_SEED_PYTHON) infrastructure/object-storage/dev-seed/generate_movie_images.py
 
 seed-object-storage-dev-movie-images: ## upload generated lightweight movie images to local object storage
-	infrastructure/minio/dev-seed/upload_to_minio.sh
+	infrastructure/object-storage/dev-seed/upload_to_object_storage.sh
 
-seed-minio-dev-movie-images: seed-object-storage-dev-movie-images
+seed-object-storage-dev-movie-images: seed-object-storage-dev-movie-images
 
 
 

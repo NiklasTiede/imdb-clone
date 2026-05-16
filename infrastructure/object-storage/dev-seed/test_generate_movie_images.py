@@ -30,7 +30,7 @@ class GenerateMovieImagesTest(unittest.TestCase):
         self.assertEqual("/poster.jpg", movies[0].poster_path)
         self.assertEqual("token-one", movies[0].image_url_token)
 
-    def test_target_image_paths_follow_frontend_minio_convention(self):
+    def test_target_image_paths_follow_frontend_object_storage_convention(self):
         paths = target_image_paths(Path("movies"), "poster-token")
 
         self.assertEqual(

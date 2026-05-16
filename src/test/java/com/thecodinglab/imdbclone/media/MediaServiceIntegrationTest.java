@@ -33,9 +33,9 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 class MediaServiceIntegrationTest extends BaseContainers {
 
   private static final Path MOVIE_IMAGE =
-      Path.of("src/main/resources/api-calls/minio/raw-movie-image.jpg");
+      Path.of("src/main/resources/api-calls/object-storage/raw-movie-image.jpg");
   private static final Path PROFILE_PHOTO =
-      Path.of("src/main/resources/api-calls/minio/raw-profile-photo.jpeg");
+      Path.of("src/main/resources/api-calls/object-storage/raw-profile-photo.jpeg");
 
   @Autowired private MediaService mediaService;
 

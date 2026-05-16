@@ -9,7 +9,7 @@ import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { formatRatingCount, IMDB_GOLD, type Movie } from "../../catalog";
-import { MinioImageSize, PosterImage } from "../../../shared/media";
+import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
 import { movieColors } from "../../../theme";
 
 type HeroProps = {
@@ -86,7 +86,7 @@ const Hero = ({
         >
           <PosterImage
             imageUrlToken={movie.imageUrlToken}
-            size={MinioImageSize.Large}
+            size={ObjectStorageImageSize.Large}
             sx={{
               aspectRatio: "2 / 3",
               backgroundColor: movieColors.surfaceInset,

@@ -44,7 +44,7 @@ services:
 
   load-object-storage-data:
     container_name: load-object-storage-data
-    image: niklastiede/custom-minio-mc:latest
+    image: niklastiede/custom-rustfs-mc:latest
     depends_on:
       - imdb-clone-rustfs
     environment:

@@ -44,7 +44,7 @@ Primary files:
 - auth token handling is centralized
 - frontend does not rely on backend implementation details not present in OpenAPI
 - UI limits match backend constraints, especially page size and public/private route behavior
-- image token semantics remain consistent with MinIO handling
+- image token semantics remain consistent with RustFS handling
 
 ### Drift Sources
 
