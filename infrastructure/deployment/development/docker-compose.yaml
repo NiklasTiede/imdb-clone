@@ -19,31 +19,32 @@ services:
       - imdb-clone-network
     command: --secure-file-priv=tmp
 
-  ### ----------------------- MinIO ----------------------- ###
-  imdb-clone-minio:
-    container_name: imdb-clone-minio
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+  ### ----------------------- RustFS ----------------------- ###
+  imdb-clone-rustfs:
+    container_name: imdb-clone-rustfs
+    image: rustfs/rustfs:1.0.0-beta.2
     restart: always
     environment:
-      - MINIO_ROOT_USER=ROOTNAME
-      - MINIO_ROOT_PASSWORD=CHANGEME123
+      - RUSTFS_ACCESS_KEY=ROOTNAME
+      - RUSTFS_SECRET_KEY=CHANGEME123
+      - RUSTFS_CONSOLE_ENABLE=true
     ports:
       - "9000:9000"
-      - "9090:9090"
+      - "9001:9001"
     volumes:
-      - imdb-clone-minio-data:/data
+      - imdb-clone-rustfs-data:/data
     networks:
       - imdb-clone-network
-    command: server --console-address :9090 /data
+    command: /data
 
-  load-minio-data:
-    container_name: load-minio-data
+  load-object-storage-data:
+    container_name: load-object-storage-data
     image: niklastiede/custom-minio-mc:latest
     depends_on:
-      - imdb-clone-minio
+      - imdb-clone-rustfs
     environment:
-      - MINIO_ROOT_USER=ROOTNAME
-      - MINIO_ROOT_PASSWORD=CHANGEME123
+      - OBJECT_STORAGE_ACCESS_KEY=ROOTNAME
+      - OBJECT_STORAGE_SECRET_KEY=CHANGEME123
     entrypoint: >
       /bin/sh -c '
       cd /tmp/ &&
@@ -51,9 +52,9 @@ services:
       tar -xzf ./compressed_movie_images.tar.gz &&
       mv processed_movie_images movies &&
       rm -rf ./compressed_movie_images.tar.gz &&
-      mc alias set minio http://imdb-clone-minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
-      (mc ls minio | grep "imdb-clone") || mc mb minio/imdb-clone &&
-      mc cp --recursive /tmp/movies minio/imdb-clone &&
+      mc alias set rustfs http://imdb-clone-rustfs:9000 $${OBJECT_STORAGE_ACCESS_KEY} $${OBJECT_STORAGE_SECRET_KEY} &&
+      (mc ls rustfs | grep "imdb-clone") || mc mb rustfs/imdb-clone &&
+      mc cp --recursive /tmp/movies rustfs/imdb-clone &&
       rm -rf /tmp/movies'
     networks:
       - imdb-clone-network
@@ -79,8 +80,8 @@ volumes:
     name: imdb-clone-mysql-data
   imdb-clone-elasticsearch-data:
     name: imdb-clone-elasticsearch-data
-  imdb-clone-minio-data:
-    name: imdb-clone-minio-data
+  imdb-clone-rustfs-data:
+    name: imdb-clone-rustfs-data
 
 networks:
   imdb-clone-network:

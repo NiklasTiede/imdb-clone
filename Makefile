@@ -3,7 +3,7 @@
 DEV_SEED_PYTHON = infrastructure/minio/dev-seed/.venv/bin/python
 DEV_SEED_REQUIREMENTS = infrastructure/minio/dev-seed/requirements.txt
 
-# ------------ Set-up and run MySQL / ElasticSearch / MinIO  ----------------------------------------------------------
+# ------------ Set-up and run MySQL / ElasticSearch / Object Storage  -------------------------------------------------
 
 .PHONY: pull-db run-db stop-db start-db remove-db-container seed-mysql-dev-data
 
@@ -20,11 +20,13 @@ $(DEV_SEED_PYTHON): $(DEV_SEED_REQUIREMENTS)
 	python3 -m venv infrastructure/minio/dev-seed/.venv
 	$(DEV_SEED_PYTHON) -m pip install -r $(DEV_SEED_REQUIREMENTS)
 
-generate-dev-movie-images: $(DEV_SEED_PYTHON) ## generate lightweight movie images for local MinIO seed
+generate-dev-movie-images: $(DEV_SEED_PYTHON) ## generate lightweight movie images for local object storage seed
 	$(DEV_SEED_PYTHON) infrastructure/minio/dev-seed/generate_movie_images.py
 
-seed-minio-dev-movie-images: ## upload generated lightweight movie images to local MinIO
+seed-object-storage-dev-movie-images: ## upload generated lightweight movie images to local object storage
 	infrastructure/minio/dev-seed/upload_to_minio.sh
+
+seed-minio-dev-movie-images: seed-object-storage-dev-movie-images
 
 
 
