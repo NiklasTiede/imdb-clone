@@ -14,9 +14,9 @@ Run from the repository root.
 
 Notes:
 
-- The backend test suite uses Testcontainers for MySQL, Elasticsearch, and RustFS object storage.
+- The backend test suite uses Testcontainers for PostgreSQL, Elasticsearch, and RustFS object storage.
 - The backend uses Java 25, Gradle 9.5.0, Spring Boot 4.0.6, and Testcontainers 2.0.5.
-- The local service baseline is MySQL 9.7.0, Elasticsearch 9.3.4, and RustFS 1.0.0-beta.2.
+- The local service baseline is PostgreSQL 18, Elasticsearch 9.3.4, and RustFS 1.0.0-beta.2.
 - Gradle 9 requires `org.junit.platform:junit-platform-launcher` on the test runtime classpath.
 - The Gradle launcher may print Java native-access warnings when Gradle runs on Java 25.
 

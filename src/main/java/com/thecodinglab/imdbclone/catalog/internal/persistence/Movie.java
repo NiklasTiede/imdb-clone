@@ -18,8 +18,18 @@ public class Movie extends DateAudit {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  private String imdbId;
+  private Long tmdbId;
+
+  @Enumerated(EnumType.STRING)
+  @Column(length = 50)
+  private MovieType movieType;
+
   private String primaryTitle;
   private String originalTitle;
+
+  @JsonIgnore private Boolean adult;
+
   private Integer startYear;
 
   @JsonIgnore private Integer endYear;
@@ -29,14 +39,19 @@ public class Movie extends DateAudit {
   @Convert(converter = MovieGenreConverterImpl.class)
   private Set<MovieGenre> movieGenre;
 
-  @Enumerated(EnumType.STRING)
-  @Column(length = 50)
-  private MovieType movieType;
-
   private Float imdbRating;
   private Integer imdbRatingCount;
 
-  @JsonIgnore private Boolean adult;
+  @JsonIgnore private String description;
+
+  @Column(length = 255)
+  private String posterImageToken;
+
+  @Column(length = 255)
+  private String backdropImageToken;
+
+  @Column(length = 255)
+  private String trailerYoutubeKey;
 
   @Column(precision = 3, scale = 1)
   private BigDecimal rating;
@@ -45,11 +60,6 @@ public class Movie extends DateAudit {
 
   @Column(nullable = false, precision = 19, scale = 1)
   private BigDecimal ratingSum = BigDecimal.ZERO;
-
-  @JsonIgnore private String description;
-
-  @Column(length = 255)
-  private String imageUrlToken;
 
   public Movie() {}
 
@@ -67,6 +77,22 @@ public class Movie extends DateAudit {
 
   public void setId(Long id) {
     this.id = id;
+  }
+
+  public String getImdbId() {
+    return imdbId;
+  }
+
+  public void setImdbId(String imdbId) {
+    this.imdbId = imdbId;
+  }
+
+  public Long getTmdbId() {
+    return tmdbId;
+  }
+
+  public void setTmdbId(Long tmdbId) {
+    this.tmdbId = tmdbId;
   }
 
   public String getPrimaryTitle() {
@@ -181,11 +207,35 @@ public class Movie extends DateAudit {
     this.description = description;
   }
 
+  public String getPosterImageToken() {
+    return posterImageToken;
+  }
+
+  public void setPosterImageToken(String posterImageToken) {
+    this.posterImageToken = posterImageToken;
+  }
+
   public String getImageUrlToken() {
-    return imageUrlToken;
+    return posterImageToken;
   }
 
   public void setImageUrlToken(String imageUrlToken) {
-    this.imageUrlToken = imageUrlToken;
+    this.posterImageToken = imageUrlToken;
+  }
+
+  public String getBackdropImageToken() {
+    return backdropImageToken;
+  }
+
+  public void setBackdropImageToken(String backdropImageToken) {
+    this.backdropImageToken = backdropImageToken;
+  }
+
+  public String getTrailerYoutubeKey() {
+    return trailerYoutubeKey;
+  }
+
+  public void setTrailerYoutubeKey(String trailerYoutubeKey) {
+    this.trailerYoutubeKey = trailerYoutubeKey;
   }
 }

@@ -77,10 +77,10 @@ dependencies {
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
 	//-- Rel. Database
-	implementation 'com.mysql:mysql-connector-j:9.7.0'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-flyway'
-	runtimeOnly 'org.flywaydb:flyway-mysql'
+	runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+	runtimeOnly 'org.postgresql:postgresql'
 
 	//-- SearchEngine
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
@@ -122,7 +122,7 @@ dependencies {
 
 	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
 	testImplementation "org.testcontainers:testcontainers-junit-jupiter:${testContainersVersion}"
-	testImplementation "org.testcontainers:testcontainers-mysql:${testContainersVersion}"
+	testImplementation "org.testcontainers:testcontainers-postgresql:${testContainersVersion}"
 	testImplementation "org.testcontainers:testcontainers-elasticsearch:${testContainersVersion}"
 
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

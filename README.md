@@ -34,7 +34,7 @@
 ## Techstack
 - Languages: Java 25 / TypeScript 6
 - Frameworks: Spring Boot 4 / React 19 / Material UI 9
-- Rel. Database: MySQL 9
+- Rel. Database: PostgreSQL 18
 - SearchEngine: Elasticsearch 9
 - File Storage: RustFS S3-compatible object storage
 - Build / test tooling: Gradle 9.5.0 / Testcontainers 2
@@ -67,14 +67,14 @@ Here's a diagram of the setup:
 
 The app can be built in 2 steps:
 
-1. Run the Spring Boot Backend with `./gradlew bootRun` (this will automatically spin up MySQL, Elasticsearch, and RustFS containers)
+1. Run the Spring Boot Backend with `./gradlew bootRun` (this will automatically spin up PostgreSQL, Elasticsearch, and RustFS containers)
 2. Run the React Frontend with `yarn install` & `yarn start`
 
 ---
 
-### 1. Set Up Stateful Services: MySQL, Elasticsearch and Object Storage
+### 1. Set Up Stateful Services: PostgreSQL, Elasticsearch and Object Storage
 
-At first, we have to run the with data preloaded stateful services (MySQL, Elasticsearch and 
+At first, we have to run the with data preloaded stateful services (PostgreSQL, Elasticsearch and
 RustFS object storage) which are used by the backend. I created a docker image of each service preloaded with 
 data, so we just have to execute the `docker-compose.yaml`.
 
@@ -83,7 +83,7 @@ the [infrastructure](./infrastructure/README.md)-folder.
 
 --- 
 
-### 1. Set Up Spring Boot Backend and Stateful Services: MySQL, Elasticsearch and Object Storage
+### 1. Set Up Spring Boot Backend and Stateful Services: PostgreSQL, Elasticsearch and Object Storage
 
 Now we can start the Spring Boot app:
 

@@ -15,7 +15,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -25,11 +25,12 @@ import org.testcontainers.utility.DockerImageName;
  * tests is loaded after Flyway migrations from the SQL file located at {@code
  * src/test/resources/sql/test-data.sql}.
  *
- * <p>Use the following credentials to connect to the MySQL TestContainer for debugging purposes:
+ * <p>Use the following credentials to connect to the PostgreSQL TestContainer for debugging
+ * purposes:
  *
  * <ul>
  *   <li>Host: localhost
- *   <li>Port: {@code mysqlContainer.getMappedPort(3306)}
+ *   <li>Port: {@code postgreSQLContainer.getMappedPort(5432)}
  *   <li>Database: movie_db
  *   <li>Username: test
  *   <li>Password: test
@@ -39,27 +40,29 @@ import org.testcontainers.utility.DockerImageName;
 @Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 public class BaseContainers {
 
-  private static final DockerImageName mysqlImage = DockerImageName.parse("mysql:9.7.0");
+  private static final DockerImageName postgreSQLImage = DockerImageName.parse("postgres:18");
   private static final DockerImageName elasticsearchImage =
       DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:9.3.4");
   private static final DockerImageName rustfsImage =
       DockerImageName.parse("rustfs/rustfs:1.0.0-beta.2");
 
-  public static MySQLContainer<?> mysqlContainer =
-      new MySQLContainer<>(mysqlImage)
+  public static PostgreSQLContainer<?> postgreSQLContainer =
+      new PostgreSQLContainer<>(postgreSQLImage)
           .withDatabaseName("movie_db")
           .withUsername("test")
           .withPassword("test");
 
   @DynamicPropertySource
-  static void mysqlProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", mysqlContainer::getJdbcUrl);
-    registry.add("spring.datasource.password", mysqlContainer::getPassword);
-    registry.add("spring.datasource.username", mysqlContainer::getUsername);
+  static void postgreSQLProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
+    registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
+    registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
   }
 
   static ElasticsearchContainer elasticContainer =
-      new ElasticsearchContainer(elasticsearchImage).withEnv("ES_JAVA_OPTS", "-Xms512m -Xmx512m");
+      new ElasticsearchContainer(elasticsearchImage)
+          .withEnv("ES_JAVA_OPTS", "-Xms512m -Xmx512m")
+          .withStartupTimeout(Duration.ofMinutes(3));
 
   @DynamicPropertySource
   static void setProperties(DynamicPropertyRegistry registry) {
@@ -154,7 +157,7 @@ public class BaseContainers {
   }
 
   static {
-    mysqlContainer.start();
+    postgreSQLContainer.start();
 
     elasticContainer.withEnv("xpack.security.enabled", "false");
     elasticContainer.start();

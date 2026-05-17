@@ -4,7 +4,7 @@
 When running this app locally we need to spin up 3 docker 
 containers.
  
-- MySQL - Rel. Database
+- PostgreSQL - Rel. Database
 - Elasticsearch - SearchEngine
 - RustFS - S3-compatible object storage
 

@@ -5,17 +5,20 @@ These are the containers I'm running:
 
 - React (Frontend) Container
 - Spring Boot (Backend) Container
-- MySQL (preloaded Database) Container
+- PostgreSQL Database Container
 - Elasticsearch (SearchEngine) Container
 - RustFS (S3-compatible object storage) Container
 - Traefik (reverse proxy) Container
 
 For CI / CD I use GitHub Workflows.
 
-# Set Up MySQL Database
+# Set Up PostgreSQL Database
 
-I created an [entity-relationship diagram](datamodel.puml) to simplify schema creation. 
-I installed mysql-server on my machine, processed the dataset and imported it into the database.
+The application schema is managed through PostgreSQL Flyway migrations. I created an
+[entity-relationship diagram](datamodel.puml) to simplify schema creation.
+
+The legacy IMDb dataset processing notes still live under `infrastructure/mysql` until the import
+pipeline is rebuilt for PostgreSQL.
 
 ## Process Movies / Rating Datasets
 
@@ -33,4 +36,4 @@ Instead of rerunning the jupyter notebook you can also just download the
 [Processed Dataset](https://www.dropbox.com/s/rzmhet4qf2joczz/processed_imdb_movies.csv?dl=0).
 
 ## Create Database Tables and import data
-- execute `create table` statements and `load infile` using [init.sql](mysql/docker-image-creation/init.sql) file
+- execute the PostgreSQL Flyway migrations from `src/main/resources/db/migration`

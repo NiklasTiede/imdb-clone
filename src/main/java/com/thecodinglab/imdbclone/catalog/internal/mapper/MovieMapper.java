@@ -11,11 +11,13 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MovieMapper {
 
+  @Mapping(target = "imageUrlToken", source = "posterImageToken")
   MovieRecord entityToDTO(Movie movie);
 
   List<MovieRecord> entityToDTO(Iterable<Movie> movies);
 
   @Mapping(target = "id", ignore = true)
+  @Mapping(target = "imageUrlToken", ignore = true)
   Movie dtoToEntity(MovieRecord movieRecord);
 
   List<Movie> dtoToEntity(Iterable<MovieRecord> movieRecords);

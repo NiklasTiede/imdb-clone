@@ -104,7 +104,7 @@ public class MediaFiles implements MediaService {
 
     MovieImageToken movieImageToken = movieImageService.getMovieImageToken(movieId);
     ImageSize.validateMovieImage(file);
-    String oldImageUrlToken = movieImageToken.imageUrlToken();
+    String oldImageUrlToken = movieImageToken.posterImageToken();
     String imageUrlToken = Image.generateToken();
 
     List<Image> movieImages =
@@ -124,12 +124,12 @@ public class MediaFiles implements MediaService {
   @Override
   public String deleteMovieImage(Long movieId) {
     MovieImageToken movieImageToken = movieImageService.getMovieImageToken(movieId);
-    if (movieImageToken.imageUrlToken() == null) {
+    if (movieImageToken.posterImageToken() == null) {
       return "No movie image of movie with movieId [%d] exists"
           .formatted(movieImageToken.movieId());
     }
 
-    deleteMovieImageObjects(movieImageToken.imageUrlToken());
+    deleteMovieImageObjects(movieImageToken.posterImageToken());
     movieImageService.clearMovieImageToken(movieImageToken.movieId());
 
     return "Movie images of movie with movieId [%d] were deleted"
@@ -143,7 +143,7 @@ public class MediaFiles implements MediaService {
 
   @TransactionalEventListener
   public void on(MovieDeleted event) {
-    deleteMovieImageObjectsBestEffort(event.imageUrlToken());
+    deleteMovieImageObjectsBestEffort(event.posterImageToken());
   }
 
   private List<String> storeFiles(List<Image> images) {

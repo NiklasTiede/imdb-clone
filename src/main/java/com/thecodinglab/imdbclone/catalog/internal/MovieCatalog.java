@@ -83,13 +83,19 @@ public class MovieCatalog implements MovieService {
   public MovieRecord updateMovie(Long movieId, MovieRequest movieRequest) {
     Movie movie = movieRepository.getMovieById(movieId);
     movie.setPrimaryTitle(movieRequest.primaryTitle());
+    movie.setImdbId(movieRequest.imdbId());
+    movie.setTmdbId(movieRequest.tmdbId());
+    movie.setMovieType(movieRequest.movieType());
     movie.setOriginalTitle(movieRequest.originalTitle());
+    movie.setAdult(movieRequest.adult());
     movie.setStartYear(movieRequest.startYear());
     movie.setEndYear(movieRequest.endYear());
     movie.setRuntimeMinutes(movieRequest.runtimeMinutes());
     movie.setMovieGenre(movieRequest.movieGenre());
-    movie.setMovieType(movieRequest.movieType());
-    movie.setAdult(movieRequest.adult());
+    movie.setDescription(movieRequest.description());
+    movie.setPosterImageToken(movieRequest.posterImageToken());
+    movie.setBackdropImageToken(movieRequest.backdropImageToken());
+    movie.setTrailerYoutubeKey(movieRequest.trailerYoutubeKey());
     Movie updatedMovie = performSave(movie);
     return movieMapper.entityToDTO(updatedMovie);
   }
@@ -133,23 +139,23 @@ public class MovieCatalog implements MovieService {
   @Override
   public MovieImageToken getMovieImageToken(Long movieId) {
     Movie movie = movieRepository.getMovieById(movieId);
-    return new MovieImageToken(movie.getId(), movie.getImageUrlToken());
+    return new MovieImageToken(movie.getId(), movie.getPosterImageToken());
   }
 
   @Override
   @Transactional
-  public MovieImageToken updateMovieImageToken(Long movieId, String imageUrlToken) {
+  public MovieImageToken updateMovieImageToken(Long movieId, String posterImageToken) {
     Movie movie = movieRepository.getMovieById(movieId);
-    movie.setImageUrlToken(imageUrlToken);
+    movie.setPosterImageToken(posterImageToken);
     Movie savedMovie = performSave(movie);
-    return new MovieImageToken(savedMovie.getId(), savedMovie.getImageUrlToken());
+    return new MovieImageToken(savedMovie.getId(), savedMovie.getPosterImageToken());
   }
 
   @Override
   @Transactional
   public void clearMovieImageToken(Long movieId) {
     Movie movie = movieRepository.getMovieById(movieId);
-    movie.setImageUrlToken(null);
+    movie.setPosterImageToken(null);
     performSave(movie);
   }
 
@@ -164,10 +170,10 @@ public class MovieCatalog implements MovieService {
   }
 
   private void performDelete(Movie movie) {
-    String imageUrlToken = movie.getImageUrlToken();
+    String posterImageToken = movie.getPosterImageToken();
     movieRepository.delete(movie);
     movieSearchProjectionTasks.enqueueDelete(movie.getId());
-    events.publishEvent(new MovieDeleted(movie.getId(), imageUrlToken));
+    events.publishEvent(new MovieDeleted(movie.getId(), posterImageToken));
     logger.info(
         "the movie [{}] with [{}] was deleted from Mysql and scheduled for ES projection delete",
         movie.getOriginalTitle(),

@@ -513,7 +513,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RegistrationRequest"
+              $ref: "#/components/schemas/CreateAccountRequest"
         required: true
       responses:
         "200":
@@ -845,10 +845,31 @@ components:
         id:
           type: integer
           format: int64
+        imdbId:
+          type: string
+        tmdbId:
+          type: integer
+          format: int64
+        movieType:
+          type: string
+          enum:
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
         primaryTitle:
           type: string
         originalTitle:
           type: string
+        adult:
+          type: boolean
         startYear:
           type: integer
           format: int32
@@ -898,36 +919,26 @@ components:
             - FILM_NOIR
             - SHORT
           uniqueItems: true
-        movieType:
-          type: string
-          enum:
-          - SHORT
-          - MOVIE
-          - VIDEO
-          - TV_MOVIE
-          - TV_EPISODE
-          - TV_MINI_SERIES
-          - TV_SPECIAL
-          - TV_SERIES
-          - TV_SHORT
-          - TV_PILOT
-          - VIDEO_GAME
         imdbRating:
           type: number
           format: float
         imdbRatingCount:
           type: integer
           format: int32
-        adult:
-          type: boolean
+        description:
+          type: string
+        posterImageToken:
+          type: string
+        backdropImageToken:
+          type: string
+        trailerYoutubeKey:
+          type: string
         rating:
           type: number
           format: float
         ratingCount:
           type: integer
           format: int32
-        description:
-          type: string
         imageUrlToken:
           type: string
     WatchedMovieRecord:
@@ -947,6 +958,26 @@ components:
     MovieRequest:
       type: object
       properties:
+        imdbId:
+          type: string
+          pattern: "^tt\\d{7,}$"
+        tmdbId:
+          type: integer
+          format: int64
+        movieType:
+          type: string
+          enum:
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
         primaryTitle:
           type: string
           maxLength: 200
@@ -955,6 +986,8 @@ components:
           type: string
           maxLength: 200
           minLength: 0
+        adult:
+          type: boolean
         startYear:
           type: integer
           format: int32
@@ -1002,22 +1035,22 @@ components:
             - FILM_NOIR
             - SHORT
           uniqueItems: true
-        movieType:
+        description:
           type: string
-          enum:
-          - SHORT
-          - MOVIE
-          - VIDEO
-          - TV_MOVIE
-          - TV_EPISODE
-          - TV_MINI_SERIES
-          - TV_SPECIAL
-          - TV_SERIES
-          - TV_SHORT
-          - TV_PILOT
-          - VIDEO_GAME
-        adult:
-          type: boolean
+          maxLength: 5000
+          minLength: 0
+        posterImageToken:
+          type: string
+          maxLength: 255
+          minLength: 0
+        backdropImageToken:
+          type: string
+          maxLength: 255
+          minLength: 0
+        trailerYoutubeKey:
+          type: string
+          maxLength: 255
+          minLength: 0
       required:
       - originalTitle
     RatingRecord:
@@ -1255,6 +1288,23 @@ components:
           type: string
         tokenType:
           type: string
+    CreateAccountRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+      - username
     AccountCreated:
       type: object
       properties:

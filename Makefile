@@ -3,9 +3,9 @@
 DEV_SEED_PYTHON = infrastructure/object-storage/dev-seed/.venv/bin/python
 DEV_SEED_REQUIREMENTS = infrastructure/object-storage/dev-seed/requirements.txt
 
-# ------------ Set-up and run MySQL / ElasticSearch / Object Storage  -------------------------------------------------
+# ------------ Set-up and run PostgreSQL / ElasticSearch / Object Storage  --------------------------------------------
 
-.PHONY: pull-db run-db stop-db start-db remove-db-container seed-mysql-dev-data
+.PHONY: pull-db run-db stop-db start-db remove-db-container seed-postgresql-dev-data
 
 docker-compose-dev-up: ## run services for backend
 	docker compose up -d
@@ -13,8 +13,8 @@ docker-compose-dev-up: ## run services for backend
 docker-compose-dev-down: ## stop services for backend
 	docker compose down
 
-seed-mysql-dev-data: ## load lightweight local movie/user data into MySQL
-	docker exec -i imdb-clone-mysql mysql -umyroot -psecret movie_db < src/main/resources/sql/2_init_data.sql
+seed-postgresql-dev-data: ## load lightweight local movie/user data into PostgreSQL
+	docker exec -i imdb-clone-postgresql psql -U myroot -d movie_db < src/main/resources/sql/2_init_data.sql
 
 $(DEV_SEED_PYTHON): $(DEV_SEED_REQUIREMENTS)
 	python3 -m venv infrastructure/object-storage/dev-seed/.venv

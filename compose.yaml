@@ -1,19 +1,18 @@
 services:
 
-  ### ----------------------- MySQL ----------------------- ###
-  imdb-clone-mysql:
-    container_name: imdb-clone-mysql
-    image: mysql:9.7.0
+  ### ----------------------- PostgreSQL ----------------------- ###
+  imdb-clone-postgresql:
+    container_name: imdb-clone-postgresql
+    image: postgres:18
     restart: unless-stopped
     environment:
-      - MYSQL_DATABASE=movie_db
-      - MYSQL_ROOT_PASSWORD=supersecret
-      - MYSQL_USER=myroot
-      - MYSQL_PASSWORD=secret
+      - POSTGRES_DB=movie_db
+      - POSTGRES_USER=myroot
+      - POSTGRES_PASSWORD=secret
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - imdb-clone-mysql-data:/var/lib/mysql
+      - imdb-clone-postgresql-data:/var/lib/postgresql
     networks:
       - imdb-clone-network
 
@@ -52,8 +51,8 @@ services:
     command: /data
 
 volumes:
-  imdb-clone-mysql-data:
-    name: imdb-clone-mysql-data
+  imdb-clone-postgresql-data:
+    name: imdb-clone-postgresql-data
   imdb-clone-elasticsearch-data:
     name: imdb-clone-elasticsearch-data
   imdb-clone-rustfs-data:
