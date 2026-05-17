@@ -11,6 +11,7 @@ todo.txt
 /infrastructure/object-storage/dev-seed/__pycache__/
 /infrastructure/object-storage/dev-seed/.venv/
 /infrastructure/object-storage/dev-seed/movies/
+/infrastructure/movie-seed/__pycache__/
 # credentials for prod on homeserver
 /infrastructure/deployment/production/.env
 /infrastructure/deployment/production/docker-swarm-deploy
