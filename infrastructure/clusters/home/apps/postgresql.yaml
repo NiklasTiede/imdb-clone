@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgresql
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: registry-1.docker.io/bitnamicharts
+    chart: postgresql
+    targetRevision: 18.6.6
+    helm:
+      releaseName: imdb-clone-postgresql
+      valuesObject:
+        architecture: standalone
+        auth:
+          database: movie_db
+          existingSecret: imdb-clone-postgresql
+          secretKeys:
+            adminPasswordKey: postgres-password
+            userPasswordKey: password
+          username: postgres_user
+        image:
+          digest: sha256:3f9462c7813afd0b9d412f1ade4fc780419bbe8971f3d2e29db920424b0c1f77
+          tag: latest
+        primary:
+          persistence:
+            enabled: true
+            size: 10Gi
+          service:
+            type: ClusterIP
+            ports:
+              postgresql: 5432
+        readReplicas:
+          replicaCount: 0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: databases
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
