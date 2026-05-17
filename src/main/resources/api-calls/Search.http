@@ -27,3 +27,8 @@ Content-Type: application/json
   "movieGenre": ["DRAMA"],
   "minStartYear": 1990
 }
+
+
+### reindex movies from PostgreSQL into Elasticsearch
+POST {{protocol}}{{host}}:{{port}}/api/search/movies/reindex
+Authorization: Bearer {{adminToken}}
