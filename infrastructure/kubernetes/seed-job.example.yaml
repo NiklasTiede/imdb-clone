@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-clone-full-seed
+  namespace: imdb-clone
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: seed
+          image: niklastiede/imdb-clone-seed:full-REPLACE_WITH_VERSION
+          args: ["all"]
+          env:
+            - name: POSTGRES_HOST
+              value: imdb-clone-postgresql.databases.svc.cluster.local
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: movie_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-postgresql
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-postgresql
+                  key: password
+            - name: RUSTFS_ENDPOINT
+              value: http://imdb-clone-rustfs.databases.svc.cluster.local:9000
+            - name: RUSTFS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-rustfs
+                  key: access-key
+            - name: RUSTFS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-rustfs
+                  key: secret-key
+            - name: RUSTFS_BUCKET
+              value: imdb-clone
+            - name: SEED_NAME
+              value: full
+            - name: SEED_VERSION
+              value: REPLACE_WITH_VERSION

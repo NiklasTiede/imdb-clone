@@ -62,3 +62,12 @@ After changing the age key or plugin config, rerun:
 cd infrastructure/ansible
 ansible-playbook site.yml
 ```
+
+## Movie Seed Job
+
+`seed-job.example.yaml` documents the Kubernetes Job shape for the versioned full
+seed image. Copy it into the GitOps app tree once PostgreSQL and RustFS services
+exist in k3s, replace the image tag and secret names, then let Argo CD apply it.
+
+The seed job is idempotent. Rerunning it upserts movie rows and uploads media
+objects without deleting existing catalog data.
