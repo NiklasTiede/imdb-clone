@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - namespaces.yaml
   - eck-operator.yaml
+  - elasticsearch.yaml
   - postgresql.yaml
   - rustfs.yaml
   - rustfs-bucket-job.yaml
