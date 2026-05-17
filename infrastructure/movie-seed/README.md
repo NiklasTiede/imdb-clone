@@ -129,3 +129,35 @@ files.
 PYTHONDONTWRITEBYTECODE=1 infrastructure/object-storage/dev-seed/.venv/bin/python \
   -m unittest discover -s infrastructure/movie-seed
 ```
+
+## Build Versioned Seed Images
+
+Build the lightweight local seed image:
+
+```bash
+make build-seed-light SEED_VERSION=2026-05-17
+```
+
+Build the full seed image:
+
+```bash
+make build-seed-full SEED_VERSION=2026-05-17
+```
+
+Push to Docker Hub:
+
+```bash
+make push-seed-light SEED_VERSION=2026-05-17
+make push-seed-full SEED_VERSION=2026-05-17
+```
+
+Run the lightweight seed against local Compose services:
+
+```bash
+make docker-compose-dev-up
+make seed-light SEED_VERSION=2026-05-17
+```
+
+The light image contains 250 movies and matching WebP media. The full image
+contains every row in `build/movie-seed/movie_enriched.csv` and all matching
+WebP media.

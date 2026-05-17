@@ -81,6 +81,19 @@ data, so we just have to execute the `docker-compose.yaml`.
 For more information on how data were collected, processed and imported look into 
 the [infrastructure](./infrastructure/README.md)-folder.
 
+### Seed Local Movie Data
+
+After starting PostgreSQL, RustFS, and Elasticsearch with Docker Compose, load
+the lightweight movie catalog:
+
+```bash
+make docker-compose-dev-up
+make seed-light SEED_VERSION=2026-05-17
+```
+
+The seed is idempotent, so rerunning it updates movies and media without wiping
+user data.
+
 --- 
 
 ### 1. Set Up Spring Boot Backend and Stateful Services: PostgreSQL, Elasticsearch and Object Storage
