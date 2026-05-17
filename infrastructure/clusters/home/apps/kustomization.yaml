@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - namespaces.yaml
   - postgresql.yaml
+  - rustfs.yaml

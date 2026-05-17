@@ -1,0 +1,71 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rustfs
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://charts.rustfs.com
+    chart: rustfs
+    targetRevision: 0.3.0
+    helm:
+      releaseName: imdb-clone-rustfs
+      valuesObject:
+        fullnameOverride: imdb-clone-rustfs
+        replicaCount: 1
+        mode:
+          standalone:
+            enabled: true
+          distributed:
+            enabled: false
+        secret:
+          existingSecret: imdb-clone-rustfs
+        config:
+          rustfs:
+            address: ":9000"
+            console_enable: "false"
+            console_address: ":9001"
+            region: "us-east-1"
+        service:
+          type: ClusterIP
+          endpoint:
+            port: 9000
+          console:
+            port: 9001
+        ingress:
+          enabled: false
+        gatewayApi:
+          enabled: false
+        storageclass:
+          name: local-path
+          dataStorageSize: 20Gi
+          logStorageSize: 1Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: databases
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: imdb-clone-rustfs
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: rustfs
+    app.kubernetes.io/instance: imdb-clone-rustfs
+  ports:
+    - name: endpoint
+      port: 9000
+      targetPort: 9000
