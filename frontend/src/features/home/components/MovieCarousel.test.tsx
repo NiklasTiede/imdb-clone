@@ -1,10 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
-import MovieCarousel, {
+import MovieCarousel from "./MovieCarousel";
+import {
   movieCarouselCardWidthSx,
   movieCarouselScrollSx,
-} from "./MovieCarousel";
+} from "./MovieCarousel.styles";
 
 describe("MovieCarousel", () => {
   test("renders carousel headings, view-all action, and movie cards", () => {

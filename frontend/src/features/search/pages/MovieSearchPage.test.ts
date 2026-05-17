@@ -4,7 +4,7 @@ import {
   SEARCH_VIEW_STORAGE_KEY,
   shouldShowSearchEmptyState,
   sortSearchMovies,
-} from "./MovieSearchPage";
+} from "./MovieSearchPage.utils";
 
 describe("MovieSearchPage layout", () => {
   test("is wide enough for six desktop search cards", () => {

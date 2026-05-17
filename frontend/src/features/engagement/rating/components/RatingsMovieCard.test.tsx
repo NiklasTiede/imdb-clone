@@ -1,12 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
-import RatingsMovieCard, {
+import RatingsMovieCard from "./RatingsMovieCard";
+import {
   imdbRatingBadgeSx,
   imdbRatingStarSx,
   yourRatingBadgeSx,
   yourRatingStarSx,
-} from "./RatingsMovieCard";
+} from "./RatingsMovieCard.styles";
 
 describe("RatingsMovieCard", () => {
   test("renders the user's score with a subdued badge style", () => {

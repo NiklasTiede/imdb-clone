@@ -13,12 +13,14 @@ import SearchResultsPagination from "../components/SearchResultsPagination";
 import { createSearchUrl, parseSearchUrlState } from "../utils/searchUrlState";
 import { useLocalStorageState } from "../../../shared/hooks/useLocalStorageState";
 import PageContent from "../../../shared/layout/PageContent";
-import type { Movie } from "../../catalog";
 import type { SearchSort, SearchUrlPatch } from "../utils/searchUrlState";
-
-export const SEARCH_RESULTS_MAX_WIDTH_PX = 1320;
-export type SearchView = "grid" | "list";
-export const SEARCH_VIEW_STORAGE_KEY = "search.view";
+import {
+  SEARCH_RESULTS_MAX_WIDTH_PX,
+  SEARCH_VIEW_STORAGE_KEY,
+  shouldShowSearchEmptyState,
+  sortSearchMovies,
+  type SearchView,
+} from "./MovieSearchPage.utils";
 
 const MovieSearchPage = () => {
   const location = useLocation();
@@ -115,30 +117,5 @@ const MovieSearchPage = () => {
     </PageContent>
   );
 };
-
-export const sortSearchMovies = (
-  movies: Movie[],
-  sort: SearchSort,
-): Movie[] => {
-  if (sort !== "rating_desc") {
-    return movies;
-  }
-
-  return [...movies].sort(
-    (left, right) => (right.imdbRating ?? 0) - (left.imdbRating ?? 0),
-  );
-};
-
-export const shouldShowSearchEmptyState = ({
-  hasSearchCriteria,
-  isError,
-  isFetching,
-  movieCount,
-}: {
-  hasSearchCriteria: boolean;
-  isError: boolean;
-  isFetching: boolean;
-  movieCount: number;
-}): boolean => hasSearchCriteria && !isError && !isFetching && movieCount === 0;
 
 export default MovieSearchPage;
