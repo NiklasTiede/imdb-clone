@@ -288,6 +288,18 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/PagedResponseMovieRecord"
+  /api/search/movies/reindex:
+    post:
+      tags:
+      - search-controller
+      operationId: reindexMovies
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MovieSearchReindexResponse"
   /api/movie/get-movies:
     post:
       tags:
@@ -1228,6 +1240,12 @@ components:
           format: int32
         last:
           type: boolean
+    MovieSearchReindexResponse:
+      type: object
+      properties:
+        indexedMovies:
+          type: integer
+          format: int64
     MovieIdsRequest:
       type: object
       properties:
