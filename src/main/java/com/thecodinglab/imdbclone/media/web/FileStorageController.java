@@ -48,7 +48,7 @@ public class FileStorageController {
   }
 
   /**
-   * Structure of URI: <b>/movies/{imageUrlToken}_size_{width}x{height}.jpg</b>
+   * Structure of URI: <b>/movies/posters/{imageUrlToken}_size_{width}x{height}.jpg</b>
    *
    * <p>Size is 600x900 (detail view) and 120x180 (movie search)
    */

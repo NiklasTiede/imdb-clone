@@ -16,7 +16,7 @@ public class MovieImageConstants {
 
   public static final String FORMAT = "jpg";
 
-  public static final String BUCKET_DIRECTORY_NAME = "movies/";
+  public static final String BUCKET_DIRECTORY_NAME = "movies/posters/";
 
   private MovieImageConstants() {}
 

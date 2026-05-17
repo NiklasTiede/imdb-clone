@@ -60,8 +60,14 @@ class MediaServiceIntegrationTest extends BaseContainers {
     var movie = movieRepository.getMovieById(1L);
     assertThat(movie.getImageUrlToken()).isNotBlank();
     assertThat(storedImages).hasSize(2);
-    assertObjectExists(MovieImageConstants.getDetailViewImageName(movie.getImageUrlToken()));
-    assertObjectExists(MovieImageConstants.getThumbNailImageName(movie.getImageUrlToken()));
+    String detailImageName = MovieImageConstants.getDetailViewImageName(movie.getImageUrlToken());
+    String thumbnailImageName = MovieImageConstants.getThumbNailImageName(movie.getImageUrlToken());
+    assertThat(detailImageName).startsWith("movies/posters/");
+    assertThat(detailImageName).endsWith("_size_600x900.jpg");
+    assertThat(thumbnailImageName).startsWith("movies/posters/");
+    assertThat(thumbnailImageName).endsWith("_size_120x180.jpg");
+    assertObjectExists(detailImageName);
+    assertObjectExists(thumbnailImageName);
   }
 
   @Test
