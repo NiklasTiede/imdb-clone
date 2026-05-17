@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rustfs-create-imdb-clone-bucket
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: create-bucket
+          image: minio/mc:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              set -eu
+              mc alias set rustfs http://imdb-clone-rustfs:9000 "$ACCESS_KEY" "$SECRET_KEY"
+              mc mb --ignore-existing rustfs/imdb-clone
+          env:
+            - name: ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-rustfs
+                  key: object_storage_access_key
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-rustfs
+                  key: object_storage_secret_key

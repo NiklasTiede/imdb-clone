@@ -4,3 +4,4 @@ resources:
   - namespaces.yaml
   - postgresql.yaml
   - rustfs.yaml
+  - rustfs-bucket-job.yaml
