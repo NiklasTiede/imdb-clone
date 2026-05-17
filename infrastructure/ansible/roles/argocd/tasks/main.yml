@@ -87,16 +87,34 @@
     KUBECONFIG: "{{ k3s_kubeconfig }}"
 
 - name: Patch Argo CD repo-server with SOPS Kustomize plugin sidecar
-  ansible.builtin.command: >
-    /usr/local/bin/kubectl
-    -n {{ argocd_namespace }}
-    patch deployment argocd-repo-server
-    --type=strategic
-    --patch-file -
-  args:
-    stdin: "{{ lookup('ansible.builtin.template', 'argocd-repo-server-sops-patch.yaml.j2') }}"
-  environment:
-    KUBECONFIG: "{{ k3s_kubeconfig }}"
+  block:
+    - name: Create temporary repo-server patch file
+      ansible.builtin.tempfile:
+        state: file
+        suffix: .yaml
+      register: argocd_repo_server_patch_file
+
+    - name: Render repo-server SOPS plugin patch
+      ansible.builtin.copy:
+        content: "{{ lookup('ansible.builtin.template', 'argocd-repo-server-sops-patch.yaml.j2') }}"
+        dest: "{{ argocd_repo_server_patch_file.path }}"
+        mode: "0600"
+
+    - name: Apply repo-server SOPS plugin patch
+      ansible.builtin.command: >
+        /usr/local/bin/kubectl
+        -n {{ argocd_namespace }}
+        patch deployment argocd-repo-server
+        --type=strategic
+        --patch-file {{ argocd_repo_server_patch_file.path }}
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig }}"
+  always:
+    - name: Remove temporary repo-server patch file
+      ansible.builtin.file:
+        path: "{{ argocd_repo_server_patch_file.path }}"
+        state: absent
+      when: argocd_repo_server_patch_file is defined
 
 - name: Wait for Argo CD repo-server with SOPS plugin
   ansible.builtin.command: >
