@@ -1,44 +1,13 @@
-# Lightweight Movie Image Seed
+# Deprecated Object Storage Dev Seed
 
-This folder creates object-storage poster objects for the movies in
-`src/main/resources/sql/2_init_data.sql`.
+This folder is kept only for historical reference. Local movie data and movie
+media are now seeded through the versioned light/full seed Docker images built
+from `infrastructure/movie-seed`.
 
-The database stores only `movie.image_url_token`. The frontend builds URLs with
-this pattern:
-
-```text
-http://localhost:9000/imdb-clone/movies/{image_url_token}_size_{width}x{height}.jpg
-```
-
-## Generate Images
-
-```bash
-make generate-dev-movie-images
-```
-
-The script downloads posters from TMDB image URLs listed in `movies.csv` and
-writes:
-
-```text
-infrastructure/object-storage/dev-seed/movies/{token}_size_600x900.jpg
-infrastructure/object-storage/dev-seed/movies/{token}_size_120x180.jpg
-```
-
-Generated images are local dev artifacts and are ignored by git.
-
-## Upload Images to Local Object Storage
-
-Start the local infrastructure first:
+Use the current local flow instead:
 
 ```bash
 make docker-compose-dev-up
+make seed-local-users
+make seed-light SEED_VERSION=2026-05-17
 ```
-
-Then upload the generated images:
-
-```bash
-infrastructure/object-storage/dev-seed/upload_to_object_storage.sh
-```
-
-The upload script uses the local `mc` command if available. Otherwise, it falls
-back to a Dockerized `mc` client on the `imdb-clone-network` network.

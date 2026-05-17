@@ -84,15 +84,17 @@ the [infrastructure](./infrastructure/README.md)-folder.
 ### Seed Local Movie Data
 
 After starting PostgreSQL, RustFS, and Elasticsearch with Docker Compose, load
-the lightweight movie catalog:
+local demo users and the lightweight movie catalog:
 
 ```bash
 make docker-compose-dev-up
+make seed-local-users
 make seed-light SEED_VERSION=2026-05-17
 ```
 
 The seed is idempotent, so rerunning it updates movies and media without wiping
-user data.
+user data. `seed-local-users` creates the local admin/user accounts without
+touching movie rows.
 
 --- 
 

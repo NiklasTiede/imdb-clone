@@ -1,16 +1,15 @@
 # This file serves also as a cheat sheet
 
-DEV_SEED_PYTHON = infrastructure/object-storage/dev-seed/.venv/bin/python
-DEV_SEED_REQUIREMENTS = infrastructure/object-storage/dev-seed/requirements.txt
 SEED_IMAGE = niklastiede/imdb-clone-seed
 SEED_VERSION ?= local
 SEED_LIGHT_TAG = $(SEED_IMAGE):light-$(SEED_VERSION)
 SEED_FULL_TAG = $(SEED_IMAGE):full-$(SEED_VERSION)
 SEED_CONTEXT_ROOT = build/movie-seed/docker-context
+LOCAL_USERS_SQL = src/main/resources/sql/local-users.sql
 
 # ------------ Set-up and run PostgreSQL / ElasticSearch / Object Storage  --------------------------------------------
 
-.PHONY: pull-db run-db stop-db start-db remove-db-container seed-postgresql-dev-data prepare-seed-light prepare-seed-full build-seed-light build-seed-full push-seed-light push-seed-full seed-light seed-full
+.PHONY: pull-db run-db stop-db start-db remove-db-container seed-local-users prepare-seed-light prepare-seed-full build-seed-light build-seed-full push-seed-light push-seed-full seed-light seed-full
 
 docker-compose-dev-up: ## run services for backend
 	docker compose up -d
@@ -18,20 +17,8 @@ docker-compose-dev-up: ## run services for backend
 docker-compose-dev-down: ## stop services for backend
 	docker compose down
 
-seed-postgresql-dev-data: ## load lightweight local movie/user data into PostgreSQL
-	docker exec -i imdb-clone-postgresql psql -U myroot -d movie_db < src/main/resources/sql/2_init_data.sql
-
-$(DEV_SEED_PYTHON): $(DEV_SEED_REQUIREMENTS)
-	python3 -m venv infrastructure/object-storage/dev-seed/.venv
-	$(DEV_SEED_PYTHON) -m pip install -r $(DEV_SEED_REQUIREMENTS)
-
-generate-dev-movie-images: $(DEV_SEED_PYTHON) ## generate lightweight movie images for local object storage seed
-	$(DEV_SEED_PYTHON) infrastructure/object-storage/dev-seed/generate_movie_images.py
-
-seed-object-storage-dev-movie-images: ## upload generated lightweight movie images to local object storage
-	infrastructure/object-storage/dev-seed/upload_to_object_storage.sh
-
-seed-object-storage-dev-movie-images: seed-object-storage-dev-movie-images
+seed-local-users: ## create local roles and demo accounts without touching movie data
+	docker exec -i imdb-clone-postgresql psql -U myroot -d movie_db < $(LOCAL_USERS_SQL)
 
 prepare-seed-light: ## prepare lightweight seed Docker context
 	python3 infrastructure/movie-seed/runtime/prepare_seed_context.py --profile light

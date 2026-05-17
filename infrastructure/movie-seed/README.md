@@ -155,6 +155,7 @@ Run the lightweight seed against local Compose services:
 
 ```bash
 make docker-compose-dev-up
+make seed-local-users
 make seed-light SEED_VERSION=2026-05-17
 ```
 
