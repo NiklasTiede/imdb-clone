@@ -2,10 +2,15 @@
 
 DEV_SEED_PYTHON = infrastructure/object-storage/dev-seed/.venv/bin/python
 DEV_SEED_REQUIREMENTS = infrastructure/object-storage/dev-seed/requirements.txt
+SEED_IMAGE = niklastiede/imdb-clone-seed
+SEED_VERSION ?= local
+SEED_LIGHT_TAG = $(SEED_IMAGE):light-$(SEED_VERSION)
+SEED_FULL_TAG = $(SEED_IMAGE):full-$(SEED_VERSION)
+SEED_CONTEXT_ROOT = build/movie-seed/docker-context
 
 # ------------ Set-up and run PostgreSQL / ElasticSearch / Object Storage  --------------------------------------------
 
-.PHONY: pull-db run-db stop-db start-db remove-db-container seed-postgresql-dev-data
+.PHONY: pull-db run-db stop-db start-db remove-db-container seed-postgresql-dev-data prepare-seed-light prepare-seed-full build-seed-light build-seed-full push-seed-light push-seed-full seed-light seed-full
 
 docker-compose-dev-up: ## run services for backend
 	docker compose up -d
@@ -27,6 +32,52 @@ seed-object-storage-dev-movie-images: ## upload generated lightweight movie imag
 	infrastructure/object-storage/dev-seed/upload_to_object_storage.sh
 
 seed-object-storage-dev-movie-images: seed-object-storage-dev-movie-images
+
+prepare-seed-light: ## prepare lightweight seed Docker context
+	python3 infrastructure/movie-seed/runtime/prepare_seed_context.py --profile light
+
+prepare-seed-full: ## prepare full seed Docker context
+	python3 infrastructure/movie-seed/runtime/prepare_seed_context.py --profile full
+
+build-seed-light: prepare-seed-light ## build lightweight seed image
+	docker build -t $(SEED_LIGHT_TAG) $(SEED_CONTEXT_ROOT)/light
+
+build-seed-full: prepare-seed-full ## build full seed image
+	docker build -t $(SEED_FULL_TAG) $(SEED_CONTEXT_ROOT)/full
+
+push-seed-light: ## push lightweight seed image
+	docker push $(SEED_LIGHT_TAG)
+
+push-seed-full: ## push full seed image
+	docker push $(SEED_FULL_TAG)
+
+seed-light: ## run lightweight seed against local Docker Compose services
+	docker run --rm --network imdb-clone-network \
+		-e POSTGRES_HOST=imdb-clone-postgresql \
+		-e POSTGRES_DB=movie_db \
+		-e POSTGRES_USER=myroot \
+		-e POSTGRES_PASSWORD=secret \
+		-e RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000 \
+		-e RUSTFS_ACCESS_KEY=ROOTNAME \
+		-e RUSTFS_SECRET_KEY=CHANGEME123 \
+		-e RUSTFS_BUCKET=imdb-clone \
+		-e SEED_NAME=light \
+		-e SEED_VERSION=$(SEED_VERSION) \
+		$(SEED_LIGHT_TAG) all
+
+seed-full: ## run full seed against local Docker Compose services
+	docker run --rm --network imdb-clone-network \
+		-e POSTGRES_HOST=imdb-clone-postgresql \
+		-e POSTGRES_DB=movie_db \
+		-e POSTGRES_USER=myroot \
+		-e POSTGRES_PASSWORD=secret \
+		-e RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000 \
+		-e RUSTFS_ACCESS_KEY=ROOTNAME \
+		-e RUSTFS_SECRET_KEY=CHANGEME123 \
+		-e RUSTFS_BUCKET=imdb-clone \
+		-e SEED_NAME=full \
+		-e SEED_VERSION=$(SEED_VERSION) \
+		$(SEED_FULL_TAG) all
 
 
 

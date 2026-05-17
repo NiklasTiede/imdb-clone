@@ -21,6 +21,7 @@ todo.txt
 HELP.md
 .gradle
 build/
+/build/movie-seed/docker-context/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
