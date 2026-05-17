@@ -50,6 +50,48 @@ services:
       - imdb-clone-network
     command: /data
 
+  imdb-clone-seed-light:
+    image: ${IMDB_CLONE_SEED_LIGHT_IMAGE:-niklastiede/imdb-clone-seed:light-local}
+    profiles:
+      - seed-light
+    depends_on:
+      - imdb-clone-postgresql
+      - imdb-clone-rustfs
+    environment:
+      - POSTGRES_HOST=imdb-clone-postgresql
+      - POSTGRES_DB=movie_db
+      - POSTGRES_USER=myroot
+      - POSTGRES_PASSWORD=secret
+      - RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000
+      - RUSTFS_ACCESS_KEY=ROOTNAME
+      - RUSTFS_SECRET_KEY=CHANGEME123
+      - RUSTFS_BUCKET=imdb-clone
+      - SEED_NAME=light
+      - SEED_VERSION=${SEED_VERSION:-local}
+    networks:
+      - imdb-clone-network
+
+  imdb-clone-seed-full:
+    image: ${IMDB_CLONE_SEED_FULL_IMAGE:-niklastiede/imdb-clone-seed:full-local}
+    profiles:
+      - seed-full
+    depends_on:
+      - imdb-clone-postgresql
+      - imdb-clone-rustfs
+    environment:
+      - POSTGRES_HOST=imdb-clone-postgresql
+      - POSTGRES_DB=movie_db
+      - POSTGRES_USER=myroot
+      - POSTGRES_PASSWORD=secret
+      - RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000
+      - RUSTFS_ACCESS_KEY=ROOTNAME
+      - RUSTFS_SECRET_KEY=CHANGEME123
+      - RUSTFS_BUCKET=imdb-clone
+      - SEED_NAME=full
+      - SEED_VERSION=${SEED_VERSION:-local}
+    networks:
+      - imdb-clone-network
+
 volumes:
   imdb-clone-postgresql-data:
     name: imdb-clone-postgresql-data

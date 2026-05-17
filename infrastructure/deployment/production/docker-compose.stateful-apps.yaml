@@ -40,27 +40,26 @@ services:
       - "traefik.http.routers.rustfs.entrypoints=websecure"
       - "traefik.http.routers.rustfs.tls.certresolver=myresolver"
 
-  load-object-storage-data:
-    container_name: load-object-storage-data
-    image: niklastiede/custom-rustfs-mc:latest
+  imdb-clone-seed-full:
+    image: ${IMDB_CLONE_SEED_FULL_IMAGE}
+    profiles:
+      - seed-full
     depends_on:
+      - imdb-clone-postgresql
       - imdb-clone-rustfs
     environment:
-      - OBJECT_STORAGE_ACCESS_KEY=${OBJECT_STORAGE_ACCESS_KEY_ENV_VAR}
-      - OBJECT_STORAGE_SECRET_KEY=${OBJECT_STORAGE_SECRET_KEY_ENV_VAR}
+      - POSTGRES_HOST=imdb-clone-postgresql
+      - POSTGRES_DB=movie_db
+      - POSTGRES_USER=${POSTGRESQL_USERNAME_ENV_VAR}
+      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD_ENV_VAR}
+      - RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000
+      - RUSTFS_ACCESS_KEY=${OBJECT_STORAGE_ACCESS_KEY_ENV_VAR}
+      - RUSTFS_SECRET_KEY=${OBJECT_STORAGE_SECRET_KEY_ENV_VAR}
+      - RUSTFS_BUCKET=imdb-clone
+      - SEED_NAME=full
+      - SEED_VERSION=${SEED_VERSION_ENV_VAR}
     networks:
       - imdb-clone-network
-    entrypoint: >
-      /bin/sh -c '
-      cd /tmp/ &&
-      wget https://www.dropbox.com/s/hz4tv7j20jprldr/compressed_movie_images.tar.gz &&
-      tar -xzf ./compressed_movie_images.tar.gz &&
-      mv processed_movie_images movies &&
-      rm -rf ./compressed_movie_images.tar.gz &&
-      mc alias set rustfs http://imdb-clone-rustfs:9000 $${OBJECT_STORAGE_ACCESS_KEY} $${OBJECT_STORAGE_SECRET_KEY} &&
-      (mc ls rustfs | grep "imdb-clone") || mc mb rustfs/imdb-clone &&
-      mc cp --recursive /tmp/movies rustfs/imdb-clone &&
-      rm -rf /tmp/movies'
 
   ### ----------------------- ElasticSearch ----------------------- ###
   imdb-clone-elasticsearch:

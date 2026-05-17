@@ -35,25 +35,45 @@ services:
       - imdb-clone-network
     command: /data
 
-  load-object-storage-data:
-    container_name: load-object-storage-data
-    image: niklastiede/custom-rustfs-mc:latest
+  imdb-clone-seed-light:
+    image: ${IMDB_CLONE_SEED_LIGHT_IMAGE:-niklastiede/imdb-clone-seed:light-local}
+    profiles:
+      - seed-light
     depends_on:
+      - imdb-clone-postgresql
       - imdb-clone-rustfs
     environment:
-      - OBJECT_STORAGE_ACCESS_KEY=ROOTNAME
-      - OBJECT_STORAGE_SECRET_KEY=CHANGEME123
-    entrypoint: >
-      /bin/sh -c '
-      cd /tmp/ &&
-      wget https://www.dropbox.com/s/hz4tv7j20jprldr/compressed_movie_images.tar.gz &&
-      tar -xzf ./compressed_movie_images.tar.gz &&
-      mv processed_movie_images movies &&
-      rm -rf ./compressed_movie_images.tar.gz &&
-      mc alias set rustfs http://imdb-clone-rustfs:9000 $${OBJECT_STORAGE_ACCESS_KEY} $${OBJECT_STORAGE_SECRET_KEY} &&
-      (mc ls rustfs | grep "imdb-clone") || mc mb rustfs/imdb-clone &&
-      mc cp --recursive /tmp/movies rustfs/imdb-clone &&
-      rm -rf /tmp/movies'
+      - POSTGRES_HOST=imdb-clone-postgresql
+      - POSTGRES_DB=movie_db
+      - POSTGRES_USER=myroot
+      - POSTGRES_PASSWORD=secret
+      - RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000
+      - RUSTFS_ACCESS_KEY=ROOTNAME
+      - RUSTFS_SECRET_KEY=CHANGEME123
+      - RUSTFS_BUCKET=imdb-clone
+      - SEED_NAME=light
+      - SEED_VERSION=${SEED_VERSION:-local}
+    networks:
+      - imdb-clone-network
+
+  imdb-clone-seed-full:
+    image: ${IMDB_CLONE_SEED_FULL_IMAGE:-niklastiede/imdb-clone-seed:full-local}
+    profiles:
+      - seed-full
+    depends_on:
+      - imdb-clone-postgresql
+      - imdb-clone-rustfs
+    environment:
+      - POSTGRES_HOST=imdb-clone-postgresql
+      - POSTGRES_DB=movie_db
+      - POSTGRES_USER=myroot
+      - POSTGRES_PASSWORD=secret
+      - RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000
+      - RUSTFS_ACCESS_KEY=ROOTNAME
+      - RUSTFS_SECRET_KEY=CHANGEME123
+      - RUSTFS_BUCKET=imdb-clone
+      - SEED_NAME=full
+      - SEED_VERSION=${SEED_VERSION:-local}
     networks:
       - imdb-clone-network
 
