@@ -1,0 +1,34 @@
+apiVersion: v1
+data:
+    backend_address: ENC[AES256_GCM,data:Q7gpUMXEe/klOWPKUYtCRsjaK2dp/+i7zoxvpg845tEleDFo57HRSvZyvuCEhUkFHeKuJSJTrPQ=,iv:zWUHqRR0WqJ4FCoWCCmX/O4MDWzTUWAbiDrdh7SmVvo=,tag:5/KIeOdFcvs84HWzEyWtdA==,type:str]
+    elasticsearch_password: ENC[AES256_GCM,data:JNid9nlxP09y0In6NqfxigdEnKeWpXNkk7t9zcidbbA=,iv:h/qou6hNDmZpPSZVH6fI/9/vw1yJgwRu3bGN2F9txd8=,tag:btaJzcwkBdP6+kizDoL9Ug==,type:str]
+    elasticsearch_username: ENC[AES256_GCM,data:2dpTaPQn3bXT+dJP,iv:IzMaE9aQOATpcE6OvFyAl4aiNB1lYh/Y4s+7rs1EKLI=,tag:cxbY6eaiVxDyoSwqN2J2pw==,type:str]
+    frontend_address: ENC[AES256_GCM,data:rdtAmj7NYbQLkRZdW0LX9z+2ueBxWy57L5NfuHw3yYa0ELhsTmIwMXpne5EEYlfFkIvWLg==,iv:UxnD4LicGky987bRa9di7UBxruWryOJ6YYn92/y25ac=,tag:kj1K6aGrYcaiEyYXxAZrBQ==,type:str]
+    jwt_secret_prod: ENC[AES256_GCM,data:tTfNqyYEQnW+1nttzqejJxIWS0iPiuwb1G0dGrQSDoxFlLqb4F1qjVpU7jPZoBVoWHpw9VLDmzebjwHzlzf8xad/zvGQkIh/h4O7+r5R15kToVDMfRIImTg5jpEHtKumdhfZT9NJ6M+GAzZntZvd9na3yb/kTdP6,iv:ref2zmpIFbIlPRfZsrDVTIFMW7fYaCLDLq0NkKsYBVA=,tag:bqN03KU2V2LLAAG2tH8oVw==,type:str]
+    mail_password: ENC[AES256_GCM,data:yQS9K931CsmOK+4z,iv:yCpAFwIXTA1AQMVIjkEaEgvBHggvUzaXtWhfWycxSOo=,tag:kkdmlfvX1kQj4fpzM4rVpA==,type:str]
+    mail_username: ENC[AES256_GCM,data:Yk9aVg/G2BYZlYMk,iv:R0lDtQnlSLgMYUryQng+uHZV4FxK/jb69WEPANDK1l0=,tag:Qw7rmsIv3YJJrXnw2ovMcA==,type:str]
+    object_storage_access_key: ENC[AES256_GCM,data:FFsgp+3rv1euhGcnThmn4KcgZFzihH2A5E+h7xPdBFtINbEg9vBCrSbuXdI=,iv:63wm6I4jTbu84ukNfqxaMYcWY6xyg+T+wfGh2WRaoe8=,tag:sqfQkqRtF1g/mZ8IEX+tDA==,type:str]
+    object_storage_secret_key: ENC[AES256_GCM,data:19BV2igND1yo7qSI9otFBzZYo5J5pQOlBJXMdV1Qb3RkZb8B9mBXpdmkdnrexSetXzR7GQpWnR5f7+cVhgT3/pHzFk8xisw62kfF/TOUsiT6eMvd3uaFMw==,iv:UCaCQGSIwkqwOZHENElYqoOKTNSz7pGEifeljd73vlY=,tag:LDfrA9+pfIDpZhge5KPXnQ==,type:str]
+    postgresql_password: ENC[AES256_GCM,data:zZJJL9uLvL7P98n+sdKAw1nMxEeZVNPJbWV6okGMjhsL82fKFY8vTQB64k9nXf1EpsyQQZWz2dOr3dUC8HfwRQ==,iv:f//A8YKNqCn/mA2A4bVUa5+X+aLTVhzGKD68JlQWjeU=,tag:coyeDkdiYc3kM0LpJszOgg==,type:str]
+    postgresql_username: ENC[AES256_GCM,data:TGONvnWgq3WMxqccbmdD35Pb+Cg=,iv:adI1hQWRQvB2LIFOFcs9RLeAflU8eqrrNGT/Ja1hVH4=,tag:j5S4tnQ84vrc6tzYt4Xlgg==,type:str]
+kind: Secret
+metadata:
+    annotations:
+        argocd.argoproj.io/sync-wave: "0"
+    name: backend-runtime
+    namespace: imdb-clone
+sops:
+    age:
+        - recipient: age1erem2t02nlncp53ehrjjyqcwd6uhfr2vrl6saf4c53esr99vv9ms2wgpw0
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBQc1pocmRlSXBMOFRkeTdx
+            N21iMU0rT2YzbFJBSDNPVjRNR1lzMFYvRmgwCkIvbUNLMTF0aUVUM0c5QUhxQTgv
+            cmFzZXZpWkovWjRpdjU3emNTeElvYlEKLS0tIEhHeVNCdGNyVTJrdFR3MzNEQjE0
+            czd2ejBPYVdsMnBmZ2p1ZTl5MHVjR0kKlboEF59wZeVgmLnbD/X6YSwMGEYmmn6i
+            jiWzBN3ZSsFz+BeFbed83pQu252wsiONXSHbXVB5P4qXT3Cr/kBwsQ==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-17T22:06:46Z"
+    mac: ENC[AES256_GCM,data:RoiKWbxdere8FbcJfHjSfIB2WXif0O2uWUewG/nX9RjDL85QSC+q+vik0vEXKQABG6ERqQg0CIrWGamRMQZUXPxH0dheCKgcO1TjAr/t1Ld01WcJTGrD0CrnFNjSUTjeuCd2WgBpMbjsBFXJGww37Xn9RFXiRJfv+YyUP+H/Uv8=,iv:taeaBjn1NI3Fbxj97QWlZn5FjhyKlaajlgq3P7u4sjo=,tag:PVsFiygXsGVOMuI1WF/UUQ==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.10.1
