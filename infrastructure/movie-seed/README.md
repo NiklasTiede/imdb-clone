@@ -14,17 +14,14 @@ later TMDB enrichment and RustFS poster generation can consume.
 
 ```bash
 python3 infrastructure/movie-seed/build_movie_seed.py \
-  --basics infrastructure/mysql/data-processing/imdb-dataset/title.basics.tsv.gz \
-  --ratings infrastructure/mysql/data-processing/imdb-dataset/title.ratings.tsv.gz \
+  --basics infrastructure/movie-seed/data-processing/imdb-dataset/title.basics.tsv.gz \
+  --ratings infrastructure/movie-seed/data-processing/imdb-dataset/title.ratings.tsv.gz \
   --limit 10000 \
   --output build/movie-seed/movie_candidates.csv
 ```
 
-The output keeps the existing database ID convention:
-
-```text
-tt2872718 -> 2872718
-```
+The output contains both the legacy numeric seed `id` and the source IMDb ID,
+for example `2872718` and `tt2872718`.
 
 Rows are filtered to non-adult IMDb `movie` titles with ratings and valid
 runtime, then sorted by `numVotes` descending.

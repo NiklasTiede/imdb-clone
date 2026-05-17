@@ -13,7 +13,7 @@ Build outputs from checks are allowed. Source changes are not.
 
 ## Repository Context
 
-- Backend: Spring Boot, Java, JPA, Flyway, MySQL, Elasticsearch, RustFS, JWT.
+- Backend: Spring Boot, Java, JPA, Flyway, PostgreSQL, Elasticsearch, RustFS, JWT.
 - Frontend: React, TypeScript, Material UI, React Query, generated Axios client.
 - Backend source: `src/main/java/com/thecodinglab/imdbclone`.
 - Backend modules are Spring Modulith application modules under the root package, with `api`, `web`, and `internal` package roles.
@@ -32,11 +32,11 @@ Choose the narrowest mode that satisfies the request:
 | Mode | Use for | Load |
 | --- | --- | --- |
 | `quick` | Fast drift scan before or after a change | This file, then relevant references only if a concern appears |
-| `persistence` | MySQL, Flyway, JPA entities, repositories, constraints, indexes | `references/persistence-jpa-mysql.md` |
+| `persistence` | PostgreSQL, Flyway, JPA entities, repositories, constraints, indexes | `references/persistence-jpa-postgresql.md` |
 | `backend-modulith` | Spring Modulith module model, named interfaces, dependency rules, and architecture tests | `references/spring-modulith.md` |
 | `api-contract` | REST/OpenAPI/generated client/frontend API usage | `references/api-contract.md` |
 | `frontend` | React feature architecture, shared modules, state/data ownership | `references/frontend-architecture.md` |
-| `integration` | MySQL, Elasticsearch, RustFS, security, jobs, and source-of-truth flows | `references/integration-storage-search.md` |
+| `integration` | PostgreSQL, Elasticsearch, RustFS, security, jobs, and source-of-truth flows | `references/integration-storage-search.md` |
 | `kubernetes` | Stateless containers, multi-replica safety, probes, config/secrets, shutdown, and runtime state | `references/kubernetes-readiness.md` |
 | `full` | Broad architecture review across the whole system | All references, but summarize aggressively |
 

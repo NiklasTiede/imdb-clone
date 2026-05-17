@@ -1,4 +1,4 @@
-# Persistence, JPA, and MySQL Review
+# Persistence, JPA, and PostgreSQL Review
 
 ## Scope
 
@@ -28,7 +28,7 @@ Compare each entity to the effective Flyway schema:
 
 - table name and column name match the JPA naming strategy or explicit annotations
 - Java nullability and database nullability agree for required fields
-- `@Column(length, precision, scale, nullable)` matches MySQL column type
+- `@Column(length, precision, scale, nullable)` matches PostgreSQL column type
 - `@Enumerated` and converters match stable database representation
 - generated IDs, embedded IDs, and composite primary keys match database keys
 - audit fields match mapped superclasses and timestamp defaults
@@ -46,7 +46,7 @@ Flag dangerous mismatches:
 
 For each association:
 
-- foreign key exists in MySQL unless deliberately absent and documented
+- foreign key exists in PostgreSQL unless deliberately absent and documented
 - cascade/delete behavior matches JPA cascade/orphan removal and service behavior
 - join table names and column names are stable
 - many-to-many ownership is explicit enough to avoid accidental table drift

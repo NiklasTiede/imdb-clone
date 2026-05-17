@@ -17,13 +17,12 @@ For CI / CD I use GitHub Workflows.
 The application schema is managed through PostgreSQL Flyway migrations. I created an
 [entity-relationship diagram](datamodel.puml) to simplify schema creation.
 
-The legacy IMDb dataset processing notes still live under `infrastructure/mysql` until the import
-pipeline is rebuilt for PostgreSQL.
+The legacy IMDb dataset processing notes live under `infrastructure/movie-seed/data-processing`.
 
 ## Process Movies / Rating Datasets
 
 For this I used the powerful capabilities of the Python framework Pandas which can easily process big datasets. 
-All steps are verifiable through a [jupyter notebook](mysql/data-processing/process_movie_dataset.ipynb).
+All steps are verifiable through a [jupyter notebook](movie-seed/data-processing/process_movie_dataset.ipynb).
 
 - download `title.basics.tsv.gz` and `title.ratings.tsv.gz` from [IMDb](https://www.imdb.com/interfaces/)
 - process dataset using Python, Pandas, Numpy:

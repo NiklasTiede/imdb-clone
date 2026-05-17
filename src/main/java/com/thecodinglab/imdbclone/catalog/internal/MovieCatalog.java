@@ -163,7 +163,7 @@ public class MovieCatalog implements MovieService {
     Movie updatedMovie = movieRepository.save(movie);
     movieSearchProjectionTasks.enqueueUpsert(updatedMovie.getId());
     logger.info(
-        "the movie [{}] with movieId [{}] was created and/or updated in Mysql and scheduled for ES projection",
+        "the movie [{}] with movieId [{}] was created and/or updated in PostgreSQL and scheduled for ES projection",
         updatedMovie.getOriginalTitle(),
         v(MOVIE_ID, updatedMovie.getId()));
     return updatedMovie;
@@ -175,7 +175,7 @@ public class MovieCatalog implements MovieService {
     movieSearchProjectionTasks.enqueueDelete(movie.getId());
     events.publishEvent(new MovieDeleted(movie.getId(), posterImageToken));
     logger.info(
-        "the movie [{}] with [{}] was deleted from Mysql and scheduled for ES projection delete",
+        "the movie [{}] with [{}] was deleted from PostgreSQL and scheduled for ES projection delete",
         movie.getOriginalTitle(),
         kv(MOVIE_ID, movie.getId()));
   }

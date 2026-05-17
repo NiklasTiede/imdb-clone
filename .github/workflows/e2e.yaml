@@ -22,17 +22,16 @@ jobs:
     timeout-minutes: 25
 
     services:
-      mysql:
-        image: mysql:9.7.0
+      postgresql:
+        image: postgres:18
         env:
-          MYSQL_DATABASE: movie_db
-          MYSQL_ROOT_PASSWORD: supersecret
-          MYSQL_USER: myroot
-          MYSQL_PASSWORD: secret
+          POSTGRES_DB: movie_db
+          POSTGRES_USER: myroot
+          POSTGRES_PASSWORD: secret
         ports:
-          - 3306:3306
+          - 5432:5432
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -umyroot -psecret"
+          --health-cmd="pg_isready -h 127.0.0.1 -U myroot -d movie_db"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -144,7 +143,7 @@ jobs:
           mkdir -p e2e-logs
           cp backend.log e2e-logs/backend.log || true
           docker logs imdb-clone-rustfs > e2e-logs/rustfs.log 2>&1 || true
-          docker logs "${{ job.services.mysql.id }}" > e2e-logs/mysql.log 2>&1 || true
+          docker logs "${{ job.services.postgresql.id }}" > e2e-logs/postgresql.log 2>&1 || true
           docker logs "${{ job.services.elasticsearch.id }}" > e2e-logs/elasticsearch.log 2>&1 || true
 
       - name: Upload Playwright report

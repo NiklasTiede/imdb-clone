@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Iterable, TextIO
 
 
-DEFAULT_IMDB_DIR = Path("infrastructure/mysql/data-processing/imdb-dataset")
+DEFAULT_IMDB_DIR = Path("infrastructure/movie-seed/data-processing/imdb-dataset")
 DEFAULT_BASICS = DEFAULT_IMDB_DIR / "title.basics.tsv.gz"
 DEFAULT_RATINGS = DEFAULT_IMDB_DIR / "title.ratings.tsv.gz"
 DEFAULT_OUTPUT = Path("build/movie-seed/movie_candidates.csv")

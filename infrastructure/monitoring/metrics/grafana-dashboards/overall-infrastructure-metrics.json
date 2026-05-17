@@ -356,7 +356,7 @@
       },
       "id": 3,
       "panels": [],
-      "title": "MySQL",
+      "title": "PostgreSQL",
       "type": "row"
     },
     {

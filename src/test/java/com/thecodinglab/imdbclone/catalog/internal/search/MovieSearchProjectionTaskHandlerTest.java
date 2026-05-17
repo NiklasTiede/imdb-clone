@@ -30,7 +30,7 @@ class MovieSearchProjectionTaskHandlerTest {
   }
 
   @Test
-  void project_upsertSavesMovieDocumentFromMysql() {
+  void project_upsertSavesMovieDocumentFromDatabase() {
     Movie movie = movieWithId(45L);
     when(movieRepository.findById(45L)).thenReturn(Optional.of(movie));
 
@@ -41,7 +41,7 @@ class MovieSearchProjectionTaskHandlerTest {
   }
 
   @Test
-  void project_upsertDeletesMovieDocumentWhenMysqlMovieIsGone() {
+  void project_upsertDeletesMovieDocumentWhenDatabaseMovieIsGone() {
     when(movieRepository.findById(46L)).thenReturn(Optional.empty());
 
     handler.project(MovieSearchProjectionOperation.UPSERT, 46L);

@@ -66,7 +66,7 @@ Primary files:
 
 ### Storage, Search, and Consistency
 
-- MySQL remains the transactional source of truth
+- PostgreSQL remains the transactional source of truth
 - Elasticsearch is treated as rebuildable projection state
 - RustFS object lifecycle is tied to DB tokens or durable owner events
 - cross-system updates have repair paths when downstream services are unavailable

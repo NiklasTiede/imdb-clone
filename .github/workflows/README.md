@@ -7,7 +7,7 @@ push. And for publishing the docker image I
 have to trigger this manually (workflow_dispatch).
 
 The Playwright e2e workflow is also manual-only. It starts
-MySQL, Elasticsearch, Object Storage, the Spring Boot backend, and the
+PostgreSQL, Elasticsearch, Object Storage, the Spring Boot backend, and the
 Vite frontend before running the browser tests. This keeps the
 regular push CI fast while still making full-stack browser checks
 available before larger merges or releases.
