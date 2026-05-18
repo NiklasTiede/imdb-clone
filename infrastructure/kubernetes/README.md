@@ -90,3 +90,10 @@ The home-cluster ingress exposes three public hostnames:
 
 All three DNS records should point to the current public home IP. The router
 must forward TCP ports `80` and `443` to the k3s node at `192.168.178.44`.
+
+## HTTPS Certificates
+
+The home cluster uses cert-manager with a Let's Encrypt `ClusterIssuer`.
+Certificates are requested from the public ingresses through HTTP-01 challenges
+handled by Traefik. Keep both TCP `80` and `443` forwarded from the router to
+`192.168.178.44`; port `80` is required for initial issuance and renewal.

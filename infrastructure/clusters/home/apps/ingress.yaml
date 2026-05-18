@@ -5,8 +5,14 @@ metadata:
   namespace: imdb-clone
   annotations:
     argocd.argoproj.io/sync-wave: "7"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - imdb-clone.the-coding-lab.com
+        - backend.imdb-clone.the-coding-lab.com
+      secretName: imdb-clone-public-tls
   rules:
     - host: imdb-clone.the-coding-lab.com
       http:
@@ -36,8 +42,13 @@ metadata:
   namespace: databases
   annotations:
     argocd.argoproj.io/sync-wave: "7"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: traefik
+  tls:
+    - hosts:
+        - object-storage.imdb-clone.the-coding-lab.com
+      secretName: imdb-clone-object-storage-tls
   rules:
     - host: object-storage.imdb-clone.the-coding-lab.com
       http:
