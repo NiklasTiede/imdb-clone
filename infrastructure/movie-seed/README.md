@@ -132,24 +132,24 @@ PYTHONDONTWRITEBYTECODE=1 infrastructure/object-storage/dev-seed/.venv/bin/pytho
 
 ## Build Versioned Seed Images
 
-Build the lightweight local seed image:
+Build local seed images for your current machine architecture:
 
 ```bash
 make build-seed-light SEED_VERSION=2026-05-17
-```
-
-Build the full seed image:
-
-```bash
 make build-seed-full SEED_VERSION=2026-05-17
 ```
 
-Push to Docker Hub:
+Publish multi-arch seed images to Docker Hub for Linux, Windows, Mac, and
+Kubernetes users:
 
 ```bash
-make push-seed-light SEED_VERSION=2026-05-17
-make push-seed-full SEED_VERSION=2026-05-17
+make publish-seed-light SEED_VERSION=2026-05-17
+make publish-seed-full SEED_VERSION=2026-05-17
 ```
+
+The `push-seed-light` and `push-seed-full` targets are aliases for the
+multi-arch publish targets. Override `SEED_PUBLISH_PLATFORMS` only when
+intentionally publishing a narrower platform set.
 
 Run the lightweight seed against local Compose services:
 

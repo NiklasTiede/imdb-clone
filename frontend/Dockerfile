@@ -1,4 +1,4 @@
-# docker buildx build -t imdb-clone-frontend .
+# docker build --platform linux/amd64 -t imdb-clone-frontend .
 # docker run --name imdb-clone-frontend -p 3000:80 --restart=always -d imdb-clone-frontend:latest
 
 # Stage 1: Install dependencies and build the application

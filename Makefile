@@ -6,10 +6,14 @@ SEED_LIGHT_TAG = $(SEED_IMAGE):light-$(SEED_VERSION)
 SEED_FULL_TAG = $(SEED_IMAGE):full-$(SEED_VERSION)
 SEED_CONTEXT_ROOT = build/movie-seed/docker-context
 LOCAL_USERS_SQL = src/main/resources/sql/local-users.sql
+APP_DOCKER_PLATFORM ?= linux/amd64
+APP_DOCKER_BUILD_PLATFORM_FLAG ?= --platform $(APP_DOCKER_PLATFORM)
+SEED_DOCKER_BUILD_PLATFORM_FLAG ?=
+SEED_PUBLISH_PLATFORMS ?= linux/amd64,linux/arm64
 
 # ------------ Set-up and run PostgreSQL / ElasticSearch / Object Storage  --------------------------------------------
 
-.PHONY: pull-db run-db stop-db start-db remove-db-container seed-local-users prepare-seed-light prepare-seed-full build-seed-light build-seed-full push-seed-light push-seed-full seed-light seed-full
+.PHONY: pull-db run-db stop-db start-db remove-db-container seed-local-users prepare-seed-light prepare-seed-full build-seed-light build-seed-full publish-seed-light publish-seed-full push-seed-light push-seed-full seed-light seed-full
 
 docker-compose-dev-up: ## run services for backend
 	docker compose up -d
@@ -27,16 +31,20 @@ prepare-seed-full: ## prepare full seed Docker context
 	python3 infrastructure/movie-seed/runtime/prepare_seed_context.py --profile full
 
 build-seed-light: prepare-seed-light ## build lightweight seed image
-	docker build -t $(SEED_LIGHT_TAG) $(SEED_CONTEXT_ROOT)/light
+	docker build $(SEED_DOCKER_BUILD_PLATFORM_FLAG) -t $(SEED_LIGHT_TAG) $(SEED_CONTEXT_ROOT)/light
 
 build-seed-full: prepare-seed-full ## build full seed image
-	docker build -t $(SEED_FULL_TAG) $(SEED_CONTEXT_ROOT)/full
+	docker build $(SEED_DOCKER_BUILD_PLATFORM_FLAG) -t $(SEED_FULL_TAG) $(SEED_CONTEXT_ROOT)/full
 
-push-seed-light: ## push lightweight seed image
-	docker push $(SEED_LIGHT_TAG)
+publish-seed-light: prepare-seed-light ## build and push multi-arch lightweight seed image
+	docker buildx build --platform $(SEED_PUBLISH_PLATFORMS) -t $(SEED_LIGHT_TAG) --push $(SEED_CONTEXT_ROOT)/light
 
-push-seed-full: ## push full seed image
-	docker push $(SEED_FULL_TAG)
+publish-seed-full: prepare-seed-full ## build and push multi-arch full seed image
+	docker buildx build --platform $(SEED_PUBLISH_PLATFORMS) -t $(SEED_FULL_TAG) --push $(SEED_CONTEXT_ROOT)/full
+
+push-seed-light: publish-seed-light ## build and push multi-arch lightweight seed image
+
+push-seed-full: publish-seed-full ## build and push multi-arch full seed image
 
 seed-light: ## run lightweight seed against local Docker Compose services
 	docker run --rm --network imdb-clone-network \
@@ -82,7 +90,7 @@ generate-jar: ## clean and build jar file (for building docker image)
 DOCKER_IMG_BACKEND = imdb-clone-backend
 
 docker-build-backend: ## build backend docker image from Dockerfile
-	docker build -t $(DOCKER_IMG_BACKEND) .
+	docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(DOCKER_IMG_BACKEND) .
 
 docker-run-backend: ## run backend docker container
 	docker run --name $(DOCKER_IMG_BACKEND) -p 8080:8080 $(DOCKER_IMG_BACKEND)
@@ -108,7 +116,7 @@ run-frontend: ## run frontend
 DOCKER_IMG_FRONTEND = imdb-clone-frontend
 
 docker-build-frontend: ## build frontend docker image from Dockerfile
-	cd ./frontend; docker build -t $(DOCKER_IMG_FRONTEND) .
+	cd ./frontend; docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(DOCKER_IMG_FRONTEND) .
 
 docker-run-frontend: ## run frontend docker container
 	docker run --name $(DOCKER_IMG_FRONTEND) -p 3000:3000 $(DOCKER_IMG_FRONTEND)
