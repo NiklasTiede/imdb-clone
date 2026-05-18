@@ -23,6 +23,7 @@ spec:
               set -eu
               mc alias set rustfs http://imdb-clone-rustfs:9000 "$ACCESS_KEY" "$SECRET_KEY"
               mc mb --ignore-existing rustfs/imdb-clone
+              mc anonymous set download rustfs/imdb-clone/movies
           env:
             - name: ACCESS_KEY
               valueFrom:

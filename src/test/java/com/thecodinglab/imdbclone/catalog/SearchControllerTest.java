@@ -4,6 +4,7 @@ import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchIndexMaintenance;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
@@ -37,6 +38,8 @@ class SearchControllerTest extends BaseContainers {
 
   @Autowired private MovieElasticSearchRepository movieSearchRepository;
 
+  @Autowired private MovieSearchIndexMaintenance movieSearchIndexMaintenance;
+
   private String adminToken;
   private String userToken;
 
@@ -53,8 +56,7 @@ class SearchControllerTest extends BaseContainers {
 
   @BeforeEach
   void indexSeedMovies() {
-    movieSearchRepository.deleteAll();
-    movieSearchRepository.saveAll(movieRepository.findAll());
+    movieSearchIndexMaintenance.reindexMovies();
   }
 
   @Test

@@ -12,9 +12,6 @@ import org.springframework.data.repository.query.Param;
 
 public interface MovieRepository extends JpaRepository<Movie, Long> {
 
-  /** Can be used in combination with indexMovies/partition-method to index movies */
-  List<Movie> findByImdbRatingCountBetween(Integer minRatingCount, Integer maxRatingCount);
-
   Page<Movie> findByIdIn(List<Long> movieIds, Pageable pageable);
 
   @Modifying(clearAutomatically = true, flushAutomatically = true)

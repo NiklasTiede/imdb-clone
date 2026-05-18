@@ -49,3 +49,13 @@ spec:
                 name: imdb-clone-rustfs
                 port:
                   name: endpoint
+    - host: minio.imdb-clone.the-coding-lab.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-rustfs
+                port:
+                  name: endpoint

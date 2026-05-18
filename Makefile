@@ -13,7 +13,7 @@ SEED_PUBLISH_PLATFORMS ?= linux/amd64,linux/arm64
 
 # ------------ Set-up and run PostgreSQL / ElasticSearch / Object Storage  --------------------------------------------
 
-.PHONY: pull-db run-db stop-db start-db remove-db-container seed-local-users prepare-seed-light prepare-seed-full build-seed-light build-seed-full publish-seed-light publish-seed-full push-seed-light push-seed-full seed-light seed-full
+.PHONY: pull-db run-db stop-db start-db remove-db-container seed-local-users prepare-seed-light prepare-seed-full build-seed-light build-seed-full publish-seed-light publish-seed-full push-seed-light push-seed-full seed-light seed-full reindex-local-search
 
 docker-compose-dev-up: ## run services for backend
 	docker compose up -d
@@ -74,6 +74,13 @@ seed-full: ## run full seed against local Docker Compose services
 		-e SEED_VERSION=$(SEED_VERSION) \
 		$(SEED_FULL_TAG) all
 
+reindex-local-search: ## rebuild local Elasticsearch movie index from PostgreSQL
+	@TOKEN=$$(curl -fsS -H 'Content-Type: application/json' \
+		-d '{"usernameOrEmail":"les_grossman","password":"Encrypted!Pa55worD"}' \
+		http://localhost:8080/api/auth/login \
+		| sed -n 's/.*"accessToken":"\([^"]*\)".*/\1/p'); \
+	curl -fsS -X POST -H "Authorization: Bearer $$TOKEN" \
+		http://localhost:8080/api/search/movies/reindex
 
 
 # ------------ Backend - Gradle/Docker --------------------------------------------------------------------------------

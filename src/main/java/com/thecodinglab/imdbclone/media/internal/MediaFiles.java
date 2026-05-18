@@ -13,8 +13,7 @@ import com.thecodinglab.imdbclone.media.internal.images.ProfilePhotoConstants;
 import com.thecodinglab.imdbclone.shared.error.ObjectStorageOperationException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import jakarta.transaction.Transactional;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
 import org.slf4j.Logger;
@@ -24,15 +23,10 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
-import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
-import software.amazon.awssdk.services.s3.model.PutBucketPolicyRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
@@ -215,77 +209,6 @@ public class MediaFiles implements MediaService {
               .build());
     } catch (Exception ex) {
       throw new ObjectStorageOperationException("Error while deleting file in object storage", ex);
-    }
-  }
-
-  void setUpBucket() {
-    try {
-      if (!bucketExists()) {
-        s3Client.createBucket(
-            CreateBucketRequest.builder().bucket(storageProperties.bucketName()).build());
-      }
-      String bucketPolicy = "config/object-storage-public-read-policy.json";
-      createBucketPolicyFrom(bucketPolicy);
-      logger.info(
-          "bucket [{}] was created and bucketPolicy set successfully",
-          storageProperties.bucketName());
-
-    } catch (Exception ex) {
-      logger.error("Creation of bucket [{}] failed", storageProperties.bucketName());
-      throw new ObjectStorageOperationException(
-          "Error while creating bucket in object storage", ex);
-    }
-  }
-
-  private boolean bucketExists() {
-    try {
-      s3Client.headBucket(
-          HeadBucketRequest.builder().bucket(storageProperties.bucketName()).build());
-      return true;
-    } catch (NoSuchBucketException ex) {
-      return false;
-    } catch (S3Exception ex) {
-      if (ex.statusCode() == 404) {
-        return false;
-      }
-      throw ex;
-    }
-  }
-
-  private void createBucketPolicyFrom(String bucketPolicy) {
-    String policyConfig = readResourceFile(bucketPolicy);
-    try {
-      s3Client.putBucketPolicy(
-          PutBucketPolicyRequest.builder()
-              .bucket(storageProperties.bucketName())
-              .policy(policyConfig)
-              .build());
-    } catch (Exception ex) {
-      logger.error("Creation of bucket policy failed");
-      throw new ObjectStorageOperationException(
-          "Error while creating bucket policy in object storage", ex);
-    }
-  }
-
-  private String readResourceFile(String resourcePath) {
-    try {
-      InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
-      if (inputStream == null) {
-        throw new FileNotFoundException("File not found: %s".formatted(resourcePath));
-      }
-
-      try (BufferedReader bufferedReader =
-          new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String line;
-        while ((line = bufferedReader.readLine()) != null) {
-          stringBuilder.append(line);
-        }
-        return stringBuilder.toString();
-      }
-    } catch (IOException ex) {
-      logger.error("Reading file with path [{}] failed", resourcePath);
-      throw new ObjectStorageOperationException("Error while reading policy config", ex);
     }
   }
 

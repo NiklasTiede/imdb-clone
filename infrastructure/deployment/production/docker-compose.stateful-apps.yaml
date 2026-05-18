@@ -40,6 +40,25 @@ services:
       - "traefik.http.routers.rustfs.entrypoints=websecure"
       - "traefik.http.routers.rustfs.tls.certresolver=myresolver"
 
+  imdb-clone-rustfs-init:
+    image: minio/mc:latest
+    depends_on:
+      - imdb-clone-rustfs
+    restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      set -eu
+      until mc alias set rustfs http://imdb-clone-rustfs:9000 "$$ACCESS_KEY" "$$SECRET_KEY"; do
+        sleep 2
+      done
+      mc mb --ignore-existing rustfs/imdb-clone
+      mc anonymous set download rustfs/imdb-clone/movies
+    environment:
+      - ACCESS_KEY=${OBJECT_STORAGE_ACCESS_KEY_ENV_VAR}
+      - SECRET_KEY=${OBJECT_STORAGE_SECRET_KEY_ENV_VAR}
+    networks:
+      - imdb-clone-network
+
   imdb-clone-seed-full:
     image: ${IMDB_CLONE_SEED_FULL_IMAGE}
     profiles:

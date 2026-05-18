@@ -6,6 +6,8 @@ import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,14 +17,19 @@ public class MovieSearchIndexMaintenance {
 
   private final MovieRepository movieRepository;
   private final MovieElasticSearchRepository movieSearchRepository;
+  private final ElasticsearchOperations elasticsearchOperations;
 
   public MovieSearchIndexMaintenance(
-      MovieRepository movieRepository, MovieElasticSearchRepository movieSearchRepository) {
+      MovieRepository movieRepository,
+      MovieElasticSearchRepository movieSearchRepository,
+      ElasticsearchOperations elasticsearchOperations) {
     this.movieRepository = movieRepository;
     this.movieSearchRepository = movieSearchRepository;
+    this.elasticsearchOperations = elasticsearchOperations;
   }
 
   public long reindexMovies() {
+    createMoviesIndexIfMissing();
     movieSearchRepository.deleteAll();
 
     long indexedMovies = 0;
@@ -40,5 +47,12 @@ public class MovieSearchIndexMaintenance {
     } while (page.hasNext());
 
     return indexedMovies;
+  }
+
+  private void createMoviesIndexIfMissing() {
+    IndexOperations index = elasticsearchOperations.indexOps(Movie.class);
+    if (!index.exists()) {
+      index.createWithMapping();
+    }
   }
 }

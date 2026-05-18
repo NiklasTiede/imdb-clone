@@ -65,10 +65,14 @@ Here's a diagram of the setup:
 
 ## How to Run this Project Locally
 
-The app can be built in 2 steps:
+The backend does not create buckets, seed data, or rebuild Elasticsearch as a
+hidden startup side effect. Local setup is explicit and repeatable:
 
-1. Run the Spring Boot Backend with `./gradlew bootRun` (this will automatically spin up PostgreSQL, Elasticsearch, and RustFS containers)
-2. Run the React Frontend with `yarn install` & `yarn start`
+1. Start PostgreSQL, Elasticsearch, and RustFS with Docker Compose.
+2. Start the Spring Boot backend so Flyway creates the schema.
+3. Seed local users, movies, and media.
+4. Rebuild the Elasticsearch movie index.
+5. Start the React frontend.
 
 ---
 
@@ -83,24 +87,38 @@ the [infrastructure](./infrastructure/README.md)-folder.
 
 ### Seed Local Movie Data
 
-After starting PostgreSQL, RustFS, and Elasticsearch with Docker Compose, load
-local demo users and the lightweight movie catalog:
+Start PostgreSQL, RustFS, and Elasticsearch:
 
 ```bash
 make docker-compose-dev-up
+```
+
+The Docker Compose setup includes a one-shot RustFS init container that creates
+the `imdb-clone` bucket and makes `imdb-clone/movies/*` publicly readable.
+
+Start the backend in another terminal and wait until it is ready:
+
+```bash
+./gradlew bootRun
+```
+
+Then load local demo users and the lightweight movie catalog:
+
+```bash
 make seed-local-users
 make seed-light SEED_VERSION=2026-05-17
+make reindex-local-search
 ```
 
 The seed is idempotent, so rerunning it updates movies and media without wiping
-user data. `seed-local-users` creates the local admin/user accounts without
-touching movie rows.
+user data. `seed-local-users` creates the local admin/user accounts, and
+`reindex-local-search` rebuilds Elasticsearch from PostgreSQL.
 
 --- 
 
 ### 1. Set Up Spring Boot Backend and Stateful Services: PostgreSQL, Elasticsearch and Object Storage
 
-Now we can start the Spring Boot app:
+If the backend is not already running, start it with:
 
 ```shell
 ./gradlew build

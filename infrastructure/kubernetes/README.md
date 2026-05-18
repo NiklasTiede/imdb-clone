@@ -71,3 +71,11 @@ exist in k3s, replace the image tag and secret names, then let Argo CD apply it.
 
 The seed job is idempotent. Rerunning it upserts movie rows and uploads media
 objects without deleting existing catalog data.
+
+After the seed job completes, rebuild the Elasticsearch movie index explicitly
+through the backend admin endpoint. The backend does not reindex movies as an
+application startup side effect.
+
+The home-cluster GitOps tree also contains `rustfs-bucket-job.yaml`, an
+idempotent Argo CD hook that creates the `imdb-clone` bucket and makes
+`imdb-clone/movies/*` publicly readable before seeded media is served.

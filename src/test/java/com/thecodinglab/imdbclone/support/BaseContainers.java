@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,15 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 /**
  * Provides a consistent Test Data Set across all integration tests. The initial data set for the
@@ -163,5 +173,39 @@ public class BaseContainers {
     elasticContainer.start();
 
     rustfsContainer.start();
+    createRustfsBucket();
+  }
+
+  private static void createRustfsBucket() {
+    try (S3Client s3Client =
+        S3Client.builder()
+            .endpointOverride(
+                URI.create(
+                    "http://%s:%d"
+                        .formatted(rustfsContainer.getHost(), rustfsContainer.getMappedPort(9000))))
+            .credentialsProvider(
+                StaticCredentialsProvider.create(
+                    AwsBasicCredentials.create("rustfsadmin", "rustfsadmin")))
+            .region(Region.US_EAST_1)
+            .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
+            .build()) {
+      if (!bucketExists(s3Client)) {
+        s3Client.createBucket(CreateBucketRequest.builder().bucket("imdb-clone").build());
+      }
+    }
+  }
+
+  private static boolean bucketExists(S3Client s3Client) {
+    try {
+      s3Client.headBucket(HeadBucketRequest.builder().bucket("imdb-clone").build());
+      return true;
+    } catch (NoSuchBucketException ex) {
+      return false;
+    } catch (S3Exception ex) {
+      if (ex.statusCode() == 404) {
+        return false;
+      }
+      throw ex;
+    }
   }
 }
