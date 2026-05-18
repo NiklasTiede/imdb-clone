@@ -19,7 +19,7 @@ JWT_SECRET_ENV_VAR=$(generate_password 88)
 
 FRONTEND_APP_ADDRESS_ENV_VAR=https://imdb-clone.the-coding-lab.com
 BACKEND_APP_ADDRESS_ENV_VAR=https://backend.imdb-clone.the-coding-lab.com
-OBJECT_STORAGE_ADDRESS_ENV_VAR=https://rustfs.imdb-clone.the-coding-lab.com
+OBJECT_STORAGE_ADDRESS_ENV_VAR=https://object-storage.imdb-clone.the-coding-lab.com
 
 MAIL_USERNAME_ENV_VAR=your-own-email@email.com
 MAIL_PASSWORD_ENV_VAR=your-own-password

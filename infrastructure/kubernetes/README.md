@@ -79,3 +79,14 @@ application startup side effect.
 The home-cluster GitOps tree also contains `rustfs-bucket-job.yaml`, an
 idempotent Argo CD hook that creates the `imdb-clone` bucket and makes
 `imdb-clone/movies/*` publicly readable before seeded media is served.
+
+## Public Hosts
+
+The home-cluster ingress exposes three public hostnames:
+
+- `imdb-clone.the-coding-lab.com` for the frontend
+- `backend.imdb-clone.the-coding-lab.com` for the backend API
+- `object-storage.imdb-clone.the-coding-lab.com` for public movie media
+
+All three DNS records should point to the current public home IP. The router
+must forward TCP ports `80` and `443` to the k3s node at `192.168.178.44`.

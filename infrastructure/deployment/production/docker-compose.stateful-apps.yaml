@@ -36,7 +36,7 @@ services:
     command: /data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.rustfs.rule=Host(`rustfs.imdb-clone.the-coding-lab.com`)"
+      - "traefik.http.routers.rustfs.rule=Host(`object-storage.imdb-clone.the-coding-lab.com`)"
       - "traefik.http.routers.rustfs.entrypoints=websecure"
       - "traefik.http.routers.rustfs.tls.certresolver=myresolver"
 
