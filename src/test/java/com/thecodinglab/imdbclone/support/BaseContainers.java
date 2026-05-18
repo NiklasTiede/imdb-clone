@@ -16,9 +16,9 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -56,8 +56,8 @@ public class BaseContainers {
   private static final DockerImageName rustfsImage =
       DockerImageName.parse("rustfs/rustfs:1.0.0-beta.2");
 
-  public static PostgreSQLContainer<?> postgreSQLContainer =
-      new PostgreSQLContainer<>(postgreSQLImage)
+  public static PostgreSQLContainer postgreSQLContainer =
+      new PostgreSQLContainer(postgreSQLImage)
           .withDatabaseName("movie_db")
           .withUsername("test")
           .withPassword("test");
