@@ -10,7 +10,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: seed
-          image: niklastiede/imdb-clone-seed:full-REPLACE_WITH_VERSION
+          image: niklastiede/imdb-clone-seed:full-v0.2.1
           args: ["all"]
           env:
             - name: POSTGRES_HOST
@@ -46,4 +46,4 @@ spec:
             - name: SEED_NAME
               value: full
             - name: SEED_VERSION
-              value: REPLACE_WITH_VERSION
+              value: v0.2.1
