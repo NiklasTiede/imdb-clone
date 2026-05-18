@@ -1,10 +1,24 @@
 
-# Current Simple Git Workflow
+# Current Git Workflow
 
 For the beginning I will just work directly on the
 master-branch. CI will be triggered with every
-push. And for publishing the docker image I
-have to trigger this manually (workflow_dispatch).
+push.
+
+## Version-Gated App Releases
+
+`VERSION` is the shared backend/frontend app version. Pushes to `master`
+run CI, but app images are published only when `VERSION` changes or the CD
+workflow is manually dispatched.
+
+For version `0.2.2`, the workflow publishes:
+
+- `niklastiede/imdb-clone-backend:v0.2.2`
+- `niklastiede/imdb-clone-frontend:v0.2.2`
+
+After publishing, the workflow resolves Docker digests and commits updates to
+`infrastructure/clusters/home/apps/backend.yaml` and `frontend.yaml`. Argo CD
+then deploys those manifest changes.
 
 The Playwright e2e workflow is also manual-only. It starts
 PostgreSQL, Elasticsearch, Object Storage, the Spring Boot backend, and the
