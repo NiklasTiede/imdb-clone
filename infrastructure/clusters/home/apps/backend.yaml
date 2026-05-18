@@ -27,20 +27,24 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://imdb-clone-postgresql.databases.svc.cluster.local:5432/movie_db
+            - name: SPRING_ELASTICSEARCH_URIS
+              value: http://imdb-clone-elasticsearch.databases.svc.cluster.local:9200
+            - name: IMDB_CLONE_MEDIA_STORAGE_URI
+              value: http://imdb-clone-rustfs.databases.svc.cluster.local:9000
           envFrom:
             - secretRef:
                 name: backend-runtime
           readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
+            tcpSocket:
               port: management
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 12
           livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
+            tcpSocket:
               port: management
             initialDelaySeconds: 90
             periodSeconds: 20

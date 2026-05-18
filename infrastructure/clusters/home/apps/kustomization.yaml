@@ -3,8 +3,10 @@ kind: Kustomization
 resources:
   - namespaces.yaml
   - backend.yaml
+  - frontend.yaml
   - eck-operator.yaml
   - elasticsearch.yaml
+  - ingress.yaml
   - postgresql.yaml
   - rustfs.yaml
   - rustfs-bucket-job.yaml

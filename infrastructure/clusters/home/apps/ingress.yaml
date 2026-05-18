@@ -1,0 +1,51 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: imdb-clone-public
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: imdb-clone.the-coding-lab.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-frontend
+                port:
+                  name: http
+    - host: backend.imdb-clone.the-coding-lab.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-backend
+                port:
+                  name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: imdb-clone-rustfs-public
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: rustfs.imdb-clone.the-coding-lab.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-rustfs
+                port:
+                  name: endpoint

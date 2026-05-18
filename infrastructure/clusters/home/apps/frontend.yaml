@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imdb-clone-frontend
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: imdb-clone-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: imdb-clone-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: niklastiede/imdb-clone-frontend:v0.2.1@sha256:dc57ae8388086126dbc89cd30a09acc1a466f7671f3392f32b9e88797efd2d9d
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: imdb-clone-frontend
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: imdb-clone-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
