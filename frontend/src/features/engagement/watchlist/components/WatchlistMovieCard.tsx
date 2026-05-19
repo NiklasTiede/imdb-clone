@@ -11,7 +11,7 @@ import {
   posterHoverTargetClassName,
   posterHoverTargetSx,
 } from "../../../catalog";
-import { ObjectStorageImageSize, PosterImage } from "../../../../shared/media";
+import { MoviePosterImageSize, PosterImage } from "../../../../shared/media";
 import { movieColors } from "../../../../theme";
 import type { WatchlistItem } from "../model/watchlist";
 import { formatMovieMeta, formatRelativeDate } from "../utils/watchlistFormat";
@@ -63,7 +63,7 @@ const WatchlistMovieCard = ({ item, onRemove }: WatchlistMovieCardProps) => {
         >
           <PosterImage
             imageUrlToken={movie?.imageUrlToken}
-            size={ObjectStorageImageSize.Large}
+            size={MoviePosterImageSize.Medium}
             sx={{ height: "100%", objectFit: "cover", width: "100%" }}
           />
           {movie?.imdbRating !== undefined && (

@@ -11,7 +11,7 @@ import {
   posterHoverTargetClassName,
   posterHoverTargetSx,
 } from "../../../catalog";
-import { ObjectStorageImageSize, PosterImage } from "../../../../shared/media";
+import { MoviePosterImageSize, PosterImage } from "../../../../shared/media";
 import { formatMovieMeta } from "../../watchlist";
 import type { RatedMovie } from "../api/ratingQueries";
 import {
@@ -68,7 +68,7 @@ const RatingsMovieCard = ({ item, onRemove }: RatingsMovieCardProps) => {
         >
           <PosterImage
             imageUrlToken={movie.imageUrlToken}
-            size={ObjectStorageImageSize.Large}
+            size={MoviePosterImageSize.Medium}
             sx={{ height: "100%", objectFit: "cover", width: "100%" }}
           />
           <Box

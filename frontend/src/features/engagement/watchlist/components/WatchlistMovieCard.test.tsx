@@ -31,7 +31,7 @@ describe("WatchlistMovieCard", () => {
     expect(screen.getByText("2014 · 117 min")).toBeTruthy();
     expect(screen.getByText(/^Added /)).toBeTruthy();
     expect(screen.getByAltText("movie poster").getAttribute("src")).toMatch(
-      /nightcrawlerToken_size_600x900\.jpg/,
+      /nightcrawlerToken_size_300x450\.webp/,
     );
   });
 

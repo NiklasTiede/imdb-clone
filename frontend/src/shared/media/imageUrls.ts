@@ -21,7 +21,8 @@ const getObjectStorageHost = () =>
 
 export type MovieImageSize =
   | ObjectStorageImageSize.Small
-  | ObjectStorageImageSize.Large;
+  | ObjectStorageImageSize.Large
+  | MoviePosterImageSize;
 
 const buildObjectUrl = (path: string): string =>
   `${getObjectStorageHost()}/imdb-clone/${path}`;
