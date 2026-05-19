@@ -1,4 +1,4 @@
-# This file serves also as a cheat sheet
+# Command index for local development, seed data, Docker images, and release support.
 
 SEED_IMAGE = niklastiede/imdb-clone-seed
 SEED_VERSION ?= local
@@ -11,40 +11,60 @@ APP_DOCKER_BUILD_PLATFORM_FLAG ?= --platform $(APP_DOCKER_PLATFORM)
 SEED_DOCKER_BUILD_PLATFORM_FLAG ?=
 SEED_PUBLISH_PLATFORMS ?= linux/amd64,linux/arm64
 
-# ------------ Set-up and run PostgreSQL / ElasticSearch / Object Storage  --------------------------------------------
+.DEFAULT_GOAL := help
 
-.PHONY: pull-db run-db stop-db start-db remove-db-container seed-local-users prepare-seed-light prepare-seed-full build-seed-light build-seed-full publish-seed-light publish-seed-full push-seed-light push-seed-full seed-light seed-full reindex-local-search
+##@ Prerequisites
 
-docker-compose-dev-up: ## run services for backend
+.PHONY: check-local-tools check-seed-tools
+
+check-local-tools: ## check tools needed for the README local workflow
+	@missing=0; \
+	for tool in docker java curl sed node yarn; do \
+		if ! command -v $$tool >/dev/null 2>&1; then \
+			echo "missing: $$tool"; \
+			missing=1; \
+		fi; \
+	done; \
+	if ! docker compose version >/dev/null 2>&1; then \
+		echo "missing: docker compose"; \
+		missing=1; \
+	fi; \
+	if [ $$missing -eq 0 ]; then \
+		echo "All local development tools are available."; \
+	else \
+		exit 1; \
+	fi
+
+check-seed-tools: check-local-tools ## check extra tools needed to build/publish seed images
+	@missing=0; \
+	for tool in python3; do \
+		if ! command -v $$tool >/dev/null 2>&1; then \
+			echo "missing: $$tool"; \
+			missing=1; \
+		fi; \
+	done; \
+	if ! docker buildx version >/dev/null 2>&1; then \
+		echo "missing: docker buildx"; \
+		missing=1; \
+	fi; \
+	if [ $$missing -eq 0 ]; then \
+		echo "All seed image tools are available."; \
+	else \
+		exit 1; \
+	fi
+
+##@ Local development
+
+.PHONY: docker-compose-dev-up docker-compose-dev-down seed-local-users seed-light seed-full reindex-local-search
+
+docker-compose-dev-up: ## start PostgreSQL, Elasticsearch, and RustFS for local development
 	docker compose up -d
 
-docker-compose-dev-down: ## stop services for backend
+docker-compose-dev-down: ## stop local Docker Compose services
 	docker compose down
 
 seed-local-users: ## create local roles and demo accounts without touching movie data
 	docker exec -i imdb-clone-postgresql psql -U myroot -d movie_db < $(LOCAL_USERS_SQL)
-
-prepare-seed-light: ## prepare lightweight seed Docker context
-	python3 infrastructure/movie-seed/runtime/prepare_seed_context.py --profile light
-
-prepare-seed-full: ## prepare full seed Docker context
-	python3 infrastructure/movie-seed/runtime/prepare_seed_context.py --profile full
-
-build-seed-light: prepare-seed-light ## build lightweight seed image
-	docker build $(SEED_DOCKER_BUILD_PLATFORM_FLAG) -t $(SEED_LIGHT_TAG) $(SEED_CONTEXT_ROOT)/light
-
-build-seed-full: prepare-seed-full ## build full seed image
-	docker build $(SEED_DOCKER_BUILD_PLATFORM_FLAG) -t $(SEED_FULL_TAG) $(SEED_CONTEXT_ROOT)/full
-
-publish-seed-light: prepare-seed-light ## build and push multi-arch lightweight seed image
-	docker buildx build --platform $(SEED_PUBLISH_PLATFORMS) -t $(SEED_LIGHT_TAG) --push $(SEED_CONTEXT_ROOT)/light
-
-publish-seed-full: prepare-seed-full ## build and push multi-arch full seed image
-	docker buildx build --platform $(SEED_PUBLISH_PLATFORMS) -t $(SEED_FULL_TAG) --push $(SEED_CONTEXT_ROOT)/full
-
-push-seed-light: publish-seed-light ## build and push multi-arch lightweight seed image
-
-push-seed-full: publish-seed-full ## build and push multi-arch full seed image
 
 seed-light: ## run lightweight seed against local Docker Compose services
 	docker run --rm --network imdb-clone-network \
@@ -82,8 +102,33 @@ reindex-local-search: ## rebuild local Elasticsearch movie index from PostgreSQL
 	curl -fsS -X POST -H "Authorization: Bearer $$TOKEN" \
 		http://localhost:8080/api/search/movies/reindex
 
+##@ Seed images
 
-# ------------ Backend - Gradle/Docker --------------------------------------------------------------------------------
+.PHONY: prepare-seed-light prepare-seed-full build-seed-light build-seed-full publish-seed-light publish-seed-full push-seed-light push-seed-full
+
+prepare-seed-light: ## prepare lightweight seed Docker context
+	python3 infrastructure/movie-seed/runtime/prepare_seed_context.py --profile light
+
+prepare-seed-full: ## prepare full seed Docker context
+	python3 infrastructure/movie-seed/runtime/prepare_seed_context.py --profile full
+
+build-seed-light: prepare-seed-light ## build lightweight seed image
+	docker build $(SEED_DOCKER_BUILD_PLATFORM_FLAG) -t $(SEED_LIGHT_TAG) $(SEED_CONTEXT_ROOT)/light
+
+build-seed-full: prepare-seed-full ## build full seed image
+	docker build $(SEED_DOCKER_BUILD_PLATFORM_FLAG) -t $(SEED_FULL_TAG) $(SEED_CONTEXT_ROOT)/full
+
+publish-seed-light: prepare-seed-light ## build and push multi-arch lightweight seed image
+	docker buildx build --platform $(SEED_PUBLISH_PLATFORMS) -t $(SEED_LIGHT_TAG) --push $(SEED_CONTEXT_ROOT)/light
+
+publish-seed-full: prepare-seed-full ## build and push multi-arch full seed image
+	docker buildx build --platform $(SEED_PUBLISH_PLATFORMS) -t $(SEED_FULL_TAG) --push $(SEED_CONTEXT_ROOT)/full
+
+push-seed-light: publish-seed-light ## build and push multi-arch lightweight seed image
+
+push-seed-full: publish-seed-full ## build and push multi-arch full seed image
+
+##@ Backend
 
 .PHONY: run-backend generate-jar docker-build-backend docker-run-backend
 
@@ -102,9 +147,7 @@ docker-build-backend: ## build backend docker image from Dockerfile
 docker-run-backend: ## run backend docker container
 	docker run --name $(DOCKER_IMG_BACKEND) -p 8080:8080 $(DOCKER_IMG_BACKEND)
 
-
-
-# ------------ Frontend - NPM/Docker  ---------------------------------------------------------------------------------
+##@ Frontend
 
 .PHONY: npm-install generate-client npm-lint run-frontend docker-build-frontend docker-run-frontend
 
@@ -128,9 +171,7 @@ docker-build-frontend: ## build frontend docker image from Dockerfile
 docker-run-frontend: ## run frontend docker container
 	docker run --name $(DOCKER_IMG_FRONTEND) -p 3000:3000 $(DOCKER_IMG_FRONTEND)
 
-
-
-# ------------  Docker  -----------------------------------------------------------------------------------------------
+##@ Docker housekeeping
 
 .PHONY: docker-show docker-clean
 
@@ -142,13 +183,9 @@ docker-clean: ## remove imdb-clone docker images and containers
 	docker rmi -f $(DOCKER_IMG_FRONTEND) $(DOCKER_IMG_BACKEND)
 	docker rm -f $(DOCKER_IMG_FRONTEND) $(DOCKER_IMG_BACKEND)
 
-
-
-# ------------  Help  -------------------------------------------------------------------------------------------------
+##@ Help
 
 .PHONY: help
 
-help: ## This help.
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-.DEFAULT_GOAL := help
+help: ## show this command index
+	@awk 'BEGIN {FS = ":.*?## "; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^##@ / {printf "\n\033[1m%s\033[0m\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*?## / {printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
