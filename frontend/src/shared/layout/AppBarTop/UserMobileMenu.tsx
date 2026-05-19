@@ -1,6 +1,5 @@
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import MailIcon from "@mui/icons-material/Mail";
-import Badge from "@mui/material/Badge";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -45,10 +44,8 @@ const UserMobileMenu = ({
       to="your-messages"
     >
       <MenuItem style={{ color: textColor }}>
-        <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-          <Badge badgeContent={4} color="error">
-            <MailIcon />
-          </Badge>
+        <IconButton size="large" aria-label="messages" color="inherit">
+          <MailIcon />
         </IconButton>
         <p>{i18n.general.messages}</p>
       </MenuItem>

@@ -1,6 +1,5 @@
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import Avatar from "@mui/material/Avatar";
-import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
@@ -29,9 +28,7 @@ const UserActions = ({
         size="large"
         to="/your-messages"
       >
-        <Badge badgeContent={4} color="error">
-          <NotificationsOutlinedIcon />
-        </Badge>
+        <NotificationsOutlinedIcon />
       </IconButton>
     </Tooltip>
     <Tooltip
