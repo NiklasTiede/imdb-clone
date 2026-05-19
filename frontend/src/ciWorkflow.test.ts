@@ -15,7 +15,7 @@ describe("CI workflow configuration", () => {
     );
 
     const waitForRustFsStep = workflow.match(
-      /- name: Wait for RustFS[\s\S]*?(?=\n      - name: )/,
+      /- name: Wait for RustFS[\s\S]*?(?=\n {6}- name: )/,
     )?.[0];
 
     expect(waitForRustFsStep).toBeDefined();
