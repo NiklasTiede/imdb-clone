@@ -1,16 +1,22 @@
-
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
-    <img alt="imdb-clone-logo" width="500" src="docs/assets/imdb-clone-logo.jpg" />
+    <img alt="IMDb Clone logo" width="460" src="docs/assets/imdb-clone-logo.jpg" />
   </a>
-
-  <h3 align="center">This <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Project</a>  exemplifies a Real-World Java / React Web App running on Kubernetes.</h3>
 </p>
 
----
+<h3 align="center">
+  Production-style React + Spring Boot app with Elasticsearch, object storage, and k3s GitOps.
+</h3>
 
 <p align="center">
+  <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Live Demo</a>
+  ·
+  <a href="https://backend.imdb-clone.the-coding-lab.com/api/movie/1" target="_blank">Backend API</a>
+  ·
+  <a href="./infrastructure/kubernetes/README.md">Kubernetes Setup</a>
+</p>
 
+<p align="center">
   <a href="https://stats.uptimerobot.com/5KMN7t0E5M">
     <img alt="Uptime Robot Status" src="https://img.shields.io/uptimerobot/status/m794347971-509793e3b2e4d89beb04d2fb" />
   </a>
@@ -23,107 +29,170 @@
   <a href="https://github.com/NiklasTiede/IMDb-Clone/issues">
     <img alt="issues" src="https://img.shields.io/github/issues-raw/niklastiede/imdb-clone" />
   </a>
-  <a href="https://codecov.io/gh/NiklasTiede/imdb-clone" >
-    <img alt="Codecov" src="https://codecov.io/gh/NiklasTiede/imdb-clone/graph/badge.svg?token=Y6Xrrlz0Vv"/>
+  <a href="https://codecov.io/gh/NiklasTiede/imdb-clone">
+    <img alt="Codecov" src="https://codecov.io/gh/NiklasTiede/imdb-clone/graph/badge.svg?token=Y6Xrrlz0Vv" />
   </a>
-  <a>
+  <a href="./LICENSE">
     <img alt="license" src="https://img.shields.io/github/license/niklastiede/imdb-clone" />
   </a>
 </p>
 
-## Techstack
-- Languages: Java 25 / TypeScript 6
-- Frameworks: Spring Boot 4 / React 19 / Material UI 9
-- Rel. Database: PostgreSQL 18
-- SearchEngine: Elasticsearch 9
-- File Storage: RustFS S3-compatible object storage
-- Deployment: single-node k3s Kubernetes home server with Traefik ingress and cert-manager HTTPS
-- Build / test tooling: Gradle 9.5.0 / Testcontainers 2
+<p align="center">
+  <img alt="IMDb Clone product walkthrough" width="760" src="docs/assets/imdb-clone-screenshot.webp" />
+</p>
 
-The app is secured with JWT authentication. The techstack is kept up-to-date. 
+## Overview
 
----
+IMDb Clone is a full-stack movie catalog built as a production-style reference application. It goes beyond a CRUD demo:
+movies are stored in PostgreSQL, searched through Elasticsearch, served with poster and backdrop media from
+S3-compatible object storage, and deployed to a self-hosted Kubernetes cluster through GitOps.
 
-## Live Kubernetes Deployment
+The project is intentionally kept close to a real web application architecture: generated API clients, explicit seed
+data, JWT-based authentication, automated CI/CD, infrastructure manifests, and local developer workflows are all part of
+the repository.
 
-The application is deployed on a self-hosted single-node k3s Kubernetes cluster running on my home server. The cluster
-runs the Spring Boot backend, React frontend, PostgreSQL, Elasticsearch, and RustFS object storage as Kubernetes
-workloads. Public traffic is routed through Traefik ingress, HTTPS certificates are managed by cert-manager, and the
-home router forwards ports `80` and `443` to the k3s node.
+## What This Project Demonstrates
 
-You can visit the live deployment here: [https://imdb-clone.the-coding-lab.com/](https://imdb-clone.the-coding-lab.com/).
-The backend API and public object storage are exposed through dedicated subdomains for the Kubernetes deployment:
+- Modular Spring Boot backend with PostgreSQL, Flyway, Spring Security, JWT auth, OpenAPI, and Testcontainers.
+- React frontend with TypeScript, Material UI, TanStack Query, generated Axios clients, and feature-oriented structure.
+- Elasticsearch-backed movie search with PostgreSQL as the relational source of truth.
+- S3-compatible media storage through RustFS for movie posters, backdrops, and profile images.
+- Repeatable local development with Docker Compose, lightweight seed data, and explicit search reindexing.
+- Self-hosted k3s deployment with Argo CD, Traefik ingress, cert-manager HTTPS, and encrypted GitOps secrets.
+- Version-gated release workflow that builds Docker images and updates Kubernetes image digests from one `VERSION` file.
 
+## Architecture
+
+Runtime containers:
+
+```mermaid
+flowchart LR
+  browser["Browser"]
+
+  subgraph app["IMDb Clone"]
+    frontend["React Frontend"]
+    backend["Spring Boot API"]
+  end
+
+  subgraph data["Data and media"]
+    postgres[("PostgreSQL")]
+    elastic[("Elasticsearch")]
+    rustfs[("RustFS / S3")]
+  end
+
+  browser --> frontend
+  frontend --> backend
+  frontend --> rustfs
+  backend --> postgres
+  backend --> elastic
+  backend --> rustfs
+  postgres -. "explicit reindex" .-> elastic
+```
+
+The backend owns the application domain and persists movie, identity, account, and engagement data in PostgreSQL.
+Elasticsearch is used as a derived search index and can be rebuilt explicitly from PostgreSQL. RustFS provides
+S3-compatible object storage for public movie media and private account uploads. The React frontend talks to the backend
+through generated API clients and loads public media through the object-storage host.
+
+Delivery pipeline:
+
+```mermaid
+flowchart LR
+  version["VERSION bump"]
+  ci["GitHub Actions"]
+  registry["Docker Hub"]
+  manifests["Kubernetes manifests"]
+  argocd["Argo CD"]
+  cluster["k3s home cluster"]
+  ingress["Traefik + cert-manager"]
+  public["Public HTTPS hosts"]
+
+  version --> ci
+  ci --> registry
+  ci --> manifests
+  manifests --> argocd
+  registry --> cluster
+  argocd --> cluster
+  cluster --> ingress
+  ingress --> public
+```
+
+## Live Deployment
+
+The public deployment runs on a Minisforum UM560 home server as a single-node k3s cluster.
+
+- Frontend: [https://imdb-clone.the-coding-lab.com/](https://imdb-clone.the-coding-lab.com/)
 - Backend API: [https://backend.imdb-clone.the-coding-lab.com/](https://backend.imdb-clone.the-coding-lab.com/)
 - Movie media: [https://object-storage.imdb-clone.the-coding-lab.com/](https://object-storage.imdb-clone.the-coding-lab.com/)
 
-The Kubernetes manifests, GitOps setup, and home-cluster notes live in
+Kubernetes manifests and home-cluster notes live in
 [infrastructure/kubernetes](./infrastructure/kubernetes/README.md) and
 [infrastructure/clusters/home](./infrastructure/clusters/home).
 
----
+## Tech Stack
 
-## Motivation
+| Area | Technology |
+| --- | --- |
+| Backend | Java 25, Spring Boot 4, Spring Security, Spring Data JPA, Flyway |
+| Frontend | React 19, TypeScript 6, Material UI 9, TanStack Query, Vite |
+| Data | PostgreSQL 18, Elasticsearch 9 |
+| Media | RustFS, S3-compatible object storage, WebP poster/backdrop variants |
+| API | OpenAPI spec, generated Axios client |
+| Testing | JUnit, Spring Boot Test, Testcontainers, Vitest, React Testing Library |
+| Delivery | Docker, GitHub Actions, k3s, Argo CD, Traefik, cert-manager, SOPS/age |
 
-When entering the field of software engineering you need to learn how to build applications professionally.
-You need to learn from good code bases (at best: similar to company code). There are the typical blog examples 
-([here](https://github.com/gothinkster/realworld)) but what is about search functionality or the handling 
-of images? How is the App deployed on a Kubernetes home server? How to generate client code with openapi-specifications?
-How can I preload my App with data? The answer to all these questions and more can be found in this codebase.
+## Features
 
-The project can be rather easily rebuild locally (for a project of this size). If you want to explore a deployed 
-instance of the IMDB Clone then visit [imdb-clone.the-coding-lab.com](https://imdb-clone.the-coding-lab.com/). 
-Here's a diagram of the setup:
+- Browse and search a seeded movie catalog with poster and backdrop media.
+- View movie detail pages with metadata, ratings, trailers, and engagement data.
+- Register and log in with JWT-backed authentication.
+- Maintain account settings and profile images.
+- Rate movies, write comments, and manage watched movies.
+- Rebuild the Elasticsearch index from PostgreSQL through an explicit admin flow.
+- Seed local and production-like environments with versioned movie/media images.
 
-<p align="center">
-  <img  alt="architecture-diagram" width="500" src="docs/assets/imdb-clone-flow-schema.svg" />
+## Run Locally
 
-<h4 align="center">Architecture Diagram showing the App's Service Interactions.</h4>
-</p>
+### Prerequisites
 
----
+- Java 25
+- Docker with Compose
+- Node.js 24 and Yarn
+- Make
 
-## How to Run this Project Locally
+The root [`Makefile`](./Makefile) is a command index for common workflows. It assumes these tools are installed
+locally; you can check the local development prerequisites with:
 
-The production-like deployment runs on Kubernetes, while local development uses Docker Compose for the stateful
-services. The backend does not create buckets, seed data, or rebuild Elasticsearch as a hidden startup side effect.
-Local setup is explicit and repeatable:
+```bash
+make check-local-tools
+```
 
-1. Start PostgreSQL, Elasticsearch, and RustFS with Docker Compose.
-2. Start the Spring Boot backend so Flyway creates the schema.
-3. Seed local users, movies, and media.
-4. Rebuild the Elasticsearch movie index.
-5. Start the React frontend.
+Run `make help` to see all grouped targets.
 
----
+### 1. Start Stateful Services
 
-### 1. Set Up Stateful Services: PostgreSQL, Elasticsearch and Object Storage
-
-At first, we have to run the with data preloaded stateful services (PostgreSQL, Elasticsearch and
-RustFS object storage) which are used by the backend. I created a docker image of each service preloaded with 
-data, so we just have to execute the `docker-compose.yaml`.
-
-For more information on how data were collected, processed and imported look into 
-the [infrastructure](./infrastructure/README.md)-folder.
-
-### Seed Local Movie Data
-
-Start PostgreSQL, RustFS, and Elasticsearch:
+Start PostgreSQL, Elasticsearch, and RustFS:
 
 ```bash
 make docker-compose-dev-up
 ```
 
-The Docker Compose setup includes a one-shot RustFS init container that creates
-the `imdb-clone` bucket and makes `imdb-clone/movies/*` publicly readable.
+The Docker Compose setup includes a one-shot RustFS init container that creates the `imdb-clone` bucket and makes
+`imdb-clone/movies/*` publicly readable.
 
-Start the backend in another terminal and wait until it is ready:
+### 2. Start The Backend
+
+In a second terminal:
 
 ```bash
 ./gradlew bootRun
 ```
 
-Then load local demo users and the lightweight movie catalog:
+The backend runs on [http://localhost:8080](http://localhost:8080). Flyway creates the schema on startup.
+
+### 3. Seed Demo Data
+
+With the backend and Docker Compose services running:
 
 ```bash
 make seed-local-users
@@ -131,42 +200,69 @@ make seed-light SEED_VERSION=2026-05-17
 make reindex-local-search
 ```
 
-The seed is idempotent, so rerunning it updates movies and media without wiping
-user data. `seed-local-users` creates the local admin/user accounts, and
-`reindex-local-search` rebuilds Elasticsearch from PostgreSQL.
+The lightweight seed contains 250 movies and matching WebP media. The seed is idempotent, so rerunning it updates movie
+and media rows without wiping local user data. The full seed pipeline can build larger datasets from IMDb and TMDB data;
+details live in [infrastructure/movie-seed](./infrastructure/movie-seed/README.md).
 
---- 
+### 4. Start The Frontend
 
-### 1. Set Up Spring Boot Backend and Stateful Services: PostgreSQL, Elasticsearch and Object Storage
+In a third terminal:
 
-If the backend is not already running, start it with:
-
-```shell
-./gradlew build
-./gradlew bootRun
-```
-
-This will automatically pull/start the stateful containers. So pulling might take time depending 
-on your bandwidth. For more information on how data were collected, processed and imported look into
-the [infrastructure](./infrastructure/README.md)-folder.
-
-The backend can now be reached at port 8080 on localhost. You can test if the backend works properly by 
-sending some http requests. Use the provided [.http](./src/main/resources/api-calls) files.
-
----
-
-### 2. Set Up React Frontend
-
-Now we can run the React frontend. We have to move into the frontend-folder and build & run with yarn or npm. 
-
-```shell
-cd ./frontend
+```bash
+cd frontend
 yarn install
 yarn run build:moviesGen
 yarn start
 ```
 
-The FE is served to `http://localhost:3000/`. We can search for movies and more.
+The frontend runs on [http://localhost:3000](http://localhost:3000).
 
-I also added a [Makefile](Makefile) as a little cheat sheet to refresh our memory for all the important commands 
-we use during development.
+## Development Workflow
+
+Useful commands from the repository root:
+
+```bash
+make help                            # list grouped workflow targets
+./gradlew test                         # backend tests
+./gradlew build jacocoTestReport       # backend CI-equivalent check
+./gradlew spotlessApply                # format backend code
+cd frontend && yarn build              # frontend production build
+cd frontend && yarn test               # frontend tests
+cd frontend && yarn run lint           # frontend linting
+```
+
+The frontend API client is generated from the backend OpenAPI spec. If backend contracts change, start the backend and
+regenerate the client:
+
+```bash
+cd frontend
+yarn run updateOpenApiSpec
+yarn run build:moviesGen
+```
+
+Generated client files under `frontend/src/client/movies/generator-output` should not be edited manually.
+
+## Release And Deployment
+
+Application releases are controlled by the root [`VERSION`](./VERSION) file. A version bump on `master` triggers the CD
+workflow, which:
+
+1. runs backend and frontend checks,
+2. builds Linux AMD64 backend and frontend Docker images,
+3. pushes versioned images to Docker Hub,
+4. resolves immutable image digests,
+5. updates the home-cluster Kubernetes manifests,
+6. lets Argo CD reconcile the live cluster from Git.
+
+Infrastructure-only changes under `infrastructure/clusters/home` can be deployed through a normal push to `master`
+without publishing new application images.
+
+## Project Structure
+
+```text
+src/main/java/com/thecodinglab/imdbclone   Spring Boot backend modules
+frontend/src                               React frontend source
+compose.yaml                               Local Docker Compose services
+infrastructure/clusters/home               k3s GitOps manifests
+infrastructure/movie-seed                  Movie and media seed pipeline
+```
