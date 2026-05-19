@@ -4,7 +4,7 @@
     <img alt="imdb-clone-logo" width="500" src="docs/assets/imdb-clone-logo.jpg" />
   </a>
 
-  <h3 align="center">This <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Project</a>  exemplifies a Real-World Java / React Web App.</h3>
+  <h3 align="center">This <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Project</a>  exemplifies a Real-World Java / React Web App running on Kubernetes.</h3>
 </p>
 
 ---
@@ -37,9 +37,29 @@
 - Rel. Database: PostgreSQL 18
 - SearchEngine: Elasticsearch 9
 - File Storage: RustFS S3-compatible object storage
+- Deployment: single-node k3s Kubernetes home server with Traefik ingress and cert-manager HTTPS
 - Build / test tooling: Gradle 9.5.0 / Testcontainers 2
 
 The app is secured with JWT authentication. The techstack is kept up-to-date. 
+
+---
+
+## Live Kubernetes Deployment
+
+The application is deployed on a self-hosted single-node k3s Kubernetes cluster running on my home server. The cluster
+runs the Spring Boot backend, React frontend, PostgreSQL, Elasticsearch, and RustFS object storage as Kubernetes
+workloads. Public traffic is routed through Traefik ingress, HTTPS certificates are managed by cert-manager, and the
+home router forwards ports `80` and `443` to the k3s node.
+
+You can visit the live deployment here: [https://imdb-clone.the-coding-lab.com/](https://imdb-clone.the-coding-lab.com/).
+The backend API and public object storage are exposed through dedicated subdomains for the Kubernetes deployment:
+
+- Backend API: [https://backend.imdb-clone.the-coding-lab.com/](https://backend.imdb-clone.the-coding-lab.com/)
+- Movie media: [https://object-storage.imdb-clone.the-coding-lab.com/](https://object-storage.imdb-clone.the-coding-lab.com/)
+
+The Kubernetes manifests, GitOps setup, and home-cluster notes live in
+[infrastructure/kubernetes](./infrastructure/kubernetes/README.md) and
+[infrastructure/clusters/home](./infrastructure/clusters/home).
 
 ---
 
@@ -48,7 +68,7 @@ The app is secured with JWT authentication. The techstack is kept up-to-date.
 When entering the field of software engineering you need to learn how to build applications professionally.
 You need to learn from good code bases (at best: similar to company code). There are the typical blog examples 
 ([here](https://github.com/gothinkster/realworld)) but what is about search functionality or the handling 
-of images? How is the App deployed on a home server? How to generate client code with openapi-specifications?
+of images? How is the App deployed on a Kubernetes home server? How to generate client code with openapi-specifications?
 How can I preload my App with data? The answer to all these questions and more can be found in this codebase.
 
 The project can be rather easily rebuild locally (for a project of this size). If you want to explore a deployed 
@@ -65,8 +85,9 @@ Here's a diagram of the setup:
 
 ## How to Run this Project Locally
 
-The backend does not create buckets, seed data, or rebuild Elasticsearch as a
-hidden startup side effect. Local setup is explicit and repeatable:
+The production-like deployment runs on Kubernetes, while local development uses Docker Compose for the stateful
+services. The backend does not create buckets, seed data, or rebuild Elasticsearch as a hidden startup side effect.
+Local setup is explicit and repeatable:
 
 1. Start PostgreSQL, Elasticsearch, and RustFS with Docker Compose.
 2. Start the Spring Boot backend so Flyway creates the schema.
@@ -149,33 +170,3 @@ The FE is served to `http://localhost:3000/`. We can search for movies and more.
 
 I also added a [Makefile](Makefile) as a little cheat sheet to refresh our memory for all the important commands 
 we use during development.
-
----
-
-### Todo:
-
-- [x] Set up Database and import Movie Data
-- [x] Create Java Backend
-- [x] Set up Elasticsearch, Photos / File Storage
-- [x] Deploy on Home Server with Docker-Compose
-- [x] enable HTTPS with reverse-proxy
-- [x] simplify local development with spring-boot-starter-docker-compose
-- [x] setup and add integration tests
-- [ ] Add Monitoring (Prometheus, Grafana, Exporters) and expose Grafana
-- [ ] Add Logging (ELK Stack) and expose Kibana
-- [ ] Create React Frontend
-  - [x] Account Settings Page
-  - [x] Movie Search Page
-  - [x] Movie Detail View with Rating / Watchlist Feature
-  - [x] Watchlist Page
-  - [ ] Edit / Create Movies Page
-  - [x] Home Page
-  - [ ] Detail View: Comments Feature
-  - [x] Make Mobile Compatible
-
-### Future Ideas
-- [ ] Deploy on HA K3s Home Server
-- [ ] Use Flux for GitOps CD
-- [ ] Add Integration Namespace in K3s next to the Prod Env for Testing
-- [ ] Add Selenium for E2E-tests from FE to BE
-- [ ] Add more Features like Chat Functionality
