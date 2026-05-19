@@ -14,17 +14,17 @@
   <a href="https://stats.uptimerobot.com/5KMN7t0E5M">
     <img alt="Uptime Robot Status" src="https://img.shields.io/uptimerobot/status/m794347971-509793e3b2e4d89beb04d2fb" />
   </a>
+  <a href="https://github.com/NiklasTiede/IMDb-Clone/actions/workflows/continuous-integration.yaml">
+    <img alt="CI" src="https://github.com/NiklasTiede/IMDb-Clone/actions/workflows/continuous-integration.yaml/badge.svg" />
+  </a>
+  <a href="https://github.com/NiklasTiede/IMDb-Clone/blob/master/VERSION">
+    <img alt="version" src="https://img.shields.io/badge/dynamic/yaml?label=version&query=%24&url=https%3A%2F%2Fraw.githubusercontent.com%2FNiklasTiede%2FIMDb-Clone%2Fmaster%2FVERSION" />
+  </a>
   <a href="https://github.com/NiklasTiede/IMDb-Clone/issues">
     <img alt="issues" src="https://img.shields.io/github/issues-raw/niklastiede/imdb-clone" />
   </a>
   <a href="https://codecov.io/gh/NiklasTiede/imdb-clone" >
     <img alt="Codecov" src="https://codecov.io/gh/NiklasTiede/imdb-clone/graph/badge.svg?token=Y6Xrrlz0Vv"/>
-  </a>
-  <a href="https://github.com/NiklasTiede/IMDb-Clone/commits/master">
-    <img alt="commit" src="https://img.shields.io/github/last-commit/NiklasTiede/IMDb-Clone">
-  </a>
-  <a>
-    <img alt="code-size" src="https://img.shields.io/github/languages/code-size/niklastiede/imdb-clone" />
   </a>
   <a>
     <img alt="license" src="https://img.shields.io/github/license/niklastiede/imdb-clone" />

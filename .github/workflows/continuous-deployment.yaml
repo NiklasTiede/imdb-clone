@@ -33,6 +33,13 @@ jobs:
           echo "value=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
+      - name: Ensure release tag does not exist
+        run: |
+          if git rev-parse --verify --quiet "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null; then
+            echo "Release tag ${{ steps.version.outputs.tag }} already exists" >&2
+            exit 1
+          fi
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
@@ -124,3 +131,11 @@ jobs:
           git add infrastructure/clusters/home/apps/backend.yaml infrastructure/clusters/home/apps/frontend.yaml
           git commit -m "chore(release): update app image digests [skip ci]"
           git push
+
+      - name: Create release tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" "${{ github.sha }}" \
+            -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
