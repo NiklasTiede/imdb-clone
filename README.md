@@ -38,7 +38,13 @@
 </p>
 
 <p align="center">
-  <img alt="IMDb Clone product walkthrough" width="760" src="docs/assets/imdb-clone-screenshot.webp" />
+  <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
+    <img
+      alt="IMDb Clone screenshot"
+      width="760"
+      src="docs/assets/imdb-clone-screenshot.webp"
+    />
+  </a>
 </p>
 
 ## Overview
