@@ -92,5 +92,10 @@ class AuthenticationControllerTest extends BaseContainers {
                     .jsonPath("$.instance")
                     .isEqualTo("/api/auth/login"));
   }
+
+  @Test
+  void unsafeNonApiRequest_requiresCsrfToken() {
+    restTestClient.post().uri("/csrf-protected").exchange().expectStatus().isForbidden();
+  }
 }
 // spotless:on
