@@ -73,7 +73,7 @@ test("renders protected watchlist for authenticated users", async ({
   await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
-    /itFollowsPosterToken_size_600x900\.jpg/,
+    /itFollowsPosterToken_size_300x450\.jpg/,
   );
   await expect(page.getByText("Movies", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Pick for me" })).toBeVisible();

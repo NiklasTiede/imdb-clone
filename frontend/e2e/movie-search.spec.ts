@@ -107,7 +107,7 @@ test("searches movies and renders a seeded poster", async ({ page }) => {
   await expect(page.getByText("2014 · 117 min")).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
-    /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_600x900\.jpg/,
+    /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_300x450\.jpg/,
   );
 });
 
@@ -130,7 +130,7 @@ test("searches for a multi-word lowercase movie title", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
-    /itFollowsPosterToken_size_600x900\.jpg/,
+    /itFollowsPosterToken_size_300x450\.jpg/,
   );
   searchRequest.expectRequestedQuery();
 });
