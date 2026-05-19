@@ -5,6 +5,8 @@ on:
     branches: ['*']
   workflow_dispatch:
 
+permissions:
+  contents: read
 
 jobs:
   backend-build-test:
