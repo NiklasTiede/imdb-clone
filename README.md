@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <a href="https://stats.uptimerobot.com/5KMN7t0E5M">
+  <a href="https://stats.uptimerobot.com/N4oJPO7A8b/794347971">
     <img alt="Uptime Robot Status" src="https://img.shields.io/uptimerobot/status/m794347971-509793e3b2e4d89beb04d2fb" />
   </a>
   <a href="https://github.com/NiklasTiede/IMDb-Clone/actions/workflows/continuous-integration.yaml">
