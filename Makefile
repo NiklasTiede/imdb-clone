@@ -10,12 +10,15 @@ APP_DOCKER_PLATFORM ?= linux/amd64
 APP_DOCKER_BUILD_PLATFORM_FLAG ?= --platform $(APP_DOCKER_PLATFORM)
 SEED_DOCKER_BUILD_PLATFORM_FLAG ?=
 SEED_PUBLISH_PLATFORMS ?= linux/amd64,linux/arm64
+K8S_RENDER_OUTPUT ?= /tmp/imdb-clone-home-apps.yaml
+KUBECONFORM_IMAGE ?= ghcr.io/yannh/kubeconform:v0.6.7
+OPENAPI_CHECK_DIR ?= /tmp/imdb-clone-openapi-check
 
 .DEFAULT_GOAL := help
 
 ##@ Prerequisites
 
-.PHONY: check-local-tools check-seed-tools
+.PHONY: check-local-tools check-seed-tools check-verification-tools
 
 check-local-tools: ## check tools needed for the README local workflow
 	@missing=0; \
@@ -49,6 +52,20 @@ check-seed-tools: check-local-tools ## check extra tools needed to build/publish
 	fi; \
 	if [ $$missing -eq 0 ]; then \
 		echo "All seed image tools are available."; \
+	else \
+		exit 1; \
+	fi
+
+check-verification-tools: check-local-tools ## check extra tools needed for verification gates
+	@missing=0; \
+	for tool in git kubectl diff; do \
+		if ! command -v $$tool >/dev/null 2>&1; then \
+			echo "missing: $$tool"; \
+			missing=1; \
+		fi; \
+	done; \
+	if [ $$missing -eq 0 ]; then \
+		echo "All verification tools are available."; \
 	else \
 		exit 1; \
 	fi
@@ -170,6 +187,28 @@ docker-build-frontend: ## build frontend docker image from Dockerfile
 
 docker-run-frontend: ## run frontend docker container
 	docker run --name $(DOCKER_IMG_FRONTEND) -p 3000:3000 $(DOCKER_IMG_FRONTEND)
+
+##@ Verification
+
+.PHONY: verify-kubernetes-render verify-kubernetes-schema verify-openapi-drift
+
+verify-kubernetes-render: check-verification-tools ## render home-cluster Kubernetes manifests
+	kubectl kustomize infrastructure/clusters/home/apps > $(K8S_RENDER_OUTPUT)
+
+verify-kubernetes-schema: verify-kubernetes-render ## validate rendered Kubernetes manifests with pinned kubeconform
+	docker run --rm -i $(KUBECONFORM_IMAGE) \
+		-strict \
+		-summary \
+		-ignore-missing-schemas \
+		< $(K8S_RENDER_OUTPUT)
+
+verify-openapi-drift: ## compare checked-in OpenAPI/client output with a running backend
+	rm -rf $(OPENAPI_CHECK_DIR)
+	mkdir -p $(OPENAPI_CHECK_DIR)
+	curl -fsS http://localhost:8080/v3/api-docs.yaml > $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml
+	diff -u frontend/src/client/imdb-clone-backend.yaml $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml
+	cd ./frontend; yarn openapi-generator-cli generate -i $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml -g typescript-axios -o $(OPENAPI_CHECK_DIR)/generator-output
+	diff -qr --exclude=FILES frontend/src/client/movies/generator-output $(OPENAPI_CHECK_DIR)/generator-output
 
 ##@ Docker housekeeping
 

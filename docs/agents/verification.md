@@ -52,6 +52,7 @@ If backend API contracts change, start the backend first and then run:
 | Update OpenAPI spec | `cd frontend && yarn run updateOpenApiSpec` |
 | Regenerate client | `cd frontend && yarn run build:moviesGen` |
 | Validate frontend build | `cd frontend && yarn build` |
+| Check spec/client drift without rewriting tracked files | `make verify-openapi-drift` |
 
 Do not manually edit files in `frontend/src/client/movies/generator-output`.
 
@@ -89,6 +90,8 @@ Expected local URLs:
 | Task | Command |
 | --- | --- |
 | Render home app manifests | `kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml` |
+| Render home app manifests via Make | `make verify-kubernetes-render` |
+| Validate rendered manifests with pinned kubeconform | `make verify-kubernetes-schema` |
 | Check Argo CD apps | `kubectl get applications -n argocd` |
 | Check app namespace | `kubectl -n imdb-clone get deploy,svc,ingress` |
 | Backend rollout status | `kubectl -n imdb-clone rollout status deploy/imdb-clone-backend` |
