@@ -4,9 +4,9 @@
   </a>
 </p>
 
-<h3 align="center">
-  Production-style React + Spring Boot app with Elasticsearch, object storage, and k3s GitOps.
-</h3>
+<h2 align="center">
+  IMDb Clone - a production-style React + Spring Boot app with Elasticsearch, object storage, and k3s GitOps.
+</h2>
 
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Live Demo</a>
