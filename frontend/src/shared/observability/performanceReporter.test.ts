@@ -1,0 +1,48 @@
+import {
+  configurePerformanceReporter,
+  reportPerformanceEvent,
+  resetPerformanceReporterForTests,
+} from "./performanceReporter";
+import type { PerformanceEvent, PerformanceReporter } from "./types";
+
+const createEvent = (): PerformanceEvent => ({
+  context: {
+    appName: "imdb-clone-frontend",
+    appVersion: "test",
+    environment: "test",
+  },
+  name: "app_boot",
+  timestamp: 100,
+  type: "app_boot",
+  value: 42,
+});
+
+describe("performanceReporter", () => {
+  afterEach(() => {
+    resetPerformanceReporterForTests();
+  });
+
+  it("forwards events to the configured reporter", () => {
+    const reportedEvents: PerformanceEvent[] = [];
+    const reporter: PerformanceReporter = {
+      report: (event) => reportedEvents.push(event),
+    };
+
+    configurePerformanceReporter(reporter);
+    reportPerformanceEvent(createEvent());
+
+    expect(reportedEvents).toEqual([createEvent()]);
+  });
+
+  it("swallows reporter failures so observability cannot break the app", () => {
+    const reporter: PerformanceReporter = {
+      report: () => {
+        throw new Error("collector unavailable");
+      },
+    };
+
+    configurePerformanceReporter(reporter);
+
+    expect(() => reportPerformanceEvent(createEvent())).not.toThrow();
+  });
+});
