@@ -1,81 +1,118 @@
-# AGENTS.md
+# IMDB Clone Agent Guide
 
-## Project
+Full-stack movie database app with a Spring Boot backend, React frontend, PostgreSQL,
+Elasticsearch, RustFS/S3-compatible object storage, and k3s GitOps deployment.
 
-Full-stack IMDB clone with a Spring Boot backend and React frontend.
+This is the auto-loaded fast-start contract. Keep detailed guidance in linked docs:
 
-- Backend: Java 25, Spring Boot 4, PostgreSQL, Elasticsearch, RustFS/S3-compatible object storage, JWT auth.
-- Frontend: React 19, TypeScript, Material UI 9, TanStack React Query, generated Axios client.
-- Backend source: `src/main/java/com/thecodinglab/imdbclone`
-- Frontend source: `frontend/src`
+- `docs/agents/README.md` - agent workflow, ownership, task templates, review checklist.
+- `docs/agents/verification.md` - verification matrix and feedback loop.
+- `docs/development.md` - local setup, env vars, smoke checks, troubleshooting.
+- `docs/design.md` - frontend design system, theme tokens, layout primitives.
+- `infrastructure/kubernetes/README.md` - k3s, Argo CD, SOPS/age, home-cluster notes.
 
 ## Working Directory
 
 Run commands from the repository root unless a command says otherwise.
 
-## Feedback Loops
+## Terminology
+
+- Movie: primary catalog title.
+- Person: actor, director, writer, or crew member; mostly future catalog work.
+- CastMember: relation between Movie and Person with role or character metadata.
+- Comment: current backend representation of a user-authored movie review.
+- Rating: numeric score attached to a movie and account.
+- Watchlist: saved or watched movie collection per account.
+- Account/User: persisted account data and authenticated frontend/Spring Security principal.
+- Media: posters, backdrops, profile photos, and files stored through RustFS/S3.
+- Search Index: Elasticsearch projection derived from PostgreSQL movie data.
+- Deployment: k3s manifests, Argo CD root app, ingress, cert-manager, and SOPS secrets.
+
+## Project Map
+
+- `src/main/java/com/thecodinglab/imdbclone/` - backend modules.
+- `src/main/resources/config/` - Spring configuration.
+- `src/main/resources/db/migration/` - Flyway migrations.
+- `src/test/java/com/thecodinglab/imdbclone/` - backend tests and Testcontainers support.
+- `frontend/src/app/` - React providers and routes.
+- `frontend/src/features/` - feature slices.
+- `frontend/src/shared/` - shared API, auth, hooks, layout, media, and UI utilities.
+- `frontend/src/client/imdb-clone-backend.yaml` - checked-in OpenAPI spec.
+- `frontend/src/client/movies/generator-output/` - generated Axios client; do not edit manually.
+- `frontend/e2e/` - Playwright tests.
+- `compose.yaml` - local PostgreSQL, Elasticsearch, RustFS, and seed services.
+- `infrastructure/clusters/home/apps/` - k3s GitOps manifests rendered by Kustomize.
+- `.codex/skills/` - Codex-specific reusable skills/tooling, not general project docs.
+- `docs/agents/` - detailed agent workflow and verification guidance.
+- `docs/assets/` - README/docs images.
+
+## Ownership Rules
 
 Backend:
 
-- Start backend: `./gradlew bootRun`
-- Run backend tests: `./gradlew test`
-- Run one backend test: `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"`
-- Format backend code: `./gradlew spotlessApply`
-- CI-equivalent backend check: `./gradlew build jacocoTestReport`
+- Public contracts live in `api`; web adapters in `web`; concrete services, repositories, mappers,
+  and persistence types under each module's `internal` package.
+- Modules are `account`, `catalog`, `engagement`, `identity`, `media`, `notification`,
+  `recommendation`, and `shared`.
+- Use existing `ProblemDetail` and `GlobalExceptionHandler` style for API errors.
+- Flyway owns schema migrations. Do not edit existing migrations unless explicitly asked.
 
 Frontend:
 
-- Install dependencies: `cd frontend && yarn install`
-- Start frontend: `cd frontend && yarn start`
-- Build frontend: `cd frontend && yarn build`
-- Lint frontend: `cd frontend && yarn run lint`
-- Run frontend tests once: `cd frontend && yarn test`
+- Read `docs/design.md` before UI, layout, theme, or visual changes.
+- Keep feature UI/behavior in `frontend/src/features/<feature>`.
+- Keep genuinely shared API/auth/layout/media/hooks under `frontend/src/shared`.
+- Use generated API clients through shared wrappers in `frontend/src/shared/api/`.
+- Keep server-state fetches/mutations in TanStack Query wrappers under feature `api` folders.
+- Prefer existing Material UI and theme patterns.
 
 Infrastructure:
 
-- Start dev services explicitly: `make docker-compose-dev-up`
-- Stop dev services: `make docker-compose-dev-down`
+- Local services are owned by `compose.yaml` and Make targets.
+- k3s app resources are owned by `infrastructure/clusters/home/apps`.
+- App image versions are controlled by `VERSION` and the CD workflow.
+- Kubernetes secrets are SOPS-encrypted `*.sops.yaml`; never commit decrypted values.
 
-## API Client
+## Core Commands
 
-The frontend API client is generated from the backend OpenAPI spec.
+```bash
+make docker-compose-dev-up
+./gradlew bootRun
+cd frontend && yarn install && yarn run build:moviesGen && yarn start
+make seed-local-users
+make seed-light SEED_VERSION=2026-05-17
+make reindex-local-search
+make docker-compose-dev-down
+```
 
-- If backend API contracts change, start the backend first.
-- Update the spec: `cd frontend && yarn run updateOpenApiSpec`
-- Regenerate the client: `cd frontend && yarn run build:moviesGen`
-- Do not manually edit files in `frontend/src/client/movies/generator-output`.
+Verification:
 
-## Backend Conventions
+```bash
+./gradlew test
+./gradlew build jacocoTestReport
+cd frontend && yarn run lint
+cd frontend && yarn test
+cd frontend && yarn build
+kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
+```
 
-- Public module contracts live in `api` packages; concrete application services live under
-  each module's `internal` package with domain names such as `MovieCatalog`, `Ratings`, or
-  `MediaFiles`.
-- Controllers expose REST endpoints and delegate business behavior to module services.
-- Persistence uses JPA repositories and Elasticsearch repositories owned by the same module as
-  their tables/documents.
-- API errors should use the existing `ProblemDetail`/global exception handling style.
-- Integration tests use Testcontainers and shared fixtures from `src/test/resources/sql/test-data.sql`.
+If backend API contracts change:
 
-## Frontend Conventions
+```bash
+./gradlew bootRun
+cd frontend && yarn run updateOpenApiSpec && yarn run build:moviesGen
+```
 
-- Prefer existing Material UI patterns and components.
-- Use generated API clients through the shared wrappers in `frontend/src/shared/api/moviesApi.ts`.
-- Keep server-state fetching and mutations in TanStack React Query wrappers under feature `api` folders.
-- Keep feature-specific UI behavior inside `frontend/src/features/<feature>` and genuinely shared UI/hooks under `frontend/src/shared`.
-- Keep reusable UI behavior in hooks or focused components.
+## Safety Rules
 
-## Database
+- Do not expose secrets in prompts, logs, docs, screenshots, commits, or summaries.
+- Do not print `.secrets/sops/age/keys.txt` or decrypted SOPS content.
+- Do not commit `.env.local`, `.env.*.local`, private kubeconfigs, age keys, or Docker Hub tokens.
+- Do not run destructive database, Docker volume, namespace, PVC, ingress, image tag, or cluster mutation commands without explicit user approval.
+- Do not deploy to k3s unless explicitly asked. Read-only cluster checks are fine when relevant.
+- Avoid unrelated refactors, formatting churn, and architecture rewrites.
 
-- Flyway owns schema migrations in `src/main/resources/db/migration`.
-- Local seed/test data uses SQL files in `src/main/resources/sql` and `src/test/resources/sql`.
-- Do not modify existing database initialization or migration files unless explicitly asked.
-- Do not introduce or rely on Liquibase unless the build and Spring config are wired for it.
+## Definition Of Done
 
-## Agent Workflow
-
-- Prefer small, focused commits.
-- Run the narrowest relevant check first, then broader checks before reporting completion.
-- Before committing Java, Kotlin, Gradle, or backend test changes, run `./gradlew spotlessApply`.
-- Add or update tests for behavior changes.
-- Do not commit secrets from local config files.
-- Avoid unrelated refactors and formatting churn.
+Before claiming completion, verify the relevant commands, protect secrets, respect ownership
+boundaries, and report changed files, commands run, results, skipped checks, and remaining risk.
