@@ -45,4 +45,28 @@ describe("performanceReporter", () => {
 
     expect(() => reportPerformanceEvent(createEvent())).not.toThrow();
   });
+
+  it("swallows async reporter failures without unhandled rejections", async () => {
+    const unhandledRejections: unknown[] = [];
+    const trackUnhandledRejection = (reason: unknown): void => {
+      unhandledRejections.push(reason);
+    };
+    const reporter: PerformanceReporter = {
+      report: () => Promise.reject(new Error("collector unavailable")),
+    };
+
+    process.on("unhandledRejection", trackUnhandledRejection);
+
+    try {
+      configurePerformanceReporter(reporter);
+
+      expect(() => reportPerformanceEvent(createEvent())).not.toThrow();
+
+      await Promise.resolve();
+
+      expect(unhandledRejections).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", trackUnhandledRejection);
+    }
+  });
 });

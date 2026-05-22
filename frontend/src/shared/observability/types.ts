@@ -72,5 +72,5 @@ export type PerformanceEvent =
   | WebVitalPerformanceEvent;
 
 export type PerformanceReporter = {
-  report: (event: PerformanceEvent) => void;
+  report: (event: PerformanceEvent) => void | Promise<void>;
 };
