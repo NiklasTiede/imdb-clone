@@ -25,7 +25,9 @@ describe("performanceReporter", () => {
   it("forwards events to the configured reporter", () => {
     const reportedEvents: PerformanceEvent[] = [];
     const reporter: PerformanceReporter = {
-      report: (event) => reportedEvents.push(event),
+      report: (event) => {
+        reportedEvents.push(event);
+      },
     };
 
     configurePerformanceReporter(reporter);
