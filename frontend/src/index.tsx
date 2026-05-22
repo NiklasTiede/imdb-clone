@@ -10,14 +10,12 @@ import {
 
 const entrypointStart = performance.now();
 
-registerBrowserErrorReporting();
+const cleanupBrowserErrorReporting = registerBrowserErrorReporting();
 registerWebVitals();
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );
-
-reportAppBoot(entrypointStart);
 
 root.render(
   // <React.StrictMode>
@@ -26,3 +24,9 @@ root.render(
   </AppProviders>,
   // </React.StrictMode>
 );
+
+reportAppBoot(entrypointStart);
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(cleanupBrowserErrorReporting);
+}

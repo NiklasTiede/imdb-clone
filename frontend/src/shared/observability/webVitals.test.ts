@@ -4,7 +4,10 @@ import {
   resetPerformanceReporterForTests,
 } from "./performanceReporter";
 import type { PerformanceEvent } from "./types";
-import { registerWebVitals } from "./webVitals";
+import {
+  registerWebVitals,
+  resetWebVitalsRegistrationForTests,
+} from "./webVitals";
 
 vi.mock("web-vitals", () => ({
   onCLS: vi.fn(),
@@ -27,6 +30,7 @@ const clsMetric = (): CLSMetric => ({
 describe("registerWebVitals", () => {
   afterEach(() => {
     resetPerformanceReporterForTests();
+    resetWebVitalsRegistrationForTests();
     vi.clearAllMocks();
   });
 
@@ -60,5 +64,18 @@ describe("registerWebVitals", () => {
         value: 123,
       }),
     ]);
+  });
+
+  it("does not register Web Vitals callbacks more than once", async () => {
+    const webVitals = await import("web-vitals");
+
+    registerWebVitals();
+    registerWebVitals();
+
+    expect(webVitals.onCLS).toHaveBeenCalledTimes(1);
+    expect(webVitals.onFCP).toHaveBeenCalledTimes(1);
+    expect(webVitals.onINP).toHaveBeenCalledTimes(1);
+    expect(webVitals.onLCP).toHaveBeenCalledTimes(1);
+    expect(webVitals.onTTFB).toHaveBeenCalledTimes(1);
   });
 });

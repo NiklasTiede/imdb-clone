@@ -3,6 +3,8 @@ import { reportPerformanceEvent } from "./performanceReporter";
 
 type BrowserErrorCleanup = () => void;
 
+let activeCleanup: BrowserErrorCleanup | null = null;
+
 const isError = (value: unknown): value is Error => value instanceof Error;
 
 const errorMessageFromReason = (reason: unknown): string => {
@@ -21,6 +23,10 @@ const errorTypeFromReason = (reason: unknown): string | undefined =>
   isError(reason) ? reason.name : undefined;
 
 export const registerBrowserErrorReporting = (): BrowserErrorCleanup => {
+  if (activeCleanup !== null) {
+    return activeCleanup;
+  }
+
   const reportErrorEvent = (event: ErrorEvent): void => {
     reportPerformanceEvent({
       column: event.colno || undefined,
@@ -49,8 +55,11 @@ export const registerBrowserErrorReporting = (): BrowserErrorCleanup => {
   window.addEventListener("error", reportErrorEvent);
   window.addEventListener("unhandledrejection", reportUnhandledRejection);
 
-  return () => {
+  activeCleanup = () => {
     window.removeEventListener("error", reportErrorEvent);
     window.removeEventListener("unhandledrejection", reportUnhandledRejection);
+    activeCleanup = null;
   };
+
+  return activeCleanup;
 };

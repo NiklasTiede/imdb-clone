@@ -69,4 +69,27 @@ describe("registerBrowserErrorReporting", () => {
       }),
     ]);
   });
+
+  it("does not duplicate browser error listeners when registered twice", () => {
+    const events: PerformanceEvent[] = [];
+    configurePerformanceReporter({
+      report: (event) => {
+        events.push(event);
+      },
+    });
+
+    const firstCleanup = registerBrowserErrorReporting();
+    const secondCleanup = registerBrowserErrorReporting();
+
+    window.dispatchEvent(
+      new ErrorEvent("error", {
+        message: "boom",
+      }),
+    );
+
+    firstCleanup();
+    secondCleanup();
+
+    expect(events).toHaveLength(1);
+  });
 });
