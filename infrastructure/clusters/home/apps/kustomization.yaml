@@ -15,6 +15,7 @@ resources:
   - elasticsearch.yaml
   - observability-grafana-admin.sops.yaml
   - observability-grafana-viewer.sops.yaml
+  - observability/dashboards
   - observability.yaml
   - ingress.yaml
   - postgresql.yaml
