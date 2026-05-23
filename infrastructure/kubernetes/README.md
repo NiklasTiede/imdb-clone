@@ -96,7 +96,9 @@ The `argocd.imdb-clone.the-coding-lab.com` hostname is also routed through
 Traefik, but it is protected by a Traefik IP allowlist for the home LAN
 `192.168.178.0/24` and the current public home IP. The public IP entry allows
 home Wi-Fi access through router NAT loopback, where Traefik may see the
-router's public address instead of the laptop's LAN address.
+router's public address instead of the laptop's LAN address. The k3s Traefik
+service uses `externalTrafficPolicy: Local` so Traefik can evaluate the client
+source IP instead of the k3s service proxy IP.
 
 ## HTTPS Certificates
 

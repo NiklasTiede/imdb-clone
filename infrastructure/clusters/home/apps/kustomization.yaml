@@ -4,6 +4,7 @@ resources:
   - namespaces.yaml
   - argocd-ingress.yaml
   - cert-manager.yaml
+  - traefik-config.yaml
   - letsencrypt-cluster-issuer.yaml
   - backend.yaml
   - frontend.yaml
