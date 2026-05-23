@@ -94,7 +94,9 @@ must forward TCP ports `80` and `443` to the k3s node at `192.168.178.44`.
 
 The `argocd.imdb-clone.the-coding-lab.com` hostname is also routed through
 Traefik, but it is protected by a Traefik IP allowlist for the home LAN
-`192.168.178.0/24`.
+`192.168.178.0/24` and the current public home IP. The public IP entry allows
+home Wi-Fi access through router NAT loopback, where Traefik may see the
+router's public address instead of the laptop's LAN address.
 
 ## HTTPS Certificates
 
@@ -138,4 +140,4 @@ Actuator endpoint at `/actuator/prometheus`.
 
 Argo CD is exposed for home LAN access at
 `https://argocd.imdb-clone.the-coding-lab.com`. The route is intended for
-operator use only and is restricted to `192.168.178.0/24` by Traefik middleware.
+operator use only and is restricted by Traefik middleware.

@@ -11,6 +11,7 @@ spec:
       - 127.0.0.1/32
       - ::1/128
       - 192.168.178.0/24
+      - 95.214.148.244/32
 ---
 apiVersion: traefik.io/v1alpha1
 kind: ServersTransport
