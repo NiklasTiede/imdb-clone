@@ -1,7 +1,15 @@
-import { consolePerformanceReporter } from "./consolePerformanceReporter";
 import { isObservabilityEnabled, shouldUseConsoleReporter } from "./config";
-import { noopPerformanceReporter } from "./noopPerformanceReporter";
 import type { PerformanceEvent, PerformanceReporter } from "./types";
+
+const consolePerformanceReporter: PerformanceReporter = {
+  report: (event) => {
+    console.info("[frontend-observability]", event);
+  },
+};
+
+const noopPerformanceReporter: PerformanceReporter = {
+  report: () => undefined,
+};
 
 let activeReporter: PerformanceReporter =
   isObservabilityEnabled() && shouldUseConsoleReporter()
