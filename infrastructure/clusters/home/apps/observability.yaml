@@ -15,17 +15,7 @@ spec:
       releaseName: observability
       valuesObject:
         alertmanager:
-          ingress:
-            enabled: false
-          alertmanagerSpec:
-            retention: 120h
-            resources:
-              requests:
-                cpu: 25m
-                memory: 64Mi
-              limits:
-                cpu: 250m
-                memory: 256Mi
+          enabled: false
         defaultRules:
           rules:
             etcd: false

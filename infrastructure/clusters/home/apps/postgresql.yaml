@@ -24,7 +24,7 @@ spec:
           username: postgres_user
         image:
           digest: sha256:3f9462c7813afd0b9d412f1ade4fc780419bbe8971f3d2e29db920424b0c1f77
-          tag: latest
+          tag: "18"
         primary:
           persistence:
             enabled: true

@@ -11,9 +11,16 @@ spec:
       - |
         set -eu
 
-        kustomize build .
+        workdir="$(mktemp -d)"
+        trap 'rm -rf "$workdir"' EXIT
+
+        cp -a . "$workdir/src"
+        cd "$workdir/src"
 
         find . \( -name '*.sops.yaml' -o -name '*.sops.yml' \) -type f | sort | while read -r file; do
-          echo '---'
-          sops --decrypt "$file"
+          decrypted="${file}.decrypted"
+          sops --decrypt "$file" > "$decrypted"
+          mv "$decrypted" "$file"
         done
+
+        kustomize build .

@@ -11,6 +11,7 @@ APP_DOCKER_BUILD_PLATFORM_FLAG ?= --platform $(APP_DOCKER_PLATFORM)
 SEED_DOCKER_BUILD_PLATFORM_FLAG ?=
 SEED_PUBLISH_PLATFORMS ?= linux/amd64,linux/arm64
 K8S_RENDER_OUTPUT ?= /tmp/imdb-clone-home-apps.yaml
+K8S_SCHEMA_OUTPUT ?= /tmp/imdb-clone-home-apps-schema.yaml
 KUBECONFORM_IMAGE ?= ghcr.io/yannh/kubeconform:v0.6.7
 OPENAPI_CHECK_DIR ?= /tmp/imdb-clone-openapi-check
 
@@ -58,7 +59,7 @@ check-seed-tools: check-local-tools ## check extra tools needed to build/publish
 
 check-verification-tools: check-local-tools ## check extra tools needed for verification gates
 	@missing=0; \
-	for tool in git kubectl diff; do \
+	for tool in git kubectl diff ruby; do \
 		if ! command -v $$tool >/dev/null 2>&1; then \
 			echo "missing: $$tool"; \
 			missing=1; \
@@ -196,11 +197,13 @@ verify-kubernetes-render: check-verification-tools ## render home-cluster Kubern
 	kubectl kustomize infrastructure/clusters/home/apps > $(K8S_RENDER_OUTPUT)
 
 verify-kubernetes-schema: verify-kubernetes-render ## validate rendered Kubernetes manifests with pinned kubeconform
+	ruby -ryaml -e 'YAML.load_stream(ARGF.read).each { |doc| next if doc.nil?; doc.delete("sops") if doc.is_a?(Hash); puts YAML.dump(doc) }' \
+		$(K8S_RENDER_OUTPUT) > $(K8S_SCHEMA_OUTPUT)
 	docker run --rm -i $(KUBECONFORM_IMAGE) \
 		-strict \
 		-summary \
 		-ignore-missing-schemas \
-		< $(K8S_RENDER_OUTPUT)
+		< $(K8S_SCHEMA_OUTPUT)
 
 verify-openapi-drift: ## compare checked-in OpenAPI/client output with a running backend
 	rm -rf $(OPENAPI_CHECK_DIR)

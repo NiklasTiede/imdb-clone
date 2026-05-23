@@ -6,6 +6,9 @@ resources:
   - cert-manager.yaml
   - traefik-config.yaml
   - letsencrypt-cluster-issuer.yaml
+  - backend-runtime.sops.yaml
+  - postgresql-credentials.sops.yaml
+  - rustfs-credentials.sops.yaml
   - backend.yaml
   - frontend.yaml
   - eck-operator.yaml
