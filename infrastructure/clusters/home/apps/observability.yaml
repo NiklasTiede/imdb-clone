@@ -1,0 +1,288 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 85.2.2
+    helm:
+      releaseName: observability
+      valuesObject:
+        alertmanager:
+          ingress:
+            enabled: false
+          alertmanagerSpec:
+            retention: 120h
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                cpu: 250m
+                memory: 256Mi
+        defaultRules:
+          rules:
+            etcd: false
+            kubeControllerManager: false
+            kubeProxy: false
+            kubeSchedulerAlerting: false
+            kubeSchedulerRecording: false
+        grafana:
+          admin:
+            existingSecret: observability-grafana-admin
+          adminUser: admin
+          defaultDashboardsTimezone: Europe/Zurich
+          grafana.ini:
+            users:
+              allow_sign_up: false
+              viewers_can_edit: false
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            hosts:
+              - grafana.imdb-clone.the-coding-lab.com
+            tls:
+              - secretName: imdb-clone-grafana-tls
+                hosts:
+                  - grafana.imdb-clone.the-coding-lab.com
+          persistence:
+            enabled: true
+            type: pvc
+            storageClassName: local-path
+            accessModes:
+              - ReadWriteOnce
+            size: 2Gi
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          sidecar:
+            dashboards:
+              searchNamespace: ALL
+        kubeControllerManager:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+        kubeProxy:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kube-state-metrics:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+        prometheus:
+          ingress:
+            enabled: false
+          prometheusSpec:
+            podMonitorNamespaceSelector: {}
+            podMonitorSelector: {}
+            podMonitorSelectorNilUsesHelmValues: false
+            probeNamespaceSelector: {}
+            probeSelector: {}
+            probeSelectorNilUsesHelmValues: false
+            replicas: 1
+            retention: 7d
+            retentionSize: 6GiB
+            ruleNamespaceSelector: {}
+            scrapeConfigNamespaceSelector: {}
+            scrapeConfigSelector: {}
+            scrapeConfigSelectorNilUsesHelmValues: false
+            serviceMonitorNamespaceSelector: {}
+            serviceMonitorSelector: {}
+            serviceMonitorSelectorNilUsesHelmValues: false
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-path
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 10Gi
+            resources:
+              requests:
+                cpu: 250m
+                memory: 768Mi
+              limits:
+                cpu: "1"
+                memory: 2Gi
+        prometheus-node-exporter:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+        prometheusOperator:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+        extraManifests:
+          - apiVersion: monitoring.coreos.com/v1
+            kind: ServiceMonitor
+            metadata:
+              name: imdb-clone-backend
+              namespace: imdb-clone
+              labels:
+                app.kubernetes.io/name: imdb-clone-backend
+            spec:
+              selector:
+                matchLabels:
+                  app.kubernetes.io/name: imdb-clone-backend
+              namespaceSelector:
+                matchNames:
+                  - imdb-clone
+              endpoints:
+                - port: management
+                  path: /actuator/prometheus
+                  interval: 30s
+                  scrapeTimeout: 10s
+          - apiVersion: batch/v1
+            kind: Job
+            metadata:
+              name: observability-grafana-viewer-user
+              namespace: observability
+              annotations:
+                argocd.argoproj.io/hook: PostSync
+                argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+            spec:
+              backoffLimit: 4
+              template:
+                spec:
+                  restartPolicy: OnFailure
+                  containers:
+                    - name: configure-viewer
+                      image: curlimages/curl:8.11.1
+                      imagePullPolicy: IfNotPresent
+                      env:
+                        - name: ADMIN_USER
+                          valueFrom:
+                            secretKeyRef:
+                              name: observability-grafana-admin
+                              key: admin-user
+                        - name: ADMIN_PASSWORD
+                          valueFrom:
+                            secretKeyRef:
+                              name: observability-grafana-admin
+                              key: admin-password
+                        - name: VIEWER_LOGIN
+                          valueFrom:
+                            secretKeyRef:
+                              name: observability-grafana-viewer
+                              key: viewer-login
+                        - name: VIEWER_EMAIL
+                          valueFrom:
+                            secretKeyRef:
+                              name: observability-grafana-viewer
+                              key: viewer-email
+                        - name: VIEWER_PASSWORD
+                          valueFrom:
+                            secretKeyRef:
+                              name: observability-grafana-viewer
+                              key: viewer-password
+                      command:
+                        - /bin/sh
+                        - -ec
+                        - |
+                          grafana_url="http://observability-grafana.observability.svc.cluster.local"
+                          auth="${ADMIN_USER}:${ADMIN_PASSWORD}"
+
+                          for attempt in $(seq 1 60); do
+                            if curl -fsS -u "${auth}" "${grafana_url}/api/health" >/dev/null; then
+                              break
+                            fi
+                            if [ "${attempt}" = "60" ]; then
+                              echo "Grafana did not become ready in time" >&2
+                              exit 1
+                            fi
+                            sleep 5
+                          done
+
+                          lookup_user() {
+                            curl -sS -o /tmp/viewer.json -w "%{http_code}" \
+                              -u "${auth}" \
+                              "${grafana_url}/api/users/lookup?loginOrEmail=${VIEWER_LOGIN}"
+                          }
+
+                          status="$(lookup_user || true)"
+                          if [ "${status}" = "404" ]; then
+                            create_status="$(curl -sS -o /tmp/create.json -w "%{http_code}" \
+                              -u "${auth}" \
+                              -H "Content-Type: application/json" \
+                              -d "{\"name\":\"IMDB Clone Viewer\",\"email\":\"${VIEWER_EMAIL}\",\"login\":\"${VIEWER_LOGIN}\",\"password\":\"${VIEWER_PASSWORD}\",\"OrgId\":1}" \
+                              "${grafana_url}/api/admin/users")"
+                            if [ "${create_status}" != "200" ] && [ "${create_status}" != "201" ] && [ "${create_status}" != "412" ]; then
+                              cat /tmp/create.json >&2
+                              exit 1
+                            fi
+                            status="$(lookup_user || true)"
+                          fi
+
+                          if [ "${status}" != "200" ]; then
+                            cat /tmp/viewer.json >&2
+                            exit 1
+                          fi
+
+                          user_id="$(sed -n 's/.*"id":[[:space:]]*\([0-9][0-9]*\).*/\1/p' /tmp/viewer.json)"
+                          if [ -z "${user_id}" ]; then
+                            echo "Could not determine Grafana viewer user id" >&2
+                            cat /tmp/viewer.json >&2
+                            exit 1
+                          fi
+
+                          curl -fsS -u "${auth}" \
+                            -H "Content-Type: application/json" \
+                            -X PUT \
+                            -d "{\"password\":\"${VIEWER_PASSWORD}\"}" \
+                            "${grafana_url}/api/admin/users/${user_id}/password" >/dev/null
+
+                          curl -fsS -u "${auth}" \
+                            -H "Content-Type: application/json" \
+                            -X PUT \
+                            -d "{\"isGrafanaAdmin\":false}" \
+                            "${grafana_url}/api/admin/users/${user_id}/permissions" >/dev/null
+
+                          curl -fsS -u "${auth}" \
+                            -H "Content-Type: application/json" \
+                            -X PATCH \
+                            -d "{\"role\":\"Viewer\"}" \
+                            "${grafana_url}/api/org/users/${user_id}" >/dev/null
+
+                          echo "Grafana viewer user reconciled"
+                      resources:
+                        requests:
+                          cpu: 10m
+                          memory: 32Mi
+                        limits:
+                          cpu: 100m
+                          memory: 128Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false

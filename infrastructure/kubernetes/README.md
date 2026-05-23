@@ -82,14 +82,19 @@ idempotent Argo CD hook that creates the `imdb-clone` bucket and makes
 
 ## Public Hosts
 
-The home-cluster ingress exposes three public hostnames:
+The home-cluster ingress exposes these public hostnames:
 
 - `imdb-clone.the-coding-lab.com` for the frontend
 - `backend.imdb-clone.the-coding-lab.com` for the backend API
 - `object-storage.imdb-clone.the-coding-lab.com` for public movie media
+- `grafana.imdb-clone.the-coding-lab.com` for public read-only observability dashboards
 
-All three DNS records should point to the current public home IP. The router
+These DNS records should point to the current public home IP. The router
 must forward TCP ports `80` and `443` to the k3s node at `192.168.178.44`.
+
+The `argocd.imdb-clone.the-coding-lab.com` hostname is also routed through
+Traefik, but it is protected by a Traefik IP allowlist for the home LAN
+`192.168.178.0/24`.
 
 ## HTTPS Certificates
 
@@ -97,3 +102,40 @@ The home cluster uses cert-manager with a Let's Encrypt `ClusterIssuer`.
 Certificates are requested from the public ingresses through HTTP-01 challenges
 handled by Traefik. Keep both TCP `80` and `443` forwarded from the router to
 `192.168.178.44`; port `80` is required for initial issuance and renewal.
+
+## Observability
+
+Grafana and Prometheus run inside the `observability` namespace through the
+`observability` Argo CD application. Grafana is exposed publicly at
+`https://grafana.imdb-clone.the-coding-lab.com` with a read-only `viewer`
+account. Retrieve the generated viewer password from the cluster:
+
+```bash
+ssh robotnik@um560 \
+  "sudo kubectl -n observability get secret observability-grafana-viewer \
+    -o jsonpath='{.data.viewer-password}' | base64 -d"
+```
+
+Grafana can still be opened privately through an SSH tunnel:
+
+```bash
+ssh -L 3001:localhost:3001 robotnik@um560 \
+  "sudo kubectl -n observability port-forward svc/observability-grafana 3001:80"
+```
+
+Then open `http://localhost:3001`. The Grafana admin user is `admin`. Retrieve
+the generated admin password from the cluster:
+
+```bash
+ssh robotnik@um560 \
+  "sudo kubectl -n observability get secret observability-grafana-admin \
+    -o jsonpath='{.data.admin-password}' | base64 -d"
+```
+
+The initial Prometheus setup collects Kubernetes node and workload metrics,
+kubelet/cAdvisor metrics, kube-state-metrics, and the backend Spring Boot
+Actuator endpoint at `/actuator/prometheus`.
+
+Argo CD is exposed for home LAN access at
+`https://argocd.imdb-clone.the-coding-lab.com`. The route is intended for
+operator use only and is restricted to `192.168.178.0/24` by Traefik middleware.

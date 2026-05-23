@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: observability-grafana-viewer
+    namespace: observability
+type: Opaque
+stringData:
+    viewer-login: ENC[AES256_GCM,data:Z21jseQn,iv:/8p392lzJ5ultI9vcHdCoRFLRoiDxbZqEC1nqvFL+a0=,tag:t4o+TbYRv8nwHp1tVO1JSA==,type:str]
+    viewer-email: ENC[AES256_GCM,data:399ugl1UUBfEzAk6x0wFvI5AzfkECzNE9AdvBMAVbg==,iv:C2hsHaANFxa/T4cFI06o2eU+yeUuKlTfj4oKtig5DSg=,tag:sjxBIJjoO+texeKyDQpObQ==,type:str]
+    viewer-password: ENC[AES256_GCM,data:O8gLHU8lcHirvsLLMYInYgAs0H8n4aEjOu5iR1m4GK4g2MrGBqNPFEEiMAw=,iv:VL7jiKZmURX1bMIzCZ32w9j0xwOjs6bCkKqMAOgXsLM=,tag:B/b0j9/ee5Ow8Iiq/ExFUg==,type:str]
+sops:
+    age:
+        - recipient: age1erem2t02nlncp53ehrjjyqcwd6uhfr2vrl6saf4c53esr99vv9ms2wgpw0
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBHU0M5OS84MHpVRmtXY3ZB
+            d2ZsYjRCeXhtU3BtVDBPWCtiUUhRZW9JZjFZCnFWblkzVTAzOXovczI0dVNZUVVB
+            WEVpSm1vcGZWNDNrdHVXWDhIMmY0aG8KLS0tIG10b3JMNm5DRmdTUFVjUGVndVpF
+            aUZzbSt3K1V3WlZFVXBtS3oyT21BblUK79965OR/XfzcZJ6eToz5ZZZ6jP9/pGRs
+            5Hm635EwpUmz/Ps+2H4X9fkjID2Sd20YKiFeaevxBzyMlGTzQbnaNQ==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-05-23T17:05:51Z"
+    mac: ENC[AES256_GCM,data:xqcTNl6L9lWYjJawiW7Wyk8gCSpllZoeLm3FuzPnK1uszGtxNxCZNoY6dhHCK++1DE/Xl1IwZDYG1GIBQfwbS48Z/HpvszhpHBaacxQSBsFPTmlOPKafRbp5RaZ8B4aOKOKiREF6cC9jt3IpuB+y9rgU/E5gc9ulP2ciHBLmv9c=,iv:o+qP+T2mHnndwmBxoWblefqKR96tleKXTAwSW1xeKlc=,tag:FecWJqJhFs/9xtNY3WZlZA==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.10.1

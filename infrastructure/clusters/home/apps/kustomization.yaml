@@ -2,12 +2,16 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - namespaces.yaml
+  - argocd-ingress.yaml
   - cert-manager.yaml
   - letsencrypt-cluster-issuer.yaml
   - backend.yaml
   - frontend.yaml
   - eck-operator.yaml
   - elasticsearch.yaml
+  - observability-grafana-admin.sops.yaml
+  - observability-grafana-viewer.sops.yaml
+  - observability.yaml
   - ingress.yaml
   - postgresql.yaml
   - rustfs.yaml
