@@ -23,6 +23,33 @@ metadata:
 spec:
   insecureSkipVerify: true
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argocd-server
+  namespace: argocd
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/name: argocd-server
+    app.kubernetes.io/part-of: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+    traefik.ingress.kubernetes.io/service.serverstransport: argocd-argocd-server@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: argocd-server
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8080
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -32,8 +59,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "7"
     cert-manager.io/cluster-issuer: letsencrypt-prod
     traefik.ingress.kubernetes.io/router.middlewares: argocd-argocd-lan-only@kubernetescrd
-    traefik.ingress.kubernetes.io/service.serverstransport: argocd-argocd-server@kubernetescrd
-    traefik.ingress.kubernetes.io/service.serversscheme: https
 spec:
   ingressClassName: traefik
   tls:
