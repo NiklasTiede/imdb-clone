@@ -75,7 +75,7 @@ check-verification-tools: check-local-tools ## check extra tools needed for veri
 
 .PHONY: docker-compose-dev-up docker-compose-dev-down seed-local-users seed-light seed-full reindex-local-search
 
-docker-compose-dev-up: ## start PostgreSQL, Elasticsearch, and RustFS for local development
+docker-compose-dev-up: ## start local backend dependencies, including llama.cpp embeddings
 	docker compose up -d
 
 docker-compose-dev-down: ## stop local Docker Compose services

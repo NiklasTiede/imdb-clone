@@ -1,0 +1,52 @@
+# Direct requests to the local llama.cpp embedding service.
+
+@llamaModel = embeddinggemma
+
+### health
+GET http://localhost:8082/health
+
+
+### create one embedding with the OpenAI-compatible endpoint
+POST http://localhost:8082/v1/embeddings
+Content-Type: application/json
+
+{
+  "model": "{{llamaModel}}",
+  "input": "guy stranded at beach"
+}
+
+### create one embedding with the OpenAI-compatible endpoint
+POST http://localhost:8082/v1/embeddings
+Content-Type: application/json
+
+{
+  "model": "{{llamaModel}}",
+  "input": "A space horror movie with an alien creature stalking a spaceship crew."
+}
+
+
+### create embeddings for multiple movie search queries
+POST http://localhost:8082/v1/embeddings
+Content-Type: application/json
+
+{
+  "model": "{{llamaModel}}",
+  "input": [
+    "A mind bending science fiction movie about dreams within dreams.",
+    "A fantasy adventure about a ring and a dangerous journey.",
+    "A tense crime thriller about a serial killer investigation."
+  ]
+}
+
+
+### native llama.cpp embedding endpoint
+POST http://localhost:8082/embedding
+Content-Type: application/json
+
+{
+  "content": "An animated family movie about toys that come to life."
+}
+
+
+### Prometheus metrics
+GET http://localhost:8082/metrics

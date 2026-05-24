@@ -70,6 +70,28 @@ services:
     networks:
       - imdb-clone-network
 
+  ### ----------------------- llama.cpp ----------------------- ###
+  imdb-clone-llama-cpp:
+    container_name: imdb-clone-llama-cpp
+    image: ghcr.io/ggml-org/llama.cpp:server
+    restart: unless-stopped
+    environment:
+      - LLAMA_ARG_ENDPOINT_METRICS=1
+    ports:
+      - "8082:8080"
+    volumes:
+      - imdb-clone-llama-cpp-cache:/root/.cache
+    networks:
+      - imdb-clone-network
+    command:
+      - -hf
+      - ggml-org/embeddinggemma-300M-GGUF
+      - --embeddings
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+
   imdb-clone-seed-light:
     image: ${IMDB_CLONE_SEED_LIGHT_IMAGE:-niklastiede/imdb-clone-seed:light-local}
     profiles:
@@ -119,6 +141,8 @@ volumes:
     name: imdb-clone-elasticsearch-data
   imdb-clone-rustfs-data:
     name: imdb-clone-rustfs-data
+  imdb-clone-llama-cpp-cache:
+    name: imdb-clone-llama-cpp-cache
 
 networks:
   imdb-clone-network:
