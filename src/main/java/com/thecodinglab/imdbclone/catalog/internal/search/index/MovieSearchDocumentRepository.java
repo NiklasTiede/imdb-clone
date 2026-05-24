@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.index;
 
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 

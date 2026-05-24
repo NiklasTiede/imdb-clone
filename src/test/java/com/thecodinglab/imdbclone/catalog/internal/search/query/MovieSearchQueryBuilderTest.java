@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

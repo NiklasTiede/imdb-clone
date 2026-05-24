@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.projection;
 
 import com.github.kagkarlsson.scheduler.task.helper.OneTimeTask;
 import com.github.kagkarlsson.scheduler.task.helper.Tasks;

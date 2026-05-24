@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.embedding;
 
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;

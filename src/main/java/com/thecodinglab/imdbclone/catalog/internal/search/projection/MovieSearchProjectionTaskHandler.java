@@ -1,7 +1,11 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.projection;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
+import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentMapper;
+import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchEmbeddingProjector;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 

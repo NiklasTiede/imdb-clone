@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.embedding;
 
 import java.util.List;
 import org.springframework.ai.document.Document;

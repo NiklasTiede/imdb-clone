@@ -12,7 +12,7 @@ import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieSearchDao;
-import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchProjectionTasks;
+import com.thecodinglab.imdbclone.catalog.internal.search.projection.MovieSearchProjectionTasks;
 import java.math.BigDecimal;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;

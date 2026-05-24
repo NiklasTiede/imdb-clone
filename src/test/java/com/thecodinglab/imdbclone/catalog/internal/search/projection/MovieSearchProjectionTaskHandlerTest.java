@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.projection;
 
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -7,6 +7,10 @@ import static org.mockito.Mockito.when;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
+import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentMapper;
+import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchEmbeddingProjector;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

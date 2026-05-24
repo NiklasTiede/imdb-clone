@@ -1,9 +1,10 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.index;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
+import com.thecodinglab.imdbclone.catalog.internal.search.embedding.MovieEmbeddingClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

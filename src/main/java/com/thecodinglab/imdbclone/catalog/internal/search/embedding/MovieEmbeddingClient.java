@@ -1,4 +1,4 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.embedding;
 
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Component;

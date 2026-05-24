@@ -1,6 +1,7 @@
-package com.thecodinglab.imdbclone.catalog.internal.search;
+package com.thecodinglab.imdbclone.catalog.internal.search.index;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
+import com.thecodinglab.imdbclone.catalog.internal.search.embedding.MovieEmbeddingClient;
 import org.springframework.stereotype.Component;
 
 @Component
