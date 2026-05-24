@@ -10,8 +10,6 @@ import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
-import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.error.ElasticsearchOperationException;
 import java.io.IOException;
@@ -31,16 +29,17 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
 
   private static final Logger logger = LoggerFactory.getLogger(ElasticsearchMovieSearchService.class);
   private final ElasticsearchClient esClient;
-  private final MovieMapper movieMapper;
+  private final MovieSearchDocumentMapper movieSearchDocumentMapper;
   private static final String MOVIES_INDEX = "movies";
 
-  public ElasticsearchMovieSearchService(ElasticsearchClient esClient, MovieMapper movieMapper) {
+  public ElasticsearchMovieSearchService(
+      ElasticsearchClient esClient, MovieSearchDocumentMapper movieSearchDocumentMapper) {
     this.esClient = esClient;
-    this.movieMapper = movieMapper;
+    this.movieSearchDocumentMapper = movieSearchDocumentMapper;
   }
 
   @Override
-  public void indexMovie(Movie movie) {
+  public void indexMovie(MovieSearchDocument movie) {
     IndexResponse indexResponse;
     try {
       indexResponse = esClient
@@ -59,15 +58,19 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
       }
     } catch (IOException ex) {
       logger.error(
-          "Document of type movie with [{}] was not indexed successfully.", kv(MOVIE_ID,movie.getId()));
-      throw new ElasticsearchOperationException("Document of type movie with id [%s] was not indexed successfully.".formatted(movie.getId()), ex);
+          "Document of type movie with [{}] was not indexed successfully.",
+          kv(MOVIE_ID, movie.getId()));
+      throw new ElasticsearchOperationException(
+          "Document of type movie with id [%s] was not indexed successfully."
+              .formatted(movie.getId()),
+          ex);
     }
   }
 
   @Override
-  public void indexMovies(List<Movie> movies) {
+  public void indexMovies(List<MovieSearchDocument> movies) {
     BulkRequest.Builder br = new BulkRequest.Builder();
-    for (Movie movie : movies) {
+    for (MovieSearchDocument movie : movies) {
       br.operations(op -> op
           .index(idx -> idx
               .index(MOVIES_INDEX)
@@ -100,13 +103,13 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
   /**
    * Search Single Document by ID
    */
-  public Movie getMovieDocumentById(Long movieId) {
+  public MovieSearchDocument getMovieDocumentById(Long movieId) {
     try {
-      GetResponse<Movie> response = esClient
+      GetResponse<MovieSearchDocument> response = esClient
           .get(g -> g
                   .index(MOVIES_INDEX)
                   .id(movieId.toString()),
-              Movie.class);
+              MovieSearchDocument.class);
 
       logger.info("Movie document with primaryTitle [{}] was found.", response.source() != null ? response.source().getPrimaryTitle() : null);
       return response.source();
@@ -119,8 +122,8 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
   /**
    * Search movies by Primary Title
    */
-  public List<Movie> searchMoviesByPrimaryTitle(String searchText) {
-    SearchResponse<Movie> response;
+  public List<MovieSearchDocument> searchMoviesByPrimaryTitle(String searchText) {
+    SearchResponse<MovieSearchDocument> response;
     try {
       response = esClient
           .search(s -> s
@@ -129,11 +132,12 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
                       .match(m -> m
                           .field("primaryTitle")
                           .query(searchText))),
-              Movie.class);
+              MovieSearchDocument.class);
     } catch (IOException ex) {
       throw new ElasticsearchOperationException("Error while searching for a Movie Document by primaryTitle in ElasticSearch", ex);
     }
-    List<Movie> movies = response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
+    List<MovieSearchDocument> movies =
+        response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
     logger.info("Document search by primaryTitle gave [{}] results.", movies.size());
     return movies;
   }
@@ -141,9 +145,9 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
   /**
    * Search movies by range of ratings
    */
-  public List<Movie> searchMoviesByRatingRange(float minRating, float maxRating) {
+  public List<MovieSearchDocument> searchMoviesByRatingRange(float minRating, float maxRating) {
     try {
-      SearchResponse<Movie> response = esClient
+      SearchResponse<MovieSearchDocument> response = esClient
           .search(s -> s
                   .index(MOVIES_INDEX)
                   .query(q -> q
@@ -152,8 +156,9 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
                               .field("imdbRating")
                               .gte((double) minRating)
                               .lte((double) maxRating)))),
-              Movie.class);
-      List<Movie> movies = response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
+              MovieSearchDocument.class);
+      List<MovieSearchDocument> movies =
+          response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
       logger.info("Document search by ratings between [{}] and [{}] gave [{}] results.",minRating, maxRating, movies.size());
       return movies;
     } catch (IOException ex) {
@@ -168,7 +173,7 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
   public PagedResponse<MovieRecord> searchMovies(
       String query, MovieSearchRequest request, int page, int size) {
     BoolQuery boolQuery = buildBoolQuery(query, request);
-    SearchResponse<Movie> response;
+    SearchResponse<MovieSearchDocument> response;
 
     SearchRequest searchRequest =
         SearchRequest.of(s -> s
@@ -180,7 +185,7 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
     logger.info("Document search query json: [{}]", searchRequest);
 
     try {
-      response = esClient.search(searchRequest, Movie.class);
+      response = esClient.search(searchRequest, MovieSearchDocument.class);
     } catch (IOException ex) {
       throw new ElasticsearchOperationException("error while search was performed", ex);
     }
@@ -191,12 +196,13 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
     int totalHits = (int) (response.hits().total() != null ? response.hits().total().value() : 0);
     Pageable pageable = PageRequest.of(page, size);
 
-    List<Movie> movies = response.hits().hits().stream()
+    List<MovieSearchDocument> movies = response.hits().hits().stream()
             .map(Hit::source)
             .filter(Objects::nonNull)
             .toList();
 
-    return PagedResponse.from(new PageImpl<>(movies, pageable, totalHits).map(movieMapper::entityToDTO));
+    return PagedResponse.from(
+        new PageImpl<>(movies, pageable, totalHits).map(movieSearchDocumentMapper::toMovieRecord));
   }
 
   @Override

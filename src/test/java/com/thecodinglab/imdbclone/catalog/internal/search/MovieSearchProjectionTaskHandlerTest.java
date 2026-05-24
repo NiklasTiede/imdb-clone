@@ -6,7 +6,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,24 +19,31 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class MovieSearchProjectionTaskHandlerTest {
 
   @Mock private MovieRepository movieRepository;
-  @Mock private MovieElasticSearchRepository elasticSearchRepository;
+  @Mock private MovieSearchDocumentRepository movieSearchRepository;
+  @Mock private MovieSearchDocumentMapper movieSearchDocumentMapper;
 
   private MovieSearchProjectionTaskHandler handler;
 
   @BeforeEach
   void setUp() {
-    handler = new MovieSearchProjectionTaskHandler(movieRepository, elasticSearchRepository);
+    handler =
+        new MovieSearchProjectionTaskHandler(
+            movieRepository, movieSearchRepository, movieSearchDocumentMapper);
   }
 
   @Test
   void project_upsertSavesMovieDocumentFromDatabase() {
     Movie movie = movieWithId(45L);
+    MovieSearchDocument document = new MovieSearchDocument();
+    document.setId(45L);
+    document.setPrimaryTitle("Projected title");
     when(movieRepository.findById(45L)).thenReturn(Optional.of(movie));
+    when(movieSearchDocumentMapper.toDocument(movie)).thenReturn(document);
 
     handler.project(MovieSearchProjectionOperation.UPSERT, 45L);
 
-    verify(elasticSearchRepository).save(movie);
-    verify(elasticSearchRepository, never()).deleteById(45L);
+    verify(movieSearchRepository).save(document);
+    verify(movieSearchRepository, never()).deleteById(45L);
   }
 
   @Test
@@ -46,15 +52,15 @@ class MovieSearchProjectionTaskHandlerTest {
 
     handler.project(MovieSearchProjectionOperation.UPSERT, 46L);
 
-    verify(elasticSearchRepository).deleteById(46L);
+    verify(movieSearchRepository).deleteById(46L);
   }
 
   @Test
   void project_deleteDeletesMovieDocument() {
     handler.project(MovieSearchProjectionOperation.DELETE, 47L);
 
-    InOrder inOrder = inOrder(elasticSearchRepository, movieRepository);
-    inOrder.verify(elasticSearchRepository).deleteById(47L);
+    InOrder inOrder = inOrder(movieSearchRepository, movieRepository);
+    inOrder.verify(movieSearchRepository).deleteById(47L);
     verify(movieRepository, never()).findById(47L);
   }
 

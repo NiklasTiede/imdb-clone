@@ -7,8 +7,8 @@ import com.thecodinglab.imdbclone.catalog.api.MovieIdsRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchDocumentRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchProjectionTaskHandler;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
@@ -43,7 +43,7 @@ class MovieControllerTest extends BaseContainers {
 
   @Autowired private MovieRepository movieRepository;
 
-  @Autowired private MovieElasticSearchRepository movieElasticSearchRepository;
+  @Autowired private MovieSearchDocumentRepository movieSearchDocumentRepository;
 
   @Autowired private MovieSearchProjectionTaskHandler movieSearchProjectionTaskHandler;
 
@@ -67,7 +67,7 @@ class MovieControllerTest extends BaseContainers {
         .filter(movie -> movie.getPrimaryTitle().startsWith(TEST_MOVIE_PREFIX))
         .forEach(
             movie -> {
-              movieElasticSearchRepository.deleteById(movie.getId());
+              movieSearchDocumentRepository.deleteById(movie.getId());
               movieRepository.delete(movie);
             });
   }
@@ -210,7 +210,7 @@ class MovieControllerTest extends BaseContainers {
 
     movieSearchProjectionTaskHandler.projectUpsert(createdMovie.id());
 
-    var movieDocument = movieElasticSearchRepository.findById(createdMovie.id());
+    var movieDocument = movieSearchDocumentRepository.findById(createdMovie.id());
     assertThat(movieDocument).isPresent();
     movieDocument.ifPresent(
         r -> assertThat(r.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " create"));
@@ -269,7 +269,7 @@ class MovieControllerTest extends BaseContainers {
 
     movieSearchProjectionTaskHandler.projectUpsert(createdMovie.id());
 
-    var movieDocument = movieElasticSearchRepository.findById(createdMovie.id());
+    var movieDocument = movieSearchDocumentRepository.findById(createdMovie.id());
     assertThat(movieDocument).isPresent();
     movieDocument.ifPresent(
         r -> assertThat(r.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " updated"));
@@ -290,7 +290,7 @@ class MovieControllerTest extends BaseContainers {
                 false));
 
     movieSearchProjectionTaskHandler.projectUpsert(createdMovie.id());
-    assertThat(movieElasticSearchRepository.findById(createdMovie.id())).isPresent();
+    assertThat(movieSearchDocumentRepository.findById(createdMovie.id())).isPresent();
 
     restTestClient
         .delete()
@@ -304,7 +304,7 @@ class MovieControllerTest extends BaseContainers {
     movieSearchProjectionTaskHandler.projectDelete(createdMovie.id());
 
     assertThat(movieRepository.findById(createdMovie.id())).isEmpty();
-    assertThat(movieElasticSearchRepository.findById(createdMovie.id())).isEmpty();
+    assertThat(movieSearchDocumentRepository.findById(createdMovie.id())).isEmpty();
   }
 
   private MovieRecord createMovie(MovieRequest movieRequest) {

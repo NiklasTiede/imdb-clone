@@ -1,72 +1,41 @@
-package com.thecodinglab.imdbclone.catalog.internal.persistence;
+package com.thecodinglab.imdbclone.catalog.internal.search;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
-import com.thecodinglab.imdbclone.shared.persistence.DateAudit;
-import jakarta.persistence.*;
-import java.math.BigDecimal;
-import java.util.*;
+import java.time.Instant;
+import java.util.Set;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
 
-@Entity
-public class Movie extends DateAudit {
+@Document(indexName = "movies", createIndex = false, writeTypeHint = WriteTypeHint.FALSE)
+@Setting(shards = 1, replicas = 0)
+public class MovieSearchDocument {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @Id private Long id;
 
   private String imdbId;
   private Long tmdbId;
-
-  @Enumerated(EnumType.STRING)
-  @Column(length = 50)
   private MovieType movieType;
-
   private String primaryTitle;
   private String originalTitle;
-
-  @JsonIgnore private Boolean adult;
-
+  private Boolean adult;
   private Integer startYear;
-
-  @JsonIgnore private Integer endYear;
-
+  private Integer endYear;
   private Integer runtimeMinutes;
-
-  @Convert(converter = MovieGenreConverterImpl.class)
+  private Instant modifiedAtInUtc;
+  private Instant createdAtInUtc;
   private Set<MovieGenre> movieGenre;
-
   private Float imdbRating;
   private Integer imdbRatingCount;
-
-  @JsonIgnore private String description;
-
-  @Column(length = 255)
+  private String description;
   private String posterImageToken;
-
-  @Column(length = 255)
   private String backdropImageToken;
-
-  @Column(length = 255)
   private String trailerYoutubeKey;
-
-  @Column(precision = 3, scale = 1)
-  private BigDecimal rating;
-
-  private Integer ratingCount = 0;
-
-  @Column(nullable = false, precision = 19, scale = 1)
-  private BigDecimal ratingSum = BigDecimal.ZERO;
-
-  public Movie() {}
-
-  public Movie(
-      String primaryTitle, String originalTitle, MovieType movieType, Integer runtimeMinutes) {
-    this.primaryTitle = primaryTitle;
-    this.originalTitle = originalTitle;
-    this.movieType = movieType;
-    this.runtimeMinutes = runtimeMinutes;
-  }
+  private Float rating;
+  private Integer ratingCount;
+  private String imageUrlToken;
 
   public Long getId() {
     return id;
@@ -92,6 +61,14 @@ public class Movie extends DateAudit {
     this.tmdbId = tmdbId;
   }
 
+  public MovieType getMovieType() {
+    return movieType;
+  }
+
+  public void setMovieType(MovieType movieType) {
+    this.movieType = movieType;
+  }
+
   public String getPrimaryTitle() {
     return primaryTitle;
   }
@@ -106,6 +83,14 @@ public class Movie extends DateAudit {
 
   public void setOriginalTitle(String originalTitle) {
     this.originalTitle = originalTitle;
+  }
+
+  public Boolean getAdult() {
+    return adult;
+  }
+
+  public void setAdult(Boolean adult) {
+    this.adult = adult;
   }
 
   public Integer getStartYear() {
@@ -132,20 +117,28 @@ public class Movie extends DateAudit {
     this.runtimeMinutes = runtimeMinutes;
   }
 
+  public Instant getModifiedAtInUtc() {
+    return modifiedAtInUtc;
+  }
+
+  public void setModifiedAtInUtc(Instant modifiedAtInUtc) {
+    this.modifiedAtInUtc = modifiedAtInUtc;
+  }
+
+  public Instant getCreatedAtInUtc() {
+    return createdAtInUtc;
+  }
+
+  public void setCreatedAtInUtc(Instant createdAtInUtc) {
+    this.createdAtInUtc = createdAtInUtc;
+  }
+
   public Set<MovieGenre> getMovieGenre() {
     return movieGenre;
   }
 
   public void setMovieGenre(Set<MovieGenre> movieGenre) {
     this.movieGenre = movieGenre;
-  }
-
-  public MovieType getMovieType() {
-    return movieType;
-  }
-
-  public void setMovieType(MovieType movieType) {
-    this.movieType = movieType;
   }
 
   public Float getImdbRating() {
@@ -164,38 +157,6 @@ public class Movie extends DateAudit {
     this.imdbRatingCount = imdbRatingCount;
   }
 
-  public Boolean getAdult() {
-    return adult;
-  }
-
-  public void setAdult(Boolean adult) {
-    this.adult = adult;
-  }
-
-  public BigDecimal getRating() {
-    return rating;
-  }
-
-  public void setRating(BigDecimal rating) {
-    this.rating = rating;
-  }
-
-  public Integer getRatingCount() {
-    return ratingCount;
-  }
-
-  public void setRatingCount(Integer ratingCount) {
-    this.ratingCount = ratingCount;
-  }
-
-  public BigDecimal getRatingSum() {
-    return ratingSum;
-  }
-
-  public void setRatingSum(BigDecimal ratingSum) {
-    this.ratingSum = ratingSum;
-  }
-
   public String getDescription() {
     return description;
   }
@@ -212,14 +173,6 @@ public class Movie extends DateAudit {
     this.posterImageToken = posterImageToken;
   }
 
-  public String getImageUrlToken() {
-    return posterImageToken;
-  }
-
-  public void setImageUrlToken(String imageUrlToken) {
-    this.posterImageToken = imageUrlToken;
-  }
-
   public String getBackdropImageToken() {
     return backdropImageToken;
   }
@@ -234,5 +187,29 @@ public class Movie extends DateAudit {
 
   public void setTrailerYoutubeKey(String trailerYoutubeKey) {
     this.trailerYoutubeKey = trailerYoutubeKey;
+  }
+
+  public Float getRating() {
+    return rating;
+  }
+
+  public void setRating(Float rating) {
+    this.rating = rating;
+  }
+
+  public Integer getRatingCount() {
+    return ratingCount;
+  }
+
+  public void setRatingCount(Integer ratingCount) {
+    this.ratingCount = ratingCount;
+  }
+
+  public String getImageUrlToken() {
+    return imageUrlToken;
+  }
+
+  public void setImageUrlToken(String imageUrlToken) {
+    this.imageUrlToken = imageUrlToken;
   }
 }

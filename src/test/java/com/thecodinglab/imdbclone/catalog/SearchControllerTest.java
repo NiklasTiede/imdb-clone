@@ -2,8 +2,8 @@ package com.thecodinglab.imdbclone.catalog;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchDocumentRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchIndexMaintenance;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
@@ -36,7 +36,7 @@ class SearchControllerTest extends BaseContainers {
 
   @Autowired private MovieRepository movieRepository;
 
-  @Autowired private MovieElasticSearchRepository movieSearchRepository;
+  @Autowired private MovieSearchDocumentRepository movieSearchRepository;
 
   @Autowired private MovieSearchIndexMaintenance movieSearchIndexMaintenance;
 

@@ -1,7 +1,6 @@
 package com.thecodinglab.imdbclone.catalog.internal.search;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -10,12 +9,16 @@ import org.springframework.stereotype.Service;
 public class MovieSearchProjectionTaskHandler {
 
   private final MovieRepository movieRepository;
-  private final MovieElasticSearchRepository elasticSearchRepository;
+  private final MovieSearchDocumentRepository movieSearchRepository;
+  private final MovieSearchDocumentMapper movieSearchDocumentMapper;
 
   public MovieSearchProjectionTaskHandler(
-      MovieRepository movieRepository, MovieElasticSearchRepository elasticSearchRepository) {
+      MovieRepository movieRepository,
+      MovieSearchDocumentRepository movieSearchRepository,
+      MovieSearchDocumentMapper movieSearchDocumentMapper) {
     this.movieRepository = movieRepository;
-    this.elasticSearchRepository = elasticSearchRepository;
+    this.movieSearchRepository = movieSearchRepository;
+    this.movieSearchDocumentMapper = movieSearchDocumentMapper;
   }
 
   public void projectUpsert(Long movieId) {
@@ -29,16 +32,16 @@ public class MovieSearchProjectionTaskHandler {
   void project(MovieSearchProjectionOperation operation, Long movieId) {
     switch (operation) {
       case UPSERT -> upsertMovieDocument(movieId);
-      case DELETE -> elasticSearchRepository.deleteById(movieId);
+      case DELETE -> movieSearchRepository.deleteById(movieId);
     }
   }
 
   private void upsertMovieDocument(Long movieId) {
     Optional<Movie> movie = movieRepository.findById(movieId);
     if (movie.isPresent()) {
-      elasticSearchRepository.save(movie.get());
+      movieSearchRepository.save(movieSearchDocumentMapper.toDocument(movie.get()));
       return;
     }
-    elasticSearchRepository.deleteById(movieId);
+    movieSearchRepository.deleteById(movieId);
   }
 }

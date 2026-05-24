@@ -1,12 +1,12 @@
 package com.thecodinglab.imdbclone.catalog.internal.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
-import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieElasticSearchRepository;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +24,8 @@ import org.springframework.data.elasticsearch.core.IndexOperations;
 class MovieSearchIndexMaintenanceTest {
 
   @Mock private MovieRepository movieRepository;
-  @Mock private MovieElasticSearchRepository movieSearchRepository;
+  @Mock private MovieSearchDocumentRepository movieSearchRepository;
+  @Mock private MovieSearchDocumentMapper movieSearchDocumentMapper;
   @Mock private ElasticsearchOperations elasticsearchOperations;
   @Mock private IndexOperations indexOperations;
 
@@ -34,37 +35,44 @@ class MovieSearchIndexMaintenanceTest {
   void setUp() {
     maintenance =
         new MovieSearchIndexMaintenance(
-            movieRepository, movieSearchRepository, elasticsearchOperations);
+            movieRepository,
+            movieSearchRepository,
+            movieSearchDocumentMapper,
+            elasticsearchOperations);
   }
 
   @Test
   void reindexMoviesCreatesTheIndexWhenMissingAndIndexesEveryMovie() {
     Movie firstMovie = new Movie("First", "First", null, 90);
     Movie secondMovie = new Movie("Second", "Second", null, 95);
+    MovieSearchDocument firstDocument = new MovieSearchDocument();
+    MovieSearchDocument secondDocument = new MovieSearchDocument();
     PageRequest firstPage = PageRequest.of(0, 500, Sort.by("id").ascending());
     PageRequest secondPage = PageRequest.of(1, 500, Sort.by("id").ascending());
 
-    when(elasticsearchOperations.indexOps(Movie.class)).thenReturn(indexOperations);
+    when(elasticsearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
     when(indexOperations.exists()).thenReturn(false);
     when(movieRepository.findAll(firstPage))
         .thenReturn(new PageImpl<>(List.of(firstMovie), firstPage, 501));
     when(movieRepository.findAll(secondPage))
         .thenReturn(new PageImpl<>(List.of(secondMovie), secondPage, 501));
+    when(movieSearchDocumentMapper.toDocument(firstMovie)).thenReturn(firstDocument);
+    when(movieSearchDocumentMapper.toDocument(secondMovie)).thenReturn(secondDocument);
 
     long indexedMovies = maintenance.reindexMovies();
 
     assertThat(indexedMovies).isEqualTo(2);
     verify(indexOperations).createWithMapping();
     verify(movieSearchRepository).deleteAll();
-    verify(movieSearchRepository).saveAll(List.of(firstMovie));
-    verify(movieSearchRepository).saveAll(List.of(secondMovie));
+    verify(movieSearchRepository).saveAll(List.of(firstDocument));
+    verify(movieSearchRepository).saveAll(List.of(secondDocument));
   }
 
   @Test
   void reindexMoviesKeepsExistingIndexMapping() {
     PageRequest firstPage = PageRequest.of(0, 500, Sort.by("id").ascending());
 
-    when(elasticsearchOperations.indexOps(Movie.class)).thenReturn(indexOperations);
+    when(elasticsearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
     when(indexOperations.exists()).thenReturn(true);
     when(movieRepository.findAll(firstPage)).thenReturn(new PageImpl<>(List.of(), firstPage, 0));
 
@@ -72,5 +80,6 @@ class MovieSearchIndexMaintenanceTest {
 
     assertThat(indexedMovies).isZero();
     verify(indexOperations, never()).createWithMapping();
+    verify(movieSearchRepository, never()).saveAll(any());
   }
 }
