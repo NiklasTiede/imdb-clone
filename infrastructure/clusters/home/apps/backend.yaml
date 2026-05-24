@@ -33,6 +33,19 @@ spec:
               value: http://imdb-clone-elasticsearch.databases.svc.cluster.local:9200
             - name: IMDB_CLONE_MEDIA_STORAGE_URI
               value: http://imdb-clone-rustfs.databases.svc.cluster.local:9000
+            - name: SPRING_APPLICATION_JSON
+              value: |-
+                {
+                  "management": {
+                    "metrics": {
+                      "distribution": {
+                        "percentiles-histogram": {
+                          "http.server.requests": true
+                        }
+                      }
+                    }
+                  }
+                }
           envFrom:
             - secretRef:
                 name: backend-runtime
