@@ -30,12 +30,19 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
   private static final Logger logger = LoggerFactory.getLogger(ElasticsearchMovieSearchService.class);
   private final ElasticsearchClient esClient;
   private final MovieSearchDocumentMapper movieSearchDocumentMapper;
+  private final MovieEmbeddingClient movieEmbeddingClient;
+  private final MovieSearchQueryBuilder movieSearchQueryBuilder;
   private static final String MOVIES_INDEX = "movies";
 
   public ElasticsearchMovieSearchService(
-      ElasticsearchClient esClient, MovieSearchDocumentMapper movieSearchDocumentMapper) {
+      ElasticsearchClient esClient,
+      MovieSearchDocumentMapper movieSearchDocumentMapper,
+      MovieEmbeddingClient movieEmbeddingClient,
+      MovieSearchQueryBuilder movieSearchQueryBuilder) {
     this.esClient = esClient;
     this.movieSearchDocumentMapper = movieSearchDocumentMapper;
+    this.movieEmbeddingClient = movieEmbeddingClient;
+    this.movieSearchQueryBuilder = movieSearchQueryBuilder;
   }
 
   @Override
@@ -193,13 +200,42 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
         "Scores of found documents: [{}]",
         response.hits().hits().stream().map(Hit::score).toList());
 
+    return toPagedMovieResponse(response, page, size);
+  }
+
+  @Override
+  public PagedResponse<MovieRecord> searchMoviesSemantically(
+      String query, MovieSearchRequest request, int page, int size) {
+    String normalizedQuery = query == null ? "" : query.trim();
+    if (normalizedQuery.isBlank()) {
+      return searchMovies(query, request, page, size);
+    }
+
+    float[] queryEmbedding = movieEmbeddingClient.embedText(normalizedQuery);
+    SearchRequest searchRequest =
+        movieSearchQueryBuilder.buildSemanticSearchRequest(
+            MOVIES_INDEX, queryEmbedding, request, page, size);
+    logger.info("Semantic movie search query json: [{}]", searchRequest);
+
+    try {
+      SearchResponse<MovieSearchDocument> response =
+          esClient.search(searchRequest, MovieSearchDocument.class);
+      logger.info(
+          "Scores of semantically found documents: [{}]",
+          response.hits().hits().stream().map(Hit::score).toList());
+      return toPagedMovieResponse(response, page, size);
+    } catch (IOException ex) {
+      throw new ElasticsearchOperationException("error while semantic search was performed", ex);
+    }
+  }
+
+  private PagedResponse<MovieRecord> toPagedMovieResponse(
+      SearchResponse<MovieSearchDocument> response, int page, int size) {
     int totalHits = (int) (response.hits().total() != null ? response.hits().total().value() : 0);
     Pageable pageable = PageRequest.of(page, size);
 
-    List<MovieSearchDocument> movies = response.hits().hits().stream()
-            .map(Hit::source)
-            .filter(Objects::nonNull)
-            .toList();
+    List<MovieSearchDocument> movies =
+        response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
 
     return PagedResponse.from(
         new PageImpl<>(movies, pageable, totalHits).map(movieSearchDocumentMapper::toMovieRecord));

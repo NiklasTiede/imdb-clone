@@ -21,5 +21,8 @@ public interface MovieSearchService {
   PagedResponse<MovieRecord> searchMovies(
       String query, MovieSearchRequest request, int page, int size);
 
+  PagedResponse<MovieRecord> searchMoviesSemantically(
+      String query, MovieSearchRequest request, int page, int size);
+
   BoolQuery buildBoolQuery(String query, MovieSearchRequest request);
 }

@@ -1,11 +1,14 @@
 package com.thecodinglab.imdbclone.catalog;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
+import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchDocument;
 import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchDocumentRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchEmbeddingTextBuilder;
 import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchIndexMaintenance;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchService;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
@@ -42,6 +45,10 @@ class SearchControllerTest extends BaseContainers {
   @Autowired private MovieSearchDocumentRepository movieSearchRepository;
 
   @Autowired private MovieSearchIndexMaintenance movieSearchIndexMaintenance;
+
+  @Autowired private MovieSearchService movieSearchService;
+
+  @Autowired private MovieSearchEmbeddingTextBuilder movieSearchEmbeddingTextBuilder;
 
   @Autowired private ElasticsearchOperations elasticsearchOperations;
 
@@ -154,6 +161,21 @@ class SearchControllerTest extends BaseContainers {
     MovieSearchDocument indexedMovie = movieSearchRepository.findById(1L).orElseThrow();
     Assertions.assertThat(indexedMovie.getEmbeddingModel()).isEqualTo("embeddinggemma");
     Assertions.assertThat(indexedMovie.getEmbeddingTextVersion()).isEqualTo("movie-search-v1");
+  }
+
+  @Test
+  void semanticSearch_returnsNearestEmbeddedMovie() {
+    String query =
+        movieSearchEmbeddingTextBuilder.build(movieRepository.findById(1L).orElseThrow());
+    var request = new MovieSearchRequest(null, null, null, null, Collections.emptySet(), null);
+
+    var response = movieSearchService.searchMoviesSemantically(query, request, 0, 20);
+
+    Assertions.assertThat(response.getContent())
+        .isNotEmpty()
+        .first()
+        .extracting(MovieRecord::id)
+        .isEqualTo(1L);
   }
 
   @Test
