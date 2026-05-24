@@ -3,12 +3,14 @@ package com.thecodinglab.imdbclone.catalog;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchDocument;
 import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchDocumentRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchIndexMaintenance;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -39,6 +42,8 @@ class SearchControllerTest extends BaseContainers {
   @Autowired private MovieSearchDocumentRepository movieSearchRepository;
 
   @Autowired private MovieSearchIndexMaintenance movieSearchIndexMaintenance;
+
+  @Autowired private ElasticsearchOperations elasticsearchOperations;
 
   private String adminToken;
   private String userToken;
@@ -139,6 +144,16 @@ class SearchControllerTest extends BaseContainers {
                     .isEqualTo((int) expectedMovies));
 
     Assertions.assertThat(movieSearchRepository.count()).isEqualTo(expectedMovies);
+    Map<String, Object> embeddingMapping =
+        propertyMapping(elasticsearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "embedding");
+    Assertions.assertThat(embeddingMapping).containsEntry("type", "dense_vector");
+    Assertions.assertThat(embeddingMapping).containsEntry("dims", 768);
+    Assertions.assertThat(embeddingMapping).containsEntry("index", true);
+    Assertions.assertThat(embeddingMapping).containsEntry("similarity", "cosine");
+
+    MovieSearchDocument indexedMovie = movieSearchRepository.findById(1L).orElseThrow();
+    Assertions.assertThat(indexedMovie.getEmbeddingModel()).isEqualTo("embeddinggemma");
+    Assertions.assertThat(indexedMovie.getEmbeddingTextVersion()).isEqualTo("movie-search-v1");
   }
 
   @Test
@@ -151,6 +166,12 @@ class SearchControllerTest extends BaseContainers {
         .exchange()
         .expectStatus()
         .isForbidden();
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> propertyMapping(Map<String, Object> mapping, String propertyName) {
+    Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
+    return (Map<String, Object>) properties.get(propertyName);
   }
 }
 // spotless:on

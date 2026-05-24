@@ -11,14 +11,17 @@ public class MovieSearchProjectionTaskHandler {
   private final MovieRepository movieRepository;
   private final MovieSearchDocumentRepository movieSearchRepository;
   private final MovieSearchDocumentMapper movieSearchDocumentMapper;
+  private final MovieSearchEmbeddingProjector movieSearchEmbeddingProjector;
 
   public MovieSearchProjectionTaskHandler(
       MovieRepository movieRepository,
       MovieSearchDocumentRepository movieSearchRepository,
-      MovieSearchDocumentMapper movieSearchDocumentMapper) {
+      MovieSearchDocumentMapper movieSearchDocumentMapper,
+      MovieSearchEmbeddingProjector movieSearchEmbeddingProjector) {
     this.movieRepository = movieRepository;
     this.movieSearchRepository = movieSearchRepository;
     this.movieSearchDocumentMapper = movieSearchDocumentMapper;
+    this.movieSearchEmbeddingProjector = movieSearchEmbeddingProjector;
   }
 
   public void projectUpsert(Long movieId) {
@@ -39,7 +42,9 @@ public class MovieSearchProjectionTaskHandler {
   private void upsertMovieDocument(Long movieId) {
     Optional<Movie> movie = movieRepository.findById(movieId);
     if (movie.isPresent()) {
-      movieSearchRepository.save(movieSearchDocumentMapper.toDocument(movie.get()));
+      MovieSearchDocument document = movieSearchDocumentMapper.toDocument(movie.get());
+      movieSearchEmbeddingProjector.addEmbedding(movie.get(), document);
+      movieSearchRepository.save(document);
       return;
     }
     movieSearchRepository.deleteById(movieId);

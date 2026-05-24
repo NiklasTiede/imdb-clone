@@ -18,16 +18,19 @@ public class MovieSearchIndexMaintenance {
   private final MovieRepository movieRepository;
   private final MovieSearchDocumentRepository movieSearchRepository;
   private final MovieSearchDocumentMapper movieSearchDocumentMapper;
+  private final MovieSearchEmbeddingProjector movieSearchEmbeddingProjector;
   private final ElasticsearchOperations elasticsearchOperations;
 
   public MovieSearchIndexMaintenance(
       MovieRepository movieRepository,
       MovieSearchDocumentRepository movieSearchRepository,
       MovieSearchDocumentMapper movieSearchDocumentMapper,
+      MovieSearchEmbeddingProjector movieSearchEmbeddingProjector,
       ElasticsearchOperations elasticsearchOperations) {
     this.movieRepository = movieRepository;
     this.movieSearchRepository = movieSearchRepository;
     this.movieSearchDocumentMapper = movieSearchDocumentMapper;
+    this.movieSearchEmbeddingProjector = movieSearchEmbeddingProjector;
     this.elasticsearchOperations = elasticsearchOperations;
   }
 
@@ -44,7 +47,7 @@ public class MovieSearchIndexMaintenance {
               PageRequest.of(pageNumber, REINDEX_PAGE_SIZE, Sort.by("id").ascending()));
       if (page.hasContent()) {
         List<MovieSearchDocument> documents =
-            page.getContent().stream().map(movieSearchDocumentMapper::toDocument).toList();
+            page.getContent().stream().map(this::toEmbeddedDocument).toList();
         movieSearchRepository.saveAll(documents);
         indexedMovies += page.getNumberOfElements();
       }
@@ -52,6 +55,12 @@ public class MovieSearchIndexMaintenance {
     } while (page.hasNext());
 
     return indexedMovies;
+  }
+
+  private MovieSearchDocument toEmbeddedDocument(Movie movie) {
+    MovieSearchDocument document = movieSearchDocumentMapper.toDocument(movie);
+    movieSearchEmbeddingProjector.addEmbedding(movie, document);
+    return document;
   }
 
   private void createMoviesIndexIfMissing() {

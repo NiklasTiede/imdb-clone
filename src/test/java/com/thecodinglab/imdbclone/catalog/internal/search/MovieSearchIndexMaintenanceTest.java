@@ -26,6 +26,7 @@ class MovieSearchIndexMaintenanceTest {
   @Mock private MovieRepository movieRepository;
   @Mock private MovieSearchDocumentRepository movieSearchRepository;
   @Mock private MovieSearchDocumentMapper movieSearchDocumentMapper;
+  @Mock private MovieSearchEmbeddingProjector movieSearchEmbeddingProjector;
   @Mock private ElasticsearchOperations elasticsearchOperations;
   @Mock private IndexOperations indexOperations;
 
@@ -38,6 +39,7 @@ class MovieSearchIndexMaintenanceTest {
             movieRepository,
             movieSearchRepository,
             movieSearchDocumentMapper,
+            movieSearchEmbeddingProjector,
             elasticsearchOperations);
   }
 
@@ -64,6 +66,8 @@ class MovieSearchIndexMaintenanceTest {
     assertThat(indexedMovies).isEqualTo(2);
     verify(indexOperations).createWithMapping();
     verify(movieSearchRepository).deleteAll();
+    verify(movieSearchEmbeddingProjector).addEmbedding(firstMovie, firstDocument);
+    verify(movieSearchEmbeddingProjector).addEmbedding(secondMovie, secondDocument);
     verify(movieSearchRepository).saveAll(List.of(firstDocument));
     verify(movieSearchRepository).saveAll(List.of(secondDocument));
   }

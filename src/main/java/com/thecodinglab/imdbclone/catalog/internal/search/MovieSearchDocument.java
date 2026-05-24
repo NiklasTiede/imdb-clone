@@ -6,6 +6,9 @@ import java.time.Instant;
 import java.util.Set;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.KnnSimilarity;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
 
@@ -36,6 +39,15 @@ public class MovieSearchDocument {
   private Float rating;
   private Integer ratingCount;
   private String imageUrlToken;
+  private String embeddingModel;
+  private String embeddingTextVersion;
+
+  @Field(
+      type = FieldType.Dense_Vector,
+      dims = 768,
+      index = true,
+      knnSimilarity = KnnSimilarity.COSINE)
+  private float[] embedding;
 
   public Long getId() {
     return id;
@@ -211,5 +223,29 @@ public class MovieSearchDocument {
 
   public void setImageUrlToken(String imageUrlToken) {
     this.imageUrlToken = imageUrlToken;
+  }
+
+  public String getEmbeddingModel() {
+    return embeddingModel;
+  }
+
+  public void setEmbeddingModel(String embeddingModel) {
+    this.embeddingModel = embeddingModel;
+  }
+
+  public String getEmbeddingTextVersion() {
+    return embeddingTextVersion;
+  }
+
+  public void setEmbeddingTextVersion(String embeddingTextVersion) {
+    this.embeddingTextVersion = embeddingTextVersion;
+  }
+
+  public float[] getEmbedding() {
+    return embedding;
+  }
+
+  public void setEmbedding(float[] embedding) {
+    this.embedding = embedding;
   }
 }

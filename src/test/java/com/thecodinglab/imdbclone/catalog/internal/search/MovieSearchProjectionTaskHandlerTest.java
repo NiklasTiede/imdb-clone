@@ -21,6 +21,7 @@ class MovieSearchProjectionTaskHandlerTest {
   @Mock private MovieRepository movieRepository;
   @Mock private MovieSearchDocumentRepository movieSearchRepository;
   @Mock private MovieSearchDocumentMapper movieSearchDocumentMapper;
+  @Mock private MovieSearchEmbeddingProjector movieSearchEmbeddingProjector;
 
   private MovieSearchProjectionTaskHandler handler;
 
@@ -28,7 +29,10 @@ class MovieSearchProjectionTaskHandlerTest {
   void setUp() {
     handler =
         new MovieSearchProjectionTaskHandler(
-            movieRepository, movieSearchRepository, movieSearchDocumentMapper);
+            movieRepository,
+            movieSearchRepository,
+            movieSearchDocumentMapper,
+            movieSearchEmbeddingProjector);
   }
 
   @Test
@@ -42,6 +46,7 @@ class MovieSearchProjectionTaskHandlerTest {
 
     handler.project(MovieSearchProjectionOperation.UPSERT, 45L);
 
+    verify(movieSearchEmbeddingProjector).addEmbedding(movie, document);
     verify(movieSearchRepository).save(document);
     verify(movieSearchRepository, never()).deleteById(45L);
   }
