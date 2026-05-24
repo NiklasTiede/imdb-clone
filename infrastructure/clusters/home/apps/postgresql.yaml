@@ -33,6 +33,21 @@ spec:
             type: ClusterIP
             ports:
               postgresql: 5432
+        metrics:
+          enabled: true
+          image:
+            digest: sha256:8827c6f0f238a5ea6c557dc4502b6a79816fea4ec7fbdb6e07bb45a550e64b53
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 150m
+              memory: 128Mi
+          serviceMonitor:
+            enabled: true
+            interval: 30s
+            scrapeTimeout: 10s
         readReplicas:
           replicaCount: 0
   destination:
