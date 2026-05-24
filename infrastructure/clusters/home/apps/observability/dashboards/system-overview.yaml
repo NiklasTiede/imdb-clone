@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: observability-dashboard-system
   namespace: observability
+  annotations:
+    grafana_folder: IMDB Clone
   labels:
     grafana_dashboard: "1"
 data:
@@ -730,7 +732,7 @@ data:
       },
       "timepicker": {},
       "timezone": "browser",
-      "title": "System Overview",
+      "title": "IMDB Clone System",
       "uid": "imdb-system-overview",
       "version": 1,
       "weekStart": ""

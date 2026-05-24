@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: observability-dashboard-backend
   namespace: observability
+  annotations:
+    grafana_folder: IMDB Clone
   labels:
     grafana_dashboard: "1"
 data:
