@@ -14,6 +14,7 @@ import com.thecodinglab.imdbclone.catalog.internal.search.embedding.MovieEmbeddi
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentMapper;
 import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchQueryBuilder;
+import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchRankFusion;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.error.ElasticsearchOperationException;
 import java.io.IOException;
@@ -36,17 +37,21 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
   private final MovieSearchDocumentMapper movieSearchDocumentMapper;
   private final MovieEmbeddingClient movieEmbeddingClient;
   private final MovieSearchQueryBuilder movieSearchQueryBuilder;
+  private final MovieSearchRankFusion movieSearchRankFusion;
   private static final String MOVIES_INDEX = "movies";
+  private static final int HYBRID_CANDIDATE_SIZE = 100;
 
   public ElasticsearchMovieSearchService(
       ElasticsearchClient esClient,
       MovieSearchDocumentMapper movieSearchDocumentMapper,
       MovieEmbeddingClient movieEmbeddingClient,
-      MovieSearchQueryBuilder movieSearchQueryBuilder) {
+      MovieSearchQueryBuilder movieSearchQueryBuilder,
+      MovieSearchRankFusion movieSearchRankFusion) {
     this.esClient = esClient;
     this.movieSearchDocumentMapper = movieSearchDocumentMapper;
     this.movieEmbeddingClient = movieEmbeddingClient;
     this.movieSearchQueryBuilder = movieSearchQueryBuilder;
+    this.movieSearchRankFusion = movieSearchRankFusion;
   }
 
   @Override
@@ -183,6 +188,11 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
   @Override
   public PagedResponse<MovieRecord> searchMovies(
       String query, MovieSearchRequest request, int page, int size) {
+    String normalizedQuery = query == null ? "" : query.trim();
+    if (!normalizedQuery.isBlank()) {
+      return searchMoviesHybrid(normalizedQuery, request, page, size);
+    }
+
     BoolQuery boolQuery = buildBoolQuery(query, request);
     SearchResponse<MovieSearchDocument> response;
 
@@ -205,6 +215,29 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
         response.hits().hits().stream().map(Hit::score).toList());
 
     return toPagedMovieResponse(response, page, size);
+  }
+
+  private PagedResponse<MovieRecord> searchMoviesHybrid(
+      String query, MovieSearchRequest request, int page, int size) {
+    SearchRequest lexicalRequest =
+        movieSearchQueryBuilder.buildLexicalCandidateSearchRequest(
+            MOVIES_INDEX, query, request, HYBRID_CANDIDATE_SIZE);
+    float[] queryEmbedding = movieEmbeddingClient.embedText(query);
+    SearchRequest semanticRequest =
+        movieSearchQueryBuilder.buildSemanticSearchRequest(
+            MOVIES_INDEX, queryEmbedding, request, 0, HYBRID_CANDIDATE_SIZE);
+    logger.info("Hybrid lexical movie search query json: [{}]", lexicalRequest);
+    logger.info("Hybrid semantic movie search query json: [{}]", semanticRequest);
+
+    try {
+      List<MovieSearchDocument> lexicalResults = searchDocuments(lexicalRequest);
+      List<MovieSearchDocument> semanticResults = searchDocuments(semanticRequest);
+      List<MovieSearchDocument> fusedCandidates =
+          movieSearchRankFusion.fuse(lexicalResults, semanticResults, 0, HYBRID_CANDIDATE_SIZE);
+      return toPagedCandidateMovieResponse(fusedCandidates, page, size);
+    } catch (IOException ex) {
+      throw new ElasticsearchOperationException("error while hybrid search was performed", ex);
+    }
   }
 
   @Override
@@ -236,73 +269,36 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
   private PagedResponse<MovieRecord> toPagedMovieResponse(
       SearchResponse<MovieSearchDocument> response, int page, int size) {
     int totalHits = (int) (response.hits().total() != null ? response.hits().total().value() : 0);
-    Pageable pageable = PageRequest.of(page, size);
-
     List<MovieSearchDocument> movies =
         response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
 
+    return toPagedMovieResponse(movies, page, size, totalHits);
+  }
+
+  private PagedResponse<MovieRecord> toPagedCandidateMovieResponse(
+      List<MovieSearchDocument> movies, int page, int size) {
+    int from = Math.min(page * size, movies.size());
+    int to = Math.min(from + size, movies.size());
+    List<MovieSearchDocument> pageContent = movies.subList(from, to);
+    return toPagedMovieResponse(pageContent, page, size, movies.size());
+  }
+
+  private PagedResponse<MovieRecord> toPagedMovieResponse(
+      List<MovieSearchDocument> pageContent, int page, int size, int totalHits) {
+    Pageable pageable = PageRequest.of(page, size);
+
     return PagedResponse.from(
-        new PageImpl<>(movies, pageable, totalHits).map(movieSearchDocumentMapper::toMovieRecord));
+        new PageImpl<>(pageContent, pageable, totalHits).map(movieSearchDocumentMapper::toMovieRecord));
+  }
+
+  private List<MovieSearchDocument> searchDocuments(SearchRequest request) throws IOException {
+    SearchResponse<MovieSearchDocument> response = esClient.search(request, MovieSearchDocument.class);
+    return response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
   }
 
   @Override
   public BoolQuery buildBoolQuery(String query, MovieSearchRequest request) {
-    BoolQuery.Builder search = QueryBuilders.bool();
-    String normalizedQuery = query == null ? "" : query.trim();
-    Query textQuery =
-        normalizedQuery.isBlank()
-            ? QueryBuilders.matchAll().build()._toQuery()
-            : QueryBuilders
-                .multiMatch(m -> m
-                    .query(normalizedQuery)
-                    .type(TextQueryType.MostFields)
-                    .fields(List.of("primaryTitle", "originalTitle")));
-
-    // -- highest voted movies scoring is boosted
-    search.must(QueryBuilders
-        .functionScore(fs -> fs
-            .query(textQuery)
-            .functions(FunctionScore
-                .of(f -> f
-                    .fieldValueFactor(FunctionScoreBuilders
-                        .fieldValueFactor()
-                        .factor(0.002)
-                        .field("imdbRatingCount")
-                        .modifier(FieldValueFactorModifier.Log1p).build())))
-            .scoreMode(FunctionScoreMode.Multiply)));
-
-    // -- results are filtrated by these parameters
-    if (request.movieGenre() != null && !request.movieGenre().isEmpty()) {
-      request.movieGenre().forEach(
-          movieGenreEnum -> search.filter(QueryBuilders
-              .match(m -> m
-                  .field("movieGenre")
-                  .query(String.valueOf(movieGenreEnum))
-              )));
-    }
-    if (request.movieType() != null) {
-      search.filter(
-          QueryBuilders.match(m -> m
-              .field("movieType")
-              .query(request.movieType().toString())));
-    }
-    if (request.minStartYear() != null || request.maxStartYear() != null) {
-      search.filter(
-          QueryBuilders.range(r -> r
-              .number(n -> n
-                  .field("startYear")
-                  .gte(request.minStartYear() == null ? null : request.minStartYear().doubleValue())
-                  .lte(request.maxStartYear() == null ? null : request.maxStartYear().doubleValue()))));
-    }
-    if (request.minRuntimeMinutes() != null || request.maxRuntimeMinutes() != null) {
-      search.filter(
-          QueryBuilders.range(r -> r
-              .number(n -> n
-                  .field("runtimeMinutes")
-                  .gte(request.minRuntimeMinutes() == null ? null : request.minRuntimeMinutes().doubleValue())
-                  .lte(request.maxRuntimeMinutes() == null ? null : request.maxRuntimeMinutes().doubleValue()))));
-    }
-    return search.build();
+    return movieSearchQueryBuilder.buildBoolQuery(query, request);
   }
 }
 // spotless:on

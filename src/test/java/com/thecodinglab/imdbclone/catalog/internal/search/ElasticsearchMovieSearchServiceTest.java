@@ -2,6 +2,7 @@ package com.thecodinglab.imdbclone.catalog.internal.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +17,7 @@ import com.thecodinglab.imdbclone.catalog.internal.search.embedding.MovieEmbeddi
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentMapper;
 import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchQueryBuilder;
+import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchRankFusion;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import java.io.IOException;
 import java.util.List;
@@ -28,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class ElasticsearchMovieSearchServiceTest {
 
   @Mock private ElasticsearchClient esClient;
@@ -36,11 +39,13 @@ class ElasticsearchMovieSearchServiceTest {
 
   private final MovieSearchDocumentMapper mapper = new MovieSearchDocumentMapper();
   private final MovieSearchQueryBuilder queryBuilder = new MovieSearchQueryBuilder();
+  private final MovieSearchRankFusion rankFusion = new MovieSearchRankFusion();
 
   @Test
   void searchMoviesSemantically_embedsQueryAndRunsKnnSearch() throws IOException {
     ElasticsearchMovieSearchService service =
-        new ElasticsearchMovieSearchService(esClient, mapper, movieEmbeddingClient, queryBuilder);
+        new ElasticsearchMovieSearchService(
+            esClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     MovieSearchDocument document = new MovieSearchDocument();
     document.setId(7L);
@@ -64,7 +69,52 @@ class ElasticsearchMovieSearchServiceTest {
         .containsExactly("Alien");
   }
 
+  @Test
+  void searchMovies_withTextQueryRunsLexicalAndSemanticSearchAndFusesResults() throws IOException {
+    ElasticsearchMovieSearchService service =
+        new ElasticsearchMovieSearchService(
+            esClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
+    MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
+    when(movieEmbeddingClient.embedText("space horror")).thenReturn(new float[] {0.1f, 0.2f});
+    when(esClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+        .thenReturn(
+            searchResponse(List.of(movie(2, "Lexical First"), movie(1, "Shared Match"))),
+            searchResponse(List.of(movie(1, "Shared Match"), movie(3, "Semantic Only"))));
+
+    PagedResponse<MovieRecord> response = service.searchMovies("space horror", request, 0, 20);
+
+    verify(movieEmbeddingClient).embedText("space horror");
+    List<SearchRequest> searchRequests = searchRequestCaptor.getAllValues();
+    assertThat(searchRequests).hasSize(2);
+    assertThat(searchRequests.getFirst().query()).isNotNull();
+    assertThat(searchRequests.getFirst().knn()).isEmpty();
+    assertThat(searchRequests.getLast().knn()).hasSize(1);
+    assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(1L, 2L, 3L);
+  }
+
+  @Test
+  void searchMovies_withBlankQueryKeepsLexicalFilterOnlySearch() throws IOException {
+    ElasticsearchMovieSearchService service =
+        new ElasticsearchMovieSearchService(
+            esClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
+    MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
+    when(esClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+        .thenReturn(searchResponse(List.of(movie(5, "Filter Match"))));
+
+    PagedResponse<MovieRecord> response = service.searchMovies(" ", request, 0, 20);
+
+    verify(movieEmbeddingClient, never()).embedText(" ");
+    assertThat(searchRequestCaptor.getAllValues()).hasSize(1);
+    assertThat(searchRequestCaptor.getValue().query()).isNotNull();
+    assertThat(searchRequestCaptor.getValue().knn()).isEmpty();
+    assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(5L);
+  }
+
   private SearchResponse<MovieSearchDocument> searchResponse(MovieSearchDocument document) {
+    return searchResponse(List.of(document));
+  }
+
+  private SearchResponse<MovieSearchDocument> searchResponse(List<MovieSearchDocument> documents) {
     return SearchResponse.of(
         response ->
             response
@@ -73,10 +123,26 @@ class ElasticsearchMovieSearchServiceTest {
                 .shards(shards -> shards.total(1).successful(1).failed(0))
                 .hits(
                     hits ->
-                        hits.total(total -> total.value(1).relation(TotalHitsRelation.Eq))
+                        hits.total(
+                                total ->
+                                    total.value(documents.size()).relation(TotalHitsRelation.Eq))
                             .hits(
-                                List.of(
-                                    Hit.<MovieSearchDocument>of(
-                                        hit -> hit.index("movies").id("7").source(document))))));
+                                documents.stream()
+                                    .map(
+                                        document ->
+                                            Hit.<MovieSearchDocument>of(
+                                                hit ->
+                                                    hit.index("movies")
+                                                        .id(document.getId().toString())
+                                                        .source(document)))
+                                    .toList())));
+  }
+
+  private MovieSearchDocument movie(long id, String title) {
+    MovieSearchDocument document = new MovieSearchDocument();
+    document.setId(id);
+    document.setPrimaryTitle(title);
+    document.setOriginalTitle(title);
+    return document;
   }
 }

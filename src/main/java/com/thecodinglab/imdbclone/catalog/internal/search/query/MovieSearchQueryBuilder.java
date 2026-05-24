@@ -1,7 +1,6 @@
 package com.thecodinglab.imdbclone.catalog.internal.search.query;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import java.util.ArrayList;
@@ -15,6 +14,35 @@ public class MovieSearchQueryBuilder {
   private static final String EMBEDDING_FIELD = "embedding";
   private static final int MIN_NUM_CANDIDATES = 100;
   private static final int NUM_CANDIDATES_MULTIPLIER = 10;
+
+  public SearchRequest buildLexicalCandidateSearchRequest(
+      String index, String query, MovieSearchRequest request, int candidateSize) {
+    return SearchRequest.of(search -> search
+        .index(index)
+        .query(searchQuery -> searchQuery.bool(buildBoolQuery(query, request)))
+        .from(0)
+        .size(candidateSize));
+  }
+
+  public BoolQuery buildBoolQuery(String query, MovieSearchRequest request) {
+    BoolQuery.Builder search = QueryBuilders.bool();
+
+    // -- highest voted movies scoring is boosted
+    search.must(QueryBuilders
+        .functionScore(fs -> fs
+            .query(buildTextQuery(query))
+            .functions(FunctionScore
+                .of(f -> f
+                    .fieldValueFactor(FunctionScoreBuilders
+                        .fieldValueFactor()
+                        .factor(0.002)
+                        .field("imdbRatingCount")
+                        .modifier(FieldValueFactorModifier.Log1p).build())))
+            .scoreMode(FunctionScoreMode.Multiply)));
+
+    search.filter(buildFilterQueries(request));
+    return search.build();
+  }
 
   public SearchRequest buildSemanticSearchRequest(
       String index, float[] queryEmbedding, MovieSearchRequest request, int page, int size) {
@@ -83,6 +111,17 @@ public class MovieSearchQueryBuilder {
                           : request.maxRuntimeMinutes().doubleValue()))));
     }
     return filters;
+  }
+
+  private Query buildTextQuery(String query) {
+    String normalizedQuery = query == null ? "" : query.trim();
+    if (normalizedQuery.isBlank()) {
+      return QueryBuilders.matchAll().build()._toQuery();
+    }
+    return QueryBuilders.multiMatch(multiMatch -> multiMatch
+        .query(normalizedQuery)
+        .type(TextQueryType.MostFields)
+        .fields(List.of("primaryTitle", "originalTitle")));
   }
 
   private List<Float> toFloatList(float[] values) {

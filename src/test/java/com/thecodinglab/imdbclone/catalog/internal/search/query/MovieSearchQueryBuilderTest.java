@@ -17,6 +17,30 @@ class MovieSearchQueryBuilderTest {
   private final MovieSearchQueryBuilder builder = new MovieSearchQueryBuilder();
 
   @Test
+  void buildLexicalCandidateSearchRequest_fetchesCandidateWindowWithTextQueryAndFilters() {
+    MovieSearchRequest request =
+        new MovieSearchRequest(1980, 1990, null, null, Set.of(MovieGenre.SCI_FI), MovieType.MOVIE);
+
+    SearchRequest searchRequest =
+        builder.buildLexicalCandidateSearchRequest("movies", "space horror", request, 100);
+
+    assertThat(searchRequest.index()).containsExactly("movies");
+    assertThat(searchRequest.from()).isEqualTo(0);
+    assertThat(searchRequest.size()).isEqualTo(100);
+    assertThat(searchRequest.query()).isNotNull();
+    assertThat(searchRequest.query().bool().filter()).hasSize(3);
+    assertThat(searchRequest.toString())
+        .contains(
+            "space horror",
+            "primaryTitle",
+            "originalTitle",
+            "imdbRatingCount",
+            "SCI_FI",
+            "MOVIE",
+            "startYear");
+  }
+
+  @Test
   void buildSemanticSearchRequest_usesEmbeddingKnnAndFetchesEnoughResultsForPage() {
     float[] queryEmbedding = new float[] {0.25f, -0.5f, 0.75f};
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
