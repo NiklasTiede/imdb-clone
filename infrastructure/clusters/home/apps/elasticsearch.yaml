@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
-  version: 9.0.0
+  version: 9.3.4
   http:
     tls:
       selfSignedCertificate:
