@@ -38,6 +38,7 @@ repositories {
 dependencyManagement {
 	imports {
 		mavenBom 'org.springframework.modulith:spring-modulith-bom:2.0.6'
+		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
 		mavenBom "software.amazon.awssdk:bom:${awsSdkVersion}"
 	}
 }
@@ -84,6 +85,7 @@ dependencies {
 
 	//-- SearchEngine
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+	implementation 'org.springframework.ai:spring-ai-model'
 
 	//-- File Storage
 	implementation 'software.amazon.awssdk:s3'
