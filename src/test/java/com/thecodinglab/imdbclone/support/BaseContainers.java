@@ -20,6 +20,7 @@ import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -57,6 +58,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
  * </ul>
  */
 @SpringBootTest
+@Import(BaseContainers.TestEmbeddingConfiguration.class)
 @Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 public class BaseContainers {
 
@@ -71,7 +73,7 @@ public class BaseContainers {
 
     @Bean
     @Primary
-    EmbeddingModel embeddingModel() {
+    EmbeddingModel testEmbeddingModel() {
       return new EmbeddingModel() {
         @Override
         public float[] embed(Document document) {
