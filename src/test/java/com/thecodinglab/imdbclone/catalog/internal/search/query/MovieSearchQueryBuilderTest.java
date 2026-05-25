@@ -32,8 +32,14 @@ class MovieSearchQueryBuilderTest {
     assertThat(searchRequest.toString())
         .contains(
             "space horror",
-            "primaryTitle",
-            "originalTitle",
+            "bool_prefix",
+            "primaryTitle^4",
+            "primaryTitle._2gram^3",
+            "primaryTitle._3gram^2",
+            "originalTitle^2",
+            "originalTitle._2gram^1.5",
+            "originalTitle._3gram^1.2",
+            "description",
             "imdbRatingCount",
             "SCI_FI",
             "MOVIE",

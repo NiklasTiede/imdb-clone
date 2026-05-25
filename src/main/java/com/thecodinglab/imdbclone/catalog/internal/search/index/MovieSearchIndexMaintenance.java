@@ -3,6 +3,7 @@ package com.thecodinglab.imdbclone.catalog.internal.search.index;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class MovieSearchIndexMaintenance {
 
   private static final int REINDEX_PAGE_SIZE = 500;
+  private static final String SEARCH_AS_YOU_TYPE = "search_as_you_type";
 
   private final MovieRepository movieRepository;
   private final MovieSearchDocumentRepository movieSearchRepository;
@@ -35,7 +37,7 @@ public class MovieSearchIndexMaintenance {
   }
 
   public long reindexMovies() {
-    createMoviesIndexIfMissing();
+    createMoviesIndexIfMissingOrStale();
     movieSearchRepository.deleteAll();
 
     long indexedMovies = 0;
@@ -63,10 +65,30 @@ public class MovieSearchIndexMaintenance {
     return document;
   }
 
-  private void createMoviesIndexIfMissing() {
+  private void createMoviesIndexIfMissingOrStale() {
     IndexOperations index = elasticsearchOperations.indexOps(MovieSearchDocument.class);
     if (!index.exists()) {
       index.createWithMapping();
+      return;
     }
+    if (!hasSearchAsYouTypeTitleMappings(index.getMapping())) {
+      index.delete();
+      index.createWithMapping();
+    }
+  }
+
+  private boolean hasSearchAsYouTypeTitleMappings(Map<String, Object> mapping) {
+    return hasSearchAsYouTypeMapping(mapping, "primaryTitle")
+        && hasSearchAsYouTypeMapping(mapping, "originalTitle");
+  }
+
+  private boolean hasSearchAsYouTypeMapping(Map<String, Object> mapping, String propertyName) {
+    if (!(mapping.get("properties") instanceof Map<?, ?> properties)) {
+      return false;
+    }
+    if (!(properties.get(propertyName) instanceof Map<?, ?> property)) {
+      return false;
+    }
+    return SEARCH_AS_YOU_TYPE.equals(property.get("type"));
   }
 }

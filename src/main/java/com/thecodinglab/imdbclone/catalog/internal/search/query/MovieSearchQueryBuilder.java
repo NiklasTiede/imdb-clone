@@ -118,10 +118,25 @@ public class MovieSearchQueryBuilder {
     if (normalizedQuery.isBlank()) {
       return QueryBuilders.matchAll().build()._toQuery();
     }
-    return QueryBuilders.multiMatch(multiMatch -> multiMatch
+    Query titlePrefixQuery = QueryBuilders.multiMatch(multiMatch -> multiMatch
         .query(normalizedQuery)
-        .type(TextQueryType.MostFields)
-        .fields(List.of("primaryTitle", "originalTitle")));
+        .type(TextQueryType.BoolPrefix)
+        .fields(List.of(
+            "primaryTitle^4",
+            "primaryTitle._2gram^3",
+            "primaryTitle._3gram^2",
+            "originalTitle^2",
+            "originalTitle._2gram^1.5",
+            "originalTitle._3gram^1.2")));
+    Query descriptionQuery = QueryBuilders.match(match -> match
+        .field("description")
+        .query(normalizedQuery)
+        .boost(0.5f));
+
+    return QueryBuilders.bool(bool -> bool
+        .should(titlePrefixQuery)
+        .should(descriptionQuery)
+        .minimumShouldMatch("1"));
   }
 
   private List<Float> toFloatList(float[] values) {

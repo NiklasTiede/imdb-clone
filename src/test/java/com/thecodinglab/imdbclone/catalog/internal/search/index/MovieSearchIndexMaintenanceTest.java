@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -78,12 +79,48 @@ class MovieSearchIndexMaintenanceTest {
 
     when(elasticsearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
     when(indexOperations.exists()).thenReturn(true);
+    when(indexOperations.getMapping()).thenReturn(searchAsYouTypeTitleMapping());
     when(movieRepository.findAll(firstPage)).thenReturn(new PageImpl<>(List.of(), firstPage, 0));
 
     long indexedMovies = maintenance.reindexMovies();
 
     assertThat(indexedMovies).isZero();
+    verify(indexOperations, never()).delete();
     verify(indexOperations, never()).createWithMapping();
     verify(movieSearchRepository, never()).saveAll(any());
+  }
+
+  @Test
+  void reindexMoviesRecreatesExistingIndexWhenTitleMappingIsStale() {
+    PageRequest firstPage = PageRequest.of(0, 500, Sort.by("id").ascending());
+
+    when(elasticsearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
+    when(indexOperations.exists()).thenReturn(true);
+    when(indexOperations.getMapping()).thenReturn(textTitleMapping());
+    when(movieRepository.findAll(firstPage)).thenReturn(new PageImpl<>(List.of(), firstPage, 0));
+
+    long indexedMovies = maintenance.reindexMovies();
+
+    assertThat(indexedMovies).isZero();
+    verify(indexOperations).delete();
+    verify(indexOperations).createWithMapping();
+    verify(movieSearchRepository).deleteAll();
+    verify(movieSearchRepository, never()).saveAll(any());
+  }
+
+  private static Map<String, Object> searchAsYouTypeTitleMapping() {
+    return Map.of(
+        "properties",
+        Map.of(
+            "primaryTitle", Map.of("type", "search_as_you_type"),
+            "originalTitle", Map.of("type", "search_as_you_type")));
+  }
+
+  private static Map<String, Object> textTitleMapping() {
+    return Map.of(
+        "properties",
+        Map.of(
+            "primaryTitle", Map.of("type", "text"),
+            "originalTitle", Map.of("type", "text")));
   }
 }

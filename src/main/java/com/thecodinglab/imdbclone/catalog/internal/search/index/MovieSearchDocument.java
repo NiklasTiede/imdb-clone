@@ -21,8 +21,13 @@ public class MovieSearchDocument {
   private String imdbId;
   private Long tmdbId;
   private MovieType movieType;
+
+  @Field(type = FieldType.Search_As_You_Type)
   private String primaryTitle;
+
+  @Field(type = FieldType.Search_As_You_Type)
   private String originalTitle;
+
   private Boolean adult;
   private Integer startYear;
   private Integer endYear;

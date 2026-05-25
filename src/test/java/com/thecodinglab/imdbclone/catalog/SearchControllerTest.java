@@ -153,6 +153,13 @@ class SearchControllerTest extends BaseContainers {
     Assertions.assertThat(movieSearchRepository.count()).isEqualTo(expectedMovies);
     Map<String, Object> embeddingMapping =
         propertyMapping(elasticsearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "embedding");
+    Map<String, Object> primaryTitleMapping =
+        propertyMapping(elasticsearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "primaryTitle");
+    Map<String, Object> originalTitleMapping =
+        propertyMapping(elasticsearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "originalTitle");
+
+    Assertions.assertThat(primaryTitleMapping).containsEntry("type", "search_as_you_type");
+    Assertions.assertThat(originalTitleMapping).containsEntry("type", "search_as_you_type");
     Assertions.assertThat(embeddingMapping).containsEntry("type", "dense_vector");
     Assertions.assertThat(embeddingMapping).containsEntry("dims", 768);
     Assertions.assertThat(embeddingMapping).containsEntry("index", true);
