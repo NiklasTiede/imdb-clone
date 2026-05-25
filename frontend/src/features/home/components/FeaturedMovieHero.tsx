@@ -8,7 +8,12 @@ import Chip from "@mui/material/Chip";
 import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { formatRatingCount, IMDB_GOLD, type Movie } from "../../catalog";
+import {
+  formatRatingCount,
+  getMoviePosterToken,
+  IMDB_GOLD,
+  type Movie,
+} from "../../catalog";
 import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
 import { movieColors } from "../../../theme";
 
@@ -85,7 +90,7 @@ const Hero = ({
           }}
         >
           <PosterImage
-            imageUrlToken={movie.imageUrlToken}
+            imageUrlToken={getMoviePosterToken(movie)}
             size={ObjectStorageImageSize.Large}
             sx={{
               aspectRatio: "2 / 3",

@@ -7,7 +7,7 @@ import CardActionArea from "@mui/material/CardActionArea";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router";
-import type { Movie } from "../model/movie";
+import { getMoviePosterToken, type Movie } from "../model/movie";
 import { IMDB_GOLD } from "./RatingPill";
 import {
   posterHoverContainerSx,
@@ -68,7 +68,7 @@ const MovieCard = ({
           }}
         >
           <PosterImage
-            imageUrlToken={movie.imageUrlToken}
+            imageUrlToken={getMoviePosterToken(movie)}
             size={MoviePosterImageSize.Medium}
             sx={{
               height: "100%",

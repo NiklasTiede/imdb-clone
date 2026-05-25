@@ -4,6 +4,7 @@ import {
   type MovieRecord,
 } from "../../../client/movies/generator-output";
 import { moviesApi, searchApi } from "../../../shared/api/moviesApi";
+import { getMoviePosterToken } from "../../catalog";
 import { pickDailyIndex } from "../utils/pickDailyIndex";
 
 const FEATURED_MOVIE_POOL_SIZE = 30;
@@ -31,7 +32,7 @@ export const featuredMovieQuery = (date = new Date()) => {
       const eligibleMovies = (response.data.content ?? [])
         .filter(
           (movie) =>
-            Boolean(movie.imageUrlToken) &&
+            Boolean(getMoviePosterToken(movie)) &&
             (movie.imdbRating ?? 0) >= MIN_FEATURED_IMDB_RATING,
         )
         .sort((left, right) => (right.imdbRating ?? 0) - (left.imdbRating ?? 0));

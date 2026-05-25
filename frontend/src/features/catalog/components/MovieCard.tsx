@@ -1,7 +1,7 @@
 import { Box, Card, Paper, Stack, styled, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { movieColors, tokens } from "../../../theme";
-import type { Movie } from "../model/movie";
+import { getMoviePosterToken, type Movie } from "../model/movie";
 import React from "react";
 import { Link } from "react-router";
 import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
@@ -50,7 +50,7 @@ const MovieCard = (movie: Movie) => {
   return (
     <Card sx={movieCardSx}>
       <PosterImage
-        imageUrlToken={movie.imageUrlToken}
+        imageUrlToken={getMoviePosterToken(movie)}
         size={ObjectStorageImageSize.Small}
         sx={posterSx}
       />

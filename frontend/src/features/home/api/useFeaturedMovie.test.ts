@@ -14,7 +14,7 @@ describe("featuredMovieQuery", () => {
         id: 2,
         primaryTitle: "Featured",
         imdbRating: 8.1,
-        imageUrlToken: "featured-poster",
+        posterImageToken: "featured-poster",
       },
       {
         id: 3,

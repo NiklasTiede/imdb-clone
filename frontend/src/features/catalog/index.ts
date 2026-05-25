@@ -12,6 +12,7 @@ export {
 } from "./components/posterHover";
 export { IMDB_GOLD, RatingPill } from "./components/RatingPill";
 export {
+  getMoviePosterToken,
   MovieGenre,
   MovieSearchGenre,
   MovieSearchType,

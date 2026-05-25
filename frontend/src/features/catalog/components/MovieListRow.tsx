@@ -10,7 +10,7 @@ import type { MouseEvent, ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
 import { movieColors } from "../../../theme";
-import type { Movie } from "../model/movie";
+import { getMoviePosterToken, type Movie } from "../model/movie";
 import { useMovieListLayout } from "./MovieListView";
 
 type MovieListRating = {
@@ -159,7 +159,7 @@ const MovieListRow = ({
         }}
       >
         <PosterImage
-          imageUrlToken={movie.imageUrlToken}
+          imageUrlToken={getMoviePosterToken(movie)}
           size={ObjectStorageImageSize.Small}
           sx={{
             aspectRatio: "2 / 3",
