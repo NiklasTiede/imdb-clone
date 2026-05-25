@@ -98,6 +98,24 @@ describe("AppBarTop", () => {
     );
   });
 
+  it("encodes multi-word search queries with percent-encoded spaces", () => {
+    vi.useFakeTimers();
+    renderAppBar("/");
+    const searchInput = screen.getByRole("textbox", { name: "search movies" });
+
+    fireEvent.change(searchInput, {
+      target: { value: "it follows" },
+    });
+    fireEvent.keyDown(searchInput, {
+      key: "Enter",
+      target: { value: "it follows" },
+    });
+
+    expect(screen.getByTestId("location").textContent).toBe(
+      "/movie-search?query=it%20follows",
+    );
+  });
+
   it("clears pending debounced searches when clearing the input", () => {
     vi.useFakeTimers();
     renderAppBar("/movie-search?genre=DRAMA");

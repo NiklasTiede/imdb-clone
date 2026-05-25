@@ -55,7 +55,7 @@ function AppBarTop() {
         params.delete("query");
       }
 
-      const search = params.toString();
+      const search = params.toString().replaceAll("+", "%20");
       navigateTo(
         {
           pathname: "/movie-search",
