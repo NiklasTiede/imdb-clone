@@ -2,17 +2,16 @@
 
 ## Scope
 
-Review cross-system behavior between PostgreSQL, Elasticsearch, RustFS, JWT/security, scheduled jobs, and infrastructure scripts.
+Review cross-system behavior between PostgreSQL, Elasticsearch, RustFS, JWT/security, durable scheduled tasks, and infrastructure scripts. Use `ai-search` mode for embedding/model/vector-search specifics and `observability` mode for metrics/logging contracts.
 
 Primary files:
 
 - `src/main/java/com/thecodinglab/imdbclone/*/internal`
-- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/persistence/MovieElasticSearchRepository.java`
 - `src/main/java/com/thecodinglab/imdbclone/catalog/internal/persistence/MovieSearchDao.java`
 - `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search`
+- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/projection`
 - `src/main/java/com/thecodinglab/imdbclone/identity/internal/security`
 - `src/main/java/com/thecodinglab/imdbclone/media/internal`
-- `src/main/java/com/thecodinglab/imdbclone/engagement/internal/RatingAggregateScheduler.java`
 - `src/main/java/com/thecodinglab/imdbclone/identity/internal/VerificationTokenCleanupScheduler.java`
 - `infrastructure`
 - `compose.yaml`
@@ -23,6 +22,7 @@ Primary files:
 
 - PostgreSQL remains the source of truth for transactional data unless documented otherwise
 - Elasticsearch documents are projections/search indexes with rebuild or repair paths
+- embedding vectors are search projection data; review model/version specifics in `ai-search` mode
 - RustFS stores binary objects addressed by stable tokens, not business state
 - frontend image URLs derive from tokens consistently
 
@@ -45,11 +45,12 @@ Primary files:
 - local dev services match Spring configuration
 - seed/import scripts match the current schema
 - production and development compose files do not encode contradictory ports, bucket names, or index names
-- monitoring/logging configs do not expose secrets
+- monitoring/logging configs do not expose secrets; review detailed scrape/dashboard contracts in `observability` mode
 
 ## Verification Recommendations
 
 - integration tests with Testcontainers for cross-system write/delete behavior
 - focused tests for RustFS object naming and image-token contracts
 - search tests proving projection updates after catalog/rating changes
+- search projection task tests proving durable repair after indexing failures
 - security tests for public/private endpoint access

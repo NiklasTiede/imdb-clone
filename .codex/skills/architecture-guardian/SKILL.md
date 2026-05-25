@@ -1,6 +1,6 @@
 ---
 name: architecture-guardian
-description: Use when reviewing this IMDB clone for architectural drift, Spring Modulith boundary erosion, persistence/schema mismatch, API/frontend contract mismatch, frontend feature-module drift, Kubernetes readiness, stateless container behavior, or multi-replica safety.
+description: Use when reviewing this IMDB clone for architectural drift, Spring Modulith boundary erosion, persistence/schema mismatch, API/frontend contract mismatch, frontend feature-module drift, Kubernetes/GitOps readiness, observability contracts, AI search, stateless container behavior, or multi-replica safety.
 ---
 
 # Architecture Guardian
@@ -13,8 +13,10 @@ Build outputs from checks are allowed. Source changes are not.
 
 ## Repository Context
 
-- Backend: Spring Boot, Java, JPA, Flyway, PostgreSQL, Elasticsearch, RustFS, JWT.
+- Backend: Spring Boot, Java, JPA, Flyway, PostgreSQL, Elasticsearch, RustFS, JWT, Spring AI, llama.cpp embeddings.
 - Frontend: React, TypeScript, Material UI, React Query, generated Axios client.
+- Deployment: local Compose plus k3s GitOps manifests under `infrastructure/clusters/home/apps`.
+- Observability: backend Actuator/Micrometer, frontend observability facade, Prometheus, Grafana, dashboards.
 - Backend source: `src/main/java/com/thecodinglab/imdbclone`.
 - Backend modules are Spring Modulith application modules under the root package, with `api`, `web`, and `internal` package roles.
 - Flyway migrations: `src/main/resources/db/migration`.
@@ -38,6 +40,9 @@ Choose the narrowest mode that satisfies the request:
 | `frontend` | React feature architecture, shared modules, state/data ownership | `references/frontend-architecture.md` |
 | `integration` | PostgreSQL, Elasticsearch, RustFS, security, jobs, and source-of-truth flows | `references/integration-storage-search.md` |
 | `kubernetes` | Stateless containers, multi-replica safety, probes, config/secrets, shutdown, and runtime state | `references/kubernetes-readiness.md` |
+| `gitops` | Argo CD app tree, kustomization inclusion, SOPS secrets, ingress/certs, image/version flow | `references/gitops-k3s.md` |
+| `observability` | Frontend/backend metrics, logs, Prometheus scrape contracts, Grafana dashboards, public/internal monitoring surfaces | `references/observability.md` |
+| `ai-search` | Embedding pipeline, llama.cpp service contract, Elasticsearch vector projection, hybrid search, eval readiness | `references/ai-search-inference.md` |
 | `full` | Broad architecture review across the whole system | All references, but summarize aggressively |
 
 If the user does not specify a mode, default to `quick`. If they name a concern, choose the matching focused mode.
@@ -69,6 +74,9 @@ Use subagents only when the user explicitly asks for parallel/delegated review o
 - Frontend specialist
 - Integration specialist
 - Kubernetes readiness specialist
+- GitOps specialist
+- Observability specialist
+- AI search specialist
 
 Specialists return findings only. The coordinator owns severity, deduplication, cross-system conclusions, and the final report.
 
@@ -88,4 +96,4 @@ Specialists return findings only. The coordinator owns severity, deduplication, 
 - Do not weaken existing architecture tests to make drift disappear.
 - Do not suggest broad rewrites when a focused seam, test, or rule would protect the architecture.
 - Do not report generic best practices without evidence from this repo.
-- Prefer deterministic follow-up checks when possible: ArchUnit, Spring Modulith verification, schema integration tests, OpenAPI generation checks, frontend lint/build/tests.
+- Prefer deterministic follow-up checks when possible: ArchUnit, Spring Modulith verification, schema integration tests, OpenAPI generation checks, frontend lint/build/tests, kustomize rendering, kubeconform schema checks, and focused manifest contract checks.

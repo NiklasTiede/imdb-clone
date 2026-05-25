@@ -100,6 +100,7 @@ Prefer concrete Kubernetes failure scenarios:
 - "Readiness can go green before required indexes/tables exist."
 - "A failed Elasticsearch write is repairable because a durable task remains."
 
-Do not require Helm, Kubernetes manifests, or production-grade observability unless the user asks for
-deployment implementation. Report missing manifests as a readiness gap only when the request is
-explicitly about deployment assets.
+Do not require Helm or Kubernetes manifests unless the user asks for deployment implementation.
+Use `gitops` mode for manifest ownership and `observability` mode for metrics, logs,
+Prometheus, and Grafana contracts. Report missing manifests as a readiness gap only when
+the request is explicitly about deployment assets.

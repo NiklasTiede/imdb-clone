@@ -9,8 +9,10 @@ Primary files:
 - `frontend/src/app`
 - `frontend/src/features`
 - `frontend/src/shared`
+- `frontend/src/shared/observability`
 - `frontend/src/client/movies/MoviesApi.ts`
 - `frontend/src/frontendArchitecture.test.ts`
+- `frontend/src/app/AppRoutesArchitecture.test.ts`
 - `frontend/package.json`
 
 ## Checks
@@ -21,6 +23,7 @@ Primary files:
 - deeper feature slices are allowed when the backend module owns multiple user workflows, such as `engagement/rating` and `engagement/watchlist`
 - feature folders own their pages, components, api wrappers, and utilities
 - shared code is genuinely shared by multiple features
+- `shared/observability` owns telemetry setup and transport details; feature modules should not wire metrics/logging transports directly
 - old global `components`, `hooks`, `pages`, and `utils` do not become dumping grounds
 - feature `index.ts` files expose intentional public APIs
 - cross-feature imports use public feature interfaces instead of reaching into another feature's internals
@@ -33,6 +36,7 @@ Primary files:
 - React Query keys are stable, scoped, and invalidated by the matching mutations
 - auth-sensitive queries and mutations respect route and token behavior
 - pagination, filters, and URL state stay consistent across page reloads
+- search URL state remains shareable and keeps query/filter semantics stable
 
 ### UI and State Boundaries
 
@@ -40,6 +44,7 @@ Primary files:
 - reusable components are not tied to one feature's backend assumptions
 - global providers stay in `app` or `shared`, not feature internals
 - components do not duplicate formatting or image URL logic that belongs in shared helpers
+- movie poster rendering should use the canonical `posterImageToken` contract and shared poster image helpers
 
 ### Tests
 
@@ -57,5 +62,6 @@ Compare docs and instructions with `frontend/package.json`. Report mismatches su
 - `cd frontend && yarn run lint`
 - `cd frontend && yarn build`
 - `cd frontend && yarn test frontendArchitecture.test.ts`
+- `cd frontend && yarn test AppRoutesArchitecture.test.ts`
 - `cd frontend && yarn test`
 - targeted Vitest tests for changed wrappers/utilities

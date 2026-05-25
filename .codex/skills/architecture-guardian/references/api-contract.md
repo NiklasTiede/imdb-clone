@@ -12,10 +12,11 @@ Primary files:
 - `src/main/java/com/thecodinglab/imdbclone/shared/error`
 - `frontend/src/client/imdb-clone-backend.yaml`
 - `frontend/src/client/movies/MoviesApi.ts`
+- `frontend/src/client/movies/generator-output/api.ts`
 - `frontend/src/shared/api/moviesApi.ts`
 - `frontend/src/client/movies/generator-output`
 - `frontend/src/features/**/api`
-- `docs/frontend-data-contract.md`
+- `frontend/src/features/**/model`
 
 ## Checks
 
@@ -44,7 +45,7 @@ Primary files:
 - auth token handling is centralized
 - frontend does not rely on backend implementation details not present in OpenAPI
 - UI limits match backend constraints, especially page size and public/private route behavior
-- image token semantics remain consistent with RustFS handling
+- image token semantics remain consistent with RustFS handling; movie poster contracts use `posterImageToken`, while account/profile image contracts use `imageUrlToken`
 
 ### Drift Sources
 

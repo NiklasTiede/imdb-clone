@@ -1,7 +1,7 @@
 interface:
   display_name: "Architecture Guardian"
-  short_description: "Review architecture, Modulith boundaries, and Kubernetes readiness."
-  default_prompt: "Use $architecture-guardian to review this repository architecture, including Kubernetes readiness, and produce a read-only guardian report."
+  short_description: "Review architecture, Modulith boundaries, GitOps, observability, and AI search."
+  default_prompt: "Use $architecture-guardian to review this repository architecture, including GitOps, observability, AI search, and Kubernetes readiness, and produce a read-only guardian report."
 
 policy:
   allow_implicit_invocation: false

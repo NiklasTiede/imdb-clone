@@ -4,7 +4,7 @@ Use this structure for final reports. Omit empty sections.
 
 ```markdown
 **Architecture Guardian Report**
-Mode: <quick|persistence|backend-modulith|api-contract|frontend|integration|full>
+Mode: <quick|persistence|backend-modulith|api-contract|frontend|integration|kubernetes|gitops|observability|ai-search|full>
 Scope: <short sentence>
 Checks run: <commands or "none">
 
