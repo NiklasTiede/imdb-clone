@@ -22,6 +22,7 @@ import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.LongStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -43,9 +44,7 @@ class ElasticsearchMovieSearchServiceTest {
 
   @Test
   void searchMoviesSemantically_embedsQueryAndRunsKnnSearch() throws IOException {
-    ElasticsearchMovieSearchService service =
-        new ElasticsearchMovieSearchService(
-            esClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
+    ElasticsearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     MovieSearchDocument document = new MovieSearchDocument();
     document.setId(7L);
@@ -71,9 +70,7 @@ class ElasticsearchMovieSearchServiceTest {
 
   @Test
   void searchMovies_withTextQueryRunsLexicalAndSemanticSearchAndFusesResults() throws IOException {
-    ElasticsearchMovieSearchService service =
-        new ElasticsearchMovieSearchService(
-            esClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
+    ElasticsearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     when(movieEmbeddingClient.embedText("space horror")).thenReturn(new float[] {0.1f, 0.2f});
     when(esClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
@@ -93,10 +90,25 @@ class ElasticsearchMovieSearchServiceTest {
   }
 
   @Test
+  void searchMovies_withTextQueryCapsHybridResultsToFourPages() throws IOException {
+    ElasticsearchMovieSearchService service = searchService();
+    MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
+    List<MovieSearchDocument> candidates =
+        LongStream.rangeClosed(1, 100).mapToObj(id -> movie(id, "Movie " + id)).toList();
+    when(movieEmbeddingClient.embedText("space horror")).thenReturn(new float[] {0.1f, 0.2f});
+    when(esClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+        .thenReturn(searchResponse(candidates), searchResponse(candidates));
+
+    PagedResponse<MovieRecord> response = service.searchMovies("space horror", request, 0, 20);
+
+    assertThat(response.getTotalElements()).isEqualTo(80);
+    assertThat(response.getTotalPages()).isEqualTo(4);
+    assertThat(response.getContent()).hasSize(20);
+  }
+
+  @Test
   void searchMovies_withBlankQueryKeepsLexicalFilterOnlySearch() throws IOException {
-    ElasticsearchMovieSearchService service =
-        new ElasticsearchMovieSearchService(
-            esClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
+    ElasticsearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     when(esClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
         .thenReturn(searchResponse(List.of(movie(5, "Filter Match"))));
@@ -114,7 +126,17 @@ class ElasticsearchMovieSearchServiceTest {
     return searchResponse(List.of(document));
   }
 
+  private ElasticsearchMovieSearchService searchService() {
+    return new ElasticsearchMovieSearchService(
+        esClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
+  }
+
   private SearchResponse<MovieSearchDocument> searchResponse(List<MovieSearchDocument> documents) {
+    return searchResponse(documents, documents.size());
+  }
+
+  private SearchResponse<MovieSearchDocument> searchResponse(
+      List<MovieSearchDocument> documents, long totalHits) {
     return SearchResponse.of(
         response ->
             response
@@ -123,9 +145,7 @@ class ElasticsearchMovieSearchServiceTest {
                 .shards(shards -> shards.total(1).successful(1).failed(0))
                 .hits(
                     hits ->
-                        hits.total(
-                                total ->
-                                    total.value(documents.size()).relation(TotalHitsRelation.Eq))
+                        hits.total(total -> total.value(totalHits).relation(TotalHitsRelation.Eq))
                             .hits(
                                 documents.stream()
                                     .map(

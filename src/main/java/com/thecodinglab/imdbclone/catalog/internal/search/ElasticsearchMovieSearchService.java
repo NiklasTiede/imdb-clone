@@ -40,6 +40,7 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
   private final MovieSearchRankFusion movieSearchRankFusion;
   private static final String MOVIES_INDEX = "movies";
   private static final int HYBRID_CANDIDATE_SIZE = 100;
+  private static final int MAX_HYBRID_RESULT_PAGES = 4;
 
   public ElasticsearchMovieSearchService(
       ElasticsearchClient esClient,
@@ -234,7 +235,8 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
       List<MovieSearchDocument> semanticResults = searchDocuments(semanticRequest);
       List<MovieSearchDocument> fusedCandidates =
           movieSearchRankFusion.fuse(lexicalResults, semanticResults, 0, HYBRID_CANDIDATE_SIZE);
-      return toPagedCandidateMovieResponse(fusedCandidates, page, size);
+      return toPagedCandidateMovieResponse(
+          fusedCandidates, page, size, maxHybridTotalElements(size));
     } catch (IOException ex) {
       throw new ElasticsearchOperationException("error while hybrid search was performed", ex);
     }
@@ -268,19 +270,25 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
 
   private PagedResponse<MovieRecord> toPagedMovieResponse(
       SearchResponse<MovieSearchDocument> response, int page, int size) {
+    return toPagedMovieResponse(response, page, size, Integer.MAX_VALUE);
+  }
+
+  private PagedResponse<MovieRecord> toPagedMovieResponse(
+      SearchResponse<MovieSearchDocument> response, int page, int size, int maxTotalElements) {
     int totalHits = (int) (response.hits().total() != null ? response.hits().total().value() : 0);
     List<MovieSearchDocument> movies =
         response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
 
-    return toPagedMovieResponse(movies, page, size, totalHits);
+    return toPagedMovieResponse(movies, page, size, Math.min(totalHits, maxTotalElements));
   }
 
   private PagedResponse<MovieRecord> toPagedCandidateMovieResponse(
-      List<MovieSearchDocument> movies, int page, int size) {
-    int from = Math.min(page * size, movies.size());
-    int to = Math.min(from + size, movies.size());
+      List<MovieSearchDocument> movies, int page, int size, int maxTotalElements) {
+    int cappedTotalElements = Math.min(movies.size(), maxTotalElements);
+    int from = Math.min(page * size, cappedTotalElements);
+    int to = Math.min(from + size, cappedTotalElements);
     List<MovieSearchDocument> pageContent = movies.subList(from, to);
-    return toPagedMovieResponse(pageContent, page, size, movies.size());
+    return toPagedMovieResponse(pageContent, page, size, cappedTotalElements);
   }
 
   private PagedResponse<MovieRecord> toPagedMovieResponse(
@@ -289,6 +297,10 @@ public class ElasticsearchMovieSearchService implements MovieSearchService {
 
     return PagedResponse.from(
         new PageImpl<>(pageContent, pageable, totalHits).map(movieSearchDocumentMapper::toMovieRecord));
+  }
+
+  private int maxHybridTotalElements(int size) {
+    return size * MAX_HYBRID_RESULT_PAGES;
   }
 
   private List<MovieSearchDocument> searchDocuments(SearchRequest request) throws IOException {
