@@ -36,7 +36,7 @@ const PickForMeDialog = ({
         {selectedMovie && (
           <Stack spacing={1.5}>
             <PosterImage
-              imageUrlToken={selectedMovie.imageUrlToken}
+              posterImageToken={selectedMovie.posterImageToken}
               size={ObjectStorageImageSize.Large}
               sx={{
                 aspectRatio: "2 / 3",

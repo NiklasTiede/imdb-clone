@@ -10,18 +10,8 @@ import java.net.Socket;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
-import java.util.stream.IntStream;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.embedding.Embedding;
-import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.embedding.EmbeddingRequest;
-import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
@@ -58,7 +48,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
  * </ul>
  */
 @SpringBootTest
-@Import(BaseContainers.TestEmbeddingConfiguration.class)
+@Import(TestEmbeddingConfiguration.class)
 @Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 public class BaseContainers {
 
@@ -67,41 +57,6 @@ public class BaseContainers {
       DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:9.3.4");
   private static final DockerImageName rustfsImage =
       DockerImageName.parse("rustfs/rustfs:1.0.0-beta.2");
-
-  @TestConfiguration
-  static class TestEmbeddingConfiguration {
-
-    @Bean
-    @Primary
-    EmbeddingModel testEmbeddingModel() {
-      return new EmbeddingModel() {
-        @Override
-        public float[] embed(Document document) {
-          String content = getEmbeddingContent(document);
-          return content == null ? new float[768] : deterministicEmbedding(content);
-        }
-
-        @Override
-        public EmbeddingResponse call(EmbeddingRequest request) {
-          List<Embedding> embeddings =
-              IntStream.range(0, request.getInstructions().size())
-                  .mapToObj(
-                      index ->
-                          new Embedding(
-                              deterministicEmbedding(request.getInstructions().get(index)), index))
-                  .toList();
-          return new EmbeddingResponse(embeddings);
-        }
-
-        private float[] deterministicEmbedding(String text) {
-          float[] embedding = new float[768];
-          embedding[0] = text.hashCode();
-          embedding[1] = text.length();
-          return embedding;
-        }
-      };
-    }
-  }
 
   public static PostgreSQLContainer postgreSQLContainer =
       new PostgreSQLContainer(postgreSQLImage)

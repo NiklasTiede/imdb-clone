@@ -43,7 +43,6 @@ public class MovieSearchDocument {
   private String trailerYoutubeKey;
   private Float rating;
   private Integer ratingCount;
-  private String imageUrlToken;
   private String embeddingModel;
   private String embeddingTextVersion;
 
@@ -220,14 +219,6 @@ public class MovieSearchDocument {
 
   public void setRatingCount(Integer ratingCount) {
     this.ratingCount = ratingCount;
-  }
-
-  public String getImageUrlToken() {
-    return imageUrlToken;
-  }
-
-  public void setImageUrlToken(String imageUrlToken) {
-    this.imageUrlToken = imageUrlToken;
   }
 
   public String getEmbeddingModel() {

@@ -20,7 +20,7 @@ describe("SearchMovieCard", () => {
             movieType: MovieRecordMovieTypeEnum.Movie,
             movieGenre: new Set([MovieRecordMovieGenreEnum.Crime]),
             imdbRating: 7.8,
-            imageUrlToken: "nightcrawlerToken",
+            posterImageToken: "nightcrawlerToken",
           }}
         />
       </MemoryRouter>,

@@ -31,7 +31,6 @@ public class MovieSearchDocumentMapper {
     document.setTrailerYoutubeKey(movie.getTrailerYoutubeKey());
     document.setRating(toFloat(movie.getRating()));
     document.setRatingCount(movie.getRatingCount());
-    document.setImageUrlToken(movie.getPosterImageToken());
     return document;
   }
 
@@ -57,8 +56,7 @@ public class MovieSearchDocumentMapper {
         document.getBackdropImageToken(),
         document.getTrailerYoutubeKey(),
         document.getRating(),
-        document.getRatingCount(),
-        document.getImageUrlToken());
+        document.getRatingCount());
   }
 
   private Float toFloat(BigDecimal value) {

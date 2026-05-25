@@ -212,14 +212,6 @@ public class Movie extends DateAudit {
     this.posterImageToken = posterImageToken;
   }
 
-  public String getImageUrlToken() {
-    return posterImageToken;
-  }
-
-  public void setImageUrlToken(String imageUrlToken) {
-    this.posterImageToken = imageUrlToken;
-  }
-
   public String getBackdropImageToken() {
     return backdropImageToken;
   }

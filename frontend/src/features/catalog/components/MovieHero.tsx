@@ -99,7 +99,7 @@ export const MovieHero = ({
           }}
         >
           <PosterImage
-            imageUrlToken={movie.imageUrlToken}
+            posterImageToken={movie.posterImageToken}
             size={ObjectStorageImageSize.Large}
             sx={{
               width: "100%",

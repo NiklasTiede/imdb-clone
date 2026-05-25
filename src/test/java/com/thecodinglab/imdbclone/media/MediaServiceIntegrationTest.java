@@ -58,10 +58,12 @@ class MediaServiceIntegrationTest extends BaseContainers {
     List<String> storedImages = mediaService.storeMovieImage(upload, 1L);
 
     var movie = movieRepository.getMovieById(1L);
-    assertThat(movie.getImageUrlToken()).isNotBlank();
+    assertThat(movie.getPosterImageToken()).isNotBlank();
     assertThat(storedImages).hasSize(2);
-    String detailImageName = MovieImageConstants.getDetailViewImageName(movie.getImageUrlToken());
-    String thumbnailImageName = MovieImageConstants.getThumbNailImageName(movie.getImageUrlToken());
+    String detailImageName =
+        MovieImageConstants.getDetailViewImageName(movie.getPosterImageToken());
+    String thumbnailImageName =
+        MovieImageConstants.getThumbNailImageName(movie.getPosterImageToken());
     assertThat(detailImageName).startsWith("movies/posters/");
     assertThat(detailImageName).endsWith("_size_600x900.jpg");
     assertThat(thumbnailImageName).startsWith("movies/posters/");
@@ -73,13 +75,13 @@ class MediaServiceIntegrationTest extends BaseContainers {
   @Test
   void storeMovieImage_replacesExistingImagesWithNewToken() throws Exception {
     mediaService.storeMovieImage(imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE), 1L);
-    String oldToken = movieRepository.getMovieById(1L).getImageUrlToken();
+    String oldToken = movieRepository.getMovieById(1L).getPosterImageToken();
     String oldDetailImageName = MovieImageConstants.getDetailViewImageName(oldToken);
     String oldThumbnailImageName = MovieImageConstants.getThumbNailImageName(oldToken);
 
     mediaService.storeMovieImage(imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE), 1L);
 
-    String newToken = movieRepository.getMovieById(1L).getImageUrlToken();
+    String newToken = movieRepository.getMovieById(1L).getPosterImageToken();
     assertThat(newToken).isNotBlank().isNotEqualTo(oldToken);
     assertObjectDoesNotExist(oldDetailImageName);
     assertObjectDoesNotExist(oldThumbnailImageName);
@@ -92,27 +94,27 @@ class MediaServiceIntegrationTest extends BaseContainers {
     var upload = imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE);
     mediaService.storeMovieImage(upload, 1L);
 
-    String imageUrlToken = movieRepository.getMovieById(1L).getImageUrlToken();
-    String detailImageName = MovieImageConstants.getDetailViewImageName(imageUrlToken);
-    String thumbnailImageName = MovieImageConstants.getThumbNailImageName(imageUrlToken);
+    String posterImageToken = movieRepository.getMovieById(1L).getPosterImageToken();
+    String detailImageName = MovieImageConstants.getDetailViewImageName(posterImageToken);
+    String thumbnailImageName = MovieImageConstants.getThumbNailImageName(posterImageToken);
 
     mediaService.deleteMovieImage(1L);
 
     assertObjectDoesNotExist(detailImageName);
     assertObjectDoesNotExist(thumbnailImageName);
-    assertThat(movieRepository.getMovieById(1L).getImageUrlToken()).isNull();
+    assertThat(movieRepository.getMovieById(1L).getPosterImageToken()).isNull();
   }
 
   @Test
   void deleteMovieImage_withoutExistingImageIsCleanNoOp() {
     var movie = movieRepository.getMovieById(2L);
-    movie.setImageUrlToken(null);
+    movie.setPosterImageToken(null);
     movieRepository.save(movie);
 
     String message = mediaService.deleteMovieImage(2L);
 
     assertThat(message).contains("No movie image");
-    assertThat(movieRepository.getMovieById(2L).getImageUrlToken()).isNull();
+    assertThat(movieRepository.getMovieById(2L).getPosterImageToken()).isNull();
   }
 
   @Test
@@ -207,9 +209,9 @@ class MediaServiceIntegrationTest extends BaseContainers {
     mediaService.storeMovieImage(
         imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE), movie.getId());
 
-    String imageUrlToken = movieRepository.getMovieById(movie.getId()).getImageUrlToken();
-    String detailImageName = MovieImageConstants.getDetailViewImageName(imageUrlToken);
-    String thumbnailImageName = MovieImageConstants.getThumbNailImageName(imageUrlToken);
+    String posterImageToken = movieRepository.getMovieById(movie.getId()).getPosterImageToken();
+    String detailImageName = MovieImageConstants.getDetailViewImageName(posterImageToken);
+    String thumbnailImageName = MovieImageConstants.getThumbNailImageName(posterImageToken);
 
     movieService.deleteMovie(movie.getId());
 

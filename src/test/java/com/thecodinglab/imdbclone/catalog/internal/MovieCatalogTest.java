@@ -66,7 +66,7 @@ class MovieCatalogTest {
   @Test
   void deleteMovie_deletesMovieAndEnqueuesSearchDelete() {
     Movie movie = movieWithId(43L);
-    movie.setImageUrlToken("movie-image-token");
+    movie.setPosterImageToken("movie-image-token");
     when(movieRepository.getMovieById(43L)).thenReturn(movie);
 
     movieCatalog.deleteMovie(43L);

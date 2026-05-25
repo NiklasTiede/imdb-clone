@@ -46,7 +46,7 @@ class MovieSearchDocumentMapperTest {
         .containsExactlyInAnyOrder(MovieGenre.DRAMA, MovieGenre.THRILLER);
     assertThat(document.getDescription()).isEqualTo("A projected movie description.");
     assertThat(document.getRating()).isEqualTo(4.5F);
-    assertThat(document.getImageUrlToken()).isEqualTo("poster-token");
+    assertThat(document.getPosterImageToken()).isEqualTo("poster-token");
   }
 
   @Test
@@ -71,7 +71,6 @@ class MovieSearchDocumentMapperTest {
     document.setTrailerYoutubeKey("trailer");
     document.setRating(3.5F);
     document.setRatingCount(3);
-    document.setImageUrlToken("poster");
 
     MovieRecord record = mapper.toMovieRecord(document);
 
@@ -81,6 +80,6 @@ class MovieSearchDocumentMapperTest {
     assertThat(record.movieGenre()).containsExactly(MovieGenre.SCI_FI);
     assertThat(record.description()).isEqualTo("Search result description.");
     assertThat(record.rating()).isEqualTo(3.5F);
-    assertThat(record.imageUrlToken()).isEqualTo("poster");
+    assertThat(record.posterImageToken()).isEqualTo("poster");
   }
 }

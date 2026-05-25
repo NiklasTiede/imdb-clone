@@ -68,7 +68,7 @@ const MovieCard = ({
           }}
         >
           <PosterImage
-            imageUrlToken={getMoviePosterToken(movie)}
+            posterImageToken={getMoviePosterToken(movie)}
             size={MoviePosterImageSize.Medium}
             sx={{
               height: "100%",

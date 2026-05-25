@@ -26,5 +26,4 @@ public record MovieRecord(
     String backdropImageToken,
     String trailerYoutubeKey,
     Float rating,
-    Integer ratingCount,
-    String imageUrlToken) {}
+    Integer ratingCount) {}

@@ -50,7 +50,7 @@ const MovieCard = (movie: Movie) => {
   return (
     <Card sx={movieCardSx}>
       <PosterImage
-        imageUrlToken={getMoviePosterToken(movie)}
+        posterImageToken={getMoviePosterToken(movie)}
         size={ObjectStorageImageSize.Small}
         sx={posterSx}
       />

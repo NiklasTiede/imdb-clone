@@ -27,7 +27,7 @@ describe("MovieListView", () => {
               runtimeMinutes: 117,
               imdbRating: 7.8,
               movieGenre: new Set([MovieRecordMovieGenreEnum.Crime]),
-              imageUrlToken: "nightcrawlerToken",
+              posterImageToken: "nightcrawlerToken",
             }}
             primaryRating={{ value: 8, variant: "user" }}
             secondaryRating={{ value: 7.8, variant: "imdb" }}

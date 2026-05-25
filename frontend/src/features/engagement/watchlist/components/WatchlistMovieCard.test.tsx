@@ -18,7 +18,7 @@ describe("WatchlistMovieCard", () => {
               startYear: 2014,
               runtimeMinutes: 117,
               imdbRating: 7.8,
-              imageUrlToken: "nightcrawlerToken",
+              posterImageToken: "nightcrawlerToken",
               movieGenre: new Set([MovieRecordMovieGenreEnum.Crime]),
             },
           }}

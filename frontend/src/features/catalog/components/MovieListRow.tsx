@@ -159,7 +159,7 @@ const MovieListRow = ({
         }}
       >
         <PosterImage
-          imageUrlToken={getMoviePosterToken(movie)}
+          posterImageToken={getMoviePosterToken(movie)}
           size={ObjectStorageImageSize.Small}
           sx={{
             aspectRatio: "2 / 3",

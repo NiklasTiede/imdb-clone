@@ -9,22 +9,22 @@ import {
 } from "./imageUrls";
 
 type PosterImageProps = {
-  imageUrlToken?: string;
+  posterImageToken?: string;
   size: MovieImageSize;
   sx?: SxProps<Theme>;
 };
 
-const PosterImage = ({ imageUrlToken, size, sx }: PosterImageProps) => {
+const PosterImage = ({ posterImageToken, size, sx }: PosterImageProps) => {
   const [useFallback, setUseFallback] = useState(false);
   const src = useMemo(() => {
-    if (!imageUrlToken) {
+    if (!posterImageToken) {
       return placeholderSearch;
     }
 
     return useFallback
-      ? getMoviePosterFallbackImageUrl(imageUrlToken, size)
-      : getMoviePosterImageUrl(imageUrlToken, size);
-  }, [imageUrlToken, size, useFallback]);
+      ? getMoviePosterFallbackImageUrl(posterImageToken, size)
+      : getMoviePosterImageUrl(posterImageToken, size);
+  }, [posterImageToken, size, useFallback]);
 
   return (
     <CardMedia

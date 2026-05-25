@@ -16,7 +16,7 @@ const nightcrawler = {
   imdbRating: 7.8,
   imdbRatingCount: 528339,
   description: "A driven freelancer enters the world of crime journalism.",
-  imageUrlToken: "9BGAIYNfdY90aIkV66dIJ6Olee7JGn",
+  posterImageToken: "9BGAIYNfdY90aIkV66dIJ6Olee7JGn",
 };
 
 const itFollows = {
@@ -32,7 +32,7 @@ const itFollows = {
   imdbRating: 6.8,
   imdbRatingCount: 293479,
   description: "A young woman is followed by an unknown supernatural force.",
-  imageUrlToken: "itFollowsPosterToken",
+  posterImageToken: "itFollowsPosterToken",
 };
 
 async function stubNightcrawlerSearch(page: Page) {

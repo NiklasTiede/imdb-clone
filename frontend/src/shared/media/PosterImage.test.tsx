@@ -6,7 +6,7 @@ describe("PosterImage", () => {
   it("falls back to JPG when the WebP poster object is unavailable", () => {
     render(
       <PosterImage
-        imageUrlToken="poster-token"
+        posterImageToken="poster-token"
         size={ObjectStorageImageSize.Large}
       />,
     );

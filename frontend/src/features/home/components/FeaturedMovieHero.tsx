@@ -90,7 +90,7 @@ const Hero = ({
           }}
         >
           <PosterImage
-            imageUrlToken={getMoviePosterToken(movie)}
+            posterImageToken={getMoviePosterToken(movie)}
             size={ObjectStorageImageSize.Large}
             sx={{
               aspectRatio: "2 / 3",

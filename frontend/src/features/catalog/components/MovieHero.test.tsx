@@ -26,7 +26,7 @@ const renderHero = (overrides: Partial<Parameters<typeof MovieHero>[0]>) => {
     rating: 7.2,
     ratingCount: 1200,
     description: "A curse passed via intercourse.",
-    imageUrlToken: undefined,
+    posterImageToken: undefined,
   };
 
   return render(

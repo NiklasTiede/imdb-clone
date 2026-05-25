@@ -20,7 +20,7 @@ describe("featuredMovieQuery", () => {
         id: 3,
         primaryTitle: "Too low",
         imdbRating: 7.4,
-        imageUrlToken: "low-poster",
+        posterImageToken: "low-poster",
       },
     ];
     const searchSpy = vi.spyOn(searchApi, "search").mockResolvedValue({
@@ -32,7 +32,7 @@ describe("featuredMovieQuery", () => {
         primaryTitle: "Featured",
         description: "Full synopsis from movie details.",
         imdbRating: 8.1,
-        imageUrlToken: "featured-poster",
+        posterImageToken: "featured-poster",
       },
     } as Awaited<ReturnType<typeof moviesApi.getMovieById>>);
 

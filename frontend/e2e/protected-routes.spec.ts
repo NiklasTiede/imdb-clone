@@ -16,7 +16,7 @@ const watchlistedMovie = {
   imdbRating: 6.8,
   imdbRatingCount: 293479,
   description: "A young woman is followed by an unknown supernatural force.",
-  imageUrlToken: "itFollowsPosterToken",
+  posterImageToken: "itFollowsPosterToken",
 };
 
 test("redirects anonymous users from protected routes to login", async ({

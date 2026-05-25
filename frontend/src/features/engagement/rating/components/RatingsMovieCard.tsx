@@ -67,7 +67,7 @@ const RatingsMovieCard = ({ item, onRemove }: RatingsMovieCardProps) => {
           }}
         >
           <PosterImage
-            imageUrlToken={movie.imageUrlToken}
+            posterImageToken={movie.posterImageToken}
             size={MoviePosterImageSize.Medium}
             sx={{ height: "100%", objectFit: "cover", width: "100%" }}
           />

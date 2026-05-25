@@ -951,8 +951,6 @@ components:
         ratingCount:
           type: integer
           format: int32
-        imageUrlToken:
-          type: string
     WatchedMovieRecord:
       type: object
       properties:

@@ -20,12 +20,8 @@ export type MovieSearchGenre = MovieSearchRequestMovieGenreEnum;
 export const MovieSearchType = MovieSearchRequestMovieTypeEnum;
 export type MovieSearchType = MovieSearchRequestMovieTypeEnum;
 
-type MoviePosterTokenSource = Pick<
-  MovieRecord,
-  "imageUrlToken" | "posterImageToken"
->;
+type MoviePosterTokenSource = Pick<MovieRecord, "posterImageToken">;
 
 export const getMoviePosterToken = (
   movie: Partial<MoviePosterTokenSource> | null | undefined,
-): string | undefined =>
-  movie?.imageUrlToken ?? movie?.posterImageToken ?? undefined;
+): string | undefined => movie?.posterImageToken ?? undefined;

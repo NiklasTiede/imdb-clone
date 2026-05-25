@@ -98,8 +98,8 @@ public class MediaFiles implements MediaService {
 
     MovieImageToken movieImageToken = movieImageService.getMovieImageToken(movieId);
     ImageSize.validateMovieImage(file);
-    String oldImageUrlToken = movieImageToken.posterImageToken();
-    String imageUrlToken = Image.generateToken();
+    String oldPosterImageToken = movieImageToken.posterImageToken();
+    String posterImageToken = Image.generateToken();
 
     List<Image> movieImages =
         Image.createImages(
@@ -107,11 +107,11 @@ public class MediaFiles implements MediaService {
             MovieImageConstants.TARGET_SIZES,
             MovieImageConstants.ASPECT_RATIO,
             MovieImageConstants.BUCKET_DIRECTORY_NAME,
-            imageUrlToken);
+            posterImageToken);
 
     List<String> storedImages = storeFiles(movieImages);
-    movieImageService.updateMovieImageToken(movieId, imageUrlToken);
-    deleteMovieImageObjectsBestEffort(oldImageUrlToken);
+    movieImageService.updateMovieImageToken(movieId, posterImageToken);
+    deleteMovieImageObjectsBestEffort(oldPosterImageToken);
     return storedImages;
   }
 
@@ -160,12 +160,12 @@ public class MediaFiles implements MediaService {
     deleteFile(ProfilePhotoConstants.getThumbnailImageName(imageUrlToken));
   }
 
-  private void deleteMovieImageObjects(String imageUrlToken) {
-    if (imageUrlToken == null) {
+  private void deleteMovieImageObjects(String posterImageToken) {
+    if (posterImageToken == null) {
       return;
     }
-    deleteFile(MovieImageConstants.getDetailViewImageName(imageUrlToken));
-    deleteFile(MovieImageConstants.getThumbNailImageName(imageUrlToken));
+    deleteFile(MovieImageConstants.getDetailViewImageName(posterImageToken));
+    deleteFile(MovieImageConstants.getThumbNailImageName(posterImageToken));
   }
 
   private void deleteProfilePhotoObjectsBestEffort(String imageUrlToken) {
@@ -176,11 +176,11 @@ public class MediaFiles implements MediaService {
     }
   }
 
-  private void deleteMovieImageObjectsBestEffort(String imageUrlToken) {
+  private void deleteMovieImageObjectsBestEffort(String posterImageToken) {
     try {
-      deleteMovieImageObjects(imageUrlToken);
+      deleteMovieImageObjects(posterImageToken);
     } catch (ObjectStorageOperationException ex) {
-      logger.warn("Could not delete previous movie image objects for token [{}]", imageUrlToken);
+      logger.warn("Could not delete previous movie image objects for token [{}]", posterImageToken);
     }
   }
 
