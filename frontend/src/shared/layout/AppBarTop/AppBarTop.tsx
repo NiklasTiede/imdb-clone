@@ -2,7 +2,7 @@ import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import type { MouseEvent } from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { authSession } from "../../auth/authSession";
 import { useAuthSession } from "../../auth/useAuthSession";
@@ -16,6 +16,7 @@ import UserSettingsMenu from "./UserSettingsMenu";
 import { movieColors } from "../../../theme";
 
 const menuId = "primary-search-account-menu";
+const SEARCH_DEBOUNCE_MS = 300;
 
 function AppBarTop() {
   const navigateTo = useNavigate();
@@ -30,12 +31,55 @@ function AppBarTop() {
   const username = authSession.getUsername();
 
   const queryParams = new URLSearchParams(location.search);
-  const initialQuery = queryParams.get("query") || "";
+  const initialQuery = queryParams.get("query") || queryParams.get("q") || "";
   const [query, setQuery] = useState(initialQuery);
 
   useEffect(() => {
-    setQuery(new URLSearchParams(location.search).get("query") || "");
+    const params = new URLSearchParams(location.search);
+    setQuery(params.get("query") || params.get("q") || "");
   }, [location.search]);
+
+  const navigateToSearch = useCallback(
+    (searchQuery: string, options?: { replace?: boolean }) => {
+      const nextQuery = searchQuery.trim();
+      const params =
+        location.pathname === "/movie-search"
+          ? new URLSearchParams(location.search)
+          : new URLSearchParams();
+
+      params.delete("q");
+      params.delete("page");
+      if (nextQuery) {
+        params.set("query", nextQuery);
+      } else {
+        params.delete("query");
+      }
+
+      const search = params.toString();
+      navigateTo(
+        {
+          pathname: "/movie-search",
+          search: search ? `?${search}` : "",
+        },
+        { replace: options?.replace ?? false },
+      );
+    },
+    [location.pathname, location.search, navigateTo],
+  );
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const currentQuery = params.get("query") || params.get("q") || "";
+    if (query.trim() === currentQuery.trim()) {
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(() => {
+      navigateToSearch(query, { replace: true });
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [location.search, navigateToSearch, query]);
 
   const handleProfileMenuOpen = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -54,16 +98,12 @@ function AppBarTop() {
   const handleSearch = (query: string) => {
     const nextQuery = query.trim();
     setQuery(nextQuery);
-    navigateTo(
-      nextQuery
-        ? `/movie-search?query=${encodeURIComponent(nextQuery)}`
-        : "/movie-search",
-    );
+    navigateToSearch(nextQuery);
   };
 
   const handleClear = () => {
     setQuery("");
-    navigateTo("/movie-search");
+    navigateToSearch("");
   };
 
   return (

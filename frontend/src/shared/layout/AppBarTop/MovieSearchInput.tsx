@@ -85,7 +85,9 @@ const MovieSearchInput = ({
     event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     if (event.key === "Enter") {
+      event.preventDefault();
       onSearch(event.currentTarget.value);
+      event.currentTarget.blur();
     }
   };
 

@@ -47,4 +47,24 @@ describe("MovieSearchInput", () => {
       screen.getByRole("textbox", { name: "search movies" }),
     ).toHaveFocus();
   });
+
+  it("blurs the search input when submitting with Enter", () => {
+    render(
+      <MovieSearchInput
+        query="alien"
+        onQueryChange={vi.fn()}
+        onSearch={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+    const searchInput = screen.getByRole("textbox", { name: "search movies" });
+    searchInput.focus();
+
+    fireEvent.keyDown(searchInput, {
+      key: "Enter",
+      target: { value: "alien" },
+    });
+
+    expect(searchInput).not.toHaveFocus();
+  });
 });
