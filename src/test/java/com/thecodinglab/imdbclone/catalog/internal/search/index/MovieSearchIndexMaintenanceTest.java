@@ -10,18 +10,21 @@ import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.LongStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opensearch.data.core.OpenSearchOperations;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, OutputCaptureExtension.class})
 class MovieSearchIndexMaintenanceTest {
 
   @Mock private MovieRepository movieRepository;
@@ -71,6 +74,40 @@ class MovieSearchIndexMaintenanceTest {
     verify(movieSearchEmbeddingProjector).addEmbedding(secondMovie, secondDocument);
     verify(movieSearchRepository).saveAll(List.of(firstDocument));
     verify(movieSearchRepository).saveAll(List.of(secondDocument));
+  }
+
+  @Test
+  void reindexMoviesLogsBatchProgress(CapturedOutput output) {
+    List<Movie> movies =
+        LongStream.rangeClosed(1, 11)
+            .mapToObj(index -> new Movie("Movie " + index, "Movie " + index, null, 90))
+            .toList();
+    List<MovieSearchDocument> documents =
+        LongStream.rangeClosed(1, 11).mapToObj(ignored -> new MovieSearchDocument()).toList();
+    PageRequest firstPage = PageRequest.of(0, 500, Sort.by("id").ascending());
+
+    when(openSearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
+    when(indexOperations.exists()).thenReturn(false);
+    when(movieRepository.findAll(firstPage)).thenReturn(new PageImpl<>(movies, firstPage, 11));
+    for (int index = 0; index < movies.size(); index++) {
+      when(movieSearchDocumentMapper.toDocument(movies.get(index)))
+          .thenReturn(documents.get(index));
+    }
+
+    maintenance.reindexMovies();
+
+    assertThat(output.getOut())
+        .doesNotContain("Starting movie search reindex")
+        .doesNotContain("Creating missing OpenSearch movies index")
+        .contains(
+            "Embedded movie search documents page=0 embeddedInPage=10 batchSize=11 totalEmbedded=10")
+        .contains("intervalSize=10")
+        .contains(
+            "Embedded movie search documents page=0 embeddedInPage=11 batchSize=11 totalEmbedded=11")
+        .contains("intervalSize=1")
+        .contains("averageMovieEmbeddingDurationMs=")
+        .contains("Indexed movie search batch page=0 batchSize=11 totalIndexed=11")
+        .contains("Finished movie search reindex totalIndexed=11");
   }
 
   @Test

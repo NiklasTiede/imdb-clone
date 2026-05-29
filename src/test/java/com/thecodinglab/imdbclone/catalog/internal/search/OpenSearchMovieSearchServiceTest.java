@@ -33,8 +33,10 @@ import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.opensearch.core.search.TotalHitsRelation;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, OutputCaptureExtension.class})
 @SuppressWarnings("unchecked")
 class OpenSearchMovieSearchServiceTest {
 
@@ -47,7 +49,8 @@ class OpenSearchMovieSearchServiceTest {
   private final MovieSearchRankFusion rankFusion = new MovieSearchRankFusion();
 
   @Test
-  void searchMoviesSemantically_embedsQueryAndRunsKnnSearch() throws IOException {
+  void searchMoviesSemantically_embedsQueryAndRunsKnnSearch(CapturedOutput output)
+      throws IOException {
     OpenSearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     MovieSearchDocument document = new MovieSearchDocument();
@@ -71,10 +74,14 @@ class OpenSearchMovieSearchServiceTest {
     assertThat(response.getContent())
         .extracting(MovieRecord::primaryTitle)
         .containsExactly("Alien");
+    assertThat(output.getOut())
+        .doesNotContain("Semantic movie search completed")
+        .doesNotContain("Semantic movie search query json:");
   }
 
   @Test
-  void searchMovies_withTextQueryRunsLexicalAndSemanticSearchAndFusesResults() throws IOException {
+  void searchMovies_withTextQueryRunsLexicalAndSemanticSearchAndFusesResults(CapturedOutput output)
+      throws IOException {
     OpenSearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     when(movieEmbeddingClient.embedText("space horror")).thenReturn(new float[] {0.1f, 0.2f});
@@ -92,6 +99,10 @@ class OpenSearchMovieSearchServiceTest {
     assertThat(searchRequests.getFirst().query().isKnn()).isFalse();
     assertThat(searchRequests.getLast().query().isKnn()).isTrue();
     assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(1L, 2L, 3L);
+    assertThat(output.getOut())
+        .doesNotContain("Hybrid movie search completed")
+        .doesNotContain("Hybrid lexical movie search query json:")
+        .doesNotContain("Hybrid semantic movie search query json:");
   }
 
   @Test
@@ -112,7 +123,8 @@ class OpenSearchMovieSearchServiceTest {
   }
 
   @Test
-  void searchMovies_withBlankQueryKeepsLexicalFilterOnlySearch() throws IOException {
+  void searchMovies_withBlankQueryKeepsLexicalFilterOnlySearch(CapturedOutput output)
+      throws IOException {
     OpenSearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
@@ -125,6 +137,10 @@ class OpenSearchMovieSearchServiceTest {
     assertThat(searchRequestCaptor.getValue().query()).isNotNull();
     assertThat(searchRequestCaptor.getValue().query().isKnn()).isFalse();
     assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(5L);
+    assertThat(output.getOut())
+        .doesNotContain("Movie search completed")
+        .doesNotContain("Document search query json:")
+        .doesNotContain("Scores of found documents:");
   }
 
   @Test

@@ -206,16 +206,12 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
             .from(page * size)
             .size(size)
         );
-    logger.info("Document search query json: [{}]", searchRequest);
 
     try {
       response = openSearchClient.search(searchRequest, MovieSearchDocument.class);
     } catch (IOException | OpenSearchException ex) {
       throw new OpenSearchOperationException("error while search was performed", ex);
     }
-    logger.info(
-        "Scores of found documents: [{}]",
-        response.hits().hits().stream().map(Hit::score).toList());
 
     return toPagedMovieResponse(response, page, size);
   }
@@ -229,8 +225,6 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
     SearchRequest semanticRequest =
         movieSearchQueryBuilder.buildSemanticSearchRequest(
             MOVIES_INDEX, queryEmbedding, request, 0, HYBRID_CANDIDATE_SIZE);
-    logger.info("Hybrid lexical movie search query json: [{}]", lexicalRequest);
-    logger.info("Hybrid semantic movie search query json: [{}]", semanticRequest);
 
     try {
       List<MovieSearchDocument> lexicalResults = searchDocuments(lexicalRequest);
@@ -256,14 +250,10 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
     SearchRequest searchRequest =
         movieSearchQueryBuilder.buildSemanticSearchRequest(
             MOVIES_INDEX, queryEmbedding, request, page, size);
-    logger.info("Semantic movie search query json: [{}]", searchRequest);
 
     try {
       SearchResponse<MovieSearchDocument> response =
           openSearchClient.search(searchRequest, MovieSearchDocument.class);
-      logger.info(
-          "Scores of semantically found documents: [{}]",
-          response.hits().hits().stream().map(Hit::score).toList());
       return toPagedMovieResponse(response, page, size);
     } catch (IOException | OpenSearchException ex) {
       throw new OpenSearchOperationException("error while semantic search was performed", ex);

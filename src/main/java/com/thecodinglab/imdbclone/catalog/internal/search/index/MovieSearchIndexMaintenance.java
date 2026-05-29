@@ -4,9 +4,13 @@ import static java.util.Map.entry;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.opensearch.data.core.OpenSearchOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -17,7 +21,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class MovieSearchIndexMaintenance {
 
+  private static final Logger logger = LoggerFactory.getLogger(MovieSearchIndexMaintenance.class);
   private static final int REINDEX_PAGE_SIZE = 500;
+  private static final int EMBEDDING_PROGRESS_INTERVAL = 10;
   private static final int EMBEDDING_DIMENSIONS = 768;
   private static final String SEARCH_AS_YOU_TYPE = "search_as_you_type";
   private static final String KNN_VECTOR = "knn_vector";
@@ -42,6 +48,7 @@ public class MovieSearchIndexMaintenance {
   }
 
   public long reindexMovies() {
+    long reindexStartedAt = System.nanoTime();
     createMoviesIndexIfMissingOrStale();
     movieSearchRepository.deleteAll();
 
@@ -53,15 +60,76 @@ public class MovieSearchIndexMaintenance {
           movieRepository.findAll(
               PageRequest.of(pageNumber, REINDEX_PAGE_SIZE, Sort.by("id").ascending()));
       if (page.hasContent()) {
+        long batchStartedAt = System.nanoTime();
+        long embeddingStartedAt = System.nanoTime();
         List<MovieSearchDocument> documents =
-            page.getContent().stream().map(this::toEmbeddedDocument).toList();
+            toEmbeddedDocuments(page.getContent(), pageNumber, indexedMovies);
+        long embeddingDurationInMs = elapsedMillisSince(embeddingStartedAt);
+
+        long saveStartedAt = System.nanoTime();
         movieSearchRepository.saveAll(documents);
+        long saveDurationInMs = elapsedMillisSince(saveStartedAt);
+
         indexedMovies += page.getNumberOfElements();
+        logger.info(
+            "Indexed movie search batch page={} batchSize={} totalIndexed={} embeddingDurationMs={} saveDurationMs={} batchDurationMs={}",
+            pageNumber,
+            page.getNumberOfElements(),
+            indexedMovies,
+            embeddingDurationInMs,
+            saveDurationInMs,
+            elapsedMillisSince(batchStartedAt));
       }
       pageNumber++;
     } while (page.hasNext());
 
+    logger.info(
+        "Finished movie search reindex totalIndexed={} durationMs={}",
+        indexedMovies,
+        elapsedMillisSince(reindexStartedAt));
     return indexedMovies;
+  }
+
+  private List<MovieSearchDocument> toEmbeddedDocuments(
+      List<Movie> movies, int pageNumber, long alreadyIndexedMovies) {
+    List<MovieSearchDocument> documents = new ArrayList<>(movies.size());
+    long batchEmbeddingStartedAt = System.nanoTime();
+    long embeddingProgressIntervalStartedAt = batchEmbeddingStartedAt;
+    int lastLoggedEmbeddedCount = 0;
+    for (Movie movie : movies) {
+      documents.add(toEmbeddedDocument(movie));
+      if (shouldLogEmbeddingProgress(documents.size(), movies.size())) {
+        int intervalSize = documents.size() - lastLoggedEmbeddedCount;
+        long intervalDurationInMs = elapsedMillisSince(embeddingProgressIntervalStartedAt);
+        logger.info(
+            "Embedded movie search documents page={} embeddedInPage={} batchSize={} totalEmbedded={} intervalSize={} averageMovieEmbeddingDurationMs={} elapsedMs={}",
+            pageNumber,
+            documents.size(),
+            movies.size(),
+            alreadyIndexedMovies + documents.size(),
+            intervalSize,
+            averageDurationInMs(intervalDurationInMs, intervalSize),
+            elapsedMillisSince(batchEmbeddingStartedAt));
+        lastLoggedEmbeddedCount = documents.size();
+        embeddingProgressIntervalStartedAt = System.nanoTime();
+      }
+    }
+    return documents;
+  }
+
+  private static boolean shouldLogEmbeddingProgress(int embeddedInPage, int batchSize) {
+    return embeddedInPage == batchSize || embeddedInPage % EMBEDDING_PROGRESS_INTERVAL == 0;
+  }
+
+  private static long elapsedMillisSince(long startedAt) {
+    return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt);
+  }
+
+  private static long averageDurationInMs(long durationInMs, int itemCount) {
+    if (itemCount == 0) {
+      return 0;
+    }
+    return durationInMs / itemCount;
   }
 
   private MovieSearchDocument toEmbeddedDocument(Movie movie) {
