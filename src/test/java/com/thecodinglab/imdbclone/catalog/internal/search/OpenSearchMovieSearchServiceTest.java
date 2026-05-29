@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.catalog.internal.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,6 +15,7 @@ import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocum
 import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchQueryBuilder;
 import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchRankFusion;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
+import com.thecodinglab.imdbclone.shared.error.OpenSearchOperationException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +27,8 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.ErrorResponse;
+import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.search.Hit;
@@ -121,6 +125,26 @@ class OpenSearchMovieSearchServiceTest {
     assertThat(searchRequestCaptor.getValue().query()).isNotNull();
     assertThat(searchRequestCaptor.getValue().query().isKnn()).isFalse();
     assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(5L);
+  }
+
+  @Test
+  void searchMovies_wrapsOpenSearchQueryFailures() throws IOException {
+    OpenSearchMovieSearchService service = searchService();
+    MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
+    OpenSearchException failure =
+        new OpenSearchException(
+            ErrorResponse.of(
+                response ->
+                    response
+                        .status(400)
+                        .error(error -> error.type("query_shard_exception").reason("bad query"))));
+    when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+        .thenThrow(failure);
+
+    assertThatThrownBy(() -> service.searchMovies(" ", request, 0, 20))
+        .isInstanceOf(OpenSearchOperationException.class)
+        .hasCause(failure)
+        .hasMessage("error while search was performed");
   }
 
   private SearchResponse<MovieSearchDocument> searchResponse(MovieSearchDocument document) {

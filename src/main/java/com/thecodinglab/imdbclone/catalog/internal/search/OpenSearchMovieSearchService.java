@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 import org.opensearch.client.opensearch.core.*;
 import org.opensearch.client.opensearch.core.bulk.BulkResponseItem;
@@ -75,7 +76,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
                 indexResponse.result().jsonValue()
         );
       }
-    } catch (IOException ex) {
+    } catch (IOException | OpenSearchException ex) {
       logger.error(
           "Document of type movie with [{}] was not indexed successfully.",
           kv(MOVIE_ID, movie.getId()));
@@ -106,7 +107,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
               .filter(Objects::nonNull)
               .collect(Collectors.toSet()),
           result.items().size());
-    } catch (IOException ex) {
+    } catch (IOException | OpenSearchException ex) {
       throw new OpenSearchOperationException("Error while indexing a Movie Document in OpenSearch", ex);
     }
     if (result.errors()) {
@@ -132,7 +133,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
 
       logger.info("Movie document with primaryTitle [{}] was found.", response.source() != null ? response.source().getPrimaryTitle() : null);
       return response.source();
-    } catch (IOException ex) {
+    } catch (IOException | OpenSearchException ex) {
       logger.error("Movie document with [{}] was not found", kv(MOVIE_ID, movieId));
       throw new OpenSearchOperationException("Error while retrieving a Movie Document by ID in OpenSearch", ex);
     }
@@ -152,7 +153,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
                           .field("primaryTitle")
                           .query(FieldValue.of(searchText)))),
               MovieSearchDocument.class);
-    } catch (IOException ex) {
+    } catch (IOException | OpenSearchException ex) {
       throw new OpenSearchOperationException("Error while searching for a Movie Document by primaryTitle in OpenSearch", ex);
     }
     List<MovieSearchDocument> movies =
@@ -179,7 +180,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
           response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
       logger.info("Document search by ratings between [{}] and [{}] gave [{}] results.",minRating, maxRating, movies.size());
       return movies;
-    } catch (IOException ex) {
+    } catch (IOException | OpenSearchException ex) {
       throw new OpenSearchOperationException("Error while searching for a Movie Document by rating range in OpenSearch", ex);
     }
   }
@@ -209,7 +210,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
 
     try {
       response = openSearchClient.search(searchRequest, MovieSearchDocument.class);
-    } catch (IOException ex) {
+    } catch (IOException | OpenSearchException ex) {
       throw new OpenSearchOperationException("error while search was performed", ex);
     }
     logger.info(
@@ -238,7 +239,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
           movieSearchRankFusion.fuse(lexicalResults, semanticResults, 0, HYBRID_CANDIDATE_SIZE);
       return toPagedCandidateMovieResponse(
           fusedCandidates, page, size, maxHybridTotalElements(size));
-    } catch (IOException ex) {
+    } catch (IOException | OpenSearchException ex) {
       throw new OpenSearchOperationException("error while hybrid search was performed", ex);
     }
   }
@@ -264,7 +265,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
           "Scores of semantically found documents: [{}]",
           response.hits().hits().stream().map(Hit::score).toList());
       return toPagedMovieResponse(response, page, size);
-    } catch (IOException ex) {
+    } catch (IOException | OpenSearchException ex) {
       throw new OpenSearchOperationException("error while semantic search was performed", ex);
     }
   }
