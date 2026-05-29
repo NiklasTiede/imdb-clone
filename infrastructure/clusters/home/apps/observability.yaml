@@ -83,6 +83,7 @@ spec:
           ingress:
             enabled: false
           prometheusSpec:
+            serviceDiscoveryRole: EndpointSlice
             podMonitorNamespaceSelector: {}
             podMonitorSelector: {}
             podMonitorSelectorNilUsesHelmValues: false
