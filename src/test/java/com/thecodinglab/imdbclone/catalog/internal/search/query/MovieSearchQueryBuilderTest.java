@@ -27,35 +27,53 @@ class MovieSearchQueryBuilderTest {
     assertThat(searchRequest.size()).isEqualTo(100);
     assertThat(searchRequest.query()).isNotNull();
     assertThat(searchRequest.query().bool().filter()).hasSize(3);
-    assertThat(searchRequest.query().bool().must()).singleElement().satisfies(query -> {
-      assertThat(query.isFunctionScore()).isTrue();
-      assertThat(query.functionScore().functions()).singleElement().satisfies(function -> {
-        assertThat(function.isFieldValueFactor()).isTrue();
-        assertThat(function.fieldValueFactor().field()).isEqualTo("imdbRatingCount");
-      });
-      assertThat(query.functionScore().query().bool().should()).hasSize(2);
-      assertThat(query.functionScore().query().bool().should().getFirst().multiMatch().query())
-          .isEqualTo("space horror");
-      assertThat(query.functionScore().query().bool().should().getFirst().multiMatch().fields())
-          .containsExactly(
-              "primaryTitle^4",
-              "primaryTitle._2gram^3",
-              "primaryTitle._3gram^2",
-              "originalTitle^2",
-              "originalTitle._2gram^1.5",
-              "originalTitle._3gram^1.2");
-      assertThat(query.functionScore().query().bool().should().getLast().match().field())
-          .isEqualTo("description");
-    });
-    assertThat(searchRequest.query().bool().filter().stream()
-            .filter(filter -> filter.isMatch())
-            .map(filter -> filter.match().query().stringValue())
-            .toList())
+    assertThat(searchRequest.query().bool().must())
+        .singleElement()
+        .satisfies(
+            query -> {
+              assertThat(query.isFunctionScore()).isTrue();
+              assertThat(query.functionScore().functions())
+                  .singleElement()
+                  .satisfies(
+                      function -> {
+                        assertThat(function.isFieldValueFactor()).isTrue();
+                        assertThat(function.fieldValueFactor().field())
+                            .isEqualTo("imdbRatingCount");
+                      });
+              assertThat(query.functionScore().query().bool().should()).hasSize(2);
+              assertThat(
+                      query.functionScore().query().bool().should().getFirst().multiMatch().query())
+                  .isEqualTo("space horror");
+              assertThat(
+                      query
+                          .functionScore()
+                          .query()
+                          .bool()
+                          .should()
+                          .getFirst()
+                          .multiMatch()
+                          .fields())
+                  .containsExactly(
+                      "primaryTitle^4",
+                      "primaryTitle._2gram^3",
+                      "primaryTitle._3gram^2",
+                      "originalTitle^2",
+                      "originalTitle._2gram^1.5",
+                      "originalTitle._3gram^1.2");
+              assertThat(query.functionScore().query().bool().should().getLast().match().field())
+                  .isEqualTo("description");
+            });
+    assertThat(
+            searchRequest.query().bool().filter().stream()
+                .filter(filter -> filter.isMatch())
+                .map(filter -> filter.match().query().stringValue())
+                .toList())
         .contains("SCI_FI", "MOVIE");
-    assertThat(searchRequest.query().bool().filter().stream()
-            .filter(filter -> filter.isRange())
-            .map(filter -> filter.range().field())
-            .toList())
+    assertThat(
+            searchRequest.query().bool().filter().stream()
+                .filter(filter -> filter.isRange())
+                .map(filter -> filter.range().field())
+                .toList())
         .containsExactly("startYear");
   }
 
@@ -94,20 +112,23 @@ class MovieSearchQueryBuilderTest {
     KnnQuery knnQuery = searchRequest.query().knn();
     assertThat(knnQuery.filter()).isNotNull();
     assertThat(knnQuery.filter().bool().filter()).hasSize(5);
-    assertThat(knnQuery.filter().bool().filter().stream()
-            .filter(filter -> filter.isMatch())
-            .map(filter -> filter.match().field())
-            .toList())
+    assertThat(
+            knnQuery.filter().bool().filter().stream()
+                .filter(filter -> filter.isMatch())
+                .map(filter -> filter.match().field())
+                .toList())
         .contains("movieGenre", "movieType");
-    assertThat(knnQuery.filter().bool().filter().stream()
-            .filter(filter -> filter.isMatch())
-            .map(filter -> filter.match().query().stringValue())
-            .toList())
+    assertThat(
+            knnQuery.filter().bool().filter().stream()
+                .filter(filter -> filter.isMatch())
+                .map(filter -> filter.match().query().stringValue())
+                .toList())
         .contains("SCI_FI", "HORROR", "MOVIE");
-    assertThat(knnQuery.filter().bool().filter().stream()
-            .filter(filter -> filter.isRange())
-            .map(filter -> filter.range().field())
-            .toList())
+    assertThat(
+            knnQuery.filter().bool().filter().stream()
+                .filter(filter -> filter.isRange())
+                .map(filter -> filter.range().field())
+                .toList())
         .contains("startYear", "runtimeMinutes");
   }
 }

@@ -10,8 +10,8 @@ import org.opensearch.data.core.OpenSearchOperations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.stereotype.Service;
 
 @Service
