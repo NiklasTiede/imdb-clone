@@ -20,11 +20,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.opensearch.data.core.OpenSearchOperations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -50,7 +50,7 @@ class SearchControllerTest extends BaseContainers {
 
   @Autowired private MovieSearchEmbeddingTextBuilder movieSearchEmbeddingTextBuilder;
 
-  @Autowired private ElasticsearchOperations elasticsearchOperations;
+  @Autowired private OpenSearchOperations openSearchOperations;
 
   private String adminToken;
   private String userToken;
@@ -152,11 +152,11 @@ class SearchControllerTest extends BaseContainers {
 
     Assertions.assertThat(movieSearchRepository.count()).isEqualTo(expectedMovies);
     Map<String, Object> embeddingMapping =
-        propertyMapping(elasticsearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "embedding");
+        propertyMapping(openSearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "embedding");
     Map<String, Object> primaryTitleMapping =
-        propertyMapping(elasticsearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "primaryTitle");
+        propertyMapping(openSearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "primaryTitle");
     Map<String, Object> originalTitleMapping =
-        propertyMapping(elasticsearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "originalTitle");
+        propertyMapping(openSearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "originalTitle");
 
     Assertions.assertThat(primaryTitleMapping).containsEntry("type", "search_as_you_type");
     Assertions.assertThat(originalTitleMapping).containsEntry("type", "search_as_you_type");

@@ -15,10 +15,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.opensearch.data.core.OpenSearchOperations;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,7 +28,7 @@ class MovieSearchIndexMaintenanceTest {
   @Mock private MovieSearchDocumentRepository movieSearchRepository;
   @Mock private MovieSearchDocumentMapper movieSearchDocumentMapper;
   @Mock private MovieSearchEmbeddingProjector movieSearchEmbeddingProjector;
-  @Mock private ElasticsearchOperations elasticsearchOperations;
+  @Mock private OpenSearchOperations openSearchOperations;
   @Mock private IndexOperations indexOperations;
 
   private MovieSearchIndexMaintenance maintenance;
@@ -41,7 +41,7 @@ class MovieSearchIndexMaintenanceTest {
             movieSearchRepository,
             movieSearchDocumentMapper,
             movieSearchEmbeddingProjector,
-            elasticsearchOperations);
+            openSearchOperations);
   }
 
   @Test
@@ -53,7 +53,7 @@ class MovieSearchIndexMaintenanceTest {
     PageRequest firstPage = PageRequest.of(0, 500, Sort.by("id").ascending());
     PageRequest secondPage = PageRequest.of(1, 500, Sort.by("id").ascending());
 
-    when(elasticsearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
+    when(openSearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
     when(indexOperations.exists()).thenReturn(false);
     when(movieRepository.findAll(firstPage))
         .thenReturn(new PageImpl<>(List.of(firstMovie), firstPage, 501));
@@ -77,7 +77,7 @@ class MovieSearchIndexMaintenanceTest {
   void reindexMoviesKeepsExistingIndexMapping() {
     PageRequest firstPage = PageRequest.of(0, 500, Sort.by("id").ascending());
 
-    when(elasticsearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
+    when(openSearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
     when(indexOperations.exists()).thenReturn(true);
     when(indexOperations.getMapping()).thenReturn(searchAsYouTypeTitleMapping());
     when(movieRepository.findAll(firstPage)).thenReturn(new PageImpl<>(List.of(), firstPage, 0));
@@ -94,7 +94,7 @@ class MovieSearchIndexMaintenanceTest {
   void reindexMoviesRecreatesExistingIndexWhenTitleMappingIsStale() {
     PageRequest firstPage = PageRequest.of(0, 500, Sort.by("id").ascending());
 
-    when(elasticsearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
+    when(openSearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
     when(indexOperations.exists()).thenReturn(true);
     when(indexOperations.getMapping()).thenReturn(textTitleMapping());
     when(movieRepository.findAll(firstPage)).thenReturn(new PageImpl<>(List.of(), firstPage, 0));

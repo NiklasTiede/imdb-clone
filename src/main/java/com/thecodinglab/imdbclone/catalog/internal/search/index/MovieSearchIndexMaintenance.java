@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.opensearch.data.core.OpenSearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.stereotype.Service;
 
@@ -21,19 +21,19 @@ public class MovieSearchIndexMaintenance {
   private final MovieSearchDocumentRepository movieSearchRepository;
   private final MovieSearchDocumentMapper movieSearchDocumentMapper;
   private final MovieSearchEmbeddingProjector movieSearchEmbeddingProjector;
-  private final ElasticsearchOperations elasticsearchOperations;
+  private final OpenSearchOperations openSearchOperations;
 
   public MovieSearchIndexMaintenance(
       MovieRepository movieRepository,
       MovieSearchDocumentRepository movieSearchRepository,
       MovieSearchDocumentMapper movieSearchDocumentMapper,
       MovieSearchEmbeddingProjector movieSearchEmbeddingProjector,
-      ElasticsearchOperations elasticsearchOperations) {
+      OpenSearchOperations openSearchOperations) {
     this.movieRepository = movieRepository;
     this.movieSearchRepository = movieSearchRepository;
     this.movieSearchDocumentMapper = movieSearchDocumentMapper;
     this.movieSearchEmbeddingProjector = movieSearchEmbeddingProjector;
-    this.elasticsearchOperations = elasticsearchOperations;
+    this.openSearchOperations = openSearchOperations;
   }
 
   public long reindexMovies() {
@@ -66,7 +66,7 @@ public class MovieSearchIndexMaintenance {
   }
 
   private void createMoviesIndexIfMissingOrStale() {
-    IndexOperations index = elasticsearchOperations.indexOps(MovieSearchDocument.class);
+    IndexOperations index = openSearchOperations.indexOps(MovieSearchDocument.class);
     if (!index.exists()) {
       index.createWithMapping();
       return;
