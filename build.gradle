@@ -84,7 +84,7 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 
 	//-- SearchEngine
-	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+	implementation "org.opensearch.client:spring-data-opensearch-starter:${springDataOpenSearchVersion}"
 	implementation 'org.springframework.ai:spring-ai-model'
 
 	//-- File Storage
@@ -125,7 +125,7 @@ dependencies {
 	testImplementation "org.testcontainers:testcontainers:${testContainersVersion}"
 	testImplementation "org.testcontainers:testcontainers-junit-jupiter:${testContainersVersion}"
 	testImplementation "org.testcontainers:testcontainers-postgresql:${testContainersVersion}"
-	testImplementation "org.testcontainers:testcontainers-elasticsearch:${testContainersVersion}"
+	testImplementation "org.opensearch:opensearch-testcontainers:${opensearchTestcontainersVersion}"
 
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
