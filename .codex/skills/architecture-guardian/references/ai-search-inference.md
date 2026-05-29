@@ -3,7 +3,7 @@
 ## Scope
 
 Review the semantic and hybrid movie search architecture: embedding generation,
-llama.cpp/EmbeddingGemma integration, Spring AI adapter usage, Elasticsearch vector
+llama.cpp/EmbeddingGemma integration, Spring AI adapter usage, OpenSearch vector
 projection, lexical search, RRF ranking, and search-quality evaluation readiness.
 
 Primary files:
@@ -22,7 +22,7 @@ Primary files:
 ### Source Of Truth And Projection
 
 - PostgreSQL movie data remains the source of truth
-- Elasticsearch movie documents are rebuildable projections
+- OpenSearch movie documents are rebuildable projections
 - embeddings are projection data, not business source of truth
 - reindex can regenerate embeddings from current movie data and current embedding text rules
 - projection tasks or repair paths exist when search indexing fails after database writes
@@ -31,7 +31,7 @@ Primary files:
 
 - embedding model name is stored with indexed documents
 - embedding text version is stored with indexed documents
-- vector dimensions match Elasticsearch mapping and the selected model
+- vector dimensions match OpenSearch mapping and the selected model
 - embedding text construction is deterministic, versioned, and tested
 - model/config changes have an explicit reindex requirement
 - local and CI tests avoid real model calls unless an opt-in flag is set
@@ -74,7 +74,7 @@ Primary files:
 
 Prefer search failure scenarios:
 
-- "Changing the embedding model dimension would break indexing because the Elasticsearch mapping still expects 768 dimensions."
+- "Changing the embedding model dimension would break indexing because the OpenSearch mapping still expects 768 dimensions."
 - "A genre filter is applied to lexical search but not semantic search, so RRF can reintroduce out-of-filter movies."
 - "Embedding text changed without a version bump, so old and new vectors are mixed in the same index."
 - "CI depends on a local model service and will fail on machines without llama.cpp."

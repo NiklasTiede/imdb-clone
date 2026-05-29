@@ -2,7 +2,7 @@
 
 ## Scope
 
-Review cross-system behavior between PostgreSQL, Elasticsearch, RustFS, JWT/security, durable scheduled tasks, and infrastructure scripts. Use `ai-search` mode for embedding/model/vector-search specifics and `observability` mode for metrics/logging contracts.
+Review cross-system behavior between PostgreSQL, OpenSearch, RustFS, JWT/security, durable scheduled tasks, and infrastructure scripts. Use `ai-search` mode for embedding/model/vector-search specifics and `observability` mode for metrics/logging contracts.
 
 Primary files:
 
@@ -21,14 +21,14 @@ Primary files:
 ### Source of Truth
 
 - PostgreSQL remains the source of truth for transactional data unless documented otherwise
-- Elasticsearch documents are projections/search indexes with rebuild or repair paths
+- OpenSearch documents are projections/search indexes with rebuild or repair paths
 - embedding vectors are search projection data; review model/version specifics in `ai-search` mode
 - RustFS stores binary objects addressed by stable tokens, not business state
 - frontend image URLs derive from tokens consistently
 
 ### Consistency and Failure Modes
 
-- write flows define what happens when PostgreSQL succeeds but Elasticsearch or RustFS fails
+- write flows define what happens when PostgreSQL succeeds but OpenSearch or RustFS fails
 - retries, exceptions, and logs preserve enough information to repair state
 - delete flows clean up relation rows, search documents, and object references according to ownership rules
 - scheduled jobs do not hide core consistency responsibilities

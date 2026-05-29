@@ -29,7 +29,7 @@ Primary files:
 
 - backend instances do not rely on durable local filesystem writes
 - uploaded images and generated media are stored in RustFS or another external object store
-- database, Elasticsearch, RustFS, mail, and external APIs are treated as external services
+- database, OpenSearch, RustFS, mail, and external APIs are treated as external services
 - no feature requires sticky sessions or pod-local auth/session state
 - startup can run repeatedly without mutating shared state outside controlled migrations or seed jobs
 
@@ -67,7 +67,7 @@ Primary files:
 ### Storage, Search, and Consistency
 
 - PostgreSQL remains the transactional source of truth
-- Elasticsearch is treated as rebuildable projection state
+- OpenSearch is treated as rebuildable projection state
 - RustFS object lifecycle is tied to DB tokens or durable owner events
 - cross-system updates have repair paths when downstream services are unavailable
 - queue/task tables are observable enough to diagnose stuck or failing work
@@ -89,7 +89,7 @@ Look for:
 - startup hooks: `CommandLineRunner`, `ApplicationRunner`, `@PostConstruct`, Flyway callbacks
 - profiles/config: `application*.properties`, `@Profile`, `${...}` placeholders
 - probes/management: `management.endpoint.health`, health groups, actuator exposure
-- external clients: `DataSource`, Elasticsearch repositories/clients, RustFS, mail, REST clients
+- external clients: `DataSource`, OpenSearch clients/repositories, RustFS, mail, REST clients
 
 ## Report Guidance
 
@@ -98,7 +98,7 @@ Prefer concrete Kubernetes failure scenarios:
 - "With two replicas, both pods can process the same cleanup job."
 - "A pod restart loses state because the token is only held in memory."
 - "Readiness can go green before required indexes/tables exist."
-- "A failed Elasticsearch write is repairable because a durable task remains."
+- "A failed OpenSearch write is repairable because a durable task remains."
 
 Do not require Helm or Kubernetes manifests unless the user asks for deployment implementation.
 Use `gitops` mode for manifest ownership and `observability` mode for metrics, logs,

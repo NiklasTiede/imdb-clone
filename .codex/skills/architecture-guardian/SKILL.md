@@ -13,7 +13,7 @@ Build outputs from checks are allowed. Source changes are not.
 
 ## Repository Context
 
-- Backend: Spring Boot, Java, JPA, Flyway, PostgreSQL, Elasticsearch, RustFS, JWT, Spring AI, llama.cpp embeddings.
+- Backend: Spring Boot, Java, JPA, Flyway, PostgreSQL, OpenSearch, RustFS, JWT, Spring AI, llama.cpp embeddings.
 - Frontend: React, TypeScript, Material UI, React Query, generated Axios client.
 - Deployment: local Compose plus k3s GitOps manifests under `infrastructure/clusters/home/apps`.
 - Observability: backend Actuator/Micrometer, frontend observability facade, Prometheus, Grafana, dashboards.
@@ -38,11 +38,11 @@ Choose the narrowest mode that satisfies the request:
 | `backend-modulith` | Spring Modulith module model, named interfaces, dependency rules, and architecture tests | `references/spring-modulith.md` |
 | `api-contract` | REST/OpenAPI/generated client/frontend API usage | `references/api-contract.md` |
 | `frontend` | React feature architecture, shared modules, state/data ownership | `references/frontend-architecture.md` |
-| `integration` | PostgreSQL, Elasticsearch, RustFS, security, jobs, and source-of-truth flows | `references/integration-storage-search.md` |
+| `integration` | PostgreSQL, OpenSearch, RustFS, security, jobs, and source-of-truth flows | `references/integration-storage-search.md` |
 | `kubernetes` | Stateless containers, multi-replica safety, probes, config/secrets, shutdown, and runtime state | `references/kubernetes-readiness.md` |
 | `gitops` | Argo CD app tree, kustomization inclusion, SOPS secrets, ingress/certs, image/version flow | `references/gitops-k3s.md` |
 | `observability` | Frontend/backend metrics, logs, Prometheus scrape contracts, Grafana dashboards, public/internal monitoring surfaces | `references/observability.md` |
-| `ai-search` | Embedding pipeline, llama.cpp service contract, Elasticsearch vector projection, hybrid search, eval readiness | `references/ai-search-inference.md` |
+| `ai-search` | Embedding pipeline, llama.cpp service contract, OpenSearch vector projection, hybrid search, eval readiness | `references/ai-search-inference.md` |
 | `full` | Broad architecture review across the whole system | All references, but summarize aggressively |
 
 If the user does not specify a mode, default to `quick`. If they name a concern, choose the matching focused mode.
