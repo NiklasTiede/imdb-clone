@@ -369,7 +369,7 @@
       },
       "id": 4,
       "panels": [],
-      "title": "Elasticsearch",
+      "title": "OpenSearch",
       "type": "row"
     },
     {

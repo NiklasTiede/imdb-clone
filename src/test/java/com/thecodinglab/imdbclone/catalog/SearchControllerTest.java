@@ -131,7 +131,7 @@ class SearchControllerTest extends BaseContainers {
   }
 
   @Test
-  void reindexMovies_rebuildsElasticsearchFromPostgresql() {
+  void reindexMovies_rebuildsOpenSearchFromPostgresql() {
     movieSearchRepository.deleteAll();
     Assertions.assertThat(movieSearchRepository.count()).isZero();
     long expectedMovies = movieRepository.count();

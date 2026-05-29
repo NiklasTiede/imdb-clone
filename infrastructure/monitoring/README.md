@@ -34,21 +34,3 @@ I have also port forwarded the Grafana instance, and you have read access to the
 showing metrics about the servers resources, the spring boots backend and other infrastructure of 
 this project  (see [imdb-clone-metrics.the-coding-lab.com](https://imdb-clone-metrics.the-coding-lab.com))
 
----
-
-## Logging: Elasticsearch / Logstash Filebeat / Kibana (ELK Stack)
-
--[ ] in progress
-
-For logging purposes there are different solutions like Graylog, Loki and more. But because I'm already 
-using Elasticsearch for movie-search I can also use it for logging purposes. Logstash will transform 
-log data and Kibana will provide a nice interface for searching across these logs.
-
-
-```bash
-docker pull logstash
-docker pull kibana
-
-docker-compose -f docker-compose-logging.yaml up -d
-```
-

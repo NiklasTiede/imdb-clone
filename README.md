@@ -5,7 +5,7 @@
 </p>
 
 <h2 align="center">
-  IMDb Clone - a production-style React + Spring Boot app with Elasticsearch, object storage, and k3s GitOps.
+  IMDb Clone - a production-style React + Spring Boot app with OpenSearch, object storage, and k3s GitOps.
 </h2>
 
 <p align="center">
@@ -50,7 +50,7 @@
 ## Overview
 
 IMDb Clone is a full-stack movie catalog built as a production-style reference application. It goes beyond a CRUD demo:
-movies are stored in PostgreSQL, searched through Elasticsearch, served with poster and backdrop media from
+movies are stored in PostgreSQL, searched through OpenSearch, served with poster and backdrop media from
 S3-compatible object storage, and deployed to a self-hosted Kubernetes cluster through GitOps.
 
 The project is intentionally kept close to a real web application architecture: generated API clients, explicit seed
@@ -61,7 +61,7 @@ the repository.
 
 - Modular Spring Boot backend with PostgreSQL, Flyway, Spring Security, JWT auth, OpenAPI, and Testcontainers.
 - React frontend with TypeScript, Material UI, TanStack Query, generated Axios clients, and feature-oriented structure.
-- Elasticsearch-backed movie search with PostgreSQL as the relational source of truth.
+- OpenSearch-backed movie search with PostgreSQL as the relational source of truth.
 - S3-compatible media storage through RustFS for movie posters, backdrops, and profile images.
 - Repeatable local development with Docker Compose, lightweight seed data, and explicit search reindexing.
 - Self-hosted k3s deployment with Argo CD, Traefik ingress, cert-manager HTTPS, and encrypted GitOps secrets.
@@ -82,7 +82,7 @@ flowchart LR
 
   subgraph data["Data and media"]
     postgres[("PostgreSQL")]
-    elastic[("Elasticsearch")]
+    opensearch[("OpenSearch")]
     rustfs[("RustFS / S3")]
   end
 
@@ -90,13 +90,13 @@ flowchart LR
   frontend --> backend
   frontend --> rustfs
   backend --> postgres
-  backend --> elastic
+  backend --> opensearch
   backend --> rustfs
-  postgres -. "explicit reindex" .-> elastic
+  postgres -. "explicit reindex" .-> opensearch
 ```
 
 The backend owns the application domain and persists movie, identity, account, and engagement data in PostgreSQL.
-Elasticsearch is used as a derived search index and can be rebuilt explicitly from PostgreSQL. RustFS provides
+OpenSearch is used as a derived search index and can be rebuilt explicitly from PostgreSQL. RustFS provides
 S3-compatible object storage for public movie media and private account uploads. The React frontend talks to the backend
 through generated API clients and loads public media through the object-storage host.
 
@@ -141,7 +141,7 @@ Kubernetes manifests and home-cluster notes live in
 | --- | --- |
 | Backend | Java 25, Spring Boot 4, Spring Security, Spring Data JPA, Flyway |
 | Frontend | React 19, TypeScript 6, Material UI 9, TanStack Query, Vite |
-| Data | PostgreSQL 18, Elasticsearch 9 |
+| Data | PostgreSQL 18, OpenSearch 3 |
 | Media | RustFS, S3-compatible object storage, WebP poster/backdrop variants |
 | API | OpenAPI spec, generated Axios client |
 | Testing | JUnit, Spring Boot Test, Testcontainers, Vitest, React Testing Library |
@@ -154,7 +154,7 @@ Kubernetes manifests and home-cluster notes live in
 - Register and log in with JWT-backed authentication.
 - Maintain account settings and profile images.
 - Rate movies, write comments, and manage watched movies.
-- Rebuild the Elasticsearch index from PostgreSQL through an explicit admin flow.
+- Rebuild the OpenSearch index from PostgreSQL through an explicit admin flow.
 - Seed local and production-like environments with versioned movie/media images.
 
 ## Run Locally
@@ -177,7 +177,7 @@ Run `make help` to see all grouped targets.
 
 ### 1. Start Stateful Services
 
-Start PostgreSQL, Elasticsearch, and RustFS:
+Start PostgreSQL, OpenSearch, and RustFS:
 
 ```bash
 make docker-compose-dev-up

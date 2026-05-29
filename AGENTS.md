@@ -1,7 +1,7 @@
 # IMDB Clone Agent Guide
 
 Full-stack movie database app with a Spring Boot backend, React frontend, PostgreSQL,
-Elasticsearch, RustFS/S3-compatible object storage, and k3s GitOps deployment.
+OpenSearch, RustFS/S3-compatible object storage, and k3s GitOps deployment.
 
 This is the auto-loaded fast-start contract. Keep detailed guidance in linked docs:
 
@@ -25,7 +25,7 @@ Run commands from the repository root unless a command says otherwise.
 - Watchlist: saved or watched movie collection per account.
 - Account/User: persisted account data and authenticated frontend/Spring Security principal.
 - Media: posters, backdrops, profile photos, and files stored through RustFS/S3.
-- Search Index: Elasticsearch projection derived from PostgreSQL movie data.
+- Search Index: OpenSearch projection derived from PostgreSQL movie data.
 - Deployment: k3s manifests, Argo CD root app, ingress, cert-manager, and SOPS secrets.
 
 ## Project Map
@@ -40,7 +40,7 @@ Run commands from the repository root unless a command says otherwise.
 - `frontend/src/client/imdb-clone-backend.yaml` - checked-in OpenAPI spec.
 - `frontend/src/client/movies/generator-output/` - generated Axios client; do not edit manually.
 - `frontend/e2e/` - Playwright tests.
-- `compose.yaml` - local PostgreSQL, Elasticsearch, RustFS, and seed services.
+- `compose.yaml` - local PostgreSQL, OpenSearch, RustFS, and seed services.
 - `infrastructure/clusters/home/apps/` - k3s GitOps manifests rendered by Kustomize.
 - `.codex/skills/` - Codex-specific reusable skills/tooling, not general project docs.
 - `docs/agents/` - detailed agent workflow and verification guidance.

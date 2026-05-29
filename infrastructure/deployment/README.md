@@ -5,7 +5,7 @@ When running this app locally we need to spin up 3 docker
 containers.
  
 - PostgreSQL - Rel. Database
-- Elasticsearch - SearchEngine
+- OpenSearch - SearchEngine
 - RustFS - S3-compatible object storage
 
 For normal local development, run the root `compose.yaml`.
