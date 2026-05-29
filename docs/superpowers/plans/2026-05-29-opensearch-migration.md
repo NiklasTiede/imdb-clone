@@ -121,7 +121,7 @@ In `compose.yaml`, replace the `imdb-clone-elasticsearch` service with:
   ### ----------------------- OpenSearch --------------------- ###
   imdb-clone-opensearch:
     container_name: imdb-clone-opensearch
-    image: opensearchproject/opensearch:3.1.0
+    image: opensearchproject/opensearch:3.6.0
     restart: unless-stopped
     environment:
       - discovery.type=single-node
@@ -502,7 +502,7 @@ Replace image and container fields with:
 
 ```java
 private static final DockerImageName openSearchImage =
-    DockerImageName.parse("opensearchproject/opensearch:3.1.0");
+    DockerImageName.parse("opensearchproject/opensearch:3.6.0");
 
 static OpensearchContainer<?> openSearchContainer =
     new OpensearchContainer<>(openSearchImage)
@@ -604,7 +604,7 @@ spec:
     spec:
       containers:
         - name: opensearch
-          image: opensearchproject/opensearch:3.1.0
+          image: opensearchproject/opensearch:3.6.0
           ports:
             - name: http
               containerPort: 9200

@@ -54,7 +54,7 @@ public class BaseContainers {
 
   private static final DockerImageName postgreSQLImage = DockerImageName.parse("postgres:18");
   private static final DockerImageName openSearchImage =
-      DockerImageName.parse("opensearchproject/opensearch:3.1.0");
+      DockerImageName.parse("opensearchproject/opensearch:3.6.0");
   private static final DockerImageName rustfsImage =
       DockerImageName.parse("rustfs/rustfs:1.0.0-beta.2");
 
