@@ -16,19 +16,20 @@ services:
     networks:
       - imdb-clone-network
 
-  ### ----------------------- ElasticSearch --------------------- ###
-  imdb-clone-elasticsearch:
-    container_name: imdb-clone-elasticsearch
-    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.4
+  ### ----------------------- OpenSearch --------------------- ###
+  imdb-clone-opensearch:
+    container_name: imdb-clone-opensearch
+    image: opensearchproject/opensearch:3.1.0
     restart: unless-stopped
     environment:
-      - xpack.security.enabled=false
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx2g
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx2g
+      - DISABLE_INSTALL_DEMO_CONFIG=true
     ports:
       - "9200:9200"
     volumes:
-      - imdb-clone-elasticsearch-data:/usr/share/elasticsearch/data
+      - imdb-clone-opensearch-data:/usr/share/opensearch/data
     networks:
       - imdb-clone-network
 
@@ -137,8 +138,8 @@ services:
 volumes:
   imdb-clone-postgresql-data:
     name: imdb-clone-postgresql-data
-  imdb-clone-elasticsearch-data:
-    name: imdb-clone-elasticsearch-data
+  imdb-clone-opensearch-data:
+    name: imdb-clone-opensearch-data
   imdb-clone-rustfs-data:
     name: imdb-clone-rustfs-data
   imdb-clone-llama-cpp-cache:
