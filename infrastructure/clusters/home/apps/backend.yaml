@@ -29,8 +29,8 @@ spec:
               value: prod
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://imdb-clone-postgresql.databases.svc.cluster.local:5432/movie_db
-            - name: SPRING_ELASTICSEARCH_URIS
-              value: http://imdb-clone-elasticsearch.databases.svc.cluster.local:9200
+            - name: OPENSEARCH_URIS
+              value: http://imdb-clone-opensearch.databases.svc.cluster.local:9200
             - name: IMDB_CLONE_MEDIA_STORAGE_URI
               value: http://imdb-clone-rustfs.databases.svc.cluster.local:9000
             - name: SPRING_APPLICATION_JSON

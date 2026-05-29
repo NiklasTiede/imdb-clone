@@ -6,11 +6,6 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: elastic-system
----
-apiVersion: v1
-kind: Namespace
-metadata:
   name: imdb-clone
 ---
 apiVersion: v1
