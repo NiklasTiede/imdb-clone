@@ -33,7 +33,7 @@ Prefer slices that can be reviewed independently:
 - Frontend API: query/mutation wrappers, auth/session behavior, generated client usage.
 - Backend endpoint: DTOs, controller, module service, validation, tests, generated OpenAPI impact.
 - Persistence: entity/repository/query, Flyway migration, schema/test data, integration tests.
-- Search/media: Elasticsearch projection or RustFS/S3 behavior with focused integration coverage.
+- Search/media: OpenSearch projection or RustFS/S3 behavior with focused integration coverage.
 - Deployment: Dockerfile, workflow, Kustomize manifest, SOPS secret shape, rollout validation.
 - Docs: guidance, troubleshooting, command matrix, ADR or architecture notes.
 

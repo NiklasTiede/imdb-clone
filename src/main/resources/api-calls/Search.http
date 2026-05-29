@@ -29,6 +29,6 @@ Content-Type: application/json
 }
 
 
-### reindex movies from PostgreSQL into Elasticsearch
+### reindex movies from PostgreSQL into OpenSearch
 POST {{protocol}}{{host}}:{{port}}/api/search/movies/reindex
 Authorization: Bearer {{adminToken}}

@@ -1,41 +1,34 @@
-# Direct Requests to the Elasticsearch Instance
+# Direct requests to the OpenSearch instance
 
-# how to generate the base64-credentials
+# how to generate the base64 credentials if security is enabled
 # echo -n 'username:password' | base64
 
 ### current version
 GET {{protocol}}{{host}}:{{port}}
-Authorization: Basic <base64_credentials>
 
 
 ### cluster health
 GET {{protocol}}{{host}}:{{port}}/_cluster/health
-Authorization: Basic <base64_credentials>
 
 
 ### cluster state and some statistics toward movies index
 GET {{protocol}}{{host}}:{{port}}/_cat/indices
-Authorization: Basic <base64_credentials>
 
 
 ### properties of each field in the document of the index
 GET {{protocol}}{{host}}:{{port}}/movies
-Authorization: Basic <base64_credentials>
 
 
 ### count number of documents in an index
 GET {{protocol}}{{host}}:{{port}}/movies/_count
-Authorization: Basic <base64_credentials>
 
 
 ### search for by document id
 GET {{protocol}}{{host}}:{{port}}/movies/_doc/109830
-Authorization: Basic <base64_credentials>
 
 
 ### simple match search
 GET {{protocol}}{{host}}:{{port}}/movies/_search
-Authorization: Basic <base64_credentials>
 Content-Type: application/json
 
 {
@@ -49,7 +42,6 @@ Content-Type: application/json
 
 ### multi match search
 GET {{protocol}}{{host}}:{{port}}/movies/_search
-Authorization: Basic <base64_credentials>
 Content-Type: application/json
 
 {
@@ -65,7 +57,6 @@ Content-Type: application/json
 
 ### simple search
 GET {{protocol}}{{host}}:{{port}}/movies/_search
-Authorization: Basic <base64_credentials>
 Content-Type: application/json
 
 {
@@ -85,7 +76,6 @@ Content-Type: application/json
 
 ### multi match search and boost based on imdbRatingCount
 GET {{protocol}}{{host}}:{{port}}/movies/_search
-Authorization: Basic <base64_credentials>
 Content-Type: application/json
 
 {
@@ -115,7 +105,6 @@ Content-Type: application/json
 
 ### complexer search (results are filtrated)
 GET {{protocol}}{{host}}:{{port}}/movies/_search
-Authorization: Basic <base64_credentials>
 Content-Type: application/json
 
 {
@@ -173,7 +162,6 @@ Content-Type: application/json
 
 ### current search extended with boosting:
 GET {{protocol}}{{host}}:{{port}}/movies/_search
-Authorization: Basic <base64_credentials>
 Content-Type: application/json
 
 {
@@ -246,7 +234,6 @@ Content-Type: application/json
 
 ### aggregations: avg rating per genre
 GET {{protocol}}{{host}}:{{port}}/movies/_search
-Authorization: Basic <base64_credentials>
 Content-Type: application/json
 
 {
@@ -271,17 +258,14 @@ Content-Type: application/json
 
 ### delete document by id
 DELETE {{protocol}}{{host}}:{{port}}/movies/_doc/816692
-Authorization: Basic <base64_credentials>
 
 
 ### delete whole index
 DELETE {{protocol}}{{host}}:{{port}}/movies
-Authorization: Basic <base64_credentials>
 
 
 ### if watermark is reached
 PUT {{protocol}}{{host}}:{{port}}/_cluster/settings
-Authorization: Basic <base64_credentials>
 Content-Type: application/json
 
 {

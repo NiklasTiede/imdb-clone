@@ -6,7 +6,7 @@ These are the containers I'm running:
 - React (Frontend) Container
 - Spring Boot (Backend) Container
 - PostgreSQL Database Container
-- Elasticsearch (SearchEngine) Container
+- OpenSearch (SearchEngine) Container
 - RustFS (S3-compatible object storage) Container
 - Traefik (reverse proxy) Container
 

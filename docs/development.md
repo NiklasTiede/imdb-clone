@@ -32,7 +32,7 @@ make check-local-tools
 
 ## Run Stateful Services
 
-Start PostgreSQL, Elasticsearch, and RustFS:
+Start PostgreSQL, OpenSearch, and RustFS:
 
 ```bash
 make docker-compose-dev-up
@@ -55,7 +55,7 @@ The Compose setup creates these local services:
 | Service | URL or port | Notes |
 | --- | --- | --- |
 | PostgreSQL | `localhost:5432` | Database `movie_db`; local demo credentials only. |
-| Elasticsearch | `http://localhost:9200` | Security disabled for local development. |
+| OpenSearch | `http://localhost:9200` | Security disabled for local development. |
 | RustFS API | `http://localhost:9000` | S3-compatible object storage. |
 | RustFS console | `http://localhost:9001` | Local console for object storage. |
 
@@ -94,7 +94,7 @@ Notes:
 
 - `seed-local-users` creates roles and demo accounts from `src/main/resources/sql/local-users.sql`.
 - `seed-light` runs the versioned lightweight seed image against local PostgreSQL and RustFS.
-- `reindex-local-search` logs in with a local demo admin account and rebuilds the Elasticsearch movie
+- `reindex-local-search` logs in with a local demo admin account and rebuilds the OpenSearch movie
   index from PostgreSQL.
 - The seed pipeline is intended to be idempotent for movie/media upserts and should not wipe local user
   data.
@@ -174,7 +174,7 @@ Run from the repository root:
 Use targeted tests while developing, then run the broader check before reporting backend work complete.
 Before committing Java, Gradle, or backend test changes, run `./gradlew spotlessApply`.
 
-Backend tests use Testcontainers for PostgreSQL, Elasticsearch, and RustFS where needed. Docker must be
+Backend tests use Testcontainers for PostgreSQL, OpenSearch, and RustFS where needed. Docker must be
 available for those tests.
 
 ## Frontend Checks
@@ -278,7 +278,7 @@ Backend configuration keys live in:
 Important backend configuration areas:
 
 - `spring.datasource.*`
-- `spring.elasticsearch.*`
+- `opensearch.*`
 - `spring.mail.*`
 - `imdb-clone.identity.*`
 - `imdb-clone.identity.jwt.*`
@@ -305,13 +305,13 @@ Port already in use:
 
 - Frontend needs `3000` because Vite uses `strictPort: true`.
 - Backend uses `8080`; management/health uses `8081`.
-- PostgreSQL uses `5432`, Elasticsearch uses `9200`, RustFS uses `9000` and `9001`.
+- PostgreSQL uses `5432`, OpenSearch uses `9200`, RustFS uses `9000` and `9001`.
 
 Backend cannot connect to services:
 
-- Confirm `docker compose ps` shows PostgreSQL, Elasticsearch, and RustFS running.
+- Confirm `docker compose ps` shows PostgreSQL, OpenSearch, and RustFS running.
 - Confirm the backend is using the `dev` profile or default local profile behavior.
-- Check `curl -fsS http://localhost:9200/_cluster/health` for Elasticsearch readiness.
+- Check `curl -fsS http://localhost:9200/_cluster/health` for OpenSearch readiness.
 
 Frontend API calls fail:
 

@@ -6,8 +6,8 @@ GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/health
 ### liveness
 GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/health/liveness
 
-### detail of health: elasticsearch
-GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/health/elasticsearch
+### readiness
+GET {{protocol}}{{host}}:{{monitoring-port}}/actuator/health/readiness
 
 ## --- env vars / Metrics ---
 

@@ -21,7 +21,7 @@ After publishing, the workflow resolves Docker digests and commits updates to
 then deploys those manifest changes.
 
 The Playwright e2e workflow is also manual-only. It starts
-PostgreSQL, Elasticsearch, Object Storage, the Spring Boot backend, and the
+PostgreSQL, OpenSearch, Object Storage, the Spring Boot backend, and the
 Vite frontend before running the browser tests. This keeps the
 regular push CI fast while still making full-stack browser checks
 available before larger merges or releases.

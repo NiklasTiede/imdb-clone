@@ -112,7 +112,7 @@ seed-full: ## run full seed against local Docker Compose services
 		-e SEED_VERSION=$(SEED_VERSION) \
 		$(SEED_FULL_TAG) all
 
-reindex-local-search: ## rebuild local Elasticsearch movie index from PostgreSQL
+reindex-local-search: ## rebuild local OpenSearch movie index from PostgreSQL
 	@TOKEN=$$(curl -fsS -H 'Content-Type: application/json' \
 		-d '{"usernameOrEmail":"les_grossman","password":"Encrypted!Pa55worD"}' \
 		http://localhost:8080/api/auth/login \

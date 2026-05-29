@@ -20,7 +20,7 @@ Run from the repository root.
 
 Notes:
 
-- Backend tests use Testcontainers where PostgreSQL, Elasticsearch, or RustFS are needed.
+- Backend tests use Testcontainers where PostgreSQL, OpenSearch, or RustFS are needed.
 - Docker must be running for Testcontainers-backed tests.
 - Before committing Java, Gradle, or backend test changes, run `./gradlew spotlessApply`.
 
@@ -76,7 +76,7 @@ Expected local URLs:
 - Frontend: `http://localhost:3000`
 - Object storage API: `http://localhost:9000`
 - RustFS console: `http://localhost:9001`
-- Elasticsearch: `http://localhost:9200`
+- OpenSearch: `http://localhost:9200`
 
 ## Docker Checks
 
