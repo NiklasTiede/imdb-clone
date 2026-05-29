@@ -6,11 +6,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.elasticsearch.core.search.TotalHitsRelation;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.search.embedding.MovieEmbeddingClient;
@@ -29,12 +24,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.Hit;
+import org.opensearch.client.opensearch.core.search.TotalHitsRelation;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
-class ElasticsearchMovieSearchServiceTest {
+class OpenSearchMovieSearchServiceTest {
 
-  @Mock private ElasticsearchClient esClient;
+  @Mock private OpenSearchClient openSearchClient;
   @Mock private MovieEmbeddingClient movieEmbeddingClient;
   @Captor private ArgumentCaptor<SearchRequest> searchRequestCaptor;
 
@@ -44,14 +44,14 @@ class ElasticsearchMovieSearchServiceTest {
 
   @Test
   void searchMoviesSemantically_embedsQueryAndRunsKnnSearch() throws IOException {
-    ElasticsearchMovieSearchService service = searchService();
+    OpenSearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     MovieSearchDocument document = new MovieSearchDocument();
     document.setId(7L);
     document.setPrimaryTitle("Alien");
     document.setOriginalTitle("Alien");
     when(movieEmbeddingClient.embedText("space horror movie")).thenReturn(new float[] {0.1f, 0.2f});
-    when(esClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+    when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
         .thenReturn(searchResponse(document));
 
     PagedResponse<MovieRecord> response =
@@ -59,9 +59,10 @@ class ElasticsearchMovieSearchServiceTest {
 
     verify(movieEmbeddingClient).embedText("space horror movie");
     SearchRequest searchRequest = searchRequestCaptor.getValue();
-    assertThat(searchRequest.knn()).hasSize(1);
-    assertThat(searchRequest.knn().getFirst().field()).isEqualTo("embedding");
-    assertThat(searchRequest.knn().getFirst().queryVector()).containsExactly(0.1f, 0.2f);
+    assertThat(searchRequest.query()).isNotNull();
+    assertThat(searchRequest.query().isKnn()).isTrue();
+    assertThat(searchRequest.query().knn().field()).isEqualTo("embedding");
+    assertThat(searchRequest.query().knn().vector()).containsExactly(0.1f, 0.2f);
     assertThat(response.getTotalElements()).isEqualTo(1);
     assertThat(response.getContent())
         .extracting(MovieRecord::primaryTitle)
@@ -70,10 +71,10 @@ class ElasticsearchMovieSearchServiceTest {
 
   @Test
   void searchMovies_withTextQueryRunsLexicalAndSemanticSearchAndFusesResults() throws IOException {
-    ElasticsearchMovieSearchService service = searchService();
+    OpenSearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     when(movieEmbeddingClient.embedText("space horror")).thenReturn(new float[] {0.1f, 0.2f});
-    when(esClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+    when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
         .thenReturn(
             searchResponse(List.of(movie(2, "Lexical First"), movie(1, "Shared Match"))),
             searchResponse(List.of(movie(1, "Shared Match"), movie(3, "Semantic Only"))));
@@ -84,19 +85,19 @@ class ElasticsearchMovieSearchServiceTest {
     List<SearchRequest> searchRequests = searchRequestCaptor.getAllValues();
     assertThat(searchRequests).hasSize(2);
     assertThat(searchRequests.getFirst().query()).isNotNull();
-    assertThat(searchRequests.getFirst().knn()).isEmpty();
-    assertThat(searchRequests.getLast().knn()).hasSize(1);
+    assertThat(searchRequests.getFirst().query().isKnn()).isFalse();
+    assertThat(searchRequests.getLast().query().isKnn()).isTrue();
     assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(1L, 2L, 3L);
   }
 
   @Test
   void searchMovies_withTextQueryCapsHybridResultsToFourPages() throws IOException {
-    ElasticsearchMovieSearchService service = searchService();
+    OpenSearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     List<MovieSearchDocument> candidates =
         LongStream.rangeClosed(1, 100).mapToObj(id -> movie(id, "Movie " + id)).toList();
     when(movieEmbeddingClient.embedText("space horror")).thenReturn(new float[] {0.1f, 0.2f});
-    when(esClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+    when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
         .thenReturn(searchResponse(candidates), searchResponse(candidates));
 
     PagedResponse<MovieRecord> response = service.searchMovies("space horror", request, 0, 20);
@@ -108,9 +109,9 @@ class ElasticsearchMovieSearchServiceTest {
 
   @Test
   void searchMovies_withBlankQueryKeepsLexicalFilterOnlySearch() throws IOException {
-    ElasticsearchMovieSearchService service = searchService();
+    OpenSearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
-    when(esClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+    when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
         .thenReturn(searchResponse(List.of(movie(5, "Filter Match"))));
 
     PagedResponse<MovieRecord> response = service.searchMovies(" ", request, 0, 20);
@@ -118,7 +119,7 @@ class ElasticsearchMovieSearchServiceTest {
     verify(movieEmbeddingClient, never()).embedText(" ");
     assertThat(searchRequestCaptor.getAllValues()).hasSize(1);
     assertThat(searchRequestCaptor.getValue().query()).isNotNull();
-    assertThat(searchRequestCaptor.getValue().knn()).isEmpty();
+    assertThat(searchRequestCaptor.getValue().query().isKnn()).isFalse();
     assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(5L);
   }
 
@@ -126,9 +127,9 @@ class ElasticsearchMovieSearchServiceTest {
     return searchResponse(List.of(document));
   }
 
-  private ElasticsearchMovieSearchService searchService() {
-    return new ElasticsearchMovieSearchService(
-        esClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
+  private OpenSearchMovieSearchService searchService() {
+    return new OpenSearchMovieSearchService(
+        openSearchClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
   }
 
   private SearchResponse<MovieSearchDocument> searchResponse(List<MovieSearchDocument> documents) {
@@ -137,7 +138,7 @@ class ElasticsearchMovieSearchServiceTest {
 
   private SearchResponse<MovieSearchDocument> searchResponse(
       List<MovieSearchDocument> documents, long totalHits) {
-    return SearchResponse.of(
+    return SearchResponse.searchResponseOf(
         response ->
             response
                 .took(1)

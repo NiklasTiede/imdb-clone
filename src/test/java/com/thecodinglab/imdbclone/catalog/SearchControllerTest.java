@@ -160,10 +160,8 @@ class SearchControllerTest extends BaseContainers {
 
     Assertions.assertThat(primaryTitleMapping).containsEntry("type", "search_as_you_type");
     Assertions.assertThat(originalTitleMapping).containsEntry("type", "search_as_you_type");
-    Assertions.assertThat(embeddingMapping).containsEntry("type", "dense_vector");
-    Assertions.assertThat(embeddingMapping).containsEntry("dims", 768);
-    Assertions.assertThat(embeddingMapping).containsEntry("index", true);
-    Assertions.assertThat(embeddingMapping).containsEntry("similarity", "cosine");
+    Assertions.assertThat(embeddingMapping).containsEntry("type", "knn_vector");
+    Assertions.assertThat(embeddingMapping).containsEntry("dimension", 768);
 
     MovieSearchDocument indexedMovie = movieSearchRepository.findById(1L).orElseThrow();
     Assertions.assertThat(indexedMovie.getEmbeddingModel()).isEqualTo("embeddinggemma");

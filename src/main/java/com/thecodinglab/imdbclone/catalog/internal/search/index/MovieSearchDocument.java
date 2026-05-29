@@ -5,10 +5,10 @@ import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import java.time.Instant;
 import java.util.Set;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.KnnSimilarity;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
 
@@ -32,8 +32,13 @@ public class MovieSearchDocument {
   private Integer startYear;
   private Integer endYear;
   private Integer runtimeMinutes;
+
+  @Field(type = FieldType.Date, format = DateFormat.date_time)
   private Instant modifiedAtInUtc;
+
+  @Field(type = FieldType.Date, format = DateFormat.date_time)
   private Instant createdAtInUtc;
+
   private Set<MovieGenre> movieGenre;
   private Float imdbRating;
   private Integer imdbRatingCount;
@@ -46,11 +51,6 @@ public class MovieSearchDocument {
   private String embeddingModel;
   private String embeddingTextVersion;
 
-  @Field(
-      type = FieldType.Dense_Vector,
-      dims = 768,
-      index = true,
-      knnSimilarity = KnnSimilarity.COSINE)
   private float[] embedding;
 
   public Long getId() {

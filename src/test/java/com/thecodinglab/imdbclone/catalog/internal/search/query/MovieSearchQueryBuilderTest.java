@@ -2,15 +2,13 @@ package com.thecodinglab.imdbclone.catalog.internal.search.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import co.elastic.clients.elasticsearch._types.KnnSearch;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch._types.query_dsl.KnnQuery;
+import org.opensearch.client.opensearch.core.SearchRequest;
 
 class MovieSearchQueryBuilderTest {
 
@@ -29,21 +27,36 @@ class MovieSearchQueryBuilderTest {
     assertThat(searchRequest.size()).isEqualTo(100);
     assertThat(searchRequest.query()).isNotNull();
     assertThat(searchRequest.query().bool().filter()).hasSize(3);
-    assertThat(searchRequest.toString())
-        .contains(
-            "space horror",
-            "bool_prefix",
-            "primaryTitle^4",
-            "primaryTitle._2gram^3",
-            "primaryTitle._3gram^2",
-            "originalTitle^2",
-            "originalTitle._2gram^1.5",
-            "originalTitle._3gram^1.2",
-            "description",
-            "imdbRatingCount",
-            "SCI_FI",
-            "MOVIE",
-            "startYear");
+    assertThat(searchRequest.query().bool().must()).singleElement().satisfies(query -> {
+      assertThat(query.isFunctionScore()).isTrue();
+      assertThat(query.functionScore().functions()).singleElement().satisfies(function -> {
+        assertThat(function.isFieldValueFactor()).isTrue();
+        assertThat(function.fieldValueFactor().field()).isEqualTo("imdbRatingCount");
+      });
+      assertThat(query.functionScore().query().bool().should()).hasSize(2);
+      assertThat(query.functionScore().query().bool().should().getFirst().multiMatch().query())
+          .isEqualTo("space horror");
+      assertThat(query.functionScore().query().bool().should().getFirst().multiMatch().fields())
+          .containsExactly(
+              "primaryTitle^4",
+              "primaryTitle._2gram^3",
+              "primaryTitle._3gram^2",
+              "originalTitle^2",
+              "originalTitle._2gram^1.5",
+              "originalTitle._3gram^1.2");
+      assertThat(query.functionScore().query().bool().should().getLast().match().field())
+          .isEqualTo("description");
+    });
+    assertThat(searchRequest.query().bool().filter().stream()
+            .filter(filter -> filter.isMatch())
+            .map(filter -> filter.match().query().stringValue())
+            .toList())
+        .contains("SCI_FI", "MOVIE");
+    assertThat(searchRequest.query().bool().filter().stream()
+            .filter(filter -> filter.isRange())
+            .map(filter -> filter.range().field())
+            .toList())
+        .containsExactly("startYear");
   }
 
   @Test
@@ -57,14 +70,15 @@ class MovieSearchQueryBuilderTest {
     assertThat(searchRequest.index()).containsExactly("movies");
     assertThat(searchRequest.from()).isEqualTo(20);
     assertThat(searchRequest.size()).isEqualTo(10);
-    assertThat(searchRequest.knn()).hasSize(1);
+    assertThat(searchRequest.query()).isNotNull();
+    assertThat(searchRequest.query().isKnn()).isTrue();
 
-    KnnSearch knnSearch = searchRequest.knn().getFirst();
-    assertThat(knnSearch.field()).isEqualTo("embedding");
-    assertThat(knnSearch.queryVector()).containsExactly(0.25f, -0.5f, 0.75f);
-    assertThat(knnSearch.k()).isEqualTo(30);
-    assertThat(knnSearch.numCandidates()).isEqualTo(300);
-    assertThat(knnSearch.filter()).isEmpty();
+    KnnQuery knnQuery = searchRequest.query().knn();
+    assertThat(knnQuery.field()).isEqualTo("embedding");
+    assertThat(knnQuery.vector()).containsExactly(0.25f, -0.5f, 0.75f);
+    assertThat(knnQuery.k()).isEqualTo(30);
+    assertThat(knnQuery.methodParameters().toString()).contains("ef_search", "300");
+    assertThat(knnQuery.filter()).isNull();
   }
 
   @Test
@@ -77,10 +91,23 @@ class MovieSearchQueryBuilderTest {
     SearchRequest searchRequest =
         builder.buildSemanticSearchRequest("movies", queryEmbedding, request, 0, 20);
 
-    List<Query> filters = searchRequest.knn().getFirst().filter();
-    assertThat(filters).hasSize(5);
-    assertThat(filters.toString())
-        .contains(
-            "movieGenre", "SCI_FI", "HORROR", "movieType", "MOVIE", "startYear", "runtimeMinutes");
+    KnnQuery knnQuery = searchRequest.query().knn();
+    assertThat(knnQuery.filter()).isNotNull();
+    assertThat(knnQuery.filter().bool().filter()).hasSize(5);
+    assertThat(knnQuery.filter().bool().filter().stream()
+            .filter(filter -> filter.isMatch())
+            .map(filter -> filter.match().field())
+            .toList())
+        .contains("movieGenre", "movieType");
+    assertThat(knnQuery.filter().bool().filter().stream()
+            .filter(filter -> filter.isMatch())
+            .map(filter -> filter.match().query().stringValue())
+            .toList())
+        .contains("SCI_FI", "HORROR", "MOVIE");
+    assertThat(knnQuery.filter().bool().filter().stream()
+            .filter(filter -> filter.isRange())
+            .map(filter -> filter.range().field())
+            .toList())
+        .contains("startYear", "runtimeMinutes");
   }
 }

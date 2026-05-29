@@ -15,10 +15,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.jdbc.Sql;
+import org.opensearch.testcontainers.OpensearchContainer;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
-import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -53,8 +53,8 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 public class BaseContainers {
 
   private static final DockerImageName postgreSQLImage = DockerImageName.parse("postgres:18");
-  private static final DockerImageName elasticsearchImage =
-      DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch:9.3.4");
+  private static final DockerImageName openSearchImage =
+      DockerImageName.parse("opensearchproject/opensearch:3.1.0");
   private static final DockerImageName rustfsImage =
       DockerImageName.parse("rustfs/rustfs:1.0.0-beta.2");
 
@@ -71,14 +71,17 @@ public class BaseContainers {
     registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
   }
 
-  static ElasticsearchContainer elasticContainer =
-      new ElasticsearchContainer(elasticsearchImage)
-          .withEnv("ES_JAVA_OPTS", "-Xms512m -Xmx512m")
+  static OpensearchContainer<?> openSearchContainer =
+      new OpensearchContainer<>(openSearchImage)
+          .withEnv("DISABLE_INSTALL_DEMO_CONFIG", "true")
+          .withEnv("OPENSEARCH_JAVA_OPTS", "-Xms512m -Xmx512m")
           .withStartupTimeout(Duration.ofMinutes(3));
 
   @DynamicPropertySource
-  static void setProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.elasticsearch.uris", elasticContainer::getHttpHostAddress);
+  static void openSearchProperties(DynamicPropertyRegistry registry) {
+    registry.add("opensearch.uris", openSearchContainer::getHttpHostAddress);
+    registry.add("opensearch.username", () -> "");
+    registry.add("opensearch.password", () -> "");
   }
 
   public static GenericContainer<?> rustfsContainer =
@@ -171,8 +174,7 @@ public class BaseContainers {
   static {
     postgreSQLContainer.start();
 
-    elasticContainer.withEnv("xpack.security.enabled", "false");
-    elasticContainer.start();
+    openSearchContainer.start();
 
     rustfsContainer.start();
     createRustfsBucket();

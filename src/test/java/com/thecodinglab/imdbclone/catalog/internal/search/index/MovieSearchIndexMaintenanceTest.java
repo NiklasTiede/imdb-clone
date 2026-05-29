@@ -65,7 +65,7 @@ class MovieSearchIndexMaintenanceTest {
     long indexedMovies = maintenance.reindexMovies();
 
     assertThat(indexedMovies).isEqualTo(2);
-    verify(indexOperations).createWithMapping();
+    verify(indexOperations).create(any(), any());
     verify(movieSearchRepository).deleteAll();
     verify(movieSearchEmbeddingProjector).addEmbedding(firstMovie, firstDocument);
     verify(movieSearchEmbeddingProjector).addEmbedding(secondMovie, secondDocument);
@@ -86,7 +86,7 @@ class MovieSearchIndexMaintenanceTest {
 
     assertThat(indexedMovies).isZero();
     verify(indexOperations, never()).delete();
-    verify(indexOperations, never()).createWithMapping();
+    verify(indexOperations, never()).create(any(), any());
     verify(movieSearchRepository, never()).saveAll(any());
   }
 
@@ -103,7 +103,7 @@ class MovieSearchIndexMaintenanceTest {
 
     assertThat(indexedMovies).isZero();
     verify(indexOperations).delete();
-    verify(indexOperations).createWithMapping();
+    verify(indexOperations).create(any(), any());
     verify(movieSearchRepository).deleteAll();
     verify(movieSearchRepository, never()).saveAll(any());
   }
@@ -113,7 +113,8 @@ class MovieSearchIndexMaintenanceTest {
         "properties",
         Map.of(
             "primaryTitle", Map.of("type", "search_as_you_type"),
-            "originalTitle", Map.of("type", "search_as_you_type")));
+            "originalTitle", Map.of("type", "search_as_you_type"),
+            "embedding", Map.of("type", "knn_vector")));
   }
 
   private static Map<String, Object> textTitleMapping() {
