@@ -10,6 +10,7 @@ import com.thecodinglab.imdbclone.support.BaseContainers;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,7 @@ class RatingControllerTest extends BaseContainers {
     SecurityContextHolder.clearContext();
   }
 
+  @BeforeEach
   @AfterEach
   void cleanup() {
     ratingRepository
