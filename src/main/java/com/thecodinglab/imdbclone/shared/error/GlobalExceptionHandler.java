@@ -95,14 +95,14 @@ public class GlobalExceptionHandler {
     return problemDetail;
   }
 
-  @ExceptionHandler(ElasticsearchOperationException.class)
-  protected final ProblemDetail resolveElasticsearchOperationException(
-      ElasticsearchOperationException ex, WebRequest request) {
-    logger.error("Stack trace for cause:", ex.getException().getCause());
+  @ExceptionHandler(OpenSearchOperationException.class)
+  protected final ProblemDetail resolveOpenSearchOperationException(
+      OpenSearchOperationException ex, WebRequest request) {
+    logger.error("Stack trace for cause:", ex.getCause());
     logger.warn(
-        "While interacting with ElasticSearch an error occurred with message: '{}' and '{}' on resource '{}'",
+        "While interacting with OpenSearch an error occurred with message: '{}' and '{}' on resource '{}'",
         v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
-        v(EXCEPTION_MESSAGE, ex.getException().getMessage()),
+        v(EXCEPTION_MESSAGE, ex.getCause() == null ? null : ex.getCause().getMessage()),
         v(HTTP_RESOURCE_PATH, request.getDescription(true)));
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());

@@ -85,6 +85,7 @@ dependencies {
 
 	//-- SearchEngine
 	implementation "org.opensearch.client:spring-data-opensearch-starter:${springDataOpenSearchVersion}"
+	implementation "org.opensearch.client:opensearch-java:${opensearchJavaVersion}"
 	implementation 'org.springframework.ai:spring-ai-model'
 
 	//-- File Storage

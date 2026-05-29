@@ -1,11 +1,11 @@
 package com.thecodinglab.imdbclone.catalog.internal.search;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import java.util.List;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 
 public interface MovieSearchService {
 

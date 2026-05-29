@@ -1,10 +1,12 @@
 package com.thecodinglab.imdbclone.catalog.internal.search.query;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.*;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import java.util.ArrayList;
 import java.util.List;
+import org.opensearch.client.json.JsonData;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.*;
+import org.opensearch.client.opensearch.core.SearchRequest;
 import org.springframework.stereotype.Component;
 
 // spotless:off
@@ -28,17 +30,15 @@ public class MovieSearchQueryBuilder {
     BoolQuery.Builder search = QueryBuilders.bool();
 
     // -- highest voted movies scoring is boosted
-    search.must(QueryBuilders
+    search.must(Query.of(q -> q
         .functionScore(fs -> fs
             .query(buildTextQuery(query))
-            .functions(FunctionScore
-                .of(f -> f
-                    .fieldValueFactor(FunctionScoreBuilders
-                        .fieldValueFactor()
-                        .factor(0.002)
-                        .field("imdbRatingCount")
-                        .modifier(FieldValueFactorModifier.Log1p).build())))
-            .scoreMode(FunctionScoreMode.Multiply)));
+            .functions(f -> f
+                .fieldValueFactor(fieldValueFactor -> fieldValueFactor
+                    .factor(0.002f)
+                    .field("imdbRatingCount")
+                    .modifier(FieldValueFactorModifier.Log1p)))
+            .scoreMode(FunctionScoreMode.Multiply))));
 
     search.filter(buildFilterQueries(request));
     return search.build();
@@ -51,16 +51,23 @@ public class MovieSearchQueryBuilder {
     int numCandidates = Math.max(k * NUM_CANDIDATES_MULTIPLIER, MIN_NUM_CANDIDATES);
     List<Query> filters = buildFilterQueries(request);
 
+    Query knnQuery = Query.of(query -> query
+        .knn(knn -> {
+          knn.field(EMBEDDING_FIELD)
+              .vector(toFloatList(queryEmbedding))
+              .k(k)
+              .methodParameters("ef_search", JsonData.of(numCandidates));
+          if (!filters.isEmpty()) {
+            knn.filter(Query.of(filterQuery -> filterQuery.bool(bool -> bool.filter(filters))));
+          }
+          return knn;
+        }));
+
     return SearchRequest.of(search -> search
         .index(index)
         .from(from)
         .size(size)
-        .knn(knn -> knn
-            .field(EMBEDDING_FIELD)
-            .queryVector(toFloatList(queryEmbedding))
-            .k(k)
-            .numCandidates(numCandidates)
-            .filter(filters)));
+        .query(knnQuery));
   }
 
   public List<Query> buildFilterQueries(MovieSearchRequest request) {
@@ -72,43 +79,41 @@ public class MovieSearchQueryBuilder {
           .forEach(
               movieGenre ->
                   filters.add(
-                      QueryBuilders.match(match -> match
+                      Query.of(query -> query.match(match -> match
                           .field("movieGenre")
-                          .query(String.valueOf(movieGenre)))));
+                          .query(FieldValue.of(String.valueOf(movieGenre)))))));
     }
     if (request.movieType() != null) {
       filters.add(
-          QueryBuilders.match(match -> match
+          Query.of(query -> query.match(match -> match
               .field("movieType")
-              .query(request.movieType().toString())));
+              .query(FieldValue.of(request.movieType().toString())))));
     }
     if (request.minStartYear() != null || request.maxStartYear() != null) {
       filters.add(
-          QueryBuilders.range(range -> range
-              .number(number -> number
-                  .field("startYear")
-                  .gte(
-                      request.minStartYear() == null
-                          ? null
-                          : request.minStartYear().doubleValue())
-                  .lte(
-                      request.maxStartYear() == null
-                          ? null
-                          : request.maxStartYear().doubleValue()))));
+          Query.of(query -> query.range(range -> {
+            range.field("startYear");
+            if (request.minStartYear() != null) {
+              range.gte(JsonData.of(request.minStartYear()));
+            }
+            if (request.maxStartYear() != null) {
+              range.lte(JsonData.of(request.maxStartYear()));
+            }
+            return range;
+          })));
     }
     if (request.minRuntimeMinutes() != null || request.maxRuntimeMinutes() != null) {
       filters.add(
-          QueryBuilders.range(range -> range
-              .number(number -> number
-                  .field("runtimeMinutes")
-                  .gte(
-                      request.minRuntimeMinutes() == null
-                          ? null
-                          : request.minRuntimeMinutes().doubleValue())
-                  .lte(
-                      request.maxRuntimeMinutes() == null
-                          ? null
-                          : request.maxRuntimeMinutes().doubleValue()))));
+          Query.of(query -> query.range(range -> {
+            range.field("runtimeMinutes");
+            if (request.minRuntimeMinutes() != null) {
+              range.gte(JsonData.of(request.minRuntimeMinutes()));
+            }
+            if (request.maxRuntimeMinutes() != null) {
+              range.lte(JsonData.of(request.maxRuntimeMinutes()));
+            }
+            return range;
+          })));
     }
     return filters;
   }
@@ -116,9 +121,9 @@ public class MovieSearchQueryBuilder {
   private Query buildTextQuery(String query) {
     String normalizedQuery = query == null ? "" : query.trim();
     if (normalizedQuery.isBlank()) {
-      return QueryBuilders.matchAll().build()._toQuery();
+      return Query.of(searchQuery -> searchQuery.matchAll(matchAll -> matchAll));
     }
-    Query titlePrefixQuery = QueryBuilders.multiMatch(multiMatch -> multiMatch
+    Query titlePrefixQuery = Query.of(searchQuery -> searchQuery.multiMatch(multiMatch -> multiMatch
         .query(normalizedQuery)
         .type(TextQueryType.BoolPrefix)
         .fields(List.of(
@@ -127,16 +132,16 @@ public class MovieSearchQueryBuilder {
             "primaryTitle._3gram^2",
             "originalTitle^2",
             "originalTitle._2gram^1.5",
-            "originalTitle._3gram^1.2")));
-    Query descriptionQuery = QueryBuilders.match(match -> match
+            "originalTitle._3gram^1.2"))));
+    Query descriptionQuery = Query.of(searchQuery -> searchQuery.match(match -> match
         .field("description")
-        .query(normalizedQuery)
-        .boost(0.5f));
+        .query(FieldValue.of(normalizedQuery))
+        .boost(0.5f)));
 
-    return QueryBuilders.bool(bool -> bool
+    return Query.of(searchQuery -> searchQuery.bool(bool -> bool
         .should(titlePrefixQuery)
         .should(descriptionQuery)
-        .minimumShouldMatch("1"));
+        .minimumShouldMatch("1")));
   }
 
   private List<Float> toFloatList(float[] values) {
