@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: imdb-clone-full-seed
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: seed
+          image: niklastiede/imdb-clone-seed:full-v0.2.1
+          imagePullPolicy: IfNotPresent
+          args: ["all"]
+          env:
+            - name: POSTGRES_HOST
+              value: imdb-clone-postgresql.databases.svc.cluster.local
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: movie_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-postgresql
+                  key: postgresql_username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-postgresql
+                  key: postgresql_password
+            - name: RUSTFS_ENDPOINT
+              value: http://imdb-clone-rustfs.databases.svc.cluster.local:9000
+            - name: RUSTFS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-rustfs
+                  key: RUSTFS_ACCESS_KEY
+            - name: RUSTFS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: imdb-clone-rustfs
+                  key: RUSTFS_SECRET_KEY
+            - name: RUSTFS_BUCKET
+              value: imdb-clone
+            - name: AWS_REQUEST_CHECKSUM_CALCULATION
+              value: when_required
+            - name: AWS_RESPONSE_CHECKSUM_VALIDATION
+              value: when_required
+            - name: SEED_NAME
+              value: full
+            - name: SEED_VERSION
+              value: v0.2.1
