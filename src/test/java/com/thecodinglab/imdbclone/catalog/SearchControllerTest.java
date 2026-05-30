@@ -2,6 +2,8 @@ package com.thecodinglab.imdbclone.catalog;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieSearchReindexJobResponse;
+import com.thecodinglab.imdbclone.catalog.api.MovieSearchReindexJobStatus;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchService;
@@ -15,6 +17,7 @@ import com.thecodinglab.imdbclone.support.BaseContainers;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -136,19 +139,33 @@ class SearchControllerTest extends BaseContainers {
     Assertions.assertThat(movieSearchRepository.count()).isZero();
     long expectedMovies = movieRepository.count();
 
-    restTestClient
+    MovieSearchReindexJobResponse startedJob =
+        restTestClient
         .post()
         .uri("/api/search/movies/reindex")
         .header("Authorization", adminToken)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
-            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectStatus().isAccepted(),
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
+                    .jsonPath("$.jobId")
+                    .exists()
+                    .jsonPath("$.status")
+                    .isEqualTo(MovieSearchReindexJobStatus.RUNNING.name())
                     .jsonPath("$.indexedMovies")
-                    .isEqualTo((int) expectedMovies));
+                    .isEqualTo(0)
+                    .jsonPath("$.totalMovies")
+                    .isEqualTo((int) expectedMovies))
+        .expectBody(MovieSearchReindexJobResponse.class)
+        .returnResult()
+        .getResponseBody();
+
+    MovieSearchReindexJobResponse completedJob = awaitCompletedReindex(startedJob.jobId());
+    Assertions.assertThat(completedJob.status()).isEqualTo(MovieSearchReindexJobStatus.COMPLETED);
+    Assertions.assertThat(completedJob.indexedMovies()).isEqualTo(expectedMovies);
 
     Assertions.assertThat(movieSearchRepository.count()).isEqualTo(expectedMovies);
     Map<String, Object> embeddingMapping =
@@ -199,6 +216,39 @@ class SearchControllerTest extends BaseContainers {
   private static Map<String, Object> propertyMapping(Map<String, Object> mapping, String propertyName) {
     Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
     return (Map<String, Object>) properties.get(propertyName);
+  }
+
+  private MovieSearchReindexJobResponse awaitCompletedReindex(UUID jobId) {
+    MovieSearchReindexJobResponse latestJob = null;
+    for (int attempt = 0; attempt < 50; attempt++) {
+      latestJob =
+          restTestClient
+              .get()
+              .uri("/api/search/movies/reindex/{jobId}", jobId)
+              .header("Authorization", adminToken)
+              .accept(MediaType.APPLICATION_JSON)
+              .exchange()
+              .expectAll(
+                  spec -> spec.expectStatus().isOk(),
+                  spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON))
+              .expectBody(MovieSearchReindexJobResponse.class)
+              .returnResult()
+              .getResponseBody();
+      if (latestJob.status() != MovieSearchReindexJobStatus.RUNNING) {
+        return latestJob;
+      }
+      sleepBeforeNextStatusCheck();
+    }
+    throw new AssertionError("Timed out waiting for reindex job [%s], latest status [%s]".formatted(jobId, latestJob));
+  }
+
+  private static void sleepBeforeNextStatusCheck() {
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new AssertionError("Interrupted while waiting for reindex completion", ex);
+    }
   }
 }
 // spotless:on

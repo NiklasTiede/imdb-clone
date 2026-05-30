@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.LongStream;
@@ -74,6 +75,31 @@ class MovieSearchIndexMaintenanceTest {
     verify(movieSearchEmbeddingProjector).addEmbedding(secondMovie, secondDocument);
     verify(movieSearchRepository).saveAll(List.of(firstDocument));
     verify(movieSearchRepository).saveAll(List.of(secondDocument));
+  }
+
+  @Test
+  void reindexMoviesReportsProgressAfterEachSavedBatch() {
+    Movie firstMovie = new Movie("First", "First", null, 90);
+    Movie secondMovie = new Movie("Second", "Second", null, 95);
+    MovieSearchDocument firstDocument = new MovieSearchDocument();
+    MovieSearchDocument secondDocument = new MovieSearchDocument();
+    PageRequest firstPage = PageRequest.of(0, 500, Sort.by("id").ascending());
+    PageRequest secondPage = PageRequest.of(1, 500, Sort.by("id").ascending());
+    List<Long> indexedCounts = new ArrayList<>();
+
+    when(openSearchOperations.indexOps(MovieSearchDocument.class)).thenReturn(indexOperations);
+    when(indexOperations.exists()).thenReturn(false);
+    when(movieRepository.findAll(firstPage))
+        .thenReturn(new PageImpl<>(List.of(firstMovie), firstPage, 501));
+    when(movieRepository.findAll(secondPage))
+        .thenReturn(new PageImpl<>(List.of(secondMovie), secondPage, 501));
+    when(movieSearchDocumentMapper.toDocument(firstMovie)).thenReturn(firstDocument);
+    when(movieSearchDocumentMapper.toDocument(secondMovie)).thenReturn(secondDocument);
+
+    long indexedMovies = maintenance.reindexMovies(indexedCounts::add);
+
+    assertThat(indexedMovies).isEqualTo(2);
+    assertThat(indexedCounts).containsExactly(1L, 2L);
   }
 
   @Test

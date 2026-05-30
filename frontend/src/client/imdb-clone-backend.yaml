@@ -299,7 +299,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/MovieSearchReindexResponse"
+                $ref: "#/components/schemas/MovieSearchReindexJobResponse"
   /api/movie/get-movies:
     post:
       tags:
@@ -534,6 +534,25 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/AccountCreated"
+  /api/search/movies/reindex/{jobId}:
+    get:
+      tags:
+      - search-controller
+      operationId: reindexStatus
+      parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MovieSearchReindexJobResponse"
   /api/movie/search/{primaryTitle}:
     get:
       tags:
@@ -1238,12 +1257,32 @@ components:
           format: int32
         last:
           type: boolean
-    MovieSearchReindexResponse:
+    MovieSearchReindexJobResponse:
       type: object
       properties:
+        jobId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - RUNNING
+          - COMPLETED
+          - FAILED
         indexedMovies:
           type: integer
           format: int64
+        totalMovies:
+          type: integer
+          format: int64
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        errorMessage:
+          type: string
     MovieIdsRequest:
       type: object
       properties:

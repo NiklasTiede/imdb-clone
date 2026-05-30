@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.LongConsumer;
 import org.opensearch.data.core.OpenSearchOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,10 @@ public class MovieSearchIndexMaintenance {
   }
 
   public long reindexMovies() {
+    return reindexMovies(ignored -> {});
+  }
+
+  public long reindexMovies(LongConsumer progressListener) {
     long reindexStartedAt = System.nanoTime();
     createMoviesIndexIfMissingOrStale();
     movieSearchRepository.deleteAll();
@@ -71,6 +76,7 @@ public class MovieSearchIndexMaintenance {
         long saveDurationInMs = elapsedMillisSince(saveStartedAt);
 
         indexedMovies += page.getNumberOfElements();
+        progressListener.accept(indexedMovies);
         logger.info(
             "Indexed movie search batch page={} batchSize={} totalIndexed={} embeddingDurationMs={} saveDurationMs={} batchDurationMs={}",
             pageNumber,
@@ -88,6 +94,10 @@ public class MovieSearchIndexMaintenance {
         indexedMovies,
         elapsedMillisSince(reindexStartedAt));
     return indexedMovies;
+  }
+
+  public long totalMovies() {
+    return movieRepository.count();
   }
 
   private List<MovieSearchDocument> toEmbeddedDocuments(

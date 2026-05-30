@@ -55,10 +55,10 @@ spec:
               mountPath: /root/.cache
           resources:
             requests:
-              cpu: 250m
+              cpu: "2"
               memory: 768Mi
             limits:
-              cpu: "1"
+              cpu: "6"
               memory: 1536Mi
   volumeClaimTemplates:
     - metadata:
