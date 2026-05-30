@@ -11,6 +11,7 @@ resources:
   - rustfs-credentials.sops.yaml
   - backend.yaml
   - frontend.yaml
+  - llama-cpp.yaml
   - opensearch.yaml
   - observability-grafana-admin.sops.yaml
   - observability-grafana-viewer.sops.yaml

@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: imdb-clone-llama-cpp
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  serviceName: imdb-clone-llama-cpp
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: imdb-clone-llama-cpp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: imdb-clone-llama-cpp
+    spec:
+      containers:
+        - name: llama-cpp
+          image: ghcr.io/ggml-org/llama.cpp:server
+          imagePullPolicy: IfNotPresent
+          args:
+            - -hf
+            - ggml-org/embeddinggemma-300M-GGUF
+            - --embeddings
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8080"
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: LLAMA_ARG_ENDPOINT_METRICS
+              value: "1"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 18
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 90
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          volumeMounts:
+            - name: llama-cpp-cache
+              mountPath: /root/.cache
+          resources:
+            requests:
+              cpu: 250m
+              memory: 768Mi
+            limits:
+              cpu: "1"
+              memory: 1536Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: llama-cpp-cache
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: imdb-clone-llama-cpp
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: imdb-clone-llama-cpp
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
