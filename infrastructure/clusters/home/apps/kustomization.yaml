@@ -21,3 +21,4 @@ resources:
   - postgresql.yaml
   - rustfs.yaml
   - rustfs-bucket-job.yaml
+  - seed-job.yaml
