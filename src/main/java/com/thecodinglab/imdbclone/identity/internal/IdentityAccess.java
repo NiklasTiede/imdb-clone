@@ -7,8 +7,6 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 import com.thecodinglab.imdbclone.account.api.AccountIdentity;
 import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
-import com.thecodinglab.imdbclone.identity.api.LoginRequest;
-import com.thecodinglab.imdbclone.identity.api.LoginResponse;
 import com.thecodinglab.imdbclone.identity.api.PasswordResetRequest;
 import com.thecodinglab.imdbclone.identity.api.RegistrationRequest;
 import com.thecodinglab.imdbclone.identity.api.UserIdentityAvailability;
@@ -17,7 +15,6 @@ import com.thecodinglab.imdbclone.identity.api.events.PasswordResetRequested;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToken;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTokenRepository;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
-import com.thecodinglab.imdbclone.identity.internal.security.JwtTokenProvider;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import java.time.Instant;
@@ -26,10 +23,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,8 +31,6 @@ public class IdentityAccess implements AuthenticationService {
 
   private static final Logger logger = LoggerFactory.getLogger(IdentityAccess.class);
 
-  private final AuthenticationManager authenticationManager;
-  private final JwtTokenProvider jwtTokenProvider;
   private final PasswordEncoder passwordEncoder;
   private final AccountIdentityService accountIdentityService;
   private final VerificationTokenRepository verificationTokenRepository;
@@ -47,15 +38,11 @@ public class IdentityAccess implements AuthenticationService {
   private final IdentityProperties identityProperties;
 
   public IdentityAccess(
-      AuthenticationManager authenticationManager,
-      JwtTokenProvider jwtTokenProvider,
       PasswordEncoder passwordEncoder,
       AccountIdentityService accountIdentityService,
       VerificationTokenRepository verificationTokenRepository,
       ApplicationEventPublisher events,
       IdentityProperties identityProperties) {
-    this.authenticationManager = authenticationManager;
-    this.jwtTokenProvider = jwtTokenProvider;
     this.passwordEncoder = passwordEncoder;
     this.accountIdentityService = accountIdentityService;
     this.verificationTokenRepository = verificationTokenRepository;
@@ -77,18 +64,6 @@ public class IdentityAccess implements AuthenticationService {
     return new UserIdentityAvailability(isAvailable);
   }
 
-  @Override
-  public LoginResponse loginUser(LoginRequest request) {
-    Authentication authentication =
-        authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.usernameOrEmail(), request.password()));
-    SecurityContextHolder.getContext().setAuthentication(authentication);
-    String jwt = jwtTokenProvider.generateToken(authentication);
-    logger.info("user with email/username [{}] logged in", request.usernameOrEmail());
-    return new LoginResponse(jwt);
-  }
-
-  @Override
   public MessageResponse registerUser(RegistrationRequest request) {
 
     String username = request.username().toLowerCase();

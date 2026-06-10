@@ -1,6 +1,10 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router";
-import { hasUserRole, isJwtNotExpired, RoleNameEnum } from "../../shared/auth";
+import {
+  hasUserRole,
+  RoleNameEnum,
+  useAuthSessionSnapshot,
+} from "../../shared/auth";
 import AccessDeniedPage from "./AccessDeniedPage";
 
 const PrivateRoute = ({
@@ -11,9 +15,13 @@ const PrivateRoute = ({
   children: React.ReactElement;
 }) => {
   const location = useLocation();
-  const isLoggedIn: boolean = isJwtNotExpired();
+  const { bootstrapped, session } = useAuthSessionSnapshot();
+  const isLoggedIn = Boolean(session);
   const hasRole: boolean = hasUserRole(role);
 
+  if (!bootstrapped) {
+    return null;
+  }
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location }} />;
   }

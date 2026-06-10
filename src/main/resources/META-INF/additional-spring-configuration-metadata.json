@@ -16,21 +16,6 @@
       "description": "Whether new accounts must confirm their email address before they are enabled."
     },
     {
-      "name": "imdb-clone.identity.jwt.secret",
-      "type": "java.lang.String",
-      "description": "Base64 encoded secret used to sign JWT access tokens."
-    },
-    {
-      "name": "imdb-clone.identity.jwt.expiration-in-ms",
-      "type": "java.lang.Long",
-      "description": "JWT access token lifetime in milliseconds."
-    },
-    {
-      "name": "imdb-clone.identity.cors.allowed-origins",
-      "type": "java.util.List<java.lang.String>",
-      "description": "Origins allowed to call the backend with credentials."
-    },
-    {
       "name": "imdb-clone.media.storage.uri",
       "type": "java.lang.String",
       "description": "S3-compatible object storage endpoint URI used by the media module."

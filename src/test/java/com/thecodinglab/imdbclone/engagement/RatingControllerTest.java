@@ -1,31 +1,33 @@
 package com.thecodinglab.imdbclone.engagement;
 
+import static com.thecodinglab.imdbclone.support.SecurityMockUsers.testUser;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
-import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
-import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
 @SpringBootTest
 @AutoConfigureRestTestClient
 @AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RatingControllerTest extends BaseContainers {
 
   private static final long MOVIE_ID = 1L;
@@ -33,21 +35,11 @@ class RatingControllerTest extends BaseContainers {
 
   @Autowired private RestTestClient restTestClient;
 
-  @Autowired private AuthenticationService authenticationService;
+  @Autowired private MockMvc mockMvc;
 
   @Autowired private RatingRepository ratingRepository;
 
   @Autowired private MovieRepository movieRepository;
-
-  private String userToken;
-
-  @BeforeAll
-  void setup() {
-    var userRequest = new LoginRequest("test_user_two", "Encrypted!Pa55worD");
-    var userLogin = authenticationService.loginUser(userRequest);
-    userToken = "%s %s".formatted(userLogin.getTokenType(), userLogin.getAccessToken());
-    SecurityContextHolder.clearContext();
-  }
 
   @BeforeEach
   @AfterEach
@@ -63,21 +55,18 @@ class RatingControllerTest extends BaseContainers {
   }
 
   @Test
-  void rateListAndDeleteMovie_success() {
-    restTestClient
-        .put()
-        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isCreated(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.rating").isEqualTo(8.5)
-                    .jsonPath("$.accountId").isEqualTo(ACCOUNT_ID)
-                    .jsonPath("$.movieId").isEqualTo(MOVIE_ID));
+  void rateListAndDeleteMovie_success() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.rating").value(8.5))
+        .andExpect(jsonPath("$.accountId").value(ACCOUNT_ID))
+        .andExpect(jsonPath("$.movieId").value(MOVIE_ID));
 
     restTestClient
         .get()
@@ -96,127 +85,109 @@ class RatingControllerTest extends BaseContainers {
                     .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
                     .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));
 
-    restTestClient
-        .delete()
-        .uri("/api/movie-rating/{movieId}", MOVIE_ID)
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isNoContent();
+    mockMvc
+        .perform(
+            delete("/api/movie-rating/{movieId}", MOVIE_ID)
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
 
-    restTestClient
-        .delete()
-        .uri("/api/movie-rating/{movieId}", MOVIE_ID)
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isNotFound(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+    mockMvc
+        .perform(
+            delete("/api/movie-rating/{movieId}", MOVIE_ID)
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
   }
 
   @Test
-  void rateMovie_acceptsTenPointZeroScore() {
-    restTestClient
-        .put()
-        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.0")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isCreated(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-            spec -> spec.expectBody().jsonPath("$.rating").isEqualTo(10.0));
+  void rateMovie_acceptsTenPointZeroScore() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.0")
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.rating").value(10.0));
   }
 
   @Test
-  void rateMovie_rejectsTenPointOneScore() {
-    restTestClient
-        .put()
-        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.1")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isBadRequest(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.detail")
-                    .isEqualTo("Score must be between 0 and 10"));
+  void rateMovie_rejectsTenPointOneScore() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.1")
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.detail").value("Score must be between 0 and 10"));
   }
 
   @Test
-  void rateMovie_rejectsScoreSlightlyAboveTen() {
-    restTestClient
-        .put()
-        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.05")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isBadRequest(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.detail")
-                    .isEqualTo("Score must be between 0 and 10"));
+  void rateMovie_rejectsScoreSlightlyAboveTen() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.05")
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.detail").value("Score must be between 0 and 10"));
   }
 
   @Test
-  void rateMovie_rejectsNegativeScore() {
-    restTestClient
-        .put()
-        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "-0.1")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isBadRequest(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.detail")
-                    .isEqualTo("Score must be between 0 and 10"));
+  void rateMovie_rejectsNegativeScore() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "-0.1")
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.detail").value("Score must be between 0 and 10"));
   }
 
   @Test
-  void rateUpdateAndDeleteMovie_updatesMovieRatingAggregateImmediately() {
-    restTestClient
-        .put()
-        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isCreated();
+  void rateUpdateAndDeleteMovie_updatesMovieRatingAggregateImmediately() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated());
 
     var movieAfterCreate = movieRepository.getMovieById(MOVIE_ID);
     assertThat(movieAfterCreate.getRating()).isEqualByComparingTo(new BigDecimal("8.5"));
     assertThat(movieAfterCreate.getRatingCount()).isEqualTo(1);
 
-    restTestClient
-        .put()
-        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "6.5")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isCreated();
+    mockMvc
+        .perform(
+            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "6.5")
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated());
 
     var movieAfterUpdate = movieRepository.getMovieById(MOVIE_ID);
     assertThat(movieAfterUpdate.getRating()).isEqualByComparingTo(new BigDecimal("6.5"));
     assertThat(movieAfterUpdate.getRatingCount()).isEqualTo(1);
 
-    restTestClient
-        .delete()
-        .uri("/api/movie-rating/{movieId}", MOVIE_ID)
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isNoContent();
+    mockMvc
+        .perform(
+            delete("/api/movie-rating/{movieId}", MOVIE_ID)
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
 
     var movieAfterDelete = movieRepository.getMovieById(MOVIE_ID);
     assertThat(movieAfterDelete.getRating()).isNull();
@@ -224,15 +195,14 @@ class RatingControllerTest extends BaseContainers {
   }
 
   @Test
-  void rateMovie_unauthenticated() {
-    restTestClient
-        .put()
-        .uri("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isUnauthorized(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+  void rateMovie_unauthenticated() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnauthorized())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
   }
 }
 // spotless:on

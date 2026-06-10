@@ -515,7 +515,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/LoginResponse"
+                $ref: "#/components/schemas/AccountSessionResponse"
   /api/account/add-account:
     post:
       tags:
@@ -638,6 +638,18 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
+  /api/auth/me:
+    get:
+      tags:
+      - authentication-controller
+      operationId: currentAccount
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountSessionResponse"
   /api/auth/confirm-email-address:
     get:
       tags:
@@ -1336,13 +1348,20 @@ components:
       required:
       - password
       - usernameOrEmail
-    LoginResponse:
+    AccountSessionResponse:
       type: object
       properties:
-        accessToken:
+        id:
+          type: integer
+          format: int64
+        username:
           type: string
-        tokenType:
+        email:
           type: string
+        roles:
+          type: array
+          items:
+            type: string
     CreateAccountRequest:
       type: object
       properties:

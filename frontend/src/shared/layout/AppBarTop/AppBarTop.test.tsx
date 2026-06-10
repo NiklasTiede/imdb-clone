@@ -1,7 +1,12 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, vi } from "vitest";
+import { authSession } from "../../auth";
 import AppBarTop from "./AppBarTop";
+
+vi.mock("../../auth/logoutSession", () => ({
+  logoutSession: vi.fn().mockResolvedValue(undefined),
+}));
 
 const LocationProbe = () => {
   const location = useLocation();
@@ -19,34 +24,22 @@ const renderAppBar = (initialPath = "/movie-search") =>
   );
 
 describe("AppBarTop", () => {
-  let localStorageData: Record<string, string>;
-
   beforeEach(() => {
     vi.useRealTimers();
-    localStorageData = {};
-    Object.defineProperty(window, "localStorage", {
-      configurable: true,
-      value: {
-        getItem: vi.fn((key: string) => localStorageData[key] ?? null),
-        removeItem: vi.fn((key: string) => {
-          delete localStorageData[key];
-        }),
-        setItem: vi.fn((key: string, value: string) => {
-          localStorageData[key] = value;
-        }),
-      },
-    });
+    authSession.resetForTests();
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    authSession.resetForTests();
   });
 
-  it("clears the session and returns home when signing out", () => {
-    window.localStorage.setItem("jwtToken", "token");
-    window.localStorage.setItem("jwtExpiresAt", "4102444800");
-    window.localStorage.setItem("rolesFromJwt", "User");
-    window.localStorage.setItem("username", "niklas");
+  it("clears the session and returns home when signing out", async () => {
+    authSession.setSession({
+      id: 1,
+      roles: ["ROLE_USER"],
+      username: "niklas",
+    });
 
     renderAppBar("/your-ratings");
 
@@ -55,8 +48,10 @@ describe("AppBarTop", () => {
     );
     fireEvent.click(screen.getByRole("menuitem", { name: /sign out/i }));
 
-    expect(window.localStorage.getItem("jwtToken")).toBeNull();
-    expect(screen.getByTestId("location").textContent).toBe("/");
+    await waitFor(() => expect(authSession.isAuthenticated()).toBe(false));
+    await waitFor(() =>
+      expect(screen.getByTestId("location").textContent).toBe("/"),
+    );
   });
 
   it("updates the movie search URL after typing pauses", () => {

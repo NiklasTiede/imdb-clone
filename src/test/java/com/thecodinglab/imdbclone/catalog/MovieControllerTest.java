@@ -1,7 +1,16 @@
 package com.thecodinglab.imdbclone.catalog;
 
+import static com.thecodinglab.imdbclone.support.SecurityMockUsers.testAdmin;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieIdsRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
@@ -10,36 +19,32 @@ import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.projection.MovieSearchProjectionTaskHandler;
-import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
-import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
 @SpringBootTest
 @AutoConfigureRestTestClient
 @AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MovieControllerTest extends BaseContainers {
 
   private static final String TEST_MOVIE_PREFIX = "movie-controller-integration-test";
 
   @Autowired private RestTestClient restTestClient;
 
-  @Autowired private AuthenticationService authenticationService;
+  @Autowired private MockMvc mockMvc;
 
   @Autowired private MovieRepository movieRepository;
 
@@ -49,15 +54,7 @@ class MovieControllerTest extends BaseContainers {
 
   @Autowired private JdbcTemplate jdbcTemplate;
 
-  private String adminToken;
-
-  @BeforeAll
-  void setup() {
-    var adminRequest = new LoginRequest("test_user_one", "Encrypted!Pa55worD");
-    var adminLogin = authenticationService.loginUser(adminRequest);
-    adminToken = "%s %s".formatted(adminLogin.getTokenType(), adminLogin.getAccessToken());
-    SecurityContextHolder.clearContext();
-  }
+  private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
   @AfterEach
   void cleanup() {
@@ -67,7 +64,11 @@ class MovieControllerTest extends BaseContainers {
         .filter(movie -> movie.getPrimaryTitle().startsWith(TEST_MOVIE_PREFIX))
         .forEach(
             movie -> {
-              movieSearchDocumentRepository.deleteById(movie.getId());
+              try {
+                movieSearchDocumentRepository.deleteById(movie.getId());
+              } catch (NoSuchIndexException ignored) {
+                // The search index is created lazily by tests that project documents.
+              }
               movieRepository.delete(movie);
             });
   }
@@ -184,7 +185,7 @@ class MovieControllerTest extends BaseContainers {
   }
 
   @Test
-  void createMovie_success() {
+  void createMovie_success() throws Exception {
     // Arrange
     var movieRequest =
         new MovieRequest(
@@ -218,7 +219,7 @@ class MovieControllerTest extends BaseContainers {
   }
 
   @Test
-  void updateMovie_success() {
+  void updateMovie_success() throws Exception {
     var createdMovie =
         createMovie(
             new MovieRequest(
@@ -242,25 +243,22 @@ class MovieControllerTest extends BaseContainers {
             MovieType.TV_MOVIE,
             false);
 
-    restTestClient
-        .put()
-        .uri("/api/movie/{movieId}", createdMovie.id())
-        .header("Authorization", adminToken)
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON)
-        .body(updateRequest)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isOk(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.id").isEqualTo(createdMovie.id())
-                    .jsonPath("$.primaryTitle").isEqualTo(TEST_MOVIE_PREFIX + " updated")
-                    .jsonPath("$.originalTitle").isEqualTo(TEST_MOVIE_PREFIX + " updated original")
-                    .jsonPath("$.startYear").isEqualTo(2020)
-                    .jsonPath("$.runtimeMinutes").isEqualTo(111)
-                    .jsonPath("$.movieType").isEqualTo("TV_MOVIE"));
+    mockMvc
+        .perform(
+            put("/api/movie/{movieId}", createdMovie.id())
+                .with(testAdmin())
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.id").value(createdMovie.id()))
+        .andExpect(jsonPath("$.primaryTitle").value(TEST_MOVIE_PREFIX + " updated"))
+        .andExpect(jsonPath("$.originalTitle").value(TEST_MOVIE_PREFIX + " updated original"))
+        .andExpect(jsonPath("$.startYear").value(2020))
+        .andExpect(jsonPath("$.runtimeMinutes").value(111))
+        .andExpect(jsonPath("$.movieType").value("TV_MOVIE"));
 
     var movieEntity = movieRepository.getMovieById(createdMovie.id());
     assertThat(movieEntity.getPrimaryTitle()).isEqualTo(TEST_MOVIE_PREFIX + " updated");
@@ -276,7 +274,7 @@ class MovieControllerTest extends BaseContainers {
   }
 
   @Test
-  void deleteMovie_success() {
+  void deleteMovie_success() throws Exception {
     var createdMovie =
         createMovie(
             new MovieRequest(
@@ -292,14 +290,13 @@ class MovieControllerTest extends BaseContainers {
     movieSearchProjectionTaskHandler.projectUpsert(createdMovie.id());
     assertThat(movieSearchDocumentRepository.findById(createdMovie.id())).isPresent();
 
-    restTestClient
-        .delete()
-        .uri("/api/movie/{movieId}", createdMovie.id())
-        .header("Authorization", adminToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isNoContent();
+    mockMvc
+        .perform(
+            delete("/api/movie/{movieId}", createdMovie.id())
+                .with(testAdmin())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
 
     movieSearchProjectionTaskHandler.projectDelete(createdMovie.id());
 
@@ -307,24 +304,23 @@ class MovieControllerTest extends BaseContainers {
     assertThat(movieSearchDocumentRepository.findById(createdMovie.id())).isEmpty();
   }
 
-  private MovieRecord createMovie(MovieRequest movieRequest) {
+  private MovieRecord createMovie(MovieRequest movieRequest) throws Exception {
     var response =
-        restTestClient
-            .post()
-            .uri("/api/movie/create-movie")
-            .header("Authorization", adminToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(movieRequest)
-            .exchange()
-            .expectAll(
-                spec -> spec.expectStatus().isCreated(),
-                spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON))
-            .expectBody(MovieRecord.class)
-            .returnResult()
-            .getResponseBody();
+        mockMvc
+            .perform(
+                post("/api/movie/create-movie")
+                    .with(testAdmin())
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(movieRequest)))
+            .andExpect(status().isCreated())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
     assertThat(response).isNotNull();
-    return response;
+    return objectMapper.readValue(response, MovieRecord.class);
   }
 }
 // spotless:on

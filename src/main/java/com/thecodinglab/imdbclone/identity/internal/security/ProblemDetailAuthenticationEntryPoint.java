@@ -13,13 +13,14 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 @Component
-public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+public class ProblemDetailAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
   public void commence(
       HttpServletRequest request, HttpServletResponse response, AuthenticationException ex)
       throws IOException {
-
     response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
@@ -28,7 +29,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpStatus.UNAUTHORIZED, "Sorry, you're not authorized to access this resource.");
     problemDetail.setInstance(URI.create(request.getRequestURI()));
 
-    final ObjectMapper mapper = new ObjectMapper();
-    mapper.writeValue(response.getOutputStream(), problemDetail);
+    objectMapper.writeValue(response.getOutputStream(), problemDetail);
   }
 }

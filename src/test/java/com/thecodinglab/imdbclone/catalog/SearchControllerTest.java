@@ -1,5 +1,15 @@
 package com.thecodinglab.imdbclone.catalog;
 
+import static com.thecodinglab.imdbclone.support.SecurityMockUsers.testAdmin;
+import static com.thecodinglab.imdbclone.support.SecurityMockUsers.testUser;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchReindexJobResponse;
@@ -11,37 +21,32 @@ import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocum
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchEmbeddingTextBuilder;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchIndexMaintenance;
-import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
-import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.opensearch.data.core.OpenSearchOperations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
 @SpringBootTest
 @AutoConfigureRestTestClient
 @AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SearchControllerTest extends BaseContainers {
 
   @Autowired private RestTestClient restTestClient;
 
-  @Autowired private AuthenticationService authenticationService;
+  @Autowired private MockMvc mockMvc;
 
   @Autowired private MovieRepository movieRepository;
 
@@ -55,19 +60,7 @@ class SearchControllerTest extends BaseContainers {
 
   @Autowired private OpenSearchOperations openSearchOperations;
 
-  private String adminToken;
-  private String userToken;
-
-  @BeforeAll
-  void setup() {
-    var adminRequest = new LoginRequest("test_user_one", "Encrypted!Pa55worD");
-    var adminLogin = authenticationService.loginUser(adminRequest);
-    adminToken = "%s %s".formatted(adminLogin.getTokenType(), adminLogin.getAccessToken());
-    var userRequest = new LoginRequest("test_user_two", "Encrypted!Pa55worD");
-    var userLogin = authenticationService.loginUser(userRequest);
-    userToken = "%s %s".formatted(userLogin.getTokenType(), userLogin.getAccessToken());
-    SecurityContextHolder.clearContext();
-  }
+  private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
   @BeforeEach
   void indexSeedMovies() {
@@ -134,34 +127,29 @@ class SearchControllerTest extends BaseContainers {
   }
 
   @Test
-  void reindexMovies_rebuildsOpenSearchFromPostgresql() {
+  void reindexMovies_rebuildsOpenSearchFromPostgresql() throws Exception {
     movieSearchRepository.deleteAll();
     Assertions.assertThat(movieSearchRepository.count()).isZero();
     long expectedMovies = movieRepository.count();
 
     MovieSearchReindexJobResponse startedJob =
-        restTestClient
-        .post()
-        .uri("/api/search/movies/reindex")
-        .header("Authorization", adminToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isAccepted(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.jobId")
-                    .exists()
-                    .jsonPath("$.status")
-                    .isEqualTo(MovieSearchReindexJobStatus.RUNNING.name())
-                    .jsonPath("$.indexedMovies")
-                    .isEqualTo(0)
-                    .jsonPath("$.totalMovies")
-                    .isEqualTo((int) expectedMovies))
-        .expectBody(MovieSearchReindexJobResponse.class)
-        .returnResult()
-        .getResponseBody();
+        objectMapper.readValue(
+            mockMvc
+                .perform(
+                    post("/api/search/movies/reindex")
+                        .with(testAdmin())
+                        .with(csrf())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isAccepted())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.jobId").exists())
+                .andExpect(jsonPath("$.status").value(MovieSearchReindexJobStatus.RUNNING.name()))
+                .andExpect(jsonPath("$.indexedMovies").value(0))
+                .andExpect(jsonPath("$.totalMovies").value((int) expectedMovies))
+                .andReturn()
+                .getResponse()
+                .getContentAsString(),
+            MovieSearchReindexJobResponse.class);
 
     MovieSearchReindexJobResponse completedJob = awaitCompletedReindex(startedJob.jobId());
     Assertions.assertThat(completedJob.status()).isEqualTo(MovieSearchReindexJobStatus.COMPLETED);
@@ -201,15 +189,14 @@ class SearchControllerTest extends BaseContainers {
   }
 
   @Test
-  void reindexMovies_withUserRoleIsForbidden() {
-    restTestClient
-        .post()
-        .uri("/api/search/movies/reindex")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isForbidden();
+  void reindexMovies_withUserRoleIsForbidden() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/search/movies/reindex")
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
   }
 
   @SuppressWarnings("unchecked")
@@ -218,22 +205,22 @@ class SearchControllerTest extends BaseContainers {
     return (Map<String, Object>) properties.get(propertyName);
   }
 
-  private MovieSearchReindexJobResponse awaitCompletedReindex(UUID jobId) {
+  private MovieSearchReindexJobResponse awaitCompletedReindex(UUID jobId) throws Exception {
     MovieSearchReindexJobResponse latestJob = null;
     for (int attempt = 0; attempt < 50; attempt++) {
       latestJob =
-          restTestClient
-              .get()
-              .uri("/api/search/movies/reindex/{jobId}", jobId)
-              .header("Authorization", adminToken)
-              .accept(MediaType.APPLICATION_JSON)
-              .exchange()
-              .expectAll(
-                  spec -> spec.expectStatus().isOk(),
-                  spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON))
-              .expectBody(MovieSearchReindexJobResponse.class)
-              .returnResult()
-              .getResponseBody();
+          objectMapper.readValue(
+              mockMvc
+                  .perform(
+                      get("/api/search/movies/reindex/{jobId}", jobId)
+                          .with(testAdmin())
+                          .accept(MediaType.APPLICATION_JSON))
+                  .andExpect(status().isOk())
+                  .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                  .andReturn()
+                  .getResponse()
+                  .getContentAsString(),
+              MovieSearchReindexJobResponse.class);
       if (latestJob.status() != MovieSearchReindexJobStatus.RUNNING) {
         return latestJob;
       }

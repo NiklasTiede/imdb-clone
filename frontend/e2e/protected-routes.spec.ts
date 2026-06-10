@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
 const transparentPixel =
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////2wBDAf//////////////////////////////////////////////////////////////////////////////////////wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAX/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAH/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAEFAqf/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAEDAQE/ASP/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oACAECAQE/ASP/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAY/Aqf/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/9oACAEBAAE/ISP/2gAMAwEAAgADAAAAEP/EFBQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QH//EFBQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QH//EFBABAQAAAAAAAAAAAAAAAAAAABD/2gAIAQEAAT8QH//Z";
@@ -19,9 +19,33 @@ const watchlistedMovie = {
   posterImageToken: "itFollowsPosterToken",
 };
 
+const mockAnonymousSession = async (page: Page) => {
+  await page.route("**/api/auth/me", async (route) => {
+    await route.fulfill({ status: 401, body: "" });
+  });
+};
+
+const mockAuthenticatedSession = async (
+  page: Page,
+) => {
+  await page.route("**/api/auth/me", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: 1,
+        username: "test_user",
+        email: "test@example.com",
+        roles: ["ROLE_USER"],
+      }),
+    });
+  });
+};
+
 test("redirects anonymous users from protected routes to login", async ({
   page,
 }) => {
+  await mockAnonymousSession(page);
+
   await page.goto("/your-watchlist");
 
   await expect(page).toHaveURL(/\/login$/);
@@ -31,11 +55,7 @@ test("redirects anonymous users from protected routes to login", async ({
 test("renders protected watchlist for authenticated users", async ({
   page,
 }) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem("jwtExpiresAt", String(Date.now() / 1000 + 60));
-    window.localStorage.setItem("rolesFromJwt", "ROLE_USER");
-    window.localStorage.setItem("username", "test_user");
-  });
+  await mockAuthenticatedSession(page);
   await page.route("**/api/account/test_user/watchlist**", async (route) => {
     expect(new URL(route.request().url()).searchParams.get("size")).toBe("30");
     await route.fulfill({
@@ -80,11 +100,7 @@ test("renders protected watchlist for authenticated users", async ({
 });
 
 test("renders protected ratings for authenticated users", async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem("jwtExpiresAt", String(Date.now() / 1000 + 60));
-    window.localStorage.setItem("rolesFromJwt", "ROLE_USER");
-    window.localStorage.setItem("username", "test_user");
-  });
+  await mockAuthenticatedSession(page);
   await page.route("**/api/account/test_user/ratings**", async (route) => {
     await route.fulfill({
       contentType: "application/json",

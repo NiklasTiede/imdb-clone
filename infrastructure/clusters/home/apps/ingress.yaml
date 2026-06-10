@@ -17,6 +17,13 @@ spec:
     - host: imdb-clone.the-coding-lab.com
       http:
         paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-backend
+                port:
+                  name: http
           - path: /
             pathType: Prefix
             backend:

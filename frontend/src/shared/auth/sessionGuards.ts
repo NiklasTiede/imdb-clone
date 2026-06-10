@@ -5,8 +5,12 @@ export const hasUserRole = (role: RoleNameEnum) => {
   return authSession.hasRole(role);
 };
 
-export const isJwtNotExpired = () => {
+export const isAuthenticated = () => {
   return authSession.isAuthenticated();
+};
+
+export const isAuthBootstrapComplete = () => {
+  return authSession.isBootstrapped();
 };
 
 export const getUsername = () => {

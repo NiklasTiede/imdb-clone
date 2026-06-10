@@ -1,40 +1,17 @@
-import { jwtDecode, JwtPayload } from "jwt-decode";
 import { AxiosError } from "axios";
 import {
   LoginRequest,
-  LoginResponse,
   MessageResponse,
   RegistrationRequest,
 } from "../../../client/movies/generator-output";
 import { authApi } from "../../../shared/api/moviesApi";
 import { AuthSessionData } from "../../../shared/auth";
 
-interface ImdbJwtPayload extends JwtPayload {
-  roles?: string;
-  username?: string;
-}
-
-export const createAuthSession = (
-  loginResponse: LoginResponse,
-): AuthSessionData => {
-  if (!loginResponse.accessToken) {
-    throw new Error("Login response did not include an access token");
-  }
-
-  const decoded = jwtDecode<ImdbJwtPayload>(loginResponse.accessToken);
-  return {
-    accessToken: loginResponse.accessToken,
-    expiresAt: decoded.exp,
-    roles: decoded.roles,
-    username: decoded.username,
-  };
-};
-
 export const authenticateAccount = async (
   loginRequest: LoginRequest,
 ): Promise<AuthSessionData> => {
   const response = await authApi.authenticateAccount(loginRequest);
-  return createAuthSession(response.data);
+  return response.data as AuthSessionData;
 };
 
 export const registerAccount = async (

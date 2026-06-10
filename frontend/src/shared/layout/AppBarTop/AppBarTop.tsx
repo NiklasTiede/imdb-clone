@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { authSession } from "../../auth/authSession";
 import { useAuthSession } from "../../auth/useAuthSession";
-import { RoleNameEnum } from "../../auth";
+import { logoutSession, RoleNameEnum } from "../../auth";
 import BrandLogo from "../BrandLogo";
 import AdminEditButton from "./AdminEditButton";
 import LoginButton from "./LoginButton";
@@ -91,8 +91,10 @@ function AppBarTop() {
 
   const handleLogout = () => {
     setAnchorEl(null);
-    authSession.clear();
-    navigateTo("/");
+    void logoutSession().finally(() => {
+      authSession.clear();
+      navigateTo("/");
+    });
   };
 
   const handleSearch = (query: string) => {

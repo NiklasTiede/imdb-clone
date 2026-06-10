@@ -83,6 +83,12 @@ async function stubMoviePosters(page: Page) {
   });
 }
 
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/auth/me", async (route) => {
+    await route.fulfill({ status: 401, body: "" });
+  });
+});
+
 test("searches movies and renders a seeded poster", async ({ page }) => {
   await stubNightcrawlerSearch(page);
   await stubMoviePosters(page);

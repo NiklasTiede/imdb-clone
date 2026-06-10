@@ -16,7 +16,8 @@ class DatabaseSchemaTest extends BaseContainers {
 
   @Test
   void flywayAppliedSchemaMigrations() {
-    assertThat(appliedMigrations()).containsExactly("1:create initial schema");
+    assertThat(appliedMigrations())
+        .containsExactly("1:create initial schema", "2:create spring session tables");
   }
 
   @Test
@@ -81,6 +82,18 @@ class DatabaseSchemaTest extends BaseContainers {
         .contains("scheduled_tasks_pkey:task_name,task_instance")
         .contains("execution_time_idx:execution_time")
         .contains("last_heartbeat_idx:last_heartbeat");
+  }
+
+  @Test
+  void springSessionsAreDurableAndIndexedForLookupAndCleanup() {
+    assertThat(columnType("spring_session", "primary_id")).isEqualTo("character");
+    assertThat(columnType("spring_session_attributes", "attribute_bytes")).isEqualTo("bytea");
+    assertThat(deleteRules("spring_session_attributes")).containsOnly("CASCADE");
+    assertThat(indexesFor("spring_session"))
+        .contains("spring_session_pk:primary_id")
+        .contains("spring_session_ix1:session_id")
+        .contains("spring_session_ix2:expiry_time")
+        .contains("spring_session_ix3:principal_name");
   }
 
   @Test

@@ -32,7 +32,7 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       BROWSER: "none",
-      VITE_IMDB_CLONE_BACKEND_ADDRESS: "http://localhost:8080",
+      VITE_IMDB_CLONE_BACKEND_ADDRESS: "",
       VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS: "http://localhost:9000",
     },
   },

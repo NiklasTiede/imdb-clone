@@ -28,26 +28,11 @@ const renderLoginPage = () => {
 };
 
 describe("LoginPage", () => {
-  let localStorageData: Record<string, string>;
-
   beforeEach(() => {
-    localStorageData = {};
-    Object.defineProperty(window, "localStorage", {
-      configurable: true,
-      value: {
-        getItem: vi.fn((key: string) => localStorageData[key] ?? null),
-        removeItem: vi.fn((key: string) => {
-          delete localStorageData[key];
-        }),
-        setItem: vi.fn((key: string, value: string) => {
-          localStorageData[key] = value;
-        }),
-      },
-    });
     vi.mocked(identityMutations.authenticateAccount).mockResolvedValue({
-      accessToken: "token",
-      expiresAt: 4102444800,
-      roles: "User",
+      email: "niklas@example.com",
+      id: 1,
+      roles: ["ROLE_USER"],
       username: "niklas",
     });
   });

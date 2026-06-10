@@ -1,9 +1,11 @@
 import { useSyncExternalStore } from "react";
 import { authSession } from "./authSession";
 
-export const useAuthSession = () =>
+export const useAuthSessionSnapshot = () =>
   useSyncExternalStore(
     authSession.subscribe,
-    authSession.isAuthenticated,
-    () => false,
+    authSession.getSnapshot,
+    authSession.getServerSnapshot,
   );
+
+export const useAuthSession = () => useAuthSessionSnapshot().session !== null;

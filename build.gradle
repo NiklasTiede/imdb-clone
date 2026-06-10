@@ -96,12 +96,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-	//-- Security: JWT / OAuth2
-	implementation "io.jsonwebtoken:jjwt-api:${jwtVersion}"
-	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jwtVersion}"
-	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jwtVersion}"
-
+	//-- Security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.session:spring-session-jdbc'
 
 	//-- Monitoring
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -120,6 +117,7 @@ dependencies {
 	//-- Testing
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.assertj:assertj-core'
 	testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
 

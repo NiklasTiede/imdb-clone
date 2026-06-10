@@ -1,30 +1,22 @@
 import { authSession } from "./authSession";
-import { installLocalStorageMock } from "../../test/installLocalStorageMock";
 
 describe("authSession", () => {
   beforeEach(() => {
-    installLocalStorageMock();
+    authSession.resetForTests();
   });
 
   afterEach(() => {
-    window.localStorage.clear();
+    authSession.resetForTests();
   });
 
-  it("stores and reads the current access token", () => {
-    authSession.setAccessToken("test-token");
-
-    expect(authSession.getAccessToken()).toBe("test-token");
-  });
-
-  it("stores decoded login session values", () => {
+  it("stores session values in memory", () => {
     authSession.setSession({
-      accessToken: "test-token",
-      roles: "ROLE_USER,ROLE_ADMIN",
+      id: 1,
+      email: "test@example.com",
+      roles: ["ROLE_USER", "ROLE_ADMIN"],
       username: "test_user",
-      expiresAt: 9999999999,
     });
 
-    expect(authSession.getAccessToken()).toBe("test-token");
     expect(authSession.getUsername()).toBe("test_user");
     expect(authSession.hasRole("ROLE_ADMIN")).toBe(true);
     expect(authSession.hasRole("ROLE_USER")).toBe(true);
@@ -32,29 +24,27 @@ describe("authSession", () => {
     expect(authSession.isAuthenticated()).toBe(true);
   });
 
-  it("reports expired sessions as unauthenticated", () => {
-    authSession.setSession({
-      accessToken: "test-token",
-      roles: "ROLE_USER",
-      username: "test_user",
-      expiresAt: 1,
-    });
+  it("tracks bootstrap completion separately from authentication", () => {
+    expect(authSession.isBootstrapped()).toBe(false);
 
+    authSession.completeBootstrap(null);
+
+    expect(authSession.isBootstrapped()).toBe(true);
     expect(authSession.isAuthenticated()).toBe(false);
   });
 
-  it("clears all authentication values", () => {
-    authSession.setAccessToken("test-token");
-    window.localStorage.setItem("rolesFromJwt", "ROLE_USER");
-    window.localStorage.setItem("jwtExpiresAt", "9999999999");
-    window.localStorage.setItem("username", "test_user");
+  it("clears the in-memory session", () => {
+    authSession.setSession({
+      id: 1,
+      roles: ["ROLE_USER"],
+      username: "test_user",
+    });
 
     authSession.clear();
 
-    expect(authSession.getAccessToken()).toBeNull();
-    expect(window.localStorage.getItem("rolesFromJwt")).toBeNull();
-    expect(window.localStorage.getItem("jwtExpiresAt")).toBeNull();
-    expect(window.localStorage.getItem("username")).toBeNull();
+    expect(authSession.getUsername()).toBeNull();
+    expect(authSession.isAuthenticated()).toBe(false);
+    expect(authSession.isBootstrapped()).toBe(true);
   });
 
   it("notifies subscribers when the session changes", () => {
@@ -62,14 +52,17 @@ describe("authSession", () => {
 
     const unsubscribe = authSession.subscribe(listener);
     authSession.setSession({
-      accessToken: "test-token",
-      roles: "ROLE_USER",
+      id: 1,
+      roles: ["ROLE_USER"],
       username: "test_user",
-      expiresAt: 9999999999,
     });
     authSession.clear();
     unsubscribe();
-    authSession.setAccessToken("another-token");
+    authSession.setSession({
+      id: 2,
+      roles: ["ROLE_USER"],
+      username: "another_user",
+    });
 
     expect(listener).toHaveBeenCalledTimes(2);
   });

@@ -16,6 +16,9 @@ type TimedAxiosRequestConfig = InternalAxiosRequestConfig & {
 
 export const apiHttpClient = axios.create();
 
+apiHttpClient.defaults.xsrfCookieName = "XSRF-TOKEN";
+apiHttpClient.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
+
 const classifyFailure = (
   error: AxiosError | undefined,
   status: number | undefined,
@@ -63,11 +66,6 @@ apiHttpClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const timedConfig = config as TimedAxiosRequestConfig;
     timedConfig.metadata = { requestStartedAt: performance.now() };
-
-    const token = authSession.getAccessToken();
-    if (token) {
-      timedConfig.headers.Authorization = `Bearer ${token}`;
-    }
     return timedConfig;
   },
   (error: AxiosError) => Promise.reject(error),
@@ -86,6 +84,9 @@ apiHttpClient.interceptors.response.use(
       config: error.config as TimedAxiosRequestConfig | undefined,
       error,
     });
+    if (error.response?.status === 401) {
+      authSession.clear();
+    }
     return Promise.reject(error);
   },
 );

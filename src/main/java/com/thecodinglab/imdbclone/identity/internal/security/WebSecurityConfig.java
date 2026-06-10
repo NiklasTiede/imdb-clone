@@ -1,54 +1,69 @@
 package com.thecodinglab.imdbclone.identity.internal.security;
 
-import com.thecodinglab.imdbclone.identity.internal.IdentityProperties;
-import java.util.Arrays;
-import java.util.Collections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(jsr250Enabled = true, securedEnabled = true)
 public class WebSecurityConfig {
 
-  private final JwtAuthenticationEntryPoint unauthorizedHandler;
-  private final JwtAuthenticationFilter jwtAuthenticationFilter;
-  private final IdentityProperties identityProperties;
-  private static final long MAX_AGE_SECS = 3600;
+  private final ProblemDetailAuthenticationEntryPoint authenticationEntryPoint;
 
-  public WebSecurityConfig(
-      JwtAuthenticationEntryPoint unauthorizedHandler,
-      JwtAuthenticationFilter jwtAuthenticationFilter,
-      IdentityProperties identityProperties) {
-    this.unauthorizedHandler = unauthorizedHandler;
-    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    this.identityProperties = identityProperties;
+  public WebSecurityConfig(ProblemDetailAuthenticationEntryPoint authenticationEntryPoint) {
+    this.authenticationEntryPoint = authenticationEntryPoint;
   }
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.cors(Customizer.withDefaults())
-        .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
-        .exceptionHandling(eh -> eh.authenticationEntryPoint(unauthorizedHandler))
-        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+    http.csrf(
+            csrf ->
+                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
+                    .ignoringRequestMatchers("/api/movie/get-movies", "/api/search/movies"))
+        .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
+        .exceptionHandling(eh -> eh.authenticationEntryPoint(authenticationEntryPoint))
+        .securityContext(context -> context.securityContextRepository(securityContextRepository()))
+        .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+        .logout(
+            logout ->
+                logout
+                    .logoutUrl("/api/auth/logout")
+                    .deleteCookies("SESSION")
+                    .logoutSuccessHandler(
+                        new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
+                    .permitAll())
         .authorizeHttpRequests(
             ar ->
-                ar.requestMatchers("/api/auth/**")
+                ar.requestMatchers(
+                        HttpMethod.GET,
+                        "/api/auth/check-username-availability",
+                        "/api/auth/check-email-availability",
+                        "/api/auth/confirm-email-address",
+                        "/api/auth/reset-password")
+                    .permitAll()
+                    .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/auth/login",
+                        "/api/auth/registration",
+                        "/api/auth/save-new-password")
                     .permitAll()
                     .requestMatchers(
                         "/v3/api-docs",
@@ -76,29 +91,15 @@ public class WebSecurityConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        .httpBasic(AbstractHttpConfigurer::disable)
+        .formLogin(AbstractHttpConfigurer::disable);
 
     return http.build();
   }
 
   @Bean
-  CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(identityProperties.cors().allowedOrigins());
-    configuration.setAllowedMethods(
-        Arrays.asList(
-            HttpMethod.GET.name(),
-            HttpMethod.POST.name(),
-            HttpMethod.PUT.name(),
-            HttpMethod.PATCH.name(),
-            HttpMethod.DELETE.name(),
-            HttpMethod.OPTIONS.name()));
-    configuration.setAllowedHeaders(Collections.singletonList("*"));
-    configuration.setAllowCredentials(true);
-    configuration.setMaxAge(MAX_AGE_SECS);
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
-    return source;
+  public SecurityContextRepository securityContextRepository() {
+    return new HttpSessionSecurityContextRepository();
   }
 
   @Bean

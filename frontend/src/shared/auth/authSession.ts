@@ -1,71 +1,110 @@
-const ACCESS_TOKEN_KEY = "jwtToken";
-const ROLES_KEY = "rolesFromJwt";
-const EXPIRES_AT_KEY = "jwtExpiresAt";
-const USERNAME_KEY = "username";
-
 const listeners = new Set<() => void>();
+
+export type AccountSessionResponse = {
+  id?: number;
+  username?: string;
+  email?: string;
+  roles?: string[];
+};
+
+export type AuthSessionData = AccountSessionResponse;
+
+export type AuthSessionSnapshot = {
+  bootstrapped: boolean;
+  session: AuthSessionData | null;
+};
+
+let currentSession: AuthSessionData | null = null;
+let bootstrapped = false;
+let currentSnapshot: AuthSessionSnapshot = {
+  bootstrapped,
+  session: currentSession,
+};
 
 const notifyListeners = (): void => {
   listeners.forEach((listener) => listener());
 };
 
-export type AuthSessionData = {
-  accessToken: string;
-  roles?: string;
-  username?: string;
-  expiresAt?: number;
+const refreshSnapshot = (): void => {
+  currentSnapshot = {
+    bootstrapped,
+    session: currentSession,
+  };
 };
 
+const normalizeRoles = (roles: string[] | undefined): string[] =>
+  roles?.filter(Boolean) ?? [];
+
 export const authSession = {
-  getAccessToken(): string | null {
-    return window.localStorage.getItem(ACCESS_TOKEN_KEY);
+  getSnapshot(): AuthSessionSnapshot {
+    return currentSnapshot;
   },
 
-  setAccessToken(token: string): void {
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  getServerSnapshot(): AuthSessionSnapshot {
+    return {
+      bootstrapped: false,
+      session: null,
+    };
+  },
+
+  markBootstrapStarted(): void {
+    bootstrapped = false;
+    refreshSnapshot();
+    notifyListeners();
+  },
+
+  completeBootstrap(session: AuthSessionData | null): void {
+    currentSession = session;
+    bootstrapped = true;
+    refreshSnapshot();
     notifyListeners();
   },
 
   setSession(session: AuthSessionData): void {
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, session.accessToken);
-    if (session.roles) {
-      window.localStorage.setItem(ROLES_KEY, session.roles);
-    }
-    if (session.username) {
-      window.localStorage.setItem(USERNAME_KEY, session.username);
-    }
-    if (session.expiresAt !== undefined) {
-      window.localStorage.setItem(EXPIRES_AT_KEY, session.expiresAt.toString());
-    }
+    currentSession = {
+      ...session,
+      roles: normalizeRoles(session.roles),
+    };
+    bootstrapped = true;
+    refreshSnapshot();
     notifyListeners();
   },
 
   getUsername(): string | null {
-    return window.localStorage.getItem(USERNAME_KEY);
+    return currentSession?.username ?? null;
   },
 
   setUsername(username: string): void {
-    window.localStorage.setItem(USERNAME_KEY, username);
+    if (currentSession) {
+      currentSession = { ...currentSession, username };
+      refreshSnapshot();
+    }
     notifyListeners();
   },
 
   hasRole(role: string): boolean {
-    return window.localStorage.getItem(ROLES_KEY)?.includes(role) ?? false;
+    return currentSession?.roles?.includes(role) ?? false;
   },
 
   isAuthenticated(): boolean {
-    const jwtExpiresAt = window.localStorage.getItem(EXPIRES_AT_KEY);
-    if (!jwtExpiresAt) {
-      return false;
-    }
-    return Number.parseInt(jwtExpiresAt, 10) > Date.now() / 1000;
+    return currentSession !== null;
+  },
+
+  isBootstrapped(): boolean {
+    return bootstrapped;
   },
 
   clear(): void {
-    window.localStorage.removeItem(ACCESS_TOKEN_KEY);
-    window.localStorage.removeItem(ROLES_KEY);
-    window.localStorage.removeItem(EXPIRES_AT_KEY);
-    window.localStorage.removeItem(USERNAME_KEY);
+    currentSession = null;
+    bootstrapped = true;
+    refreshSnapshot();
+    notifyListeners();
+  },
+
+  resetForTests(): void {
+    currentSession = null;
+    bootstrapped = false;
+    refreshSnapshot();
     notifyListeners();
   },
 

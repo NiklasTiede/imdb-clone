@@ -1,29 +1,34 @@
 package com.thecodinglab.imdbclone.engagement;
 
+import static com.thecodinglab.imdbclone.support.SecurityMockUsers.testUser;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thecodinglab.imdbclone.engagement.api.CommentRecord;
 import com.thecodinglab.imdbclone.engagement.api.CreateCommentRequest;
 import com.thecodinglab.imdbclone.engagement.api.UpdateCommentRequest;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.CommentRepository;
-import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
-import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
 @SpringBootTest
 @AutoConfigureRestTestClient
 @AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommentControllerTest extends BaseContainers {
 
   private static final long MOVIE_ID = 1L;
@@ -32,19 +37,11 @@ class CommentControllerTest extends BaseContainers {
 
   @Autowired private RestTestClient restTestClient;
 
-  @Autowired private AuthenticationService authenticationService;
+  @Autowired private MockMvc mockMvc;
 
   @Autowired private CommentRepository commentRepository;
 
-  private String userToken;
-
-  @BeforeAll
-  void setup() {
-    var userRequest = new LoginRequest("test_user_two", "Encrypted!Pa55worD");
-    var userLogin = authenticationService.loginUser(userRequest);
-    userToken = "%s %s".formatted(userLogin.getTokenType(), userLogin.getAccessToken());
-    SecurityContextHolder.clearContext();
-  }
+  private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
   @AfterEach
   void cleanup() {
@@ -55,24 +52,25 @@ class CommentControllerTest extends BaseContainers {
   }
 
   @Test
-  void createGetUpdateAndDeleteComment_success() {
+  void createGetUpdateAndDeleteComment_success() throws Exception {
     var createRequest = new CreateCommentRequest(TEST_COMMENT_PREFIX + " created");
 
     var createdComment =
-        restTestClient
-            .post()
-            .uri("/api/comment/{movieId}", MOVIE_ID)
-            .header("Authorization", userToken)
-            .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON)
-            .body(createRequest)
-            .exchange()
-            .expectAll(
-                spec -> spec.expectStatus().isCreated(),
-                spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON))
-            .expectBody(CommentRecord.class)
-            .returnResult()
-            .getResponseBody();
+        objectMapper.readValue(
+            mockMvc
+                .perform(
+                    post("/api/comment/{movieId}", MOVIE_ID)
+                        .with(testUser())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn()
+                .getResponse()
+                .getContentAsString(),
+            CommentRecord.class);
 
     restTestClient
         .get()
@@ -91,23 +89,20 @@ class CommentControllerTest extends BaseContainers {
 
     var updateRequest = new UpdateCommentRequest(TEST_COMMENT_PREFIX + " updated");
 
-    restTestClient
-        .put()
-        .uri("/api/comment/{commentId}", createdComment.id())
-        .header("Authorization", userToken)
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON)
-        .body(updateRequest)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isOk(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.id").isEqualTo(createdComment.id())
-                    .jsonPath("$.message").isEqualTo(TEST_COMMENT_PREFIX + " updated")
-                    .jsonPath("$.accountId").isEqualTo(ACCOUNT_ID)
-                    .jsonPath("$.movieId").isEqualTo(MOVIE_ID));
+    mockMvc
+        .perform(
+            put("/api/comment/{commentId}", createdComment.id())
+                .with(testUser())
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.id").value(createdComment.id()))
+        .andExpect(jsonPath("$.message").value(TEST_COMMENT_PREFIX + " updated"))
+        .andExpect(jsonPath("$.accountId").value(ACCOUNT_ID))
+        .andExpect(jsonPath("$.movieId").value(MOVIE_ID));
 
     restTestClient
         .get()
@@ -143,14 +138,13 @@ class CommentControllerTest extends BaseContainers {
                     .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
                     .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));
 
-    restTestClient
-        .delete()
-        .uri("/api/comment/{commentId}", createdComment.id())
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectStatus()
-        .isNoContent();
+    mockMvc
+        .perform(
+            delete("/api/comment/{commentId}", createdComment.id())
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNoContent());
 
     restTestClient
         .get()
@@ -163,19 +157,18 @@ class CommentControllerTest extends BaseContainers {
   }
 
   @Test
-  void createComment_unauthenticated() {
+  void createComment_unauthenticated() throws Exception {
     var request = new CreateCommentRequest(TEST_COMMENT_PREFIX + " unauthorized");
 
-    restTestClient
-        .post()
-        .uri("/api/comment/{movieId}", MOVIE_ID)
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON)
-        .body(request)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isUnauthorized(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+    mockMvc
+        .perform(
+            post("/api/comment/{movieId}", MOVIE_ID)
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isUnauthorized())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
   }
 }
 // spotless:on

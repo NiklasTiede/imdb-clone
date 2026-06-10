@@ -1,39 +1,29 @@
 package com.thecodinglab.imdbclone.account;
 
-import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
-import com.thecodinglab.imdbclone.identity.api.LoginRequest;
+import static com.thecodinglab.imdbclone.support.SecurityMockUsers.testUser;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.thecodinglab.imdbclone.support.BaseContainers;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
 @SpringBootTest
 @AutoConfigureRestTestClient
 @AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccountControllerTest extends BaseContainers {
 
   @Autowired private RestTestClient restTestClient;
 
-  @Autowired private AuthenticationService authenticationService;
-
-  private String userToken;
-
-  @BeforeAll
-  void setup() {
-    var userRequest = new LoginRequest("test_user_two", "Encrypted!Pa55worD");
-    var userLogin = authenticationService.loginUser(userRequest);
-    userToken = "%s %s".formatted(userLogin.getTokenType(), userLogin.getAccessToken());
-    SecurityContextHolder.clearContext();
-  }
+  @Autowired private MockMvc mockMvc;
 
   @Test
   void getCurrentAccount_unauthenticated() {
@@ -55,21 +45,13 @@ class AccountControllerTest extends BaseContainers {
   }
 
   @Test
-  void getCurrentAccount_success() {
-    restTestClient
-        .get()
-        .uri("/api/account/me")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isOk(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.id").isEqualTo(2)
-                    .jsonPath("$.username").isEqualTo("test_user_two")
-                    .jsonPath("$.email").isEqualTo("two@web.com"));
+  void getCurrentAccount_success() throws Exception {
+    mockMvc
+        .perform(get("/api/account/me").with(testUser()).accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(2))
+        .andExpect(jsonPath("$.username").value("test_user_two"))
+        .andExpect(jsonPath("$.email").value("two@web.com"));
   }
 
   @Test
@@ -94,23 +76,15 @@ class AccountControllerTest extends BaseContainers {
   }
 
   @Test
-  void getCurrentAccountProfile_success() {
-    restTestClient
-        .get()
-        .uri("/api/account/me/profile")
-        .header("Authorization", userToken)
-        .accept(MediaType.APPLICATION_JSON)
-        .exchange()
-        .expectAll(
-            spec -> spec.expectStatus().isOk(),
-            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-            spec ->
-                spec.expectBody()
-                    .jsonPath("$.username").isEqualTo("test_user_two")
-                    .jsonPath("$.email").isEqualTo("two@web.com")
-                    .jsonPath("$.ratingsCount").isEqualTo(0)
-                    .jsonPath("$.watchlistCount").isEqualTo(0)
-                    .jsonPath("$.commentsCount").isEqualTo(0));
+  void getCurrentAccountProfile_success() throws Exception {
+    mockMvc
+        .perform(get("/api/account/me/profile").with(testUser()).accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.username").value("test_user_two"))
+        .andExpect(jsonPath("$.email").value("two@web.com"))
+        .andExpect(jsonPath("$.ratingsCount").value(0))
+        .andExpect(jsonPath("$.watchlistCount").value(0))
+        .andExpect(jsonPath("$.commentsCount").value(0));
   }
 
   @Test

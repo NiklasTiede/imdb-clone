@@ -1,6 +1,4 @@
 import { AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
-import { authSession } from "../auth/authSession";
-import { installLocalStorageMock } from "../../test/installLocalStorageMock";
 import {
   configurePerformanceReporter,
   resetPerformanceReporterForTests,
@@ -8,39 +6,11 @@ import {
 import { apiHttpClient } from "./httpClient";
 
 describe("apiHttpClient", () => {
-  beforeEach(() => {
-    installLocalStorageMock();
-  });
-
   afterEach(() => {
     resetPerformanceReporterForTests();
-    window.localStorage.clear();
   });
 
-  it("adds the bearer token to outgoing requests", async () => {
-    authSession.setAccessToken("test-token");
-    let capturedConfig: InternalAxiosRequestConfig | undefined;
-
-    await apiHttpClient.get("/secure-resource", {
-      adapter: async (config) => {
-        capturedConfig = config;
-        return {
-          config,
-          data: {},
-          headers: {},
-          status: 200,
-          statusText: "OK",
-        };
-      },
-    });
-
-    expect(capturedConfig).toBeDefined();
-    expect(new AxiosHeaders(capturedConfig?.headers).get("Authorization")).toBe(
-      "Bearer test-token",
-    );
-  });
-
-  it("does not add an authorization header when no token exists", async () => {
+  it("does not expose an authorization header to outgoing requests", async () => {
     let capturedConfig: InternalAxiosRequestConfig | undefined;
 
     await apiHttpClient.get("/public-resource", {
@@ -60,6 +30,11 @@ describe("apiHttpClient", () => {
     expect(new AxiosHeaders(capturedConfig?.headers).has("Authorization")).toBe(
       false,
     );
+  });
+
+  it("uses the Spring CSRF cookie and header names", () => {
+    expect(apiHttpClient.defaults.xsrfCookieName).toBe("XSRF-TOKEN");
+    expect(apiHttpClient.defaults.xsrfHeaderName).toBe("X-XSRF-TOKEN");
   });
 
   it("reports successful API request timing without query parameters", async () => {

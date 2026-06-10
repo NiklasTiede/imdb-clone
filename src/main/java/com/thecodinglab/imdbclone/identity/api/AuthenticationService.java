@@ -8,8 +8,6 @@ public interface AuthenticationService {
 
   UserIdentityAvailability checkEmailAvailability(String email);
 
-  LoginResponse loginUser(LoginRequest request);
-
   MessageResponse registerUser(RegistrationRequest request);
 
   MessageResponse confirmEmailAddress(String token);
