@@ -3,6 +3,8 @@ delete from comment;
 delete from watched_movie;
 delete from rating;
 delete from account_roles;
+delete from local_credential;
+delete from account_identity_provider;
 delete from verification_token;
 delete from account;
 delete from movie;
@@ -92,6 +94,10 @@ values
     (1, 1),
     (1, 2),
     (2, 2);
+
+insert into local_credential(account_id, password_hash)
+select id, password
+from account;
 
 select setval(pg_get_serial_sequence('movie', 'id'), (select max(id) from movie));
 select setval(pg_get_serial_sequence('account', 'id'), (select max(id) from account));

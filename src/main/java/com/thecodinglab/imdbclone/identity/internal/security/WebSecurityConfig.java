@@ -1,5 +1,7 @@
 package com.thecodinglab.imdbclone.identity.internal.security;
 
+import com.thecodinglab.imdbclone.identity.internal.security.oauth2.AccountLinkingOAuth2UserService;
+import com.thecodinglab.imdbclone.identity.internal.security.oauth2.AccountLinkingOidcUserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,9 +28,16 @@ import org.springframework.security.web.csrf.CsrfFilter;
 public class WebSecurityConfig {
 
   private final ProblemDetailAuthenticationEntryPoint authenticationEntryPoint;
+  private final AccountLinkingOidcUserService oidcUserService;
+  private final AccountLinkingOAuth2UserService oauth2UserService;
 
-  public WebSecurityConfig(ProblemDetailAuthenticationEntryPoint authenticationEntryPoint) {
+  public WebSecurityConfig(
+      ProblemDetailAuthenticationEntryPoint authenticationEntryPoint,
+      AccountLinkingOidcUserService oidcUserService,
+      AccountLinkingOAuth2UserService oauth2UserService) {
     this.authenticationEntryPoint = authenticationEntryPoint;
+    this.oidcUserService = oidcUserService;
+    this.oauth2UserService = oauth2UserService;
   }
 
   @Bean
@@ -65,6 +74,8 @@ public class WebSecurityConfig {
                         "/api/auth/registration",
                         "/api/auth/save-new-password")
                     .permitAll()
+                    .requestMatchers("/oauth2/**", "/login/oauth2/**")
+                    .permitAll()
                     .requestMatchers(
                         "/v3/api-docs",
                         "/v3/api-docs.yaml",
@@ -91,6 +102,16 @@ public class WebSecurityConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
+        .oauth2Login(
+            oauth2 ->
+                oauth2
+                    .userInfoEndpoint(
+                        userInfo ->
+                            userInfo
+                                .oidcUserService(oidcUserService)
+                                .userService(oauth2UserService))
+                    .defaultSuccessUrl("/", true)
+                    .failureUrl("/login?error=social"))
         .httpBasic(AbstractHttpConfigurer::disable)
         .formLogin(AbstractHttpConfigurer::disable);
 

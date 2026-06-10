@@ -24,6 +24,20 @@ spec:
                 name: imdb-clone-backend
                 port:
                   name: http
+          - path: /oauth2
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-backend
+                port:
+                  name: http
+          - path: /login/oauth2
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-backend
+                port:
+                  name: http
           - path: /
             pathType: Prefix
             backend:

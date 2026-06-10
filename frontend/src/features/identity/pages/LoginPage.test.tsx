@@ -41,6 +41,12 @@ describe("LoginPage", () => {
     renderLoginPage();
 
     expect(screen.getByRole("heading", { name: "Sign in" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Continue with Google" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Continue with GitHub" }),
+    ).toBeTruthy();
     expect(screen.getByText("Welcome back.")).toBeTruthy();
     expect(screen.queryByText(/Need an account/i)).toBeNull();
   });

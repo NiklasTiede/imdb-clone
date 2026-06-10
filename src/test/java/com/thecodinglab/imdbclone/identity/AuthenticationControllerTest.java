@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -38,9 +39,20 @@ class AuthenticationControllerTest extends BaseContainers {
 
   @Autowired private JdbcTemplate jdbcTemplate;
 
+  @Autowired private PasswordEncoder passwordEncoder;
+
   @BeforeEach
   void clearSessions() {
     jdbcTemplate.update("delete from spring_session");
+    String passwordHash = passwordEncoder.encode("Encrypted!Pa55worD");
+    jdbcTemplate.update("update account set password = ? where id = 2", passwordHash);
+    jdbcTemplate.update(
+        """
+        insert into local_credential(account_id, password_hash)
+        values (2, ?)
+        on conflict (account_id) do update set password_hash = excluded.password_hash
+        """,
+        passwordHash);
   }
 
   @Test
@@ -106,6 +118,52 @@ class AuthenticationControllerTest extends BaseContainers {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(1))
         .andExpect(jsonPath("$.username").value("test_user_one"));
+  }
+
+  @Test
+  void login_usesLocalCredentialInsteadOfLegacyAccountPassword() throws Exception {
+    String passwordHash = passwordEncoder.encode("Encrypted!Pa55worD");
+    jdbcTemplate.update("update account set password = null where username = 'test_user_two'");
+    jdbcTemplate.update(
+        """
+        insert into local_credential(account_id, password_hash)
+        values (2, ?)
+        on conflict (account_id) do update set password_hash = excluded.password_hash
+        """,
+        passwordHash);
+
+    var request = new LoginRequest("test_user_two", "Encrypted!Pa55worD");
+
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(2))
+        .andExpect(jsonPath("$.username").value("test_user_two"));
+  }
+
+  @Test
+  void login_withoutLocalCredentialReturnsUnauthorized() throws Exception {
+    jdbcTemplate.update("delete from local_credential where account_id = 2");
+    jdbcTemplate.update(
+        "update account set password = ? where id = 2",
+        passwordEncoder.encode("Encrypted!Pa55worD"));
+
+    var request = new LoginRequest("test_user_two", "Encrypted!Pa55worD");
+
+    mockMvc
+        .perform(
+            post("/api/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.status").value(401));
   }
 
   @Test

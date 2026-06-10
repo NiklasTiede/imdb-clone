@@ -14,24 +14,27 @@ public class VerificationToken {
   @Column(nullable = false)
   private VerificationTypeEnum verificationType;
 
-  @Column(nullable = false)
   private String token;
+
+  private String tokenHash;
 
   @Column(nullable = false)
   private Instant expiryDateInUtc;
 
   private Instant confirmedAtInUtc;
 
+  private Instant consumedAtInUtc;
+
   @Column(name = "account_id", nullable = false)
   private Long accountId;
 
   public VerificationToken(
       VerificationTypeEnum verificationType,
-      String token,
+      String tokenHash,
       Instant expiryDateInUtc,
       Long accountId) {
     this.verificationType = verificationType;
-    this.token = token;
+    this.tokenHash = tokenHash;
     this.expiryDateInUtc = expiryDateInUtc;
     this.accountId = accountId;
   }
@@ -55,11 +58,19 @@ public class VerificationToken {
   }
 
   public String getToken() {
-    return token;
+    return tokenHash;
   }
 
   public void setToken(String token) {
-    this.token = token;
+    this.tokenHash = token;
+  }
+
+  public String getTokenHash() {
+    return tokenHash;
+  }
+
+  public void setTokenHash(String tokenHash) {
+    this.tokenHash = tokenHash;
   }
 
   public Instant getExpiryDateInUtc() {
@@ -86,6 +97,14 @@ public class VerificationToken {
     this.confirmedAtInUtc = confirmedAtInUtc;
   }
 
+  public Instant getConsumedAtInUtc() {
+    return consumedAtInUtc;
+  }
+
+  public void setConsumedAtInUtc(Instant consumedAtInUtc) {
+    this.consumedAtInUtc = consumedAtInUtc;
+  }
+
   @Override
   public String toString() {
     return "VerificationToken{"
@@ -93,9 +112,7 @@ public class VerificationToken {
         + id
         + ", verificationType="
         + verificationType
-        + ", token='"
-        + token
-        + '\''
+        + ", tokenHash='[redacted]'"
         + ", expiryDateInUtc="
         + expiryDateInUtc
         + ", confirmedAtInUtc="

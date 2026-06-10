@@ -31,6 +31,7 @@ import {
 } from "../api/identityAvailability";
 import AuthVisualPane from "../components/AuthVisualPane";
 import { authTextFieldSx } from "../components/authFormStyles";
+import SocialLoginButtons from "../components/SocialLoginButtons";
 import { useAvailability } from "../hooks/useAvailability";
 import { useSnackbar } from "notistack";
 
@@ -305,6 +306,8 @@ const RegistrationPage = () => {
             >
               Create account
             </Button>
+
+            <SocialLoginButtons />
 
             <Typography
               sx={{

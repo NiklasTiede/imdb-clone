@@ -48,6 +48,12 @@ describe("RegistrationPage", () => {
     expect(
       screen.getByRole("button", { name: "Create account" }),
     ).not.toHaveProperty("disabled", true);
+    expect(
+      screen.getByRole("button", { name: "Continue with Google" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Continue with GitHub" }),
+    ).toBeTruthy();
   });
 
   it("shows live password rule feedback", async () => {

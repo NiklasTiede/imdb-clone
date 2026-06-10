@@ -22,7 +22,9 @@ This migration is split into four shippable phases. Deploy and verify each phase
 Status as of 2026-06-10:
 
 - Phase 1 is implemented and locally verified.
-- Phase 2, Phase 3, and Phase 4 are pending and can be adjusted before implementation.
+- Phase 2 backend and frontend/ingress wiring are implemented and locally verified.
+- Phase 2 production OAuth secrets are still pending because the local workspace does not have `sops` available for encrypted secret edits.
+- Phase 3 and Phase 4 are pending and can be adjusted before implementation.
 - The local dev database may need a manual Flyway repair/reset if it applied an earlier draft of `V2__create_spring_session_tables.sql`; do not repair it automatically.
 
 ## Design Decisions
@@ -735,7 +737,7 @@ Verify:
 - Create audit foundation files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/audit/`
 - Modify tests under `src/test/java/com/thecodinglab/imdbclone/identity/`
 
-- [ ] **Step 1: Add local credential schema**
+- [x] **Step 1: Add local credential schema**
 
 Migration intent:
 
@@ -763,7 +765,7 @@ ALTER TABLE account ALTER COLUMN password DROP NOT NULL;
 
 Keep the old `account.password` column during the migration if needed for a safe two-step deploy, but all new password reads/writes must move to `local_credential` before later dropping the legacy column in a cleanup migration.
 
-- [ ] **Step 2: Harden verification and reset token storage**
+- [x] **Step 2: Harden verification and reset token storage**
 
 Migration intent:
 
@@ -783,7 +785,7 @@ Implementation rules:
 - Reject missing, expired, or consumed tokens with the existing ProblemDetail style.
 - Never log raw tokens. Existing logs that include `token=` must be removed or redacted.
 
-- [ ] **Step 3: Add security audit foundation**
+- [x] **Step 3: Add security audit foundation**
 
 Create the audit table in the same migration so credential/social/passkey lifecycle events can be recorded as soon as those features are introduced:
 
@@ -816,7 +818,7 @@ void recordCredentialEvent(SecurityAuditEventType type, AccountId accountId, Map
 
 The first implementation can be simple JDBC/JPA persistence. Phase 4 will add Spring Security event listeners, retention cleanup, dashboards, and rate-limit event coverage.
 
-- [ ] **Step 4: Add account API operations for credentials**
+- [x] **Step 4: Add account API operations for credentials**
 
 Add account-facing API methods that expose intent, not persistence details:
 
@@ -829,7 +831,7 @@ Optional<AccountIdentity> findOptionalByEmail(String email);
 
 Password authentication must load credentials through the identity/account boundary without reaching into account internals from `identity/internal/security/**`.
 
-- [ ] **Step 5: Preserve password login behavior**
+- [x] **Step 5: Preserve password login behavior**
 
 Write tests proving:
 
@@ -839,7 +841,7 @@ Write tests proving:
 - Raw verification/reset tokens are not persisted and not written to logs.
 - Token issuance and consumption create audit rows without raw token values.
 
-- [ ] **Step 6: Verify credential foundation**
+- [x] **Step 6: Verify credential foundation**
 
 Run:
 
@@ -862,13 +864,13 @@ Expected: password login, registration, email confirmation, and reset-password f
 - Modify: `src/main/resources/config/application-dev.properties`
 - Modify: `src/main/resources/config/application-prod.properties`
 
-- [ ] **Step 1: Add OAuth2 client dependency**
+- [x] **Step 1: Add OAuth2 client dependency**
 
 ```gradle
 implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 ```
 
-- [ ] **Step 2: Add social identity schema**
+- [x] **Step 2: Add social identity schema**
 
 Migration changes:
 
@@ -888,7 +890,7 @@ CREATE INDEX account_identity_provider_account_id_idx
     ON account_identity_provider(account_id);
 ```
 
-- [ ] **Step 3: Add account API operations**
+- [x] **Step 3: Add account API operations**
 
 Add:
 
@@ -898,7 +900,7 @@ Optional<AccountIdentityProviderLink> findProviderLink(String provider, String p
 void linkProvider(AccountId accountId, String provider, String providerUserId, String email);
 ```
 
-- [ ] **Step 4: Implement social provisioning service**
+- [x] **Step 4: Implement social provisioning service**
 
 Lookup order:
 
@@ -914,11 +916,11 @@ Rules:
 - Creating or linking a provider must emit a `SOCIAL_PROVIDER_LINKED` security audit event.
 - Failed link attempts caused by unverified or conflicting provider email must emit `SOCIAL_PROVIDER_LINK_FAILED` without storing provider access tokens or authorization codes.
 
-- [ ] **Step 5: Configure OAuth2 login**
+- [x] **Step 5: Configure OAuth2 login**
 
 Add custom OIDC user service for Google and OAuth2 user service for GitHub.
 
-- [ ] **Step 6: Verify Phase 2 backend**
+- [x] **Step 6: Verify Phase 2 backend**
 
 Run:
 
@@ -937,7 +939,7 @@ Expected: tests pass and accounts without `local_credential` cannot password-log
 - Modify: `infrastructure/clusters/home/apps/ingress.yaml`
 - Modify: `infrastructure/clusters/home/apps/backend-runtime.sops.yaml`
 
-- [ ] **Step 1: Add social login buttons**
+- [x] **Step 1: Add social login buttons**
 
 Buttons navigate with:
 
@@ -946,7 +948,7 @@ window.location.href = "/oauth2/authorization/google";
 window.location.href = "/oauth2/authorization/github";
 ```
 
-- [ ] **Step 2: Proxy OAuth2 routes in dev**
+- [x] **Step 2: Proxy OAuth2 routes in dev**
 
 Add Vite proxy paths:
 
@@ -955,7 +957,7 @@ Add Vite proxy paths:
 "/login/oauth2": { target: "http://localhost:8080" },
 ```
 
-- [ ] **Step 3: Route OAuth2 paths in production**
+- [x] **Step 3: Route OAuth2 paths in production**
 
 Add ingress backend paths:
 
@@ -965,6 +967,8 @@ Add ingress backend paths:
 ```
 
 - [ ] **Step 4: Add OAuth2 secrets**
+
+Pending: add encrypted `google_client_id`, `google_client_secret`, `github_client_id`, and `github_client_secret` entries to `infrastructure/clusters/home/apps/backend-runtime.sops.yaml` with SOPS. Do not store plaintext placeholders in the manifest.
 
 Add Google and GitHub client id and secret placeholders to SOPS-backed runtime secrets.
 

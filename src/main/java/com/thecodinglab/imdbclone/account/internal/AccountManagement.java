@@ -9,6 +9,8 @@ import com.thecodinglab.imdbclone.account.api.events.AccountDeleted;
 import com.thecodinglab.imdbclone.account.internal.mapper.AccountMapper;
 import com.thecodinglab.imdbclone.account.internal.persistence.Account;
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
+import com.thecodinglab.imdbclone.account.internal.persistence.LocalCredential;
+import com.thecodinglab.imdbclone.account.internal.persistence.LocalCredentialRepository;
 import com.thecodinglab.imdbclone.engagement.api.AccountActivityService;
 import com.thecodinglab.imdbclone.engagement.api.EngagementStats;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
@@ -28,6 +30,7 @@ public class AccountManagement implements AccountService {
   private static final Logger logger = LoggerFactory.getLogger(AccountManagement.class);
 
   private final AccountRepository accountRepository;
+  private final LocalCredentialRepository localCredentialRepository;
   private final AccountActivityService accountActivityService;
   private final PasswordEncoder passwordEncoder;
   private final RegisteredUserRoleProvider registeredUserRoleProvider;
@@ -36,12 +39,14 @@ public class AccountManagement implements AccountService {
 
   public AccountManagement(
       AccountRepository accountRepository,
+      LocalCredentialRepository localCredentialRepository,
       AccountActivityService accountActivityService,
       PasswordEncoder passwordEncoder,
       RegisteredUserRoleProvider registeredUserRoleProvider,
       AccountMapper accountMapper,
       ApplicationEventPublisher events) {
     this.accountRepository = accountRepository;
+    this.localCredentialRepository = localCredentialRepository;
     this.accountActivityService = accountActivityService;
     this.passwordEncoder = passwordEncoder;
     this.registeredUserRoleProvider = registeredUserRoleProvider;
@@ -108,10 +113,11 @@ public class AccountManagement implements AccountService {
     String username = request.username().toLowerCase();
     String email = request.email().toLowerCase();
     String password = passwordEncoder.encode(request.password());
-    Account account = new Account(username, email, password);
+    Account account = new Account(username, email);
     account.setEnabled(true);
     account.setRoles(registeredUserRoleProvider.rolesForRegisteredUser());
     Account savedAccount = accountRepository.save(account);
+    localCredentialRepository.save(new LocalCredential(savedAccount.getId(), password));
     logger.info(
         "Account with [{}] was created and activated.", kv(ACCOUNT_ID, savedAccount.getId()));
     return new AccountCreated(savedAccount.getUsername(), savedAccount.getEmail());

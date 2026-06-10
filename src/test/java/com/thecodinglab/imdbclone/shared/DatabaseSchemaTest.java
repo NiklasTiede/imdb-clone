@@ -17,7 +17,11 @@ class DatabaseSchemaTest extends BaseContainers {
   @Test
   void flywayAppliedSchemaMigrations() {
     assertThat(appliedMigrations())
-        .containsExactly("1:create initial schema", "2:create spring session tables");
+        .containsExactly(
+            "1:create initial schema",
+            "2:create spring session tables",
+            "3:credential model and token hardening",
+            "4:social login identity providers");
   }
 
   @Test
@@ -53,6 +57,9 @@ class DatabaseSchemaTest extends BaseContainers {
     assertThat(deleteRules("watched_movie")).containsOnly("CASCADE");
     assertThat(deleteRules("comment")).containsOnly("CASCADE");
     assertThat(deleteRules("verification_token")).containsOnly("CASCADE");
+    assertThat(deleteRules("local_credential")).containsOnly("CASCADE");
+    assertThat(deleteRules("account_identity_provider")).containsOnly("CASCADE");
+    assertThat(deleteRules("security_audit_event")).containsOnly("SET NULL");
   }
 
   @Test
@@ -63,10 +70,35 @@ class DatabaseSchemaTest extends BaseContainers {
         .contains("idx_comment_account_id_created_at_in_utc:account_id,created_at_in_utc");
     assertThat(indexesFor("rating")).contains("idx_rating_account_id:account_id");
     assertThat(indexesFor("verification_token"))
-        .contains("idx_verification_token_account_id:account_id");
+        .contains("idx_verification_token_account_id:account_id")
+        .contains("verification_token_token_hash_key:token_hash");
+    assertThat(indexesFor("local_credential"))
+        .contains("local_credential_account_unique:account_id")
+        .contains("local_credential_account_id_idx:account_id");
+    assertThat(indexesFor("account_identity_provider"))
+        .contains("account_identity_provider_provider_user_unique:provider,provider_user_id")
+        .contains("account_identity_provider_account_id_idx:account_id");
+    assertThat(indexesFor("security_audit_event"))
+        .contains("security_audit_event_occurred_at_idx:occurred_at")
+        .contains("security_audit_event_event_type_idx:event_type")
+        .contains("security_audit_event_account_id_idx:account_id");
     assertThat(indexesFor("watched_movie"))
         .contains("idx_watched_movie_movie_id:movie_id")
         .contains("idx_watched_movie_account_id:account_id");
+  }
+
+  @Test
+  void credentialAndAuditTablesUseExpectedTypes() {
+    assertThat(columnType("account", "password")).isEqualTo("character varying");
+    assertThat(isNullable("account", "password")).isEqualTo("YES");
+    assertThat(columnType("local_credential", "password_hash")).isEqualTo("character varying");
+    assertThat(columnType("verification_token", "token_hash")).isEqualTo("character varying");
+    assertThat(isNullable("verification_token", "token")).isEqualTo("YES");
+    assertThat(columnType("verification_token", "consumed_at_in_utc"))
+        .isEqualTo("timestamp with time zone");
+    assertThat(columnType("security_audit_event", "details")).isEqualTo("jsonb");
+    assertThat(columnType("account_identity_provider", "provider")).isEqualTo("character varying");
+    assertThat(characterLength("account_identity_provider", "provider")).isEqualTo(50);
   }
 
   @Test
@@ -156,6 +188,20 @@ class DatabaseSchemaTest extends BaseContainers {
           and column_name = ?
         """,
         Long.class,
+        tableName,
+        columnName);
+  }
+
+  private String isNullable(String tableName, String columnName) {
+    return jdbcTemplate.queryForObject(
+        """
+        select is_nullable
+        from information_schema.columns
+        where table_schema = current_schema()
+          and table_name = ?
+          and column_name = ?
+        """,
+        String.class,
         tableName,
         columnName);
   }

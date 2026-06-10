@@ -2,22 +2,35 @@ package com.thecodinglab.imdbclone.account.internal;
 
 import com.thecodinglab.imdbclone.account.api.AccountCredentials;
 import com.thecodinglab.imdbclone.account.api.AccountIdentity;
+import com.thecodinglab.imdbclone.account.api.AccountIdentityProviderLink;
 import com.thecodinglab.imdbclone.account.api.AccountIdentityService;
 import com.thecodinglab.imdbclone.account.internal.persistence.Account;
+import com.thecodinglab.imdbclone.account.internal.persistence.AccountIdentityProvider;
+import com.thecodinglab.imdbclone.account.internal.persistence.AccountIdentityProviderRepository;
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
+import com.thecodinglab.imdbclone.account.internal.persistence.LocalCredential;
+import com.thecodinglab.imdbclone.account.internal.persistence.LocalCredentialRepository;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import jakarta.transaction.Transactional;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AccountIdentities implements AccountIdentityService {
 
   private final AccountRepository accountRepository;
+  private final LocalCredentialRepository localCredentialRepository;
+  private final AccountIdentityProviderRepository accountIdentityProviderRepository;
   private final RegisteredUserRoleProvider registeredUserRoleProvider;
 
   public AccountIdentities(
-      AccountRepository accountRepository, RegisteredUserRoleProvider registeredUserRoleProvider) {
+      AccountRepository accountRepository,
+      LocalCredentialRepository localCredentialRepository,
+      AccountIdentityProviderRepository accountIdentityProviderRepository,
+      RegisteredUserRoleProvider registeredUserRoleProvider) {
     this.accountRepository = accountRepository;
+    this.localCredentialRepository = localCredentialRepository;
+    this.accountIdentityProviderRepository = accountIdentityProviderRepository;
     this.registeredUserRoleProvider = registeredUserRoleProvider;
   }
 
@@ -35,8 +48,19 @@ public class AccountIdentities implements AccountIdentityService {
   @Transactional
   public AccountIdentity createAccountForIdentity(
       String username, String email, String passwordHash, boolean enabled) {
-    Account account = new Account(username.toLowerCase(), email.toLowerCase(), passwordHash);
+    Account account = new Account(username.toLowerCase(), email.toLowerCase());
     account.setEnabled(enabled);
+    account.setRoles(registeredUserRoleProvider.rolesForRegisteredUser());
+    Account savedAccount = accountRepository.save(account);
+    createLocalCredential(savedAccount.getId(), passwordHash);
+    return toIdentity(savedAccount);
+  }
+
+  @Override
+  @Transactional
+  public AccountIdentity createSocialAccount(String username, String email) {
+    Account account = new Account(username.toLowerCase(), email.toLowerCase());
+    account.setEnabled(true);
     account.setRoles(registeredUserRoleProvider.rolesForRegisteredUser());
     return toIdentity(accountRepository.save(account));
   }
@@ -53,6 +77,11 @@ public class AccountIdentities implements AccountIdentityService {
   }
 
   @Override
+  public Optional<AccountIdentity> findOptionalByEmail(String email) {
+    return accountRepository.findByEmail(email).map(this::toIdentity);
+  }
+
+  @Override
   public AccountIdentity findByUsername(String username) {
     return toIdentity(accountRepository.getAccountByUsername(username));
   }
@@ -66,11 +95,40 @@ public class AccountIdentities implements AccountIdentityService {
   }
 
   @Override
+  public boolean hasLocalCredential(Long accountId) {
+    return localCredentialRepository.existsByAccountId(accountId);
+  }
+
+  @Override
+  @Transactional
+  public void createLocalCredential(Long accountId, String passwordHash) {
+    localCredentialRepository.save(new LocalCredential(accountId, passwordHash));
+  }
+
+  @Override
+  public Optional<AccountIdentityProviderLink> findProviderLink(
+      String provider, String providerUserId) {
+    return accountIdentityProviderRepository
+        .findByProviderAndProviderUserId(provider, providerUserId)
+        .map(this::toProviderLink);
+  }
+
+  @Override
+  @Transactional
+  public void linkProvider(Long accountId, String provider, String providerUserId, String email) {
+    accountIdentityProviderRepository.save(
+        new AccountIdentityProvider(accountId, provider, providerUserId, email));
+  }
+
+  @Override
   @Transactional
   public void updatePassword(Long accountId, String passwordHash) {
-    Account account = getAccount(accountId);
-    account.setPassword(passwordHash);
-    accountRepository.save(account);
+    LocalCredential credential =
+        localCredentialRepository
+            .findByAccountId(accountId)
+            .orElseGet(() -> new LocalCredential(accountId, passwordHash));
+    credential.setPasswordHash(passwordHash);
+    localCredentialRepository.save(credential);
   }
 
   @Override
@@ -102,14 +160,27 @@ public class AccountIdentities implements AccountIdentityService {
     return new AccountIdentity(account.getId(), account.getUsername(), account.getEmail());
   }
 
+  private AccountIdentityProviderLink toProviderLink(AccountIdentityProvider provider) {
+    return new AccountIdentityProviderLink(
+        provider.getAccountId(),
+        provider.getProvider(),
+        provider.getProviderUserId(),
+        provider.getEmail());
+  }
+
   private AccountCredentials toCredentials(Account account) {
+    String passwordHash =
+        localCredentialRepository
+            .findByAccountId(account.getId())
+            .map(LocalCredential::getPasswordHash)
+            .orElse(null);
     return new AccountCredentials(
         account.getId(),
         account.getFirstName(),
         account.getLastName(),
         account.getUsername(),
         account.getEmail(),
-        account.getPassword(),
+        passwordHash,
         account.getLocked(),
         account.getEnabled(),
         account.getRoles().stream().map(role -> role.getName().name()).toList());

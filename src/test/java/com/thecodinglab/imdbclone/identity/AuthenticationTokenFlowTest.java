@@ -14,10 +14,15 @@ import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToke
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
 import com.thecodinglab.imdbclone.notification.internal.EmailNotificationService;
 import com.thecodinglab.imdbclone.support.BaseContainers;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +40,8 @@ class AuthenticationTokenFlowTest extends BaseContainers {
 
   @Autowired private PasswordEncoder passwordEncoder;
 
+  @Autowired private JdbcTemplate jdbcTemplate;
+
   @MockitoBean private EmailNotificationService emailNotifications;
 
   @Test
@@ -45,12 +52,22 @@ class AuthenticationTokenFlowTest extends BaseContainers {
             "Needs_Confirmation", "Needs.Confirmation@example.com", "Encrypted!Pa55worD"));
 
     Account account = accountRepository.getAccountByUsername("needs_confirmation");
+    String rawToken =
+        StreamSupport.stream(events.ofType(EmailConfirmationRequested.class).spliterator(), false)
+            .filter(event -> event.emailAddress().equals("needs.confirmation@example.com"))
+            .map(event -> tokenFromLink(event.link()))
+            .findFirst()
+            .orElseThrow();
     VerificationToken token =
         onlyTokenForAccount(account.getId(), VerificationTypeEnum.EMAIL_CONFIRMATION);
 
     assertThat(account.getEnabled()).isFalse();
     assertThat(token.getConfirmedAtInUtc()).isNull();
     assertThat(token.getExpiryDateInUtc()).isNotNull();
+    assertThat(persistedTokenValues()).doesNotContain(rawToken);
+    assertThat(auditEventTypesFor(account.getId()))
+        .contains("LOCAL_CREDENTIAL_CREATED", "VERIFICATION_TOKEN_ISSUED");
+    assertThat(auditDetails()).noneMatch(details -> details.contains(rawToken));
 
     assertThat(
             events
@@ -59,26 +76,36 @@ class AuthenticationTokenFlowTest extends BaseContainers {
                     event ->
                         event.emailAddress().equals("needs.confirmation@example.com")
                             && event.username().equals("needs_confirmation")
-                            && event.link().contains(token.getToken())))
+                            && event.link().contains(rawToken)))
         .hasSize(1);
   }
 
   @Test
-  void confirmEmailAddress_enablesAccountAndMarksTokenConfirmed() {
+  void confirmEmailAddress_enablesAccountAndMarksTokenConfirmed(AssertablePublishedEvents events) {
     authenticationService.registerUser(
         new RegistrationRequest(
             "Confirmable_User", "confirmable@example.com", "Encrypted!Pa55worD"));
     Account account = accountRepository.getAccountByUsername("confirmable_user");
     VerificationToken token =
         onlyTokenForAccount(account.getId(), VerificationTypeEnum.EMAIL_CONFIRMATION);
+    String rawToken =
+        StreamSupport.stream(events.ofType(EmailConfirmationRequested.class).spliterator(), false)
+            .filter(event -> event.emailAddress().equals("confirmable@example.com"))
+            .findFirst()
+            .map(EmailConfirmationRequested::link)
+            .map(AuthenticationTokenFlowTest::tokenFromLink)
+            .orElseThrow();
 
-    authenticationService.confirmEmailAddress(token.getToken());
+    authenticationService.confirmEmailAddress(rawToken);
 
     Account confirmedAccount = accountRepository.getAccountByUsername("confirmable_user");
     VerificationToken confirmedToken =
-        verificationTokenRepository.findByToken(token.getToken()).orElseThrow();
+        onlyTokenForAccount(account.getId(), VerificationTypeEnum.EMAIL_CONFIRMATION);
     assertThat(confirmedAccount.getEnabled()).isTrue();
     assertThat(confirmedToken.getConfirmedAtInUtc()).isNotNull();
+    assertThat(confirmedToken.getConsumedAtInUtc()).isNotNull();
+    assertThat(confirmedToken.getToken()).isNotEqualTo(rawToken);
+    assertThat(auditEventTypesFor(account.getId())).contains("VERIFICATION_TOKEN_CONSUMED");
   }
 
   @Test
@@ -87,7 +114,14 @@ class AuthenticationTokenFlowTest extends BaseContainers {
     authenticationService.resetPassword("two@web.com");
 
     VerificationToken token = onlyTokenForAccount(2L, VerificationTypeEnum.PASSWORD_RESET);
+    String rawToken =
+        StreamSupport.stream(events.ofType(PasswordResetRequested.class).spliterator(), false)
+            .filter(event -> event.emailAddress().equals("two@web.com"))
+            .map(event -> tokenFromLink(event.link()))
+            .findFirst()
+            .orElseThrow();
     assertThat(token.getConfirmedAtInUtc()).isNotNull();
+    assertThat(persistedTokenValues()).doesNotContain(rawToken);
     assertThat(
             events
                 .ofType(PasswordResetRequested.class)
@@ -95,14 +129,21 @@ class AuthenticationTokenFlowTest extends BaseContainers {
                     event ->
                         event.emailAddress().equals("two@web.com")
                             && event.username().equals("test_user_two")
-                            && event.link().contains(token.getToken())))
+                            && event.link().contains(rawToken)))
         .hasSize(1);
 
-    authenticationService.saveNewPassword(
-        new PasswordResetRequest(token.getToken(), "Changed!Pa55worD"));
+    authenticationService.saveNewPassword(new PasswordResetRequest(rawToken, "Changed!Pa55worD"));
 
-    Account account = accountRepository.getAccountByUsername("test_user_two");
-    assertThat(passwordEncoder.matches("Changed!Pa55worD", account.getPassword())).isTrue();
+    String localCredentialHash =
+        jdbcTemplate.queryForObject(
+            "select password_hash from local_credential where account_id = 2", String.class);
+    assertThat(passwordEncoder.matches("Changed!Pa55worD", localCredentialHash)).isTrue();
+    assertThat(auditEventTypesFor(2L))
+        .contains(
+            "PASSWORD_RESET_TOKEN_ISSUED",
+            "LOCAL_CREDENTIAL_PASSWORD_CHANGED",
+            "PASSWORD_RESET_TOKEN_CONSUMED");
+    assertThat(auditDetails()).noneMatch(details -> details.contains(rawToken));
   }
 
   private VerificationToken onlyTokenForAccount(Long accountId, VerificationTypeEnum type) {
@@ -111,5 +152,32 @@ class AuthenticationTokenFlowTest extends BaseContainers {
         .filter(token -> token.getVerificationType() == type)
         .reduce((first, second) -> second)
         .orElseThrow();
+  }
+
+  private java.util.List<String> persistedTokenValues() {
+    return verificationTokenRepository.findAll().stream().map(VerificationToken::getToken).toList();
+  }
+
+  private java.util.List<String> auditEventTypesFor(Long accountId) {
+    return jdbcTemplate.queryForList(
+        "select event_type from security_audit_event where account_id = ?",
+        String.class,
+        accountId);
+  }
+
+  private java.util.List<String> auditDetails() {
+    return jdbcTemplate.queryForList(
+        "select details::text from security_audit_event", String.class);
+  }
+
+  private static String tokenFromLink(String link) {
+    String query = URI.create(link).getQuery();
+    for (String pair : query.split("&")) {
+      String[] parts = pair.split("=", 2);
+      if (parts.length == 2 && parts[0].equals("token")) {
+        return URLDecoder.decode(parts[1], StandardCharsets.UTF_8);
+      }
+    }
+    throw new IllegalArgumentException("Missing token query parameter in link");
   }
 }

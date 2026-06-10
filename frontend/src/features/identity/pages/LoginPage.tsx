@@ -25,6 +25,7 @@ import { movieColors } from "../../../theme";
 import { authenticateAccount } from "../api/identityMutations";
 import AuthVisualPane from "../components/AuthVisualPane";
 import { authTextFieldSx } from "../components/authFormStyles";
+import SocialLoginButtons from "../components/SocialLoginButtons";
 import type { LoginRequest } from "../model/identityRequests";
 
 interface FormInputs {
@@ -210,6 +211,8 @@ const LoginPage = () => {
             >
               Sign in
             </Button>
+
+            <SocialLoginButtons />
           </Stack>
         </Box>
       </Grid>

@@ -1,7 +1,6 @@
 package com.thecodinglab.imdbclone.identity.internal;
 
 import static com.thecodinglab.imdbclone.shared.logging.Log.ACCOUNT_ID;
-import static com.thecodinglab.imdbclone.shared.logging.Log.TOKEN;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.account.api.AccountIdentity;
@@ -15,11 +14,13 @@ import com.thecodinglab.imdbclone.identity.api.events.PasswordResetRequested;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToken;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTokenRepository;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
+import com.thecodinglab.imdbclone.identity.internal.security.audit.SecurityAuditEventType;
+import com.thecodinglab.imdbclone.identity.internal.security.audit.SecurityAuditEvents;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -34,6 +35,8 @@ public class IdentityAccess implements AuthenticationService {
   private final PasswordEncoder passwordEncoder;
   private final AccountIdentityService accountIdentityService;
   private final VerificationTokenRepository verificationTokenRepository;
+  private final TokenHasher tokenHasher;
+  private final SecurityAuditEvents auditEvents;
   private final ApplicationEventPublisher events;
   private final IdentityProperties identityProperties;
 
@@ -41,11 +44,15 @@ public class IdentityAccess implements AuthenticationService {
       PasswordEncoder passwordEncoder,
       AccountIdentityService accountIdentityService,
       VerificationTokenRepository verificationTokenRepository,
+      TokenHasher tokenHasher,
+      SecurityAuditEvents auditEvents,
       ApplicationEventPublisher events,
       IdentityProperties identityProperties) {
     this.passwordEncoder = passwordEncoder;
     this.accountIdentityService = accountIdentityService;
     this.verificationTokenRepository = verificationTokenRepository;
+    this.tokenHasher = tokenHasher;
+    this.auditEvents = auditEvents;
     this.events = events;
     this.identityProperties = identityProperties;
   }
@@ -73,6 +80,8 @@ public class IdentityAccess implements AuthenticationService {
     AccountIdentity savedAccount =
         accountIdentityService.createAccountForIdentity(
             username, email, password, !identityProperties.emailVerificationEnabled());
+    auditEvents.recordCredentialEvent(
+        SecurityAuditEventType.LOCAL_CREDENTIAL_CREATED, savedAccount.id(), Map.of());
     logger.info("Account with [{}] was registered", kv(ACCOUNT_ID, savedAccount.id()));
     return new MessageResponse(
         identityProperties.emailVerificationEnabled()
@@ -81,15 +90,17 @@ public class IdentityAccess implements AuthenticationService {
   }
 
   private String createAndSendEmailConfirmationToken(AccountIdentity account) {
-    String token = UUID.randomUUID().toString();
+    String token = tokenHasher.newRawToken();
 
     VerificationToken verificationToken =
         new VerificationToken(
             VerificationTypeEnum.EMAIL_CONFIRMATION,
-            token,
+            tokenHasher.hash(token),
             Instant.now().plus(30, ChronoUnit.MINUTES),
             account.id());
     verificationTokenRepository.save(verificationToken);
+    auditEvents.recordCredentialEvent(
+        SecurityAuditEventType.VERIFICATION_TOKEN_ISSUED, account.id(), Map.of());
 
     String link =
         identityProperties.backendHost() + "/api/auth/confirm-email-address?token=" + token;
@@ -104,15 +115,20 @@ public class IdentityAccess implements AuthenticationService {
   public MessageResponse confirmEmailAddress(String token) {
     VerificationToken verificationToken =
         verificationTokenRepository
-            .findByToken(token)
+            .findByTokenHash(tokenHasher.hash(token))
             .orElseThrow(
-                () ->
-                    new NotFoundException(
-                        "Email Confirmation Token [%s] not found in database.".formatted(token)));
+                () -> new NotFoundException("Email Confirmation Token not found in database."));
     accountIdentityService.enableAccount(verificationToken.getAccountId());
     verificationToken.setConfirmedAtInUtc(Instant.now());
+    verificationToken.setConsumedAtInUtc(Instant.now());
     verificationTokenRepository.save(verificationToken);
-    logger.info("email address of new account was confirmed by token with [{}]", kv(TOKEN, token));
+    auditEvents.recordCredentialEvent(
+        SecurityAuditEventType.VERIFICATION_TOKEN_CONSUMED,
+        verificationToken.getAccountId(),
+        Map.of());
+    logger.info(
+        "email address of new account was confirmed for account with [{}]",
+        kv(ACCOUNT_ID, verificationToken.getAccountId()));
     return new MessageResponse("Email was confirmed and therefore account was activated");
   }
 
@@ -123,15 +139,17 @@ public class IdentityAccess implements AuthenticationService {
   }
 
   private MessageResponse createAndSendPasswordResetToken(AccountIdentity account) {
-    String token = UUID.randomUUID().toString();
+    String token = tokenHasher.newRawToken();
     VerificationToken verificationToken =
         new VerificationToken(
             VerificationTypeEnum.PASSWORD_RESET,
-            token,
+            tokenHasher.hash(token),
             Instant.now().plus(30, ChronoUnit.MINUTES),
             account.id());
     verificationToken.setConfirmedAtInUtc(Instant.now());
     verificationTokenRepository.save(verificationToken);
+    auditEvents.recordCredentialEvent(
+        SecurityAuditEventType.PASSWORD_RESET_TOKEN_ISSUED, account.id(), Map.of());
 
     String link = identityProperties.frontendHost() + "/reset-password?token=" + token;
     events.publishEvent(new PasswordResetRequested(account.email(), account.username(), link));
@@ -144,14 +162,21 @@ public class IdentityAccess implements AuthenticationService {
   public MessageResponse saveNewPassword(PasswordResetRequest request) {
     VerificationToken verificationToken =
         verificationTokenRepository
-            .findByToken(request.token())
+            .findByTokenHash(tokenHasher.hash(request.token()))
             .orElseThrow(
-                () ->
-                    new NotFoundException(
-                        "Password Reset Token [%s] not found in database."
-                            .formatted(request.token())));
+                () -> new NotFoundException("Password Reset Token not found in database."));
     accountIdentityService.updatePassword(
         verificationToken.getAccountId(), passwordEncoder.encode(request.newPassword()));
+    verificationToken.setConsumedAtInUtc(Instant.now());
+    verificationTokenRepository.save(verificationToken);
+    auditEvents.recordCredentialEvent(
+        SecurityAuditEventType.LOCAL_CREDENTIAL_PASSWORD_CHANGED,
+        verificationToken.getAccountId(),
+        Map.of());
+    auditEvents.recordCredentialEvent(
+        SecurityAuditEventType.PASSWORD_RESET_TOKEN_CONSUMED,
+        verificationToken.getAccountId(),
+        Map.of());
     logger.info(
         "new password was saved for account with [{}]",
         kv(ACCOUNT_ID, verificationToken.getAccountId()));

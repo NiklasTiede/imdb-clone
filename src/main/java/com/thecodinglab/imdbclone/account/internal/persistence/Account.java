@@ -21,7 +21,7 @@ public class Account extends DateAudit {
 
   @NotNull private String username;
   @NotNull private String email;
-  @NotNull @JsonIgnore private String password;
+  @JsonIgnore private String password;
   private String firstName;
   private String lastName;
   private String phone;
@@ -44,6 +44,11 @@ public class Account extends DateAudit {
     this.username = username;
     this.email = email;
     this.password = password;
+  }
+
+  public Account(String username, String email) {
+    this.username = username;
+    this.email = email;
   }
 
   public Long getId() {
