@@ -986,11 +986,20 @@ Verify:
 ### Task 14: WebAuthn Backend
 
 **Files:**
+- Modify: `build.gradle`
 - Create: `src/main/resources/db/migration/V5__create_webauthn_tables.sql`
 - Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/WebSecurityConfig.java`
 - Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/IdentityProperties.java`
 - Create passkey management controller files under `src/main/java/com/thecodinglab/imdbclone/identity/web/`
 - Create supporting identity security files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/webauthn/`
+
+- [ ] **Step 0: Add Spring Security WebAuthn dependency**
+
+Spring Security 7.0.5 exposes the WebAuthn DSL from config, but the implementation classes and JDBC repositories live in the separate artifact:
+
+```gradle
+implementation 'org.springframework.security:spring-security-webauthn'
+```
 
 - [ ] **Step 1: Add Spring Security WebAuthn tables**
 
@@ -1022,9 +1031,13 @@ JdbcPublicKeyCredentialUserEntityRepository
 JdbcUserCredentialRepository
 ```
 
+Wrap `JdbcUserCredentialRepository` if needed for application audit events; keep the table schema compatible with Spring Security's repository SQL.
+
 - [ ] **Step 4: Normalize WebAuthn login principal**
 
 After `/login/webauthn`, reload `UserPrincipal` through `AccountUserDetails` and save it in the `SecurityContext`.
+
+Also replace Spring Security's default session-backed WebAuthn options repositories with JSON-backed session repositories. `PublicKeyCredentialCreationOptions` is not Java-serializable in Spring Security 7.0.5, so storing it directly breaks Spring Session JDBC.
 
 - [ ] **Step 5: Add passkey management endpoints**
 

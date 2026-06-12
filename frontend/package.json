@@ -22,6 +22,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource-variable/manrope": "^5.2.8",
+    "@github/webauthn-json": "^2.1.1",
     "@hookform/resolvers": "5.2.2",
     "@mui/icons-material": "9.0.1",
     "@mui/material": "9.0.1",

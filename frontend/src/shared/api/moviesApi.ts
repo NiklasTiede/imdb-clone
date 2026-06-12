@@ -6,6 +6,7 @@ import {
   Configuration,
   FileStorageControllerApi,
   MovieControllerApi,
+  PasskeyManagementControllerApi,
   RatingControllerApi,
   SearchControllerApi,
   WatchedMovieControllerApi,
@@ -65,6 +66,12 @@ export const watchlistApi = new WatchedMovieControllerApi(
 );
 
 export const fileStorageApi = new FileStorageControllerApi(
+  moviesApiClientConfig,
+  undefined,
+  apiHttpClient,
+);
+
+export const passkeyManagementApi = new PasskeyManagementControllerApi(
   moviesApiClientConfig,
   undefined,
   apiHttpClient,

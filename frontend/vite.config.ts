@@ -16,6 +16,12 @@ export default defineConfig({
       "/login/oauth2": {
         target: "http://localhost:8080",
       },
+      "/webauthn": {
+        target: "http://localhost:8080",
+      },
+      "/login/webauthn": {
+        target: "http://localhost:8080",
+      },
     },
   },
   build: {

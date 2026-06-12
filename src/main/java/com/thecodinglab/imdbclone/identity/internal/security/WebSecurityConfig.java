@@ -1,11 +1,15 @@
 package com.thecodinglab.imdbclone.identity.internal.security;
 
+import com.thecodinglab.imdbclone.identity.internal.IdentityProperties;
+import com.thecodinglab.imdbclone.identity.internal.security.audit.SecurityAuditEvents;
 import com.thecodinglab.imdbclone.identity.internal.security.oauth2.AccountLinkingOAuth2UserService;
 import com.thecodinglab.imdbclone.identity.internal.security.oauth2.AccountLinkingOidcUserService;
+import com.thecodinglab.imdbclone.identity.internal.security.webauthn.AuditingUserCredentialRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -21,6 +25,10 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.webauthn.management.JdbcPublicKeyCredentialUserEntityRepository;
+import org.springframework.security.web.webauthn.management.JdbcUserCredentialRepository;
+import org.springframework.security.web.webauthn.management.PublicKeyCredentialUserEntityRepository;
+import org.springframework.security.web.webauthn.management.UserCredentialRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -28,14 +36,17 @@ import org.springframework.security.web.csrf.CsrfFilter;
 public class WebSecurityConfig {
 
   private final ProblemDetailAuthenticationEntryPoint authenticationEntryPoint;
+  private final IdentityProperties identityProperties;
   private final AccountLinkingOidcUserService oidcUserService;
   private final AccountLinkingOAuth2UserService oauth2UserService;
 
   public WebSecurityConfig(
       ProblemDetailAuthenticationEntryPoint authenticationEntryPoint,
+      IdentityProperties identityProperties,
       AccountLinkingOidcUserService oidcUserService,
       AccountLinkingOAuth2UserService oauth2UserService) {
     this.authenticationEntryPoint = authenticationEntryPoint;
+    this.identityProperties = identityProperties;
     this.oidcUserService = oidcUserService;
     this.oauth2UserService = oauth2UserService;
   }
@@ -77,6 +88,13 @@ public class WebSecurityConfig {
                     .requestMatchers("/oauth2/**", "/login/oauth2/**")
                     .permitAll()
                     .requestMatchers(
+                        HttpMethod.POST, "/webauthn/authenticate/options", "/login/webauthn")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/webauthn/register/**")
+                    .authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/webauthn/register/*")
+                    .authenticated()
+                    .requestMatchers(
                         "/v3/api-docs",
                         "/v3/api-docs.yaml",
                         "/v3/api-docs/**",
@@ -112,6 +130,14 @@ public class WebSecurityConfig {
                                 .userService(oauth2UserService))
                     .defaultSuccessUrl("/", true)
                     .failureUrl("/login?error=social"))
+        .webAuthn(
+            webAuthn ->
+                webAuthn
+                    .rpName("IMDB Clone")
+                    .rpId(identityProperties.webauthn().rpId())
+                    .allowedOrigins(
+                        identityProperties.webauthn().allowedOrigins().toArray(String[]::new))
+                    .disableDefaultRegistrationPage(true))
         .httpBasic(AbstractHttpConfigurer::disable)
         .formLogin(AbstractHttpConfigurer::disable);
 
@@ -132,5 +158,18 @@ public class WebSecurityConfig {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public PublicKeyCredentialUserEntityRepository publicKeyCredentialUserEntityRepository(
+      JdbcOperations jdbcOperations) {
+    return new JdbcPublicKeyCredentialUserEntityRepository(jdbcOperations);
+  }
+
+  @Bean
+  public UserCredentialRepository userCredentialRepository(
+      JdbcOperations jdbcOperations, SecurityAuditEvents auditEvents) {
+    return new AuditingUserCredentialRepository(
+        new JdbcUserCredentialRepository(jdbcOperations), auditEvents);
   }
 }

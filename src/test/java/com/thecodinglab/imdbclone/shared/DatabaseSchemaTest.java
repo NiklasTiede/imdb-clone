@@ -21,7 +21,8 @@ class DatabaseSchemaTest extends BaseContainers {
             "1:create initial schema",
             "2:create spring session tables",
             "3:credential model and token hardening",
-            "4:social login identity providers");
+            "4:social login identity providers",
+            "5:create webauthn tables");
   }
 
   @Test
@@ -126,6 +127,39 @@ class DatabaseSchemaTest extends BaseContainers {
         .contains("spring_session_ix1:session_id")
         .contains("spring_session_ix2:expiry_time")
         .contains("spring_session_ix3:principal_name");
+  }
+
+  @Test
+  void webauthnCredentialsUseSpringSecuritySchemaNamesAndTypes() {
+    assertThat(columnType("user_entities", "id")).isEqualTo("character varying");
+    assertThat(characterLength("user_entities", "id")).isEqualTo(1000);
+    assertThat(columnType("user_entities", "name")).isEqualTo("character varying");
+    assertThat(characterLength("user_entities", "name")).isEqualTo(100);
+    assertThat(columnType("user_entities", "display_name")).isEqualTo("character varying");
+    assertThat(characterLength("user_entities", "display_name")).isEqualTo(200);
+    assertThat(indexesFor("user_entities")).contains("user_entities_pkey:id");
+
+    assertThat(columnType("user_credentials", "credential_id")).isEqualTo("character varying");
+    assertThat(characterLength("user_credentials", "credential_id")).isEqualTo(1000);
+    assertThat(columnType("user_credentials", "user_entity_user_id"))
+        .isEqualTo("character varying");
+    assertThat(characterLength("user_credentials", "user_entity_user_id")).isEqualTo(1000);
+    assertThat(columnType("user_credentials", "public_key")).isEqualTo("bytea");
+    assertThat(columnType("user_credentials", "signature_count")).isEqualTo("bigint");
+    assertThat(columnType("user_credentials", "uv_initialized")).isEqualTo("boolean");
+    assertThat(columnType("user_credentials", "backup_eligible")).isEqualTo("boolean");
+    assertThat(columnType("user_credentials", "authenticator_transports"))
+        .isEqualTo("character varying");
+    assertThat(columnType("user_credentials", "public_key_credential_type"))
+        .isEqualTo("character varying");
+    assertThat(columnType("user_credentials", "backup_state")).isEqualTo("boolean");
+    assertThat(columnType("user_credentials", "attestation_object")).isEqualTo("bytea");
+    assertThat(columnType("user_credentials", "attestation_client_data_json")).isEqualTo("bytea");
+    assertThat(columnType("user_credentials", "created")).isEqualTo("timestamp without time zone");
+    assertThat(columnType("user_credentials", "last_used"))
+        .isEqualTo("timestamp without time zone");
+    assertThat(columnType("user_credentials", "label")).isEqualTo("character varying");
+    assertThat(indexesFor("user_credentials")).contains("user_credentials_pkey:credential_id");
   }
 
   @Test

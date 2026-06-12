@@ -25,6 +25,7 @@ import { movieColors } from "../../../theme";
 import { authenticateAccount } from "../api/identityMutations";
 import AuthVisualPane from "../components/AuthVisualPane";
 import { authTextFieldSx } from "../components/authFormStyles";
+import PasskeyLoginButton from "../components/PasskeyLoginButton";
 import SocialLoginButtons from "../components/SocialLoginButtons";
 import type { LoginRequest } from "../model/identityRequests";
 
@@ -211,6 +212,8 @@ const LoginPage = () => {
             >
               Sign in
             </Button>
+
+            <PasskeyLoginButton />
 
             <SocialLoginButtons />
           </Stack>

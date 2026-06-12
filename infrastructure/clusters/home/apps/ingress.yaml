@@ -38,6 +38,20 @@ spec:
                 name: imdb-clone-backend
                 port:
                   name: http
+          - path: /webauthn
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-backend
+                port:
+                  name: http
+          - path: /login/webauthn
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-backend
+                port:
+                  name: http
           - path: /
             pathType: Prefix
             backend:

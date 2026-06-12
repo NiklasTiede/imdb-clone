@@ -12,6 +12,11 @@ vi.mock("../api/identityMutations", () => ({
   authenticateAccount: vi.fn(),
 }));
 
+vi.mock("../passkeys/passkeyApi", () => ({
+  isPasskeySupported: () => true,
+  loginWithPasskey: vi.fn(),
+}));
+
 const renderLoginPage = () => {
   const queryClient = new QueryClient({
     defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
@@ -46,6 +51,9 @@ describe("LoginPage", () => {
     ).toBeTruthy();
     expect(
       screen.getByRole("button", { name: "Continue with GitHub" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Sign in with passkey" }),
     ).toBeTruthy();
     expect(screen.getByText("Welcome back.")).toBeTruthy();
     expect(screen.queryByText(/Need an account/i)).toBeNull();

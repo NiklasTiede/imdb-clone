@@ -11,6 +11,7 @@ import { useSnackbar } from "notistack";
 import PageContent from "../../../shared/layout/PageContent";
 import PageHeader from "../../../shared/layout/PageHeader";
 import AccountSectionCard from "../components/AccountSectionCard";
+import PasskeySectionCard from "../components/PasskeySectionCard";
 import ProfileHeaderCard from "../components/ProfileHeaderCard";
 import ProfileSectionCard from "../components/ProfileSectionCard";
 import {
@@ -20,6 +21,12 @@ import {
   ProfileSectionForm,
 } from "../utils/accountSettingsForm";
 import { deleteUserProfilePhoto } from "../../media";
+import {
+  deletePasskey,
+  listPasskeys,
+  passkeyQueryKeys,
+  registerPasskey,
+} from "../../identity";
 
 const AccountSettingsPage = () => {
   const queryClient = useQueryClient();
@@ -28,6 +35,11 @@ const AccountSettingsPage = () => {
   const { data: accountProfile = emptyAccountProfile } = useQuery(
     accountQueries.currentProfile(),
   );
+  const { data: passkeys = [], isLoading: passkeysLoading } = useQuery({
+    queryFn: listPasskeys,
+    queryKey: passkeyQueryKeys.all,
+  });
+
   const updateProfileSection = useMutation({
     mutationFn: updateAccountProfile,
     onSuccess: async () => {
@@ -74,6 +86,35 @@ const AccountSettingsPage = () => {
     },
     onError: () => {
       enqueueSnackbar(i18n.accountSettings.loadingError("remove profile photo"), {
+        variant: "error",
+      });
+    },
+  });
+
+  const addPasskey = useMutation({
+    mutationFn: registerPasskey,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: passkeyQueryKeys.all });
+      enqueueSnackbar("Passkey added", { variant: "info" });
+    },
+    onError: (error) => {
+      enqueueSnackbar(
+        error instanceof Error
+          ? error.message
+          : i18n.accountSettings.loadingError("add passkey"),
+        { variant: "error" },
+      );
+    },
+  });
+
+  const removePasskey = useMutation({
+    mutationFn: deletePasskey,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: passkeyQueryKeys.all });
+      enqueueSnackbar("Passkey removed", { variant: "info" });
+    },
+    onError: () => {
+      enqueueSnackbar(i18n.accountSettings.loadingError("remove passkey"), {
         variant: "error",
       });
     },
@@ -146,6 +187,15 @@ const AccountSettingsPage = () => {
           isSaving={updateAccountSection.isPending}
           onFormChange={setAccountForm}
           onSave={saveAccountSection}
+        />
+
+        <PasskeySectionCard
+          isAdding={addPasskey.isPending}
+          isDeleting={removePasskey.isPending}
+          isLoading={passkeysLoading}
+          onAdd={(label) => addPasskey.mutate(label)}
+          onDelete={(credentialId) => removePasskey.mutate(credentialId)}
+          passkeys={passkeys}
         />
       </Stack>
     </PageContent>
