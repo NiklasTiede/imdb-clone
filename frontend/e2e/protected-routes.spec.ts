@@ -49,7 +49,9 @@ test("redirects anonymous users from protected routes to login", async ({
   await page.goto("/your-watchlist");
 
   await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Sign in", exact: true }),
+  ).toBeVisible();
 });
 
 test("renders protected watchlist for authenticated users", async ({

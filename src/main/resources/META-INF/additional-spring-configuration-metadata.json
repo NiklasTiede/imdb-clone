@@ -16,6 +16,21 @@
       "description": "Whether new accounts must confirm their email address before they are enabled."
     },
     {
+      "name": "imdb-clone.identity.rate-limit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether Spring auth endpoint rate limiting is enabled."
+    },
+    {
+      "name": "imdb-clone.identity.rate-limit.*.capacity",
+      "type": "java.lang.Long",
+      "description": "Token capacity for one identity rate-limit rule."
+    },
+    {
+      "name": "imdb-clone.identity.rate-limit.*.refill-period",
+      "type": "java.time.Duration",
+      "description": "Refill interval for one identity rate-limit rule."
+    },
+    {
       "name": "imdb-clone.media.storage.uri",
       "type": "java.lang.String",
       "description": "S3-compatible object storage endpoint URI used by the media module."

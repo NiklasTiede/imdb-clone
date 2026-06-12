@@ -42,4 +42,17 @@ public class SecurityAuditEvent {
     this.accountId = accountId;
     this.details = details;
   }
+
+  public SecurityAuditEvent(
+      SecurityAuditEventType eventType,
+      String principal,
+      Long accountId,
+      String ipAddress,
+      Map<String, Object> details) {
+    this.eventType = eventType;
+    this.principal = principal;
+    this.accountId = accountId;
+    this.ipAddress = ipAddress;
+    this.details = details;
+  }
 }

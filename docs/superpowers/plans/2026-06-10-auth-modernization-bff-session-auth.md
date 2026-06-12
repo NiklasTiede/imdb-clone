@@ -1134,14 +1134,14 @@ Verify:
 - Modify: `src/main/resources/config/application.properties`
 - Modify test/e2e properties to disable rate limiting where needed.
 
-- [ ] **Step 1: Add dependencies**
+- [x] **Step 1: Add dependencies**
 
 ```gradle
 implementation 'com.bucket4j:bucket4j_jdk17-core:8.19.0'
 implementation 'com.github.ben-manes.caffeine:caffeine'
 ```
 
-- [ ] **Step 2: Add rate limit properties**
+- [x] **Step 2: Add rate limit properties**
 
 Prefix:
 
@@ -1149,7 +1149,7 @@ Prefix:
 imdb-clone.identity.rate-limit.enabled=true
 ```
 
-- [ ] **Step 3: Add auth rate limit filter**
+- [x] **Step 3: Add auth rate limit filter**
 
 Rules:
 
@@ -1162,7 +1162,7 @@ Rules:
 login failures: 5/min per username
 ```
 
-- [ ] **Step 4: Expose metrics**
+- [x] **Step 4: Expose metrics**
 
 Counter:
 
@@ -1176,7 +1176,7 @@ Tags:
 rule
 ```
 
-- [ ] **Step 5: Verify rate limiting**
+- [x] **Step 5: Verify rate limiting**
 
 Run a curl loop against login and confirm 429 plus Prometheus counter.
 
@@ -1186,7 +1186,7 @@ Run a curl loop against login and confirm 429 plus Prometheus counter.
 - Modify files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/audit/`
 - Modify or create retention scheduler files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/audit/`
 
-- [ ] **Step 1: Verify audit table and event taxonomy**
+- [x] **Step 1: Verify audit table and event taxonomy**
 
 The table is created in Task 11 so social and passkey phases can emit lifecycle events. Confirm it has at least:
 
@@ -1221,7 +1221,7 @@ PASSWORD_RESET_TOKEN_CONSUMED
 RATE_LIMIT_REJECTED
 ```
 
-- [ ] **Step 2: Add event listener**
+- [x] **Step 2: Add event listener**
 
 Listen to:
 
@@ -1249,11 +1249,11 @@ Use that port from:
 
 Do not put raw tokens, OAuth access tokens, authorization codes, passkey credential public keys, or credential ids that can be used for replay into `details`.
 
-- [ ] **Step 3: Add retention cleanup**
+- [x] **Step 3: Add retention cleanup**
 
 Reuse the scheduler style from `VerificationTokenCleanupScheduler` and delete events older than 90 days.
 
-- [ ] **Step 4: Verify audit**
+- [x] **Step 4: Verify audit**
 
 Exercise password, social, passkey, failed login, logout, social linking, passkey add/remove, and verification/reset token consumption. Confirm rows include correct event type and client IP, and confirm no raw token values are present in the table or logs.
 
@@ -1266,7 +1266,7 @@ Exercise password, social, passkey, failed login, logout, social linking, passke
 - Modify ingress annotations in `infrastructure/clusters/home/apps/ingress.yaml`
 - Modify Grafana dashboard manifests if present under `infrastructure/clusters/home/apps`
 
-- [ ] **Step 1: Add backend security headers**
+- [x] **Step 1: Add backend security headers**
 
 Configure:
 
@@ -1275,7 +1275,7 @@ Referrer-Policy
 Permissions-Policy: publickey-credentials-get=(self)
 ```
 
-- [ ] **Step 2: Add Traefik rate limit middleware**
+- [x] **Step 2: Add Traefik rate limit middleware**
 
 Coarse rule:
 
@@ -1284,7 +1284,7 @@ average: 50/s
 burst: 100
 ```
 
-- [ ] **Step 3: Add Traefik security headers middleware**
+- [x] **Step 3: Add Traefik security headers middleware**
 
 Include:
 
@@ -1295,7 +1295,7 @@ referrer policy
 CSP
 ```
 
-- [ ] **Step 4: Verify rendered manifests**
+- [x] **Step 4: Verify rendered manifests**
 
 Run:
 
@@ -1309,12 +1309,12 @@ Run a securityheaders.com scan and tune CSP so MUI and object-storage images sti
 
 ## Final Verification Matrix
 
-- [ ] `./gradlew test`
-- [ ] `./gradlew build jacocoTestReport`
+- [x] `./gradlew test`
+- [x] `./gradlew build jacocoTestReport`
 - [ ] `cd frontend && yarn run lint`
 - [ ] `cd frontend && yarn test`
 - [ ] `cd frontend && yarn build`
-- [ ] `kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml`
+- [x] `kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml`
 - [ ] Manual login, logout, CSRF, restart persistence, social login, passkey login, and rate-limit smoke checks for the relevant deployed phase.
 
 ## Open Risks To Recheck Per Phase

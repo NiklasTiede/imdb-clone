@@ -6,6 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "7"
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: imdb-clone-imdb-clone-public-rate-limit@kubernetescrd,imdb-clone-imdb-clone-security-headers@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
@@ -78,6 +79,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "7"
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: databases-imdb-clone-public-rate-limit@kubernetescrd,databases-imdb-clone-security-headers@kubernetescrd
 spec:
   ingressClassName: traefik
   tls:
