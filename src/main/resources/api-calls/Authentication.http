@@ -18,10 +18,6 @@ Content-Type: application/json
   "password": "Encrypted!Pa55worD"
 }
 
-> {%
-  client.global.set("adminToken", response.body.accessToken);
-%}
-
 
 ### login as regular user
 POST {{protocol}}{{host}}:{{port}}/api/auth/login
@@ -31,10 +27,6 @@ Content-Type: application/json
   "usernameOrEmail": "jeff_portnoy",
   "password": "Encrypted!Pa55worD"
 }
-
-> {%
-  client.global.set("userToken", response.body.accessToken);
-%}
 
 
 ### register

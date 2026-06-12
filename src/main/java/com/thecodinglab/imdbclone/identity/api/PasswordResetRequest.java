@@ -4,4 +4,4 @@ import com.thecodinglab.imdbclone.shared.validation.ValidPassword;
 import jakarta.validation.constraints.*;
 
 public record PasswordResetRequest(
-    @Size(min = 36, max = 36) String token, @ValidPassword String newPassword) {}
+    @NotBlank @Size(min = 32, max = 128) String token, @ValidPassword String newPassword) {}

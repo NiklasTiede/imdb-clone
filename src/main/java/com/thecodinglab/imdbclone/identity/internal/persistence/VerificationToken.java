@@ -14,8 +14,6 @@ public class VerificationToken {
   @Column(nullable = false)
   private VerificationTypeEnum verificationType;
 
-  private String token;
-
   private String tokenHash;
 
   @Column(nullable = false)
@@ -55,14 +53,6 @@ public class VerificationToken {
 
   public void setVerificationType(VerificationTypeEnum verificationType) {
     this.verificationType = verificationType;
-  }
-
-  public String getToken() {
-    return tokenHash;
-  }
-
-  public void setToken(String token) {
-    this.tokenHash = token;
   }
 
   public String getTokenHash() {

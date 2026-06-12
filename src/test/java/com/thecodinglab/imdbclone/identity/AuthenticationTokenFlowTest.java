@@ -1,7 +1,11 @@
 package com.thecodinglab.imdbclone.identity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thecodinglab.imdbclone.account.internal.persistence.Account;
 import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository;
 import com.thecodinglab.imdbclone.identity.api.AuthenticationService;
@@ -22,17 +26,23 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.modulith.test.AssertablePublishedEvents;
 import org.springframework.modulith.test.PublishedEventsExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = "imdb-clone.identity.email-verification-enabled=true")
+@AutoConfigureMockMvc
 @ExtendWith(PublishedEventsExtension.class)
 class AuthenticationTokenFlowTest extends BaseContainers {
 
   @Autowired private AuthenticationService authenticationService;
+
+  @Autowired private MockMvc mockMvc;
 
   @Autowired private AccountRepository accountRepository;
 
@@ -43,6 +53,8 @@ class AuthenticationTokenFlowTest extends BaseContainers {
   @Autowired private JdbcTemplate jdbcTemplate;
 
   @MockitoBean private EmailNotificationService emailNotifications;
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Test
   void registerUser_withEmailVerificationEnabled_createsDisabledAccountAndConfirmationToken(
@@ -104,7 +116,7 @@ class AuthenticationTokenFlowTest extends BaseContainers {
     assertThat(confirmedAccount.getEnabled()).isTrue();
     assertThat(confirmedToken.getConfirmedAtInUtc()).isNotNull();
     assertThat(confirmedToken.getConsumedAtInUtc()).isNotNull();
-    assertThat(confirmedToken.getToken()).isNotEqualTo(rawToken);
+    assertThat(confirmedToken.getTokenHash()).isNotEqualTo(rawToken);
     assertThat(auditEventTypesFor(account.getId())).contains("VERIFICATION_TOKEN_CONSUMED");
   }
 
@@ -146,6 +158,28 @@ class AuthenticationTokenFlowTest extends BaseContainers {
     assertThat(auditDetails()).noneMatch(details -> details.contains(rawToken));
   }
 
+  @Test
+  void saveNewPassword_acceptsGeneratedResetTokenThroughWebValidation(
+      AssertablePublishedEvents events) throws Exception {
+    authenticationService.resetPassword("two@web.com");
+    String rawToken =
+        StreamSupport.stream(events.ofType(PasswordResetRequested.class).spliterator(), false)
+            .filter(event -> event.emailAddress().equals("two@web.com"))
+            .map(event -> tokenFromLink(event.link()))
+            .findFirst()
+            .orElseThrow();
+
+    mockMvc
+        .perform(
+            post("/api/auth/save-new-password")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    objectMapper.writeValueAsString(
+                        new PasswordResetRequest(rawToken, "Changed!Pa55worD"))))
+        .andExpect(status().isCreated());
+  }
+
   private VerificationToken onlyTokenForAccount(Long accountId, VerificationTypeEnum type) {
     return verificationTokenRepository.findAll().stream()
         .filter(token -> token.getAccountId().equals(accountId))
@@ -155,7 +189,13 @@ class AuthenticationTokenFlowTest extends BaseContainers {
   }
 
   private java.util.List<String> persistedTokenValues() {
-    return verificationTokenRepository.findAll().stream().map(VerificationToken::getToken).toList();
+    return jdbcTemplate.queryForList(
+        """
+        select token from verification_token where token is not null
+        union all
+        select token_hash from verification_token where token_hash is not null
+        """,
+        String.class);
   }
 
   private java.util.List<String> auditEventTypesFor(Long accountId) {

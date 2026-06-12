@@ -281,7 +281,6 @@ Important backend configuration areas:
 - `opensearch.*`
 - `spring.mail.*`
 - `imdb-clone.identity.*`
-- `imdb-clone.identity.jwt.*`
 - `imdb-clone.media.storage.*`
 - `imdb-clone.notification.*`
 - `imdb-clone.recommendation.*`
