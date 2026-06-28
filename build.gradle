@@ -5,7 +5,7 @@ plugins {
 	id 'jacoco'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'com.github.ben-manes.versions' version '0.54.0'
-	id 'com.diffplug.spotless' version '8.4.0'
+	id 'com.diffplug.spotless' version '8.7.0'
 }
 
 group = 'com.thecodinglab'
@@ -37,7 +37,7 @@ repositories {
 
 dependencyManagement {
 	imports {
-		mavenBom 'org.springframework.modulith:spring-modulith-bom:2.0.6'
+		mavenBom 'org.springframework.modulith:spring-modulith-bom:2.1.0'
 		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
 		mavenBom "software.amazon.awssdk:bom:${awsSdkVersion}"
 	}
@@ -112,7 +112,7 @@ dependencies {
 	implementation 'org.springframework.modulith:spring-modulith-starter-core'
 
 	//-- Durable task scheduling
-	implementation 'com.github.kagkarlsson:db-scheduler-spring-boot-4-starter:16.8.1'
+	implementation 'com.github.kagkarlsson:db-scheduler-spring-boot-4-starter:16.12.0'
 
 	//-- Logging
 	implementation 'org.springframework.boot:spring-boot-starter-logging'
@@ -133,7 +133,7 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	if (System.getProperty('os.name').toLowerCase().contains('mac')) {
-		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.2.12.Final:osx-aarch_64'
+		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.2.15.Final:osx-aarch_64'
 	}
 }
 
