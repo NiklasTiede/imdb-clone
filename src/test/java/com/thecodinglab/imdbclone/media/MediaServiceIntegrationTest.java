@@ -10,6 +10,7 @@ import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
+import com.thecodinglab.imdbclone.catalog.internal.search.projection.MovieSearchProjectionTasks;
 import com.thecodinglab.imdbclone.media.internal.MediaService;
 import com.thecodinglab.imdbclone.media.internal.MediaStorageProperties;
 import com.thecodinglab.imdbclone.media.internal.images.MovieImageConstants;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -50,6 +52,8 @@ class MediaServiceIntegrationTest extends BaseContainers {
   @Autowired private S3Client s3Client;
 
   @Autowired private MediaStorageProperties storageProperties;
+
+  @MockitoBean private MovieSearchProjectionTasks movieSearchProjectionTasks;
 
   @Test
   void storeMovieImage_updatesMovieTokenAndStoresExpectedObjects() throws Exception {

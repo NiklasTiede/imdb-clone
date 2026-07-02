@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import org.opensearch.testcontainers.OpensearchContainer;
+import org.opensearch.testcontainers.OpenSearchContainer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -71,8 +71,8 @@ public class BaseContainers {
     registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
   }
 
-  static OpensearchContainer<?> openSearchContainer =
-      new OpensearchContainer<>(openSearchImage)
+  static OpenSearchContainer<?> openSearchContainer =
+      new OpenSearchContainer<>(openSearchImage)
           .withEnv("DISABLE_INSTALL_DEMO_CONFIG", "true")
           .withEnv("OPENSEARCH_JAVA_OPTS", "-Xms512m -Xmx512m")
           .withStartupTimeout(Duration.ofMinutes(3));
