@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 
-@SpringBootTest(properties = "db-scheduler.polling-interval=1h")
+@SpringBootTest(properties = {"db-scheduler.enabled=true", "db-scheduler.polling-interval=1h"})
 class MovieSearchProjectionTasksIntegrationTest extends BaseContainers {
 
   private static final long TEST_MOVIE_ID = 901_000L;

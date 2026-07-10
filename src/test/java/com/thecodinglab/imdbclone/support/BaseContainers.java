@@ -48,7 +48,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
  * </ul>
  */
 @SpringBootTest
-@Import(TestEmbeddingConfiguration.class)
+@Import({TestEmbeddingConfiguration.class, TestSchedulerConfiguration.class})
 @Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 public class BaseContainers {
 
