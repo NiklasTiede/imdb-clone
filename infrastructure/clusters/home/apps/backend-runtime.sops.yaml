@@ -17,10 +17,14 @@ metadata:
         argocd.argoproj.io/sync-wave: "0"
     name: backend-runtime
     namespace: imdb-clone
+stringData:
+    google_client_id: ENC[AES256_GCM,data:Nwdt9gewhvV4z1iWlLR165UAX34ni1gONS2fpVxIPJpQ318XUL4hCHoQENNzXAZadNRHFSNZ8CjAu3ngJSBafPNPykP96prk,iv:bZuqtCYrYttHJrYpSOJTlZTCkJoUAiMz9wf9nogy4sU=,tag:SbVXx7JZxbxH45zXXD1Szg==,type:str]
+    google_client_secret: ENC[AES256_GCM,data:bmwq05tGirvtycrWNm1J738UrJq7kLuV+l4AYcSDsaWngrA=,iv:997zZaBpQqmsmTWtFq6Ou5NVF14fXRKPvDoEG8J/3D8=,tag:KcEMQXac29S6XC4B8r8qvw==,type:str]
+    github_client_id: ENC[AES256_GCM,data:72ECPaHQyzctCnwp06iTP12Uons=,iv:IHJTDUbrdguuMcmiqhuVrHiBj/wMX5G8B8DwmLAZxwI=,tag:CVnkipuLD63AHpzlMrm8TQ==,type:str]
+    github_client_secret: ENC[AES256_GCM,data:q9vqQQ2rCNL3//U8nTQ0szO5Aa7CGXNqQxYzMXy9P8IqpQ/3vZtWXA==,iv:HpVez/9hefdcduy+9pyrCtQC2eKqlzM81qaNKn5fcS0=,tag:ZcX+BZD9dERLuPR3Shg+JA==,type:str]
 sops:
     age:
-        - recipient: age1erem2t02nlncp53ehrjjyqcwd6uhfr2vrl6saf4c53esr99vv9ms2wgpw0
-          enc: |
+        - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
             YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBQc1pocmRlSXBMOFRkeTdx
             N21iMU0rT2YzbFJBSDNPVjRNR1lzMFYvRmgwCkIvbUNLMTF0aUVUM0c5QUhxQTgv
@@ -28,7 +32,8 @@ sops:
             czd2ejBPYVdsMnBmZ2p1ZTl5MHVjR0kKlboEF59wZeVgmLnbD/X6YSwMGEYmmn6i
             jiWzBN3ZSsFz+BeFbed83pQu252wsiONXSHbXVB5P4qXT3Cr/kBwsQ==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2026-05-17T22:06:46Z"
-    mac: ENC[AES256_GCM,data:RoiKWbxdere8FbcJfHjSfIB2WXif0O2uWUewG/nX9RjDL85QSC+q+vik0vEXKQABG6ERqQg0CIrWGamRMQZUXPxH0dheCKgcO1TjAr/t1Ld01WcJTGrD0CrnFNjSUTjeuCd2WgBpMbjsBFXJGww37Xn9RFXiRJfv+YyUP+H/Uv8=,iv:taeaBjn1NI3Fbxj97QWlZn5FjhyKlaajlgq3P7u4sjo=,tag:PVsFiygXsGVOMuI1WF/UUQ==,type:str]
+          recipient: age1erem2t02nlncp53ehrjjyqcwd6uhfr2vrl6saf4c53esr99vv9ms2wgpw0
     encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-07-10T20:45:33Z"
+    mac: ENC[AES256_GCM,data:5++XbkryWGK3jtU22tKswJxFLZPIRJXEM2HpmoPuooIGG2b+v9LVwvujr93aBBI2q2Mhfe47sShjWhScmO39Fcc6jHJCqRRnb9PC8tDxVMRRt/Q2L5vytJaUZD/rujHlUaZetnjC1doS7pX2it6P5J4/qh47U8uGAAPRXhhDjz8=,iv:f2cBqRG8dv6NnuvEn1vV29DcF9Ae6gaffedBaDJtzjw=,tag:jumXJ3l8PMi82mQF5g+Bwg==,type:str]
     version: 3.10.1
