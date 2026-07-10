@@ -64,6 +64,35 @@ The `imdb-clone-rustfs-init` container creates the `imdb-clone` bucket and makes
 
 ## Run Backend
 
+### Configure local social login
+
+Create separate development OAuth applications in Google and GitHub, then copy the ignored local
+credentials file:
+
+```bash
+cp .env.example .env.local
+```
+
+Replace all four values in `.env.local`. The default `dev,local-secrets` Spring profiles import this
+file when the backend is started from the repository root. Environment variables with the same names
+still take precedence. Tests activate only the `dev` profile and use inert test credentials, so local
+secrets never affect automated test results.
+
+Use these provider settings:
+
+| Provider | Setting | Local value |
+| --- | --- | --- |
+| GitHub | Homepage URL | `http://localhost:3000` |
+| GitHub | Authorization callback URL | `http://localhost:3000/login/oauth2/code/github` |
+| Google | Application type | Web application |
+| Google | Authorized JavaScript origin | `http://localhost:3000` |
+| Google | Authorized redirect URI | `http://localhost:3000/login/oauth2/code/google` |
+
+Keep GitHub device flow disabled; this app uses the browser-based authorization-code flow. If the
+Google consent screen is in testing mode, add the developers who need local access as test users.
+Port `3000` is intentional: OAuth starts on the Vite origin and its `/oauth2` and `/login/oauth2`
+routes are proxied to the backend.
+
 Start the backend after local services are running:
 
 ```bash
