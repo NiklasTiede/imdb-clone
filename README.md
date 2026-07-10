@@ -230,6 +230,7 @@ Detailed workflow docs:
 - [Development Guide](./docs/development.md) for local setup, env vars, smoke checks, and troubleshooting.
 - [Agentic Engineering](./docs/agents/README.md) for agent workflow, task templates, verification, and review.
 - [Frontend Design System](./docs/design.md) for theme tokens, shared layout primitives, and UI consistency.
+- [Product Roadmap](./docs/product-roadmap.md) for the long-term movie detail and discovery vision.
 - [Agent Fast-Start](./AGENTS.md) for repo terminology, ownership, safety rules, and definition of done.
 
 Useful commands from the repository root:
