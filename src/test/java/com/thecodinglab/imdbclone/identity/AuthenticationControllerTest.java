@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import jakarta.servlet.http.Cookie;
+import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -205,7 +206,7 @@ class AuthenticationControllerTest extends BaseContainers {
   }
 
   @Test
-  void logout_deletesServerSession() throws Exception {
+  void logout_deletesServerSessionAndRotatesCsrfToken() throws Exception {
     var request = new LoginRequest("test_user_one", "Encrypted!Pa55worD");
     MvcResult login =
         mockMvc
@@ -221,9 +222,20 @@ class AuthenticationControllerTest extends BaseContainers {
     Cookie session = login.getResponse().getCookie("SESSION");
     assertThat(session).isNotNull();
 
-    mockMvc
-        .perform(post("/api/auth/logout").with(csrf()).cookie(session))
-        .andExpect(status().isOk());
+    MvcResult logout =
+        mockMvc
+            .perform(post("/api/auth/logout").with(csrf()).cookie(session))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    Cookie csrfToken =
+        Arrays.stream(logout.getResponse().getCookies())
+            .filter(cookie -> "XSRF-TOKEN".equals(cookie.getName()))
+            .filter(cookie -> !cookie.getValue().isBlank())
+            .findFirst()
+            .orElse(null);
+    assertThat(csrfToken).isNotNull();
+    assertThat(csrfToken.getValue()).isNotBlank();
 
     assertThat(jdbcTemplate.queryForObject("select count(*) from spring_session", Long.class))
         .isZero();

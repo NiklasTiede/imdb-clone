@@ -9,7 +9,6 @@ import com.thecodinglab.imdbclone.identity.internal.security.webauthn.AuditingUs
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -21,7 +20,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -58,9 +56,11 @@ public class WebSecurityConfig {
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+
     http.csrf(
             csrf ->
-                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                csrf.csrfTokenRepository(csrfTokenRepository)
                     .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
                     .ignoringRequestMatchers("/api/movie/get-movies", "/api/search/movies"))
         .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
@@ -74,7 +74,7 @@ public class WebSecurityConfig {
                     .logoutUrl("/api/auth/logout")
                     .deleteCookies("SESSION")
                     .logoutSuccessHandler(
-                        new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
+                        new CsrfTokenRefreshingLogoutSuccessHandler(csrfTokenRepository))
                     .permitAll())
         .authorizeHttpRequests(
             ar ->
