@@ -146,6 +146,7 @@ test("uses a broad backdrop-led desktop composition", async ({ page }) => {
     .boundingBox();
   const synopsisBounds = await page.getByTestId("movie-synopsis").boundingBox();
   const trailerBounds = await page.getByTestId("movie-trailer").boundingBox();
+  const commentsBounds = await page.getByTestId("movie-comments").boundingBox();
   const synopsisTextBounds = await page
     .getByText(shawshank.description)
     .boundingBox();
@@ -193,9 +194,12 @@ test("uses a broad backdrop-led desktop composition", async ({ page }) => {
     Math.abs((synopsisTextBounds?.width ?? 0) - (synopsisBounds?.width ?? 0)),
   ).toBeLessThanOrEqual(1);
   expect(
-    (synopsisBounds?.y ?? 0) -
-      ((trailerBounds?.y ?? 0) + (trailerBounds?.height ?? 0)),
-  ).toBeLessThanOrEqual(24);
+    (trailerBounds?.y ?? 0) -
+      ((synopsisBounds?.y ?? 0) + (synopsisBounds?.height ?? 0)),
+  ).toBeGreaterThan(0);
+  expect(commentsBounds?.y ?? 0).toBeGreaterThan(
+    (trailerBounds?.y ?? 0) + (trailerBounds?.height ?? 0),
+  );
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     1440,
   );
@@ -217,6 +221,9 @@ test("uses a broad backdrop-led desktop composition", async ({ page }) => {
   const mediumTrailerBounds = await page
     .getByTestId("movie-trailer")
     .boundingBox();
+  const mediumSynopsisBounds = await page
+    .getByTestId("movie-synopsis")
+    .boundingBox();
   expect(
     Math.abs(
       (mediumPosterBounds?.y ?? 0) +
@@ -226,7 +233,7 @@ test("uses a broad backdrop-led desktop composition", async ({ page }) => {
   ).toBeLessThanOrEqual(1);
   expect(mediumTrailerBounds?.width ?? 0).toBeLessThanOrEqual(720);
   expect(mediumTrailerBounds?.y ?? 0).toBeGreaterThan(
-    (mediumPosterBounds?.y ?? 0) + (mediumPosterBounds?.height ?? 0),
+    (mediumSynopsisBounds?.y ?? 0) + (mediumSynopsisBounds?.height ?? 0),
   );
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     960,

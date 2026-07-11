@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router";
@@ -72,6 +72,7 @@ const movie: Movie = {
   backdropImageToken: "backdrop-token",
   rating: 8.8,
   ratingCount: 1240,
+  trailerYoutubeKey: "abcDEF123_-",
 };
 
 const makeQueryClient = () =>
@@ -178,13 +179,30 @@ describe("MovieDetailPage", () => {
     expect(
       screen.getByRole("heading", { name: "The Shawshank Redemption" }),
     ).toBeTruthy();
-    expect(screen.getByTestId("movie-backdrop").dataset.hasImage).toBe("true");
+    expect(
+      within(screen.getByTestId("movie-detail-hero")).getByTestId(
+        "movie-backdrop",
+      ).dataset.hasImage,
+    ).toBe("true");
     expect(screen.getByRole("heading", { name: "Synopsis" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Trailer" })).toBeTruthy();
     expect(screen.getByTestId("movie-comments").textContent).toContain(
       "Comments for movie 1",
     );
     expect(
       screen.getByText("Two imprisoned men bond over a number of years."),
+    ).toBeTruthy();
+
+    const synopsis = screen.getByTestId("movie-synopsis");
+    const trailer = screen.getByTestId("movie-trailer");
+    const comments = screen.getByTestId("movie-comments");
+    expect(
+      synopsis.compareDocumentPosition(trailer) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      trailer.compareDocumentPosition(comments) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 

@@ -21,8 +21,6 @@ import {
   getMovieMetaItems,
   getOriginalTitle,
 } from "../model/moviePresentation";
-import { getValidYouTubeVideoKey } from "../utils/youtubeTrailer";
-import MovieTrailer from "./MovieTrailer";
 import { COMMUNITY_BLUE, IMDB_GOLD, RatingPill } from "./RatingPill";
 
 type MovieHeroProps = {
@@ -52,8 +50,6 @@ export const MovieHero = ({
   const metaItems = getMovieMetaItems(movie);
   const originalTitle = getOriginalTitle(movie);
   const title = movie.primaryTitle?.trim() || "Untitled movie";
-  const trailerVideoKey = getValidYouTubeVideoKey(movie.trailerYoutubeKey);
-
   return (
     <Box
       component="section"
@@ -296,24 +292,6 @@ export const MovieHero = ({
           </Box>
         </Box>
       </Box>
-
-      {trailerVideoKey && (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mt: { xs: 2, md: 3 },
-            mx: { xs: 1.5, sm: 3, md: 4 },
-          }}
-        >
-          <MovieTrailer
-            backdropImageToken={movie.backdropImageToken}
-            movieTitle={title}
-            youtubeVideoKey={trailerVideoKey}
-            sx={{ maxWidth: 720 }}
-          />
-        </Box>
-      )}
     </Box>
   );
 };

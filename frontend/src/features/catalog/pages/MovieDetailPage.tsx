@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Skeleton from "@mui/material/Skeleton";
 import Snackbar from "@mui/material/Snackbar";
+import Typography from "@mui/material/Typography";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router";
@@ -20,8 +21,10 @@ import { MovieCommentsSection } from "../../engagement/comment";
 import { movieQueries } from "../api/movieQueries";
 import { MovieHero } from "../components/MovieHero";
 import MovieRatingDialog from "../components/MovieRatingDialog";
+import MovieTrailer from "../components/MovieTrailer";
 import Synopsis from "../components/Synopsis";
 import { shareMovie } from "../utils/shareMovie";
+import { getValidYouTubeVideoKey } from "../utils/youtubeTrailer";
 
 type PageFeedback = {
   message: string;
@@ -119,6 +122,8 @@ const MovieDetailPage = () => {
   const isBookmarked = Boolean(
     movie.id !== undefined && watchedMovieIds?.has(movie.id),
   );
+  const movieTitle = movie.primaryTitle?.trim() || "this movie";
+  const trailerVideoKey = getValidYouTubeVideoKey(movie.trailerYoutubeKey);
 
   const requestAuthentication = (action: "rate" | "watchlist") => {
     setAuthPrompt(
@@ -229,10 +234,37 @@ const MovieDetailPage = () => {
 
       <Synopsis text={movie.description} />
 
+      {trailerVideoKey && (
+        <Box
+          component="section"
+          aria-labelledby="movie-trailer-title"
+          sx={{
+            borderTop: "1px solid",
+            borderColor: "divider",
+            py: { xs: 3, md: 4 },
+          }}
+        >
+          <Box sx={{ maxWidth: 720, mx: "auto" }}>
+            <Typography
+              component="h2"
+              id="movie-trailer-title"
+              sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}
+            >
+              Trailer
+            </Typography>
+            <MovieTrailer
+              backdropImageToken={movie.backdropImageToken}
+              movieTitle={movieTitle}
+              youtubeVideoKey={trailerVideoKey}
+            />
+          </Box>
+        </Box>
+      )}
+
       {movie.id !== undefined && (
         <MovieCommentsSection
           movieId={movie.id}
-          movieTitle={movie.primaryTitle?.trim() || "this movie"}
+          movieTitle={movieTitle}
           onRequestSignIn={navigateToLogin}
         />
       )}

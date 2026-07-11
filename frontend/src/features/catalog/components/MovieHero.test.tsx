@@ -81,12 +81,12 @@ describe("MovieHero", () => {
     expect(screen.getByText("Original title: Die Verurteilten")).toBeTruthy();
   });
 
-  test("renders a trailer preview only for a valid stored key", () => {
+  test("keeps trailer content outside the hero", () => {
     renderHero({
       movie: { ...defaultMovie, trailerYoutubeKey: "abcDEF123_-" },
     });
 
-    expect(screen.getByRole("button", { name: "Play trailer" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Play trailer" })).toBeNull();
   });
 
   test("does not render empty metadata", () => {
