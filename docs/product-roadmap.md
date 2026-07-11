@@ -54,7 +54,8 @@ than a separate carousel implementation in each feature.
 - `MovieRecord` already exposes the primary and original titles, movie type, year range, runtime,
   genres, IMDb rating and count, community rating and count, description, poster and backdrop
   tokens, IMDb/TMDB IDs, and `trailerYoutubeKey`.
-- The current page renders the poster but does not use the available backdrop image or trailer.
+- The detail page now uses the available backdrop and a click-to-load trailer when a valid YouTube
+  key is present.
 - Rating and watchlist actions are already available.
 - The backend already exposes paginated comments by movie, plus authenticated create, update, and
   delete operations.
@@ -100,8 +101,8 @@ than a separate carousel implementation in each feature.
 
 Goal: turn the page into a broad, media-led movie destination instead of a compact summary panel.
 
-- Increase the responsive content width to the application's wider catalog scale while preserving
-  readable synopsis and comment line lengths.
+- Increase the responsive content width to the application's wider catalog scale, align synopsis
+  content to the hero frame, and preserve readable comment line lengths.
 - Recompose the page into unframed content bands for hero media, facts, trailer, community, and
   recommendations instead of nesting everything inside one card.
 - Use the stored backdrop image as a strong, wide first-viewport signal and retain a substantially
@@ -109,7 +110,7 @@ Goal: turn the page into a broad, media-led movie destination instead of a compa
   no backdrop is available.
 - Use a broad desktop hero grid for poster, identity, ratings, and actions. On mobile, deliberately
   stack or overlap these elements so the poster does not leave an empty upper-right region.
-- Keep the synopsis constrained to a readable measure even though the overall page is wider.
+- Let the synopsis use the full hero frame with comfortable typography and line height.
 - Replace the cramped inline ten-star control with a touch-friendly rating action or focused rating
   interaction, while continuing to show the current user rating clearly.
 - Surface more of the existing data:
@@ -119,7 +120,6 @@ Goal: turn the page into a broad, media-led movie destination instead of a compa
   - Runtime
   - Genres and adult classification
   - IMDb and community rating counts
-  - Links to the corresponding IMDb and TMDB records when IDs are available
 - Keep rating and watchlist actions prominent and usable on mobile.
 
 #### Trailer
@@ -443,7 +443,8 @@ after its user outcome and data requirements are clear.
    evaluation contracts with anonymous content-based results first.
 3. **Detail layout, backdrop, and existing metadata** - widen and restructure the page around the
    stored backdrop and poster without changing API contracts.
-4. **Trailer** - add the lazy, privacy-aware player and fallback behavior.
+4. **Trailer (delivered)** - lazy, privacy-enhanced playback with a local preview and responsive
+   desktop/mobile placement.
 5. **Movie comments** - expose author metadata and build list/create/edit/delete workflows.
 6. **Your comments** - make authored comments discoverable and manageable from the user area.
 7. **Search relevance tuning** - tune weighted fusion, lexical popularity, candidate retrieval, and

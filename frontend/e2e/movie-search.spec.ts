@@ -164,7 +164,7 @@ test("opens a movie detail page from search results", async ({ page }) => {
     page.getByRole("heading", { name: "Nightcrawler" }),
   ).toBeVisible();
   await expect(page.getByText("2014")).toBeVisible();
-  await expect(page.getByText("117 min")).toBeVisible();
+  await expect(page.getByText("1h 57m")).toBeVisible();
   await expect(page.getByText("Crime", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("IMDb rating")).toBeVisible();
   await expect(page.getByText("7.8")).toBeVisible();
@@ -172,7 +172,7 @@ test("opens a movie detail page from search results", async ({ page }) => {
   await expect(
     page.getByText("A driven freelancer enters the world of crime journalism."),
   ).toBeVisible();
-  await expect(page.getByAltText("movie poster")).toHaveAttribute(
+  await expect(page.getByAltText("Nightcrawler poster")).toHaveAttribute(
     "src",
     /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_600x900\.jpg/,
   );

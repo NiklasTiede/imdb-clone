@@ -42,9 +42,10 @@ python3 infrastructure/movie-seed/enrich_movie_seed.py \
   --log-every 100
 ```
 
-The enrichment step caches one TMDB response per IMDb ID under the cache
-directory. Reruns reuse cached responses and only call TMDB for missing cache
-files.
+The enrichment step caches the TMDB lookup response per IMDb ID and the movie
+details response per TMDB ID. The details request includes videos so the seed
+can select a YouTube trailer. Reruns reuse cached responses and only call TMDB
+for missing cache files.
 
 Rows without a TMDB movie result or without a poster are skipped. Backdrops and
 trailers are optional.

@@ -1,171 +1,286 @@
-import { useState } from "react";
-import { Box, Button, Chip, Rating, Stack, Typography } from "@mui/material";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import CheckIcon from "@mui/icons-material/Check";
 import IosShareIcon from "@mui/icons-material/IosShare";
-import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import {
+  BackdropImage,
+  ObjectStorageImageSize,
+  PosterImage,
+} from "../../../shared/media";
 import { movieColors } from "../../../theme";
 import type { Movie } from "../model/movie";
-import { MovieType } from "../model/movie";
+import {
+  getMovieGenreLabels,
+  getMovieMetaItems,
+  getOriginalTitle,
+} from "../model/moviePresentation";
+import { getValidYouTubeVideoKey } from "../utils/youtubeTrailer";
+import MovieTrailer from "./MovieTrailer";
 import { COMMUNITY_BLUE, IMDB_GOLD, RatingPill } from "./RatingPill";
 
-const humanizeEnum = (value: string): string =>
-  value
-    .toLowerCase()
-    .split("_")
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-
-const SERIES_TYPES = new Set<string>([
-  MovieType.TvSeries,
-  MovieType.TvMiniSeries,
-]);
-
 type MovieHeroProps = {
-  movie: Movie;
   isBookmarked: boolean;
-  onToggleBookmark: () => void;
   isBookmarkLoading?: boolean;
+  isRatingLoading?: boolean;
+  isShareDisabled?: boolean;
+  movie: Movie;
+  onOpenRating: () => void;
+  onShare: () => void;
+  onToggleBookmark: () => void;
   userRating: number | null;
-  onRate: (score: number) => void;
-};
-
-const formatYearRange = (movie: Movie): string => {
-  if (
-    movie.movieType &&
-    SERIES_TYPES.has(movie.movieType) &&
-    movie.endYear &&
-    movie.startYear
-  ) {
-    return `${movie.startYear} – ${movie.endYear}`;
-  }
-  return movie.startYear ? String(movie.startYear) : "";
 };
 
 export const MovieHero = ({
-  movie,
   isBookmarked,
-  onToggleBookmark,
   isBookmarkLoading = false,
+  isRatingLoading = false,
+  isShareDisabled = false,
+  movie,
+  onOpenRating,
+  onShare,
+  onToggleBookmark,
   userRating,
-  onRate,
 }: MovieHeroProps) => {
-  const showOriginalTitle =
-    movie.originalTitle &&
-    movie.primaryTitle &&
-    movie.originalTitle !== movie.primaryTitle;
-
-  const yearLabel = formatYearRange(movie);
-  const typeLabel = movie.movieType
-    ? humanizeEnum(String(movie.movieType))
-    : "";
-  const runtimeLabel =
-    movie.runtimeMinutes != null ? `${movie.runtimeMinutes} min` : null;
+  const genreLabels = getMovieGenreLabels(movie);
+  const metaItems = getMovieMetaItems(movie);
+  const originalTitle = getOriginalTitle(movie);
+  const title = movie.primaryTitle?.trim() || "Untitled movie";
+  const trailerVideoKey = getValidYouTubeVideoKey(movie.trailerYoutubeKey);
 
   return (
     <Box
-      sx={{
-        position: "relative",
-        px: { xs: 2, sm: 3 },
-        py: { xs: 3, sm: 3.5 },
-        backgroundColor: movieColors.surface,
-        color: "common.white",
-      }}
+      component="section"
+      data-testid="movie-detail-hero"
+      aria-labelledby="movie-detail-title"
+      sx={{ color: "common.white", pb: { xs: 1, md: 2 } }}
     >
       <Box
-        aria-hidden
         sx={{
-          position: "absolute",
-          inset: 0,
-          height: { xs: 160, sm: 200 },
-          background: `linear-gradient(135deg, rgba(245,197,24,0.08) 0%, rgba(77,171,247,0.08) 44%, ${movieColors.backdrop} 100%)`,
-          zIndex: 0,
+          borderRadius: 1,
+          overflow: "hidden",
+          position: "relative",
         }}
-      />
-
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        spacing={{ xs: 2, md: 2.5 }}
-        sx={{ position: "relative", zIndex: 1 }}
       >
-        <Box
+        <BackdropImage
+          backdropImageToken={movie.backdropImageToken}
           sx={{
-            width: { xs: 130, md: 150 },
-            flexShrink: 0,
-            mx: { xs: "auto", md: 0 },
+            height: { xs: 220, sm: 300, md: 430 },
+            maskImage:
+              "linear-gradient(to bottom, black 0%, black 48%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 0%, black 48%, transparent 100%)",
           }}
-        >
+        />
+        <Box
+          aria-hidden
+          sx={{
+            background: {
+              xs: `linear-gradient(180deg, rgba(7,11,18,0.08) 0%, rgba(7,11,18,0.5) 46%, ${movieColors.backdrop} 100%)`,
+              md: `linear-gradient(90deg, rgba(7,11,18,0.22) 0%, rgba(7,11,18,0.58) 52%, rgba(7,11,18,0.38) 100%), linear-gradient(180deg, rgba(7,11,18,0.04) 18%, rgba(7,11,18,0.66) 58%, ${movieColors.backdrop} 100%)`,
+            },
+            inset: 0,
+            position: "absolute",
+          }}
+        />
+      </Box>
+
+      <Box
+        sx={{
+          display: "grid",
+          gap: { xs: 2, sm: 2.5, md: 2 },
+          gridTemplateAreas: {
+            xs: '"poster identity" "actions actions" "ratings ratings"',
+            md: '"poster content"',
+          },
+          gridTemplateColumns: {
+            xs: "104px minmax(0, 1fr)",
+            sm: "140px minmax(0, 1fr)",
+            md: "220px minmax(0, 1fr)",
+          },
+          gridTemplateRows: { md: "330px" },
+          height: { md: 330 },
+          mx: { xs: 1.5, sm: 3, md: 4 },
+          mt: { xs: -7, sm: -11, md: -24 },
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <Box sx={{ gridArea: "poster", minWidth: 0 }}>
           <PosterImage
+            alt={`${title} poster`}
             posterImageToken={movie.posterImageToken}
             size={ObjectStorageImageSize.Large}
             sx={{
-              width: "100%",
               aspectRatio: "2 / 3",
-              borderRadius: 1,
-              border: "1px solid rgba(255,255,255,0.05)",
               backgroundColor: movieColors.surfaceInset,
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 1,
+              boxShadow: "0 18px 42px rgba(0,0,0,0.42)",
+              height: "auto",
+              width: "100%",
             }}
           />
         </Box>
 
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography
-            component="h1"
+        <Box
+          sx={{
+            display: { xs: "contents", md: "flex" },
+            flexDirection: { md: "column" },
+            gap: { md: 1.5 },
+            gridArea: { md: "content" },
+            justifyContent: { md: "flex-end" },
+            minWidth: 0,
+          }}
+        >
+          <Stack
+            data-testid="movie-detail-identity"
+            spacing={{ xs: 1, sm: 1.25 }}
             sx={{
-              fontSize: { xs: 22, sm: 24 },
-              fontWeight: 500,
-              lineHeight: 1.2,
-              mb: 0.25,
+              alignSelf: { xs: "end", md: "stretch" },
+              gridArea: "identity",
+              minWidth: 0,
             }}
           >
-            {movie.primaryTitle}
-          </Typography>
-          {showOriginalTitle && (
-            <Typography
-              sx={{
-                color: "rgba(255,255,255,0.45)",
-                fontSize: 12,
-                fontStyle: "italic",
-                mb: 1.5,
-              }}
-            >
-              Original: {movie.originalTitle}
-            </Typography>
-          )}
-
-          <MetaRow
-            year={yearLabel}
-            type={typeLabel}
-            runtime={runtimeLabel}
-            adult={movie.adult ?? false}
-          />
-
-          <Stack
-            direction="row"
-            spacing={0.75}
-            useFlexGap
-            sx={{ flexWrap: "wrap", mb: 1.75 }}
-          >
-            {movie.movieGenre &&
-              Array.from(movie.movieGenre).map((genre) => (
-                <Chip
-                  key={String(genre)}
-                  label={humanizeEnum(String(genre))}
-                  size="small"
+            <Box>
+              <Typography
+                id="movie-detail-title"
+                component="h1"
+                sx={{
+                  fontSize: { xs: 24, sm: 30, md: 38 },
+                  fontWeight: 600,
+                  lineHeight: 1.12,
+                  overflowWrap: "anywhere",
+                  textShadow: "0 2px 16px rgba(0,0,0,0.72)",
+                }}
+              >
+                {title}
+              </Typography>
+              {originalTitle && (
+                <Typography
                   sx={{
-                    backgroundColor: movieColors.surfaceElevated,
-                    color: "rgba(255,255,255,0.85)",
-                    fontSize: 12,
-                    height: 24,
+                    color: "rgba(255,255,255,0.65)",
+                    fontSize: { xs: 11, sm: 12 },
+                    mt: 0.5,
                   }}
-                />
-              ))}
+                >
+                  Original title: {originalTitle}
+                </Typography>
+              )}
+            </Box>
+
+            <MetaRow items={metaItems} />
+
+            {genreLabels.length > 0 && (
+              <Stack
+                direction="row"
+                spacing={0.75}
+                useFlexGap
+                sx={{ flexWrap: "wrap" }}
+              >
+                {genreLabels.map((genre) => (
+                  <Chip
+                    key={genre}
+                    label={genre}
+                    size="small"
+                    sx={{
+                      backgroundColor: "rgba(23,33,50,0.88)",
+                      color: "rgba(255,255,255,0.88)",
+                      fontSize: 11,
+                      height: 24,
+                    }}
+                  />
+                ))}
+              </Stack>
+            )}
           </Stack>
 
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+          <Stack
+            data-testid="movie-detail-actions"
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{
+              alignItems: "center",
+              flexWrap: "wrap",
+              gridArea: "actions",
+            }}
+          >
+            <Button
+              variant="contained"
+              startIcon={isBookmarked ? <CheckIcon /> : <BookmarkBorderIcon />}
+              onClick={onToggleBookmark}
+              disabled={isBookmarkLoading}
+              sx={{
+                color: isBookmarked ? "common.white" : movieColors.brandInk,
+                fontWeight: 700,
+                height: 40,
+                textTransform: "none",
+                ...(isBookmarked && {
+                  backgroundColor: "success.main",
+                  "&:hover": { backgroundColor: "success.dark" },
+                }),
+              }}
+            >
+              {isBookmarked ? "In watchlist" : "Add to watchlist"}
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<StarBorderIcon />}
+              onClick={onOpenRating}
+              disabled={isRatingLoading}
+              sx={{
+                borderColor: "rgba(255,255,255,0.24)",
+                color: "common.white",
+                height: 40,
+                textTransform: "none",
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.06)",
+                  borderColor: "rgba(255,255,255,0.44)",
+                },
+              }}
+            >
+              {userRating === null
+                ? "Rate movie"
+                : `Your rating: ${userRating}`}
+            </Button>
+            <Tooltip title="Share movie">
+              <span>
+                <IconButton
+                  aria-label="Share movie"
+                  onClick={onShare}
+                  disabled={isShareDisabled}
+                  sx={{
+                    border: "1px solid rgba(255,255,255,0.24)",
+                    borderRadius: 1,
+                    color: "common.white",
+                    height: 40,
+                    width: 40,
+                  }}
+                >
+                  <IosShareIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Stack>
+
+          <Box
+            data-testid="movie-detail-ratings"
+            sx={{
+              display: "grid",
+              gap: 1,
+              gridArea: "ratings",
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+              maxWidth: { md: 560 },
+              width: "100%",
+            }}
+          >
             <RatingPill
               label="IMDb rating"
               score={movie.imdbRating}
@@ -178,83 +293,46 @@ export const MovieHero = ({
               count={movie.ratingCount}
               starColor={COMMUNITY_BLUE}
             />
-          </Stack>
+          </Box>
         </Box>
-      </Stack>
+      </Box>
 
-      <Stack
-        direction="row"
-        spacing={1.25}
-        useFlexGap
-        sx={{
-          alignItems: "center",
-          flexWrap: "wrap",
-          mt: 2.5,
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        <Button
-          variant="contained"
-          startIcon={isBookmarked ? <CheckIcon /> : <BookmarkBorderIcon />}
-          onClick={onToggleBookmark}
-          disabled={isBookmarkLoading}
+      {trailerVideoKey && (
+        <Box
           sx={{
-            textTransform: "none",
-            fontWeight: 700,
-            color: isBookmarked ? "common.white" : movieColors.brandInk,
-            backgroundColor: isBookmarked ? "success.main" : movieColors.brand,
-            "&:hover": {
-              backgroundColor: isBookmarked ? "success.dark" : movieColors.gold,
-            },
+            display: "flex",
+            justifyContent: "center",
+            mt: { xs: 2, md: 3 },
+            mx: { xs: 1.5, sm: 3, md: 4 },
           }}
         >
-          {isBookmarked ? "In your watchlist" : "Add to watchlist"}
-        </Button>
-
-        <UserRatingStars value={userRating} onRate={onRate} />
-
-        <Button
-          variant="outlined"
-          startIcon={<IosShareIcon />}
-          sx={{
-            textTransform: "none",
-            color: "rgba(255,255,255,0.85)",
-            borderColor: "rgba(255,255,255,0.2)",
-            "&:hover": {
-              borderColor: "rgba(255,255,255,0.42)",
-              backgroundColor: "rgba(255,255,255,0.06)",
-            },
-          }}
-        >
-          Share
-        </Button>
-      </Stack>
+          <MovieTrailer
+            backdropImageToken={movie.backdropImageToken}
+            movieTitle={title}
+            youtubeVideoKey={trailerVideoKey}
+            sx={{ maxWidth: 720 }}
+          />
+        </Box>
+      )}
     </Box>
   );
 };
 
-type MetaRowProps = {
-  year: string;
-  type: string;
-  runtime: string | null;
-  adult: boolean;
-};
+const MetaRow = ({ items }: { items: string[] }) => {
+  if (items.length === 0) {
+    return null;
+  }
 
-const MetaRow = ({ year, type, runtime, adult }: MetaRowProps) => {
-  const items = [year, type, runtime, adult ? "18+" : null].filter(
-    (item): item is string => Boolean(item),
-  );
   return (
     <Stack
       direction="row"
       spacing={1}
       useFlexGap
       sx={{
+        alignItems: "center",
+        color: "rgba(255,255,255,0.76)",
         flexWrap: "wrap",
-        color: "rgba(255,255,255,0.75)",
         fontSize: 13,
-        mb: 1.5,
       }}
     >
       {items.map((item, index) => (
@@ -265,81 +343,13 @@ const MetaRow = ({ year, type, runtime, adult }: MetaRowProps) => {
           sx={{ alignItems: "center" }}
         >
           {index > 0 && (
-            <Box component="span" sx={{ color: "rgba(255,255,255,0.3)" }}>
+            <Box component="span" sx={{ color: "rgba(255,255,255,0.35)" }}>
               ·
             </Box>
           )}
           <Box component="span">{item}</Box>
         </Stack>
       ))}
-    </Stack>
-  );
-};
-
-type UserRatingStarsProps = {
-  value: number | null;
-  onRate: (score: number) => void;
-};
-
-const UserRatingStars = ({ value, onRate }: UserRatingStarsProps) => {
-  const [hover, setHover] = useState<number>(-1);
-
-  return (
-    <Stack
-      direction={{ xs: "column", sm: "row" }}
-      spacing={{ xs: 0.5, sm: 0.75 }}
-      data-testid="user-rating-stars"
-      sx={{
-        alignItems: { xs: "flex-start", sm: "center" },
-        backgroundColor: movieColors.surfaceElevated,
-        border: "1px solid rgba(255,255,255,0.06)",
-        borderRadius: 1,
-        px: 1.5,
-        py: { xs: 0.75, sm: 0.5 },
-        maxWidth: "100%",
-      }}
-    >
-      <Typography
-        sx={{
-          color: "rgba(255,255,255,0.72)",
-          fontSize: 12,
-          whiteSpace: "nowrap",
-        }}
-      >
-        Your rating
-      </Typography>
-      <Rating
-        max={10}
-        value={value}
-        onChange={(event, newValue) => {
-          const fallbackValue = Number(
-            (event.target as HTMLInputElement).value,
-          );
-          const nextValue =
-            typeof newValue === "number" && Number.isFinite(newValue)
-              ? newValue
-              : fallbackValue;
-
-          if (Number.isFinite(nextValue)) {
-            onRate(nextValue);
-          }
-        }}
-        onChangeActive={(_event, newHover) => setHover(newHover)}
-        icon={<StarIcon fontSize="inherit" />}
-        emptyIcon={<StarBorderIcon fontSize="inherit" />}
-        size="small"
-        sx={{
-          color: IMDB_GOLD,
-          "& .MuiRating-iconEmpty": {
-            color: "rgba(255,255,255,0.35)",
-          },
-        }}
-      />
-      {hover !== -1 && (
-        <Typography sx={{ color: "rgba(255,255,255,0.72)", fontSize: 12 }}>
-          {hover}/10
-        </Typography>
-      )}
     </Stack>
   );
 };

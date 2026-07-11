@@ -4,11 +4,13 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 from enrich_movie_seed import (
     EnrichmentProgress,
+    TmdbClient,
     enrich_candidates,
     stable_image_token,
     write_enriched_movies,
@@ -19,40 +21,62 @@ from enrich_movie_seed import (
 class FakeTmdbClient:
     def __init__(self):
         self.calls = []
+        self.detail_calls = []
 
     def find_by_imdb_id(self, imdb_id: str) -> dict:
         self.calls.append(imdb_id)
+        return {"movie_results": [{"id": 242582}]}
+
+    def get_movie_details(self, movie_id: int) -> dict:
+        self.detail_calls.append(movie_id)
         return {
-            "movie_results": [
-                {
-                    "id": 242582,
-                    "overview": "A driven crime journalist crosses lines.",
-                    "poster_path": "/poster.jpg",
-                    "backdrop_path": "/backdrop.jpg",
-                    "videos": {
-                        "results": [
-                            {
-                                "key": "behindTheScenes",
-                                "site": "YouTube",
-                                "type": "Behind the Scenes",
-                                "official": True,
-                                "iso_639_1": "en",
-                            },
-                            {
-                                "key": "officialTrailer",
-                                "site": "YouTube",
-                                "type": "Trailer",
-                                "official": True,
-                                "iso_639_1": "en",
-                            },
-                        ]
+            "id": movie_id,
+            "overview": "A driven crime journalist crosses lines.",
+            "poster_path": "/poster.jpg",
+            "backdrop_path": "/backdrop.jpg",
+            "videos": {
+                "results": [
+                    {
+                        "key": "behindTheScenes",
+                        "site": "YouTube",
+                        "type": "Behind the Scenes",
+                        "official": True,
+                        "iso_639_1": "en",
                     },
-                }
-            ]
+                    {
+                        "key": "officialTrailer",
+                        "site": "YouTube",
+                        "type": "Trailer",
+                        "official": True,
+                        "iso_639_1": "en",
+                    },
+                ]
+            },
         }
 
 
 class EnrichMovieSeedTest(unittest.TestCase):
+    def test_tmdb_client_fetches_details_with_appended_videos(self):
+        class RecordingTmdbClient(TmdbClient):
+            def __init__(self):
+                super().__init__(api_key="test-key", cache_dir=Path("unused"))
+                self.urls = []
+
+            def fetch_json(self, url: str, resource_name: str) -> dict:
+                self.urls.append(url)
+                return {}
+
+        client = RecordingTmdbClient()
+
+        client.fetch_find_result("tt2872718")
+        client.fetch_movie_details(242582)
+
+        find_url, details_url = map(urlparse, client.urls)
+        self.assertEqual("/3/find/tt2872718", find_url.path)
+        self.assertNotIn("append_to_response", parse_qs(find_url.query))
+        self.assertEqual("/3/movie/242582", details_url.path)
+        self.assertEqual(["videos"], parse_qs(details_url.query)["append_to_response"])
+
     def test_stable_image_token_is_repeatable_for_imdb_id(self):
         self.assertEqual(stable_image_token("tt2872718"), stable_image_token("tt2872718"))
         self.assertEqual(30, len(stable_image_token("tt2872718")))
@@ -92,8 +116,13 @@ class EnrichMovieSeedTest(unittest.TestCase):
         class Client(FakeTmdbClient):
             def find_by_imdb_id(self, imdb_id: str) -> dict:
                 if imdb_id == "tt0000001":
-                    return {"movie_results": [{"id": 1, "overview": "", "poster_path": None}]}
+                    return {"movie_results": [{"id": 1}]}
                 return super().find_by_imdb_id(imdb_id)
+
+            def get_movie_details(self, movie_id: int) -> dict:
+                if movie_id == 1:
+                    return {"id": 1, "overview": "", "poster_path": None}
+                return super().get_movie_details(movie_id)
 
         enriched = enrich_candidates(rows, Client())
 
@@ -147,30 +176,23 @@ class EnrichMovieSeedTest(unittest.TestCase):
     def test_enrichment_uses_cached_tmdb_response(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             cache_dir = Path(tmp_dir)
-            cache_file = cache_dir / "tt2872718.json"
-            cache_file.write_text(
+            (cache_dir / "tt2872718.json").write_text(
+                json.dumps({"movie_results": [{"id": 1}]}), encoding="utf-8"
+            )
+            (cache_dir / "movie-1.json").write_text(
                 json.dumps(
                     {
-                        "movie_results": [
-                            {
-                                "id": 1,
-                                "overview": "Cached overview",
-                                "poster_path": "/cached.jpg",
-                                "backdrop_path": None,
-                                "videos": {"results": []},
-                            }
-                        ]
+                        "id": 1,
+                        "overview": "Cached overview",
+                        "poster_path": "/cached.jpg",
+                        "backdrop_path": None,
+                        "videos": {"results": []},
                     }
                 ),
                 encoding="utf-8",
             )
 
-            class CacheClient(FakeTmdbClient):
-                def find_by_imdb_id(self, imdb_id: str) -> dict:
-                    self.calls.append(imdb_id)
-                    return json.loads((cache_dir / f"{imdb_id}.json").read_text())
-
-            client = CacheClient()
+            client = TmdbClient(api_key="unused", cache_dir=cache_dir)
             rows = [
                 {
                     "id": "2872718",
@@ -191,7 +213,7 @@ class EnrichMovieSeedTest(unittest.TestCase):
             enriched = enrich_candidates(rows, client)
 
         self.assertEqual("/cached.jpg", enriched[0]["poster_path"])
-        self.assertEqual(["tt2872718"], client.calls)
+        self.assertEqual("cache", client.last_status)
 
     def test_enrichment_progress_counts_outcomes(self):
         rows = [
@@ -244,8 +266,13 @@ class EnrichMovieSeedTest(unittest.TestCase):
                 if imdb_id == "tt0000001":
                     return {"movie_results": []}
                 if imdb_id == "tt0000002":
-                    return {"movie_results": [{"id": 2, "poster_path": None}]}
+                    return {"movie_results": [{"id": 2}]}
                 return super().find_by_imdb_id(imdb_id)
+
+            def get_movie_details(self, movie_id: int) -> dict:
+                if movie_id == 2:
+                    return {"id": 2, "poster_path": None}
+                return super().get_movie_details(movie_id)
 
         progress = EnrichmentProgress(total=len(rows), log_every=2)
         messages = []

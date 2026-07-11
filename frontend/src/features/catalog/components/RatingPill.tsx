@@ -15,11 +15,12 @@ type RatingPillProps = {
 };
 
 const containerSx: SxProps<Theme> = {
-  backgroundColor: movieColors.surfaceElevated,
-  border: "1px solid rgba(255,255,255,0.06)",
-  borderRadius: 1.5,
+  backgroundColor: "rgba(23,33,50,0.86)",
+  border: "1px solid rgba(255,255,255,0.1)",
+  backdropFilter: "blur(10px)",
+  borderRadius: 1,
   px: 1.5,
-  py: 1,
+  py: 1.25,
   flex: 1,
   minWidth: 0,
 };
@@ -39,7 +40,7 @@ export const RatingPill = ({
       <Typography
         sx={{
           fontSize: 11,
-          color: "rgba(255,255,255,0.5)",
+          color: "rgba(255,255,255,0.62)",
           letterSpacing: 0,
           mb: 0.4,
         }}
@@ -55,7 +56,7 @@ export const RatingPill = ({
         >
           ★
         </Box>
-        <Typography sx={{ fontWeight: 500, fontSize: 16, lineHeight: 1.2 }}>
+        <Typography sx={{ fontWeight: 600, fontSize: 18, lineHeight: 1.2 }}>
           {formattedScore}
         </Typography>
         <Typography

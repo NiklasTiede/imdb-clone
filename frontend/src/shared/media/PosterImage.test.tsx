@@ -21,5 +21,21 @@ describe("PosterImage", () => {
     expect(image.src).toContain(
       "/imdb-clone/movies/posters/poster-token_size_600x900.jpg",
     );
+
+    fireEvent.error(image);
+
+    expect(image.src).not.toContain("poster-token");
+  });
+
+  it("uses a movie-specific accessible label", () => {
+    render(
+      <PosterImage
+        alt="Arrival poster"
+        posterImageToken="arrival-token"
+        size={ObjectStorageImageSize.Large}
+      />,
+    );
+
+    expect(screen.getByAltText("Arrival poster")).toBeTruthy();
   });
 });

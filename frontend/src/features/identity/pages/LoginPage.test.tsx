@@ -7,7 +7,7 @@ import { MemoryRouter } from "react-router";
 
 import * as identityMutations from "../api/identityMutations";
 import { authSession } from "../../../shared/auth";
-import LoginPage from "./LoginPage";
+import LoginPage, { getPostLoginDestination } from "./LoginPage";
 
 vi.mock("../api/identityMutations", () => ({
   authenticateAccount: vi.fn(),
@@ -63,6 +63,17 @@ describe("LoginPage", () => {
     ).toBeTruthy();
     expect(screen.getByText("Welcome back.")).toBeTruthy();
     expect(screen.queryByText(/Need an account/i)).toBeNull();
+  });
+
+  it("returns to a safe internal destination after sign-in", () => {
+    expect(
+      getPostLoginDestination({
+        from: { pathname: "/movie", search: "?id=42" },
+      }),
+    ).toBe("/movie?id=42");
+    expect(
+      getPostLoginDestination({ from: { pathname: "//example.com" } }),
+    ).toBe("/");
   });
 
   it("toggles password visibility from the field action", async () => {

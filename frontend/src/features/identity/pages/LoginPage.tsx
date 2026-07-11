@@ -42,6 +42,15 @@ interface FormInputs {
   password: string;
 }
 
+type LoginLocationState = {
+  from?: {
+    hash?: string;
+    pathname?: string;
+    search?: string;
+  };
+  registrationMessage?: string;
+};
+
 const schema = zod.object({
   usernameOrEmail: zod.string().min(1, "Email or username is required"),
   password: zod.string().min(1, "Password is required"),
@@ -54,9 +63,8 @@ const LoginPage = () => {
   const isLoggedIn = useAuthSession();
   const [showPassword, setShowPassword] = useState(false);
   const [feedback, setFeedback] = useState<AuthFeedback | null>(null);
-  const registrationMessage = (
-    location.state as { registrationMessage?: string } | null
-  )?.registrationMessage;
+  const locationState = location.state as LoginLocationState | null;
+  const registrationMessage = locationState?.registrationMessage;
   const socialFeedback =
     searchParams.get("error") === "social" ? socialLoginFailure : null;
 
@@ -65,7 +73,7 @@ const LoginPage = () => {
     onMutate: () => setFeedback(null),
     onSuccess: (session) => {
       authSession.setSession(session);
-      navigateTo("/");
+      navigateTo(getPostLoginDestination(locationState));
     },
     onError: (error: unknown) => {
       setFeedback(getPasswordLoginFeedback(error));
@@ -91,9 +99,9 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigateTo("/");
+      navigateTo(getPostLoginDestination(locationState));
     }
-  }, [isLoggedIn, navigateTo]);
+  }, [isLoggedIn, locationState, navigateTo]);
 
   return (
     <AuthPageFrame variant="login">
@@ -233,6 +241,18 @@ const LoginPage = () => {
       </Box>
     </AuthPageFrame>
   );
+};
+
+export const getPostLoginDestination = (
+  state: LoginLocationState | null,
+): string => {
+  const from = state?.from;
+  const pathname = from?.pathname;
+  if (!pathname?.startsWith("/") || pathname.startsWith("//")) {
+    return "/";
+  }
+
+  return `${pathname}${from?.search ?? ""}${from?.hash ?? ""}`;
 };
 
 export default LoginPage;

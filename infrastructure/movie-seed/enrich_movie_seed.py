@@ -134,6 +134,11 @@ def enrich_candidate(
         if progress:
             progress.skipped_no_match += 1
         return None
+
+    movie = tmdb_client.get_movie_details(movie["id"])
+    if progress and getattr(tmdb_client, "last_status", None):
+        progress.record_client_status(tmdb_client.last_status)
+
     if not movie.get("poster_path"):
         if progress:
             progress.skipped_no_poster += 1
@@ -203,22 +208,48 @@ class TmdbClient:
             self.last_status = "cache"
             return json.loads(cache_path.read_text(encoding="utf-8"))
 
-        response = self.fetch_from_tmdb(imdb_id)
+        response = self.fetch_find_result(imdb_id)
         self.last_status = "fetch"
         cache_path.write_text(json.dumps(response, ensure_ascii=False, indent=2), encoding="utf-8")
         if self.sleep_seconds:
             time.sleep(self.sleep_seconds)
         return response
 
-    def fetch_from_tmdb(self, imdb_id: str) -> dict:
+    def get_movie_details(self, movie_id: int) -> dict:
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        cache_path = self.cache_dir / f"movie-{movie_id}.json"
+        if cache_path.exists():
+            self.last_status = "cache"
+            return json.loads(cache_path.read_text(encoding="utf-8"))
+
+        response = self.fetch_movie_details(movie_id)
+        self.last_status = "fetch"
+        cache_path.write_text(json.dumps(response, ensure_ascii=False, indent=2), encoding="utf-8")
+        if self.sleep_seconds:
+            time.sleep(self.sleep_seconds)
+        return response
+
+    def fetch_find_result(self, imdb_id: str) -> dict:
         query = urlencode(
             {
                 "api_key": self.api_key,
                 "external_source": "imdb_id",
-                "append_to_response": "videos",
             }
         )
         url = f"https://api.themoviedb.org/3/find/{imdb_id}?{query}"
+        return self.fetch_json(url, f"IMDb ID {imdb_id}")
+
+    def fetch_movie_details(self, movie_id: int) -> dict:
+        query = urlencode(
+            {
+                "api_key": self.api_key,
+                "append_to_response": "videos",
+            }
+        )
+        url = f"https://api.themoviedb.org/3/movie/{movie_id}?{query}"
+        return self.fetch_json(url, f"TMDB movie ID {movie_id}")
+
+    def fetch_json(self, url: str, resource_name: str) -> dict:
         request = Request(url, headers={"User-Agent": "imdb-clone-movie-seed/1.0"})
 
         last_error = None
@@ -229,7 +260,7 @@ class TmdbClient:
             except Exception as exc:
                 last_error = exc
                 time.sleep(1)
-        raise RuntimeError(f"Could not fetch TMDB data for {imdb_id}") from last_error
+        raise RuntimeError(f"Could not fetch TMDB data for {resource_name}") from last_error
 
 
 def parse_args() -> argparse.Namespace:

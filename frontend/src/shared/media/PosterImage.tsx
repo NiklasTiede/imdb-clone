@@ -1,6 +1,6 @@
 import { CardMedia } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import placeholderSearch from "../../assets/img/placeholder_search.png";
 import {
   getMoviePosterFallbackImageUrl,
@@ -9,30 +9,45 @@ import {
 } from "./imageUrls";
 
 type PosterImageProps = {
+  alt?: string;
   posterImageToken?: string;
   size: MovieImageSize;
   sx?: SxProps<Theme>;
 };
 
-const PosterImage = ({ posterImageToken, size, sx }: PosterImageProps) => {
-  const [useFallback, setUseFallback] = useState(false);
-  const src = useMemo(() => {
-    if (!posterImageToken) {
-      return placeholderSearch;
-    }
-
-    return useFallback
-      ? getMoviePosterFallbackImageUrl(posterImageToken, size)
-      : getMoviePosterImageUrl(posterImageToken, size);
-  }, [posterImageToken, size, useFallback]);
+const PosterImage = ({
+  alt = "movie poster",
+  posterImageToken,
+  size,
+  sx,
+}: PosterImageProps) => {
+  const [failureState, setFailureState] = useState<{
+    attempts: number;
+    token?: string;
+  }>({ attempts: 0 });
+  const failedAttempts =
+    failureState.token === posterImageToken ? failureState.attempts : 0;
+  const src =
+    !posterImageToken || failedAttempts >= 2
+      ? placeholderSearch
+      : failedAttempts === 1
+        ? getMoviePosterFallbackImageUrl(posterImageToken, size)
+        : getMoviePosterImageUrl(posterImageToken, size);
 
   return (
     <CardMedia
       component="img"
-      alt="movie poster"
+      alt={alt}
       sx={sx}
       src={src}
-      onError={() => setUseFallback(true)}
+      onError={() => {
+        if (posterImageToken && failedAttempts < 2) {
+          setFailureState({
+            attempts: failedAttempts + 1,
+            token: posterImageToken,
+          });
+        }
+      }}
     />
   );
 };

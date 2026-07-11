@@ -1,3 +1,4 @@
+export { default as BackdropImage } from "./BackdropImage";
 export { default as PosterImage } from "./PosterImage";
 export { default as ProfileAvatar } from "./ProfileAvatar";
 export {

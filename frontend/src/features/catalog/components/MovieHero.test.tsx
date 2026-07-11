@@ -1,149 +1,138 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
-import { MemoryRouter } from "react-router";
 import {
-  MovieRecord,
   MovieRecordMovieGenreEnum,
   MovieRecordMovieTypeEnum,
 } from "../../../client/movies/generator-output";
+import type { Movie } from "../model/movie";
 import { MovieHero } from "./MovieHero";
 
-const renderHero = (overrides: Partial<Parameters<typeof MovieHero>[0]>) => {
-  const defaultMovie: MovieRecord = {
-    id: 1,
-    primaryTitle: "It Follows",
-    originalTitle: "It Follows",
-    startYear: 2014,
-    runtimeMinutes: 100,
-    movieType: MovieRecordMovieTypeEnum.Movie,
-    movieGenre: new Set([
-      MovieRecordMovieGenreEnum.Horror,
-      MovieRecordMovieGenreEnum.Mystery,
-    ]),
-    imdbRating: 6.8,
-    imdbRatingCount: 245000,
-    rating: 7.2,
-    ratingCount: 1200,
-    description: "A curse passed via intercourse.",
-    posterImageToken: undefined,
+const defaultMovie: Movie = {
+  id: 1,
+  imdbId: "tt0111161",
+  tmdbId: 278,
+  primaryTitle: "The Shawshank Redemption",
+  originalTitle: "The Shawshank Redemption",
+  startYear: 1994,
+  runtimeMinutes: 142,
+  movieType: MovieRecordMovieTypeEnum.Movie,
+  movieGenre: new Set([MovieRecordMovieGenreEnum.Drama]),
+  imdbRating: 9.3,
+  imdbRatingCount: 3189003,
+  rating: 8.8,
+  ratingCount: 1240,
+  description: "Two imprisoned men bond over a number of years.",
+  posterImageToken: "poster-token",
+  backdropImageToken: "backdrop-token",
+};
+
+const renderHero = (
+  overrides: Partial<Parameters<typeof MovieHero>[0]> = {},
+) => {
+  const props = {
+    movie: defaultMovie,
+    isBookmarked: false,
+    onToggleBookmark: vi.fn(),
+    userRating: null,
+    onOpenRating: vi.fn(),
+    onShare: vi.fn(),
+    ...overrides,
   };
 
-  return render(
-    <MemoryRouter>
-      <MovieHero
-        movie={defaultMovie}
-        isBookmarked={false}
-        onToggleBookmark={vi.fn()}
-        isBookmarkLoading={false}
-        userRating={null}
-        onRate={vi.fn()}
-        {...overrides}
-      />
-    </MemoryRouter>,
-  );
+  render(<MovieHero {...props} />);
+  return props;
 };
 
 describe("MovieHero", () => {
-  test("renders title, meta row, genre chips, and both ratings", () => {
-    renderHero({});
+  test("renders backdrop, poster, identity, metadata, genres, and ratings", () => {
+    renderHero();
 
-    expect(screen.getByRole("heading", { name: "It Follows" })).toBeTruthy();
-    expect(screen.getByText("2014")).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "The Shawshank Redemption" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("img", {
+        name: "The Shawshank Redemption poster",
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("presentation", { hidden: true }).getAttribute("src"),
+    ).toContain("backdrop-token_size_1280x720.webp");
+    expect(screen.getByText("1994")).toBeTruthy();
     expect(screen.getByText("Movie")).toBeTruthy();
-    expect(screen.getByText("100 min")).toBeTruthy();
-    expect(screen.getByText("Horror")).toBeTruthy();
-    expect(screen.getByText("Mystery")).toBeTruthy();
+    expect(screen.getByText("2h 22m")).toBeTruthy();
+    expect(screen.getByText("Drama")).toBeTruthy();
     expect(screen.getByText("IMDb rating")).toBeTruthy();
     expect(screen.getByText("Community")).toBeTruthy();
-    expect(screen.getByText("6.8")).toBeTruthy();
-    expect(screen.getByText("7.2")).toBeTruthy();
-    expect(screen.getByText("/ 10 · 245k")).toBeTruthy();
-    expect(screen.getByText("/ 10 · 1.2k")).toBeTruthy();
+    expect(screen.getByText("9.3")).toBeTruthy();
+    expect(screen.getByText("8.8")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: /View on/ })).toBeNull();
   });
 
-  test("hides original title when it matches the primary title", () => {
-    renderHero({});
-    expect(screen.queryByText(/^Original:/)).toBeNull();
-  });
-
-  test("shows original title when it differs from primary", () => {
+  test("renders a conditional original title", () => {
     renderHero({
       movie: {
-        primaryTitle: "Spirited Away",
-        originalTitle: "千と千尋の神隠し",
-        startYear: 2001,
-        runtimeMinutes: 125,
-        movieType: MovieRecordMovieTypeEnum.Movie,
+        ...defaultMovie,
+        originalTitle: "Die Verurteilten",
       },
     });
-    expect(screen.getByText("Original: 千と千尋の神隠し")).toBeTruthy();
+
+    expect(screen.getByText("Original title: Die Verurteilten")).toBeTruthy();
   });
 
-  test("shows endYear range for series", () => {
+  test("renders a trailer preview only for a valid stored key", () => {
     renderHero({
-      movie: {
-        primaryTitle: "Breaking Bad",
-        originalTitle: "Breaking Bad",
-        startYear: 2008,
-        endYear: 2013,
-        movieType: MovieRecordMovieTypeEnum.TvSeries,
-        runtimeMinutes: 49,
-      },
+      movie: { ...defaultMovie, trailerYoutubeKey: "abcDEF123_-" },
     });
-    expect(screen.getByText("2008 – 2013")).toBeTruthy();
-    expect(screen.getByText("Tv Series")).toBeTruthy();
+
+    expect(screen.getByRole("button", { name: "Play trailer" })).toBeTruthy();
   });
 
-  test("bookmark button reflects bookmarked state and calls handler on click", async () => {
+  test("does not render empty metadata", () => {
+    renderHero({ movie: { primaryTitle: "Unknown title" } });
+
+    expect(screen.queryByText(/^Original title:/)).toBeNull();
+    expect(screen.getAllByText("—")).toHaveLength(2);
+  });
+
+  test("toggles the watchlist and reflects selected state", async () => {
     const user = userEvent.setup();
-    const onToggleBookmark = vi.fn();
+    const { onToggleBookmark } = renderHero({ isBookmarked: true });
 
-    const { rerender } = renderHero({ onToggleBookmark });
+    await user.click(screen.getByRole("button", { name: "In watchlist" }));
 
-    const button = screen.getByRole("button", { name: /add to watchlist/i });
-    await user.click(button);
     expect(onToggleBookmark).toHaveBeenCalledTimes(1);
-
-    rerender(
-      <MemoryRouter>
-        <MovieHero
-          movie={{
-            id: 1,
-            primaryTitle: "It Follows",
-            originalTitle: "It Follows",
-            startYear: 2014,
-            runtimeMinutes: 100,
-            movieType: MovieRecordMovieTypeEnum.Movie,
-            movieGenre: new Set([MovieRecordMovieGenreEnum.Horror]),
-            imdbRating: 6.8,
-            imdbRatingCount: 245000,
-            rating: 7.2,
-            ratingCount: 1200,
-          }}
-          isBookmarked={true}
-          onToggleBookmark={onToggleBookmark}
-          isBookmarkLoading={false}
-          userRating={null}
-          onRate={vi.fn()}
-        />
-      </MemoryRouter>,
-    );
-    expect(
-      screen.getByRole("button", { name: /in your watchlist/i }),
-    ).toBeTruthy();
   });
 
-  test("rates the movie 1-10 when a star is clicked", async () => {
+  test("opens rating and invokes share actions", async () => {
     const user = userEvent.setup();
-    const onRate = vi.fn();
-    renderHero({ onRate });
+    const { onOpenRating, onShare } = renderHero({ userRating: 7 });
 
-    const ratingGroup = screen.getByTestId("user-rating-stars");
-    const stars = within(ratingGroup).getAllByRole("radio");
-    expect(stars).toHaveLength(11);
+    await user.click(screen.getByRole("button", { name: "Your rating: 7" }));
+    await user.click(screen.getByRole("button", { name: "Share movie" }));
 
-    await user.click(stars[6]);
-    expect(onRate).toHaveBeenCalledWith(7);
+    expect(onOpenRating).toHaveBeenCalledTimes(1);
+    expect(onShare).toHaveBeenCalledTimes(1);
+  });
+
+  test("disables pending actions", () => {
+    renderHero({
+      isBookmarkLoading: true,
+      isRatingLoading: true,
+      isShareDisabled: true,
+    });
+
+    expect(
+      screen.getByRole("button", { name: "Add to watchlist" }),
+    ).toHaveProperty("disabled", true);
+    expect(screen.getByRole("button", { name: "Rate movie" })).toHaveProperty(
+      "disabled",
+      true,
+    );
+    expect(screen.getByRole("button", { name: "Share movie" })).toHaveProperty(
+      "disabled",
+      true,
+    );
   });
 });
