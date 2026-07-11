@@ -124,6 +124,8 @@ public class WebSecurityConfig {
                         "/api/account/*/watchlist",
                         "/api/account/*/ratings")
                     .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/recommendations/home-feed")
+                    .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/movie/get-movies", "/api/search/movies")
                     .permitAll()
                     .anyRequest()

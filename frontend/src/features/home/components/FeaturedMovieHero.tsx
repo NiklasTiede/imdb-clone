@@ -105,7 +105,7 @@ const Hero = ({
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Chip
-            label="FEATURED TODAY"
+            label="FEATURED PICK"
             size="small"
             sx={{
               backgroundColor: FEATURED_BADGE_BG,

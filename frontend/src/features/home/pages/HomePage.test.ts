@@ -1,17 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generator-output";
-import { getHomeMinStartYear, homeGenreRows } from "./HomePage";
+import { homeFeedQueryKey } from "../api/homeFeedQueries";
 
-describe("homeGenreRows", () => {
-  test("uses horror as the first homepage carousel", () => {
-    expect(homeGenreRows[0]).toMatchObject({
-      genre: MovieSearchRequestMovieGenreEnum.Horror,
-      title: "Top horror",
-      viewAllGenre: "HORROR",
-    });
-  });
-
-  test("uses a 30-year lookback for homepage carousel searches", () => {
-    expect(getHomeMinStartYear(new Date("2026-05-10T00:00:00Z"))).toBe(1996);
+describe("home feed query key", () => {
+  test("keeps one cache entry for a browser-document discovery session", () => {
+    expect(homeFeedQueryKey("session-a")).toEqual(["home", "feed", "session-a"]);
   });
 });

@@ -2,6 +2,7 @@ package com.thecodinglab.imdbclone.catalog.internal.search.query;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryCriteria;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
@@ -152,5 +153,38 @@ class MovieSearchQueryBuilderTest {
               assertThat(excluded.isIds()).isTrue();
               assertThat(excluded.ids().values()).containsExactly("42");
             });
+  }
+
+  @Test
+  void buildDiscoveryCandidateSearchRequest_filtersAndSortsTheQualityPool() {
+    MovieDiscoveryCriteria criteria =
+        new MovieDiscoveryCriteria(
+            1990,
+            1999,
+            null,
+            null,
+            Set.of(MovieGenre.THRILLER),
+            MovieType.MOVIE,
+            7.0f,
+            1_000,
+            Set.of(42L));
+
+    SearchRequest searchRequest =
+        builder.buildDiscoveryCandidateSearchRequest("movies", criteria, 90);
+
+    assertThat(searchRequest.index()).containsExactly("movies");
+    assertThat(searchRequest.from()).isZero();
+    assertThat(searchRequest.size()).isEqualTo(90);
+    assertThat(searchRequest.query().bool().filter()).hasSize(5);
+    assertThat(searchRequest.query().bool().mustNot())
+        .singleElement()
+        .satisfies(
+            excluded -> {
+              assertThat(excluded.isIds()).isTrue();
+              assertThat(excluded.ids().values()).containsExactly("42");
+            });
+    assertThat(searchRequest.sort())
+        .extracting(sort -> sort.field().field())
+        .containsExactly("imdbRating", "imdbRatingCount", "_id");
   }
 }

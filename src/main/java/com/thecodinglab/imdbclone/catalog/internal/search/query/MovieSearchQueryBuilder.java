@@ -1,10 +1,12 @@
 package com.thecodinglab.imdbclone.catalog.internal.search.query;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryCriteria;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import java.util.ArrayList;
 import java.util.List;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.query_dsl.*;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.springframework.stereotype.Component;
@@ -90,6 +92,66 @@ public class MovieSearchQueryBuilder {
 
     return SearchRequest.of(search ->
         search.index(index).from(0).size(candidateLimit).query(candidateQuery));
+  }
+
+  public SearchRequest buildDiscoveryCandidateSearchRequest(
+      String index, MovieDiscoveryCriteria criteria, int candidateLimit) {
+    List<Query> filters = new ArrayList<>();
+    filters.addAll(
+        buildFilterQueries(
+            new MovieSearchRequest(
+                criteria.minStartYear(),
+                criteria.maxStartYear(),
+                criteria.minRuntimeMinutes(),
+                criteria.maxRuntimeMinutes(),
+                criteria.movieGenres(),
+                criteria.movieType())));
+
+    if (criteria.minImdbRating() != null) {
+      filters.add(
+          Query.of(
+              query ->
+                  query.range(
+                      range -> range.field("imdbRating").gte(JsonData.of(criteria.minImdbRating())))));
+    }
+    if (criteria.minImdbRatingCount() != null) {
+      filters.add(
+          Query.of(
+              query ->
+                  query.range(
+                      range ->
+                          range
+                              .field("imdbRatingCount")
+                              .gte(JsonData.of(criteria.minImdbRatingCount())))));
+    }
+
+    BoolQuery.Builder query = QueryBuilders.bool().filter(filters);
+    if (!criteria.excludedMovieIds().isEmpty()) {
+      query.mustNot(
+          excluded ->
+              excluded.ids(
+                  ids ->
+                      ids.values(
+                          criteria.excludedMovieIds().stream().map(String::valueOf).toList())));
+    }
+
+    return SearchRequest.of(
+        search ->
+            search
+                .index(index)
+                .from(0)
+                .size(candidateLimit)
+                .query(discoveryQuery -> discoveryQuery.bool(query.build()))
+                .sort(sort -> sort.field(field -> field.field("imdbRating").order(SortOrder.Desc)))
+                .sort(
+                    sort ->
+                        sort
+                            .field(
+                                field ->
+                                    field
+                                        .field("imdbRatingCount")
+                                        .order(SortOrder.Desc)))
+                .sort(sort -> sort.field(field -> field.field("_id").order(SortOrder.Asc))));
   }
 
   public List<Query> buildFilterQueries(MovieSearchRequest request) {

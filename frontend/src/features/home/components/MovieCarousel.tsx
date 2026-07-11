@@ -16,18 +16,22 @@ import {
 } from "./MovieCarousel.styles";
 
 type MovieCarouselProps = {
+  initialScrollLeft?: number;
   title: string;
   subtitle?: string;
   movies: Movie[];
   onViewAll?: () => void;
+  onScrollPositionChange?: (position: number) => void;
   loading?: boolean;
 };
 
 const MovieCarousel = ({
+  initialScrollLeft = 0,
   title,
   subtitle,
   movies,
   onViewAll,
+  onScrollPositionChange,
   loading = false,
 }: MovieCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -50,6 +54,15 @@ const MovieCarousel = ({
     updateScrollState();
   }, [loading, movies.length, updateScrollState]);
 
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element || initialScrollLeft === 0) {
+      return;
+    }
+    element.scrollLeft = initialScrollLeft;
+    updateScrollState();
+  }, [initialScrollLeft, updateScrollState]);
+
   const scroll = (direction: "left" | "right") => {
     const element = scrollRef.current;
     if (!element) {
@@ -67,6 +80,7 @@ const MovieCarousel = ({
 
   const handleScroll = () => {
     updateScrollState();
+    onScrollPositionChange?.(scrollRef.current?.scrollLeft ?? 0);
   };
 
   return (

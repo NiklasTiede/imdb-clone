@@ -300,6 +300,24 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/MovieSearchReindexJobResponse"
+  /api/recommendations/home-feed:
+    post:
+      tags:
+      - recommendation-controller
+      operationId: homeFeed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HomeFeedRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/HomeFeedResponse"
   /api/movie/get-movies:
     post:
       tags:
@@ -1383,6 +1401,67 @@ components:
           format: date-time
         errorMessage:
           type: string
+    HomeFeedRequest:
+      type: object
+      properties:
+        feedInstanceId:
+          type: string
+          maxLength: 100
+          minLength: 0
+        seed:
+          type: string
+          maxLength: 100
+          minLength: 0
+        cursor:
+          type: string
+          maxLength: 100
+          minLength: 0
+        excludedMovieIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          maxItems: 500
+          minItems: 0
+    HomeFeedItem:
+      type: object
+      properties:
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+        reason:
+          type: string
+    HomeFeedResponse:
+      type: object
+      properties:
+        seed:
+          type: string
+        strategyVersion:
+          type: string
+        featuredMovie:
+          $ref: "#/components/schemas/MovieRecord"
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/HomeFeedSection"
+        nextCursor:
+          type: string
+        exhausted:
+          type: boolean
+    HomeFeedSection:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        family:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/HomeFeedItem"
     MovieIdsRequest:
       type: object
       properties:
