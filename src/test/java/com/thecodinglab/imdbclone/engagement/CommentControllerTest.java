@@ -85,7 +85,9 @@ class CommentControllerTest extends BaseContainers {
                     .jsonPath("$.id").isEqualTo(createdComment.id())
                     .jsonPath("$.message").isEqualTo(TEST_COMMENT_PREFIX + " created")
                     .jsonPath("$.accountId").isEqualTo(ACCOUNT_ID)
-                    .jsonPath("$.movieId").isEqualTo(MOVIE_ID));
+                    .jsonPath("$.movieId").isEqualTo(MOVIE_ID)
+                    .jsonPath("$.createdAtInUtc").isNotEmpty()
+                    .jsonPath("$.modifiedAtInUtc").isNotEmpty());
 
     var updateRequest = new UpdateCommentRequest(TEST_COMMENT_PREFIX + " updated");
 
@@ -169,6 +171,23 @@ class CommentControllerTest extends BaseContainers {
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isUnauthorized())
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+  }
+
+  @Test
+  void createComment_rejectsBlankMessage() throws Exception {
+    var request = new CreateCommentRequest("   ");
+
+    mockMvc
+        .perform(
+            post("/api/comment/{movieId}", MOVIE_ID)
+                .with(testUser())
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.message").value("message must not be blank"));
   }
 }
 // spotless:on

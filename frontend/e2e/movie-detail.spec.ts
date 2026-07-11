@@ -32,11 +32,43 @@ const partialMovie = {
   description: "No media is available for this catalog entry.",
 };
 
-const mockMovie = async (page: Page, movie = shawshank) => {
+const commentAuthors = [
+  {
+    id: 7,
+    username: "niklas",
+    displayName: "Niklas Tiede",
+    imageUrlToken: "niklas-avatar",
+  },
+];
+
+const mockMovie = async (
+  page: Page,
+  movie = shawshank,
+  comments: Array<Record<string, unknown>> = [],
+) => {
   await page.route(`**/api/movie/${movie.id}`, async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify(movie),
+    });
+  });
+  await page.route(`**/api/comment/${movie.id}/comments**`, async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        content: comments,
+        last: true,
+        page: 0,
+        size: 10,
+        totalElements: comments.length,
+        totalPages: comments.length > 0 ? 1 : 0,
+      }),
+    });
+  });
+  await page.route("**/api/account/summaries**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(commentAuthors),
     });
   });
 };
@@ -276,7 +308,9 @@ test("provides sign-in guidance and share feedback", async ({ page }) => {
   await page.goto("/movie?id=1");
   await page.getByRole("button", { name: "Rate movie" }).click();
   await expect(page.getByText("Sign in to rate this movie.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Sign in", exact: true }),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "Share movie" }).click();
   await expect(page.getByText("Movie shared.")).toBeVisible();
@@ -305,6 +339,105 @@ test("loads the privacy-enhanced trailer only after user interaction", async ({
     "src",
     "https://www.youtube-nocookie.com/embed/abcDEF123_-?autoplay=1&playsinline=1&rel=0",
   );
+});
+
+test("publishes, edits, and deletes an owned movie comment", async ({
+  page,
+}) => {
+  const comments: Array<Record<string, unknown>> = [
+    {
+      id: 11,
+      message: "An unforgettable ending.",
+      accountId: 7,
+      movieId: 1,
+      createdAtInUtc: "2026-07-11T10:00:00Z",
+      modifiedAtInUtc: "2026-07-11T10:00:00Z",
+    },
+  ];
+  await mockAuthenticatedSession(page);
+  await mockMovie(page, shawshank, comments);
+  await mockMovieMedia(page);
+  await page.route("**/api/comment/*", async (route) => {
+    const request = route.request();
+    const pathname = new URL(request.url()).pathname;
+    const commentId = Number(pathname.split("/").at(-1));
+    const payload =
+      request.method() === "POST" || request.method() === "PUT"
+        ? (request.postDataJSON() as { message?: string })
+        : null;
+
+    if (request.method() === "POST" && commentId === 1) {
+      const created = {
+        id: 12,
+        message: payload?.message,
+        accountId: 7,
+        movieId: 1,
+        createdAtInUtc: "2026-07-11T12:00:00Z",
+        modifiedAtInUtc: "2026-07-11T12:00:00Z",
+      };
+      comments.unshift(created);
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(created),
+        status: 201,
+      });
+      return;
+    }
+
+    if (request.method() === "PUT") {
+      const existing = comments.find((comment) => comment.id === commentId);
+      if (existing) {
+        existing.message = payload?.message;
+        existing.modifiedAtInUtc = "2026-07-11T12:10:00Z";
+      }
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(existing),
+      });
+      return;
+    }
+
+    if (request.method() === "DELETE") {
+      const index = comments.findIndex((comment) => comment.id === commentId);
+      if (index >= 0) {
+        comments.splice(index, 1);
+      }
+      await route.fulfill({ status: 204 });
+      return;
+    }
+
+    await route.fallback();
+  });
+
+  await page.goto("/movie?id=1");
+  await expect(page.getByRole("heading", { name: "Community" })).toBeVisible();
+  await expect(page.getByText("An unforgettable ending.")).toBeVisible();
+
+  await page
+    .getByRole("textbox", { name: "Comment on The Shawshank Redemption" })
+    .fill("Hope is a good thing.");
+  await page.getByRole("button", { name: "Publish comment" }).click();
+  const createdComment = page.getByTestId("comment-12");
+  await expect(createdComment.getByText("Hope is a good thing.")).toBeVisible();
+
+  await createdComment
+    .getByRole("button", { name: "Manage comment by Niklas Tiede" })
+    .click();
+  await page.getByRole("menuitem", { name: "Edit" }).click();
+  const editor = createdComment.getByRole("textbox", { name: "Edit comment" });
+  await editor.fill("Hope is the best of things.");
+  await createdComment.getByRole("button", { name: "Save" }).click();
+  await expect(
+    createdComment.getByText("Hope is the best of things."),
+  ).toBeVisible();
+
+  await createdComment
+    .getByRole("button", { name: "Manage comment by Niklas Tiede" })
+    .click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  const deleteDialog = page.getByRole("dialog", { name: "Delete comment?" });
+  await deleteDialog.getByRole("button", { name: "Delete" }).click();
+  await expect(createdComment).toHaveCount(0);
 });
 
 test("saves a rating in the authenticated dialog flow", async ({ page }) => {

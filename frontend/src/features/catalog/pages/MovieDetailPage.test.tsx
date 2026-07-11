@@ -49,6 +49,12 @@ vi.mock("../utils/shareMovie", () => ({
   shareMovie: mocks.shareMovie,
 }));
 
+vi.mock("../../engagement/comment", () => ({
+  MovieCommentsSection: ({ movieId }: { movieId: number }) => (
+    <section data-testid="movie-comments">Comments for movie {movieId}</section>
+  ),
+}));
+
 const movie: Movie = {
   id: 1,
   imdbId: "tt0111161",
@@ -108,10 +114,7 @@ const seedAuthenticatedEngagement = (queryClient: QueryClient) => {
     ["watchlist", "current-user", "niklas", "movie-ids"],
     new Set<number>(),
   );
-  queryClient.setQueryData(
-    ["rating", "current-user", "niklas", "movie", 1],
-    6,
-  );
+  queryClient.setQueryData(["rating", "current-user", "niklas", "movie", 1], 6);
 };
 
 describe("MovieDetailPage", () => {
@@ -141,7 +144,9 @@ describe("MovieDetailPage", () => {
   test("renders a distinct invalid-link state", () => {
     renderPage({ initialEntry: "/movie?id=not-a-number" });
 
-    expect(screen.getByRole("heading", { name: "Choose a movie" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Choose a movie" }),
+    ).toBeTruthy();
     expect(screen.getByRole("link", { name: "Browse movies" })).toBeTruthy();
   });
 
@@ -149,7 +154,9 @@ describe("MovieDetailPage", () => {
     mocks.moviesApi.getMovieById.mockReturnValue(new Promise(() => {}));
     renderPage();
 
-    expect(screen.getByRole("status", { name: "Loading movie details" })).toBeTruthy();
+    expect(
+      screen.getByRole("status", { name: "Loading movie details" }),
+    ).toBeTruthy();
   });
 
   test("renders a retryable request-failure state", async () => {
@@ -173,6 +180,9 @@ describe("MovieDetailPage", () => {
     ).toBeTruthy();
     expect(screen.getByTestId("movie-backdrop").dataset.hasImage).toBe("true");
     expect(screen.getByRole("heading", { name: "Synopsis" })).toBeTruthy();
+    expect(screen.getByTestId("movie-comments").textContent).toContain(
+      "Comments for movie 1",
+    );
     expect(
       screen.getByText("Two imprisoned men bond over a number of years."),
     ).toBeTruthy();

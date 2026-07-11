@@ -16,6 +16,7 @@ import {
   toggleWatchlistMutationOptions,
   watchlistQueries,
 } from "../../engagement";
+import { MovieCommentsSection } from "../../engagement/comment";
 import { movieQueries } from "../api/movieQueries";
 import { MovieHero } from "../components/MovieHero";
 import MovieRatingDialog from "../components/MovieRatingDialog";
@@ -175,8 +176,7 @@ const MovieDetailPage = () => {
 
       if (result !== "cancelled") {
         setFeedback({
-          message:
-            result === "copied" ? "Movie link copied." : "Movie shared.",
+          message: result === "copied" ? "Movie link copied." : "Movie shared.",
           severity: "success",
         });
       }
@@ -221,6 +221,14 @@ const MovieDetailPage = () => {
       )}
 
       <Synopsis text={movie.description} />
+
+      {movie.id !== undefined && (
+        <MovieCommentsSection
+          movieId={movie.id}
+          movieTitle={movie.primaryTitle?.trim() || "this movie"}
+          onRequestSignIn={navigateToLogin}
+        />
+      )}
 
       <MovieRatingDialog
         currentRating={userRating ?? null}

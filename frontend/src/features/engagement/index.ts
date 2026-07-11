@@ -1,3 +1,4 @@
+export { MovieCommentsSection } from "./comment";
 export {
   ratingQueries,
   rateMovieMutationOptions,

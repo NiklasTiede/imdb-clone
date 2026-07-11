@@ -16,7 +16,12 @@ import com.thecodinglab.imdbclone.engagement.api.EngagementStats;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -95,6 +100,34 @@ public class AccountManagement implements AccountService {
         counts.ratingsCount(),
         counts.watchedMoviesCount(),
         counts.commentsCount());
+  }
+
+  @Override
+  public List<PublicAccountSummary> getPublicAccountSummaries(List<Long> accountIds) {
+    var uniqueAccountIds = new LinkedHashSet<>(accountIds);
+    Map<Long, Account> accountsById =
+        accountRepository.findAllById(uniqueAccountIds).stream()
+            .collect(Collectors.toMap(Account::getId, Function.identity()));
+
+    return uniqueAccountIds.stream()
+        .map(accountsById::get)
+        .filter(Objects::nonNull)
+        .map(
+            account ->
+                new PublicAccountSummary(
+                    account.getId(),
+                    account.getUsername(),
+                    getDisplayName(account),
+                    account.getImageUrlToken()))
+        .toList();
+  }
+
+  private String getDisplayName(Account account) {
+    return java.util.stream.Stream.of(account.getFirstName(), account.getLastName())
+        .filter(Objects::nonNull)
+        .map(String::trim)
+        .filter(namePart -> !namePart.isEmpty())
+        .collect(Collectors.joining(" "));
   }
 
   private ProfileCounts getProfileCounts(Account account) {

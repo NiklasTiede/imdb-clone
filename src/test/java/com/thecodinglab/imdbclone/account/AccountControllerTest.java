@@ -76,6 +76,37 @@ class AccountControllerTest extends BaseContainers {
   }
 
   @Test
+  void getPublicAccountSummaries_success() {
+    restTestClient
+        .get()
+        .uri("/api/account/summaries?ids=2,1,2")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.length()").isEqualTo(2)
+                    .jsonPath("$[0].id").isEqualTo(2)
+                    .jsonPath("$[0].username").isEqualTo("test_user_two")
+                    .jsonPath("$[0].displayName").isEqualTo("")
+                    .jsonPath("$[0].email").doesNotExist()
+                    .jsonPath("$[1].id").isEqualTo(1));
+  }
+
+  @Test
+  void getPublicAccountSummaries_rejectsInvalidIds() {
+    restTestClient
+        .get()
+        .uri("/api/account/summaries?ids=0")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
+  }
+
+  @Test
   void getCurrentAccountProfile_success() throws Exception {
     mockMvc
         .perform(get("/api/account/me/profile").with(testUser()).accept(MediaType.APPLICATION_JSON))

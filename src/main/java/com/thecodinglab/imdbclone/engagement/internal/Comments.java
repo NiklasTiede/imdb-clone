@@ -71,7 +71,7 @@ public class Comments implements CommentService {
   public CommentRecord createComment(
       Long movieId, CreateCommentRequest request, UserPrincipal currentAccount) {
     movieReferenceService.findMovieById(movieId);
-    Comment comment = new Comment(request.message(), currentAccount.getId(), movieId);
+    Comment comment = new Comment(request.message().trim(), currentAccount.getId(), movieId);
     Comment savedComment = commentRepository.save(comment);
     logger.info("Comment with [{}] was created", kv(COMMENT_ID, savedComment.getId()));
     return commentMapper.entityToDTO(comment);
@@ -97,7 +97,7 @@ public class Comments implements CommentService {
     Comment comment = commentRepository.getCommentById(commentId);
     if (Objects.equals(comment.getAccountId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
-      comment.setMessage(request.message());
+      comment.setMessage(request.message().trim());
       Comment updatedComment = commentRepository.save(comment);
       logger.info("comment with [{}] was updated.", kv(COMMENT_ID, updatedComment.getId()));
       return commentMapper.entityToDTO(updatedComment);

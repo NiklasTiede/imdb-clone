@@ -117,6 +117,7 @@ public class WebSecurityConfig {
                         HttpMethod.GET,
                         "/api/movie/**",
                         "/api/comment/**",
+                        "/api/account/summaries",
                         "/api/account/*/profile",
                         "/api/account/*/comments",
                         "/api/account/*/watchlist",

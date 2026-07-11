@@ -14,7 +14,8 @@ public class CommentMapper {
         comment.getMessage(),
         comment.getAccountId(),
         comment.getMovieId(),
-        comment.getCreatedAtInUtc());
+        comment.getCreatedAtInUtc(),
+        comment.getModifiedAtInUtc());
   }
 
   public List<CommentRecord> entityToDTO(List<Comment> comments) {

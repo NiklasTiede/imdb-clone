@@ -6,6 +6,9 @@ import com.thecodinglab.imdbclone.shared.security.CurrentUser;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,6 +38,13 @@ public class AccountController {
   @GetMapping("/{username}/profile")
   public ResponseEntity<PublicAccountProfile> getAccountProfile(@PathVariable String username) {
     return new ResponseEntity<>(accountService.getAccountProfile(username), HttpStatus.OK);
+  }
+
+  @GetMapping("/summaries")
+  public ResponseEntity<List<PublicAccountSummary>> getPublicAccountSummaries(
+      @RequestParam("ids") @Size(min = 1, max = 30) List<@Positive Long> accountIds) {
+    return new ResponseEntity<>(
+        accountService.getPublicAccountSummaries(accountIds), HttpStatus.OK);
   }
 
   @GetMapping("/me/profile")
