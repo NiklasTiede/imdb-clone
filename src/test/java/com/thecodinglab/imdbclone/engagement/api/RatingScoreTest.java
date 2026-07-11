@@ -10,6 +10,13 @@ import org.junit.jupiter.api.Test;
 class RatingScoreTest {
 
   @Test
+  void rejectsMissingScores() {
+    assertThatThrownBy(() -> RatingScore.of(null))
+        .isInstanceOf(BadRequestException.class)
+        .hasMessage("Score is required");
+  }
+
+  @Test
   void acceptsAndNormalizesScoresRepresentableByTheDatabase() {
     assertThat(RatingScore.of(new BigDecimal("8.50")).value())
         .isEqualByComparingTo(new BigDecimal("8.5"))

@@ -13,7 +13,7 @@ group = 'com.thecodinglab'
 version = '1.0.0'
 
 tasks.named('check') {
-	dependsOn 'spotlessCheck', 'integrationTest'
+	dependsOn 'spotlessCheck', 'integrationTest', 'jacocoTestCoverageVerification'
 }
 
 
@@ -193,5 +193,25 @@ jacocoTestReport {
 	executionData tasks.withType(Test)
 	reports {
 		xml.required = true
+	}
+}
+
+jacocoTestCoverageVerification {
+	dependsOn test
+	executionData tasks.named('test').get()
+	violationRules {
+		rule {
+			element = 'CLASS'
+			includes = [
+				'com.thecodinglab.imdbclone.engagement.api.RatingScore',
+				'com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchRankFusion',
+				'com.thecodinglab.imdbclone.recommendation.internal.ContentRecommendationRanker'
+			]
+			limit {
+				counter = 'BRANCH'
+				value = 'COVEREDRATIO'
+				minimum = 1.0
+			}
+		}
 	}
 }

@@ -57,7 +57,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Model expected outcomes with sealed types where callers branch | Use closed state models when variants own different data; reindex jobs now map states through a compiler-exhaustive switch. |
 | Adopted | Add property-based tests for pure invariants | Exercise broad deterministic input spaces where shrinking produces useful examples; rank fusion is the first target. |
 | Declined for now | Add targeted mutation testing | The focused PIT trial could not execute the JUnit 6 suite with the latest stable adapter; avoid a legacy shadow suite and revisit when the adapter supports this test platform. |
-| Candidate | Add risk-based JaCoCo branch thresholds | Turn coverage regressions in important modules into build failures. |
+| Adopted | Add risk-based JaCoCo branch thresholds | Preserve complete branch coverage in compact, high-risk pure logic without imposing a misleading repository-wide percentage. |
 | Candidate | Start independent Testcontainers concurrently | Reduce some integration startup latency without parallel database mutation. |
 | Candidate | Consolidate avoidable Spring test contexts | Reduce repeated application-context and connection-pool startup. |
 | Candidate | Parallelize only the fast backend lane | Use measured Gradle forks without duplicating containers or Spring context caches. |
@@ -244,6 +244,23 @@ Revisit when a stable PIT adapter explicitly supports JUnit 6 and jqwik; retain 
 tests meanwhile because their deliberate off-by-one mutation trial already proved useful fault
 detection. Mutation testing should remain targeted and opt-in if it becomes compatible rather than
 joining the fast `test` or `check` lanes.
+
+## Backend Risk-Coverage Policy
+
+JaCoCo branch verification protects compact, high-risk pure logic where every branch represents a
+reviewable contract. The initial gate covers `RatingScore`, `MovieSearchRankFusion`, and
+`ContentRecommendationRanker` at 100 percent branch coverage. The recommendation trial added tests
+for diversity, missing search projections, sparse metadata on either side of a comparison, different
+types and eras, and rating-confidence fallbacks; its branch coverage increased from 66 to 100
+percent. A negative control that removed the null-score test reduced `RatingScore` to 7 of 8 covered
+branches and made the verification task fail; the test was then restored.
+
+`jacocoTestCoverageVerification` reads only the fast `test` execution data and is part of `check`.
+The combined `jacocoTestReport` continues to include fast and integration execution data. Do not add
+a repository-wide coverage percentage: generated mappers, framework adapters, and configuration
+would turn it into a volume metric. Add a class only when its decisions are high risk, its tests can
+exercise the branches through stable behavior, and complete coverage remains readable rather than
+requiring implementation-shaped assertions.
 
 ## Frontend Indexed Access Policy
 

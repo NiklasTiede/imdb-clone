@@ -47,6 +47,63 @@ class ContentRecommendationRankerTest {
     assertThat(result).singleElement().extracting(item -> item.movie().id()).isEqualTo(2L);
   }
 
+  @Test
+  void rank_diversifiesOtherwiseSimilarCandidates() {
+    MovieRecord anchor = movie(1L, "Anchor", 2000, Set.of(MovieGenre.DRAMA));
+    List<MovieRecommendationCandidate> candidates =
+        List.of(
+            candidate(2L, "First drama", 2000, Set.of(MovieGenre.DRAMA), 1),
+            candidate(3L, "Second drama", 2000, Set.of(MovieGenre.DRAMA), 4),
+            candidate(4L, "Different genre", 2000, Set.of(MovieGenre.COMEDY), 2));
+
+    List<MovieRecommendation> result = ranker.rank(anchor, candidates, 3);
+
+    assertThat(result).extracting(item -> item.movie().id()).containsExactly(2L, 4L, 3L);
+  }
+
+  @Test
+  void rank_handlesSparseMetadataAndMissingProjectionRecords() {
+    MovieRecord anchor = sparseMovie(1L, null, null, null, null, null);
+    MovieRecord sparseCandidate = sparseMovie(2L, null, null, null, null, null);
+    MovieRecord zeroConfidenceCandidate = sparseMovie(3L, MovieType.MOVIE, 1990, Set.of(), 7.0f, 0);
+    MovieRecord fallbackCandidate =
+        sparseMovie(4L, MovieType.TV_SERIES, 1970, Set.of(), null, null);
+    List<MovieRecommendationCandidate> candidates =
+        List.of(
+            new MovieRecommendationCandidate(null, 1),
+            new MovieRecommendationCandidate(sparseCandidate, 0),
+            new MovieRecommendationCandidate(zeroConfidenceCandidate, 2),
+            new MovieRecommendationCandidate(fallbackCandidate, 3));
+
+    List<MovieRecommendation> result = ranker.rank(anchor, candidates, 5);
+
+    assertThat(result).extracting(item -> item.movie().id()).containsExactly(2L, 3L, 4L);
+    assertThat(result)
+        .extracting(MovieRecommendation::reason)
+        .containsOnly(RecommendationReason.SIMILAR_THEMES);
+  }
+
+  @Test
+  void rank_handlesCandidateSideMissingAndDifferentMetadata() {
+    MovieRecord anchor = movie(1L, "Anchor", 2000, Set.of(MovieGenre.DRAMA));
+    MovieRecord completeCandidate =
+        sparseMovie(2L, MovieType.MOVIE, 2000, Set.of(MovieGenre.DRAMA), 8.0f, 100_000);
+    MovieRecord missingCandidate = sparseMovie(3L, null, null, null, 7.0f, null);
+    MovieRecord differentCandidate =
+        sparseMovie(4L, MovieType.TV_SERIES, 1970, Set.of(), 7.0f, 100);
+    List<MovieRecommendationCandidate> candidates =
+        List.of(
+            new MovieRecommendationCandidate(completeCandidate, 1),
+            new MovieRecommendationCandidate(missingCandidate, 2),
+            new MovieRecommendationCandidate(differentCandidate, 3));
+
+    List<MovieRecommendation> result = ranker.rank(anchor, candidates, 3);
+
+    assertThat(result).extracting(item -> item.movie().id()).containsExactly(2L, 3L, 4L);
+    assertThat(result.get(1).reason()).isEqualTo(RecommendationReason.SIMILAR_THEMES);
+    assertThat(result.get(2).reason()).isEqualTo(RecommendationReason.SIMILAR_THEMES);
+  }
+
   private MovieRecommendationCandidate candidate(
       Long id, String title, Integer year, Set<MovieGenre> genres, int semanticRank) {
     return new MovieRecommendationCandidate(movie(id, title, year, genres), semanticRank);
@@ -69,6 +126,37 @@ class ContentRecommendationRankerTest {
         genres,
         8.0f,
         100_000,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  private MovieRecord sparseMovie(
+      Long id,
+      MovieType type,
+      Integer year,
+      Set<MovieGenre> genres,
+      Float rating,
+      Integer ratingCount) {
+    return new MovieRecord(
+        id,
+        null,
+        null,
+        type,
+        "Movie",
+        "Movie",
+        false,
+        year,
+        null,
+        null,
+        null,
+        null,
+        genres,
+        rating,
+        ratingCount,
         null,
         null,
         null,
