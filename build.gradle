@@ -42,6 +42,11 @@ repositories {
 	mavenCentral()
 }
 
+dependencyLocking {
+	lockAllConfigurations()
+	lockMode = LockMode.STRICT
+}
+
 dependencyManagement {
 	imports {
 		mavenBom 'org.springframework.modulith:spring-modulith-bom:2.1.0'

@@ -61,7 +61,7 @@ Frontend observations from 2026-07-11:
 | Candidate | Start independent Testcontainers concurrently | Reduce some integration startup latency without parallel database mutation. |
 | Candidate | Consolidate avoidable Spring test contexts | Reduce repeated application-context and connection-pool startup. |
 | Candidate | Parallelize only the fast backend lane | Use measured Gradle forks without duplicating containers or Spring context caches. |
-| Candidate | Enable dependency locking and verification | Make transitive dependency resolution reproducible and checksum-verified. |
+| Adopted | Enable dependency locking and verification | Pin every resolved backend dependency and reject artifacts whose SHA-256 checksum is not reviewed metadata. |
 | Candidate | Replace source-text architecture checks where practical | Verify module dependencies and seams semantically rather than through formatting-sensitive scans. |
 
 ## Frontend Opportunities
@@ -164,6 +164,27 @@ Expand package by package when working in a module. Review every finding and doc
 semantics rather than marking the repository root or persistence packages mechanically. A temporary
 negative-control compile confirmed that returning null from a method in a marked package fails with a
 NullAway error; that deliberate defect was reverted after the check.
+
+## Backend Dependency Reproducibility Policy
+
+Gradle locks every resolvable configuration in strict mode through the checked-in `gradle.lockfile`.
+Dependency verification checks artifact and metadata SHA-256 values from
+`gradle/verification-metadata.xml` on every build, including build plugins. This makes unexpected
+transitive upgrades, missing lock state, and changed repository artifacts fail before compilation.
+
+Update the files intentionally after reviewing a dependency change:
+
+```bash
+./gradlew dependencies spotlessApply --write-locks --write-verification-metadata sha256
+```
+
+Checksum generation is trust-on-first-use, not independent provenance verification. Review the
+requested dependency/version changes before accepting generated metadata, and never regenerate the
+file merely to silence a verification failure. Resolving `spotlessApply` is required because its
+Google Java Format dependency is provisioned lazily and does not appear in the ordinary dependency
+report. The adoption trial produced 389 lock entries and 5,548 checksum-metadata lines. A fully
+offline test passed; a deliberate checksum mismatch failed at project configuration and was reverted
+after proving the gate.
 
 ## Frontend Indexed Access Policy
 
