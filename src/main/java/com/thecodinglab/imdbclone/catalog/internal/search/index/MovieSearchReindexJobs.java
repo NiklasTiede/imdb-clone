@@ -70,10 +70,7 @@ public class MovieSearchReindexJobs {
     private final UUID id;
     private final long totalMovies;
     private final Instant startedAt;
-    private MovieSearchReindexJobStatus status = MovieSearchReindexJobStatus.RUNNING;
-    private long indexedMovies;
-    private Instant finishedAt;
-    private String errorMessage;
+    private ReindexJobState state = new Running(0);
 
     private ReindexJob(UUID id, long totalMovies, Instant startedAt) {
       this.id = id;
@@ -86,24 +83,63 @@ public class MovieSearchReindexJobs {
     }
 
     synchronized void updateProgress(long indexedMovies) {
-      this.indexedMovies = indexedMovies;
+      if (!(state instanceof Running)) {
+        throw new IllegalStateException("Cannot update a finished reindex job");
+      }
+      state = new Running(indexedMovies);
     }
 
     synchronized void complete(long indexedMovies) {
-      this.indexedMovies = indexedMovies;
-      this.status = MovieSearchReindexJobStatus.COMPLETED;
-      this.finishedAt = Instant.now();
+      state = new Completed(indexedMovies, Instant.now());
     }
 
     synchronized void fail(RuntimeException ex) {
-      this.status = MovieSearchReindexJobStatus.FAILED;
-      this.finishedAt = Instant.now();
-      this.errorMessage = ex.getMessage();
+      state = new Failed(state.indexedMovies(), Instant.now(), errorMessage(ex));
     }
 
     synchronized MovieSearchReindexJobResponse toResponse() {
+      return switch (state) {
+        case Running running ->
+            response(MovieSearchReindexJobStatus.RUNNING, running.indexedMovies(), null, null);
+        case Completed completed ->
+            response(
+                MovieSearchReindexJobStatus.COMPLETED,
+                completed.indexedMovies(),
+                completed.finishedAt(),
+                null);
+        case Failed failed ->
+            response(
+                MovieSearchReindexJobStatus.FAILED,
+                failed.indexedMovies(),
+                failed.finishedAt(),
+                failed.errorMessage());
+      };
+    }
+
+    private MovieSearchReindexJobResponse response(
+        MovieSearchReindexJobStatus status,
+        long indexedMovies,
+        Instant finishedAt,
+        String errorMessage) {
       return new MovieSearchReindexJobResponse(
           id, status, indexedMovies, totalMovies, startedAt, finishedAt, errorMessage);
     }
+
+    private static String errorMessage(RuntimeException exception) {
+      return exception.getMessage() != null
+          ? exception.getMessage()
+          : exception.getClass().getSimpleName();
+    }
   }
+
+  private sealed interface ReindexJobState permits Running, Completed, Failed {
+    long indexedMovies();
+  }
+
+  private record Running(long indexedMovies) implements ReindexJobState {}
+
+  private record Completed(long indexedMovies, Instant finishedAt) implements ReindexJobState {}
+
+  private record Failed(long indexedMovies, Instant finishedAt, String errorMessage)
+      implements ReindexJobState {}
 }

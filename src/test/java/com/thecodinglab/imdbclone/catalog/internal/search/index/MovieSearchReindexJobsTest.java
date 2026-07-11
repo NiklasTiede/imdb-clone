@@ -65,6 +65,23 @@ class MovieSearchReindexJobsTest {
   }
 
   @Test
+  void failedReindexHasACompleteFailureState() {
+    CapturingExecutor executor = new CapturingExecutor();
+    MovieSearchReindexJobs jobs = new MovieSearchReindexJobs(movieSearchIndexMaintenance, executor);
+    when(movieSearchIndexMaintenance.totalMovies()).thenReturn(12L);
+    when(movieSearchIndexMaintenance.reindexMovies(any()))
+        .thenThrow(new IllegalStateException("index unavailable"));
+
+    var startedJob = jobs.startReindex();
+    executor.runNext();
+
+    var failedJob = jobs.getStatus(startedJob.jobId());
+    assertThat(failedJob.status()).isEqualTo(MovieSearchReindexJobStatus.FAILED);
+    assertThat(failedJob.finishedAt()).isNotNull();
+    assertThat(failedJob.errorMessage()).isEqualTo("index unavailable");
+  }
+
+  @Test
   void getStatusRejectsUnknownJobIds() {
     CapturingExecutor executor = new CapturingExecutor();
     MovieSearchReindexJobs jobs = new MovieSearchReindexJobs(movieSearchIndexMaintenance, executor);

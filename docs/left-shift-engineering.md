@@ -54,7 +54,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Add Error Prone | Catch semantic Java mistakes during compilation; the Java 25 adoption trial produced 31 diagnostics without requiring a globally disabled check. |
 | Adopted | Add JSpecify and NullAway incrementally | Make nullability part of deterministic package interfaces; the first three checked packages use non-null defaults with explicit nullable exceptions. |
 | Adopted | Introduce high-value domain types incrementally | Make invalid values unconstructable where one type can concentrate a real invariant; the first type is `RatingScore`. |
-| Candidate | Model expected outcomes with sealed types where callers branch | Make new expected states require exhaustive handling. |
+| Adopted | Model expected outcomes with sealed types where callers branch | Use closed state models when variants own different data; reindex jobs now map states through a compiler-exhaustive switch. |
 | Candidate | Add property-based tests for pure invariants | Exercise ranking, pagination, conversion, hashing, and aggregate behavior over many inputs. |
 | Candidate | Add targeted mutation testing | Prove important tests fail when implementation behavior is changed incorrectly. |
 | Candidate | Add risk-based JaCoCo branch thresholds | Turn coverage regressions in important modules into build failures. |
@@ -202,6 +202,18 @@ The persistence adapter still stores `BigDecimal`, keeping JPA mapping simple.
 Typed account and movie IDs were evaluated but not introduced: they currently cross too many Spring,
 OpenAPI, persistence, and module interfaces for the conversion cost to improve readability. Revisit a
 specific ID only when mixing is demonstrated or a narrower seam emerges.
+
+## Backend Sealed Outcome Policy
+
+Use sealed outcomes for a genuinely closed set of expected states when callers branch and each state
+owns different data. Keep ordinary return values and exceptions when no exhaustive branch exists;
+wrapping every operation in success/failure records would make interfaces shallower, not safer.
+
+Movie search reindex jobs are the first adopted state model. `Running` owns current progress,
+`Completed` owns progress plus a finish time, and `Failed` owns progress, finish time, and an error
+message. The public response remains unchanged, but its conversion uses an exhaustive pattern switch.
+Adding a state now fails compilation until the response mapping handles it, and combinations such as
+a running job with a finish time or a completed job with an error cannot be represented internally.
 
 ## Frontend Indexed Access Policy
 
