@@ -50,7 +50,7 @@ Frontend observations from 2026-07-11:
 | Status | Experiment | Expected early feedback |
 | --- | --- | --- |
 | Adopted | Split fast and integration test execution | Run pure module and architecture tests without Docker; retain all tests under `check` and `build`. |
-| Candidate | Enable selected `javac -Xlint` checks, then `-Werror` | Reject unchecked, deprecated, and suspicious Java constructs during compilation. |
+| Adopted | Enable high-signal `javac -Xlint` checks with `-Werror` | Reject unchecked, deprecated, and suspicious Java constructs during compilation. |
 | Candidate | Add Error Prone | Catch semantic Java mistakes during compilation. Verify Java 25 compatibility first. |
 | Candidate | Add JSpecify and NullAway incrementally | Make nullability part of each checked module interface. Start with pure packages. |
 | Candidate | Introduce high-value domain types | Prevent mixing IDs and constructing invalid ratings, years, or tokens. |
@@ -113,6 +113,25 @@ The first adopted improvement establishes these commands:
 Tests inheriting from `BaseContainers` inherit the JUnit `integration` tag. Integration tests that do
 not inherit from it must declare `@Tag("integration")` directly. The integration lane remains
 single-process until its PostgreSQL fixtures and other mutable adapters are isolated.
+
+## Backend Compiler Policy
+
+Every `JavaCompile` task uses UTF-8 and enables all Java 25 lint categories except `processing` and
+`serial`. Compiler warnings fail the build through `-Werror`.
+
+The initial diagnostic found one genuine unchecked conversion in a Mockito argument captor. It was
+replaced with Mockito's type-inferred `ArgumentCaptor.captor()` interface. The excluded categories
+were intentionally rejected:
+
+- `processing` warns that ordinary Spring, Jakarta, and other runtime annotations are not claimed by
+  an annotation processor. That is expected and produces a large, unstable warning with no defect
+  signal.
+- `serial` requires serialization identifiers and transient-field decisions across security
+  principals, exceptions, and persistence IDs. Java serialization is not an application storage or
+  transport interface here, so the added ceremony would not improve relevant safety.
+
+Revisit `serial` if Java object serialization becomes an intentional compatibility interface. Do not
+add broad source-level warning suppressions to bypass the adopted compiler policy.
 
 ## References
 

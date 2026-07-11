@@ -118,7 +118,7 @@ class SocialAccountProvisioningServiceTest {
 
     verify(accountIdentityService, never())
         .linkProvider(2L, "github", "12345", "private@example.com");
-    ArgumentCaptor<Map<String, Object>> details = ArgumentCaptor.forClass(Map.class);
+    ArgumentCaptor<Map<String, Object>> details = ArgumentCaptor.captor();
     verify(auditEvents)
         .recordCredentialEvent(
             eq(SecurityAuditEventType.SOCIAL_PROVIDER_LINK_FAILED), isNull(), details.capture());
