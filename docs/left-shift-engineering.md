@@ -55,7 +55,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Add JSpecify and NullAway incrementally | Make nullability part of deterministic package interfaces; the first three checked packages use non-null defaults with explicit nullable exceptions. |
 | Adopted | Introduce high-value domain types incrementally | Make invalid values unconstructable where one type can concentrate a real invariant; the first type is `RatingScore`. |
 | Adopted | Model expected outcomes with sealed types where callers branch | Use closed state models when variants own different data; reindex jobs now map states through a compiler-exhaustive switch. |
-| Candidate | Add property-based tests for pure invariants | Exercise ranking, pagination, conversion, hashing, and aggregate behavior over many inputs. |
+| Adopted | Add property-based tests for pure invariants | Exercise broad deterministic input spaces where shrinking produces useful examples; rank fusion is the first target. |
 | Candidate | Add targeted mutation testing | Prove important tests fail when implementation behavior is changed incorrectly. |
 | Candidate | Add risk-based JaCoCo branch thresholds | Turn coverage regressions in important modules into build failures. |
 | Candidate | Start independent Testcontainers concurrently | Reduce some integration startup latency without parallel database mutation. |
@@ -182,7 +182,7 @@ Checksum generation is trust-on-first-use, not independent provenance verificati
 requested dependency/version changes before accepting generated metadata, and never regenerate the
 file merely to silence a verification failure. Resolving `spotlessApply` is required because its
 Google Java Format dependency is provisioned lazily and does not appear in the ordinary dependency
-report. The adoption trial produced 389 lock entries and 5,548 checksum-metadata lines. A fully
+report. The current graph contains 394 lock entries and 5,606 checksum-metadata lines. A fully
 offline test passed; a deliberate checksum mismatch failed at project configuration and was reverted
 after proving the gate.
 
@@ -214,6 +214,21 @@ Movie search reindex jobs are the first adopted state model. `Running` owns curr
 message. The public response remains unchanged, but its conversion uses an exhaustive pattern switch.
 Adding a state now fails compilation until the response mapping handles it, and combinations such as
 a running job with a finish time or a completed job with an error cannot be represented internally.
+
+## Backend Property-Test Policy
+
+Use jqwik for pure algorithms whose invariants span many combinations and whose failures benefit from
+shrinking. Keep focused example tests for named edge cases and use integration tests for framework and
+adapter behavior. Property tests must state a domain invariant rather than mirror the implementation.
+
+The first properties cover movie-search rank fusion: a full result is the distinct union of both
+rankings, and every page is a stable window over the full ranking. Together they check 600 generated
+cases in about 0.36 seconds. A trial off-by-one mutation was detected and shrunk to an empty lexical
+list plus the semantic list `[1]`; the mutation was reverted after proving the signal.
+
+jqwik stores replay data under ignored `build/jqwik-database`, reports the reproduction seed on
+failure, and retries the previous failing seed locally. Keep generated input sizes bounded so these
+properties remain part of the fast backend lane.
 
 ## Frontend Indexed Access Policy
 
