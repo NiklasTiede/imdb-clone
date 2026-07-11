@@ -2,8 +2,9 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import {
   Box,
+  Alert,
   Button,
-  Grid,
+  CircularProgress,
   IconButton,
   InputAdornment,
   Link,
@@ -12,22 +13,29 @@ import {
   Typography,
 } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
-import { AxiosError } from "axios";
-import { useSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link as RouterLink, useNavigate } from "react-router";
+import {
+  Link as RouterLink,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router";
 import * as zod from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { i18n } from "../../../i18n";
 import { authSession, useAuthSession } from "../../../shared/auth";
 import { movieColors } from "../../../theme";
 import { authenticateAccount } from "../api/identityMutations";
-import AuthVisualPane from "../components/AuthVisualPane";
+import AuthPageFrame from "../components/AuthPageFrame";
 import { authTextFieldSx } from "../components/authFormStyles";
 import PasskeyLoginButton from "../components/PasskeyLoginButton";
 import SocialLoginButtons from "../components/SocialLoginButtons";
 import type { LoginRequest } from "../model/identityRequests";
+import {
+  getPasswordLoginFeedback,
+  socialLoginFailure,
+  type AuthFeedback,
+} from "../model/authFeedback";
 
 interface FormInputs {
   usernameOrEmail: string;
@@ -41,24 +49,26 @@ const schema = zod.object({
 
 const LoginPage = () => {
   const navigateTo = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const isLoggedIn = useAuthSession();
-  const { enqueueSnackbar } = useSnackbar();
   const [showPassword, setShowPassword] = useState(false);
+  const [feedback, setFeedback] = useState<AuthFeedback | null>(null);
+  const registrationMessage = (
+    location.state as { registrationMessage?: string } | null
+  )?.registrationMessage;
+  const socialFeedback =
+    searchParams.get("error") === "social" ? socialLoginFailure : null;
 
   const authenticateAccountMutation = useMutation({
     mutationFn: authenticateAccount,
+    onMutate: () => setFeedback(null),
     onSuccess: (session) => {
       authSession.setSession(session);
       navigateTo("/");
     },
     onError: (error: unknown) => {
-      const axiosError = error as AxiosError;
-      enqueueSnackbar(
-        axiosError.response?.status === 401
-          ? i18n.login.badCredentials
-          : i18n.login.loadingError,
-        { variant: "error" },
-      );
+      setFeedback(getPasswordLoginFeedback(error));
     },
   });
 
@@ -86,140 +96,142 @@ const LoginPage = () => {
   }, [isLoggedIn, navigateTo]);
 
   return (
-    <Grid container sx={{ minHeight: "calc(100vh - 55px)" }}>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <AuthVisualPane variant="login" />
-      </Grid>
-      <Grid
-        size={{ xs: 12, md: 6 }}
-        sx={{
-          alignItems: "center",
-          display: "flex",
-          justifyContent: "center",
-          px: { xs: 2.5, sm: 5, md: 7 },
-          py: { xs: 4, md: 6 },
-        }}
-      >
-        <Box
-          component="form"
-          onSubmit={handleSubmit(onSubmit)}
-          sx={{ maxWidth: 440, width: "100%" }}
-        >
-          <Box sx={{ mb: 3.5 }}>
-            <Typography
-              component="h1"
+    <AuthPageFrame variant="login">
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <Box sx={{ mb: 3.5 }}>
+          <Typography
+            component="h1"
+            sx={{
+              color: "common.white",
+              fontSize: { xs: 24, sm: 26 },
+              fontWeight: 500,
+              mb: 0.75,
+            }}
+          >
+            Sign in
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            Enter your credentials to continue.
+          </Typography>
+        </Box>
+
+        {registrationMessage && (
+          <Alert severity="success" sx={{ mb: 2.5 }}>
+            {registrationMessage}
+          </Alert>
+        )}
+        {(feedback ?? socialFeedback) && (
+          <Alert
+            severity={(feedback ?? socialFeedback)?.severity}
+            sx={{ mb: 2.5 }}
+          >
+            {(feedback ?? socialFeedback)?.message}
+          </Alert>
+        )}
+
+        <Stack spacing={2}>
+          <TextField
+            autoComplete="username"
+            error={!!errors.usernameOrEmail}
+            fullWidth
+            helperText={
+              errors.usernameOrEmail ? errors.usernameOrEmail?.message : " "
+            }
+            label="Email or username"
+            type="text"
+            {...register("usernameOrEmail")}
+            sx={authTextFieldSx}
+          />
+
+          <Box>
+            <Stack
+              direction="row"
               sx={{
-                color: "common.white",
-                fontSize: { xs: 24, sm: 26 },
-                fontWeight: 500,
+                alignItems: "baseline",
+                justifyContent: "space-between",
                 mb: 0.75,
               }}
             >
-              Sign in
-            </Typography>
-            <Typography color="text.secondary" variant="body2">
-              Enter your credentials to continue.
-            </Typography>
-          </Box>
+              <Typography
+                color="text.secondary"
+                component="label"
+                htmlFor="password"
+                variant="caption"
+              >
+                Password
+              </Typography>
+              <Link
+                component={RouterLink}
+                sx={{
+                  color: movieColors.brand,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  "&:hover": { textDecoration: "underline" },
+                }}
+                to="/reset-password"
+              >
+                Forgot password?
+              </Link>
+            </Stack>
 
-          <Stack spacing={2}>
             <TextField
-              autoComplete="username"
-              autoFocus
-              error={!!errors.usernameOrEmail}
+              autoComplete="current-password"
+              error={!!errors.password}
               fullWidth
-              helperText={
-                errors.usernameOrEmail ? errors.usernameOrEmail?.message : " "
-              }
-              label="Email or username"
-              type="text"
-              {...register("usernameOrEmail")}
+              helperText={errors.password ? errors.password?.message : " "}
+              id="password"
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                        edge="end"
+                        onClick={() => setShowPassword((current) => !current)}
+                        size="small"
+                      >
+                        {showPassword ? (
+                          <VisibilityOffIcon fontSize="small" />
+                        ) : (
+                          <VisibilityIcon fontSize="small" />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              type={showPassword ? "text" : "password"}
+              {...register("password")}
               sx={authTextFieldSx}
             />
+          </Box>
 
-            <Box>
-              <Stack
-                direction="row"
-                sx={{
-                  alignItems: "baseline",
-                  justifyContent: "space-between",
-                  mb: 0.75,
-                }}
-              >
-                <Typography
-                  color="text.secondary"
-                  component="label"
-                  htmlFor="password"
-                  variant="caption"
-                >
-                  Password
-                </Typography>
-                <Link
-                  component={RouterLink}
-                  sx={{
-                    color: movieColors.brand,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    "&:hover": { textDecoration: "underline" },
-                  }}
-                  to="/reset-password"
-                >
-                  Forgot password?
-                </Link>
+          <Button
+            disabled={authenticateAccountMutation.isPending}
+            fullWidth
+            sx={{ py: 1.5, textTransform: "none" }}
+            type="submit"
+            variant="contained"
+          >
+            {authenticateAccountMutation.isPending ? (
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <CircularProgress color="inherit" size={16} />
+                <span>Signing in...</span>
               </Stack>
+            ) : (
+              "Sign in"
+            )}
+          </Button>
 
-              <TextField
-                autoComplete="current-password"
-                error={!!errors.password}
-                fullWidth
-                helperText={errors.password ? errors.password?.message : " "}
-                id="password"
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label={
-                            showPassword ? "Hide password" : "Show password"
-                          }
-                          edge="end"
-                          onClick={() => setShowPassword((current) => !current)}
-                          size="small"
-                        >
-                          {showPassword ? (
-                            <VisibilityOffIcon fontSize="small" />
-                          ) : (
-                            <VisibilityIcon fontSize="small" />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-                type={showPassword ? "text" : "password"}
-                {...register("password")}
-                sx={authTextFieldSx}
-              />
-            </Box>
+          <PasskeyLoginButton />
 
-            <Button
-              disabled={authenticateAccountMutation.isPending}
-              fullWidth
-              sx={{ py: 1.5, textTransform: "none" }}
-              type="submit"
-              variant="contained"
-            >
-              Sign in
-            </Button>
-
-            <PasskeyLoginButton />
-
-            <SocialLoginButtons />
-          </Stack>
-        </Box>
-      </Grid>
-    </Grid>
+          <SocialLoginButtons />
+        </Stack>
+      </Box>
+    </AuthPageFrame>
   );
 };
 

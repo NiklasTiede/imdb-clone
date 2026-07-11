@@ -13,8 +13,9 @@ public @interface ValidUsername {
   String message() default
       """
                   Username has to follow these rules:
-                  - has at least 2 letters, at most 30 letters
-                  - can contain . or _ between letters
+                  - has at least 2 characters, at most 20 characters
+                  - can contain letters, digits, . or _
+                  - . and _ cannot be leading, trailing or consecutive
                   """;
 
   Class<?>[] groups() default {};

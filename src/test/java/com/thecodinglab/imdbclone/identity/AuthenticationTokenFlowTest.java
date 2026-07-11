@@ -17,6 +17,7 @@ import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationToke
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTokenRepository;
 import com.thecodinglab.imdbclone.identity.internal.persistence.VerificationTypeEnum;
 import com.thecodinglab.imdbclone.notification.internal.EmailNotificationService;
+import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -59,9 +60,10 @@ class AuthenticationTokenFlowTest extends BaseContainers {
   @Test
   void registerUser_withEmailVerificationEnabled_createsDisabledAccountAndConfirmationToken(
       AssertablePublishedEvents events) {
-    authenticationService.registerUser(
-        new RegistrationRequest(
-            "Needs_Confirmation", "Needs.Confirmation@example.com", "Encrypted!Pa55worD"));
+    MessageResponse response =
+        authenticationService.registerUser(
+            new RegistrationRequest(
+                "Needs_Confirmation", "Needs.Confirmation@example.com", "Encrypted!Pa55worD"));
 
     Account account = accountRepository.getAccountByUsername("needs_confirmation");
     String rawToken =
@@ -74,6 +76,7 @@ class AuthenticationTokenFlowTest extends BaseContainers {
         onlyTokenForAccount(account.getId(), VerificationTypeEnum.EMAIL_CONFIRMATION);
 
     assertThat(account.getEnabled()).isFalse();
+    assertThat(response.message()).isEqualTo("Check your email to activate your account.");
     assertThat(token.getConfirmedAtInUtc()).isNull();
     assertThat(token.getExpiryDateInUtc()).isNotNull();
     assertThat(persistedTokenValues()).doesNotContain(rawToken);

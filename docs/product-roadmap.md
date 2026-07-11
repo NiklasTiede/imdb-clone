@@ -18,6 +18,8 @@ Guiding principles:
 - Treat search relevance as a measured product capability, not a one-time ranking implementation.
 - Use PostgreSQL as the source of truth and OpenSearch as the derived discovery index.
 - Prefer explainable editorial queries before introducing opaque personalization.
+- Treat authentication as a first-class responsive experience, with balanced composition on desktop
+  and focused, efficient forms on mobile.
 - Preserve fast loading, responsive layouts, keyboard access, and useful empty states as content
   density increases.
 
@@ -46,9 +48,13 @@ than a separate carousel implementation in each feature.
 ### Movie detail
 
 - The page is constrained to `760px` and contains one surface with the movie hero and synopsis.
+- On wide desktop viewports, that compact surface reads like a dialog and leaves most of the page
+  unused. On mobile, the poster composition leaves dead space before the title, while rating panels
+  and actions consume excessive vertical space and wrap inconsistently.
 - `MovieRecord` already exposes the primary and original titles, movie type, year range, runtime,
   genres, IMDb rating and count, community rating and count, description, poster and backdrop
   tokens, IMDb/TMDB IDs, and `trailerYoutubeKey`.
+- The current page renders the poster but does not use the available backdrop image or trailer.
 - Rating and watchlist actions are already available.
 - The backend already exposes paginated comments by movie, plus authenticated create, update, and
   delete operations.
@@ -98,8 +104,14 @@ Goal: turn the page into a broad, media-led movie destination instead of a compa
   readable synopsis and comment line lengths.
 - Recompose the page into unframed content bands for hero media, facts, trailer, community, and
   recommendations instead of nesting everything inside one card.
-- Use the backdrop image as a strong first-viewport signal and retain the poster as the primary
-  inspectable asset.
+- Use the stored backdrop image as a strong, wide first-viewport signal and retain a substantially
+  larger poster as the primary inspectable asset. Provide an intentional poster/color fallback when
+  no backdrop is available.
+- Use a broad desktop hero grid for poster, identity, ratings, and actions. On mobile, deliberately
+  stack or overlap these elements so the poster does not leave an empty upper-right region.
+- Keep the synopsis constrained to a readable measure even though the overall page is wider.
+- Replace the cramped inline ten-star control with a touch-friendly rating action or focused rating
+  interaction, while continuing to show the current user rating clearly.
 - Surface more of the existing data:
   - Original title when different from the display title
   - Movie or series type
@@ -429,8 +441,8 @@ after its user outcome and data requirements are clear.
    RRF or changing the embedding model.
 2. **Recommendation foundation** - define candidate, ranking, explanation, interaction-event, and
    evaluation contracts with anonymous content-based results first.
-3. **Detail layout and existing metadata** - widen and restructure the page without changing API
-   contracts.
+3. **Detail layout, backdrop, and existing metadata** - widen and restructure the page around the
+   stored backdrop and poster without changing API contracts.
 4. **Trailer** - add the lazy, privacy-aware player and fallback behavior.
 5. **Movie comments** - expose author metadata and build list/create/edit/delete workflows.
 6. **Your comments** - make authored comments discoverable and manageable from the user area.
@@ -445,8 +457,8 @@ after its user outcome and data requirements are clear.
    summaries, and safe import/export.
 13. **Administrator movie editing** - deliver search/select and safe single-movie editing before
    delete or bulk operations.
-14. **Catalog enrichment and advanced personalization** - add people and richer metadata, then use account
-   activity only when enough meaningful signals exist.
+14. **Catalog enrichment and advanced personalization** - add people and richer metadata, then use
+   account activity only when enough meaningful signals exist.
 
 Each slice should be independently deployable and include backend tests where contracts change,
 frontend behavior tests, responsive Playwright coverage, and production observability checks.

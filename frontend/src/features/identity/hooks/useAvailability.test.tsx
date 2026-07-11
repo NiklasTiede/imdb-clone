@@ -66,4 +66,21 @@ describe("useAvailability", () => {
 
     await waitFor(() => expect(result.current.status).toBe("taken"));
   });
+
+  it("reports a failed availability check without treating the value as taken", async () => {
+    const checkFn = vi.fn().mockRejectedValue(new Error("network unavailable"));
+
+    const { result } = renderHook(
+      () =>
+        useAvailability({
+          checkFn,
+          debounceMs: 0,
+          enabled: true,
+          value: "movie_fan",
+        }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => expect(result.current.status).toBe("error"));
+  });
 });

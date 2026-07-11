@@ -1,6 +1,14 @@
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GoogleIcon from "@mui/icons-material/Google";
-import { Box, Button, Divider, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { useState } from "react";
 
 const socialProviders = [
   {
@@ -16,7 +24,10 @@ const socialProviders = [
 ];
 
 const SocialLoginButtons = () => {
+  const [pendingProvider, setPendingProvider] = useState<string | null>(null);
+
   const startSocialLogin = (provider: string) => {
+    setPendingProvider(provider);
     window.location.href = `/oauth2/authorization/${provider}`;
   };
 
@@ -48,6 +59,7 @@ const SocialLoginButtons = () => {
       >
         {socialProviders.map((provider) => (
           <Button
+            disabled={pendingProvider !== null}
             key={provider.id}
             fullWidth
             onClick={() => startSocialLogin(provider.id)}
@@ -65,7 +77,14 @@ const SocialLoginButtons = () => {
             type="button"
             variant="outlined"
           >
-            {provider.label}
+            {pendingProvider === provider.id ? (
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <CircularProgress color="inherit" size={14} />
+                <span>Opening...</span>
+              </Stack>
+            ) : (
+              provider.label
+            )}
           </Button>
         ))}
       </Box>

@@ -1,24 +1,22 @@
 import {
   Box,
+  Alert,
   Button,
   Checkbox,
   CircularProgress,
   FormControlLabel,
   Grid,
   InputAdornment,
-  Link,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckIcon from "@mui/icons-material/Check";
-import React, { useState } from "react";
-import { Link as RouterLink, useNavigate } from "react-router";
-import { i18n } from "../../../i18n";
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as zod from "zod";
 import type { RegistrationRequest } from "../model/identityRequests";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -29,74 +27,36 @@ import {
   checkEmailAvailability,
   checkUsernameAvailability,
 } from "../api/identityAvailability";
-import AuthVisualPane from "../components/AuthVisualPane";
 import { authTextFieldSx } from "../components/authFormStyles";
 import SocialLoginButtons from "../components/SocialLoginButtons";
 import { useAvailability } from "../hooks/useAvailability";
-import { useSnackbar } from "notistack";
-
-export interface FormInputs {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-
-export const schema = zod
-  .object({
-    username: zod
-      .string()
-      .min(2, "Username must contain at least 2 character(s)")
-      .max(30, "Username must contain at most 30 character(s)")
-      .regex(
-        new RegExp(i18n.regex.username.pattern),
-        i18n.regex.username.rules,
-      ),
-    email: zod
-      .string()
-      .regex(new RegExp(i18n.regex.email.pattern), i18n.regex.email.rules),
-    password: zod
-      .string()
-      .min(8, "Password must contain at least 8 characters")
-      .max(30, "Password must contain at most 30 characters")
-      .regex(
-        new RegExp(i18n.regex.password.pattern),
-        i18n.regex.password.rules,
-      ),
-    confirmPassword: zod
-      .string()
-      .min(8, "Password must contain at least 8 characters")
-      .max(30, "Password must contain at most 30 characters")
-      .regex(
-        new RegExp(i18n.regex.password.pattern),
-        i18n.regex.password.rules,
-      ),
-  })
-  .superRefine(({ confirmPassword, password }, ctx) => {
-    if (confirmPassword !== password) {
-      ctx.addIssue({
-        path: ["confirmPassword"],
-        code: "custom",
-        message: "Passwords do not match",
-      });
-    }
-  });
+import AuthPageFrame from "../components/AuthPageFrame";
+import {
+  passwordRules,
+  registrationSchema,
+  type RegistrationFormInputs,
+} from "../model/registrationValidation";
+import {
+  getRegistrationFeedback,
+  type AuthFeedback,
+} from "../model/authFeedback";
 
 const RegistrationPage = () => {
   const navigateTo = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [feedback, setFeedback] = useState<AuthFeedback | null>(null);
 
   const {
     setError,
+    setFocus,
     register,
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<FormInputs>({
+  } = useForm<RegistrationFormInputs>({
     mode: "onBlur",
-    resolver: zodResolver(schema),
+    resolver: zodResolver(registrationSchema),
   });
 
   const username = watch("username") ?? "";
@@ -116,11 +76,14 @@ const RegistrationPage = () => {
 
   const registerAccountMutation = useMutation({
     mutationFn: registerAccount,
-    onSuccess: () => {
-      enqueueSnackbar(i18n.registration.registrationSuccessful, {
-        variant: "success",
+    onMutate: () => setFeedback(null),
+    onSuccess: (response) => {
+      navigateTo("/login", {
+        state: {
+          registrationMessage:
+            response.message ?? "Account created. You can sign in now.",
+        },
       });
-      navigateTo("/login");
     },
     onError: (error: unknown) => {
       const invalidParams = getRegistrationInvalidParams(error);
@@ -137,15 +100,18 @@ const RegistrationPage = () => {
           message: invalidParams.username,
         });
       }
+      if (invalidParams.username) {
+        setFocus("username");
+      } else if (invalidParams.email) {
+        setFocus("email");
+      }
       if (!invalidParams.email && !invalidParams.username) {
-        enqueueSnackbar(i18n.registration.loadingError, {
-          variant: "error",
-        });
+        setFeedback(getRegistrationFeedback());
       }
     },
   });
 
-  const onSubmit = (data: FormInputs) => {
+  const onSubmit = (data: RegistrationFormInputs) => {
     const request: RegistrationRequest = {
       username: data.username,
       email: data.email,
@@ -162,175 +128,158 @@ const RegistrationPage = () => {
     emailAvailability.status !== "taken";
 
   return (
-    <Grid container sx={{ minHeight: "calc(100vh - 55px)" }}>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <AuthVisualPane />
-      </Grid>
-      <Grid
-        size={{ xs: 12, md: 6 }}
-        sx={{
-          alignItems: "center",
-          display: "flex",
-          justifyContent: "center",
-          px: { xs: 2.5, sm: 5, md: 7 },
-          py: { xs: 4, md: 6 },
-        }}
-      >
-        <Box
-          component="form"
-          onSubmit={handleSubmit(onSubmit)}
-          sx={{ maxWidth: 480, width: "100%" }}
-        >
-          <Box sx={{ mb: 3.5 }}>
-            <Typography
-              component="h1"
+    <AuthPageFrame formMaxWidth={480} variant="signup">
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <Box sx={{ mb: 3.5 }}>
+          <Typography
+            component="h1"
+            sx={{
+              color: "common.white",
+              fontSize: { xs: 24, sm: 26 },
+              fontWeight: 500,
+              mb: 0.75,
+            }}
+          >
+            Create your account
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            Free, takes less than a minute.
+          </Typography>
+        </Box>
+
+        {feedback && (
+          <Alert severity={feedback.severity} sx={{ mb: 2.5 }}>
+            {feedback.message}
+          </Alert>
+        )}
+
+        <Stack spacing={2}>
+          <TextField
+            autoComplete="username"
+            error={!!errors.username}
+            fullWidth
+            helperText={
+              errors.username?.message ??
+              (usernameAvailability.status === "error"
+                ? "Availability check unavailable; we will verify when you submit."
+                : " ")
+            }
+            label="Username"
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <AvailabilityAdornment
+                    status={usernameAvailability.status}
+                    takenLabel="Taken"
+                  />
+                ),
+              },
+            }}
+            type="text"
+            {...register("username")}
+            sx={authTextFieldSx}
+          />
+
+          <TextField
+            autoComplete="email"
+            error={!!errors.email}
+            fullWidth
+            helperText={
+              errors.email?.message ??
+              (emailAvailability.status === "error"
+                ? "Availability check unavailable; we will verify when you submit."
+                : " ")
+            }
+            label="Email"
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <AvailabilityAdornment
+                    status={emailAvailability.status}
+                    takenLabel="In use"
+                  />
+                ),
+              },
+            }}
+            type="email"
+            {...register("email")}
+            sx={authTextFieldSx}
+          />
+
+          <Box>
+            <Grid container spacing={1.5}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  autoComplete="new-password"
+                  error={!!errors.password}
+                  fullWidth
+                  helperText={errors.password ? errors.password?.message : " "}
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  {...register("password")}
+                  sx={authTextFieldSx}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  autoComplete="new-password"
+                  error={!!errors.confirmPassword}
+                  fullWidth
+                  helperText={
+                    errors.confirmPassword
+                      ? errors.confirmPassword?.message
+                      : " "
+                  }
+                  label="Confirm password"
+                  type={showPassword ? "text" : "password"}
+                  {...register("confirmPassword")}
+                  sx={authTextFieldSx}
+                />
+              </Grid>
+            </Grid>
+
+            <PasswordRules password={password} />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={showPassword}
+                  onChange={() => setShowPassword((current) => !current)}
+                  size="small"
+                />
+              }
+              label="Show passwords"
               sx={{
-                color: "common.white",
-                fontSize: { xs: 24, sm: 26 },
-                fontWeight: 500,
-                mb: 0.75,
+                mt: 1,
+                "& .MuiFormControlLabel-label": {
+                  color: "text.secondary",
+                  fontSize: 13,
+                },
               }}
-            >
-              Create your account
-            </Typography>
-            <Typography color="text.secondary" variant="body2">
-              Free, takes less than a minute.
-            </Typography>
+            />
           </Box>
 
-          <Stack spacing={2}>
-            <TextField
-              autoComplete="username"
-              autoFocus
-              error={!!errors.username}
-              fullWidth
-              helperText={errors.username ? errors.username?.message : " "}
-              label="Username"
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <AvailabilityAdornment
-                      status={usernameAvailability.status}
-                      takenLabel="Taken"
-                    />
-                  ),
-                },
-              }}
-              type="text"
-              {...register("username")}
-              sx={authTextFieldSx}
-            />
+          <Button
+            disabled={!canSubmit}
+            fullWidth
+            sx={{ py: 1.5, textTransform: "none" }}
+            type="submit"
+            variant="contained"
+          >
+            {registerAccountMutation.isPending ? (
+              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <CircularProgress color="inherit" size={16} />
+                <span>Creating account...</span>
+              </Stack>
+            ) : (
+              "Create account"
+            )}
+          </Button>
 
-            <TextField
-              autoComplete="email"
-              error={!!errors.email}
-              fullWidth
-              helperText={errors.email ? errors.email?.message : " "}
-              label="Email"
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <AvailabilityAdornment
-                      status={emailAvailability.status}
-                      takenLabel="In use"
-                    />
-                  ),
-                },
-              }}
-              type="email"
-              {...register("email")}
-              sx={authTextFieldSx}
-            />
-
-            <Box>
-              <Grid container spacing={1.5}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    autoComplete="new-password"
-                    error={!!errors.password}
-                    fullWidth
-                    helperText={
-                      errors.password ? errors.password?.message : " "
-                    }
-                    label="Password"
-                    type={showPassword ? "text" : "password"}
-                    {...register("password")}
-                    sx={authTextFieldSx}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    autoComplete="new-password"
-                    error={!!errors.confirmPassword}
-                    fullWidth
-                    helperText={
-                      errors.confirmPassword
-                        ? errors.confirmPassword?.message
-                        : " "
-                    }
-                    label="Confirm password"
-                    type={showPassword ? "text" : "password"}
-                    {...register("confirmPassword")}
-                    sx={authTextFieldSx}
-                  />
-                </Grid>
-              </Grid>
-
-              <PasswordRules password={password} />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={showPassword}
-                    onChange={() => setShowPassword((current) => !current)}
-                    size="small"
-                  />
-                }
-                label="Show passwords"
-                sx={{
-                  mt: 1,
-                  "& .MuiFormControlLabel-label": {
-                    color: "text.secondary",
-                    fontSize: 13,
-                  },
-                }}
-              />
-            </Box>
-
-            <Button
-              disabled={!canSubmit}
-              fullWidth
-              sx={{ py: 1.5, textTransform: "none" }}
-              type="submit"
-              variant="contained"
-            >
-              Create account
-            </Button>
-
-            <SocialLoginButtons />
-
-            <Typography
-              sx={{
-                color: "text.secondary",
-                fontSize: 12,
-                lineHeight: 1.6,
-                textAlign: "center",
-              }}
-            >
-              By creating an account, you agree to our{" "}
-              <Link component={RouterLink} to="#" underline="hover">
-                Terms
-              </Link>{" "}
-              and{" "}
-              <Link component={RouterLink} to="#" underline="hover">
-                Privacy Policy
-              </Link>
-              .
-            </Typography>
-          </Stack>
-        </Box>
-      </Grid>
-    </Grid>
+          <SocialLoginButtons />
+        </Stack>
+      </Box>
+    </AuthPageFrame>
   );
 };
 
@@ -372,39 +321,29 @@ const AvailabilityAdornment = ({
   );
 };
 
-const passwordRules = [
-  {
-    label: "At least 8 characters",
-    met: (password: string) => password.length >= 8,
-  },
-  {
-    label: "One uppercase letter",
-    met: (password: string) => /[A-Z]/.test(password),
-  },
-  {
-    label: "One lowercase letter",
-    met: (password: string) => /[a-z]/.test(password),
-  },
-  { label: "One number", met: (password: string) => /[0-9]/.test(password) },
-];
-
 const PasswordRules = ({ password }: { password: string }) => (
   <Box
+    aria-label="Password requirements"
+    aria-live="polite"
+    component="ul"
     sx={{
       display: "grid",
       gap: "4px 12px",
       gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+      m: 0,
       mt: 1,
+      p: 0,
     }}
   >
     {passwordRules.map((rule) => {
       const met = rule.met(password);
       return (
         <Stack
+          component="li"
           direction="row"
           key={rule.label}
           spacing={0.75}
-          sx={{ alignItems: "center" }}
+          sx={{ alignItems: "center", listStyle: "none" }}
         >
           <Box
             sx={{

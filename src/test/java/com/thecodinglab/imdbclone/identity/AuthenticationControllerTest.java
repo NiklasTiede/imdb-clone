@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thecodinglab.imdbclone.identity.api.LoginRequest;
+import com.thecodinglab.imdbclone.identity.api.RegistrationRequest;
 import com.thecodinglab.imdbclone.support.BaseContainers;
 import jakarta.servlet.http.Cookie;
 import java.util.Arrays;
@@ -86,6 +87,22 @@ class AuthenticationControllerTest extends BaseContainers {
             spec -> spec.expectStatus().isOk(),
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec -> spec.expectBody().jsonPath("$.isAvailable").isEqualTo(true));
+  }
+
+  @Test
+  void registration_withoutEmailVerificationReturnsSignInInstruction() throws Exception {
+    var request =
+        new RegistrationRequest(
+            "reg_feedback", "registration-feedback@example.com", "Encrypted!Pa55worD");
+
+    mockMvc
+        .perform(
+            post("/api/auth/registration")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.message").value("Account created. You can sign in now."));
   }
 
   @Test

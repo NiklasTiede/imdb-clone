@@ -86,7 +86,7 @@ public class IdentityAccess implements AuthenticationService {
     return new MessageResponse(
         identityProperties.emailVerificationEnabled()
             ? createAndSendEmailConfirmationToken(savedAccount)
-            : "Email verification is turned off: no verification email was sent but account was activated!");
+            : "Account created. You can sign in now.");
   }
 
   private String createAndSendEmailConfirmationToken(AccountIdentity account) {
@@ -108,7 +108,7 @@ public class IdentityAccess implements AuthenticationService {
     logger.info(
         "confirmation email containing activation token for account with [{}] was requested",
         kv(ACCOUNT_ID, account.id()));
-    return "Confirmation email was send";
+    return "Check your email to activate your account.";
   }
 
   @Override

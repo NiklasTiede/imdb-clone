@@ -1,23 +1,12 @@
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import ExploreOutlinedIcon from "@mui/icons-material/ExploreOutlined";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import authCinemaBackdrop from "../../../assets/img/auth-cinema-backdrop.webp";
 import { movieColors } from "../../../theme";
-
-const posters = [
-  { title: "HEREDITARY", bg: "#2a1a1a", fg: "#d4a574" },
-  { title: "THE WITCH", bg: "#1a2a1f", fg: "#8fbc8f" },
-  { title: "MIDSOMMAR", bg: "#2c1f2a", fg: "#d896c8" },
-  { title: "IT FOLLOWS", bg: "#1a1a08", fg: "#fbbf24" },
-  { title: "GET OUT", bg: "#0a1a14", fg: "#4ade80" },
-  { title: "BABADOOK", bg: "#1a1f2e", fg: "#6fa3c7" },
-  { title: "INTERSTELLAR", bg: "#0a0f1f", fg: "#a5b4cb" },
-  { title: "DUNE", bg: "#1f1408", fg: "#fbbf24" },
-  { title: "ARRIVAL", bg: "#0a1410", fg: "#86efac" },
-];
 
 type AuthVisualPaneVariant = "login" | "signup";
 
@@ -36,7 +25,7 @@ const copyByVariant: Record<
   signup: {
     title: "Track your taste in cinema.",
     subtitle:
-      "Join thousands of movie lovers cataloguing, rating, and discussing the films that matter to them.",
+      "Build a personal catalog around the movies you want to watch and the ones you already love.",
     features: [
       {
         description: "Save movies for movie night.",
@@ -44,21 +33,20 @@ const copyByVariant: Record<
         label: "Build your watchlist",
       },
       {
-        description: "Build a personal taste profile.",
+        description: "Keep your scores in one place.",
         icon: <StarBorderIcon fontSize="small" />,
         label: "Rate what you watch",
       },
       {
-        description: "Comment on movies and discover other fans.",
-        icon: <ChatBubbleOutlineIcon fontSize="small" />,
-        label: "Join the conversation",
+        description: "Explore more of the catalog.",
+        icon: <ExploreOutlinedIcon fontSize="small" />,
+        label: "Discover new favorites",
       },
     ],
   },
   login: {
     title: "Welcome back.",
-    subtitle:
-      "Pick up where you left off - your watchlist, ratings, and discussions are waiting.",
+    subtitle: "Pick up where you left off - your watchlist and ratings are ready.",
     features: [
       {
         description: "The movies you've saved.",
@@ -66,14 +54,14 @@ const copyByVariant: Record<
         label: "Your watchlist",
       },
       {
-        description: "The judgments you've made.",
+        description: "The scores you've recorded.",
         icon: <StarBorderIcon fontSize="small" />,
         label: "Your ratings",
       },
       {
-        description: "Replies to your comments.",
-        icon: <ChatBubbleOutlineIcon fontSize="small" />,
-        label: "Your conversations",
+        description: "Find something worth watching next.",
+        icon: <ExploreOutlinedIcon fontSize="small" />,
+        label: "Continue exploring",
       },
     ],
   },
@@ -88,110 +76,109 @@ const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
 
   return (
     <Box
+      data-testid="auth-visual-pane"
       sx={{
-        background: "linear-gradient(135deg, #0a1a2e 0%, #16243a 100%)",
+        alignItems: "center",
+        bgcolor: movieColors.surfaceInset,
         display: { xs: "none", md: "flex" },
-        flexDirection: "column",
-        justifyContent: "space-between",
+        height: "100%",
         overflow: "hidden",
-        p: 6,
+        px: { md: 6, lg: 8 },
+        py: 6,
         position: "relative",
       }}
     >
       <Box
-        aria-hidden
+        alt=""
+        aria-hidden="true"
+        component="img"
+        src={authCinemaBackdrop}
         sx={{
-          display: "grid",
-          gap: 1,
-          gridTemplateColumns: "repeat(3, 1fr)",
+          height: "100%",
           inset: 0,
-          opacity: 0.15,
-          p: 1.5,
+          objectFit: "cover",
+          objectPosition: "center",
           position: "absolute",
-          transform: "rotate(-8deg) scale(1.4)",
-          transformOrigin: "center",
+          width: "100%",
         }}
+      />
+      <Box
+        aria-hidden="true"
+        sx={{
+          background:
+            "linear-gradient(90deg, rgba(7,11,18,0.92) 0%, rgba(7,11,18,0.78) 58%, rgba(7,11,18,0.48) 100%)",
+          inset: 0,
+          position: "absolute",
+        }}
+      />
+
+      <Stack
+        spacing={4}
+        sx={{ maxWidth: 420, position: "relative", width: "100%", zIndex: 1 }}
       >
-        {posters.map((poster) => (
-          <Box
-            key={poster.title}
+        <Box>
+          <Typography
+            component="h2"
             sx={{
-              alignItems: "flex-end",
-              aspectRatio: "2 / 3",
-              bgcolor: poster.bg,
-              borderRadius: 0.5,
-              color: poster.fg,
-              display: "flex",
-              fontSize: 9,
-              fontWeight: 500,
-              justifyContent: "center",
-              letterSpacing: 1,
-              pb: 0.75,
-              textAlign: "center",
+              color: "common.white",
+              fontSize: 30,
+              fontWeight: 600,
+              mb: 1.5,
             }}
           >
-            {poster.title}
-          </Box>
-        ))}
-      </Box>
-
-      <Box sx={{ position: "relative", zIndex: 1 }}>
-        <Typography
-          component="h2"
-          sx={{ color: "common.white", fontSize: 28, fontWeight: 500, mb: 1.5 }}
-        >
-          {copy.title}
-        </Typography>
-        <Typography
-          sx={{
-            color: "rgba(255,255,255,0.65)",
-            fontSize: 14,
-            lineHeight: 1.6,
-            maxWidth: 340,
-          }}
-        >
-          {copy.subtitle}
-        </Typography>
-      </Box>
-
-      <Stack component="ul" spacing={1.75} sx={{ m: 0, p: 0, zIndex: 1 }}>
-        {copy.features.map((feature) => (
-          <Stack
-            component="li"
-            direction="row"
-            key={feature.label}
-            spacing={1.5}
-            sx={{ color: "rgba(255,255,255,0.85)", listStyle: "none" }}
+            {copy.title}
+          </Typography>
+          <Typography
+            sx={{
+              color: "rgba(255,255,255,0.65)",
+              fontSize: 14,
+              lineHeight: 1.6,
+              maxWidth: 340,
+            }}
           >
-            <Box
-              sx={{
-                alignItems: "center",
-                bgcolor: "rgba(122,184,255,0.12)",
-                borderRadius: 1,
-                color: movieColors.info,
-                display: "flex",
-                flexShrink: 0,
-                height: 28,
-                justifyContent: "center",
-                width: 28,
-              }}
+            {copy.subtitle}
+          </Typography>
+        </Box>
+
+        <Stack component="ul" spacing={2} sx={{ m: 0, p: 0 }}>
+          {copy.features.map((feature) => (
+            <Stack
+              component="li"
+              direction="row"
+              key={feature.label}
+              spacing={1.5}
+              sx={{ color: "rgba(255,255,255,0.85)", listStyle: "none" }}
             >
-              {feature.icon}
-            </Box>
-            <Box>
-              <Typography
-                sx={{ color: "common.white", fontSize: 13, fontWeight: 500 }}
+              <Box
+                sx={{
+                  alignItems: "center",
+                  bgcolor: "rgba(122,184,255,0.12)",
+                  borderRadius: 1,
+                  color: movieColors.info,
+                  display: "flex",
+                  flexShrink: 0,
+                  height: 28,
+                  justifyContent: "center",
+                  width: 28,
+                }}
               >
-                {feature.label}
-              </Typography>
-              <Typography
-                sx={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}
-              >
-                {feature.description}
-              </Typography>
-            </Box>
-          </Stack>
-        ))}
+                {feature.icon}
+              </Box>
+              <Box>
+                <Typography
+                  sx={{ color: "common.white", fontSize: 13, fontWeight: 500 }}
+                >
+                  {feature.label}
+                </Typography>
+                <Typography
+                  sx={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}
+                >
+                  {feature.description}
+                </Typography>
+              </Box>
+            </Stack>
+          ))}
+        </Stack>
       </Stack>
     </Box>
   );

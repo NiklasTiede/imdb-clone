@@ -1,9 +1,12 @@
 import { Route, Routes } from "react-router";
 import { appTheme } from "./theme";
-import { CssBaseline, ThemeProvider } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  CssBaseline,
+  ThemeProvider,
+} from "@mui/material";
 import { Suspense } from "react";
-import PageContent from "./shared/layout/PageContent";
-import Surface from "./shared/layout/Surface";
 import { routeDefinitions } from "./app/routes/routeDefinitions";
 
 function App() {
@@ -22,9 +25,17 @@ function App() {
 }
 
 const RouteFallback = () => (
-  <PageContent maxWidth="760px">
-    <Surface sx={{ p: 3, mt: 4 }}>Loading...</Surface>
-  </PageContent>
+  <Box
+    sx={{
+      alignItems: "center",
+      bgcolor: "background.default",
+      display: "flex",
+      justifyContent: "center",
+      minHeight: "100dvh",
+    }}
+  >
+    <CircularProgress aria-label="Loading page" size={28} />
+  </Box>
 );
 
 export default App;

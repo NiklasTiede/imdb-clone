@@ -18,7 +18,14 @@ const AuthLayout = ({
   altTo,
   children,
 }: AuthLayoutProps) => (
-  <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
+  <Box
+    sx={{
+      bgcolor: "background.default",
+      display: "grid",
+      gridTemplateRows: "auto minmax(0, 1fr)",
+      minHeight: "100dvh",
+    }}
+  >
     <Box
       component="header"
       sx={{
@@ -27,6 +34,7 @@ const AuthLayout = ({
         bgcolor: `${movieColors.surface}f0`,
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         display: "flex",
+        gap: 2,
         justifyContent: "space-between",
         px: { xs: 2, sm: 3 },
         py: 1.75,
@@ -46,7 +54,9 @@ const AuthLayout = ({
           }}
           to={altTo}
         >
-          {altLabel}{" "}
+          <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+            {altLabel}{" "}
+          </Box>
           <Box
             component="span"
             sx={{ color: movieColors.info, fontWeight: 500 }}
@@ -56,7 +66,9 @@ const AuthLayout = ({
         </Link>
       )}
     </Box>
-    {children}
+    <Box component="main" sx={{ minHeight: 0 }}>
+      {children}
+    </Box>
   </Box>
 );
 
