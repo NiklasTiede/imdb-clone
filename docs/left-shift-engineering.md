@@ -56,7 +56,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Introduce high-value domain types incrementally | Make invalid values unconstructable where one type can concentrate a real invariant; the first type is `RatingScore`. |
 | Adopted | Model expected outcomes with sealed types where callers branch | Use closed state models when variants own different data; reindex jobs now map states through a compiler-exhaustive switch. |
 | Adopted | Add property-based tests for pure invariants | Exercise broad deterministic input spaces where shrinking produces useful examples; rank fusion is the first target. |
-| Candidate | Add targeted mutation testing | Prove important tests fail when implementation behavior is changed incorrectly. |
+| Declined for now | Add targeted mutation testing | The focused PIT trial could not execute the JUnit 6 suite with the latest stable adapter; avoid a legacy shadow suite and revisit when the adapter supports this test platform. |
 | Candidate | Add risk-based JaCoCo branch thresholds | Turn coverage regressions in important modules into build failures. |
 | Candidate | Start independent Testcontainers concurrently | Reduce some integration startup latency without parallel database mutation. |
 | Candidate | Consolidate avoidable Spring test contexts | Reduce repeated application-context and connection-pool startup. |
@@ -229,6 +229,21 @@ list plus the semantic list `[1]`; the mutation was reverted after proving the s
 jqwik stores replay data under ignored `build/jqwik-database`, reports the reproduction seed on
 failure, and retries the previous failing seed locally. Keep generated input sizes bounded so these
 properties remain part of the fast backend lane.
+
+## Backend Mutation-Testing Decision
+
+Targeted mutation testing was trialed against `MovieSearchRankFusion`, including its example and
+property tests. The trial used Gradle PIT plugin 1.19.0, PIT 1.25.5, and the stable JUnit Platform
+adapter 1.2.3. PIT reached its coverage pre-scan on Java 25, but the adapter exposed both Jupiter and
+jqwik engine descriptors as failing tests under the project's JUnit 6 runtime, even when only the
+ordinary Jupiter example class was selected. The normal Gradle suite remained green.
+
+The candidate is declined for now. Maintaining duplicate JUnit 4 tests or depending on an
+unreleased adapter would reduce locality and add a second test model merely to operate the tool.
+Revisit when a stable PIT adapter explicitly supports JUnit 6 and jqwik; retain the current property
+tests meanwhile because their deliberate off-by-one mutation trial already proved useful fault
+detection. Mutation testing should remain targeted and opt-in if it becomes compatible rather than
+joining the fast `test` or `check` lanes.
 
 ## Frontend Indexed Access Policy
 
