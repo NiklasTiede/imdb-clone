@@ -58,7 +58,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Add property-based tests for pure invariants | Exercise broad deterministic input spaces where shrinking produces useful examples; rank fusion is the first target. |
 | Declined for now | Add targeted mutation testing | The focused PIT trial could not execute the JUnit 6 suite with the latest stable adapter; avoid a legacy shadow suite and revisit when the adapter supports this test platform. |
 | Adopted | Add risk-based JaCoCo branch thresholds | Preserve complete branch coverage in compact, high-risk pure logic without imposing a misleading repository-wide percentage. |
-| Candidate | Start independent Testcontainers concurrently | Reduce some integration startup latency without parallel database mutation. |
+| Declined | Start independent Testcontainers concurrently | A cached-image trial changed a 35-second targeted integration run into a hang beyond four minutes even though all services became healthy; keep deterministic sequential startup. |
 | Candidate | Consolidate avoidable Spring test contexts | Reduce repeated application-context and connection-pool startup. |
 | Candidate | Parallelize only the fast backend lane | Use measured Gradle forks without duplicating containers or Spring context caches. |
 | Adopted | Enable dependency locking and verification | Pin every resolved backend dependency and reject artifacts whose SHA-256 checksum is not reviewed metadata. |
@@ -261,6 +261,20 @@ a repository-wide coverage percentage: generated mappers, framework adapters, an
 would turn it into a volume metric. Add a class only when its decisions are high risk, its tests can
 exercise the branches through stable behavior, and complete coverage remains readable rather than
 requiring implementation-shaped assertions.
+
+## Backend Testcontainers Startup Decision
+
+Parallel startup was trialed with Testcontainers `Startables.deepStart` for the independent
+PostgreSQL, OpenSearch, and RustFS containers. With images cached, a targeted `DatabaseSchemaTest`
+method completed in 35 seconds under the existing sequential lifecycle. The parallel version did not
+complete after more than four minutes: container logs showed PostgreSQL ready and OpenSearch green,
+but the combined startup future did not return and had to be interrupted.
+
+The candidate is declined. A startup optimization that can hang the entire integration feedback loop
+is worse than the small theoretical latency reduction, especially on a resource-constrained developer
+machine starting OpenSearch beside two other services. Keep the shared singleton containers and
+sequential startup. This decision does not prohibit parallel test execution research for tests that do
+not share mutable infrastructure; it only rejects concurrent startup of this three-service fixture.
 
 ## Frontend Indexed Access Policy
 
