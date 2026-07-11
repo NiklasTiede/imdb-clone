@@ -73,7 +73,7 @@ const LoginPage = () => {
     onMutate: () => setFeedback(null),
     onSuccess: (session) => {
       authSession.setSession(session);
-      navigateTo(getPostLoginDestination(locationState));
+      void navigateTo(getPostLoginDestination(locationState));
     },
     onError: (error: unknown) => {
       setFeedback(getPasswordLoginFeedback(error));
@@ -99,13 +99,18 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigateTo(getPostLoginDestination(locationState));
+      void navigateTo(getPostLoginDestination(locationState));
     }
   }, [isLoggedIn, locationState, navigateTo]);
 
   return (
     <AuthPageFrame variant="login">
-      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+      <Box
+        component="form"
+        onSubmit={(event) => {
+          void handleSubmit(onSubmit)(event);
+        }}
+      >
         <Box sx={{ mb: 3.5 }}>
           <Typography
             component="h1"

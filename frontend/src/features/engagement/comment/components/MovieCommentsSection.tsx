@@ -149,7 +149,12 @@ const MovieCommentsSection = ({
         ) : commentsQuery.isError ? (
           <Alert
             action={
-              <Button color="inherit" onClick={() => commentsQuery.refetch()}>
+              <Button
+                color="inherit"
+                onClick={() => {
+                  void commentsQuery.refetch();
+                }}
+              >
                 Try again
               </Button>
             }
@@ -213,7 +218,9 @@ const MovieCommentsSection = ({
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
                 <Button
                   disabled={commentsQuery.isFetchingNextPage}
-                  onClick={() => commentsQuery.fetchNextPage()}
+                  onClick={() => {
+                    void commentsQuery.fetchNextPage();
+                  }}
                   variant="outlined"
                 >
                   {commentsQuery.isFetchingNextPage ? (

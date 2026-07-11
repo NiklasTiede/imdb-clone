@@ -67,7 +67,7 @@ const FilterPanelPage = () => {
       params.set("sort", sort);
     }
 
-    navigate(`/movie-search?${params.toString()}`);
+    void navigate(`/movie-search?${params.toString()}`);
   };
 
   return (
@@ -132,8 +132,10 @@ const FilterPanelPage = () => {
                     marks={yearMarks}
                     max={2026}
                     min={1950}
-                    onChange={(_event, value) =>
-                      setMinYear(Array.isArray(value) ? value[0] : value)
+                    onChange={(_event, value: number | number[]) =>
+                      setMinYear(
+                        Array.isArray(value) ? (value[0] ?? 1950) : value,
+                      )
                     }
                     step={1}
                     value={minYear}

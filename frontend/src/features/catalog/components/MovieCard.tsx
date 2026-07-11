@@ -40,7 +40,9 @@ const posterSx = {
 export function snakeToPascalCase(str: string): string {
   const camelCase = str
     .toLowerCase()
-    .replace(/_(\w)/g, (_, letter) => letter.toUpperCase());
+    .replace(/_(\w)/g, (_match: string, letter: string) =>
+      letter.toUpperCase(),
+    );
   return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
 }
 

@@ -25,6 +25,11 @@ const containerSx: SxProps<Theme> = {
   minWidth: 0,
 };
 
+type SxArray = Extract<SxProps<Theme>, readonly unknown[]>;
+
+const isSxArray = (value: SxProps<Theme> | undefined): value is SxArray =>
+  Array.isArray(value);
+
 export const RatingPill = ({
   label,
   score,
@@ -34,9 +39,14 @@ export const RatingPill = ({
 }: RatingPillProps) => {
   const formattedScore =
     score === null || score === undefined ? "—" : score.toFixed(1);
+  const combinedSx: SxProps<Theme> = isSxArray(sx)
+    ? [containerSx, ...sx]
+    : sx === undefined
+      ? [containerSx]
+      : [containerSx, sx];
 
   return (
-    <Box sx={[containerSx, ...(Array.isArray(sx) ? sx : [sx])]}>
+    <Box sx={combinedSx}>
       <Typography
         sx={{
           fontSize: 11,

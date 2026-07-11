@@ -71,7 +71,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Enable `noUncheckedIndexedAccess` | Detect possibly missing array and indexed values; the adoption trial found eleven issues. |
 | Adopted | Enable `exactOptionalPropertyTypes` | Distinguish omitted properties from explicit `undefined`; a local generator template keeps generated configuration compatible. |
 | Adopted | Type-check Vite, Playwright, and end-to-end files | Bring TypeScript outside `src` into the normal build gate; the adoption trial found three issues. |
-| Candidate | Enable type-aware typescript-eslint rules | Catch floating promises, unsafe values, misused promises, and non-exhaustive handling. |
+| Adopted | Enable type-aware typescript-eslint rules | Catch floating promises, unsafe values, misused promises, and non-exhaustive handling; the curated adoption trial found 39 actionable issues. |
 | Candidate | Parse trust seams with runtime schemas | Validate HTTP responses, errors, router state, storage, and environment values before use. |
 | Candidate | Strengthen OpenAPI required and nullable contracts | Generate useful transport types instead of making most response fields optional. |
 | Candidate | Adapt transport types into feature-owned domain types | Normalize wire arrays/sets and establish required fields at one seam. |
@@ -183,6 +183,23 @@ The adoption trial found three previously invisible issues: a Vite plugin invoca
 signature required an options object, a Playwright config that explicitly passed an absent worker
 count, and an e2e helper whose inferred fixture type rejected the partial fixture it was meant to
 exercise.
+
+## Frontend Type-Aware Lint Policy
+
+ESLint applies typescript-eslint's `recommendedTypeCheckedOnly` rules using the same three explicit
+TypeScript projects as the compiler. It also enables exhaustive switch checking. This makes promise
+lifecycle mistakes, unsafe `any` flow, invalid typed operations, and incomplete discriminated-union
+switches fail during linting.
+
+The adoption trial initially reported 56 findings. Low-signal rules for unnecessary assertions and
+intentionally async functions without `await` are disabled, as are test-only checks that conflict
+with mock method references and matcher values. The remaining 39 findings led to explicit
+fire-and-forget navigation, awaited query invalidation, safer React event adapters, a typed slider
+boundary, a corrected action-icon union, and profile-crop failure handling.
+
+Use `void` only when deliberately discarding a promise whose rejection is already handled or whose
+API owns error reporting. Await work that affects mutation lifecycle or cache consistency, and add an
+explicit rejection path for operations that can fail independently.
 
 ## References
 

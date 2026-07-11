@@ -78,7 +78,7 @@ const RegistrationPage = () => {
     mutationFn: registerAccount,
     onMutate: () => setFeedback(null),
     onSuccess: (response) => {
-      navigateTo("/login", {
+      void navigateTo("/login", {
         state: {
           registrationMessage:
             response.message ?? "Account created. You can sign in now.",
@@ -129,7 +129,12 @@ const RegistrationPage = () => {
 
   return (
     <AuthPageFrame formMaxWidth={480} variant="signup">
-      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+      <Box
+        component="form"
+        onSubmit={(event) => {
+          void handleSubmit(onSubmit)(event);
+        }}
+      >
         <Box sx={{ mb: 3.5 }}>
           <Typography
             component="h1"

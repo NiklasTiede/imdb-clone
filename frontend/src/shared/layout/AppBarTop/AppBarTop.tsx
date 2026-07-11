@@ -56,7 +56,7 @@ function AppBarTop() {
       }
 
       const search = params.toString().replaceAll("+", "%20");
-      navigateTo(
+      void navigateTo(
         {
           pathname: "/movie-search",
           search: search ? `?${search}` : "",
@@ -91,10 +91,12 @@ function AppBarTop() {
 
   const handleLogout = () => {
     setAnchorEl(null);
-    void logoutSession().finally(() => {
-      authSession.clear();
-      navigateTo("/");
-    });
+    void logoutSession()
+      .catch(() => undefined)
+      .finally(() => {
+        authSession.clear();
+        void navigateTo("/");
+      });
   };
 
   const handleSearch = (query: string) => {

@@ -82,7 +82,7 @@ const HomePage = () => {
 
   const handleViewMovie = () => {
     if (featuredMovie?.id !== undefined) {
-      navigate(`/movie?id=${featuredMovie.id}`);
+      void navigate(`/movie?id=${featuredMovie.id}`);
     }
   };
 
@@ -120,11 +120,11 @@ const HomePage = () => {
           title={homeGenreRows[0].title}
           subtitle={homeGenreRows[0].subtitle}
           movies={horrorMovies.data ?? []}
-          onViewAll={() =>
-            navigate(
+          onViewAll={() => {
+            void navigate(
               `/movie-search?genre=${homeGenreRows[0].viewAllGenre}&minYear=${minStartYear}&sort=rating_desc`,
-            )
-          }
+            );
+          }}
           loading={horrorMovies.isLoading}
         />
 
@@ -132,11 +132,11 @@ const HomePage = () => {
           title={homeGenreRows[1].title}
           subtitle={homeGenreRows[1].subtitle}
           movies={thrillerMovies.data ?? []}
-          onViewAll={() =>
-            navigate(
+          onViewAll={() => {
+            void navigate(
               `/movie-search?genre=${homeGenreRows[1].viewAllGenre}&minYear=${minStartYear}&sort=rating_desc`,
-            )
-          }
+            );
+          }}
           loading={thrillerMovies.isLoading}
         />
 
@@ -144,11 +144,11 @@ const HomePage = () => {
           title={homeGenreRows[2].title}
           subtitle={homeGenreRows[2].subtitle}
           movies={sciFiMovies.data ?? []}
-          onViewAll={() =>
-            navigate(
+          onViewAll={() => {
+            void navigate(
               `/movie-search?genre=${homeGenreRows[2].viewAllGenre}&minYear=${minStartYear}&sort=rating_desc`,
-            )
-          }
+            );
+          }}
           loading={sciFiMovies.isLoading}
         />
       </Container>

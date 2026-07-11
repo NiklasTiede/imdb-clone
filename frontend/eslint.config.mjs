@@ -19,11 +19,20 @@ export default defineConfig(
     extends: [
       eslint.configs.recommended,
       ...tseslint.configs.recommended,
+      ...tseslint.configs.recommendedTypeCheckedOnly,
     ],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
       parser: tseslint.parser,
+      parserOptions: {
+        project: [
+          "./tsconfig.json",
+          "./tsconfig.node.json",
+          "./tsconfig.e2e.json",
+        ],
+        tsconfigRootDir: import.meta.dirname,
+      },
       globals: {
         ...globals.browser,
         ...globals.node,
@@ -32,6 +41,9 @@ export default defineConfig(
     rules: {
       "no-console": "off",
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/require-await": "off",
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
     },
@@ -46,6 +58,11 @@ export default defineConfig(
       globals: {
         ...globals.browser,
       },
+    },
+    rules: {
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/prefer-promise-reject-errors": "off",
+      "@typescript-eslint/unbound-method": "off",
     },
   },
   {

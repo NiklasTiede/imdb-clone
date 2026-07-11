@@ -21,7 +21,7 @@ type MovieListRating = {
 type MovieListAction = {
   ariaLabel: string;
   color?: "danger" | "default";
-  icon: "bookmark" | "bookmark-filled" | "delete" | ReactNode;
+  icon: "bookmark" | "bookmark-filled" | "delete" | Exclude<ReactNode, string>;
   onClick: () => void;
 };
 

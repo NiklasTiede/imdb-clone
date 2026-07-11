@@ -60,8 +60,8 @@ const WatchlistPage = () => {
         variant: "error",
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: watchlistQueryKeys.all });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: watchlistQueryKeys.all });
     },
   });
 

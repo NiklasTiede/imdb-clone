@@ -68,7 +68,7 @@ const MovieDetailPage = () => {
   });
 
   const navigateToLogin = () => {
-    navigate("/login", { state: { from: location } });
+    void navigate("/login", { state: { from: location } });
   };
 
   if (movieId === null) {
@@ -100,7 +100,12 @@ const MovieDetailPage = () => {
           icon={<MovieIcon />}
           title="Movie unavailable"
           action={
-            <Button variant="contained" onClick={() => movieQuery.refetch()}>
+            <Button
+              variant="contained"
+              onClick={() => {
+                void movieQuery.refetch();
+              }}
+            >
               Try again
             </Button>
           }
@@ -201,7 +206,9 @@ const MovieDetailPage = () => {
         userRating={userRating ?? null}
         onOpenRating={handleOpenRating}
         isRatingLoading={rateMovie.isPending}
-        onShare={handleShare}
+        onShare={() => {
+          void handleShare();
+        }}
         isShareDisabled={movie.id === undefined}
       />
 

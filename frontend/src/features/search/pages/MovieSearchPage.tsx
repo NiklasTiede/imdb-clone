@@ -50,7 +50,7 @@ const MovieSearchPage = () => {
     movieCount: movies.length,
   });
   const updateSearchUrl = (patch: SearchUrlPatch) => {
-    navigate({
+    void navigate({
       pathname: location.pathname,
       search: createSearchUrl(location.search, patch),
     });

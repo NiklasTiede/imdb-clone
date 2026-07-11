@@ -14,12 +14,14 @@ export const rateMovieMutationOptions = (queryClient?: QueryClient) => ({
       await ratingApi.rateMovie(movieId, score);
     }
   },
-  onSuccess: (_data: unknown, variables: RateMovieVariables) => {
-    queryClient?.invalidateQueries({
-      queryKey: ["rating", "current-user"],
-    });
-    queryClient?.invalidateQueries({
-      queryKey: ["catalog", "movie", variables.movieId],
-    });
+  onSuccess: async (_data: unknown, variables: RateMovieVariables) => {
+    await Promise.all([
+      queryClient?.invalidateQueries({
+        queryKey: ["rating", "current-user"],
+      }),
+      queryClient?.invalidateQueries({
+        queryKey: ["catalog", "movie", variables.movieId],
+      }),
+    ]);
   },
 });

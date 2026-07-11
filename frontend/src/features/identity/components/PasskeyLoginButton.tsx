@@ -16,7 +16,7 @@ const PasskeyLoginButton = () => {
     mutationFn: loginWithPasskey,
     onSuccess: (session) => {
       authSession.setSession(session);
-      navigateTo("/");
+      void navigateTo("/");
     },
     onError: (error) => {
       const feedback = getPasskeyFeedback(error);

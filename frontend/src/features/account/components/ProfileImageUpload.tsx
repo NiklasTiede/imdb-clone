@@ -88,9 +88,14 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
   const handleUpload = async () => {
     if (imageRef && crop?.width && crop.height && file) {
-      const croppedImage = await getCroppedImage(imageRef, crop, file.name);
-
-      uploadProfilePhoto.mutate(croppedImage);
+      try {
+        const croppedImage = await getCroppedImage(imageRef, crop, file.name);
+        uploadProfilePhoto.mutate(croppedImage);
+      } catch (error) {
+        enqueueSnackbar(getProfilePhotoUploadErrorMessage(error), {
+          variant: "error",
+        });
+      }
     }
   };
 
@@ -124,9 +129,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       canvasCrop.outputHeight,
     );
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
-        if (!blob) return;
+        if (!blob) {
+          reject(new Error("Could not create the cropped profile image."));
+          return;
+        }
         const newBlob = new File([blob], fileName, { type: "image/jpeg" });
         resolve(newBlob);
       }, "image/jpeg");
@@ -219,7 +227,9 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
               Cancel
             </Button>
             <Button
-              onClick={handleUpload}
+              onClick={() => {
+                void handleUpload();
+              }}
               color="primary"
               disabled={uploadProfilePhoto.isPending}
             >

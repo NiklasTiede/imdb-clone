@@ -16,8 +16,8 @@ export const toggleWatchlistMutationOptions = (queryClient?: QueryClient) => ({
       await watchlistApi.watchMovie(movieId);
     }
   },
-  onSuccess: () => {
-    queryClient?.invalidateQueries({ queryKey: watchlistQueryKeys.all });
+  onSuccess: async () => {
+    await queryClient?.invalidateQueries({ queryKey: watchlistQueryKeys.all });
   },
 });
 
@@ -83,7 +83,7 @@ export const removeFromWatchlistMutationOptions = ({
   onSuccess: (_data: unknown, movieId: number) => {
     onRemoved(movieId);
   },
-  onSettled: () => {
-    queryClient.invalidateQueries({ queryKey: watchlistQueryKeys.all });
+  onSettled: async () => {
+    await queryClient.invalidateQueries({ queryKey: watchlistQueryKeys.all });
   },
 });
