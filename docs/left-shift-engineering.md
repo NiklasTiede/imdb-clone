@@ -70,7 +70,7 @@ Frontend observations from 2026-07-11:
 | --- | --- | --- |
 | Adopted | Enable `noUncheckedIndexedAccess` | Detect possibly missing array and indexed values; the adoption trial found eleven issues. |
 | Adopted | Enable `exactOptionalPropertyTypes` | Distinguish omitted properties from explicit `undefined`; a local generator template keeps generated configuration compatible. |
-| Candidate | Type-check Vite, Playwright, and end-to-end files | Bring TypeScript outside `src` into the normal build gate. |
+| Adopted | Type-check Vite, Playwright, and end-to-end files | Bring TypeScript outside `src` into the normal build gate; the adoption trial found three issues. |
 | Candidate | Enable type-aware typescript-eslint rules | Catch floating promises, unsafe values, misused promises, and non-exhaustive handling. |
 | Candidate | Parse trust seams with runtime schemas | Validate HTTP responses, errors, router state, storage, and environment values before use. |
 | Candidate | Strengthen OpenAPI required and nullable contracts | Generate useful transport types instead of making most response fields optional. |
@@ -167,6 +167,23 @@ OpenAPI Generator 7.19.0 emits a `Configuration` constructor that assigns absent
 override preserves absence instead. `yarn run build:moviesGen` applies that template automatically;
 generated output remains unedited and ignored.
 
+## Frontend Type-Check Boundaries
+
+`yarn typecheck` checks three environments independently:
+
+- `tsconfig.json` checks browser application code and Vitest tests under `src`;
+- `tsconfig.node.json` checks the Node-side Vite configuration;
+- `tsconfig.e2e.json` checks Playwright configuration and end-to-end specs with Node and DOM types.
+
+The production build runs all three checks before Vite builds. Playwright commands check the e2e
+project before starting a browser because Playwright transpiles TypeScript but does not perform a
+complete type check itself.
+
+The adoption trial found three previously invisible issues: a Vite plugin invocation whose CommonJS
+signature required an options object, a Playwright config that explicitly passed an absent worker
+count, and an e2e helper whose inferred fixture type rejected the partial fixture it was meant to
+exercise.
+
 ## References
 
 - [Gradle test execution](https://docs.gradle.org/current/userguide/java_testing.html)
@@ -177,5 +194,6 @@ generated output remains unedited and ignored.
 - [typescript-eslint typed linting](https://typescript-eslint.io/getting-started/typed-linting/)
 - [TypeScript `noUncheckedIndexedAccess`](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html)
 - [TypeScript `exactOptionalPropertyTypes`](https://www.typescriptlang.org/tsconfig/exactOptionalPropertyTypes.html)
+- [Playwright TypeScript](https://playwright.dev/docs/test-typescript)
 - [NullAway](https://github.com/uber/NullAway)
 - [Error Prone](https://errorprone.info/)

@@ -37,6 +37,7 @@ Run from `frontend`.
 | Task | Command |
 | --- | --- |
 | Install dependencies | `yarn install --frozen-lockfile` |
+| Type-check app, tooling, and e2e | `yarn typecheck` |
 | Lint | `yarn run lint` |
 | Tests once | `yarn test` |
 | Production build | `yarn build` |
@@ -46,6 +47,8 @@ Run from `frontend`.
 Notes:
 
 - The frontend is a Vite app on `http://localhost:3000`.
+- `yarn typecheck` checks browser source, Node-side Vite configuration, and Playwright configuration
+  and specs with their respective TypeScript environments.
 - Vitest includes `frontend/src/**/*.{test,spec}.{ts,tsx}`.
 - Playwright tests live in `frontend/e2e` and use desktop/mobile Chromium projects.
 

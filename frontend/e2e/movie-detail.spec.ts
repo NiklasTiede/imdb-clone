@@ -41,9 +41,14 @@ const commentAuthors = [
   },
 ];
 
+type MovieFixture = {
+  id: number;
+  [property: string]: unknown;
+};
+
 const mockMovie = async (
   page: Page,
-  movie = shawshank,
+  movie: MovieFixture = shawshank,
   comments: Array<Record<string, unknown>> = [],
 ) => {
   await page.route(`**/api/movie/${movie.id}`, async (route) => {
