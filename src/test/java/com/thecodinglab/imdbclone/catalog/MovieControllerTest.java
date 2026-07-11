@@ -19,15 +19,12 @@ import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.projection.MovieSearchProjectionTaskHandler;
-import com.thecodinglab.imdbclone.support.BaseContainers;
+import com.thecodinglab.imdbclone.support.BaseControllerIntegrationTest;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -35,10 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
-@SpringBootTest
-@AutoConfigureRestTestClient
-@AutoConfigureMockMvc
-class MovieControllerTest extends BaseContainers {
+class MovieControllerTest extends BaseControllerIntegrationTest {
 
   private static final String TEST_MOVIE_PREFIX = "movie-controller-integration-test";
 

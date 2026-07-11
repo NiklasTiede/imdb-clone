@@ -11,24 +11,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
-import com.thecodinglab.imdbclone.support.BaseContainers;
+import com.thecodinglab.imdbclone.support.BaseControllerIntegrationTest;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
-@SpringBootTest
-@AutoConfigureRestTestClient
-@AutoConfigureMockMvc
-class RatingControllerTest extends BaseContainers {
+class RatingControllerTest extends BaseControllerIntegrationTest {
 
   private static final long MOVIE_ID = 1L;
   private static final long ACCOUNT_ID = 2L;

@@ -59,7 +59,7 @@ Frontend observations from 2026-07-11:
 | Declined for now | Add targeted mutation testing | The focused PIT trial could not execute the JUnit 6 suite with the latest stable adapter; avoid a legacy shadow suite and revisit when the adapter supports this test platform. |
 | Adopted | Add risk-based JaCoCo branch thresholds | Preserve complete branch coverage in compact, high-risk pure logic without imposing a misleading repository-wide percentage. |
 | Declined | Start independent Testcontainers concurrently | A cached-image trial changed a 35-second targeted integration run into a hang beyond four minutes even though all services became healthy; keep deterministic sequential startup. |
-| Candidate | Consolidate avoidable Spring test contexts | Reduce repeated application-context and connection-pool startup. |
+| Adopted | Consolidate avoidable Spring test contexts | Keep ordinary controller integration tests on one explicit shared web fixture; the trial removed one context and 70 lines of annotation duplication. |
 | Candidate | Parallelize only the fast backend lane | Use measured Gradle forks without duplicating containers or Spring context caches. |
 | Adopted | Enable dependency locking and verification | Pin every resolved backend dependency and reject artifacts whose SHA-256 checksum is not reviewed metadata. |
 | Candidate | Replace source-text architecture checks where practical | Verify module dependencies and seams semantically rather than through formatting-sensitive scans. |
@@ -275,6 +275,20 @@ is worse than the small theoretical latency reduction, especially on a resource-
 machine starting OpenSearch beside two other services. Keep the shared singleton containers and
 sequential startup. This decision does not prohibit parallel test execution research for tests that do
 not share mutable infrastructure; it only rejects concurrent startup of this three-service fixture.
+
+## Backend Spring-Context Policy
+
+Ordinary controller integration tests inherit `BaseControllerIntegrationTest`, which composes the
+shared container fixture with both `RestTestClient` and `MockMvc` auto-configuration. Eight existing
+controller suites already used that exact context; moving the recommendation controller from its
+Rest-only variant onto the same fixture reduced full-suite application contexts and connection pools
+from ten to nine while removing 70 lines of repeated annotations and imports.
+
+The measured full-suite duration remained within normal run-to-run noise, so this is adopted for
+context consistency, memory, and fixture locality rather than a claimed latency win. Do not merge
+tests with meaningfully different properties or collaborators merely to improve cache counts. The
+scheduler, email-verification, OAuth, WebAuthn, rate-limit, random-port actuator, and media mock
+contexts remain separate because those differences are part of the behavior under test.
 
 ## Frontend Indexed Access Policy
 

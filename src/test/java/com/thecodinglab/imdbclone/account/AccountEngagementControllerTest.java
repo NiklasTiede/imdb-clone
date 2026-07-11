@@ -6,23 +6,17 @@ import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovie;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovieRepository;
-import com.thecodinglab.imdbclone.support.BaseContainers;
+import com.thecodinglab.imdbclone.support.BaseControllerIntegrationTest;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-@SpringBootTest
-@AutoConfigureRestTestClient
-@AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AccountEngagementControllerTest extends BaseContainers {
+class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
 
   @Autowired private RestTestClient restTestClient;
 

@@ -9,22 +9,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovieRepository;
-import com.thecodinglab.imdbclone.support.BaseContainers;
+import com.thecodinglab.imdbclone.support.BaseControllerIntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 // spotless:off
-@SpringBootTest
-@AutoConfigureRestTestClient
-@AutoConfigureMockMvc
-class WatchedMovieControllerTest extends BaseContainers {
+class WatchedMovieControllerTest extends BaseControllerIntegrationTest {
 
   private static final long MOVIE_ID = 2L;
   private static final long ACCOUNT_ID = 2L;
