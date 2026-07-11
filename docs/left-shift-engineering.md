@@ -73,7 +73,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Type-check Vite, Playwright, and end-to-end files | Bring TypeScript outside `src` into the normal build gate; the adoption trial found three issues. |
 | Adopted | Enable type-aware typescript-eslint rules | Catch floating promises, unsafe values, misused promises, and non-exhaustive handling; the curated adoption trial found 39 actionable issues. |
 | Adopted | Parse high-risk trust seams with runtime schemas | Validate authenticated session responses and login navigation state before use; expand only where boundary risk justifies a schema. |
-| Candidate | Strengthen OpenAPI required and nullable contracts | Generate useful transport types instead of making most response fields optional. |
+| Adopted | Strengthen OpenAPI required and nullable contracts incrementally | Generate useful transport types by documenting guaranteed response fields; the first contract covers authenticated sessions. |
 | Candidate | Adapt transport types into feature-owned domain types | Normalize wire arrays/sets and establish required fields at one seam. |
 | Candidate | Use discriminated unions for application state | Make impossible authentication, upload, and mutation states unrepresentable. |
 | Candidate | Split Node and jsdom Vitest projects | Avoid browser-environment startup for pure logic tests. |
@@ -222,6 +222,22 @@ their maintenance cost.
 The production bundle trial moved about 17 KB gzip into the shared startup chunk while removing about
 16 KB from the lazy identity chunk, increasing total compressed JavaScript by roughly 1.6 KB. This is
 accepted for the authentication boundary and should be remeasured if runtime schemas expand.
+
+## OpenAPI Response Contract Policy
+
+Generated frontend types are only as precise as the backend's OpenAPI contract. Mark response fields
+with `@Schema(requiredMode = REQUIRED)` when the backend guarantees that the field is present and
+non-null. Use `nullable = true` in addition when a required field is always present but may contain
+`null`. Leave fields optional when omission is part of the contract.
+
+Adopt this incrementally while working in a domain rather than annotating every response type
+mechanically. Required and nullable semantics need domain review, and annotation noise is not useful
+when the guarantee is uncertain. A focused converter test should protect important schema contracts.
+
+The first adopted contract is `AccountSessionResponse`. Its ID, username, email, and roles are now
+required in the generated TypeScript interface, so consumers and coding agents get compile-time
+feedback if they construct or assume an incomplete authenticated session. Runtime validation remains
+valuable at this trust boundary because generated TypeScript types cannot validate server data.
 
 ## References
 

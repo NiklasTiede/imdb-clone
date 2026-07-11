@@ -1425,6 +1425,11 @@ components:
           type: array
           items:
             type: string
+      required:
+      - email
+      - id
+      - roles
+      - username
     CreateAccountRequest:
       type: object
       properties:
