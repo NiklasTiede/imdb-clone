@@ -24,8 +24,6 @@ describe("watchlistStats", () => {
       },
       {
         movie: {
-          runtimeMinutes: undefined,
-          imdbRating: undefined,
           movieGenre: new Set([MovieRecordMovieGenreEnum.Action]),
         },
       },

@@ -19,7 +19,7 @@ import { MoviePosterImageSize, PosterImage } from "../../../shared/media";
 type MovieCardProps = {
   movie: Movie;
   isBookmarked?: boolean;
-  onToggleBookmark?: (movieId: number) => void;
+  onToggleBookmark?: ((movieId: number) => void) | undefined;
 };
 
 const MovieCard = ({

@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 type SynopsisProps = {
-  text?: string | null;
+  text?: string | null | undefined;
 };
 
 const Synopsis = ({ text }: SynopsisProps) => {

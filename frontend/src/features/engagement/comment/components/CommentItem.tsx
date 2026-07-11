@@ -28,7 +28,7 @@ import {
 const MAX_COMMENT_LENGTH = 1000;
 
 type CommentItemProps = {
-  author?: CommentAuthor;
+  author?: CommentAuthor | undefined;
   canManage: boolean;
   comment: MovieComment;
   isDeleting: boolean;

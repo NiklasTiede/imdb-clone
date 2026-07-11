@@ -6,9 +6,9 @@ import { movieColors } from "../../theme";
 import BrandLogo from "./BrandLogo";
 
 type AuthLayoutProps = {
-  altActionLabel?: string;
-  altLabel?: string;
-  altTo?: string;
+  altActionLabel?: string | undefined;
+  altLabel?: string | undefined;
+  altTo?: string | undefined;
   children: ReactNode;
 };
 

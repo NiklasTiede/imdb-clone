@@ -35,7 +35,11 @@ export const loginWithPasskey = async (): Promise<AccountSessionResponse> => {
     await apiHttpClient.post<PublicKeyCredentialRequestOptionsJSON>(
       "/webauthn/authenticate/options",
     );
-  const credential = await get({ publicKey: optionsResponse.data });
+  const publicKey = optionsResponse.data;
+  if (publicKey === undefined) {
+    throw new Error("Passkey authentication options are missing.");
+  }
+  const credential = await get({ publicKey });
   await apiHttpClient.post("/login/webauthn", credential);
 
   const sessionResponse =
@@ -50,7 +54,11 @@ export const registerPasskey = async (label: string): Promise<void> => {
     await apiHttpClient.post<PublicKeyCredentialCreationOptionsJSON>(
       "/webauthn/register/options",
     );
-  const credential = await create({ publicKey: optionsResponse.data });
+  const publicKey = optionsResponse.data;
+  if (publicKey === undefined) {
+    throw new Error("Passkey registration options are missing.");
+  }
+  const credential = await create({ publicKey });
 
   await apiHttpClient.post("/webauthn/register", {
     publicKey: {

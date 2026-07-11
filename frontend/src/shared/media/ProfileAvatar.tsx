@@ -3,7 +3,7 @@ import type { SxProps, Theme } from "@mui/material/styles";
 import { getProfileImageUrl } from "./imageUrls";
 
 type ProfileAvatarProps = {
-  imageUrlToken?: string;
+  imageUrlToken?: string | undefined;
   sx?: SxProps<Theme>;
 };
 

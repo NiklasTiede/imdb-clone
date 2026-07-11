@@ -77,12 +77,8 @@ const getCurrentUserRatedMovies = async ({
 
   if (ratedMovieIds.length === 0) {
     return {
+      ...ratings,
       content: [],
-      last: ratings.last,
-      page: ratings.page,
-      size: ratings.size,
-      totalElements: ratings.totalElements,
-      totalPages: ratings.totalPages,
     };
   }
 
@@ -98,6 +94,7 @@ const getCurrentUserRatedMovies = async ({
   );
 
   return {
+    ...ratings,
     content: (ratings.content ?? [])
       .map((rating) => {
         if (rating.movieId === undefined || rating.rating === undefined) {
@@ -107,11 +104,6 @@ const getCurrentUserRatedMovies = async ({
         return movie ? { movie, rating: rating.rating } : null;
       })
       .filter((ratedMovie): ratedMovie is RatedMovie => ratedMovie !== null),
-    last: ratings.last,
-    page: ratings.page,
-    size: ratings.size,
-    totalElements: ratings.totalElements,
-    totalPages: ratings.totalPages,
   };
 };
 

@@ -2,13 +2,10 @@ import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useState } from "react";
 import { movieColors } from "../../theme";
-import {
-  getMovieBackdropImageUrl,
-  MovieBackdropImageSize,
-} from "./imageUrls";
+import { getMovieBackdropImageUrl, MovieBackdropImageSize } from "./imageUrls";
 
 type BackdropImageProps = {
-  backdropImageToken?: string | null;
+  backdropImageToken?: string | null | undefined;
   sx?: SxProps<Theme>;
 };
 

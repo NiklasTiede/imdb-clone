@@ -14,7 +14,7 @@ import { getMoviePosterToken, type Movie } from "../model/movie";
 import { useMovieListLayout } from "./MovieListView";
 
 type MovieListRating = {
-  value?: number | null;
+  value?: number | null | undefined;
   variant: "imdb" | "user";
 };
 
@@ -26,7 +26,7 @@ type MovieListAction = {
 };
 
 type MovieListRowProps = {
-  action?: MovieListAction;
+  action?: MovieListAction | undefined;
   movie: Movie;
   primaryRating?: MovieListRating;
   secondaryRating?: MovieListRating;
@@ -57,7 +57,11 @@ const ratingBackground = {
   user: "rgba(77,171,247,0.15)",
 };
 
-const MovieListRatingPill = ({ rating }: { rating?: MovieListRating }) => {
+const MovieListRatingPill = ({
+  rating,
+}: {
+  rating?: MovieListRating | undefined;
+}) => {
   if (rating?.value === undefined || rating.value === null) {
     return null;
   }
@@ -109,8 +113,12 @@ const MovieListRow = ({
   timestamp,
   to,
 }: MovieListRowProps) => {
-  const { columns, gridTemplateColumns, hasRowActions, rowGridTemplateColumns } =
-    useMovieListLayout();
+  const {
+    columns,
+    gridTemplateColumns,
+    hasRowActions,
+    rowGridTemplateColumns,
+  } = useMovieListLayout();
   const movieId = movie.id;
   const movieLink =
     to ?? (movieId === undefined ? "#" : `/movie?id=${movieId}`);

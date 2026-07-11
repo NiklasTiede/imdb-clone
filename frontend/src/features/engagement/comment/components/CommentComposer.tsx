@@ -14,7 +14,7 @@ import type { CommentAuthor } from "../model/comment";
 const MAX_COMMENT_LENGTH = 1000;
 
 type CommentComposerProps = {
-  author?: CommentAuthor;
+  author?: CommentAuthor | undefined;
   errorMessage?: string | null;
   isAuthenticated: boolean;
   isSubmitting: boolean;

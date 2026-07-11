@@ -8,10 +8,10 @@ import { movieColors } from "../../../theme";
 import { getYouTubeNoCookieEmbedUrl } from "../utils/youtubeTrailer";
 
 type MovieTrailerProps = {
-  backdropImageToken?: string | null;
+  backdropImageToken?: string | null | undefined;
   movieTitle: string;
   sx?: SxProps<Theme>;
-  youtubeVideoKey?: string | null;
+  youtubeVideoKey?: string | null | undefined;
 };
 
 const MovieTrailer = ({
@@ -54,7 +54,13 @@ const MovieTrailer = ({
           allowFullScreen
           loading="lazy"
           referrerPolicy="strict-origin-when-cross-origin"
-          sx={{ border: 0, height: "100%", inset: 0, position: "absolute", width: "100%" }}
+          sx={{
+            border: 0,
+            height: "100%",
+            inset: 0,
+            position: "absolute",
+            width: "100%",
+          }}
         />
       ) : (
         <>

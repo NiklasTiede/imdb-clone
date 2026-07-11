@@ -18,33 +18,58 @@ export type AccountSectionForm = {
 const emptyToUndefined = (value: string): string | undefined =>
   value.trim() === "" ? undefined : value;
 
-const basePayloadFromProfile = (accountProfile: AccountProfile): AccountRecord => ({
-  bio: accountProfile.bio ?? undefined,
-  birthday: accountProfile.birthday ?? undefined,
-  email: accountProfile.email ?? undefined,
-  firstName: accountProfile.firstName ?? undefined,
-  lastName: accountProfile.lastName ?? undefined,
-  phone: accountProfile.phone ?? undefined,
-  username: accountProfile.username ?? undefined,
-});
+const basePayloadFromProfile = (
+  accountProfile: AccountProfile,
+): AccountRecord => {
+  const payload: AccountRecord = {};
+
+  if (accountProfile.bio !== undefined) payload.bio = accountProfile.bio;
+  if (accountProfile.birthday !== undefined) {
+    payload.birthday = accountProfile.birthday;
+  }
+  if (accountProfile.email !== undefined) payload.email = accountProfile.email;
+  if (accountProfile.firstName !== undefined) {
+    payload.firstName = accountProfile.firstName;
+  }
+  if (accountProfile.lastName !== undefined) {
+    payload.lastName = accountProfile.lastName;
+  }
+  if (accountProfile.phone !== undefined) payload.phone = accountProfile.phone;
+  if (accountProfile.username !== undefined) {
+    payload.username = accountProfile.username;
+  }
+
+  return payload;
+};
 
 export const buildProfileSectionPayload = (
   accountProfile: AccountProfile,
   form: ProfileSectionForm,
-): AccountRecord => ({
-  ...basePayloadFromProfile(accountProfile),
-  bio: form.bio,
-  firstName: emptyToUndefined(form.firstName),
-  lastName: emptyToUndefined(form.lastName),
-});
+): AccountRecord => {
+  const payload = basePayloadFromProfile(accountProfile);
+  const firstName = emptyToUndefined(form.firstName);
+  const lastName = emptyToUndefined(form.lastName);
+
+  payload.bio = form.bio;
+  if (firstName === undefined) delete payload.firstName;
+  else payload.firstName = firstName;
+  if (lastName === undefined) delete payload.lastName;
+  else payload.lastName = lastName;
+
+  return payload;
+};
 
 export const buildAccountSectionPayload = (
   accountProfile: AccountProfile,
   form: AccountSectionForm,
-): AccountRecord => ({
-  ...basePayloadFromProfile(accountProfile),
-  birthday: form.birthday ?? undefined,
-});
+): AccountRecord => {
+  const payload = basePayloadFromProfile(accountProfile);
+
+  if (form.birthday === null) delete payload.birthday;
+  else payload.birthday = form.birthday;
+
+  return payload;
+};
 
 export const hasProfileSectionChanges = (
   accountProfile: AccountProfile,

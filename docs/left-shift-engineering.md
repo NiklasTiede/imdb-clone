@@ -69,7 +69,7 @@ Frontend observations from 2026-07-11:
 | Status | Experiment | Expected early feedback |
 | --- | --- | --- |
 | Adopted | Enable `noUncheckedIndexedAccess` | Detect possibly missing array and indexed values; the adoption trial found eleven issues. |
-| Candidate | Enable `exactOptionalPropertyTypes` in a staged migration | Distinguish omitted properties from explicit `undefined`. Generated types need a plan first. |
+| Adopted | Enable `exactOptionalPropertyTypes` | Distinguish omitted properties from explicit `undefined`; a local generator template keeps generated configuration compatible. |
 | Candidate | Type-check Vite, Playwright, and end-to-end files | Bring TypeScript outside `src` into the normal build gate. |
 | Candidate | Enable type-aware typescript-eslint rules | Catch floating promises, unsafe values, misused promises, and non-exhaustive handling. |
 | Candidate | Parse trust seams with runtime schemas | Validate HTTP responses, errors, router state, storage, and environment values before use. |
@@ -150,6 +150,23 @@ Tests and architecture helpers use optional access or explicit guards so a missi
 group, or path segment still fails visibly. Avoid non-null assertions that merely silence this check;
 narrow the value or define the appropriate absence behavior instead.
 
+## Frontend Optional Property Policy
+
+TypeScript enables `exactOptionalPropertyTypes`, so an optional property means the property may be
+absent. It does not also mean that callers may explicitly assign `undefined` unless the declared
+type says so.
+
+The adoption trial exposed unsafe or misleading shapes in request payloads, optimistic cache data,
+passkey options, telemetry events, and component boundaries. Prefer omitting unavailable values,
+especially for transport objects. Include `| undefined` explicitly only at boundaries where passing
+`undefined` is an intentional and supported operation, such as a presentation component that treats
+an unavailable image token as its fallback state.
+
+OpenAPI Generator 7.19.0 emits a `Configuration` constructor that assigns absent parameters as
+`undefined`. The checked-in `frontend/openapi-templates/typescript-axios/configuration.mustache`
+override preserves absence instead. `yarn run build:moviesGen` applies that template automatically;
+generated output remains unedited and ignored.
+
 ## References
 
 - [Gradle test execution](https://docs.gradle.org/current/userguide/java_testing.html)
@@ -159,5 +176,6 @@ narrow the value or define the appropriate absence behavior instead.
 - [Vitest parallelism](https://vitest.dev/guide/parallelism)
 - [typescript-eslint typed linting](https://typescript-eslint.io/getting-started/typed-linting/)
 - [TypeScript `noUncheckedIndexedAccess`](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html)
+- [TypeScript `exactOptionalPropertyTypes`](https://www.typescriptlang.org/tsconfig/exactOptionalPropertyTypes.html)
 - [NullAway](https://github.com/uber/NullAway)
 - [Error Prone](https://errorprone.info/)

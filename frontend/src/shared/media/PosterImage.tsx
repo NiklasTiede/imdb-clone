@@ -10,7 +10,7 @@ import {
 
 type PosterImageProps = {
   alt?: string;
-  posterImageToken?: string;
+  posterImageToken?: string | undefined;
   size: MovieImageSize;
   sx?: SxProps<Theme>;
 };

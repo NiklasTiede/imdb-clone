@@ -23,7 +23,7 @@ import {
 
 type RatingsMovieCardProps = {
   item: RatedMovie;
-  onRemove?: (movieId: number) => void;
+  onRemove?: ((movieId: number) => void) | undefined;
 };
 
 const RatingsMovieCard = ({ item, onRemove }: RatingsMovieCardProps) => {

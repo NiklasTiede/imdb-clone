@@ -4,7 +4,7 @@ import Pagination from "@mui/material/Pagination";
 type SearchResultsPaginationProps = {
   onPageChange: (page: number) => void;
   page: number;
-  pageCount?: number;
+  pageCount?: number | undefined;
 };
 
 const SearchResultsPagination = ({

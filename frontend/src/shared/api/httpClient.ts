@@ -50,10 +50,10 @@ const reportApiTiming = ({
 
   reportPerformanceEvent({
     context: createPerformanceEventContext(window.location.pathname),
-    failureKind: success ? undefined : classifyFailure(error, status),
+    ...(success ? {} : { failureKind: classifyFailure(error, status) }),
     method: (config?.method ?? "GET").toUpperCase(),
     name: "api_request",
-    status,
+    ...(status === undefined ? {} : { status }),
     success,
     timestamp: finishedAt,
     type: "api_request",
@@ -81,8 +81,10 @@ apiHttpClient.interceptors.response.use(
   },
   (error: AxiosError) => {
     reportApiTiming({
-      config: error.config as TimedAxiosRequestConfig | undefined,
       error,
+      ...(error.config === undefined
+        ? {}
+        : { config: error.config as TimedAxiosRequestConfig }),
     });
     if (error.response?.status === 401) {
       authSession.clear();

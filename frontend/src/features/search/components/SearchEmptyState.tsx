@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import StatusState from "../../../shared/layout/StatusState";
 
 type SearchEmptyStateProps = {
-  onClearFilters?: () => void;
+  onClearFilters?: (() => void) | undefined;
 };
 
 const SearchEmptyState = ({ onClearFilters }: SearchEmptyStateProps) => (

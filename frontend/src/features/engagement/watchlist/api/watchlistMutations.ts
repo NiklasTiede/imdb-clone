@@ -60,7 +60,7 @@ export const removeFromWatchlistMutationOptions = ({
         current
           ? {
               ...current,
-              content: current.content?.filter(
+              content: (current.content ?? []).filter(
                 (item) => (item.movieId ?? item.movie?.id) !== movieId,
               ),
               totalElements: Math.max((current.totalElements ?? 1) - 1, 0),
@@ -68,7 +68,7 @@ export const removeFromWatchlistMutationOptions = ({
           : current,
     );
 
-    return { previous };
+    return previous === undefined ? {} : { previous };
   },
   onError: (
     _error: unknown,

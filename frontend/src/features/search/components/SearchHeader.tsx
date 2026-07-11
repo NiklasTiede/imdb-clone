@@ -18,7 +18,7 @@ type SearchHeaderProps = {
   onViewChange: (view: SearchView) => void;
   query: string | null;
   sort: SearchSort;
-  totalCount?: number;
+  totalCount?: number | undefined;
   view: SearchView;
 };
 

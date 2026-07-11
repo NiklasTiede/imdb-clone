@@ -46,7 +46,6 @@ describe("accountSettingsForm", () => {
       }),
     ).toEqual({
       bio: "Original bio",
-      birthday: undefined,
       email: "ada@example.com",
       firstName: "Ada",
       lastName: "Lovelace",

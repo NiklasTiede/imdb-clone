@@ -20,7 +20,7 @@ const WatchlistList = ({ items, onRemove }: WatchlistListProps) => (
   >
     {items.map((item) => {
       const movie: Movie = item.movie ?? {
-        id: item.movieId,
+        ...(item.movieId === undefined ? {} : { id: item.movieId }),
         primaryTitle: "Unknown title",
       };
       const movieId = item.movieId ?? movie?.id;

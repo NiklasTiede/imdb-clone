@@ -188,7 +188,7 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
               }}
             >
               <ReactCrop
-                crop={crop}
+                {...(crop === undefined ? {} : { crop })}
                 circularCrop
                 aspect={1}
                 onComplete={handleCropComplete}

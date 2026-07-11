@@ -28,23 +28,25 @@ export const registerBrowserErrorReporting = (): BrowserErrorCleanup => {
   }
 
   const reportErrorEvent = (event: ErrorEvent): void => {
+    const errorType = errorTypeFromReason(event.error);
     reportPerformanceEvent({
-      column: event.colno || undefined,
+      ...(event.colno ? { column: event.colno } : {}),
       context: createPerformanceEventContext(window.location.pathname),
-      errorType: errorTypeFromReason(event.error),
-      line: event.lineno || undefined,
+      ...(errorType === undefined ? {} : { errorType }),
+      ...(event.lineno ? { line: event.lineno } : {}),
       message: event.message || "Browser error",
       name: "browser_error",
-      source: event.filename || undefined,
+      ...(event.filename ? { source: event.filename } : {}),
       timestamp: performance.now(),
       type: "browser_error",
     });
   };
 
   const reportUnhandledRejection = (event: PromiseRejectionEvent): void => {
+    const errorType = errorTypeFromReason(event.reason);
     reportPerformanceEvent({
       context: createPerformanceEventContext(window.location.pathname),
-      errorType: errorTypeFromReason(event.reason),
+      ...(errorType === undefined ? {} : { errorType }),
       message: errorMessageFromReason(event.reason),
       name: "unhandled_rejection",
       timestamp: performance.now(),

@@ -35,8 +35,11 @@ export const getRegistrationInvalidParams = (
   const axiosError = error as AxiosError<RegistrationErrorResponse>;
   const invalidParams = axiosError.response?.data?.invalidParams;
 
+  const email = invalidParams?.email;
+  const username = invalidParams?.username;
+
   return {
-    email: invalidParams?.email,
-    username: invalidParams?.username,
+    ...(email === undefined ? {} : { email }),
+    ...(username === undefined ? {} : { username }),
   };
 };
