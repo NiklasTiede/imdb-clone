@@ -143,6 +143,19 @@ class RatingControllerTest extends BaseContainers {
   }
 
   @Test
+  void rateMovie_rejectsScoreThatWouldBeRoundedByTheDatabase() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.55")
+                .with(testUser())
+                .with(csrf())
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.detail").value("Score must use at most one decimal place"));
+  }
+
+  @Test
   void rateMovie_rejectsNegativeScore() throws Exception {
     mockMvc
         .perform(

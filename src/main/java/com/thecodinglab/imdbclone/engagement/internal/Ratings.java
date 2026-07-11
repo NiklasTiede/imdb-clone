@@ -7,13 +7,13 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 import com.thecodinglab.imdbclone.catalog.api.MovieRatingAggregateService;
 import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
+import com.thecodinglab.imdbclone.engagement.api.RatingScore;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.RatingMapper;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
-import com.thecodinglab.imdbclone.shared.error.BadRequestException;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
@@ -33,9 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class Ratings implements RatingService {
 
   private static final Logger logger = LoggerFactory.getLogger(Ratings.class);
-  private static final BigDecimal MIN_SCORE = BigDecimal.ZERO;
-  private static final BigDecimal MAX_SCORE = BigDecimal.TEN;
-
   private final MovieReferenceService movieReferenceService;
   private final MovieRatingAggregateService movieRatingAggregateService;
   private final RatingRepository ratingRepository;
@@ -54,25 +51,22 @@ public class Ratings implements RatingService {
 
   @Override
   @Transactional
-  public RatingRecord rateMovie(UserPrincipal currentAccount, Long movieId, BigDecimal score) {
-    if (score.compareTo(MIN_SCORE) < 0 || score.compareTo(MAX_SCORE) > 0) {
-      throw new BadRequestException("Score must be between 0 and 10");
-    } else {
-      movieReferenceService.findMovieById(movieId);
-      Rating existingRating =
-          ratingRepository
-              .findByIdAccountIdAndIdMovieId(currentAccount.getId(), movieId)
-              .orElse(null);
-      BigDecimal ratingSumDelta =
-          existingRating == null ? score : score.subtract(existingRating.getRating());
-      int ratingCountDelta = existingRating == null ? 1 : 0;
-      Rating rating = Rating.create(score, movieId, currentAccount.getId());
-      Rating savedRating = ratingRepository.save(rating);
-      movieRatingAggregateService.applyRatingAggregateDelta(
-          movieId, ratingSumDelta, ratingCountDelta);
-      logger.info("rating with [{}] was created.", kv(RATING_ID, savedRating.getId()));
-      return ratingMapper.entityToDTO(savedRating);
-    }
+  public RatingRecord rateMovie(UserPrincipal currentAccount, Long movieId, RatingScore score) {
+    movieReferenceService.findMovieById(movieId);
+    Rating existingRating =
+        ratingRepository
+            .findByIdAccountIdAndIdMovieId(currentAccount.getId(), movieId)
+            .orElse(null);
+    BigDecimal scoreValue = score.value();
+    BigDecimal ratingSumDelta =
+        existingRating == null ? scoreValue : scoreValue.subtract(existingRating.getRating());
+    int ratingCountDelta = existingRating == null ? 1 : 0;
+    Rating rating = Rating.create(scoreValue, movieId, currentAccount.getId());
+    Rating savedRating = ratingRepository.save(rating);
+    movieRatingAggregateService.applyRatingAggregateDelta(
+        movieId, ratingSumDelta, ratingCountDelta);
+    logger.info("rating with [{}] was created.", kv(RATING_ID, savedRating.getId()));
+    return ratingMapper.entityToDTO(savedRating);
   }
 
   @Override

@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.engagement.web;
 
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
+import com.thecodinglab.imdbclone.engagement.api.RatingScore;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.security.CurrentUser;
@@ -29,7 +30,8 @@ public class RatingController {
       @PathVariable Long movieId,
       @PathVariable BigDecimal score) {
     return new ResponseEntity<>(
-        ratingService.rateMovie(currentAccount, movieId, score), HttpStatus.CREATED);
+        ratingService.rateMovie(currentAccount, movieId, RatingScore.of(score)),
+        HttpStatus.CREATED);
   }
 
   @DeleteMapping("/{movieId}")

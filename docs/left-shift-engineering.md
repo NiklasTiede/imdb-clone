@@ -53,7 +53,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Enable high-signal `javac -Xlint` checks with `-Werror` | Reject unchecked, deprecated, and suspicious Java constructs during compilation. |
 | Adopted | Add Error Prone | Catch semantic Java mistakes during compilation; the Java 25 adoption trial produced 31 diagnostics without requiring a globally disabled check. |
 | Adopted | Add JSpecify and NullAway incrementally | Make nullability part of deterministic package interfaces; the first three checked packages use non-null defaults with explicit nullable exceptions. |
-| Candidate | Introduce high-value domain types | Prevent mixing IDs and constructing invalid ratings, years, or tokens. |
+| Adopted | Introduce high-value domain types incrementally | Make invalid values unconstructable where one type can concentrate a real invariant; the first type is `RatingScore`. |
 | Candidate | Model expected outcomes with sealed types where callers branch | Make new expected states require exhaustive handling. |
 | Candidate | Add property-based tests for pure invariants | Exercise ranking, pagination, conversion, hashing, and aggregate behavior over many inputs. |
 | Candidate | Add targeted mutation testing | Prove important tests fail when implementation behavior is changed incorrectly. |
@@ -185,6 +185,23 @@ Google Java Format dependency is provisioned lazily and does not appear in the o
 report. The adoption trial produced 389 lock entries and 5,548 checksum-metadata lines. A fully
 offline test passed; a deliberate checksum mismatch failed at project configuration and was reverted
 after proving the gate.
+
+## Backend Domain Type Policy
+
+Introduce a domain type when it concentrates a meaningful invariant at a narrow module interface and
+removes repeated validation or unsafe primitive operations. Do not wrap primitives mechanically when
+the conversions would spread across controllers, generated contracts, persistence, and unrelated
+module interfaces.
+
+The first adopted type is `RatingScore`. The engagement web adapter converts the path value once, and
+the engagement module accepts only a constructed score. It guarantees the zero-to-ten range and at
+most one decimal place, matching the database's `numeric(3,1)` representation. This closes a previous
+gap where a value such as `8.55` passed Java validation and could be rounded silently by PostgreSQL.
+The persistence adapter still stores `BigDecimal`, keeping JPA mapping simple.
+
+Typed account and movie IDs were evaluated but not introduced: they currently cross too many Spring,
+OpenAPI, persistence, and module interfaces for the conversion cost to improve readability. Revisit a
+specific ID only when mixing is demonstrated or a narrower seam emerges.
 
 ## Frontend Indexed Access Policy
 
