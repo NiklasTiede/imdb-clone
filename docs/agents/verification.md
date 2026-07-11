@@ -13,15 +13,21 @@ Run from the repository root.
 
 | Task | Command |
 | --- | --- |
-| One backend test | `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"` |
-| All backend tests | `./gradlew test` |
+| One fast backend test | `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"` |
+| All fast backend tests | `./gradlew test` |
+| One backend integration test | `./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"` |
+| All backend integration tests | `./gradlew integrationTest` |
+| All backend tests | `./gradlew test integrationTest` |
 | Format backend code | `./gradlew spotlessApply` |
 | Backend CI-equivalent check | `./gradlew build jacocoTestReport` |
 
 Notes:
 
-- Backend tests use Testcontainers where PostgreSQL, OpenSearch, or RustFS are needed.
-- Docker must be running for Testcontainers-backed tests.
+- `test` excludes the JUnit `integration` tag and does not start Testcontainers.
+- `integrationTest` selects the `integration` tag and uses Testcontainers where PostgreSQL,
+  OpenSearch, or RustFS are needed.
+- Docker must be running for `integrationTest`, `check`, and `build`.
+- `jacocoTestReport` combines coverage from the fast and integration test tasks.
 - Before committing Java, Gradle, or backend test changes, run `./gradlew spotlessApply`.
 
 ## Frontend Checks

@@ -2,6 +2,7 @@ package com.thecodinglab.imdbclone.catalog.internal.search.embedding;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Import;
       "imdb-clone.catalog.search.embedding.base-url=http://localhost:8082",
       "imdb-clone.catalog.search.embedding.model=embeddinggemma"
     })
+@Tag("integration")
 @EnabledIfEnvironmentVariable(named = "IMDB_CLONE_TEST_LLAMA_CPP", matches = "true")
 class MovieEmbeddingClientIntegrationTest {
 

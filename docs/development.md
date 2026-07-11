@@ -196,6 +196,8 @@ Run from the repository root:
 ```bash
 ./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"
 ./gradlew test
+./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"
+./gradlew integrationTest
 ./gradlew spotlessApply
 ./gradlew build jacocoTestReport
 ```
@@ -203,8 +205,9 @@ Run from the repository root:
 Use targeted tests while developing, then run the broader check before reporting backend work complete.
 Before committing Java, Gradle, or backend test changes, run `./gradlew spotlessApply`.
 
-Backend tests use Testcontainers for PostgreSQL, OpenSearch, and RustFS where needed. Docker must be
-available for those tests.
+The `test` task is the fast lane and excludes tests tagged `integration`. The `integrationTest` task
+uses Testcontainers for PostgreSQL, OpenSearch, and RustFS where needed. Docker must be available for
+`integrationTest`, `check`, and `build`. The JaCoCo report combines both test tasks.
 
 ## Frontend Checks
 
@@ -374,8 +377,11 @@ Testcontainers tests fail:
 | Frontend tests | `cd frontend && yarn test` |
 | Frontend build | `cd frontend && yarn build` |
 | Frontend e2e | `cd frontend && yarn e2e` |
-| Backend targeted test | `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"` |
-| Backend tests | `./gradlew test` |
+| Backend targeted fast test | `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"` |
+| Backend fast tests | `./gradlew test` |
+| Backend targeted integration test | `./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"` |
+| Backend integration tests | `./gradlew integrationTest` |
+| All backend tests | `./gradlew test integrationTest` |
 | Backend package/check | `./gradlew build jacocoTestReport` |
 | Backend formatting | `./gradlew spotlessApply` |
 | Backend image | `docker build --platform linux/amd64 -t imdb-clone-backend .` |

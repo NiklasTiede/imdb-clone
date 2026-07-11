@@ -8,6 +8,7 @@ encryption, and live cluster changes.
 Related docs:
 
 - `verification.md` - compact verification matrix.
+- `../left-shift-engineering.md` - experiments for earlier, deterministic defect feedback.
 - `../development.md` - local development and troubleshooting.
 - `../design.md` - frontend design system and visual consistency rules.
 
@@ -92,6 +93,8 @@ Verification options:
 ```bash
 ./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"
 ./gradlew test
+./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"
+./gradlew integrationTest
 ./gradlew spotlessApply
 ./gradlew build jacocoTestReport
 ```

@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import org.junit.jupiter.api.Tag;
 import org.opensearch.testcontainers.OpenSearchContainer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -50,6 +51,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 @SpringBootTest
 @Import({TestEmbeddingConfiguration.class, TestSchedulerConfiguration.class})
 @Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
+@Tag("integration")
 public class BaseContainers {
 
   private static final DockerImageName postgreSQLImage = DockerImageName.parse("postgres:18");

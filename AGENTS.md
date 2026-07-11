@@ -7,6 +7,7 @@ This is the auto-loaded fast-start contract. Keep detailed guidance in linked do
 
 - `docs/agents/README.md` - agent workflow, ownership, task templates, review checklist.
 - `docs/agents/verification.md` - verification matrix and feedback loop.
+- `docs/left-shift-engineering.md` - compiler, type, test, and agent-feedback experiments.
 - `docs/development.md` - local setup, env vars, smoke checks, troubleshooting.
 - `docs/design.md` - frontend design system, theme tokens, layout primitives.
 - `infrastructure/kubernetes/README.md` - k3s, Argo CD, SOPS/age, home-cluster notes.
@@ -89,6 +90,7 @@ Verification:
 
 ```bash
 ./gradlew test
+./gradlew integrationTest
 ./gradlew build jacocoTestReport
 cd frontend && yarn run lint
 cd frontend && yarn test
