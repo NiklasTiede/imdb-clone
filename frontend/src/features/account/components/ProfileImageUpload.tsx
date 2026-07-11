@@ -59,16 +59,20 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   }, [imageFit, imageRef]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+    const selectedFile = e.currentTarget.files?.item(0);
+
+    if (selectedFile) {
       const reader = new FileReader();
-      reader.addEventListener("load", () => setSrc(reader.result as string));
-      reader.readAsDataURL(e.target.files[0]);
-      setFile(e.target.files[0]);
+      reader.addEventListener("load", () => {
+        if (typeof reader.result === "string") {
+          setSrc(reader.result);
+        }
+      });
+      reader.readAsDataURL(selectedFile);
+      setFile(selectedFile);
       setOpen(true);
     }
-    if (e.target) {
-      e.target.value = "";
-    }
+    e.currentTarget.value = "";
   };
 
   const handleCropComplete = (crop: PixelCrop) => {

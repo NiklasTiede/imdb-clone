@@ -68,7 +68,7 @@ Frontend observations from 2026-07-11:
 
 | Status | Experiment | Expected early feedback |
 | --- | --- | --- |
-| Candidate | Enable `noUncheckedIndexedAccess` | Detect possibly missing array and indexed values; the diagnostic trial found nine issues. |
+| Adopted | Enable `noUncheckedIndexedAccess` | Detect possibly missing array and indexed values; the adoption trial found eleven issues. |
 | Candidate | Enable `exactOptionalPropertyTypes` in a staged migration | Distinguish omitted properties from explicit `undefined`. Generated types need a plan first. |
 | Candidate | Type-check Vite, Playwright, and end-to-end files | Bring TypeScript outside `src` into the normal build gate. |
 | Candidate | Enable type-aware typescript-eslint rules | Catch floating promises, unsafe values, misused promises, and non-exhaustive handling. |
@@ -132,6 +132,23 @@ were intentionally rejected:
 
 Revisit `serial` if Java object serialization becomes an intentional compatibility interface. Do not
 add broad source-level warning suppressions to bypass the adopted compiler policy.
+
+## Frontend Indexed Access Policy
+
+TypeScript enables `noUncheckedIndexedAccess`, so array, tuple, regular-expression group, and other
+indexed reads include `undefined` unless their presence is proven.
+
+The adoption trial found eleven unsafe assumptions across production code, tests, and the frontend
+architecture helper. Production fixes now:
+
+- read the first uploaded file through the nullable `FileList.item()` interface and verify the
+  `FileReader` result is a string;
+- return `null` explicitly when random watchlist selection cannot produce an item;
+- distinguish a missing daily featured movie from a movie whose generated transport ID is absent.
+
+Tests and architecture helpers use optional access or explicit guards so a missing call, capture
+group, or path segment still fails visibly. Avoid non-null assertions that merely silence this check;
+narrow the value or define the appropriate absence behavior instead.
 
 ## References
 

@@ -101,7 +101,7 @@ describe("LoginPage", () => {
       expect(identityMutations.authenticateAccount).toHaveBeenCalled(),
     );
     expect(
-      vi.mocked(identityMutations.authenticateAccount).mock.calls[0][0],
+      vi.mocked(identityMutations.authenticateAccount).mock.calls[0]?.[0],
     ).toEqual({
       usernameOrEmail: "niklas",
       password: "x",

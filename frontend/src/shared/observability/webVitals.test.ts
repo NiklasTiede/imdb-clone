@@ -46,7 +46,11 @@ describe("registerWebVitals", () => {
     registerWebVitals();
 
     expect(webVitals.onCLS).toHaveBeenCalledTimes(1);
-    const onCls = vi.mocked(webVitals.onCLS).mock.calls[0][0];
+    const firstOnClsCall = vi.mocked(webVitals.onCLS).mock.calls[0];
+    const onCls = firstOnClsCall?.[0];
+    if (!onCls) {
+      throw new Error("Expected onCLS to register a callback.");
+    }
     onCls(clsMetric());
 
     expect(events).toEqual([

@@ -4,13 +4,14 @@ export const pickRandomWatchlistItem = (
   items: WatchlistItem[],
   previousMovieId?: number,
 ): WatchlistItem | null => {
-  if (items.length === 0) {
+  const [firstItem] = items;
+  if (!firstItem) {
     return null;
   }
   if (items.length === 1) {
-    return items[0];
+    return firstItem;
   }
 
   const candidates = items.filter((item) => item.movieId !== previousMovieId);
-  return candidates[Math.floor(Math.random() * candidates.length)] ?? items[0];
+  return candidates[Math.floor(Math.random() * candidates.length)] ?? firstItem;
 };

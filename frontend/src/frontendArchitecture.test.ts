@@ -194,8 +194,10 @@ const importSpecifiers = (sourceFile: string): string[] => {
   const source = readFileSync(sourceFile, "utf8");
   return Array.from(
     source.matchAll(/import(?:\s+type)?[\s\S]*?from\s+["']([^"']+)["']/g),
-    (match) => match[1],
-  );
+  ).flatMap((match) => {
+    const specifier = match[1];
+    return specifier === undefined ? [] : [specifier];
+  });
 };
 
 type ResolvedImport = {
@@ -242,9 +244,12 @@ const featurePath = (sourceFile: string): string | null => {
   if (relativeToFeatures.startsWith("..")) {
     return null;
   }
-  const parts = relativeToFeatures.split(path.sep);
-  if (parts[0] !== "engagement") {
-    return parts[0];
+  const [feature, nestedFeature] = relativeToFeatures.split(path.sep);
+  if (!feature) {
+    return null;
   }
-  return parts.length > 2 ? `${parts[0]}/${parts[1]}` : parts[0];
+  if (feature !== "engagement") {
+    return feature;
+  }
+  return nestedFeature === undefined ? feature : `${feature}/${nestedFeature}`;
 };

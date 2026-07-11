@@ -36,8 +36,8 @@ describe("commentQueries", () => {
       Array.from({ length: 31 }, (_, index) => index + 1),
     );
     expect(getSummaries).toHaveBeenCalledTimes(2);
-    expect(getSummaries.mock.calls[0][0]).toHaveLength(30);
-    expect(getSummaries.mock.calls[1][0]).toEqual([31]);
+    expect(getSummaries.mock.calls[0]?.[0]).toHaveLength(30);
+    expect(getSummaries.mock.calls[1]?.[0]).toEqual([31]);
   });
 
   test("disables author loading without valid ids", () => {

@@ -35,12 +35,17 @@ export const featuredMovieQuery = (date = new Date()) => {
             Boolean(getMoviePosterToken(movie)) &&
             (movie.imdbRating ?? 0) >= MIN_FEATURED_IMDB_RATING,
         )
-        .sort((left, right) => (right.imdbRating ?? 0) - (left.imdbRating ?? 0));
+        .sort(
+          (left, right) => (right.imdbRating ?? 0) - (left.imdbRating ?? 0),
+        );
       const selectedIndex = pickDailyIndex(eligibleMovies.length, date);
       const selectedMovie =
         selectedIndex === null ? null : eligibleMovies[selectedIndex];
 
-      if (selectedMovie?.id === undefined) {
+      if (!selectedMovie) {
+        return null;
+      }
+      if (selectedMovie.id === undefined) {
         return selectedMovie;
       }
 
