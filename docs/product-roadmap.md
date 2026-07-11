@@ -47,22 +47,18 @@ than a separate carousel implementation in each feature.
 
 ### Movie detail
 
-- The page is constrained to `760px` and contains one surface with the movie hero and synopsis.
-- On wide desktop viewports, that compact surface reads like a dialog and leaves most of the page
-  unused. On mobile, the poster composition leaves dead space before the title, while rating panels
-  and actions consume excessive vertical space and wrap inconsistently.
+- The page now uses the wider catalog scale with a backdrop-led hero, prominent poster, responsive
+  identity/actions/ratings composition, full-width synopsis band, and a size-limited trailer band.
 - `MovieRecord` already exposes the primary and original titles, movie type, year range, runtime,
   genres, IMDb rating and count, community rating and count, description, poster and backdrop
   tokens, IMDb/TMDB IDs, and `trailerYoutubeKey`.
-- The detail page now uses the available backdrop and a click-to-load trailer when a valid YouTube
-  key is present.
-- Rating and watchlist actions are already available.
-- The backend already exposes paginated comments by movie, plus authenticated create, update, and
-  delete operations.
-- Comment responses currently expose only `accountId`; displaying a useful author identity will
-  require an enriched comment contract or a separate account lookup.
-- There is no dedicated similar-movies contract. The existing semantic and filtered OpenSearch
-  capabilities can provide its foundation.
+- The detail page uses a click-to-load, privacy-enhanced trailer when a valid YouTube key is present.
+- Rating, watchlist, and share actions are available across desktop and mobile layouts.
+- The community band exposes paginated comments to anonymous users and provides authenticated
+  create, edit, and delete workflows with bounded author-summary loading.
+- A versioned anonymous similar-movies contract now reuses stored OpenSearch embeddings and returns
+  diversified content-based results with stable reason codes and explanations. The movie-detail
+  carousel that consumes it is still pending.
 
 ### Homepage
 
@@ -97,51 +93,13 @@ than a separate carousel implementation in each feature.
 
 ## Roadmap
 
-### 1. Richer movie detail page
+### 1. Complete the movie detail destination
 
-Goal: turn the page into a broad, media-led movie destination instead of a compact summary panel.
+Goal: finish the remaining discovery and fallback work around the delivered broad, media-led page.
 
-- Increase the responsive content width to the application's wider catalog scale, align synopsis
-  content to the hero frame, and preserve readable comment line lengths.
-- Recompose the page into unframed content bands for hero media, facts, trailer, community, and
-  recommendations instead of nesting everything inside one card.
-- Use the stored backdrop image as a strong, wide first-viewport signal and retain a substantially
-  larger poster as the primary inspectable asset. Provide an intentional poster/color fallback when
-  no backdrop is available.
-- Use a broad desktop hero grid for poster, identity, ratings, and actions. On mobile, deliberately
-  stack or overlap these elements so the poster does not leave an empty upper-right region.
-- Let the synopsis use the full hero frame with comfortable typography and line height.
-- Replace the cramped inline ten-star control with a touch-friendly rating action or focused rating
-  interaction, while continuing to show the current user rating clearly.
-- Surface more of the existing data:
-  - Original title when different from the display title
-  - Movie or series type
-  - Start and end years
-  - Runtime
-  - Genres and adult classification
-  - IMDb and community rating counts
-- Keep rating and watchlist actions prominent and usable on mobile.
-
-#### Trailer
-
-- Embed the saved YouTube trailer when `trailerYoutubeKey` is present.
-- Lazy-load the player so it does not delay the initial movie content.
-- Prefer YouTube's privacy-enhanced embed domain and define the required consent/privacy behavior
-  before loading third-party content.
-- Provide an intentional no-trailer state instead of leaving an empty media frame.
-- Validate the stored value as a YouTube video key; do not accept arbitrary embed URLs.
-
-#### Comments
-
-- Show paginated comments below the movie content for anonymous and authenticated users.
-- Add an authenticated comment composer with clear validation and mutation feedback.
-- Allow authors to edit and delete their own comments; retain the existing administrator behavior.
-- Enrich comment responses with display name, username, and profile-image token so the frontend does
-  not issue one account request per comment.
-- Start with newest-first or oldest-first sorting. Popular sorting should wait until reactions or
-  another meaningful ranking signal exist.
-- Use a `Load more` interaction initially; consider comment-level infinite loading only after the
-  basic workflow is stable.
+- Provide an intentional no-trailer state instead of omitting the media band without explanation.
+- Surface the adult classification when relevant and finish any remaining metadata fallback polish.
+- Add a similar-movies band backed by the shared recommendation platform.
 
 #### Similar movies
 
@@ -439,13 +397,15 @@ after its user outcome and data requirements are clear.
 
 1. **Search relevance baseline** - add the query benchmark, metrics, and diagnostics before tuning
    RRF or changing the embedding model.
-2. **Recommendation foundation** - define candidate, ranking, explanation, interaction-event, and
-   evaluation contracts with anonymous content-based results first.
-3. **Detail layout, backdrop, and existing metadata** - widen and restructure the page around the
-   stored backdrop and poster without changing API contracts.
+2. **Recommendation foundation (initial slice delivered)** - the `content-v1` strategy provides
+   anonymous content-based candidates, ranking, diversity, stable explanations, and a reusable
+   public contract. Interaction-event and evaluation contracts remain before personalization.
+3. **Detail layout, backdrop, and existing metadata (delivered)** - the page uses a broad responsive
+   hero and unframed content bands around the stored backdrop and poster.
 4. **Trailer (delivered)** - lazy, privacy-enhanced playback with a local preview and responsive
    desktop/mobile placement.
-5. **Movie comments** - expose author metadata and build list/create/edit/delete workflows.
+5. **Movie comments (delivered)** - anonymous reading, authenticated list/create/edit/delete, and
+   bounded author-summary loading are available on movie details.
 6. **Your comments** - make authored comments discoverable and manageable from the user area.
 7. **Search relevance tuning** - tune weighted fusion, lexical popularity, candidate retrieval, and
    server-side sorting against the benchmark.

@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.Set;
 import org.springframework.modulith.NamedInterface;
 
-@NamedInterface({"reference", "ratings"})
+@NamedInterface({"reference", "ratings", "recommendation"})
 public record MovieRecord(
     Long id,
     String imdbId,

@@ -131,4 +131,26 @@ class MovieSearchQueryBuilderTest {
                 .toList())
         .contains("startYear", "runtimeMinutes");
   }
+
+  @Test
+  void buildRecommendationCandidateSearchRequest_reusesEmbeddingAndExcludesAnchor() {
+    SearchRequest searchRequest =
+        builder.buildRecommendationCandidateSearchRequest(
+            "movies", new float[] {0.2f, -0.4f}, 42L, 24);
+
+    assertThat(searchRequest.index()).containsExactly("movies");
+    assertThat(searchRequest.from()).isZero();
+    assertThat(searchRequest.size()).isEqualTo(24);
+    KnnQuery knnQuery = searchRequest.query().knn();
+    assertThat(knnQuery.vector()).containsExactly(0.2f, -0.4f);
+    assertThat(knnQuery.k()).isEqualTo(24);
+    assertThat(knnQuery.filter()).isNotNull();
+    assertThat(knnQuery.filter().bool().mustNot())
+        .singleElement()
+        .satisfies(
+            excluded -> {
+              assertThat(excluded.isIds()).isTrue();
+              assertThat(excluded.ids().values()).containsExactly("42");
+            });
+  }
 }

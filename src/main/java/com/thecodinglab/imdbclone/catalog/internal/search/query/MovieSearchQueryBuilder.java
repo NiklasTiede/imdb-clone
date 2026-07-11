@@ -70,6 +70,28 @@ public class MovieSearchQueryBuilder {
         .query(knnQuery));
   }
 
+  public SearchRequest buildRecommendationCandidateSearchRequest(
+      String index, float[] anchorEmbedding, Long anchorMovieId, int candidateLimit) {
+    int numCandidates =
+        Math.max(candidateLimit * NUM_CANDIDATES_MULTIPLIER, MIN_NUM_CANDIDATES);
+    Query excludeAnchor =
+        Query.of(query ->
+            query.ids(ids -> ids.values(anchorMovieId.toString())));
+    Query candidateQuery =
+        Query.of(query ->
+            query.knn(knn ->
+                knn.field(EMBEDDING_FIELD)
+                    .vector(toFloatList(anchorEmbedding))
+                    .k(candidateLimit)
+                    .methodParameters("ef_search", JsonData.of(numCandidates))
+                    .filter(
+                        Query.of(filter ->
+                            filter.bool(bool -> bool.mustNot(excludeAnchor))))));
+
+    return SearchRequest.of(search ->
+        search.index(index).from(0).size(candidateLimit).query(candidateQuery));
+  }
+
   public List<Query> buildFilterQueries(MovieSearchRequest request) {
     List<Query> filters = new ArrayList<>();
 

@@ -94,6 +94,9 @@ class ModulithArchitectureTest {
     assertThat(readString(MODULE_ROOT.resolve("media/package-info.java")))
         .contains("catalog::media")
         .doesNotContain("catalog::api");
+    assertThat(readString(MODULE_ROOT.resolve("recommendation/package-info.java")))
+        .contains("catalog::recommendation")
+        .doesNotContain("catalog::api");
   }
 
   @Test

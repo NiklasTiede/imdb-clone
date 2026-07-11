@@ -116,6 +116,7 @@ public class WebSecurityConfig {
                     .requestMatchers(
                         HttpMethod.GET,
                         "/api/movie/**",
+                        "/api/recommendations/**",
                         "/api/comment/**",
                         "/api/account/summaries",
                         "/api/account/*/profile",

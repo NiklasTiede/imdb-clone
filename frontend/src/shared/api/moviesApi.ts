@@ -8,6 +8,7 @@ import {
   MovieControllerApi,
   PasskeyManagementControllerApi,
   RatingControllerApi,
+  RecommendationControllerApi,
   SearchControllerApi,
   WatchedMovieControllerApi,
 } from "../../client/movies/generator-output";
@@ -49,6 +50,12 @@ export const moviesApi = new MovieControllerApi(
 );
 
 export const ratingApi = new RatingControllerApi(
+  moviesApiClientConfig,
+  undefined,
+  apiHttpClient,
+);
+
+export const recommendationApi = new RecommendationControllerApi(
   moviesApiClientConfig,
   undefined,
   apiHttpClient,
