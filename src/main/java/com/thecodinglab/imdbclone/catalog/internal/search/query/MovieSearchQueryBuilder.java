@@ -96,6 +96,48 @@ public class MovieSearchQueryBuilder {
 
   public SearchRequest buildDiscoveryCandidateSearchRequest(
       String index, MovieDiscoveryCriteria criteria, int candidateLimit) {
+    BoolQuery query = buildDiscoveryFilterQuery(criteria);
+
+    return SearchRequest.of(
+        search ->
+            search
+                .index(index)
+                .from(0)
+                .size(candidateLimit)
+                .query(discoveryQuery -> discoveryQuery.bool(query))
+                .sort(sort -> sort.field(field -> field.field("imdbRating").order(SortOrder.Desc)))
+                .sort(
+                    sort ->
+                        sort
+                            .field(
+                                field ->
+                                    field
+                                        .field("imdbRatingCount")
+                                        .order(SortOrder.Desc)))
+                .sort(sort -> sort.field(field -> field.field("_id").order(SortOrder.Asc))));
+  }
+
+  public SearchRequest buildSemanticDiscoveryCandidateSearchRequest(
+      String index, float[] themeEmbedding, MovieDiscoveryCriteria criteria, int candidateLimit) {
+    int numCandidates =
+        Math.max(candidateLimit * NUM_CANDIDATES_MULTIPLIER, MIN_NUM_CANDIDATES);
+    BoolQuery filter = buildDiscoveryFilterQuery(criteria);
+    Query query =
+        Query.of(
+            searchQuery ->
+                searchQuery.knn(
+                    knn ->
+                        knn.field(EMBEDDING_FIELD)
+                            .vector(toFloatList(themeEmbedding))
+                            .k(candidateLimit)
+                            .methodParameters("ef_search", JsonData.of(numCandidates))
+                            .filter(Query.of(filterQuery -> filterQuery.bool(filter)))));
+
+    return SearchRequest.of(
+        search -> search.index(index).from(0).size(candidateLimit).query(query));
+  }
+
+  private BoolQuery buildDiscoveryFilterQuery(MovieDiscoveryCriteria criteria) {
     List<Query> filters = new ArrayList<>();
     filters.addAll(
         buildFilterQueries(
@@ -134,24 +176,7 @@ public class MovieSearchQueryBuilder {
                       ids.values(
                           criteria.excludedMovieIds().stream().map(String::valueOf).toList())));
     }
-
-    return SearchRequest.of(
-        search ->
-            search
-                .index(index)
-                .from(0)
-                .size(candidateLimit)
-                .query(discoveryQuery -> discoveryQuery.bool(query.build()))
-                .sort(sort -> sort.field(field -> field.field("imdbRating").order(SortOrder.Desc)))
-                .sort(
-                    sort ->
-                        sort
-                            .field(
-                                field ->
-                                    field
-                                        .field("imdbRatingCount")
-                                        .order(SortOrder.Desc)))
-                .sort(sort -> sort.field(field -> field.field("_id").order(SortOrder.Asc))));
+    return query.build();
   }
 
   public List<Query> buildFilterQueries(MovieSearchRequest request) {

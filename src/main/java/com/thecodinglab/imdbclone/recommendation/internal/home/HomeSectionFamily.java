@@ -5,5 +5,6 @@ enum HomeSectionFamily {
   GENRE,
   ERA,
   RUNTIME,
-  FORMAT
+  FORMAT,
+  THEME
 }

@@ -187,4 +187,33 @@ class MovieSearchQueryBuilderTest {
         .extracting(sort -> sort.field().field())
         .containsExactly("imdbRating", "imdbRatingCount", "_id");
   }
+
+  @Test
+  void buildSemanticDiscoveryCandidateSearchRequest_usesTheThemeEmbeddingAndQualityFilters() {
+    MovieDiscoveryCriteria criteria =
+        new MovieDiscoveryCriteria(
+            null,
+            null,
+            null,
+            null,
+            Set.of(MovieGenre.DRAMA),
+            MovieType.MOVIE,
+            6.5f,
+            100,
+            Set.of(12L));
+
+    SearchRequest searchRequest =
+        builder.buildSemanticDiscoveryCandidateSearchRequest(
+            "movies", new float[] {0.1f, -0.2f}, criteria, 24);
+
+    assertThat(searchRequest.index()).containsExactly("movies");
+    assertThat(searchRequest.size()).isEqualTo(24);
+    KnnQuery knnQuery = searchRequest.query().knn();
+    assertThat(knnQuery.vector()).containsExactly(0.1f, -0.2f);
+    assertThat(knnQuery.k()).isEqualTo(24);
+    assertThat(knnQuery.filter().bool().filter()).hasSize(4);
+    assertThat(knnQuery.filter().bool().mustNot())
+        .singleElement()
+        .satisfies(excluded -> assertThat(excluded.ids().values()).containsExactly("12"));
+  }
 }

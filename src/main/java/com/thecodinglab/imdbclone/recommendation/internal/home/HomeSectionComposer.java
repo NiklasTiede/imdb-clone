@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.recommendation.internal.home;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryCandidateProvider;
+import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryThemeEmbeddingProvider;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.recommendation.api.HomeFeedItem;
 import com.thecodinglab.imdbclone.recommendation.api.HomeFeedSection;
@@ -14,17 +15,19 @@ class HomeSectionComposer {
   private static final int MINIMUM_SECTION_SIZE = 8;
 
   private final MovieDiscoveryCandidateProvider candidateProvider;
+  private final MovieDiscoveryThemeEmbeddingProvider themeEmbeddingProvider;
   private final HomeDiscoveryRanker ranker = new HomeDiscoveryRanker();
 
-  HomeSectionComposer(MovieDiscoveryCandidateProvider candidateProvider) {
+  HomeSectionComposer(
+      MovieDiscoveryCandidateProvider candidateProvider,
+      MovieDiscoveryThemeEmbeddingProvider themeEmbeddingProvider) {
     this.candidateProvider = candidateProvider;
+    this.themeEmbeddingProvider = themeEmbeddingProvider;
   }
 
   HomeFeedSection compose(
       HomeSectionDefinition definition, String feedSeed, Set<Long> seenMovieIds) {
-    List<MovieRecord> candidates =
-        candidateProvider.findCandidates(
-            definition.criteria().excluding(seenMovieIds), definition.candidateLimit());
+    List<MovieRecord> candidates = findCandidates(definition, seenMovieIds);
     List<MovieRecord> movies =
         ranker.rank(
             candidates,
@@ -55,5 +58,20 @@ class HomeSectionComposer {
     MovieRecord featured = ranked.getFirst();
     seenMovieIds.add(featured.id());
     return featured;
+  }
+
+  private List<MovieRecord> findCandidates(
+      HomeSectionDefinition definition, Set<Long> seenMovieIds) {
+    var criteria = definition.criteria().excluding(seenMovieIds);
+    if (definition.semanticTheme() == null) {
+      return candidateProvider.findCandidates(criteria, definition.candidateLimit());
+    }
+    return themeEmbeddingProvider
+        .findEmbedding(definition.semanticTheme())
+        .map(
+            embedding ->
+                candidateProvider.findSemanticCandidates(
+                    criteria, embedding.toFloatArray(), definition.candidateLimit()))
+        .orElseGet(List::of);
   }
 }

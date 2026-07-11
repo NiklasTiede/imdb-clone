@@ -35,13 +35,28 @@ public class OpenSearchMovieDiscoveryCandidates implements MovieDiscoveryCandida
 
   @Override
   public List<MovieRecord> findCandidates(MovieDiscoveryCriteria criteria, int candidateLimit) {
-    if (candidateLimit < 1) {
-      throw new IllegalArgumentException("candidateLimit must be positive");
-    }
-
     SearchRequest request =
         movieSearchQueryBuilder.buildDiscoveryCandidateSearchRequest(
             MOVIES_INDEX, criteria, candidateLimit);
+    return execute(request, candidateLimit);
+  }
+
+  @Override
+  public List<MovieRecord> findSemanticCandidates(
+      MovieDiscoveryCriteria criteria, float[] themeEmbedding, int candidateLimit) {
+    if (themeEmbedding == null || themeEmbedding.length == 0) {
+      return List.of();
+    }
+    SearchRequest request =
+        movieSearchQueryBuilder.buildSemanticDiscoveryCandidateSearchRequest(
+            MOVIES_INDEX, themeEmbedding, criteria, candidateLimit);
+    return execute(request, candidateLimit);
+  }
+
+  private List<MovieRecord> execute(SearchRequest request, int candidateLimit) {
+    if (candidateLimit < 1) {
+      throw new IllegalArgumentException("candidateLimit must be positive");
+    }
     try {
       SearchResponse<MovieSearchDocument> response =
           openSearchClient.search(request, MovieSearchDocument.class);

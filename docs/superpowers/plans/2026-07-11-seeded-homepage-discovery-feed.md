@@ -17,7 +17,7 @@ document-scoped feed instance with TanStack Query infinite pages and restores bo
 horizontal scroll state. Evergreen semantic topic embeddings are precomputed and versioned by the
 catalog module rather than generated during every request.
 
-**Tech Stack:** Java 21, Spring Boot, Spring Modulith, OpenSearch, the existing embedding client,
+**Tech Stack:** Java 25, Spring Boot, Spring Modulith, OpenSearch, the existing embedding client,
 React 19, TypeScript, Material UI 9, TanStack Query 5, Vitest, Testing Library, and Playwright.
 
 ---

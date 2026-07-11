@@ -7,4 +7,7 @@ import org.springframework.modulith.NamedInterface;
 public interface MovieDiscoveryCandidateProvider {
 
   List<MovieRecord> findCandidates(MovieDiscoveryCriteria criteria, int candidateLimit);
+
+  List<MovieRecord> findSemanticCandidates(
+      MovieDiscoveryCriteria criteria, float[] themeEmbedding, int candidateLimit);
 }

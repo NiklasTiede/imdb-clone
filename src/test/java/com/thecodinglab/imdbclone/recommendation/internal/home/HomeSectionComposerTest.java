@@ -2,10 +2,15 @@ package com.thecodinglab.imdbclone.recommendation.internal.home;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryCandidateProvider;
 import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryCriteria;
+import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryTheme;
+import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryThemeEmbedding;
+import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryThemeEmbeddingProvider;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import java.util.List;
@@ -20,11 +25,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class HomeSectionComposerTest {
 
   @Mock private MovieDiscoveryCandidateProvider candidateProvider;
+  @Mock private MovieDiscoveryThemeEmbeddingProvider themeEmbeddingProvider;
 
   @Test
   void compose_ranksCandidatesAndAddsThemToTheFeedWideSeenSet() {
     when(candidateProvider.findCandidates(any(), any(Integer.class))).thenReturn(movies(1, 12));
-    HomeSectionComposer composer = new HomeSectionComposer(candidateProvider);
+    HomeSectionComposer composer =
+        new HomeSectionComposer(candidateProvider, themeEmbeddingProvider);
     Set<Long> seenMovieIds = Set.of(1L);
     Set<Long> mutableSeenMovieIds = new java.util.HashSet<>(seenMovieIds);
 
@@ -44,9 +51,26 @@ class HomeSectionComposerTest {
     when(candidateProvider.findCandidates(any(), any(Integer.class))).thenReturn(movies(1, 7));
 
     assertThat(
-            new HomeSectionComposer(candidateProvider)
+            new HomeSectionComposer(candidateProvider, themeEmbeddingProvider)
                 .compose(definition(), "seed", new java.util.HashSet<>()))
         .isNull();
+  }
+
+  @Test
+  void compose_usesThePrecomputedThemeEmbeddingForSemanticSections() {
+    MovieDiscoveryTheme theme = new MovieDiscoveryTheme("found-family", "Chosen family", 1);
+    when(themeEmbeddingProvider.findEmbedding(theme))
+        .thenReturn(
+            java.util.Optional.of(
+                new MovieDiscoveryThemeEmbedding("found-family", 1, "local-model", List.of(0.1f))));
+    when(candidateProvider.findSemanticCandidates(any(), any(), eq(90))).thenReturn(movies(1, 12));
+
+    var section =
+        new HomeSectionComposer(candidateProvider, themeEmbeddingProvider)
+            .compose(semanticDefinition(theme), "seed", new java.util.HashSet<>());
+
+    assertThat(section).isNotNull();
+    verify(candidateProvider).findSemanticCandidates(any(), any(), eq(90));
   }
 
   private HomeSectionDefinition definition() {
@@ -55,6 +79,20 @@ class HomeSectionComposerTest {
         "A section",
         "A clear reason",
         HomeSectionFamily.GENRE,
+        null,
+        new MovieDiscoveryCriteria(
+            null, null, null, null, Set.of(), MovieType.MOVIE, null, null, Set.of()),
+        90,
+        12);
+  }
+
+  private HomeSectionDefinition semanticDefinition(MovieDiscoveryTheme theme) {
+    return new HomeSectionDefinition(
+        "found-family",
+        "Found family",
+        "Unexpected people becoming home",
+        HomeSectionFamily.THEME,
+        theme,
         new MovieDiscoveryCriteria(
             null, null, null, null, Set.of(), MovieType.MOVIE, null, null, Set.of()),
         90,

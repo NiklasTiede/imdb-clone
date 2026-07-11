@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.recommendation.internal.home;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryCriteria;
+import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryTheme;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import java.util.ArrayList;
@@ -177,7 +178,61 @@ class HomeSectionCatalog {
               "Short films",
               "Small runtimes, lasting impressions",
               HomeSectionFamily.FORMAT,
-              criteria(1980, null, 10, 60, Set.of(), MovieType.SHORT, 6.0f, 0)));
+              criteria(1980, null, 10, 60, Set.of(), MovieType.SHORT, 6.0f, 0)),
+          semanticSection(
+              "found-family",
+              "Found family",
+              "Unexpected people becoming home",
+              theme("found-family", "Movies about found family, belonging, and chosen family")),
+          semanticSection(
+              "slow-burn-mysteries",
+              "Slow-burn mysteries",
+              "Patient stories with clues beneath the surface",
+              theme(
+                  "slow-burn-mysteries",
+                  "Slow-burn mystery movies with atmospheric suspense and careful investigation")),
+          semanticSection(
+              "courtroom-tension",
+              "Courtroom tension",
+              "Arguments, evidence, and high stakes",
+              theme(
+                  "courtroom-tension",
+                  "Courtroom dramas and legal thrillers with tense trials and moral dilemmas")),
+          semanticSection(
+              "space-exploration",
+              "Space exploration",
+              "Big questions at the edge of the unknown",
+              theme(
+                  "space-exploration",
+                  "Movies about space exploration, astronauts, distant planets, and cosmic discovery")),
+          semanticSection(
+              "political-paranoia",
+              "Political paranoia",
+              "Power, secrets, and who to trust",
+              theme(
+                  "political-paranoia",
+                  "Political thrillers about conspiracy, surveillance, corruption, and paranoia")),
+          semanticSection(
+              "quiet-grief",
+              "Quiet films about grief",
+              "Tender stories about loss and healing",
+              theme(
+                  "quiet-grief",
+                  "Quiet reflective movies about grief, loss, healing, and human connection")),
+          semanticSection(
+              "heists-gone-wrong",
+              "Heists gone wrong",
+              "Plans unraveling in spectacular fashion",
+              theme(
+                  "heists-gone-wrong",
+                  "Crime movies about heists gone wrong, betrayals, escapes, and consequences")),
+          semanticSection(
+              "small-town-secrets",
+              "Small-town secrets",
+              "Nothing stays hidden forever",
+              theme(
+                  "small-town-secrets",
+                  "Mystery movies set in small towns with secrets, hidden histories, and close-knit communities")));
 
   List<HomeSectionDefinition> ordered(String seed) {
     List<HomeSectionDefinition> randomized = new ArrayList<>(definitions);
@@ -201,6 +256,14 @@ class HomeSectionCatalog {
 
   MovieDiscoveryCriteria featuredCriteria() {
     return criteria(1980, null, null, null, Set.of(), MovieType.MOVIE, 7.5f, 1_000);
+  }
+
+  List<MovieDiscoveryTheme> semanticThemes() {
+    return definitions.stream()
+        .map(HomeSectionDefinition::semanticTheme)
+        .filter(theme -> theme != null)
+        .distinct()
+        .toList();
   }
 
   private void addFirstFamily(
@@ -234,7 +297,31 @@ class HomeSectionCatalog {
       HomeSectionFamily family,
       MovieDiscoveryCriteria criteria) {
     return new HomeSectionDefinition(
-        id, title, subtitle, family, criteria, DEFAULT_CANDIDATE_LIMIT, DEFAULT_DISPLAY_LIMIT);
+        id,
+        title,
+        subtitle,
+        family,
+        null,
+        criteria,
+        DEFAULT_CANDIDATE_LIMIT,
+        DEFAULT_DISPLAY_LIMIT);
+  }
+
+  private HomeSectionDefinition semanticSection(
+      String id, String title, String subtitle, MovieDiscoveryTheme theme) {
+    return new HomeSectionDefinition(
+        id,
+        title,
+        subtitle,
+        HomeSectionFamily.THEME,
+        theme,
+        criteria(1980, null, null, null, Set.of(), MovieType.MOVIE, 6.5f, 0),
+        DEFAULT_CANDIDATE_LIMIT,
+        DEFAULT_DISPLAY_LIMIT);
+  }
+
+  private MovieDiscoveryTheme theme(String id, String prompt) {
+    return new MovieDiscoveryTheme(id, prompt, 1);
   }
 
   private MovieDiscoveryCriteria criteria(
