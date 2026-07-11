@@ -72,7 +72,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Enable `exactOptionalPropertyTypes` | Distinguish omitted properties from explicit `undefined`; a local generator template keeps generated configuration compatible. |
 | Adopted | Type-check Vite, Playwright, and end-to-end files | Bring TypeScript outside `src` into the normal build gate; the adoption trial found three issues. |
 | Adopted | Enable type-aware typescript-eslint rules | Catch floating promises, unsafe values, misused promises, and non-exhaustive handling; the curated adoption trial found 39 actionable issues. |
-| Candidate | Parse trust seams with runtime schemas | Validate HTTP responses, errors, router state, storage, and environment values before use. |
+| Adopted | Parse high-risk trust seams with runtime schemas | Validate authenticated session responses and login navigation state before use; expand only where boundary risk justifies a schema. |
 | Candidate | Strengthen OpenAPI required and nullable contracts | Generate useful transport types instead of making most response fields optional. |
 | Candidate | Adapt transport types into feature-owned domain types | Normalize wire arrays/sets and establish required fields at one seam. |
 | Candidate | Use discriminated unions for application state | Make impossible authentication, upload, and mutation states unrepresentable. |
@@ -200,6 +200,28 @@ boundary, a corrected action-icon union, and profile-crop failure handling.
 Use `void` only when deliberately discarding a promise whose rejection is already handled or whose
 API owns error reporting. Await work that affects mutation lifecycle or cache consistency, and add an
 explicit rejection path for operations that can fail independently.
+
+## Frontend Runtime Validation Policy
+
+Static transport types do not validate values received at runtime. Use Zod at high-impact external
+boundaries where malformed data could corrupt security or application state, but do not duplicate
+every generated OpenAPI model with a handwritten schema.
+
+The first adopted boundary is authenticated session data. Password login, passkey login, and session
+bootstrap all parse the same required session shape before it can populate auth state: a positive
+integer account ID, non-empty username, valid email address, and string roles. Invalid bootstrap data
+fails closed to an anonymous session; interactive login paths use their existing error feedback.
+Unknown response fields are discarded so additive backend changes remain compatible.
+
+Login navigation state is also parsed before constructing a post-authentication destination. Invalid
+history state falls back to the home page. Current local-storage values already pass through explicit
+allow-lists, so adding schemas there would not improve safety. Broad response validation, structured
+error parsing, and environment schemas should be added only when a concrete failure mode warrants
+their maintenance cost.
+
+The production bundle trial moved about 17 KB gzip into the shared startup chunk while removing about
+16 KB from the lazy identity chunk, increasing total compressed JavaScript by roughly 1.6 KB. This is
+accepted for the authentication boundary and should be remeasured if runtime schemas expand.
 
 ## References
 

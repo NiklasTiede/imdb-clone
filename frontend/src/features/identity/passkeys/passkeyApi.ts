@@ -8,7 +8,10 @@ import {
 import type { PasskeyCredentialResponse } from "../../../client/movies/generator-output";
 import { apiHttpClient } from "../../../shared/api/httpClient";
 import { passkeyManagementApi } from "../../../shared/api/moviesApi";
-import type { AccountSessionResponse } from "../../../shared/auth";
+import {
+  parseAccountSessionResponse,
+  type AccountSessionResponse,
+} from "../../../shared/auth";
 
 type PublicKeyCredentialCreationOptionsJSON =
   CredentialCreationOptionsJSON["publicKey"];
@@ -42,9 +45,8 @@ export const loginWithPasskey = async (): Promise<AccountSessionResponse> => {
   const credential = await get({ publicKey });
   await apiHttpClient.post("/login/webauthn", credential);
 
-  const sessionResponse =
-    await apiHttpClient.get<AccountSessionResponse>("/api/auth/me");
-  return sessionResponse.data;
+  const sessionResponse = await apiHttpClient.get<unknown>("/api/auth/me");
+  return parseAccountSessionResponse(sessionResponse.data);
 };
 
 export const registerPasskey = async (label: string): Promise<void> => {

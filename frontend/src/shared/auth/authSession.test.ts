@@ -1,4 +1,33 @@
-import { authSession } from "./authSession";
+import { authSession, parseAccountSessionResponse } from "./authSession";
+
+describe("parseAccountSessionResponse", () => {
+  it("accepts a complete authenticated session and removes unknown fields", () => {
+    expect(
+      parseAccountSessionResponse({
+        email: "test@example.com",
+        id: 1,
+        ignored: "transport detail",
+        roles: ["ROLE_USER"],
+        username: "test_user",
+      }),
+    ).toEqual({
+      email: "test@example.com",
+      id: 1,
+      roles: ["ROLE_USER"],
+      username: "test_user",
+    });
+  });
+
+  it("rejects incomplete or malformed authenticated sessions", () => {
+    expect(() =>
+      parseAccountSessionResponse({
+        id: "1",
+        roles: ["ROLE_USER"],
+        username: "test_user",
+      }),
+    ).toThrow();
+  });
+});
 
 describe("authSession", () => {
   beforeEach(() => {
@@ -35,6 +64,7 @@ describe("authSession", () => {
 
   it("clears the in-memory session", () => {
     authSession.setSession({
+      email: "test@example.com",
       id: 1,
       roles: ["ROLE_USER"],
       username: "test_user",
@@ -52,6 +82,7 @@ describe("authSession", () => {
 
     const unsubscribe = authSession.subscribe(listener);
     authSession.setSession({
+      email: "test@example.com",
       id: 1,
       roles: ["ROLE_USER"],
       username: "test_user",
@@ -59,6 +90,7 @@ describe("authSession", () => {
     authSession.clear();
     unsubscribe();
     authSession.setSession({
+      email: "another@example.com",
       id: 2,
       roles: ["ROLE_USER"],
       username: "another_user",

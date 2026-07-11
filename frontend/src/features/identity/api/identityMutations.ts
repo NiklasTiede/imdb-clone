@@ -5,13 +5,16 @@ import {
   RegistrationRequest,
 } from "../../../client/movies/generator-output";
 import { authApi } from "../../../shared/api/moviesApi";
-import { AuthSessionData } from "../../../shared/auth";
+import {
+  parseAccountSessionResponse,
+  type AuthSessionData,
+} from "../../../shared/auth";
 
 export const authenticateAccount = async (
   loginRequest: LoginRequest,
 ): Promise<AuthSessionData> => {
   const response = await authApi.authenticateAccount(loginRequest);
-  return response.data as AuthSessionData;
+  return parseAccountSessionResponse(response.data);
 };
 
 export const registerAccount = async (

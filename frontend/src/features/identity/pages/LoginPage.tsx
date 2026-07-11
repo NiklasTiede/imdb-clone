@@ -42,13 +42,24 @@ interface FormInputs {
   password: string;
 }
 
-type LoginLocationState = {
-  from?: {
-    hash?: string;
-    pathname?: string;
-    search?: string;
-  };
-  registrationMessage?: string;
+const loginLocationStateSchema = zod.object({
+  from: zod
+    .object({
+      hash: zod.string().optional(),
+      pathname: zod.string().optional(),
+      search: zod.string().optional(),
+    })
+    .optional(),
+  registrationMessage: zod.string().optional(),
+});
+
+type LoginLocationState = zod.infer<typeof loginLocationStateSchema>;
+
+export const parseLoginLocationState = (
+  value: unknown,
+): LoginLocationState | null => {
+  const result = loginLocationStateSchema.safeParse(value);
+  return result.success ? result.data : null;
 };
 
 const schema = zod.object({
@@ -63,7 +74,7 @@ const LoginPage = () => {
   const isLoggedIn = useAuthSession();
   const [showPassword, setShowPassword] = useState(false);
   const [feedback, setFeedback] = useState<AuthFeedback | null>(null);
-  const locationState = location.state as LoginLocationState | null;
+  const locationState = parseLoginLocationState(location.state);
   const registrationMessage = locationState?.registrationMessage;
   const socialFeedback =
     searchParams.get("error") === "social" ? socialLoginFailure : null;

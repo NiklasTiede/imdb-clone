@@ -7,7 +7,10 @@ import { MemoryRouter } from "react-router";
 
 import * as identityMutations from "../api/identityMutations";
 import { authSession } from "../../../shared/auth";
-import LoginPage, { getPostLoginDestination } from "./LoginPage";
+import LoginPage, {
+  getPostLoginDestination,
+  parseLoginLocationState,
+} from "./LoginPage";
 
 vi.mock("../api/identityMutations", () => ({
   authenticateAccount: vi.fn(),
@@ -74,6 +77,11 @@ describe("LoginPage", () => {
     expect(
       getPostLoginDestination({ from: { pathname: "//example.com" } }),
     ).toBe("/");
+  });
+
+  it("rejects malformed login navigation state", () => {
+    expect(parseLoginLocationState({ from: "//example.com" })).toBeNull();
+    expect(parseLoginLocationState(null)).toBeNull();
   });
 
   it("toggles password visibility from the field action", async () => {

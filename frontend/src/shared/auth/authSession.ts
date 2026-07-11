@@ -1,13 +1,23 @@
+import * as zod from "zod";
+
 const listeners = new Set<() => void>();
 
-export type AccountSessionResponse = {
-  id?: number;
-  username?: string;
-  email?: string;
-  roles?: string[];
-};
+const accountSessionResponseSchema = zod.object({
+  id: zod.number().int().positive(),
+  username: zod.string().min(1),
+  email: zod.email(),
+  roles: zod.array(zod.string().min(1)),
+});
+
+export type AccountSessionResponse = zod.infer<
+  typeof accountSessionResponseSchema
+>;
 
 export type AuthSessionData = AccountSessionResponse;
+
+export const parseAccountSessionResponse = (
+  value: unknown,
+): AccountSessionResponse => accountSessionResponseSchema.parse(value);
 
 export type AuthSessionSnapshot = {
   bootstrapped: boolean;

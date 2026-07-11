@@ -36,6 +36,7 @@ describe("AppBarTop", () => {
 
   it("clears the session and returns home when signing out", async () => {
     authSession.setSession({
+      email: "niklas@example.com",
       id: 1,
       roles: ["ROLE_USER"],
       username: "niklas",

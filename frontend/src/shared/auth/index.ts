@@ -1,5 +1,6 @@
 export {
   authSession,
+  parseAccountSessionResponse,
   type AccountSessionResponse,
   type AuthSessionData,
   type AuthSessionSnapshot,

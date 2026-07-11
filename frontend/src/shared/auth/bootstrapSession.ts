@@ -1,5 +1,5 @@
 import { apiHttpClient } from "../api/httpClient";
-import { authSession, type AccountSessionResponse } from "./authSession";
+import { authSession, parseAccountSessionResponse } from "./authSession";
 
 let bootstrapPromise: Promise<void> | null = null;
 
@@ -10,12 +10,14 @@ export const bootstrapSession = (): Promise<void> => {
 
   authSession.markBootstrapStarted();
   bootstrapPromise = apiHttpClient
-    .get<AccountSessionResponse>("/api/auth/me", {
+    .get<unknown>("/api/auth/me", {
       validateStatus: (status) => status === 200 || status === 401,
     })
     .then((response) => {
       authSession.completeBootstrap(
-        response.status === 200 ? response.data : null,
+        response.status === 200
+          ? parseAccountSessionResponse(response.data)
+          : null,
       );
     })
     .catch(() => {
