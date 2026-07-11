@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 
 public class ValidUsernameImpl implements ConstraintValidator<ValidUsername, String> {
 
@@ -17,7 +18,7 @@ public class ValidUsernameImpl implements ConstraintValidator<ValidUsername, Str
   }
 
   @Override
-  public boolean isValid(String username, ConstraintValidatorContext context) {
+  public boolean isValid(@Nullable String username, ConstraintValidatorContext context) {
     if (username == null) {
       return true;
     }

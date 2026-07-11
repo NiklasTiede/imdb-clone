@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 
 public class ValidPasswordImpl implements ConstraintValidator<ValidPassword, String> {
 
@@ -12,7 +13,7 @@ public class ValidPasswordImpl implements ConstraintValidator<ValidPassword, Str
   private static final Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
 
   @Override
-  public boolean isValid(String password, ConstraintValidatorContext context) {
+  public boolean isValid(@Nullable String password, ConstraintValidatorContext context) {
     if (password == null) {
       return true;
     }

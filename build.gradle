@@ -65,6 +65,9 @@ spotless {
 
 dependencies {
 	errorprone 'com.google.errorprone:error_prone_core:2.50.0'
+	errorprone 'com.uber.nullaway:nullaway:0.13.7'
+	compileOnly 'org.jspecify:jspecify:1.0.0'
+	testCompileOnly 'org.jspecify:jspecify:1.0.0'
 
 	//-- Improved developing
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -144,6 +147,17 @@ dependencies {
 	if (System.getProperty('os.name').toLowerCase().contains('mac')) {
 		runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.2.15.Final:osx-aarch_64'
 	}
+}
+
+tasks.named('compileJava') {
+	options.errorprone {
+		error 'NullAway'
+		option 'NullAway:OnlyNullMarked', 'true'
+	}
+}
+
+tasks.named('compileTestJava') {
+	options.errorprone.disable 'NullAway'
 }
 
 tasks.named('test') {

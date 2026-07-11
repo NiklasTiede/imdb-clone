@@ -52,7 +52,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Split fast and integration test execution | Run pure module and architecture tests without Docker; retain all tests under `check` and `build`. |
 | Adopted | Enable high-signal `javac -Xlint` checks with `-Werror` | Reject unchecked, deprecated, and suspicious Java constructs during compilation. |
 | Adopted | Add Error Prone | Catch semantic Java mistakes during compilation; the Java 25 adoption trial produced 31 diagnostics without requiring a globally disabled check. |
-| Candidate | Add JSpecify and NullAway incrementally | Make nullability part of each checked module interface. Start with pure packages. |
+| Adopted | Add JSpecify and NullAway incrementally | Make nullability part of deterministic package interfaces; the first three checked packages use non-null defaults with explicit nullable exceptions. |
 | Candidate | Introduce high-value domain types | Prevent mixing IDs and constructing invalid ratings, years, or tokens. |
 | Candidate | Model expected outcomes with sealed types where callers branch | Make new expected states require exhaustive handling. |
 | Candidate | Add property-based tests for pure invariants | Exercise ranking, pagination, conversion, hashing, and aggregate behavior over many inputs. |
@@ -147,6 +147,23 @@ mappings, and closed a filesystem stream within the module that opens it. Three 
 read reflectively by Hibernate, so only those fields carry a narrow `UnusedVariable` suppression.
 Do not disable checks globally to accommodate framework reflection; suppress the smallest justified
 interface and explain why.
+
+## Backend Nullability Policy
+
+NullAway 0.13.7 runs as an Error Prone error for main code, and JSpecify supplies source-level
+nullability contracts. NullAway checks only packages explicitly marked with `@NullMarked`; do not
+assume that unmarked packages have been verified.
+
+The first checked packages are catalog search-query construction and ranking, media image handling,
+and shared validation. These deterministic modules have small interfaces and little framework-driven
+null behavior. Their unannotated types are non-null by default. Use `@Nullable` where absence is an
+intentional part of the interface; Bean Validation inputs are the first example because custom
+validators deliberately leave null rejection to `@NotNull`.
+
+Expand package by package when working in a module. Review every finding and document framework
+semantics rather than marking the repository root or persistence packages mechanically. A temporary
+negative-control compile confirmed that returning null from a method in a marked package fails with a
+NullAway error; that deliberate defect was reverted after the check.
 
 ## Frontend Indexed Access Policy
 
