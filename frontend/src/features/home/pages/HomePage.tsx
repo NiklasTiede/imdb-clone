@@ -20,6 +20,7 @@ import FeaturedMovieHero from "../components/FeaturedMovieHero";
 import MovieCarousel from "../components/MovieCarousel";
 import { useHomeFeedRestoration } from "../hooks/useHomeFeedRestoration";
 import type { HomeFeedMovie, HomeFeedSection } from "../model/homeFeed";
+import { reportHomeMovieOpen } from "../observability/discoveryEvents";
 import {
   getCarouselScrollPosition,
   getHomeFeedInstanceId,
@@ -124,6 +125,14 @@ const HomePage = () => {
               movies={movies}
               onScrollPositionChange={(position) =>
                 setCarouselScrollPosition(sectionId, position)
+              }
+              onMovieOpen={(movieId, position) =>
+                reportHomeMovieOpen({
+                  feedInstanceId,
+                  movieId,
+                  position,
+                  sectionId,
+                })
               }
               title={section.title ?? "Movie picks"}
               {...(section.subtitle ? { subtitle: section.subtitle } : {})}

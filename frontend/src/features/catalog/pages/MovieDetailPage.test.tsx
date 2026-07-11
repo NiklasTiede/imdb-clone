@@ -24,6 +24,9 @@ const mocks = vi.hoisted(() => ({
     deleteRating: vi.fn(),
     rateMovie: vi.fn(),
   },
+  recommendationApi: {
+    similarMovies: vi.fn(),
+  },
   shareMovie: vi.fn(),
   watchlistApi: {
     deleteWatchedMovie: vi.fn(),
@@ -41,6 +44,7 @@ vi.mock("../../../shared/auth", () => ({
 vi.mock("../../../shared/api/moviesApi", () => ({
   accountEngagementApi: mocks.accountEngagementApi,
   moviesApi: mocks.moviesApi,
+  recommendationApi: mocks.recommendationApi,
   ratingApi: mocks.ratingApi,
   watchlistApi: mocks.watchlistApi,
 }));
@@ -131,6 +135,7 @@ describe("MovieDetailPage", () => {
     });
     mocks.ratingApi.rateMovie.mockResolvedValue({});
     mocks.ratingApi.deleteRating.mockResolvedValue({});
+    mocks.recommendationApi.similarMovies.mockResolvedValue({ data: { items: [] } });
     mocks.shareMovie.mockResolvedValue("copied");
   });
 
@@ -204,6 +209,35 @@ describe("MovieDetailPage", () => {
       trailer.compareDocumentPosition(comments) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  test("shows content-based similar movies above community comments", async () => {
+    const queryClient = makeQueryClient();
+    seedMovie(queryClient);
+    mocks.recommendationApi.similarMovies.mockResolvedValue({
+      data: {
+        items: [
+          {
+            movie: {
+              id: 2,
+              imdbRating: 8.1,
+              primaryTitle: "The Green Mile",
+              startYear: 1999,
+            },
+          },
+        ],
+      },
+    });
+
+    renderPage({ queryClient });
+
+    expect(
+      await screen.findByRole("heading", { name: "Similar movies" }),
+    ).toBeTruthy();
+    expect(
+      await screen.findByRole("link", { name: /the green mile/i }),
+    ).toBeTruthy();
+    expect(mocks.recommendationApi.similarMovies).toHaveBeenCalledWith(1, 15);
   });
 
   test("guides an anonymous rating attempt to sign in", async () => {

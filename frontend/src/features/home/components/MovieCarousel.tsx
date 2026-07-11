@@ -22,6 +22,7 @@ type MovieCarouselProps = {
   movies: Movie[];
   onViewAll?: () => void;
   onScrollPositionChange?: (position: number) => void;
+  onMovieOpen?: (movieId: number, position: number) => void;
   loading?: boolean;
 };
 
@@ -32,6 +33,7 @@ const MovieCarousel = ({
   movies,
   onViewAll,
   onScrollPositionChange,
+  onMovieOpen,
   loading = false,
 }: MovieCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -185,7 +187,7 @@ const MovieCarousel = ({
                 <Skeleton variant="text" width="60%" />
               </Box>
             ))
-          : movies.map((movie) => (
+          : movies.map((movie, index) => (
               <Box
                 key={movie.id}
                 sx={{
@@ -194,7 +196,10 @@ const MovieCarousel = ({
                   width: movieCarouselCardWidthSx,
                 }}
               >
-                <PosterMovieCard movie={movie} />
+                <PosterMovieCard
+                  movie={movie}
+                  onOpen={(movieId) => onMovieOpen?.(movieId, index)}
+                />
               </Box>
             ))}
       </Box>

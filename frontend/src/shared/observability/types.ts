@@ -2,6 +2,7 @@ export type PerformanceEventType =
   | "api_request"
   | "app_boot"
   | "browser_error"
+  | "discovery_interaction"
   | "route_navigation"
   | "web_vital";
 
@@ -64,10 +65,20 @@ export type BrowserErrorPerformanceEvent = BasePerformanceEvent & {
   source?: string;
 };
 
+export type DiscoveryInteractionPerformanceEvent = BasePerformanceEvent & {
+  type: "discovery_interaction";
+  name: "movie_open";
+  feedInstanceId?: string;
+  movieId: number;
+  position: number;
+  sectionId: string;
+};
+
 export type PerformanceEvent =
   | ApiRequestPerformanceEvent
   | AppBootPerformanceEvent
   | BrowserErrorPerformanceEvent
+  | DiscoveryInteractionPerformanceEvent
   | RouteNavigationPerformanceEvent
   | WebVitalPerformanceEvent;
 

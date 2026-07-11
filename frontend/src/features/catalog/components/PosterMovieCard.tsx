@@ -19,12 +19,14 @@ import { MoviePosterImageSize, PosterImage } from "../../../shared/media";
 type MovieCardProps = {
   movie: Movie;
   isBookmarked?: boolean;
+  onOpen?: ((movieId: number) => void) | undefined;
   onToggleBookmark?: ((movieId: number) => void) | undefined;
 };
 
 const MovieCard = ({
   movie,
   isBookmarked = false,
+  onOpen,
   onToggleBookmark,
 }: MovieCardProps) => {
   const detailUrl = `/movie?id=${movie.id ?? ""}`;
@@ -41,6 +43,11 @@ const MovieCard = ({
     >
       <CardActionArea
         component={Link}
+        onClick={() => {
+          if (movie.id !== undefined) {
+            onOpen?.(movie.id);
+          }
+        }}
         to={detailUrl}
         sx={{
           color: "text.primary",

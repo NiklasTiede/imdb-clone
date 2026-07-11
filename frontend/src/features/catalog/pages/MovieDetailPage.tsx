@@ -21,6 +21,7 @@ import { MovieCommentsSection } from "../../engagement/comment";
 import { movieQueries } from "../api/movieQueries";
 import { MovieHero } from "../components/MovieHero";
 import MovieRatingDialog from "../components/MovieRatingDialog";
+import SimilarMoviesCarousel from "../components/SimilarMoviesCarousel";
 import MovieTrailer from "../components/MovieTrailer";
 import Synopsis from "../components/Synopsis";
 import { shareMovie } from "../utils/shareMovie";
@@ -260,6 +261,8 @@ const MovieDetailPage = () => {
           </Box>
         </Box>
       )}
+
+      {movie.id !== undefined && <SimilarMoviesCarousel movieId={movie.id} />}
 
       {movie.id !== undefined && (
         <MovieCommentsSection
