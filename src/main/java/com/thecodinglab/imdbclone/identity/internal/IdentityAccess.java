@@ -20,6 +20,7 @@ import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,10 +72,11 @@ public class IdentityAccess implements AuthenticationService {
     return new UserIdentityAvailability(isAvailable);
   }
 
+  @Override
   public MessageResponse registerUser(RegistrationRequest request) {
 
-    String username = request.username().toLowerCase();
-    String email = request.email().toLowerCase();
+    String username = request.username().toLowerCase(Locale.ROOT);
+    String email = request.email().toLowerCase(Locale.ROOT);
     String password = passwordEncoder.encode(request.password());
 
     AccountIdentity savedAccount =

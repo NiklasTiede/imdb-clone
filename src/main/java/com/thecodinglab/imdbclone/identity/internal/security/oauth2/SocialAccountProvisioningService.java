@@ -8,6 +8,7 @@ import com.thecodinglab.imdbclone.identity.internal.security.audit.SecurityAudit
 import com.thecodinglab.imdbclone.identity.internal.security.audit.SecurityAuditEvents;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import jakarta.transaction.Transactional;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -69,7 +70,7 @@ public class SocialAccountProvisioningService {
 
   private String uniqueUsername(String email) {
     String localPart = email.substring(0, email.indexOf('@'));
-    String candidate = localPart.toLowerCase().replaceAll("[^a-z0-9_]", "_");
+    String candidate = localPart.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "_");
     if (candidate.isBlank()) {
       candidate = "user";
     }

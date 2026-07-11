@@ -12,6 +12,7 @@ import com.thecodinglab.imdbclone.account.internal.persistence.LocalCredential;
 import com.thecodinglab.imdbclone.account.internal.persistence.LocalCredentialRepository;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import jakarta.transaction.Transactional;
+import java.util.Locale;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +49,8 @@ public class AccountIdentities implements AccountIdentityService {
   @Transactional
   public AccountIdentity createAccountForIdentity(
       String username, String email, String passwordHash, boolean enabled) {
-    Account account = new Account(username.toLowerCase(), email.toLowerCase());
+    Account account =
+        new Account(username.toLowerCase(Locale.ROOT), email.toLowerCase(Locale.ROOT));
     account.setEnabled(enabled);
     account.setRoles(registeredUserRoleProvider.rolesForRegisteredUser());
     Account savedAccount = accountRepository.save(account);
@@ -59,7 +61,8 @@ public class AccountIdentities implements AccountIdentityService {
   @Override
   @Transactional
   public AccountIdentity createSocialAccount(String username, String email) {
-    Account account = new Account(username.toLowerCase(), email.toLowerCase());
+    Account account =
+        new Account(username.toLowerCase(Locale.ROOT), email.toLowerCase(Locale.ROOT));
     account.setEnabled(true);
     account.setRoles(registeredUserRoleProvider.rolesForRegisteredUser());
     return toIdentity(accountRepository.save(account));

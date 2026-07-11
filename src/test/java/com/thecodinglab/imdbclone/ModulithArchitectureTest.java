@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -151,48 +152,43 @@ class ModulithArchitectureTest {
 
   @Test
   void concreteImplementationsUseDomainNames() throws IOException {
-    try (Stream<Path> sources = javaSources()) {
-      assertThat(
-              sources
-                  .filter(path -> path.getFileName().toString().endsWith("ServiceImpl.java"))
-                  .toList())
-          .isEmpty();
-    }
+    assertThat(
+            javaSources().stream()
+                .filter(path -> path.getFileName().toString().endsWith("ServiceImpl.java"))
+                .toList())
+        .isEmpty();
   }
 
   @Test
   void apiPackagesDoNotDependOnModuleInternals() throws IOException {
-    try (Stream<Path> sources = javaSources()) {
-      assertThat(
-              sources
-                  .filter(path -> path.toString().contains("/api/"))
-                  .filter(path -> referencesOwnInternalPackage(path))
-                  .toList())
-          .isEmpty();
-    }
+    assertThat(
+            javaSources().stream()
+                .filter(path -> path.toString().contains("/api/"))
+                .filter(path -> referencesOwnInternalPackage(path))
+                .toList())
+        .isEmpty();
   }
 
   @Test
   void modulesDoNotImportOtherModulesInternalPackages() throws IOException {
-    try (Stream<Path> sources = javaSources()) {
-      assertThat(
-              sources
-                  .flatMap(
-                      source ->
-                          importedInternalModules(source)
-                              .filter(targetModule -> !targetModule.equals(moduleName(source)))
-                              .map(
-                                  targetModule ->
-                                      source + " imports " + targetModule + ".internal"))
-                  .toList())
-          .isEmpty();
-    }
+    assertThat(
+            javaSources().stream()
+                .flatMap(
+                    source ->
+                        importedInternalModules(source)
+                            .filter(targetModule -> !targetModule.equals(moduleName(source)))
+                            .map(targetModule -> source + " imports " + targetModule + ".internal"))
+                .toList())
+        .isEmpty();
   }
 
-  private Stream<Path> javaSources() throws IOException {
-    return Files.walk(MODULE_ROOT)
-        .filter(Files::isRegularFile)
-        .filter(path -> path.toString().endsWith(".java"));
+  private List<Path> javaSources() throws IOException {
+    try (Stream<Path> sources = Files.walk(MODULE_ROOT)) {
+      return sources
+          .filter(Files::isRegularFile)
+          .filter(path -> path.toString().endsWith(".java"))
+          .toList();
+    }
   }
 
   private boolean referencesOwnInternalPackage(Path source) {

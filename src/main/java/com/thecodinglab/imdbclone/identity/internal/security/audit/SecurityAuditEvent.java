@@ -26,8 +26,14 @@ public class SecurityAuditEvent {
   @Column(nullable = false)
   private SecurityAuditEventType eventType;
 
+  // Hibernate reads these fields directly when persisting audit events.
+  @SuppressWarnings("UnusedVariable")
   private String principal;
+
+  @SuppressWarnings("UnusedVariable")
   private Long accountId;
+
+  @SuppressWarnings("UnusedVariable")
   private String ipAddress;
 
   @JdbcTypeCode(SqlTypes.JSON)

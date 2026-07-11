@@ -123,6 +123,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
   /**
    * Search Single Document by ID
    */
+  @Override
   public MovieSearchDocument getMovieDocumentById(Long movieId) {
     try {
       GetResponse<MovieSearchDocument> response = openSearchClient
@@ -142,6 +143,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
   /**
    * Search movies by Primary Title
    */
+  @Override
   public List<MovieSearchDocument> searchMoviesByPrimaryTitle(String searchText) {
     SearchResponse<MovieSearchDocument> response;
     try {
@@ -165,6 +167,7 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
   /**
    * Search movies by range of ratings
    */
+  @Override
   public List<MovieSearchDocument> searchMoviesByRatingRange(float minRating, float maxRating) {
     try {
       SearchResponse<MovieSearchDocument> response = openSearchClient

@@ -100,9 +100,6 @@ class AuthenticationTokenFlowTest extends BaseContainers {
     authenticationService.registerUser(
         new RegistrationRequest(
             "Confirmable_User", "confirmable@example.com", "Encrypted!Pa55worD"));
-    Account account = accountRepository.getAccountByUsername("confirmable_user");
-    VerificationToken token =
-        onlyTokenForAccount(account.getId(), VerificationTypeEnum.EMAIL_CONFIRMATION);
     String rawToken =
         StreamSupport.stream(events.ofType(EmailConfirmationRequested.class).spliterator(), false)
             .filter(event -> event.emailAddress().equals("confirmable@example.com"))
@@ -115,12 +112,13 @@ class AuthenticationTokenFlowTest extends BaseContainers {
 
     Account confirmedAccount = accountRepository.getAccountByUsername("confirmable_user");
     VerificationToken confirmedToken =
-        onlyTokenForAccount(account.getId(), VerificationTypeEnum.EMAIL_CONFIRMATION);
+        onlyTokenForAccount(confirmedAccount.getId(), VerificationTypeEnum.EMAIL_CONFIRMATION);
     assertThat(confirmedAccount.getEnabled()).isTrue();
     assertThat(confirmedToken.getConfirmedAtInUtc()).isNotNull();
     assertThat(confirmedToken.getConsumedAtInUtc()).isNotNull();
     assertThat(confirmedToken.getTokenHash()).isNotEqualTo(rawToken);
-    assertThat(auditEventTypesFor(account.getId())).contains("VERIFICATION_TOKEN_CONSUMED");
+    assertThat(auditEventTypesFor(confirmedAccount.getId()))
+        .contains("VERIFICATION_TOKEN_CONSUMED");
   }
 
   @Test
@@ -215,7 +213,7 @@ class AuthenticationTokenFlowTest extends BaseContainers {
 
   private static String tokenFromLink(String link) {
     String query = URI.create(link).getQuery();
-    for (String pair : query.split("&")) {
+    for (String pair : query.split("&", -1)) {
       String[] parts = pair.split("=", 2);
       if (parts.length == 2 && parts[0].equals("token")) {
         return URLDecoder.decode(parts[1], StandardCharsets.UTF_8);

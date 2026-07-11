@@ -18,6 +18,7 @@ import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -143,8 +144,8 @@ public class AccountManagement implements AccountService {
 
   @Override
   public AccountCreated createAccount(CreateAccountRequest request, UserPrincipal currentAccount) {
-    String username = request.username().toLowerCase();
-    String email = request.email().toLowerCase();
+    String username = request.username().toLowerCase(Locale.ROOT);
+    String email = request.email().toLowerCase(Locale.ROOT);
     String password = passwordEncoder.encode(request.password());
     Account account = new Account(username, email);
     account.setEnabled(true);
@@ -163,10 +164,14 @@ public class AccountManagement implements AccountService {
     if (Objects.equals(account.getId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
       String firstName =
-          accountRecord.firstName() != null ? accountRecord.firstName().toLowerCase() : null;
+          accountRecord.firstName() != null
+              ? accountRecord.firstName().toLowerCase(Locale.ROOT)
+              : null;
       account.setFirstName(firstName);
       String lastName =
-          accountRecord.lastName() != null ? accountRecord.lastName().toLowerCase() : null;
+          accountRecord.lastName() != null
+              ? accountRecord.lastName().toLowerCase(Locale.ROOT)
+              : null;
       account.setLastName(lastName);
       account.setPhone(accountRecord.phone());
       account.setBirthday(accountRecord.birthday());

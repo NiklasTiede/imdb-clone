@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Validated
-@RequestMapping(("/api/search"))
+@RequestMapping("/api/search")
 public class SearchController {
 
   private final MovieSearchService movieSearchService;

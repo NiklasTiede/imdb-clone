@@ -91,13 +91,14 @@ public class UserPrincipal implements UserDetails {
     return enabled;
   }
 
+  @Override
   public boolean equals(Object object) {
     if (this == object) return true;
-    if (object == null || getClass() != object.getClass()) return false;
-    UserPrincipal that = (UserPrincipal) object;
+    if (!(object instanceof UserPrincipal that)) return false;
     return Objects.equals(id, that.id);
   }
 
+  @Override
   public int hashCode() {
     return Objects.hash(id);
   }

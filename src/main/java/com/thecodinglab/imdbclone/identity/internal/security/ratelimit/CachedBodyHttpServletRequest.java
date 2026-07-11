@@ -47,6 +47,11 @@ class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
       public int read() {
         return inputStream.read();
       }
+
+      @Override
+      public int read(byte[] target, int offset, int length) {
+        return inputStream.read(target, offset, length);
+      }
     };
   }
 

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Validated
-@RequestMapping(("/api/account"))
+@RequestMapping("/api/account")
 public class AccountEngagementController {
 
   private final AccountActivityService accountActivityService;

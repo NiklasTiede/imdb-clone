@@ -18,7 +18,9 @@ public final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler
   public void handle(
       HttpServletRequest request, HttpServletResponse response, Supplier<CsrfToken> csrfToken) {
     xor.handle(request, response, csrfToken);
-    csrfToken.get();
+    if (csrfToken.get() == null) {
+      throw new IllegalStateException("Deferred CSRF token was not available");
+    }
   }
 
   @Override

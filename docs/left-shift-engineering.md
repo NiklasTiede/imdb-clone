@@ -51,7 +51,7 @@ Frontend observations from 2026-07-11:
 | --- | --- | --- |
 | Adopted | Split fast and integration test execution | Run pure module and architecture tests without Docker; retain all tests under `check` and `build`. |
 | Adopted | Enable high-signal `javac -Xlint` checks with `-Werror` | Reject unchecked, deprecated, and suspicious Java constructs during compilation. |
-| Candidate | Add Error Prone | Catch semantic Java mistakes during compilation. Verify Java 25 compatibility first. |
+| Adopted | Add Error Prone | Catch semantic Java mistakes during compilation; the Java 25 adoption trial produced 31 diagnostics without requiring a globally disabled check. |
 | Candidate | Add JSpecify and NullAway incrementally | Make nullability part of each checked module interface. Start with pure packages. |
 | Candidate | Introduce high-value domain types | Prevent mixing IDs and constructing invalid ratings, years, or tokens. |
 | Candidate | Model expected outcomes with sealed types where callers branch | Make new expected states require exhaustive handling. |
@@ -132,6 +132,21 @@ were intentionally rejected:
 
 Revisit `serial` if Java object serialization becomes an intentional compatibility interface. Do not
 add broad source-level warning suppressions to bypass the adopted compiler policy.
+
+## Error Prone Policy
+
+Every main and test Java compilation runs Error Prone 2.50.0 through the Gradle Error Prone plugin.
+The plugin supplies the Java 25 module exports and isolates the compiler process. Generated-code
+warnings are disabled because MapStruct owns that source; checks remain enabled for handwritten main
+and test code, and existing `-Werror` policy promotes Error Prone warnings to build failures.
+
+The adoption trial produced 31 diagnostics. Fixes made account and email normalization independent of
+the host locale, aligned base and social principal identity, added missing interface overrides,
+delegated servlet bulk reads efficiently, made deferred CSRF loading explicit, simplified controller
+mappings, and closed a filesystem stream within the module that opens it. Three JPA audit fields are
+read reflectively by Hibernate, so only those fields carry a narrow `UnusedVariable` suppression.
+Do not disable checks globally to accommodate framework reflection; suppress the smallest justified
+interface and explain why.
 
 ## Frontend Indexed Access Policy
 

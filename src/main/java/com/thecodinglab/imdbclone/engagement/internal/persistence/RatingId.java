@@ -38,8 +38,7 @@ public class RatingId implements Serializable {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    RatingId ratingId = (RatingId) o;
+    if (!(o instanceof RatingId ratingId)) return false;
     return Objects.equals(movieId, ratingId.movieId)
         && Objects.equals(accountId, ratingId.accountId);
   }
