@@ -1,5 +1,5 @@
 import { fileStorageApi } from "../../../shared/api/moviesApi";
-import { accountQueryKeys } from "../../account";
+import { accountQueryKeys } from "../../../shared/api/accountProfileQueries";
 
 export const mediaMutationKeys = {
   currentProfile: accountQueryKeys.currentProfile,

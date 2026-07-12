@@ -53,6 +53,7 @@ services:
       done
       mc mb --ignore-existing rustfs/imdb-clone
       mc anonymous set download rustfs/imdb-clone/movies
+      mc anonymous set download rustfs/imdb-clone/profile-photos
     environment:
       - ACCESS_KEY=${OBJECT_STORAGE_ACCESS_KEY_ENV_VAR}
       - SECRET_KEY=${OBJECT_STORAGE_SECRET_KEY_ENV_VAR}

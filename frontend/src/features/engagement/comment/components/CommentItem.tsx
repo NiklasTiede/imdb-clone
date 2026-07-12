@@ -100,6 +100,8 @@ const CommentItem = ({
       }}
     >
       <ProfileAvatar
+        alt={`${authorName} profile`}
+        fallback={authorName.slice(0, 1).toUpperCase()}
         imageUrlToken={author?.imageUrlToken}
         sx={{ height: 40, width: 40 }}
       />

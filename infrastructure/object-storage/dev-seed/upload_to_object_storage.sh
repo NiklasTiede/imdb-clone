@@ -22,6 +22,7 @@ if command -v mc >/dev/null 2>&1; then
   mc alias set "$OBJECT_STORAGE_ALIAS" "$OBJECT_STORAGE_ENDPOINT" "$OBJECT_STORAGE_ACCESS_KEY" "$OBJECT_STORAGE_SECRET_KEY"
   mc mb --ignore-existing "$OBJECT_STORAGE_ALIAS/$OBJECT_STORAGE_BUCKET"
   mc anonymous set download "$OBJECT_STORAGE_ALIAS/$OBJECT_STORAGE_BUCKET/movies"
+  mc anonymous set download "$OBJECT_STORAGE_ALIAS/$OBJECT_STORAGE_BUCKET/profile-photos"
   mc cp --recursive "$MOVIES_DIR/" "$OBJECT_STORAGE_ALIAS/$OBJECT_STORAGE_BUCKET/movies/"
 elif command -v docker >/dev/null 2>&1; then
   docker run --rm \
@@ -36,6 +37,7 @@ elif command -v docker >/dev/null 2>&1; then
     -c 'mc alias set rustfs "$DOCKER_OBJECT_STORAGE_ENDPOINT" "$OBJECT_STORAGE_ACCESS_KEY" "$OBJECT_STORAGE_SECRET_KEY" &&
         mc mb --ignore-existing "rustfs/$OBJECT_STORAGE_BUCKET" &&
         mc anonymous set download "rustfs/$OBJECT_STORAGE_BUCKET/movies" &&
+        mc anonymous set download "rustfs/$OBJECT_STORAGE_BUCKET/profile-photos" &&
         mc cp --recursive /seed-movies/ "rustfs/$OBJECT_STORAGE_BUCKET/movies/"'
 else
   echo "Neither mc nor docker is available. Install the mc client or run Docker."

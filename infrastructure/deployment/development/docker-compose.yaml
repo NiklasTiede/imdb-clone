@@ -48,6 +48,7 @@ services:
       done
       mc mb --ignore-existing rustfs/imdb-clone
       mc anonymous set download rustfs/imdb-clone/movies
+      mc anonymous set download rustfs/imdb-clone/profile-photos
     environment:
       - ACCESS_KEY=ROOTNAME
       - SECRET_KEY=CHANGEME123

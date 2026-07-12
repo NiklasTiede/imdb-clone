@@ -3,7 +3,7 @@ import {
   UpdatedAccountProfile,
 } from "../../../client/movies/generator-output";
 import { accountApi } from "../../../shared/api/moviesApi";
-import { accountQueryKeys } from "./accountQueries";
+import { accountQueryKeys } from "../../../shared/api/accountProfileQueries";
 
 export const accountMutationKeys = {
   currentProfile: accountQueryKeys.currentProfile,

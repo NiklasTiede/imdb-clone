@@ -1,7 +1,7 @@
-import { accountQueries } from "./accountQueries";
+import { accountQueries } from "./accountProfileQueries";
 
 describe("accountQueries", () => {
-  it("builds a stable current profile query key", () => {
+  it("builds a stable shared current-profile query key", () => {
     expect(accountQueries.currentProfile().queryKey).toEqual([
       "account",
       "current-profile",

@@ -1,4 +1,4 @@
-import { accountApi } from "../../../shared/api/moviesApi";
+import { accountApi } from "./moviesApi";
 
 export const accountQueryKeys = {
   currentProfile: ["account", "current-profile"] as const,

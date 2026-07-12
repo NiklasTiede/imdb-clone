@@ -1,19 +1,21 @@
-import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { alpha } from "@mui/material/styles";
 import type React from "react";
+import { ProfileAvatar } from "../../media";
 import { movieColors } from "../../../theme";
 
 type UserActionsProps = {
   menuId: string;
   onProfileMenuOpen: (event: React.MouseEvent<HTMLElement>) => void;
+  imageUrlToken?: string | undefined;
   username?: string | null;
 };
 
 const UserActions = ({
   menuId,
   onProfileMenuOpen,
+  imageUrlToken,
   username,
 }: UserActionsProps) => (
   <Tooltip
@@ -42,7 +44,10 @@ const UserActions = ({
       size="large"
       sx={{ p: 0.5 }}
     >
-      <Avatar
+      <ProfileAvatar
+        alt={username ? `${username} profile` : "Account profile"}
+        fallback={(username?.slice(0, 2) || "IM").toUpperCase()}
+        imageUrlToken={imageUrlToken}
         sx={{
           bgcolor: alpha(movieColors.brand, 0.18),
           border: `1px solid ${alpha(movieColors.brand, 0.36)}`,
@@ -52,9 +57,7 @@ const UserActions = ({
           height: 34,
           width: 34,
         }}
-      >
-        {(username?.slice(0, 2) || "IM").toUpperCase()}
-      </Avatar>
+      />
     </IconButton>
   </Tooltip>
 );

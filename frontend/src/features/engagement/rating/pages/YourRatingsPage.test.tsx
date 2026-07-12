@@ -79,7 +79,9 @@ describe("YourRatingsPage", () => {
     expect(screen.getByRole("grid", { name: "Rated movies" })).toBeTruthy();
     expect(screen.getByText("Your average")).toBeTruthy();
     expect(screen.getByText("8.0")).toBeTruthy();
-    expect(screen.getByText("First Movie")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: "First Movie, 2014 · 117 min" }),
+    ).toBeTruthy();
     expect(screen.getByLabelText("Your rating 9 out of 10")).toBeTruthy();
   });
 

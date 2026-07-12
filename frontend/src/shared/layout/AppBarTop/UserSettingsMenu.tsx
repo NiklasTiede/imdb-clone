@@ -3,7 +3,6 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
-import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -13,6 +12,7 @@ import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router";
 import { movieColors } from "../../../theme";
+import { ProfileAvatar } from "../../media";
 
 const settings = [
   {
@@ -47,6 +47,7 @@ type UserSettingsMenuProps = {
   onClose: () => void;
   onLogout: () => void;
   open: boolean;
+  imageUrlToken?: string | undefined;
   username?: string | null;
 };
 
@@ -56,6 +57,7 @@ const UserSettingsMenu = ({
   onClose,
   onLogout,
   open,
+  imageUrlToken,
   username,
 }: UserSettingsMenuProps) => (
   <Menu
@@ -94,7 +96,10 @@ const UserSettingsMenu = ({
         py: 1.5,
       }}
     >
-      <Avatar
+      <ProfileAvatar
+        alt={username ? `${username} profile` : "Account profile"}
+        fallback={(username?.slice(0, 2) || "IM").toUpperCase()}
+        imageUrlToken={imageUrlToken}
         sx={{
           bgcolor: alpha(movieColors.brand, 0.18),
           color: movieColors.brand,
@@ -103,9 +108,7 @@ const UserSettingsMenu = ({
           height: 40,
           width: 40,
         }}
-      >
-        {(username?.slice(0, 2) || "IM").toUpperCase()}
-      </Avatar>
+      />
       <Box sx={{ minWidth: 0 }}>
         <Typography sx={{ fontSize: 14, fontWeight: 800 }} noWrap>
           {username || "Your account"}

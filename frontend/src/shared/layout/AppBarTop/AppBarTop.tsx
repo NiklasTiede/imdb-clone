@@ -1,19 +1,21 @@
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
+import { useQuery } from "@tanstack/react-query";
 import type { MouseEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { movieColors } from "../../../theme";
+import { accountQueries } from "../../api/accountProfileQueries";
+import { logoutSession, RoleNameEnum } from "../../auth";
 import { authSession } from "../../auth/authSession";
 import { useAuthSession } from "../../auth/useAuthSession";
-import { logoutSession, RoleNameEnum } from "../../auth";
 import BrandLogo from "../BrandLogo";
 import AdminEditButton from "./AdminEditButton";
 import LoginButton from "./LoginButton";
 import MovieSearchInput from "./MovieSearchInput";
 import UserActions from "./UserActions";
 import UserSettingsMenu from "./UserSettingsMenu";
-import { movieColors } from "../../../theme";
 
 const menuId = "primary-search-account-menu";
 const SEARCH_DEBOUNCE_MS = 300;
@@ -29,6 +31,10 @@ function AppBarTop() {
   const isLoggedIn = useAuthSession();
   const isAdmin = authSession.hasRole(RoleNameEnum.Admin);
   const username = authSession.getUsername();
+  const { data: currentProfile } = useQuery({
+    ...accountQueries.currentProfile(),
+    enabled: isLoggedIn,
+  });
 
   const queryParams = new URLSearchParams(location.search);
   const initialQuery = queryParams.get("query") || queryParams.get("q") || "";
@@ -167,6 +173,7 @@ function AppBarTop() {
             {isAdmin && <AdminEditButton />}
             {isLoggedIn ? (
               <UserActions
+                imageUrlToken={currentProfile?.imageUrlToken}
                 menuId={menuId}
                 onProfileMenuOpen={handleProfileMenuOpen}
                 username={username}
@@ -179,6 +186,7 @@ function AppBarTop() {
       </AppBar>
       <UserSettingsMenu
         anchorEl={anchorEl}
+        imageUrlToken={currentProfile?.imageUrlToken}
         menuId={menuId}
         onClose={handleMenuClose}
         onLogout={handleLogout}

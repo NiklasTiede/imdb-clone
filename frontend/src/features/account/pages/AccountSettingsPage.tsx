@@ -6,7 +6,7 @@ import {
   accountMutationKeys,
   updateAccountProfile,
 } from "../api/accountMutations";
-import { accountQueries } from "../api/accountQueries";
+import { accountQueries } from "../../../shared/api/accountProfileQueries";
 import { useSnackbar } from "notistack";
 import PageContent from "../../../shared/layout/PageContent";
 import PageHeader from "../../../shared/layout/PageHeader";

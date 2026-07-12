@@ -7,11 +7,13 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import YourCommentsPage from "./YourCommentsPage";
 
 const mocks = vi.hoisted(() => ({
+  accountApi: { getCurrentAccountProfile: vi.fn() },
   accountEngagementApi: { getCommentsByAccount: vi.fn() },
   commentApi: { deleteComment: vi.fn(), updateComment: vi.fn() },
 }));
 
 vi.mock("../../../../shared/api/moviesApi", () => ({
+  accountApi: mocks.accountApi,
   accountEngagementApi: mocks.accountEngagementApi,
   commentApi: mocks.commentApi,
 }));
@@ -56,6 +58,9 @@ const commentPage = (page: number, message: string, totalPages = 1) => ({
 describe("YourCommentsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.accountApi.getCurrentAccountProfile.mockResolvedValue({
+      data: { imageUrlToken: "ada-avatar-token" },
+    });
     mocks.commentApi.deleteComment.mockResolvedValue({});
     mocks.commentApi.updateComment.mockResolvedValue({ data: {} });
   });
@@ -71,6 +76,9 @@ describe("YourCommentsPage", () => {
     expect(
       screen.getByRole("link", { name: "View movie discussion" }).getAttribute("href"),
     ).toBe("/movie?id=31#comment-1");
+    expect(
+      (await screen.findByAltText("ada profile")).getAttribute("src"),
+    ).toContain("profile-photos/ada-avatar-token_size_800x800.jpg");
   });
 
   test("loads another page without mixing comment pages", async () => {

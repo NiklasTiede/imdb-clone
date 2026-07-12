@@ -1,7 +1,9 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, vi } from "vitest";
 import { authSession } from "../../auth";
+import { accountApi } from "../../api/moviesApi";
 import AppBarTop from "./AppBarTop";
 
 vi.mock("../../auth/logoutSession", () => ({
@@ -13,25 +15,35 @@ const LocationProbe = () => {
   return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
 };
 
-const renderAppBar = (initialPath = "/movie-search") =>
-  render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <AppBarTop />
-      <Routes>
-        <Route path="*" element={<LocationProbe />} />
-      </Routes>
-    </MemoryRouter>,
+const renderAppBar = (initialPath = "/movie-search") => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <AppBarTop />
+        <Routes>
+          <Route path="*" element={<LocationProbe />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
+};
 
 describe("AppBarTop", () => {
   beforeEach(() => {
     vi.useRealTimers();
     authSession.resetForTests();
+    vi.spyOn(accountApi, "getCurrentAccountProfile").mockResolvedValue({
+      data: {},
+    } as never);
   });
 
   afterEach(() => {
     vi.useRealTimers();
     authSession.resetForTests();
+    vi.restoreAllMocks();
   });
 
   it("clears the session and returns home when signing out", async () => {
@@ -53,6 +65,26 @@ describe("AppBarTop", () => {
     await waitFor(() =>
       expect(screen.getByTestId("location").textContent).toBe("/"),
     );
+  });
+
+  it("renders the current profile photo in the account action", async () => {
+    authSession.setSession({
+      email: "niklas@example.com",
+      id: 1,
+      roles: ["ROLE_USER"],
+      username: "niklas",
+    });
+    vi.mocked(accountApi.getCurrentAccountProfile).mockResolvedValue({
+      data: { imageUrlToken: "avatar-token" },
+    } as never);
+
+    renderAppBar();
+
+    expect(
+      (
+        await screen.findByRole("img", { name: "niklas profile" })
+      ).getAttribute("src"),
+    ).toContain("profile-photos/avatar-token_size_800x800.jpg");
   });
 
   it("updates the movie search URL after typing pauses", () => {

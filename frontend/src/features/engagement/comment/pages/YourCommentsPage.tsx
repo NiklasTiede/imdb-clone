@@ -8,6 +8,7 @@ import { Link as RouterLink } from "react-router";
 import { useState } from "react";
 import { getUsername } from "../../../../shared/auth";
 import { accountEngagementApi } from "../../../../shared/api/moviesApi";
+import { accountQueries } from "../../../../shared/api/accountProfileQueries";
 import PageContent from "../../../../shared/layout/PageContent";
 import PageHeader from "../../../../shared/layout/PageHeader";
 import { deleteCommentMutationOptions, updateCommentMutationOptions } from "../api/commentMutations";
@@ -20,6 +21,10 @@ const YourCommentsPage = () => {
   const username = getUsername();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
+  const { data: currentProfile } = useQuery({
+    ...accountQueries.currentProfile(),
+    enabled: Boolean(username),
+  });
   const query = useQuery({
     enabled: Boolean(username),
     queryFn: async () =>
@@ -70,7 +75,16 @@ const YourCommentsPage = () => {
         {comments.map((comment) => (
           <Stack key={comment.id} spacing={0.75} sx={{ borderBottom: "1px solid", borderColor: "divider" }}>
             <CommentItem
-              author={username ? { username } : undefined}
+              author={
+                username
+                  ? {
+                      ...(currentProfile?.imageUrlToken
+                        ? { imageUrlToken: currentProfile.imageUrlToken }
+                        : {}),
+                      username,
+                    }
+                  : undefined
+              }
               canManage
               comment={comment}
               isDeleting={remove.isPending}
