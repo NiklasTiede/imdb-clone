@@ -54,6 +54,14 @@ class MovieSearchRankFusionTest {
   }
 
   @Test
+  void fuse_ignoresAResultSourceWithZeroWeight() {
+    List<MovieSearchDocument> fusedResults =
+        rankFusion.fuse(List.of(movie(1)), List.of(movie(2)), 0, 10, 0.0, 1.0);
+
+    assertThat(fusedResults).extracting(MovieSearchDocument::getId).containsExactly(2L);
+  }
+
+  @Test
   void fuse_rejectsInvalidWeights() {
     org.assertj.core.api.Assertions.assertThatThrownBy(
             () -> rankFusion.fuse(List.of(), List.of(), 0, 10, -0.1, 1.1))
@@ -61,6 +69,18 @@ class MovieSearchRankFusionTest {
 
     org.assertj.core.api.Assertions.assertThatThrownBy(
             () -> rankFusion.fuse(List.of(), List.of(), 0, 10, Double.NaN, 1.0))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> rankFusion.fuse(List.of(), List.of(), 0, 10, 1.0, Double.POSITIVE_INFINITY))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> rankFusion.fuse(List.of(), List.of(), 0, 10, 1.0, -0.1))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> rankFusion.fuse(List.of(), List.of(), 0, 10, 0.0, 0.0))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
