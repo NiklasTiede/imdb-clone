@@ -1,0 +1,5 @@
+ARG BASE_SEED_IMAGE=niklastiede/imdb-clone-seed:full-v0.2.1
+FROM ${BASE_SEED_IMAGE}
+
+ARG SEED_CSV=movie_enriched.csv
+COPY ${SEED_CSV} /seed/movie_enriched.csv

@@ -12,6 +12,7 @@ from enrich_movie_seed import (
     EnrichmentProgress,
     TmdbClient,
     enrich_candidates,
+    enrich_candidates_parallel,
     stable_image_token,
     write_enriched_movies,
     write_report,
@@ -135,6 +136,65 @@ class EnrichMovieSeedTest(unittest.TestCase):
         self.assertEqual("officialTrailer", enriched[0]["trailer_youtube_key"])
         self.assertEqual(stable_image_token("tt2872718", "poster"), enriched[0]["poster_image_token"])
         self.assertEqual(stable_image_token("tt2872718", "backdrop"), enriched[0]["backdrop_image_token"])
+
+    def test_enrichment_reuses_existing_tmdb_id(self):
+        client = FakeTmdbClient()
+        rows = [
+            {
+                "id": "2872718",
+                "imdb_id": "tt2872718",
+                "movie_type": "MOVIE",
+                "primary_title": "Nightcrawler",
+                "original_title": "Nightcrawler",
+                "adult": "0",
+                "start_year": "2014",
+                "end_year": "\\N",
+                "runtime_minutes": "117",
+                "movie_genre": "16409",
+                "imdb_rating": "7.8",
+                "imdb_rating_count": "700000",
+                "tmdb_id": "242582",
+            }
+        ]
+
+        enriched = enrich_candidates(rows, client)
+
+        self.assertEqual([], client.calls)
+        self.assertEqual([242582], client.detail_calls)
+        self.assertEqual("officialTrailer", enriched[0]["trailer_youtube_key"])
+
+    def test_parallel_enrichment_preserves_input_order(self):
+        rows = [
+            {
+                "id": str(movie_id),
+                "imdb_id": f"tt{movie_id:07d}",
+                "movie_type": "MOVIE",
+                "primary_title": f"Movie {movie_id}",
+                "original_title": f"Movie {movie_id}",
+                "adult": "0",
+                "start_year": "2014",
+                "end_year": "\\N",
+                "runtime_minutes": "117",
+                "movie_genre": "16409",
+                "imdb_rating": "7.8",
+                "imdb_rating_count": "700000",
+                "tmdb_id": str(movie_id),
+            }
+            for movie_id in (3, 1, 2)
+        ]
+        progress = EnrichmentProgress(total=len(rows), log_every=10)
+
+        enriched = enrich_candidates_parallel(
+            rows,
+            FakeTmdbClient,
+            workers=2,
+            progress=progress,
+            logger=lambda _message: None,
+        )
+
+        self.assertEqual(["3", "1", "2"], [row["id"] for row in enriched])
+        self.assertEqual(3, progress.processed)
+        self.assertEqual(3, progress.enriched)
 
     def test_write_enriched_movies_uses_database_and_manifest_columns(self):
         with tempfile.TemporaryDirectory() as tmp_dir:

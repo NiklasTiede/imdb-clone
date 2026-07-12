@@ -5,8 +5,11 @@ import hashlib
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from threading import local
+from typing import Callable
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -125,17 +128,22 @@ def enrich_candidate(
     tmdb_client,
     progress: EnrichmentProgress | None = None,
 ) -> dict[str, str] | None:
-    response = tmdb_client.find_by_imdb_id(candidate["imdb_id"])
-    if progress and getattr(tmdb_client, "last_status", None):
-        progress.record_client_status(tmdb_client.last_status)
+    tmdb_id = candidate.get("tmdb_id")
+    if tmdb_id and tmdb_id != "\\N":
+        movie_id = int(tmdb_id)
+    else:
+        response = tmdb_client.find_by_imdb_id(candidate["imdb_id"])
+        if progress and getattr(tmdb_client, "last_status", None):
+            progress.record_client_status(tmdb_client.last_status)
 
-    movie = select_movie_result(response)
-    if not movie:
-        if progress:
-            progress.skipped_no_match += 1
-        return None
+        movie = select_movie_result(response)
+        if not movie:
+            if progress:
+                progress.skipped_no_match += 1
+            return None
+        movie_id = movie["id"]
 
-    movie = tmdb_client.get_movie_details(movie["id"])
+    movie = tmdb_client.get_movie_details(movie_id)
     if progress and getattr(tmdb_client, "last_status", None):
         progress.record_client_status(tmdb_client.last_status)
 
@@ -263,6 +271,43 @@ class TmdbClient:
         raise RuntimeError(f"Could not fetch TMDB data for {resource_name}") from last_error
 
 
+def enrich_candidates_parallel(
+    rows: list[dict[str, str]],
+    client_factory: Callable[[], object],
+    workers: int,
+    progress: EnrichmentProgress,
+    logger=print,
+) -> list[dict[str, str]]:
+    if workers < 2:
+        raise ValueError("Parallel enrichment requires at least two workers")
+
+    thread_state = local()
+
+    def enrich_row(row: dict[str, str]):
+        if not hasattr(thread_state, "client"):
+            thread_state.client = client_factory()
+        row_progress = EnrichmentProgress(total=1, log_every=1)
+        enriched_row = enrich_candidate(row, thread_state.client, row_progress)
+        return enriched_row, row_progress
+
+    enriched = []
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        for row, (enriched_row, row_progress) in zip(
+            rows, executor.map(enrich_row, rows)
+        ):
+            progress.cache_hits += row_progress.cache_hits
+            progress.api_fetches += row_progress.api_fetches
+            progress.skipped_no_match += row_progress.skipped_no_match
+            progress.skipped_no_poster += row_progress.skipped_no_poster
+            if enriched_row:
+                enriched.append(enriched_row)
+                progress.enriched += 1
+            progress.processed += 1
+            if progress.should_log():
+                logger(progress.progress_line(row))
+    return enriched
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Enrich IMDb movie seed candidates with TMDB metadata."
@@ -274,6 +319,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--api-key", default=os.environ.get("TMDB_API_KEY"))
     parser.add_argument("--sleep-seconds", type=float, default=0.0)
     parser.add_argument("--log-every", type=int, default=100)
+    parser.add_argument("--workers", type=int, default=1)
     return parser.parse_args()
 
 
@@ -282,14 +328,22 @@ def main() -> None:
     if not args.api_key:
         raise SystemExit("TMDB API key missing. Pass --api-key or set TMDB_API_KEY.")
 
-    client = TmdbClient(
+    candidates = load_candidates(args.input)
+    progress = EnrichmentProgress(total=len(candidates), log_every=args.log_every)
+    client_factory = lambda: TmdbClient(
         api_key=args.api_key,
         cache_dir=args.cache_dir,
         sleep_seconds=args.sleep_seconds,
     )
-    candidates = load_candidates(args.input)
-    progress = EnrichmentProgress(total=len(candidates), log_every=args.log_every)
-    enriched = enrich_candidates(candidates, client, progress=progress)
+    if args.workers > 1:
+        enriched = enrich_candidates_parallel(
+            candidates,
+            client_factory,
+            workers=args.workers,
+            progress=progress,
+        )
+    else:
+        enriched = enrich_candidates(candidates, client_factory(), progress=progress)
     write_enriched_movies(enriched, args.output)
     write_report(progress, args.report)
     print(f"Wrote {len(enriched)} enriched movies to {args.output}")

@@ -13,7 +13,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: seed
-          image: niklastiede/imdb-clone-seed:full-v0.2.1
+          image: niklastiede/imdb-clone-seed:full-v0.2.2
           imagePullPolicy: IfNotPresent
           args: ["all"]
           env:
@@ -54,4 +54,4 @@ spec:
             - name: SEED_NAME
               value: full
             - name: SEED_VERSION
-              value: v0.2.1
+              value: v0.2.2

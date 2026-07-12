@@ -63,8 +63,23 @@ class PrepareSeedContextTest(unittest.TestCase):
                 ).exists()
             )
 
+    def test_context_rejects_seed_without_trailers(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            source = root / "source"
+            output = root / "context"
+            csv_path = source / "movie_enriched.csv"
+            write_enriched_csv(csv_path, row_count=2, trailer_youtube_key="")
 
-def write_enriched_csv(path: Path, row_count: int) -> None:
+            with self.assertRaisesRegex(ValueError, "Trailer coverage is 0.0%"):
+                prepare_seed_context(source, output, profile="full", limit=None)
+
+
+def write_enriched_csv(
+    path: Path,
+    row_count: int,
+    trailer_youtube_key: str = "abcDEF123_-",
+) -> None:
     fields = [
         "id",
         "imdb_id",
@@ -109,7 +124,7 @@ def write_enriched_csv(path: Path, row_count: int) -> None:
                     "description": "Description",
                     "poster_path": "/poster.jpg",
                     "backdrop_path": "/backdrop.jpg",
-                    "trailer_youtube_key": "",
+                    "trailer_youtube_key": trailer_youtube_key,
                     "poster_image_token": f"poster-{index:03d}",
                     "backdrop_image_token": f"backdrop-{index:03d}",
                 }

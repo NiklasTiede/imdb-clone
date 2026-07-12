@@ -1,16 +1,39 @@
 #!/usr/bin/env python3
 import argparse
 import csv
+import re
 import shutil
 from pathlib import Path
 
 
 DEFAULT_SOURCE_ROOT = Path("build/movie-seed")
 DEFAULT_OUTPUT_ROOT = Path("build/movie-seed/docker-context")
+MINIMUM_TRAILER_COVERAGE = 0.5
+YOUTUBE_VIDEO_KEY_PATTERN = re.compile(r"^[A-Za-z0-9_-]{11}$")
 MEDIA_VARIANTS = {
     "poster_image_token": ("posters", ("120x180", "300x450", "600x900")),
     "backdrop_image_token": ("backdrops", ("780x439", "1280x720")),
 }
+
+
+def validate_trailer_coverage(
+    rows: list[dict[str, str]],
+    minimum_coverage: float = MINIMUM_TRAILER_COVERAGE,
+) -> None:
+    valid_trailers = sum(
+        1
+        for row in rows
+        if YOUTUBE_VIDEO_KEY_PATTERN.fullmatch(
+            row.get("trailer_youtube_key", "").strip()
+        )
+    )
+    coverage = valid_trailers / len(rows)
+    if coverage < minimum_coverage:
+        raise ValueError(
+            "Trailer coverage is "
+            f"{coverage:.1%}; expected at least {minimum_coverage:.1%} "
+            "before building a seed image"
+        )
 
 
 def load_rows(source_root: Path, limit: int | None) -> list[dict[str, str]]:
@@ -88,6 +111,7 @@ def prepare_seed_context(
     rows = load_rows(source_root, limit)
     if not rows:
         raise ValueError(f"No rows found in {source_root / 'movie_enriched.csv'}")
+    validate_trailer_coverage(rows)
     write_seed_csv(rows, output_root / "seed" / "movie_enriched.csv")
     copy_runtime_files(output_root)
     copy_matching_media(source_root, output_root, rows)
