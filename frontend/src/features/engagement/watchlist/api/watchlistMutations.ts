@@ -30,17 +30,12 @@ export const toggleWatchlistMutationOptions = (
   },
 });
 
-export const addToWatchlist = async (movieId: number) => {
-  await watchlistApi.watchMovie(movieId);
-};
-
 export const removeFromWatchlist = async (movieId: number) => {
   await watchlistApi.deleteWatchedMovie(movieId);
 };
 
 type RemoveFromWatchlistMutationOptionsParams = {
   onRemoveError: () => void;
-  onRemoved: (movieId: number) => void;
   queryClient: QueryClient;
   watchlistQueryKey: QueryKey;
 };
@@ -70,7 +65,6 @@ const isInfiniteLibraryData = (
 
 export const removeFromWatchlistMutationOptions = ({
   onRemoveError,
-  onRemoved,
   queryClient,
   watchlistQueryKey,
 }: RemoveFromWatchlistMutationOptionsParams) => ({
@@ -112,9 +106,6 @@ export const removeFromWatchlistMutationOptions = ({
       queryClient.setQueryData(watchlistQueryKey, context.previous);
     }
     onRemoveError();
-  },
-  onSuccess: (_data: unknown, movieId: number) => {
-    onRemoved(movieId);
   },
   onSettled: async () => {
     await queryClient.invalidateQueries({ queryKey: watchlistQueryKeys.all });

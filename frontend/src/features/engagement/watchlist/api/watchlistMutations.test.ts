@@ -86,7 +86,6 @@ describe("removeFromWatchlistMutationOptions", () => {
 
     const options = removeFromWatchlistMutationOptions({
       onRemoveError: vi.fn(),
-      onRemoved: vi.fn(),
       queryClient,
       watchlistQueryKey: queryKey,
     });

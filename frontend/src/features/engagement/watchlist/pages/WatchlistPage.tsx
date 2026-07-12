@@ -16,11 +16,8 @@ import WatchlistDecisionPanel from "../components/WatchlistDecisionPanel";
 import WatchlistToolbar, {
   WatchlistView,
 } from "../components/WatchlistToolbar";
-import {
-  addToWatchlist,
-  removeFromWatchlistMutationOptions,
-} from "../api/watchlistMutations";
-import { watchlistQueries, watchlistQueryKeys } from "../api/watchlistQueries";
+import { removeFromWatchlistMutationOptions } from "../api/watchlistMutations";
+import { watchlistQueries } from "../api/watchlistQueries";
 import { WatchlistSort } from "../utils/watchlistSorting";
 import { useSnackbar } from "notistack";
 
@@ -29,7 +26,7 @@ const WATCHLIST_PAGE_SIZE = 30;
 const WatchlistPage = () => {
   const username = getUsername();
   const queryClient = useQueryClient();
-  const { closeSnackbar, enqueueSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
   const [sortBy, setSortBy] = useState<WatchlistSort>("addedAt_desc");
   const [view, setView] = useLocalStorageState<WatchlistView>(
     "watchlist.view",
@@ -56,40 +53,11 @@ const WatchlistPage = () => {
   );
   const insights = data?.pages[0]?.insights;
 
-  const addMutation = useMutation({
-    mutationFn: addToWatchlist,
-    onError: () => {
-      enqueueSnackbar("Could not restore movie to watchlist", {
-        variant: "error",
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: watchlistQueryKeys.all });
-    },
-  });
-
   const removeMutation = useMutation({
     ...removeFromWatchlistMutationOptions({
       onRemoveError: () => {
         enqueueSnackbar("Could not remove movie from watchlist", {
           variant: "error",
-        });
-      },
-      onRemoved: (movieId) => {
-        enqueueSnackbar("Removed from watchlist", {
-          action: (snackbarId) => (
-            <Button
-              color="inherit"
-              onClick={() => {
-                addMutation.mutate(movieId);
-                closeSnackbar(snackbarId);
-              }}
-              size="small"
-            >
-              Undo
-            </Button>
-          ),
-          variant: "info",
         });
       },
       queryClient,
