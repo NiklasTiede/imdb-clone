@@ -28,6 +28,7 @@ describe("WatchlistMovieCard", () => {
     );
 
     expect(screen.getByRole("link", { name: /nightcrawler/i })).toBeTruthy();
+    expect(screen.queryByText("Nightcrawler")).toBeNull();
     expect(screen.getByText("2014 · 117 min")).toBeTruthy();
     expect(screen.getByText(/^Added /)).toBeTruthy();
     expect(screen.getByAltText("movie poster").getAttribute("src")).toMatch(

@@ -12,10 +12,10 @@ const movie = {
 };
 
 describe("PosterMovieCard", () => {
-  test("keeps the title accessible when carousel captions hide it", () => {
+  test("keeps the title accessible without rendering it below the poster", () => {
     render(
       <MemoryRouter>
-        <PosterMovieCard movie={movie} showTitle={false} />
+        <PosterMovieCard movie={movie} />
       </MemoryRouter>,
     );
 

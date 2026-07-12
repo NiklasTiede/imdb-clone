@@ -6,6 +6,7 @@ import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { getMoviePosterToken, type Movie } from "../model/movie";
 import { IMDB_GOLD } from "./RatingPill";
@@ -21,7 +22,10 @@ type MovieCardProps = {
   isBookmarked?: boolean;
   onOpen?: ((movieId: number) => void) | undefined;
   onToggleBookmark?: ((movieId: number) => void) | undefined;
-  showTitle?: boolean;
+  action?: ReactNode;
+  caption?: string;
+  posterOverlay?: ReactNode;
+  showImdbRating?: boolean;
 };
 
 const MovieCard = ({
@@ -29,7 +33,10 @@ const MovieCard = ({
   isBookmarked = false,
   onOpen,
   onToggleBookmark,
-  showTitle = true,
+  action,
+  caption,
+  posterOverlay,
+  showImdbRating = true,
 }: MovieCardProps) => {
   const detailUrl = `/movie?id=${movie.id ?? ""}`;
   const title = movie.primaryTitle ?? "Untitled movie";
@@ -42,6 +49,8 @@ const MovieCard = ({
         backgroundColor: "transparent",
         boxShadow: "none",
         overflow: "visible",
+        position: "relative",
+        "&:hover .movie-card-action": { opacity: 1 },
       }}
     >
       <CardActionArea
@@ -60,9 +69,6 @@ const MovieCard = ({
           textDecoration: "none",
           ...posterHoverContainerSx,
           "& .MuiCardActionArea-focusHighlight": { display: "none" },
-          "&:hover .movie-card-bookmark": {
-            opacity: 1,
-          },
         }}
         title={title}
       >
@@ -89,44 +95,7 @@ const MovieCard = ({
             }}
           />
 
-          {showBookmark && (
-            <IconButton
-              aria-label={
-                isBookmarked ? "Remove from watchlist" : "Add to watchlist"
-              }
-              className="movie-card-bookmark"
-              size="small"
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                onToggleBookmark(movie.id as number);
-              }}
-              sx={{
-                backgroundColor: isBookmarked
-                  ? "success.main"
-                  : "rgba(0,0,0,0.65)",
-                color: "common.white",
-                opacity: isBookmarked ? 1 : 0,
-                position: "absolute",
-                right: 0.75,
-                top: 0.75,
-                transition: "opacity 150ms ease, background-color 150ms ease",
-                "&:hover": {
-                  backgroundColor: isBookmarked
-                    ? "success.dark"
-                    : "rgba(0,0,0,0.78)",
-                },
-              }}
-            >
-              {isBookmarked ? (
-                <BookmarkIcon fontSize="small" />
-              ) : (
-                <BookmarkBorderIcon fontSize="small" />
-              )}
-            </IconButton>
-          )}
-
-          {movie.imdbRating !== undefined && (
+          {showImdbRating && movie.imdbRating !== undefined && (
             <Box
               sx={{
                 alignItems: "center",
@@ -148,39 +117,60 @@ const MovieCard = ({
               {movie.imdbRating.toFixed(1)}
             </Box>
           )}
+          {posterOverlay}
         </Box>
 
-        {showTitle && (
-          <Typography
-            sx={{
-              display: "-webkit-box",
-              fontSize: 13,
-              fontWeight: 600,
-              lineHeight: 1.25,
-              mt: 1,
-              overflow: "hidden",
-              WebkitBoxOrient: "vertical",
-              WebkitLineClamp: 2,
-            }}
-          >
-            {title}
-          </Typography>
-        )}
         <Typography
           sx={{
-            color: showTitle ? "text.secondary" : "text.disabled",
-            fontSize: showTitle ? 12 : 11,
-            fontWeight: showTitle ? 400 : 600,
-            letterSpacing: showTitle ? 0 : "0.035em",
+            color: "text.disabled",
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: "0.035em",
             minHeight: 18,
-            mt: showTitle ? 0.25 : 0.45,
-            px: showTitle ? 0 : 0.5,
-            textAlign: showTitle ? "left" : "center",
+            mt: 0.45,
+            px: 0.5,
+            textAlign: "center",
           }}
         >
           {meta}
         </Typography>
+        {caption && (
+          <Typography
+            sx={{
+              color: "text.secondary",
+              fontSize: 11,
+              mt: 0.1,
+              textAlign: "center",
+            }}
+          >
+            {caption}
+          </Typography>
+        )}
       </CardActionArea>
+      {showBookmark && (
+        <IconButton
+          aria-label={isBookmarked ? "Remove from watchlist" : "Add to watchlist"}
+          className="movie-card-action"
+          size="small"
+          onClick={() => onToggleBookmark(movie.id as number)}
+          sx={{
+            backgroundColor: isBookmarked ? "success.main" : "rgba(0,0,0,0.65)",
+            color: "common.white",
+            opacity: isBookmarked ? 1 : 0,
+            position: "absolute",
+            right: 0.75,
+            top: 0.75,
+            transition: "opacity 150ms ease, background-color 150ms ease",
+            "@media (hover: none)": { opacity: isBookmarked ? 1 : 0.75 },
+            "&:hover": {
+              backgroundColor: isBookmarked ? "success.dark" : "rgba(0,0,0,0.78)",
+            },
+          }}
+        >
+          {isBookmarked ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
+        </IconButton>
+      )}
+      {action}
     </Card>
   );
 };

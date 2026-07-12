@@ -28,6 +28,7 @@ describe("RatingsMovieCard", () => {
     );
 
     expect(screen.getByLabelText("Your rating 9 out of 10")).toBeTruthy();
+    expect(screen.queryByText("The Green Mile")).toBeNull();
     expect(yourRatingBadgeSx.backgroundColor).toBe("rgba(5,10,20,0.72)");
     expect(yourRatingBadgeSx.border).toBe("1px solid rgba(77,171,247,0.32)");
     expect(yourRatingStarSx.color).toBe("rgba(77,171,247,0.9)");

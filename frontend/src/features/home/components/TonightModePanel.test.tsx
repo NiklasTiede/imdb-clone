@@ -43,9 +43,10 @@ describe("TonightModePanel", () => {
     await user.click(screen.getByText("Thriller"));
     await user.click(screen.getByRole("button", { name: "Pick tonight's movies" }));
 
-    expect(await screen.findByText("First choice")).toBeTruthy();
-    expect(screen.getByText("Second choice")).toBeTruthy();
-    expect(screen.getByText("Third choice")).toBeTruthy();
+    expect(await screen.findByRole("link", { name: /first choice/i })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /second choice/i })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /third choice/i })).toBeTruthy();
+    expect(screen.queryByText("First choice")).toBeNull();
     expect(screen.getByText("Fits your time tonight.")).toBeTruthy();
     expect(mocks.getTonightPicks.mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({
@@ -62,7 +63,7 @@ describe("TonightModePanel", () => {
     renderPanel();
 
     await user.click(screen.getByRole("button", { name: "Pick tonight's movies" }));
-    await screen.findByText("First choice");
+    await screen.findByRole("link", { name: /first choice/i });
     await user.click(screen.getByRole("button", { name: "Different three" }));
 
     const nextRequest = mocks.getTonightPicks.mock.calls.at(-1)?.[0] as unknown as {

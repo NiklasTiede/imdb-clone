@@ -34,5 +34,6 @@ describe("SearchMovieCard", () => {
     );
     expect(screen.getByText("7.8")).toBeTruthy();
     expect(screen.getByText("2014 · 117 min")).toBeTruthy();
+    expect(screen.queryByText("Nightcrawler")).toBeNull();
   });
 });
