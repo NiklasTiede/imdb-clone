@@ -32,37 +32,20 @@ class MovieSearchQueryBuilderTest {
         .singleElement()
         .satisfies(
             query -> {
-              assertThat(query.isFunctionScore()).isTrue();
-              assertThat(query.functionScore().functions())
-                  .singleElement()
-                  .satisfies(
-                      function -> {
-                        assertThat(function.isFieldValueFactor()).isTrue();
-                        assertThat(function.fieldValueFactor().field())
-                            .isEqualTo("imdbRatingCount");
-                      });
-              assertThat(query.functionScore().query().bool().should()).hasSize(2);
-              assertThat(
-                      query.functionScore().query().bool().should().getFirst().multiMatch().query())
+              assertThat(query.isBool()).isTrue();
+              assertThat(query.bool().should()).hasSize(4);
+              assertThat(query.bool().should().getFirst().multiMatch().query())
                   .isEqualTo("space horror");
-              assertThat(
-                      query
-                          .functionScore()
-                          .query()
-                          .bool()
-                          .should()
-                          .getFirst()
-                          .multiMatch()
-                          .fields())
+              assertThat(query.bool().should().get(1).multiMatch().fields())
                   .containsExactly(
-                      "primaryTitle^4",
-                      "primaryTitle._2gram^3",
-                      "primaryTitle._3gram^2",
-                      "originalTitle^2",
-                      "originalTitle._2gram^1.5",
-                      "originalTitle._3gram^1.2");
-              assertThat(query.functionScore().query().bool().should().getLast().match().field())
-                  .isEqualTo("description");
+                      "primaryTitle^6",
+                      "primaryTitle._2gram^4",
+                      "primaryTitle._3gram^3",
+                      "originalTitle^3",
+                      "originalTitle._2gram^2",
+                      "originalTitle._3gram^1.5");
+              assertThat(query.bool().should().get(2).multiMatch().fuzziness()).isEqualTo("AUTO");
+              assertThat(query.bool().should().getLast().match().field()).isEqualTo("description");
             });
     assertThat(
             searchRequest.query().bool().filter().stream()
@@ -84,7 +67,8 @@ class MovieSearchQueryBuilderTest {
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
 
     SearchRequest searchRequest =
-        builder.buildSemanticSearchRequest("movies", queryEmbedding, request, 2, 10);
+        builder.buildSemanticSearchRequest(
+            "movies", queryEmbedding, request, 2, 10, "embeddinggemma", "movie-search-v1");
 
     assertThat(searchRequest.index()).containsExactly("movies");
     assertThat(searchRequest.from()).isEqualTo(20);
@@ -97,7 +81,10 @@ class MovieSearchQueryBuilderTest {
     assertThat(knnQuery.vector()).containsExactly(0.25f, -0.5f, 0.75f);
     assertThat(knnQuery.k()).isEqualTo(30);
     assertThat(knnQuery.methodParameters().toString()).contains("ef_search", "300");
-    assertThat(knnQuery.filter()).isNull();
+    assertThat(knnQuery.filter()).isNotNull();
+    assertThat(knnQuery.filter().bool().filter())
+        .extracting(query -> query.term().field())
+        .containsExactly("embeddingModel", "embeddingTextVersion");
   }
 
   @Test
@@ -108,11 +95,12 @@ class MovieSearchQueryBuilderTest {
             1980, 1990, 80, 140, Set.of(MovieGenre.SCI_FI, MovieGenre.HORROR), MovieType.MOVIE);
 
     SearchRequest searchRequest =
-        builder.buildSemanticSearchRequest("movies", queryEmbedding, request, 0, 20);
+        builder.buildSemanticSearchRequest(
+            "movies", queryEmbedding, request, 0, 20, "embeddinggemma", "movie-search-v1");
 
     KnnQuery knnQuery = searchRequest.query().knn();
     assertThat(knnQuery.filter()).isNotNull();
-    assertThat(knnQuery.filter().bool().filter()).hasSize(5);
+    assertThat(knnQuery.filter().bool().filter()).hasSize(7);
     assertThat(
             knnQuery.filter().bool().filter().stream()
                 .filter(filter -> filter.isMatch())

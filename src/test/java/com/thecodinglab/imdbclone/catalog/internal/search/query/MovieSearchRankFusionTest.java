@@ -42,6 +42,28 @@ class MovieSearchRankFusionTest {
     assertThat(fusedResults).extracting(MovieSearchDocument::getId).containsExactly(1L, 2L);
   }
 
+  @Test
+  void fuse_canPrioritizeSemanticResultsForDescriptiveQueries() {
+    List<MovieSearchDocument> lexicalResults = List.of(movie(1), movie(2));
+    List<MovieSearchDocument> semanticResults = List.of(movie(3), movie(2));
+
+    List<MovieSearchDocument> fusedResults =
+        rankFusion.fuse(lexicalResults, semanticResults, 0, 10, 0.05, 0.95);
+
+    assertThat(fusedResults).extracting(MovieSearchDocument::getId).containsExactly(3L, 2L, 1L);
+  }
+
+  @Test
+  void fuse_rejectsInvalidWeights() {
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> rankFusion.fuse(List.of(), List.of(), 0, 10, -0.1, 1.1))
+        .isInstanceOf(IllegalArgumentException.class);
+
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> rankFusion.fuse(List.of(), List.of(), 0, 10, Double.NaN, 1.0))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
   private MovieSearchDocument movie(long id) {
     MovieSearchDocument movie = new MovieSearchDocument();
     movie.setId(id);

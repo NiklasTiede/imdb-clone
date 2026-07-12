@@ -1,0 +1,19 @@
+{
+  "version": "search-relevance-live-v1",
+  "corpus": "seed-light-2026-05-17",
+  "embeddingModel": "embeddinggemma",
+  "cases": [
+    { "id": "exact-title", "query": "spirited away", "relevanceByMovieId": { "97": 3 } },
+    { "id": "title-prefix", "query": "spir", "relevanceByMovieId": { "97": 3 } },
+    { "id": "title-typo", "query": "sprited away", "relevanceByMovieId": { "97": 3 } },
+    { "id": "plot-spirit-world", "query": "a girl enters a spirit world", "relevanceByMovieId": { "97": 3, "187": 1 } },
+    { "id": "plot-dream-heist", "query": "dream heist inside people's minds", "relevanceByMovieId": { "3": 3 } },
+    { "id": "theme-space-horror", "query": "space horror", "relevanceByMovieId": { "74": 3, "139": 2, "212": 1 } },
+    { "id": "plot-animated-emotions", "query": "animated emotions inside a girl's mind", "relevanceByMovieId": { "115": 3 } },
+    { "id": "theme-serial-killer", "query": "serial killer psychological thriller", "relevanceByMovieId": { "12": 3, "19": 3, "160": 3, "141": 2, "229": 2 } },
+    { "id": "plot-living-toys", "query": "toys come alive when humans leave", "relevanceByMovieId": { "63": 3, "94": 2, "233": 2 } },
+    { "id": "plot-time-travel", "query": "teenager travels back in time and meets his parents", "relevanceByMovieId": { "33": 3 } },
+    { "id": "theme-crime-family", "query": "crime family patriarch succession", "relevanceByMovieId": { "9": 3, "32": 2 } },
+    { "id": "year-as-text", "query": "1999", "relevanceByMovieId": { "4": 3, "8": 3, "27": 3, "46": 3, "70": 3, "111": 3, "233": 3 } }
+  ]
+}

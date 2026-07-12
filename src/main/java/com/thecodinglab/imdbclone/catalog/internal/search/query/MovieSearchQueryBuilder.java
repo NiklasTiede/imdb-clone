@@ -30,28 +30,28 @@ public class MovieSearchQueryBuilder {
 
   public BoolQuery buildBoolQuery(String query, MovieSearchRequest request) {
     BoolQuery.Builder search = QueryBuilders.bool();
-
-    // -- highest voted movies scoring is boosted
-    search.must(Query.of(q -> q
-        .functionScore(fs -> fs
-            .query(buildTextQuery(query))
-            .functions(f -> f
-                .fieldValueFactor(fieldValueFactor -> fieldValueFactor
-                    .factor(0.002f)
-                    .field("imdbRatingCount")
-                    .modifier(FieldValueFactorModifier.Log1p)))
-            .scoreMode(FunctionScoreMode.Multiply))));
+    String normalizedQuery = query == null ? "" : query.trim();
+    search.must(
+        normalizedQuery.isBlank() ? buildPopularityQuery() : buildTextQuery(normalizedQuery));
 
     search.filter(buildFilterQueries(request));
     return search.build();
   }
 
   public SearchRequest buildSemanticSearchRequest(
-      String index, float[] queryEmbedding, MovieSearchRequest request, int page, int size) {
+      String index,
+      float[] queryEmbedding,
+      MovieSearchRequest request,
+      int page,
+      int size,
+      String embeddingModel,
+      String embeddingTextVersion) {
     int from = page * size;
     int k = from + size;
     int numCandidates = Math.max(k * NUM_CANDIDATES_MULTIPLIER, MIN_NUM_CANDIDATES);
     List<Query> filters = buildFilterQueries(request);
+    filters.add(termFilter("embeddingModel", embeddingModel));
+    filters.add(termFilter("embeddingTextVersion", embeddingTextVersion));
 
     Query knnQuery = Query.of(query -> query
         .knn(knn -> {
@@ -248,29 +248,55 @@ public class MovieSearchQueryBuilder {
   }
 
   private Query buildTextQuery(String query) {
-    String normalizedQuery = query == null ? "" : query.trim();
-    if (normalizedQuery.isBlank()) {
-      return Query.of(searchQuery -> searchQuery.matchAll(matchAll -> matchAll));
-    }
+    Query titlePhraseQuery = Query.of(searchQuery -> searchQuery.multiMatch(multiMatch -> multiMatch
+        .query(query)
+        .type(TextQueryType.Phrase)
+        .fields(List.of("primaryTitle^12", "originalTitle^6"))));
     Query titlePrefixQuery = Query.of(searchQuery -> searchQuery.multiMatch(multiMatch -> multiMatch
-        .query(normalizedQuery)
+        .query(query)
         .type(TextQueryType.BoolPrefix)
         .fields(List.of(
-            "primaryTitle^4",
-            "primaryTitle._2gram^3",
-            "primaryTitle._3gram^2",
-            "originalTitle^2",
-            "originalTitle._2gram^1.5",
-            "originalTitle._3gram^1.2"))));
+            "primaryTitle^6",
+            "primaryTitle._2gram^4",
+            "primaryTitle._3gram^3",
+            "originalTitle^3",
+            "originalTitle._2gram^2",
+            "originalTitle._3gram^1.5"))));
+    Query fuzzyTitleQuery = Query.of(searchQuery -> searchQuery.multiMatch(multiMatch -> multiMatch
+        .query(query)
+        .type(TextQueryType.BestFields)
+        .fields(List.of("primaryTitle^2", "originalTitle"))
+        .fuzziness("AUTO")
+        .prefixLength(1)
+        .boost(0.8f)));
     Query descriptionQuery = Query.of(searchQuery -> searchQuery.match(match -> match
         .field("description")
-        .query(FieldValue.of(normalizedQuery))
-        .boost(0.5f)));
+        .query(FieldValue.of(query))
+        .minimumShouldMatch("60%")
+        .boost(0.35f)));
 
     return Query.of(searchQuery -> searchQuery.bool(bool -> bool
+        .should(titlePhraseQuery)
         .should(titlePrefixQuery)
+        .should(fuzzyTitleQuery)
         .should(descriptionQuery)
         .minimumShouldMatch("1")));
+  }
+
+  private Query buildPopularityQuery() {
+    return Query.of(q -> q
+        .functionScore(fs -> fs
+            .query(matchAll -> matchAll.matchAll(all -> all))
+            .functions(f -> f
+                .fieldValueFactor(fieldValueFactor -> fieldValueFactor
+                    .factor(0.002f)
+                    .field("imdbRatingCount")
+                    .modifier(FieldValueFactorModifier.Log1p)))
+            .scoreMode(FunctionScoreMode.Multiply)));
+  }
+
+  private Query termFilter(String field, String value) {
+    return Query.of(query -> query.term(term -> term.field(field).value(FieldValue.of(value))));
   }
 
   private List<Float> toFloatList(float[] values) {

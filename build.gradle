@@ -169,6 +169,17 @@ tasks.named('test') {
 	}
 }
 
+tasks.register('liveSearchEvaluation', Test) {
+	description = 'Evaluates live search relevance against the seeded local corpus.'
+	group = LifecycleBasePlugin.VERIFICATION_GROUP
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	environment 'IMDB_CLONE_LIVE_SEARCH_EVALUATION', 'true'
+	useJUnitPlatform {
+		includeTags 'live-search-evaluation'
+	}
+}
+
 def integrationTest = tasks.register('integrationTest', Test) {
 	description = 'Runs backend integration tests against external infrastructure.'
 	group = LifecycleBasePlugin.VERIFICATION_GROUP

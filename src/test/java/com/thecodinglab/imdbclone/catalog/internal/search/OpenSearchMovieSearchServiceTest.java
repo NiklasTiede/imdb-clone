@@ -13,9 +13,11 @@ import com.thecodinglab.imdbclone.catalog.internal.search.embedding.MovieEmbeddi
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentMapper;
 import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchQueryBuilder;
+import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchQueryIntentClassifier;
 import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchRankFusion;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.error.OpenSearchOperationException;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +49,8 @@ class OpenSearchMovieSearchServiceTest {
   private final MovieSearchDocumentMapper mapper = new MovieSearchDocumentMapper();
   private final MovieSearchQueryBuilder queryBuilder = new MovieSearchQueryBuilder();
   private final MovieSearchRankFusion rankFusion = new MovieSearchRankFusion();
+  private final MovieSearchQueryIntentClassifier intentClassifier =
+      new MovieSearchQueryIntentClassifier();
 
   @Test
   void searchMoviesSemantically_embedsQueryAndRunsKnnSearch(CapturedOutput output)
@@ -58,6 +62,7 @@ class OpenSearchMovieSearchServiceTest {
     document.setPrimaryTitle("Alien");
     document.setOriginalTitle("Alien");
     when(movieEmbeddingClient.embedText("space horror movie")).thenReturn(new float[] {0.1f, 0.2f});
+    when(movieEmbeddingClient.modelName()).thenReturn("embeddinggemma");
     when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
         .thenReturn(searchResponse(document));
 
@@ -85,6 +90,7 @@ class OpenSearchMovieSearchServiceTest {
     OpenSearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     when(movieEmbeddingClient.embedText("space horror")).thenReturn(new float[] {0.1f, 0.2f});
+    when(movieEmbeddingClient.modelName()).thenReturn("embeddinggemma");
     when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
         .thenReturn(
             searchResponse(List.of(movie(2, "Lexical First"), movie(1, "Shared Match"))),
@@ -98,7 +104,7 @@ class OpenSearchMovieSearchServiceTest {
     assertThat(searchRequests.getFirst().query()).isNotNull();
     assertThat(searchRequests.getFirst().query().isKnn()).isFalse();
     assertThat(searchRequests.getLast().query().isKnn()).isTrue();
-    assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(1L, 2L, 3L);
+    assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(1L, 3L, 2L);
     assertThat(output.getOut())
         .doesNotContain("Hybrid movie search completed")
         .doesNotContain("Hybrid lexical movie search query json:")
@@ -106,20 +112,50 @@ class OpenSearchMovieSearchServiceTest {
   }
 
   @Test
-  void searchMovies_withTextQueryCapsHybridResultsToFourPages() throws IOException {
+  void searchMovies_withTextQueryUsesTheAccessibleFusedCandidateTotal() throws IOException {
     OpenSearchMovieSearchService service = searchService();
     MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
     List<MovieSearchDocument> candidates =
         LongStream.rangeClosed(1, 100).mapToObj(id -> movie(id, "Movie " + id)).toList();
     when(movieEmbeddingClient.embedText("space horror")).thenReturn(new float[] {0.1f, 0.2f});
+    when(movieEmbeddingClient.modelName()).thenReturn("embeddinggemma");
     when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
         .thenReturn(searchResponse(candidates), searchResponse(candidates));
 
     PagedResponse<MovieRecord> response = service.searchMovies("space horror", request, 0, 20);
 
-    assertThat(response.getTotalElements()).isEqualTo(80);
-    assertThat(response.getTotalPages()).isEqualTo(4);
+    assertThat(response.getTotalElements()).isEqualTo(100);
+    assertThat(response.getTotalPages()).isEqualTo(5);
     assertThat(response.getContent()).hasSize(20);
+  }
+
+  @Test
+  void searchMovies_withConfidentTitleQuerySkipsTheEmbeddingSearch() throws IOException {
+    OpenSearchMovieSearchService service = searchService();
+    MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
+    when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+        .thenReturn(searchResponse(List.of(movie(2, "Spirited Away"))));
+
+    PagedResponse<MovieRecord> response = service.searchMovies("spirited away", request, 0, 20);
+
+    verify(movieEmbeddingClient, never()).embedText("spirited away");
+    assertThat(searchRequestCaptor.getAllValues()).hasSize(1);
+    assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(2L);
+  }
+
+  @Test
+  void searchMovies_fallsBackToLexicalResultsWhenEmbeddingFails() throws IOException {
+    OpenSearchMovieSearchService service = searchService();
+    MovieSearchRequest request = new MovieSearchRequest(null, null, null, null, Set.of(), null);
+    when(openSearchClient.search(searchRequestCaptor.capture(), eq(MovieSearchDocument.class)))
+        .thenReturn(searchResponse(List.of(movie(2, "Lexical Match"))));
+    when(movieEmbeddingClient.embedText("space horror"))
+        .thenThrow(new IllegalStateException("embedding service unavailable"));
+
+    PagedResponse<MovieRecord> response = service.searchMovies("space horror", request, 0, 20);
+
+    assertThat(response.getContent()).extracting(MovieRecord::id).containsExactly(2L);
+    assertThat(searchRequestCaptor.getAllValues()).hasSize(1);
   }
 
   @Test
@@ -169,7 +205,13 @@ class OpenSearchMovieSearchServiceTest {
 
   private OpenSearchMovieSearchService searchService() {
     return new OpenSearchMovieSearchService(
-        openSearchClient, mapper, movieEmbeddingClient, queryBuilder, rankFusion);
+        openSearchClient,
+        mapper,
+        movieEmbeddingClient,
+        queryBuilder,
+        rankFusion,
+        intentClassifier,
+        new MovieSearchMetrics(new SimpleMeterRegistry()));
   }
 
   private SearchResponse<MovieSearchDocument> searchResponse(List<MovieSearchDocument> documents) {

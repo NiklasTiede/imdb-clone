@@ -299,6 +299,33 @@ Do not run `kubectl apply`, `kubectl delete`, `argocd app sync`, rollout restart
 mutations unless explicitly asked. The normal app release path is the version-gated CD workflow, which
 builds images and commits digest-pinned manifest updates.
 
+## Live Search Relevance Evaluation
+
+The ordinary unit test verifies the metric calculations. The opt-in live evaluation calls the running
+backend and measures the actual OpenSearch and embedding rankings against the versioned judgements in
+`src/test/resources/search/relevance-live-v1.json`.
+
+Prepare the versioned local corpus and start the backend in a separate terminal:
+
+```bash
+make seed-light SEED_VERSION=2026-05-17
+make reindex-local-search
+./gradlew bootRun
+```
+
+Then run:
+
+```bash
+./gradlew liveSearchEvaluation
+```
+
+Set `IMDB_CLONE_SEARCH_BASE_URL` when evaluating a backend other than `http://localhost:8080`.
+The live evaluation is intentionally not part of `check` because it depends on the seeded corpus and
+the local embedding service.
+
+Search operations expose `imdb.search.requests` and `imdb.search.duration` through Micrometer. The
+metrics use bounded `mode` and `result` tags and never record the user's query text.
+
 ## Environment Variables And Secrets
 
 Backend configuration keys live in:

@@ -19,7 +19,13 @@ describe("MovieSearchInput", () => {
       />,
     );
 
-    fireEvent.keyDown(screen.getByRole("textbox", { name: "search movies" }), {
+    const searchInput = screen.getByRole("textbox", { name: "search movies" });
+    expect(searchInput).toHaveAttribute(
+      "placeholder",
+      "Search a title or describe a movie",
+    );
+
+    fireEvent.keyDown(searchInput, {
       key: "Enter",
       target: { value: "it follows" },
     });

@@ -97,7 +97,7 @@ const MovieSearchInput = ({
         <SearchIcon />
       </SearchIconWrapper>
       <StyledInputBase
-        placeholder="Search movies by title, actor, or year"
+        placeholder="Search a title or describe a movie"
         inputProps={{ "aria-label": "search movies" }}
         inputRef={inputRef}
         value={query}

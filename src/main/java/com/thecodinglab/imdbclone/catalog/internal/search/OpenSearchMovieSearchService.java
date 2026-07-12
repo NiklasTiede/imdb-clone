@@ -1,5 +1,10 @@
 package com.thecodinglab.imdbclone.catalog.internal.search;
 
+import static com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchMetrics.Mode.DISCOVERY;
+import static com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchMetrics.Mode.FILTER_ONLY;
+import static com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchMetrics.Mode.LEXICAL_FALLBACK;
+import static com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchMetrics.Mode.SEMANTIC;
+import static com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchMetrics.Mode.TITLE;
 import static com.thecodinglab.imdbclone.shared.logging.Log.MOVIE_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
@@ -8,7 +13,9 @@ import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.search.embedding.MovieEmbeddingClient;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentMapper;
+import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchEmbeddingTextBuilder;
 import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchQueryBuilder;
+import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchQueryIntentClassifier;
 import com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchRankFusion;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.error.OpenSearchOperationException;
@@ -41,21 +48,29 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
   private final MovieEmbeddingClient movieEmbeddingClient;
   private final MovieSearchQueryBuilder movieSearchQueryBuilder;
   private final MovieSearchRankFusion movieSearchRankFusion;
+  private final MovieSearchQueryIntentClassifier movieSearchQueryIntentClassifier;
+  private final MovieSearchMetrics movieSearchMetrics;
   private static final String MOVIES_INDEX = "movies";
-  private static final int HYBRID_CANDIDATE_SIZE = 100;
-  private static final int MAX_HYBRID_RESULT_PAGES = 4;
+  private static final int MIN_HYBRID_CANDIDATE_SIZE = 100;
+  private static final int MAX_HYBRID_CANDIDATE_SIZE = 500;
+  private static final double DISCOVERY_LEXICAL_WEIGHT = 0.05;
+  private static final double DISCOVERY_SEMANTIC_WEIGHT = 0.95;
 
   public OpenSearchMovieSearchService(
       OpenSearchClient openSearchClient,
       MovieSearchDocumentMapper movieSearchDocumentMapper,
       MovieEmbeddingClient movieEmbeddingClient,
       MovieSearchQueryBuilder movieSearchQueryBuilder,
-      MovieSearchRankFusion movieSearchRankFusion) {
+      MovieSearchRankFusion movieSearchRankFusion,
+      MovieSearchQueryIntentClassifier movieSearchQueryIntentClassifier,
+      MovieSearchMetrics movieSearchMetrics) {
     this.openSearchClient = openSearchClient;
     this.movieSearchDocumentMapper = movieSearchDocumentMapper;
     this.movieEmbeddingClient = movieEmbeddingClient;
     this.movieSearchQueryBuilder = movieSearchQueryBuilder;
     this.movieSearchRankFusion = movieSearchRankFusion;
+    this.movieSearchQueryIntentClassifier = movieSearchQueryIntentClassifier;
+    this.movieSearchMetrics = movieSearchMetrics;
   }
 
   @Override
@@ -189,14 +204,15 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
   }
 
   /**
-   * Search Movies by Multiple Parameters, highest voted movies scoring is boosted
+   * Searches movies using title-aware lexical ranking or semantic discovery, plus filters.
    */
   @Override
   public PagedResponse<MovieRecord> searchMovies(
       String query, MovieSearchRequest request, int page, int size) {
+    long startedAt = movieSearchMetrics.start();
     String normalizedQuery = query == null ? "" : query.trim();
     if (!normalizedQuery.isBlank()) {
-      return searchMoviesHybrid(normalizedQuery, request, page, size);
+      return searchMoviesHybrid(normalizedQuery, request, page, size, startedAt);
     }
 
     BoolQuery boolQuery = buildBoolQuery(query, request);
@@ -216,34 +232,77 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
       throw new OpenSearchOperationException("error while search was performed", ex);
     }
 
-    return toPagedMovieResponse(response, page, size);
+    PagedResponse<MovieRecord> result = toPagedMovieResponse(response, page, size);
+    movieSearchMetrics.record(FILTER_ONLY, result.getTotalElements(), startedAt);
+    return result;
   }
 
   private PagedResponse<MovieRecord> searchMoviesHybrid(
-      String query, MovieSearchRequest request, int page, int size) {
+      String query, MovieSearchRequest request, int page, int size, long startedAt) {
+    int candidateSize = hybridCandidateSize(page, size);
     SearchRequest lexicalRequest =
         movieSearchQueryBuilder.buildLexicalCandidateSearchRequest(
-            MOVIES_INDEX, query, request, HYBRID_CANDIDATE_SIZE);
-    float[] queryEmbedding = movieEmbeddingClient.embedText(query);
-    SearchRequest semanticRequest =
-        movieSearchQueryBuilder.buildSemanticSearchRequest(
-            MOVIES_INDEX, queryEmbedding, request, 0, HYBRID_CANDIDATE_SIZE);
+            MOVIES_INDEX, query, request, candidateSize);
+
+    SearchResponse<MovieSearchDocument> lexicalResponse;
+    try {
+      lexicalResponse = openSearchClient.search(lexicalRequest, MovieSearchDocument.class);
+    } catch (IOException | OpenSearchException ex) {
+      throw new OpenSearchOperationException("error while lexical search was performed", ex);
+    }
+
+    List<MovieSearchDocument> lexicalResults = documents(lexicalResponse);
+    if (movieSearchQueryIntentClassifier.isConfidentTitleQuery(query, lexicalResults)) {
+      PagedResponse<MovieRecord> result = toPagedCandidateMovieResponse(
+          lexicalResults, page, size, accessibleTotalHits(lexicalResponse, lexicalResults.size()));
+      movieSearchMetrics.record(TITLE, result.getTotalElements(), startedAt);
+      return result;
+    }
 
     try {
-      List<MovieSearchDocument> lexicalResults = searchDocuments(lexicalRequest);
+      float[] queryEmbedding = movieEmbeddingClient.embedText(query);
+      if (queryEmbedding == null || queryEmbedding.length == 0) {
+        logger.warn("Movie query embedding was empty; falling back to lexical results");
+        PagedResponse<MovieRecord> result = toPagedCandidateMovieResponse(
+            lexicalResults, page, size, accessibleTotalHits(lexicalResponse, lexicalResults.size()));
+        movieSearchMetrics.record(LEXICAL_FALLBACK, result.getTotalElements(), startedAt);
+        return result;
+      }
+      SearchRequest semanticRequest =
+          movieSearchQueryBuilder.buildSemanticSearchRequest(
+              MOVIES_INDEX,
+              queryEmbedding,
+              request,
+              0,
+              candidateSize,
+              movieEmbeddingClient.modelName(),
+              MovieSearchEmbeddingTextBuilder.VERSION);
       List<MovieSearchDocument> semanticResults = searchDocuments(semanticRequest);
       List<MovieSearchDocument> fusedCandidates =
-          movieSearchRankFusion.fuse(lexicalResults, semanticResults, 0, HYBRID_CANDIDATE_SIZE);
-      return toPagedCandidateMovieResponse(
-          fusedCandidates, page, size, maxHybridTotalElements(size));
-    } catch (IOException | OpenSearchException ex) {
-      throw new OpenSearchOperationException("error while hybrid search was performed", ex);
+          movieSearchRankFusion.fuse(
+              lexicalResults,
+              semanticResults,
+              0,
+              candidateSize,
+              DISCOVERY_LEXICAL_WEIGHT,
+              DISCOVERY_SEMANTIC_WEIGHT);
+      PagedResponse<MovieRecord> result =
+          toPagedCandidateMovieResponse(fusedCandidates, page, size, fusedCandidates.size());
+      movieSearchMetrics.record(DISCOVERY, result.getTotalElements(), startedAt);
+      return result;
+    } catch (IOException | RuntimeException ex) {
+      logger.warn("Semantic movie search failed; falling back to lexical results", ex);
+      PagedResponse<MovieRecord> result = toPagedCandidateMovieResponse(
+          lexicalResults, page, size, accessibleTotalHits(lexicalResponse, lexicalResults.size()));
+      movieSearchMetrics.record(LEXICAL_FALLBACK, result.getTotalElements(), startedAt);
+      return result;
     }
   }
 
   @Override
   public PagedResponse<MovieRecord> searchMoviesSemantically(
       String query, MovieSearchRequest request, int page, int size) {
+    long startedAt = movieSearchMetrics.start();
     String normalizedQuery = query == null ? "" : query.trim();
     if (normalizedQuery.isBlank()) {
       return searchMovies(query, request, page, size);
@@ -252,12 +311,20 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
     float[] queryEmbedding = movieEmbeddingClient.embedText(normalizedQuery);
     SearchRequest searchRequest =
         movieSearchQueryBuilder.buildSemanticSearchRequest(
-            MOVIES_INDEX, queryEmbedding, request, page, size);
+            MOVIES_INDEX,
+            queryEmbedding,
+            request,
+            page,
+            size,
+            movieEmbeddingClient.modelName(),
+            MovieSearchEmbeddingTextBuilder.VERSION);
 
     try {
       SearchResponse<MovieSearchDocument> response =
           openSearchClient.search(searchRequest, MovieSearchDocument.class);
-      return toPagedMovieResponse(response, page, size);
+      PagedResponse<MovieRecord> result = toPagedMovieResponse(response, page, size);
+      movieSearchMetrics.record(SEMANTIC, result.getTotalElements(), startedAt);
+      return result;
     } catch (IOException | OpenSearchException ex) {
       throw new OpenSearchOperationException("error while semantic search was performed", ex);
     }
@@ -294,12 +361,26 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
         new PageImpl<>(pageContent, pageable, totalHits).map(movieSearchDocumentMapper::toMovieRecord));
   }
 
-  private int maxHybridTotalElements(int size) {
-    return size * MAX_HYBRID_RESULT_PAGES;
+  private int accessibleTotalHits(
+      SearchResponse<MovieSearchDocument> response, int candidateCount) {
+    long totalHits = response.hits().total() == null ? candidateCount : response.hits().total().value();
+    return (int) Math.min(totalHits, candidateCount);
+  }
+
+  private int hybridCandidateSize(int page, int size) {
+    long requestedWindow = (long) (page + 1) * size * 2;
+    return (int)
+        Math.min(
+            MAX_HYBRID_CANDIDATE_SIZE,
+            Math.max(MIN_HYBRID_CANDIDATE_SIZE, requestedWindow));
   }
 
   private List<MovieSearchDocument> searchDocuments(SearchRequest request) throws IOException {
     SearchResponse<MovieSearchDocument> response = openSearchClient.search(request, MovieSearchDocument.class);
+    return documents(response);
+  }
+
+  private List<MovieSearchDocument> documents(SearchResponse<MovieSearchDocument> response) {
     return response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
   }
 
