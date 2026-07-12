@@ -10,12 +10,14 @@ const mocks = vi.hoisted(() => ({
   accountApi: { getCurrentAccountProfile: vi.fn() },
   accountEngagementApi: { getCommentsByAccount: vi.fn() },
   commentApi: { deleteComment: vi.fn(), updateComment: vi.fn() },
+  moviesApi: { getMoviesByIds: vi.fn() },
 }));
 
 vi.mock("../../../../shared/api/moviesApi", () => ({
   accountApi: mocks.accountApi,
   accountEngagementApi: mocks.accountEngagementApi,
   commentApi: mocks.commentApi,
+  moviesApi: mocks.moviesApi,
 }));
 
 vi.mock("../../../../shared/auth", () => ({ getUsername: () => "ada" }));
@@ -63,9 +65,20 @@ describe("YourCommentsPage", () => {
     });
     mocks.commentApi.deleteComment.mockResolvedValue({});
     mocks.commentApi.updateComment.mockResolvedValue({ data: {} });
+    mocks.moviesApi.getMoviesByIds.mockImplementation(({ movieIds }: { movieIds: number[] }) =>
+      Promise.resolve({
+        data: {
+          content: movieIds.map((id) => ({
+            id,
+            primaryTitle: id === 31 ? "Spirited Away" : `Movie ${id}`,
+            startYear: id === 31 ? 2001 : undefined,
+          })),
+        },
+      }),
+    );
   });
 
-  test("lists the signed-in member's comments with links back to each discussion", async () => {
+  test("lists the signed-in member's comments with movie context and links back to each discussion", async () => {
     mocks.accountEngagementApi.getCommentsByAccount.mockResolvedValue(
       commentPage(0, "A patient, hopeful film."),
     );
@@ -74,8 +87,11 @@ describe("YourCommentsPage", () => {
     expect(await screen.findByText("A patient, hopeful film.")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Your comments" })).toBeTruthy();
     expect(
-      screen.getByRole("link", { name: "View movie discussion" }).getAttribute("href"),
+      (await screen.findByRole("link", { name: "Open Spirited Away discussion" })).getAttribute("href"),
     ).toBe("/movie?id=31#comment-1");
+    expect(screen.getByText("Your comment on")).toBeTruthy();
+    expect(screen.getByText("2001")).toBeTruthy();
+    expect(mocks.moviesApi.getMoviesByIds).toHaveBeenCalledWith({ movieIds: [31] }, 0, 1);
     expect(
       (await screen.findByAltText("ada profile")).getAttribute("src"),
     ).toContain("profile-photos/ada-avatar-token_size_800x800.jpg");
