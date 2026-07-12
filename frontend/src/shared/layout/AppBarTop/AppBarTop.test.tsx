@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, vi } from "vitest";
 import { authSession } from "../../auth";
@@ -105,6 +106,30 @@ describe("AppBarTop", () => {
 
     expect(screen.getByTestId("location").textContent).toBe(
       "/movie-search?genre=HORROR&query=alien",
+    );
+  });
+
+  it("keeps the latest input while debounced URL updates settle", async () => {
+    const user = userEvent.setup();
+    renderAppBar("/movie-search");
+    const searchInput = screen.getByRole("textbox", {
+      name: "search movies",
+    });
+
+    let expectedQuery = "";
+    for (const characters of ["s", "p", "i", "rited"]) {
+      await user.type(searchInput, characters);
+      expectedQuery += characters;
+      await waitFor(() =>
+        expect(screen.getByTestId("location").textContent).toBe(
+          `/movie-search?query=${expectedQuery}`,
+        ),
+      );
+    }
+
+    expect((searchInput as HTMLInputElement).value).toBe("spirited");
+    expect(screen.getByTestId("location").textContent).toBe(
+      "/movie-search?query=spirited",
     );
   });
 

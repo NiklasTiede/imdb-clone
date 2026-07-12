@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import { useQuery } from "@tanstack/react-query";
 import type { MouseEvent } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { movieColors } from "../../../theme";
 import { accountQueries } from "../../api/accountProfileQueries";
@@ -39,15 +39,23 @@ function AppBarTop() {
   const queryParams = new URLSearchParams(location.search);
   const initialQuery = queryParams.get("query") || queryParams.get("q") || "";
   const [query, setQuery] = useState(initialQuery);
+  const pendingSearchQueriesRef = useRef(new Set<string>());
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    setQuery(params.get("query") || params.get("q") || "");
+    const locationQuery = params.get("query") || params.get("q") || "";
+
+    if (pendingSearchQueriesRef.current.delete(locationQuery.trim())) {
+      return;
+    }
+
+    setQuery(locationQuery);
   }, [location.search]);
 
   const navigateToSearch = useCallback(
     (searchQuery: string, options?: { replace?: boolean }) => {
       const nextQuery = searchQuery.trim();
+      pendingSearchQueriesRef.current.add(nextQuery);
       const params =
         location.pathname === "/movie-search"
           ? new URLSearchParams(location.search)

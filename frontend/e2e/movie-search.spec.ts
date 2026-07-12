@@ -168,6 +168,36 @@ test("searches for a multi-word lowercase movie title", async ({ page }) => {
   searchRequest.expectRequestedQuery();
 });
 
+test("keeps every character while earlier search results load", async ({ page }) => {
+  await page.route("**/api/search/movies**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 450));
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        content: [nightcrawler],
+        last: true,
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    });
+  });
+  await stubMoviePosters(page);
+
+  await page.goto("/");
+  const searchInput = page.getByRole("textbox", { name: "search movies" });
+
+  await searchInput.fill("spir");
+  await expect(page).toHaveURL(/query=spir/);
+  await searchInput.pressSequentially("ited", { delay: 55 });
+
+  await expect(searchInput).toHaveValue("spirited");
+  await expect(page).toHaveURL(/query=spirited/);
+  await page.waitForTimeout(500);
+  await expect(searchInput).toHaveValue("spirited");
+});
+
 test("switches search results into the compact editorial list", async ({ page }) => {
   await stubNightcrawlerSearch(page);
   await stubMoviePosters(page);
