@@ -168,6 +168,23 @@ test("searches for a multi-word lowercase movie title", async ({ page }) => {
   searchRequest.expectRequestedQuery();
 });
 
+test("switches search results into the compact editorial list", async ({ page }) => {
+  await stubNightcrawlerSearch(page);
+  await stubMoviePosters(page);
+
+  await page.goto("/movie-search?query=Nightcrawler");
+  await page.getByRole("button", { name: "List view" }).click();
+
+  const searchResults = page.getByRole("list", { name: "Search results" });
+  await expect(searchResults).toBeVisible();
+  await expect(
+    searchResults.getByRole("link", { name: "Nightcrawler" }),
+  ).toBeVisible();
+  await expect(searchResults.getByText("2014 · 117 min")).toBeVisible();
+  await expect(searchResults.getByLabel("IMDb rating 7.8")).toBeVisible();
+  await expect(page.getByRole("grid", { name: "Search results" })).toHaveCount(0);
+});
+
 test("opens a movie detail page from search results", async ({ page }) => {
   await stubNightcrawlerSearch(page);
   await stubMoviePosters(page);
@@ -205,13 +222,20 @@ test("opens a movie detail page from search results", async ({ page }) => {
   );
 });
 
-test("replaces genre filters and fetches fresh results", async ({ page }) => {
+test("replaces genre filters and fetches fresh results", async ({ page }, testInfo) => {
   const search = await stubGenreSearch(page);
   await stubMoviePosters(page);
+  const isMobile = testInfo.project.name === "mobile-chromium";
 
   await page.goto("/movie-search?query=the");
-  await page.getByRole("button", { name: "All genres" }).click();
-  await page.getByRole("menuitem", { name: "Horror" }).click();
+  if (isMobile) {
+    await page.getByRole("button", { name: "Filters" }).click();
+    await page.getByRole("button", { name: "Horror", exact: true }).click();
+    await page.getByRole("button", { name: "Show results" }).click();
+  } else {
+    await page.getByRole("button", { name: "All genres" }).click();
+    await page.getByRole("menuitem", { name: "Horror" }).click();
+  }
 
   await expect(page).toHaveURL(/genre=HORROR/);
   await expect(
@@ -220,8 +244,14 @@ test("replaces genre filters and fetches fresh results", async ({ page }) => {
       .getByRole("link", { name: /It Follows/ }),
   ).toBeVisible();
 
-  await page.locator("button").filter({ hasText: "Horror" }).click();
-  await page.getByRole("menuitem", { name: "Drama" }).click();
+  if (isMobile) {
+    await page.getByRole("button", { name: "Filters" }).click();
+    await page.getByRole("button", { name: "Drama", exact: true }).click();
+    await page.getByRole("button", { name: "Show results" }).click();
+  } else {
+    await page.locator("button").filter({ hasText: "Horror" }).click();
+    await page.getByRole("menuitem", { name: "Drama" }).click();
+  }
 
   await expect(page).toHaveURL(/genre=DRAMA/);
   await expect(

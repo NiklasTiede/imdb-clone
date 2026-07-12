@@ -5,14 +5,7 @@ type SearchMovieListProps = {
 };
 
 const SearchMovieList = ({ movies }: SearchMovieListProps) => (
-  <MovieListView
-    ariaLabel="Search results"
-    columns={{
-      genre: "Genre",
-      primaryRating: "IMDb",
-      runtime: "Runtime",
-    }}
-  >
+  <MovieListView ariaLabel="Search results">
     {movies.map((movie) => (
       <MovieListRow
         key={movie.id ?? movie.primaryTitle}

@@ -10,13 +10,6 @@ type WatchlistListProps = {
 const WatchlistList = ({ items, onRemove }: WatchlistListProps) => (
   <MovieListView
     ariaLabel="Watchlist movies"
-    columns={{
-      genre: "Genre",
-      primaryRating: "IMDb",
-      runtime: "Runtime",
-      timestamp: "Added",
-    }}
-    hasRowActions
   >
     {items.map((item) => {
       const movie: Movie = item.movie ?? {

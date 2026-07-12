@@ -9,13 +9,6 @@ type RatingsListProps = {
 const RatingsList = ({ items, onRemove }: RatingsListProps) => (
   <MovieListView
     ariaLabel="Rated movies"
-    columns={{
-      genre: "Genre",
-      primaryRating: "Your score",
-      runtime: "Runtime",
-      secondaryRating: "IMDb",
-    }}
-    hasRowActions={Boolean(onRemove)}
   >
     {items.map((item) => {
       const movie = item.movie;
@@ -35,8 +28,8 @@ const RatingsList = ({ items, onRemove }: RatingsListProps) => (
           }
           key={movieId ?? movie.primaryTitle}
           movie={movie}
-          primaryRating={{ value: item.rating, variant: "user" }}
-          secondaryRating={{ value: movie.imdbRating, variant: "imdb" }}
+          primaryRating={{ label: "You", value: item.rating, variant: "user" }}
+          secondaryRating={{ label: "IMDb", value: movie.imdbRating, variant: "imdb" }}
         />
       );
     })}
