@@ -26,13 +26,15 @@ class TonightMode implements TonightModeService {
             : request.seed();
     Set<Long> excluded = new HashSet<>(request.excludedMovieIds());
     Set<MovieGenre> genres =
-        request.movieGenres().isEmpty() ? genresFor(request.mood()) : request.movieGenres();
-    YearRange years = yearsFor(request.era());
+        request.movieGenres().isEmpty()
+            ? TonightPreferences.genresFor(request.mood())
+            : request.movieGenres();
+    TonightPreferences.YearRange years = TonightPreferences.yearsFor(request.era());
     MovieType type = request.movieType() == null ? MovieType.MOVIE : request.movieType();
     MovieDiscoveryCriteria criteria =
         new MovieDiscoveryCriteria(
-            years.min(),
-            years.max(),
+            years.minimum(),
+            years.maximum(),
             30,
             request.maxRuntimeMinutes(),
             genres,
@@ -93,28 +95,6 @@ class TonightMode implements TonightModeService {
     return ((seed.hashCode() * 31L + movieId * 17L) & 1023) / 10230.0;
   }
 
-  private Set<MovieGenre> genresFor(TonightMood mood) {
-    if (mood == null) return Set.of();
-    return switch (mood) {
-      case ESCAPIST -> Set.of(MovieGenre.ADVENTURE, MovieGenre.FANTASY, MovieGenre.SCI_FI);
-      case LIGHT -> Set.of(MovieGenre.COMEDY, MovieGenre.FAMILY, MovieGenre.ANIMATION);
-      case ROMANTIC -> Set.of(MovieGenre.ROMANCE, MovieGenre.COMEDY, MovieGenre.DRAMA);
-      case TENSE -> Set.of(MovieGenre.THRILLER, MovieGenre.MYSTERY, MovieGenre.CRIME);
-      case THOUGHT_PROVOKING -> Set.of(MovieGenre.DRAMA, MovieGenre.HISTORY, MovieGenre.SCI_FI);
-    };
-  }
-
-  private YearRange yearsFor(TonightEra era) {
-    if (era == null) return new YearRange(null, null);
-    return switch (era) {
-      case CLASSIC -> new YearRange(null, 1979);
-      case EIGHTIES -> new YearRange(1980, 1989);
-      case NINETIES -> new YearRange(1990, 1999);
-      case TWO_THOUSANDS -> new YearRange(2000, 2009);
-      case MODERN -> new YearRange(2010, null);
-    };
-  }
-
   private String explanation(
       MovieRecord movie, TonightModeRequest request, Set<MovieGenre> genres) {
     List<String> parts = new ArrayList<>();
@@ -139,6 +119,4 @@ class TonightMode implements TonightModeService {
       parts.add(String.format(Locale.ROOT, "has a %.1f IMDb rating", movie.imdbRating()));
     return String.join(" · ", parts);
   }
-
-  private record YearRange(Integer min, Integer max) {}
 }

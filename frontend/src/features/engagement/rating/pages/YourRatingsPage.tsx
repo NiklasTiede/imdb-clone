@@ -2,7 +2,7 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { i18n } from "../../../../i18n";
 import { getUsername } from "../../../../shared/auth";
@@ -14,14 +14,13 @@ import EmptyRatings from "../components/EmptyRatings";
 import RatingsGrid from "../components/RatingsGrid";
 import RatingsHeader from "../components/RatingsHeader";
 import RatingsList from "../components/RatingsList";
-import RatingsStats from "../components/RatingsStats";
+import RatingsTasteSnapshot from "../components/RatingsTasteSnapshot";
 import RatingsToolbar, { type RatingsView } from "../components/RatingsToolbar";
 import {
   allScoresRange,
   filterRatedMovies,
   type RatingSort,
   type ScoreRange,
-  sortRatedMovies,
 } from "../utils/ratingsSorting";
 
 const RATINGS_PAGE_SIZE = 30;
@@ -36,17 +35,29 @@ const YourRatingsPage = () => {
     "grid",
     ["grid", "list"],
   );
-  const ratingsQuery = ratingQueries.currentUserMovies({
-    page: 0,
+  const ratingsQuery = ratingQueries.library({
     size: RATINGS_PAGE_SIZE,
+    sort: sortBy,
     username,
   });
-  const { data, isError, isLoading } = useQuery(ratingsQuery);
-  const ratedMovies = useMemo(() => data?.content ?? [], [data?.content]);
-  const visibleMovies = useMemo(
-    () => sortRatedMovies(filterRatedMovies(ratedMovies, scoreRange), sortBy),
-    [ratedMovies, scoreRange, sortBy],
+  const { data, fetchNextPage, hasNextPage, isError, isLoading, isFetchingNextPage } =
+    useInfiniteQuery(ratingsQuery);
+  const ratedMovies = useMemo(
+    () =>
+      (data?.pages ?? [])
+        .flatMap((page) => page.items?.content ?? [])
+        .flatMap((item) =>
+          item.movie && item.rating !== undefined
+            ? [{ movie: item.movie, rating: item.rating }]
+            : [],
+        ),
+    [data?.pages],
   );
+  const visibleMovies = useMemo(
+    () => filterRatedMovies(ratedMovies, scoreRange),
+    [ratedMovies, scoreRange],
+  );
+  const insights = data?.pages[0]?.insights;
 
   const removeRating = useMutation({
     ...rateMovieMutationOptions(queryClient),
@@ -65,7 +76,7 @@ const YourRatingsPage = () => {
 
         {ratedMovies.length > 0 && (
           <>
-            <RatingsStats items={ratedMovies} />
+            <RatingsTasteSnapshot insights={insights} />
             <RatingsToolbar
               scoreRange={scoreRange}
               sortBy={sortBy}
@@ -104,6 +115,19 @@ const YourRatingsPage = () => {
                   removeRating.mutate({ movieId, score: null })
                 }
               />
+            )}
+            {hasNextPage && (
+              <Stack sx={{ alignItems: "center", pt: 1 }}>
+                <Button
+                  disabled={isFetchingNextPage}
+                  onClick={() => void fetchNextPage()}
+                  variant="outlined"
+                >
+                  {isFetchingNextPage
+                    ? "Loading more…"
+                    : `Load more (${ratedMovies.length} of ${insights?.totalRatings ?? ratedMovies.length})`}
+                </Button>
+              </Stack>
             )}
           </>
         )}

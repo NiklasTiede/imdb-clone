@@ -17,6 +17,8 @@ import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MovieCatalog implements MovieService {
 
   private static final Logger logger = LoggerFactory.getLogger(MovieCatalog.class);
+  private static final int MOVIE_REFERENCE_BATCH_SIZE = 250;
 
   private final MovieRepository movieRepository;
   private final MovieSearchDao movieSearchDao;
@@ -56,6 +59,29 @@ public class MovieCatalog implements MovieService {
     Movie movie = movieRepository.getMovieById(movieId);
     logger.info("Movie with {} was retrieved", kv(MOVIE_ID, movieId));
     return movieMapper.entityToDTO(movie);
+  }
+
+  @Override
+  public List<MovieRecord> findMoviesByIds(Collection<Long> movieIds) {
+    if (movieIds == null || movieIds.isEmpty()) {
+      return List.of();
+    }
+
+    List<Long> uniqueMovieIds =
+        movieIds.stream().filter(java.util.Objects::nonNull).distinct().toList();
+    if (uniqueMovieIds.isEmpty()) {
+      return List.of();
+    }
+
+    LinkedHashSet<MovieRecord> movies = new LinkedHashSet<>();
+    for (int start = 0; start < uniqueMovieIds.size(); start += MOVIE_REFERENCE_BATCH_SIZE) {
+      int end = Math.min(start + MOVIE_REFERENCE_BATCH_SIZE, uniqueMovieIds.size());
+      movies.addAll(
+          movieRepository.findByIdIn(uniqueMovieIds.subList(start, end)).stream()
+              .map(movieMapper::entityToDTO)
+              .toList());
+    }
+    return List.copyOf(movies);
   }
 
   @Override

@@ -25,9 +25,7 @@ const mockAnonymousSession = async (page: Page) => {
   });
 };
 
-const mockAuthenticatedSession = async (
-  page: Page,
-) => {
+const mockAuthenticatedSession = async (page: Page) => {
   await page.route("**/api/auth/me", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -36,6 +34,15 @@ const mockAuthenticatedSession = async (
         username: "test_user",
         email: "test@example.com",
         roles: ["ROLE_USER"],
+      }),
+    });
+  });
+  await page.route("**/api/account/me/profile", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        username: "test_user",
+        email: "test@example.com",
       }),
     });
   });
@@ -58,28 +65,42 @@ test("renders protected watchlist for authenticated users", async ({
   page,
 }) => {
   await mockAuthenticatedSession(page);
-  await page.route("**/api/account/test_user/watchlist**", async (route) => {
-    expect(new URL(route.request().url()).searchParams.get("size")).toBe("30");
-    await route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        content: [
-          {
-            accountId: 1,
-            movieId: watchlistedMovie.id,
-            addedAt: "2026-05-08T12:00:00Z",
-            movie: watchlistedMovie,
+  await page.route(
+    "**/api/account/test_user/library/watchlist**",
+    async (route) => {
+      expect(new URL(route.request().url()).searchParams.get("size")).toBe(
+        "30",
+      );
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          items: {
+            content: [
+              {
+                accountId: 1,
+                movieId: watchlistedMovie.id,
+                addedAt: "2026-05-08T12:00:00Z",
+                movie: watchlistedMovie,
+              },
+            ],
+            page: 0,
+            size: 30,
+            totalElements: 1,
+            totalPages: 1,
+            last: true,
           },
-        ],
-        page: 0,
-        size: 30,
-        totalElements: 1,
-        totalPages: 1,
-        last: true,
-      }),
-    });
-  });
-  await page.route("**/imdb-clone/movies/*.jpg", async (route) => {
+          insights: {
+            totalMovies: 1,
+            totalRuntimeMinutes: 100,
+            averageImdbRating: 6.8,
+            topGenres: [{ label: "Horror", movieCount: 1 }],
+            quickWatchCount: 1,
+          },
+        }),
+      });
+    },
+  );
+  await page.route("**/imdb-clone/movies/**", async (route) => {
     await route.fulfill({
       contentType: "image/jpeg",
       body: Buffer.from(transparentPixel, "base64"),
@@ -95,41 +116,49 @@ test("renders protected watchlist for authenticated users", async ({
   await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
-    /itFollowsPosterToken_size_300x450\.jpg/,
+    /itFollowsPosterToken_size_300x450\.webp/,
   );
-  await expect(page.getByText("Movies", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Pick for me" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Recommend something new" }),
+  ).toBeVisible();
 });
 
 test("renders protected ratings for authenticated users", async ({ page }) => {
   await mockAuthenticatedSession(page);
-  await page.route("**/api/account/test_user/ratings**", async (route) => {
-    await route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        content: [{ accountId: 1, movieId: watchlistedMovie.id, rating: 8 }],
-        page: 0,
-        size: 20,
-        totalElements: 1,
-        totalPages: 1,
-        last: true,
-      }),
-    });
-  });
-  await page.route("**/api/movie/get-movies**", async (route) => {
-    await route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        content: [watchlistedMovie],
-        page: 0,
-        size: 1,
-        totalElements: 1,
-        totalPages: 1,
-        last: true,
-      }),
-    });
-  });
-  await page.route("**/imdb-clone/movies/*.jpg", async (route) => {
+  await page.route(
+    "**/api/account/test_user/library/ratings**",
+    async (route) => {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          items: {
+            content: [
+              {
+                accountId: 1,
+                movieId: watchlistedMovie.id,
+                rating: 8,
+                movie: watchlistedMovie,
+              },
+            ],
+            page: 0,
+            size: 30,
+            totalElements: 1,
+            totalPages: 1,
+            last: true,
+          },
+          insights: {
+            totalRatings: 1,
+            averageUserRating: 8,
+            distribution: [{ label: "8–8.9", count: 1 }],
+            favoriteGenres: [],
+            favoriteDecades: [],
+            definingMovies: [],
+          },
+        }),
+      });
+    },
+  );
+  await page.route("**/imdb-clone/movies/**", async (route) => {
     await route.fulfill({
       contentType: "image/jpeg",
       body: Buffer.from(transparentPixel, "base64"),
@@ -139,7 +168,9 @@ test("renders protected ratings for authenticated users", async ({ page }) => {
   await page.goto("/your-ratings");
 
   await expect(page).toHaveURL(/\/your-ratings$/);
-  await expect(page.getByRole("heading", { name: "Your Ratings" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Your Ratings" }),
+  ).toBeVisible();
   await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
   await expect(page.getByLabel("Your rating 8 out of 10")).toBeVisible();
 });

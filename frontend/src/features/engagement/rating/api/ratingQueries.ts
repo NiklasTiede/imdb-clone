@@ -1,6 +1,8 @@
 import {
+  GetRatingLibrarySortEnum,
   MovieRecord,
   PagedResponseRatingRecord,
+  RatingLibraryResponse,
 } from "../../../../client/movies/generator-output";
 import { accountEngagementApi } from "../../../../shared/api/moviesApi";
 import { moviesApi } from "../../../../shared/api/moviesApi";
@@ -23,6 +25,21 @@ export type RatedMovie = {
 
 export type RatedMoviesResponse = Omit<PagedResponseRatingRecord, "content"> & {
   content: RatedMovie[];
+};
+
+export type RatingLibrarySort =
+  | "score_desc"
+  | "score_asc"
+  | "imdb_desc"
+  | "imdb_asc"
+  | "title_asc";
+
+const ratingLibrarySortValues: Record<RatingLibrarySort, GetRatingLibrarySortEnum> = {
+  score_desc: GetRatingLibrarySortEnum.ScoreDesc,
+  score_asc: GetRatingLibrarySortEnum.ScoreAsc,
+  imdb_desc: GetRatingLibrarySortEnum.ImdbDesc,
+  imdb_asc: GetRatingLibrarySortEnum.ImdbAsc,
+  title_asc: GetRatingLibrarySortEnum.TitleAsc,
 };
 
 const RATINGS_PAGE_SIZE = 30;
@@ -108,6 +125,41 @@ const getCurrentUserRatedMovies = async ({
 };
 
 export const ratingQueries = {
+  library: ({
+    size,
+    sort,
+    username,
+  }: {
+    size: number;
+    sort: RatingLibrarySort;
+    username: string | null;
+  }) => {
+    const normalizedUsername = username?.trim() || null;
+
+    return {
+      enabled: normalizedUsername !== null,
+      getNextPageParam: (lastPage: RatingLibraryResponse) =>
+        lastPage.items?.last
+          ? undefined
+          : (lastPage.items?.page ?? 0) + 1,
+      initialPageParam: 0,
+      queryFn: async ({ pageParam }: { pageParam: number }) => {
+        if (normalizedUsername === null) {
+          throw new Error("Username is required to load the ratings library.");
+        }
+        return (
+          await accountEngagementApi.getRatingLibrary(
+            normalizedUsername,
+            pageParam,
+            size,
+            ratingLibrarySortValues[sort],
+          )
+        ).data;
+      },
+      queryKey: ["rating", "library", normalizedUsername, sort, size] as const,
+    };
+  },
+
   currentUserMovies: ({
     page,
     size,

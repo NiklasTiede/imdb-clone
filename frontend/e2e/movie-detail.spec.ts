@@ -96,6 +96,12 @@ const mockAuthenticatedSession = async (page: Page) => {
       }),
     });
   });
+  await page.route("**/api/account/me/profile", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ username: "niklas", email: "niklas@example.com" }),
+    });
+  });
 };
 
 const mockMovieMedia = async (page: Page) => {

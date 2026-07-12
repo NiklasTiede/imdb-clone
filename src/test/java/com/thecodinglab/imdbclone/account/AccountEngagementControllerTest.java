@@ -100,6 +100,48 @@ class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
   }
 
   @Test
+  void getRatingLibrary_success() {
+    restTestClient
+        .get()
+        .uri("/api/account/test_user_two/library/ratings?page=0&size=10&sort=SCORE_DESC")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.items.totalElements")
+                    .isEqualTo(1)
+                    .jsonPath("$.items.content[0].rating")
+                    .isEqualTo(8.5)
+                    .jsonPath("$.items.content[0].movie.id")
+                    .isEqualTo(1)
+                    .jsonPath("$.insights.totalRatings")
+                    .isEqualTo(1));
+  }
+
+  @Test
+  void getWatchlistLibrary_success() {
+    restTestClient
+        .get()
+        .uri("/api/account/test_user_two/library/watchlist?page=0&size=10&sort=ADDED_AT_DESC")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.items.totalElements")
+                    .isEqualTo(1)
+                    .jsonPath("$.items.content[0].movie.id")
+                    .isEqualTo(1)
+                    .jsonPath("$.insights.totalMovies")
+                    .isEqualTo(1));
+  }
+
+  @Test
   void getAccountEngagement_unknownUsername() {
     restTestClient
         .get()

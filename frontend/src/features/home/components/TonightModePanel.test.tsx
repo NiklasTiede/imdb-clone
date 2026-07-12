@@ -14,9 +14,13 @@ vi.mock("../api/tonightMode", async (importOriginal) => ({
 }));
 
 const renderPanel = () => {
-  const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  const queryClient = new QueryClient({
+    defaultOptions: { mutations: { retry: false } },
+  });
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}><MemoryRouter>{children}</MemoryRouter></QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </QueryClientProvider>
   );
   render(<TonightModePanel watchedMovieIds={new Set([4])} />, { wrapper });
 };
@@ -26,9 +30,33 @@ describe("TonightModePanel", () => {
     vi.clearAllMocks();
     mocks.getTonightPicks.mockResolvedValue({
       picks: [
-        { explanation: "Fits your time tonight.", movie: { id: 11, imdbRating: 8.1, primaryTitle: "First choice", runtimeMinutes: 98 } },
-        { explanation: "A different mood.", movie: { id: 12, imdbRating: 7.9, primaryTitle: "Second choice", runtimeMinutes: 104 } },
-        { explanation: "A great closer.", movie: { id: 13, imdbRating: 7.8, primaryTitle: "Third choice", runtimeMinutes: 112 } },
+        {
+          explanation: "Fits your time tonight.",
+          movie: {
+            id: 11,
+            imdbRating: 8.1,
+            primaryTitle: "First choice",
+            runtimeMinutes: 98,
+          },
+        },
+        {
+          explanation: "A different mood.",
+          movie: {
+            id: 12,
+            imdbRating: 7.9,
+            primaryTitle: "Second choice",
+            runtimeMinutes: 104,
+          },
+        },
+        {
+          explanation: "A great closer.",
+          movie: {
+            id: 13,
+            imdbRating: 7.8,
+            primaryTitle: "Third choice",
+            runtimeMinutes: 112,
+          },
+        },
       ],
       seed: "tonight-seed",
     });
@@ -41,9 +69,13 @@ describe("TonightModePanel", () => {
     await user.click(screen.getByText("Edge of seat"));
     await user.click(screen.getByText("Under 2 hours"));
     await user.click(screen.getByText("Thriller"));
-    await user.click(screen.getByRole("button", { name: "Pick tonight's movies" }));
+    await user.click(
+      screen.getByRole("button", { name: "Pick tonight's movies" }),
+    );
 
-    expect(await screen.findByRole("link", { name: /first choice/i })).toBeTruthy();
+    expect(
+      await screen.findByRole("link", { name: /first choice/i }),
+    ).toBeTruthy();
     expect(screen.getByRole("link", { name: /second choice/i })).toBeTruthy();
     expect(screen.getByRole("link", { name: /third choice/i })).toBeTruthy();
     expect(screen.queryByText("First choice")).toBeNull();
@@ -62,16 +94,70 @@ describe("TonightModePanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Pick tonight's movies" }));
+    await user.click(
+      screen.getByRole("button", { name: "Pick tonight's movies" }),
+    );
     await screen.findByRole("link", { name: /first choice/i });
     await user.click(screen.getByRole("button", { name: "Different three" }));
 
-    const nextRequest = mocks.getTonightPicks.mock.calls.at(-1)?.[0] as unknown as {
+    const nextRequest = mocks.getTonightPicks.mock.calls.at(
+      -1,
+    )?.[0] as unknown as {
       excludedMovieIds: number[];
       seed?: string;
     };
-    expect(nextRequest).toEqual(expect.objectContaining({ seed: "tonight-seed" }));
-    expect(new Set(nextRequest?.excludedMovieIds)).toEqual(new Set([4, 11, 12, 13]));
+    expect(nextRequest).toEqual(
+      expect.objectContaining({ seed: "tonight-seed" }),
+    );
+    expect(new Set(nextRequest?.excludedMovieIds)).toEqual(
+      new Set([4, 11, 12, 13]),
+    );
+  });
+
+  test("keeps the current choices mounted while a replacement set is loading", async () => {
+    const user = userEvent.setup();
+    let resolveRefresh: (value: unknown) => void = () => undefined;
+    mocks.getTonightPicks.mockReset();
+    mocks.getTonightPicks
+      .mockResolvedValueOnce({
+        picks: [
+          {
+            explanation: "First round.",
+            movie: { id: 11, primaryTitle: "First choice", runtimeMinutes: 98 },
+          },
+        ],
+        seed: "tonight-seed",
+      })
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveRefresh = resolve;
+          }),
+      );
+    renderPanel();
+
+    await user.click(
+      screen.getByRole("button", { name: "Pick tonight's movies" }),
+    );
+    await screen.findByRole("link", { name: /first choice/i });
+    await user.click(screen.getByRole("button", { name: "Different three" }));
+
+    expect(screen.getByRole("link", { name: /first choice/i })).toBeTruthy();
+    expect(screen.getByText("Finding three more…")).toBeTruthy();
+
+    resolveRefresh({
+      picks: [
+        {
+          explanation: "Second round.",
+          movie: { id: 14, primaryTitle: "Fresh choice", runtimeMinutes: 104 },
+        },
+      ],
+      seed: "tonight-seed",
+    });
+
+    expect(
+      await screen.findByRole("link", { name: /fresh choice/i }),
+    ).toBeTruthy();
   });
 
   test("clears a selected single-choice filter when it is clicked again", async () => {
@@ -80,7 +166,9 @@ describe("TonightModePanel", () => {
 
     await user.click(screen.getByText("Edge of seat"));
     await user.click(screen.getByText("Edge of seat"));
-    await user.click(screen.getByRole("button", { name: "Pick tonight's movies" }));
+    await user.click(
+      screen.getByRole("button", { name: "Pick tonight's movies" }),
+    );
 
     expect(mocks.getTonightPicks.mock.calls[0]?.[0]).not.toHaveProperty("mood");
   });

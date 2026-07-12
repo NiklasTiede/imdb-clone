@@ -2,18 +2,17 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
 import { i18n } from "../../../../i18n";
 import { useLocalStorageState } from "../../../../shared/hooks/useLocalStorageState";
 import PageContent from "../../../../shared/layout/PageContent";
 import { getUsername } from "../../../../shared/auth";
 import EmptyWatchlist from "../components/EmptyWatchlist";
-import PickForMeDialog from "../components/PickForMeDialog";
 import WatchlistGrid from "../components/WatchlistGrid";
 import WatchlistHeader from "../components/WatchlistHeader";
 import WatchlistList from "../components/WatchlistList";
-import WatchlistStats from "../components/WatchlistStats";
+import WatchlistDecisionPanel from "../components/WatchlistDecisionPanel";
 import WatchlistToolbar, {
   WatchlistView,
 } from "../components/WatchlistToolbar";
@@ -22,9 +21,7 @@ import {
   removeFromWatchlistMutationOptions,
 } from "../api/watchlistMutations";
 import { watchlistQueries, watchlistQueryKeys } from "../api/watchlistQueries";
-import type { WatchlistItem } from "../model/watchlist";
-import { pickRandomWatchlistItem } from "../utils/pickRandomWatchlistItem";
-import { sortWatchlistItems, WatchlistSort } from "../utils/watchlistSorting";
+import { WatchlistSort } from "../utils/watchlistSorting";
 import { useSnackbar } from "notistack";
 
 const WATCHLIST_PAGE_SIZE = 30;
@@ -39,19 +36,25 @@ const WatchlistPage = () => {
     "grid",
     ["grid", "list"],
   );
-  const [pickedMovie, setPickedMovie] = useState<WatchlistItem | null>(null);
-  const [pickDialogOpen, setPickDialogOpen] = useState(false);
-  const watchlistQuery = watchlistQueries.currentUserItems({
-    page: 0,
+  const watchlistQuery = watchlistQueries.library({
     size: WATCHLIST_PAGE_SIZE,
+    sort: sortBy,
     username,
   });
-  const { data, isError, isLoading } = useQuery(watchlistQuery);
-  const items = useMemo(() => data?.content ?? [], [data?.content]);
-  const sortedItems = useMemo(
-    () => sortWatchlistItems(items, sortBy),
-    [items, sortBy],
+  const { data, fetchNextPage, hasNextPage, isError, isFetchingNextPage, isLoading } =
+    useInfiniteQuery(watchlistQuery);
+  const items = useMemo(
+    () =>
+      (data?.pages ?? [])
+        .flatMap((page) => page.items?.content ?? [])
+        .filter((item, index, all) =>
+          item.movieId === undefined
+            ? true
+            : all.findIndex((candidate) => candidate.movieId === item.movieId) === index,
+        ),
+    [data?.pages],
   );
+  const insights = data?.pages[0]?.insights;
 
   const addMutation = useMutation({
     mutationFn: addToWatchlist,
@@ -94,22 +97,10 @@ const WatchlistPage = () => {
     }),
   });
 
-  const pickForMe = () => {
-    const nextMovie = pickRandomWatchlistItem(
-      sortedItems,
-      pickedMovie?.movieId,
-    );
-    setPickedMovie(nextMovie);
-    setPickDialogOpen(nextMovie !== null);
-  };
-
   return (
     <PageContent maxWidth="1320px">
       <Stack spacing={2.5}>
-        <WatchlistHeader
-          disabled={items.length === 0}
-          onPickForMe={pickForMe}
-        />
+        <WatchlistHeader />
 
         {isLoading && <CircularProgress aria-label="Loading watchlist" />}
 
@@ -121,7 +112,7 @@ const WatchlistPage = () => {
 
         {items.length > 0 && (
           <>
-            <WatchlistStats items={items} />
+            <WatchlistDecisionPanel insights={insights} />
             <WatchlistToolbar
               sortBy={sortBy}
               view={view}
@@ -130,25 +121,31 @@ const WatchlistPage = () => {
             />
             {view === "grid" ? (
               <WatchlistGrid
-                items={sortedItems}
+                items={items}
                 onRemove={(movieId) => removeMutation.mutate(movieId)}
               />
             ) : (
               <WatchlistList
-                items={sortedItems}
+                items={items}
                 onRemove={(movieId) => removeMutation.mutate(movieId)}
               />
+            )}
+            {hasNextPage && (
+              <Stack sx={{ alignItems: "center", pt: 1 }}>
+                <Button
+                  disabled={isFetchingNextPage}
+                  onClick={() => void fetchNextPage()}
+                  variant="outlined"
+                >
+                  {isFetchingNextPage
+                    ? "Loading more…"
+                    : `Load more (${items.length} of ${insights?.totalMovies ?? items.length})`}
+                </Button>
+              </Stack>
             )}
           </>
         )}
       </Stack>
-      <PickForMeDialog
-        canPickAnother={items.length > 1}
-        movie={pickedMovie}
-        onClose={() => setPickDialogOpen(false)}
-        onPickAnother={pickForMe}
-        open={pickDialogOpen}
-      />
     </PageContent>
   );
 };

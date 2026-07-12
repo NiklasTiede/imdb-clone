@@ -2,6 +2,7 @@ package com.thecodinglab.imdbclone.catalog.internal.persistence;
 
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,8 @@ import org.springframework.data.repository.query.Param;
 public interface MovieRepository extends JpaRepository<Movie, Long> {
 
   Page<Movie> findByIdIn(List<Long> movieIds, Pageable pageable);
+
+  List<Movie> findByIdIn(Collection<Long> movieIds);
 
   @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query(

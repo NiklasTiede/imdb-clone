@@ -91,6 +91,16 @@ than a separate carousel implementation in each feature.
 - Authored comments are user activity, not private messages. The route label and icon should match
   the first delivered behavior; actual notifications need their own event and unread-state model.
 
+### Personal library
+
+- Ratings now provide complete-library taste snapshots: a score distribution, favorite genres and
+  decades, IMDb comparison, and defining films. Sorting and pagination are server-backed.
+- Watchlists now provide complete-library decision context and an authenticated, explainable
+  three-pick chooser (`Safe bet`, `Forgotten gem`, and `Wild card`) that uses saved movies as a
+  taste signal while excluding them from results.
+- Both collections support progressive `Load more` browsing without deriving insights from only the
+  first page.
+
 ## Roadmap
 
 ### 1. Complete the movie detail destination

@@ -122,7 +122,8 @@ public class WebSecurityConfig {
                         "/api/account/*/profile",
                         "/api/account/*/comments",
                         "/api/account/*/watchlist",
-                        "/api/account/*/ratings")
+                        "/api/account/*/ratings",
+                        "/api/account/*/library/**")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/recommendations/home-feed")
                     .permitAll()

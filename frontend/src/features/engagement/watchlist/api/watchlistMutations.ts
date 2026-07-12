@@ -1,5 +1,8 @@
-import type { QueryClient, QueryKey } from "@tanstack/react-query";
-import type { PagedResponseWatchedMovieRecord } from "../../../../client/movies/generator-output";
+import type { InfiniteData, QueryClient, QueryKey } from "@tanstack/react-query";
+import type {
+  PagedResponseWatchedMovieRecord,
+  WatchlistLibraryResponse,
+} from "../../../../client/movies/generator-output";
 import { watchlistApi } from "../../../../shared/api/moviesApi";
 import { watchlistQueryKeys } from "./watchlistQueries";
 
@@ -43,8 +46,27 @@ type RemoveFromWatchlistMutationOptionsParams = {
 };
 
 type RemoveFromWatchlistContext = {
-  previous?: PagedResponseWatchedMovieRecord;
+  previous?: WatchlistQueryData;
 };
+
+type WatchlistQueryData =
+  | PagedResponseWatchedMovieRecord
+  | InfiniteData<WatchlistLibraryResponse>;
+
+const removeMovieFromPage = (
+  page: PagedResponseWatchedMovieRecord,
+  movieId: number,
+): PagedResponseWatchedMovieRecord => ({
+  ...page,
+  content: (page.content ?? []).filter(
+    (item) => (item.movieId ?? item.movie?.id) !== movieId,
+  ),
+  totalElements: Math.max((page.totalElements ?? 1) - 1, 0),
+});
+
+const isInfiniteLibraryData = (
+  data: WatchlistQueryData,
+): data is InfiniteData<WatchlistLibraryResponse> => "pages" in data;
 
 export const removeFromWatchlistMutationOptions = ({
   onRemoveError,
@@ -55,23 +77,28 @@ export const removeFromWatchlistMutationOptions = ({
   mutationFn: removeFromWatchlist,
   onMutate: async (movieId: number): Promise<RemoveFromWatchlistContext> => {
     await queryClient.cancelQueries({ queryKey: watchlistQueryKey });
-    const previous =
-      queryClient.getQueryData<PagedResponseWatchedMovieRecord>(
-        watchlistQueryKey,
-      );
+    const previous = queryClient.getQueryData<WatchlistQueryData>(
+      watchlistQueryKey,
+    );
 
-    queryClient.setQueryData<PagedResponseWatchedMovieRecord>(
+    queryClient.setQueryData<WatchlistQueryData>(
       watchlistQueryKey,
       (current) =>
-        current
-          ? {
-              ...current,
-              content: (current.content ?? []).filter(
-                (item) => (item.movieId ?? item.movie?.id) !== movieId,
-              ),
-              totalElements: Math.max((current.totalElements ?? 1) - 1, 0),
-            }
-          : current,
+        !current
+          ? current
+          : isInfiniteLibraryData(current)
+            ? {
+                ...current,
+                pages: current.pages.map((page) =>
+                  page.items
+                    ? {
+                        ...page,
+                        items: removeMovieFromPage(page.items, movieId),
+                      }
+                    : page,
+                ),
+              }
+            : removeMovieFromPage(current, movieId),
     );
 
     return previous === undefined ? {} : { previous };

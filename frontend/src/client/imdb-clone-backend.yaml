@@ -3,7 +3,7 @@ info:
   title: OpenAPI definition
   version: v0
 servers:
-- url: http://localhost:8080
+- url: http://localhost:18080
   description: Generated server url
 paths:
   /api/watched-movie/{movieId}/watch:
@@ -300,6 +300,24 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/MovieSearchReindexJobResponse"
+  /api/recommendations/watchlist-tonight:
+    post:
+      tags:
+      - recommendation-controller
+      operationId: watchlistTonight
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WatchlistTonightRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WatchlistTonightResponse"
   /api/recommendations/tonight:
     post:
       tags:
@@ -887,6 +905,98 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/PublicAccountProfile"
+  /api/account/{username}/library/watchlist:
+    get:
+      tags:
+      - account-engagement-controller
+      operationId: getWatchlistLibrary
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ADDED_AT_DESC
+          enum:
+          - ADDED_AT_DESC
+          - ADDED_AT_ASC
+          - IMDB_DESC
+          - IMDB_ASC
+          - RUNTIME_DESC
+          - RUNTIME_ASC
+          - TITLE_ASC
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WatchlistLibraryResponse"
+  /api/account/{username}/library/ratings:
+    get:
+      tags:
+      - account-engagement-controller
+      operationId: getRatingLibrary
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          default: SCORE_DESC
+          enum:
+          - SCORE_DESC
+          - SCORE_ASC
+          - RATED_AT_DESC
+          - RATED_AT_ASC
+          - IMDB_DESC
+          - IMDB_ASC
+          - TITLE_ASC
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RatingLibraryResponse"
   /api/account/{username}/comments:
     get:
       tags:
@@ -1455,6 +1565,99 @@ components:
           format: date-time
         errorMessage:
           type: string
+    WatchlistTonightRequest:
+      type: object
+      properties:
+        maxRuntimeMinutes:
+          type: integer
+          format: int32
+          maximum: 360
+          minimum: 10
+        movieGenres:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          maxItems: 8
+          minItems: 0
+          uniqueItems: true
+        mood:
+          type: string
+          enum:
+          - ESCAPIST
+          - LIGHT
+          - ROMANTIC
+          - TENSE
+          - THOUGHT_PROVOKING
+        era:
+          type: string
+          enum:
+          - CLASSIC
+          - EIGHTIES
+          - NINETIES
+          - TWO_THOUSANDS
+          - MODERN
+        excludedMovieIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          maxItems: 500
+          minItems: 0
+        seed:
+          type: string
+          maxLength: 100
+          minLength: 0
+    WatchlistTonightPick:
+      type: object
+      properties:
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+        role:
+          type: string
+          enum:
+          - SAFE_BET
+          - FORGOTTEN_GEM
+          - WILD_CARD
+        explanation:
+          type: string
+    WatchlistTonightResponse:
+      type: object
+      properties:
+        seed:
+          type: string
+        picks:
+          type: array
+          items:
+            $ref: "#/components/schemas/WatchlistTonightPick"
     TonightModeRequest:
       type: object
       properties:
@@ -1893,6 +2096,143 @@ components:
         commentsCount:
           type: integer
           format: int64
+    LibraryFacet:
+      type: object
+      properties:
+        label:
+          type: string
+        movieCount:
+          type: integer
+          format: int32
+    WatchlistInsights:
+      type: object
+      properties:
+        totalMovies:
+          type: integer
+          format: int32
+        totalRuntimeMinutes:
+          type: integer
+          format: int64
+        averageImdbRating:
+          type: number
+        topGenres:
+          type: array
+          items:
+            $ref: "#/components/schemas/LibraryFacet"
+        oldestSavedAt:
+          type: string
+          format: date-time
+        quickWatchCount:
+          type: integer
+          format: int32
+    WatchlistLibraryResponse:
+      type: object
+      properties:
+        items:
+          $ref: "#/components/schemas/PagedResponseWatchedMovieRecord"
+        insights:
+          $ref: "#/components/schemas/WatchlistInsights"
+    PagedResponseRatedMovieRecord:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatedMovieRecord"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+    RatedMovieInsight:
+      type: object
+      properties:
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+        userRating:
+          type: number
+        imdbDifference:
+          type: number
+    RatedMovieRecord:
+      type: object
+      properties:
+        accountId:
+          type: integer
+          format: int64
+        movieId:
+          type: integer
+          format: int64
+        rating:
+          type: number
+        ratedAt:
+          type: string
+          format: date-time
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+    RatingDistributionBucket:
+      type: object
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+          format: int32
+    RatingLibraryResponse:
+      type: object
+      properties:
+        items:
+          $ref: "#/components/schemas/PagedResponseRatedMovieRecord"
+        insights:
+          $ref: "#/components/schemas/RatingTasteInsights"
+    RatingTasteInsights:
+      type: object
+      properties:
+        totalRatings:
+          type: integer
+          format: int32
+        averageUserRating:
+          type: number
+        distribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatingDistributionBucket"
+        favoriteGenres:
+          type: array
+          items:
+            $ref: "#/components/schemas/TasteFacet"
+        favoriteDecades:
+          type: array
+          items:
+            $ref: "#/components/schemas/TasteFacet"
+        averageImdbDifference:
+          type: number
+        definingMovies:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatedMovieInsight"
+        biggestPositiveDifference:
+          $ref: "#/components/schemas/RatedMovieInsight"
+        biggestNegativeDifference:
+          $ref: "#/components/schemas/RatedMovieInsight"
+    TasteFacet:
+      type: object
+      properties:
+        label:
+          type: string
+        movieCount:
+          type: integer
+          format: int32
+        averageUserRating:
+          type: number
     PublicAccountSummary:
       type: object
       properties:

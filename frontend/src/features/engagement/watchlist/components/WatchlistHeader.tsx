@@ -1,14 +1,7 @@
-import CasinoIcon from "@mui/icons-material/CasinoSharp";
-import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
-type WatchlistHeaderProps = {
-  disabled: boolean;
-  onPickForMe: () => void;
-};
-
-const WatchlistHeader = ({ disabled, onPickForMe }: WatchlistHeaderProps) => (
+const WatchlistHeader = () => (
   <Stack
     direction={{ xs: "column", sm: "row" }}
     spacing={1.5}
@@ -22,14 +15,6 @@ const WatchlistHeader = ({ disabled, onPickForMe }: WatchlistHeaderProps) => (
         Movies you've saved to watch later
       </Typography>
     </Stack>
-    <Button
-      disabled={disabled}
-      onClick={onPickForMe}
-      startIcon={<CasinoIcon />}
-      variant="contained"
-    >
-      Pick for me
-    </Button>
   </Stack>
 );
 

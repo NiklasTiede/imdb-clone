@@ -49,20 +49,33 @@ const genres: { label: string; value: TonightGenre }[] = [
   { label: "Thriller", value: "THRILLER" },
 ];
 
-const TonightModePanel = ({ watchedMovieIds = new Set() }: TonightModePanelProps) => {
+const TonightModePanel = ({
+  watchedMovieIds = new Set(),
+}: TonightModePanelProps) => {
   const [era, setEra] = useState<TonightEra>();
   const [includeWatched, setIncludeWatched] = useState(false);
   const [mood, setMood] = useState<TonightMood>();
   const [maxRuntimeMinutes, setMaxRuntimeMinutes] = useState<number>();
-  const [selectedGenres, setSelectedGenres] = useState<Set<TonightGenre>>(new Set());
+  const [selectedGenres, setSelectedGenres] = useState<Set<TonightGenre>>(
+    new Set(),
+  );
   const [shownMovieIds, setShownMovieIds] = useState<Set<number>>(new Set());
+  const [picks, setPicks] = useState<TonightPick[]>([]);
+  const [seed, setSeed] = useState<string>();
 
   const mutation = useMutation({
     mutationFn: getTonightPicks,
-    onSuccess: (result) =>
+    onSuccess: (result) => {
+      setPicks(result.picks);
+      setSeed(result.seed);
       setShownMovieIds(
-        (current) => new Set([...current, ...result.picks.flatMap((pick) => pick.movie.id ?? [])]),
-      ),
+        (current) =>
+          new Set([
+            ...current,
+            ...result.picks.flatMap((pick) => pick.movie.id ?? []),
+          ]),
+      );
+    },
   });
 
   const excludedMovieIds = useMemo(
@@ -79,7 +92,7 @@ const TonightModePanel = ({ watchedMovieIds = new Set() }: TonightModePanelProps
       ...(mood ? { mood } : {}),
       movieGenres: selectedGenres,
       movieType: "MOVIE",
-      ...(mutation.data?.seed ? { seed: mutation.data.seed } : {}),
+      ...(seed ? { seed } : {}),
     });
 
   const toggleGenre = (genre: TonightGenre) =>
@@ -105,40 +118,140 @@ const TonightModePanel = ({ watchedMovieIds = new Set() }: TonightModePanelProps
         position: "relative",
       }}
     >
-      <Box aria-hidden sx={{ background: "radial-gradient(circle at 94% 8%, rgba(245,197,24,.18), transparent 26%)", inset: 0, pointerEvents: "none", position: "absolute" }} />
+      <Box
+        aria-hidden
+        sx={{
+          background:
+            "radial-gradient(circle at 94% 8%, rgba(245,197,24,.18), transparent 26%)",
+          inset: 0,
+          pointerEvents: "none",
+          position: "absolute",
+        }}
+      />
       <Stack spacing={2.25} sx={{ position: "relative" }}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} sx={{ alignItems: { sm: "center" }, justifyContent: "space-between" }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1.25}
+          sx={{ alignItems: { sm: "center" }, justifyContent: "space-between" }}
+        >
           <Box>
-            <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", mb: 0.5 }}>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              sx={{ alignItems: "center", mb: 0.5 }}
+            >
               <AutoAwesomeIcon color="primary" fontSize="small" />
-              <Typography sx={{ color: "primary.main", fontSize: 11, fontWeight: 800, letterSpacing: 1.25 }}>TONIGHT MODE</Typography>
+              <Typography
+                sx={{
+                  color: "primary.main",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: 1.25,
+                }}
+              >
+                TONIGHT MODE
+              </Typography>
             </Stack>
-            <Typography component="h2" id="tonight-mode-title" variant="h5" sx={{ fontWeight: 700 }}>Three good answers for tonight.</Typography>
-            <Typography sx={{ color: "text.secondary", fontSize: 14, mt: 0.5 }}>Give us a little context; we&apos;ll make the hard part easier.</Typography>
+            <Typography
+              component="h2"
+              id="tonight-mode-title"
+              variant="h5"
+              sx={{ fontWeight: 700 }}
+            >
+              Three good answers for tonight.
+            </Typography>
+            <Typography sx={{ color: "text.secondary", fontSize: 14, mt: 0.5 }}>
+              Give us a little context; we&apos;ll make the hard part easier.
+            </Typography>
           </Box>
           <Stack direction="row" sx={{ alignItems: "center" }}>
-            <Switch checked={includeWatched} onChange={(_event, checked) => setIncludeWatched(checked)} />
-            <Typography sx={{ fontSize: 12, maxWidth: 150 }}>Include movies already on my list</Typography>
+            <Switch
+              checked={includeWatched}
+              onChange={(_event, checked) => setIncludeWatched(checked)}
+            />
+            <Typography sx={{ fontSize: 12, maxWidth: 150 }}>
+              Include movies already on my list
+            </Typography>
           </Stack>
         </Stack>
 
-        <PickerRow label="What kind of night?" options={moods} selected={mood} onSelect={setMood} />
-        <PickerRow label="How much time?" options={runtimes} selected={maxRuntimeMinutes} onSelect={setMaxRuntimeMinutes} />
-        <PickerRow label="When was it made?" options={eras} selected={era} onSelect={setEra} />
-        <Stack direction="row" spacing={0.75} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
-          <Typography sx={{ color: "text.secondary", fontSize: 12, minWidth: 118 }}>Optional genres</Typography>
-          {genres.map((genre) => <Chip key={genre.value} label={genre.label} onClick={() => toggleGenre(genre.value)} size="small" color={selectedGenres.has(genre.value) ? "primary" : "default"} variant={selectedGenres.has(genre.value) ? "filled" : "outlined"} />)}
+        <PickerRow
+          label="What kind of night?"
+          options={moods}
+          selected={mood}
+          onSelect={setMood}
+        />
+        <PickerRow
+          label="How much time?"
+          options={runtimes}
+          selected={maxRuntimeMinutes}
+          onSelect={setMaxRuntimeMinutes}
+        />
+        <PickerRow
+          label="When was it made?"
+          options={eras}
+          selected={era}
+          onSelect={setEra}
+        />
+        <Stack
+          direction="row"
+          spacing={0.75}
+          useFlexGap
+          sx={{ alignItems: "center", flexWrap: "wrap" }}
+        >
+          <Typography
+            sx={{ color: "text.secondary", fontSize: 12, minWidth: 118 }}
+          >
+            Optional genres
+          </Typography>
+          {genres.map((genre) => (
+            <Chip
+              key={genre.value}
+              label={genre.label}
+              onClick={() => toggleGenre(genre.value)}
+              size="small"
+              color={selectedGenres.has(genre.value) ? "primary" : "default"}
+              variant={selectedGenres.has(genre.value) ? "filled" : "outlined"}
+            />
+          ))}
         </Stack>
 
-        {mutation.isError && <Alert severity="error">We couldn&apos;t find tonight&apos;s picks. Please try again.</Alert>}
+        {mutation.isError && (
+          <Alert severity="error">
+            We couldn&apos;t find tonight&apos;s picks. Please try again.
+          </Alert>
+        )}
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          <Button disabled={mutation.isPending} onClick={findPicks} startIcon={mutation.isPending ? <CircularProgress size={16} /> : <AutoAwesomeIcon />} variant="contained">
-            {mutation.data ? "Show me three others" : "Pick tonight's movies"}
+          <Button
+            disabled={mutation.isPending}
+            onClick={findPicks}
+            startIcon={
+              mutation.isPending ? (
+                <CircularProgress size={16} />
+              ) : (
+                <AutoAwesomeIcon />
+              )
+            }
+            variant="contained"
+          >
+            {picks.length > 0
+              ? "Show me three others"
+              : "Pick tonight's movies"}
           </Button>
-          {mutation.data && <Typography sx={{ color: "text.secondary", fontSize: 12 }}>We keep the shown picks out of the next round.</Typography>}
+          {picks.length > 0 && (
+            <Typography sx={{ color: "text.secondary", fontSize: 12 }}>
+              We keep the shown picks out of the next round.
+            </Typography>
+          )}
         </Stack>
 
-        {mutation.data && <TonightChoices picks={mutation.data.picks} onRefresh={findPicks} refreshing={mutation.isPending} />}
+        {picks.length > 0 && (
+          <TonightChoices
+            picks={picks}
+            onRefresh={findPicks}
+            refreshing={mutation.isPending}
+          />
+        )}
       </Stack>
     </Box>
   );
@@ -155,31 +268,104 @@ const PickerRow = <T extends string | number>({
   options: { label: string; value: T | undefined }[];
   selected: T | undefined;
 }) => (
-  <Stack direction="row" spacing={0.75} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
-    <Typography sx={{ color: "text.secondary", fontSize: 12, minWidth: 118 }}>{label}</Typography>
-    {options.map((option) => <Chip key={option.label} label={option.label} onClick={() => onSelect(selected === option.value ? undefined : option.value)} size="small" color={selected === option.value ? "primary" : "default"} variant={selected === option.value ? "filled" : "outlined"} />)}
+  <Stack
+    direction="row"
+    spacing={0.75}
+    useFlexGap
+    sx={{ alignItems: "center", flexWrap: "wrap" }}
+  >
+    <Typography sx={{ color: "text.secondary", fontSize: 12, minWidth: 118 }}>
+      {label}
+    </Typography>
+    {options.map((option) => (
+      <Chip
+        key={option.label}
+        label={option.label}
+        onClick={() =>
+          onSelect(selected === option.value ? undefined : option.value)
+        }
+        size="small"
+        color={selected === option.value ? "primary" : "default"}
+        variant={selected === option.value ? "filled" : "outlined"}
+      />
+    ))}
   </Stack>
 );
 
-const TonightChoices = ({ onRefresh, picks, refreshing }: { onRefresh: () => void; picks: TonightPick[]; refreshing: boolean }) => (
+const TonightChoices = ({
+  onRefresh,
+  picks,
+  refreshing,
+}: {
+  onRefresh: () => void;
+  picks: TonightPick[];
+  refreshing: boolean;
+}) => (
   <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 2.25 }}>
-    {picks.length === 0 ? <Alert severity="info">No close matches yet—try a longer runtime or a wider mood.</Alert> : <>
-      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", mb: 1.25 }}><Typography sx={{ fontSize: 13, fontWeight: 800 }}>Your three choices</Typography><Button disabled={refreshing} onClick={onRefresh} size="small" startIcon={<RefreshIcon fontSize="small" />}>Different three</Button></Stack>
-      <Box
-        sx={{
-          display: "grid",
-          gap: 2,
-          gridTemplateColumns: {
-            xs: "repeat(1, minmax(0, 1fr))",
-            sm: "repeat(3, 180px)",
-            md: "repeat(3, 200px)",
-          },
-          justifyContent: { sm: "center" },
-        }}
-      >
-        {picks.map((pick) => <Box key={pick.movie.id} sx={{ minWidth: 0 }}><PosterMovieCard movie={pick.movie} /><Typography sx={{ color: "text.secondary", fontSize: 12, lineHeight: 1.45, mt: 0.75 }}>{pick.explanation}</Typography></Box>)}
-      </Box>
-    </>}
+    {picks.length === 0 ? (
+      <Alert severity="info">
+        No close matches yet—try a longer runtime or a wider mood.
+      </Alert>
+    ) : (
+      <>
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 1.25,
+          }}
+        >
+          <Typography sx={{ fontSize: 13, fontWeight: 800 }}>
+            Your three choices
+          </Typography>
+          {refreshing ? (
+            <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
+              <CircularProgress size={14} />
+              <Typography sx={{ color: "text.secondary", fontSize: 12 }}>
+                Finding three more…
+              </Typography>
+            </Stack>
+          ) : (
+            <Button
+              onClick={onRefresh}
+              size="small"
+              startIcon={<RefreshIcon fontSize="small" />}
+            >
+              Different three
+            </Button>
+          )}
+        </Stack>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: {
+              xs: "repeat(1, minmax(0, 1fr))",
+              sm: "repeat(3, 180px)",
+              md: "repeat(3, 200px)",
+            },
+            justifyContent: { sm: "center" },
+          }}
+        >
+          {picks.map((pick) => (
+            <Box key={pick.movie.id} sx={{ minWidth: 0 }}>
+              <PosterMovieCard movie={pick.movie} />
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  fontSize: 12,
+                  lineHeight: 1.45,
+                  mt: 0.75,
+                }}
+              >
+                {pick.explanation}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </>
+    )}
   </Box>
 );
 

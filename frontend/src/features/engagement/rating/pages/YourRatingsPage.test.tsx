@@ -17,6 +17,38 @@ const makeQueryClient = () =>
     },
   });
 
+const ratingLibraryData = (content: unknown[]) => ({
+  pageParams: [0],
+  pages: [
+    {
+      insights: {
+        averageImdbDifference: 0.2,
+        averageUserRating: 8,
+        definingMovies: [],
+        distribution: [
+          { count: 0, label: "0–3.9" },
+          { count: 0, label: "4–5.9" },
+          { count: 0, label: "6–6.9" },
+          { count: 1, label: "7–7.9" },
+          { count: 1, label: "8–8.9" },
+          { count: 0, label: "9–10" },
+        ],
+        favoriteDecades: [{ averageUserRating: 8, label: "2010s", movieCount: 1 }],
+        favoriteGenres: [{ averageUserRating: 8, label: "Thriller", movieCount: 1 }],
+        totalRatings: content.length,
+      },
+      items: {
+        content,
+        last: true,
+        page: 0,
+        size: 30,
+        totalElements: content.length,
+        totalPages: 1,
+      },
+    },
+  ],
+});
+
 describe("YourRatingsPage", () => {
   let localStorageData: Record<string, string>;
 
@@ -36,9 +68,8 @@ describe("YourRatingsPage", () => {
   test("renders rated movies as a poster grid with stats", () => {
     const queryClient = makeQueryClient();
     queryClient.setQueryData(
-      ["rating", "current-user", "ada", "movies", 0, 30],
-      {
-        content: [
+      ["rating", "library", "ada", "score_desc", 30],
+      ratingLibraryData([
           {
             movie: {
               id: 7,
@@ -63,8 +94,7 @@ describe("YourRatingsPage", () => {
             },
             rating: 7,
           },
-        ],
-      },
+      ]),
     );
 
     render(
@@ -89,9 +119,8 @@ describe("YourRatingsPage", () => {
     const user = userEvent.setup();
     const queryClient = makeQueryClient();
     queryClient.setQueryData(
-      ["rating", "current-user", "ada", "movies", 0, 30],
-      {
-        content: [
+      ["rating", "library", "ada", "score_desc", 30],
+      ratingLibraryData([
           {
             movie: { id: 7, primaryTitle: "Loved Movie", startYear: 2014 },
             rating: 9,
@@ -100,8 +129,7 @@ describe("YourRatingsPage", () => {
             movie: { id: 9, primaryTitle: "Okay Movie", startYear: 2012 },
             rating: 6,
           },
-        ],
-      },
+      ]),
     );
 
     render(

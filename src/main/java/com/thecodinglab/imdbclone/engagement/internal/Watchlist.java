@@ -3,6 +3,7 @@ package com.thecodinglab.imdbclone.engagement.internal;
 import static com.thecodinglab.imdbclone.shared.logging.Log.*;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
+import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieRecord;
 import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
@@ -14,6 +15,9 @@ import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -44,14 +48,14 @@ public class Watchlist implements WatchedMovieService {
   @Override
   @Transactional
   public WatchedMovieRecord watchMovie(Long movieId, UserPrincipal currentAccount) {
-    movieReferenceService.findMovieById(movieId);
+    MovieRecord movie = movieReferenceService.findMovieById(movieId);
     WatchedMovie watchedMovie = WatchedMovie.create(movieId, currentAccount.getId());
     WatchedMovie savedWatchedMovie = watchedMovieRepository.saveAndFlush(watchedMovie);
     logger.info(
         "Movie with [{}] is watched by account with id [{}].",
         kv(WATCHED_MOVIE_ID, savedWatchedMovie.getId()),
         savedWatchedMovie.getId().getAccountId());
-    return watchedMovieMapper.entityToDTO(savedWatchedMovie);
+    return watchedMovieMapper.entityToDTO(savedWatchedMovie, movie);
   }
 
   @Override
@@ -66,7 +70,28 @@ public class Watchlist implements WatchedMovieService {
         "[{}] watchedMovies from account with [{}] were retrieved.",
         watchedMovies.getContent().size(),
         kv(ACCOUNT_ID, accountId));
-    return PagedResponse.from(watchedMovies.map(watchedMovieMapper::entityToDTO));
+    Map<Long, MovieRecord> moviesById =
+        movieReferenceService
+            .findMoviesByIds(
+                watchedMovies.getContent().stream().map(WatchedMovie::getMovieId).toList())
+            .stream()
+            .collect(java.util.stream.Collectors.toMap(MovieRecord::id, Function.identity()));
+    watchedMovies.getContent().stream()
+        .filter(watchedMovie -> !moviesById.containsKey(watchedMovie.getMovieId()))
+        .forEach(
+            watchedMovie ->
+                logger.warn(
+                    "Watched movie references a catalog movie that no longer exists [{}].",
+                    kv(MOVIE_ID, watchedMovie.getMovieId())));
+    List<WatchedMovieRecord> content =
+        watchedMovieMapper.entityToDTO(watchedMovies.getContent(), moviesById);
+    long totalElements =
+        Math.max(
+            0,
+            watchedMovies.getTotalElements() - watchedMovies.getContent().size() + content.size());
+    int totalPages = size == 0 ? 0 : (int) Math.ceil((double) totalElements / size);
+    return new PagedResponse<>(
+        content, page, size, totalElements, totalPages, watchedMovies.isLast());
   }
 
   @Override

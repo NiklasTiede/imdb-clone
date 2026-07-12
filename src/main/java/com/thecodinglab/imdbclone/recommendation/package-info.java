@@ -3,6 +3,7 @@
     displayName = "Recommendations",
     allowedDependencies = {
       "catalog::recommendation",
+      "engagement::recommendation",
       "shared::error",
       "shared::persistence",
       "shared::security"

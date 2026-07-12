@@ -1,4 +1,8 @@
-import { PagedResponseWatchedMovieRecord } from "../../../../client/movies/generator-output";
+import {
+  GetWatchlistLibrarySortEnum,
+  PagedResponseWatchedMovieRecord,
+  WatchlistLibraryResponse,
+} from "../../../../client/movies/generator-output";
 import { accountEngagementApi } from "../../../../shared/api/moviesApi";
 
 type CurrentUserWatchlistParams = {
@@ -9,6 +13,28 @@ type CurrentUserWatchlistParams = {
 
 type WatchlistMovieIdsParams = {
   username: string | null;
+};
+
+export type WatchlistLibrarySort =
+  | "addedAt_desc"
+  | "addedAt_asc"
+  | "rating_desc"
+  | "rating_asc"
+  | "runtime_desc"
+  | "runtime_asc"
+  | "title_asc";
+
+const watchlistLibrarySortValues: Record<
+  WatchlistLibrarySort,
+  GetWatchlistLibrarySortEnum
+> = {
+  addedAt_desc: GetWatchlistLibrarySortEnum.AddedAtDesc,
+  addedAt_asc: GetWatchlistLibrarySortEnum.AddedAtAsc,
+  rating_desc: GetWatchlistLibrarySortEnum.ImdbDesc,
+  rating_asc: GetWatchlistLibrarySortEnum.ImdbAsc,
+  runtime_desc: GetWatchlistLibrarySortEnum.RuntimeDesc,
+  runtime_asc: GetWatchlistLibrarySortEnum.RuntimeAsc,
+  title_asc: GetWatchlistLibrarySortEnum.TitleAsc,
 };
 
 const MOVIE_IDS_PAGE_SIZE = 30;
@@ -77,6 +103,41 @@ const fetchCurrentUserWatchedMovieIds = async (
 };
 
 export const watchlistQueries = {
+  library: ({
+    size,
+    sort,
+    username,
+  }: {
+    size: number;
+    sort: WatchlistLibrarySort;
+    username: string | null;
+  }) => {
+    const normalizedUsername = username?.trim() || null;
+
+    return {
+      enabled: normalizedUsername !== null,
+      getNextPageParam: (lastPage: WatchlistLibraryResponse) =>
+        lastPage.items?.last
+          ? undefined
+          : (lastPage.items?.page ?? 0) + 1,
+      initialPageParam: 0,
+      queryFn: async ({ pageParam }: { pageParam: number }) => {
+        if (normalizedUsername === null) {
+          throw new Error("Username is required to load the watchlist library.");
+        }
+        return (
+          await accountEngagementApi.getWatchlistLibrary(
+            normalizedUsername,
+            pageParam,
+            size,
+            watchlistLibrarySortValues[sort],
+          )
+        ).data;
+      },
+      queryKey: ["watchlist", "library", normalizedUsername, sort, size] as const,
+    };
+  },
+
   currentUserItems: ({ page, size, username }: CurrentUserWatchlistParams) => {
     const normalizedUsername = username?.trim() || null;
 

@@ -11,6 +11,9 @@ import com.thecodinglab.imdbclone.recommendation.api.RecommendationService;
 import com.thecodinglab.imdbclone.recommendation.api.TonightModeRequest;
 import com.thecodinglab.imdbclone.recommendation.api.TonightModeResponse;
 import com.thecodinglab.imdbclone.recommendation.api.TonightModeService;
+import com.thecodinglab.imdbclone.recommendation.api.WatchlistTonightRequest;
+import com.thecodinglab.imdbclone.recommendation.api.WatchlistTonightResponse;
+import com.thecodinglab.imdbclone.recommendation.api.WatchlistTonightService;
 import com.thecodinglab.imdbclone.shared.security.CurrentUser;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,16 +41,19 @@ public class RecommendationController {
   private final HomeFeedService homeFeedService;
   private final DiscoveryEventService discoveryEventService;
   private final TonightModeService tonightModeService;
+  private final WatchlistTonightService watchlistTonightService;
 
   public RecommendationController(
       RecommendationService recommendationService,
       HomeFeedService homeFeedService,
       DiscoveryEventService discoveryEventService,
-      TonightModeService tonightModeService) {
+      TonightModeService tonightModeService,
+      WatchlistTonightService watchlistTonightService) {
     this.recommendationService = recommendationService;
     this.homeFeedService = homeFeedService;
     this.discoveryEventService = discoveryEventService;
     this.tonightModeService = tonightModeService;
+    this.watchlistTonightService = watchlistTonightService;
   }
 
   @GetMapping("/movies/{movieId}/similar")
@@ -74,6 +80,13 @@ public class RecommendationController {
   public ResponseEntity<TonightModeResponse> tonight(
       @Valid @RequestBody TonightModeRequest request) {
     return ResponseEntity.ok(tonightModeService.choose(request));
+  }
+
+  @PostMapping("/watchlist-tonight")
+  public ResponseEntity<WatchlistTonightResponse> watchlistTonight(
+      @Valid @RequestBody WatchlistTonightRequest request,
+      @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
+    return ResponseEntity.ok(watchlistTonightService.choose(currentAccount.getId(), request));
   }
 
   @GetMapping("/discovery-events/summary")
