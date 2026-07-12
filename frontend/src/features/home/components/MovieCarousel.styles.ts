@@ -16,6 +16,7 @@ export const movieCarouselScrollSx = {
   overscrollBehaviorX: "contain",
   px: { xs: 2, md: "8px" },
   py: 2,
+  scrollPaddingInline: { xs: "16px", md: "8px" },
   scrollSnapType: "x mandatory",
   scrollbarWidth: "none",
   "&::-webkit-scrollbar": { display: "none" },

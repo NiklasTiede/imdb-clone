@@ -43,6 +43,10 @@ describe("MovieCarousel", () => {
   test("keeps scroll clipping edges outside the aligned movie cards", () => {
     expect(movieCarouselScrollSx.mx).toEqual({ xs: 0, md: "-8px" });
     expect(movieCarouselScrollSx.px).toEqual({ xs: 2, md: "8px" });
+    expect(movieCarouselScrollSx.scrollPaddingInline).toEqual({
+      xs: "16px",
+      md: "8px",
+    });
   });
 
   test("shows six skeleton cards while loading", () => {
