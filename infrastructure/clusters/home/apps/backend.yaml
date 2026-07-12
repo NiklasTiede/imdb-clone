@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: niklastiede/imdb-clone-backend:v0.4.0@sha256:35a50d81cbbec078110f95882a84c5f8efabbf7dc33e8b7d7052b11690e328cd
+          image: niklastiede/imdb-clone-backend:v1.0.0@sha256:60d283f03fda6c597ac6c1ee0841fad82c9ad2b338ef3d183105951762c464a6
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
