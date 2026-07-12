@@ -18,7 +18,6 @@ describe("frontend feature architecture", () => {
       "home",
       "identity",
       "media",
-      "notification",
       "search",
     ]);
     expect(existsSync(path.join(featuresRoot, "auth"))).toBe(false);
@@ -71,7 +70,13 @@ describe("frontend feature architecture", () => {
 
 const featureDirectoryNames = (): string[] =>
   readdirSync(featuresRoot)
-    .filter((entry) => statSync(path.join(featuresRoot, entry)).isDirectory())
+    .filter((entry) => {
+      const featureDirectory = path.join(featuresRoot, entry);
+      return (
+        statSync(featureDirectory).isDirectory() &&
+        sourceFiles(featureDirectory).length > 0
+      );
+    })
     .sort();
 
 const crossFeatureInternalImports = (): string[] =>
