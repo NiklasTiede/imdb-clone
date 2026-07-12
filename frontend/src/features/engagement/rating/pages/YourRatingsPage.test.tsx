@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { MovieRecordMovieGenreEnum } from "../../../../client/movies/generator-output";
+import { ratingApi } from "../../../../shared/api/moviesApi";
 import YourRatingsPage from "./YourRatingsPage";
 
 vi.mock("../../../../shared/auth", () => ({
@@ -63,6 +64,10 @@ describe("YourRatingsPage", () => {
         }),
       },
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   test("renders rated movies as a poster grid with stats", () => {
@@ -146,5 +151,42 @@ describe("YourRatingsPage", () => {
     expect(screen.getByText("Loved Movie")).toBeTruthy();
     expect(screen.queryByText("Okay Movie")).toBeNull();
     expect(screen.getByRole("list", { name: "Rated movies" })).toBeTruthy();
+  });
+
+  test("removes a rating from the visible library immediately", async () => {
+    const user = userEvent.setup();
+    const queryClient = makeQueryClient();
+    const deleteRating = vi
+      .spyOn(ratingApi, "deleteRating")
+      .mockResolvedValue({} as never);
+    queryClient.setQueryData(
+      ["rating", "library", "ada", "score_desc", 30],
+      ratingLibraryData([
+        {
+          movie: { id: 7, primaryTitle: "Remove Me", startYear: 2014 },
+          rating: 9,
+        },
+        {
+          movie: { id: 9, primaryTitle: "Keep Me", startYear: 2012 },
+          rating: 7,
+        },
+      ]),
+    );
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <YourRatingsPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Delete rating" })[0]!);
+
+    await waitFor(() => {
+      expect(screen.queryByRole("link", { name: /Remove Me/ })).toBeNull();
+    });
+    expect(screen.getByRole("link", { name: /Keep Me/ })).toBeTruthy();
+    expect(deleteRating).toHaveBeenCalledWith(7);
   });
 });

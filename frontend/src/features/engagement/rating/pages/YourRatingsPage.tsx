@@ -8,7 +8,7 @@ import { i18n } from "../../../../i18n";
 import { getUsername } from "../../../../shared/auth";
 import { useLocalStorageState } from "../../../../shared/hooks/useLocalStorageState";
 import PageContent from "../../../../shared/layout/PageContent";
-import { rateMovieMutationOptions } from "../api/ratingMutations";
+import { removeRatingMutationOptions } from "../api/ratingMutations";
 import { ratingQueries } from "../api/ratingQueries";
 import EmptyRatings from "../components/EmptyRatings";
 import RatingsGrid from "../components/RatingsGrid";
@@ -30,6 +30,7 @@ const YourRatingsPage = () => {
   const queryClient = useQueryClient();
   const [sortBy, setSortBy] = useState<RatingSort>("score_desc");
   const [scoreRange, setScoreRange] = useState<ScoreRange>(allScoresRange);
+  const [removeError, setRemoveError] = useState(false);
   const [view, setView] = useLocalStorageState<RatingsView>(
     "ratings.view",
     "grid",
@@ -60,8 +61,17 @@ const YourRatingsPage = () => {
   const insights = data?.pages[0]?.insights;
 
   const removeRating = useMutation({
-    ...rateMovieMutationOptions(queryClient),
+    ...removeRatingMutationOptions({
+      onRemoveError: () => setRemoveError(true),
+      queryClient,
+      ratingQueryKey: ratingsQuery.queryKey,
+    }),
   });
+
+  const handleRemove = (movieId: number) => {
+    setRemoveError(false);
+    removeRating.mutate(movieId);
+  };
 
   return (
     <PageContent maxWidth="1320px">
@@ -71,6 +81,12 @@ const YourRatingsPage = () => {
         {isLoading && <CircularProgress aria-label="Loading ratings" />}
 
         {isError && <Alert severity="error">{i18n.ratings.loadingError}</Alert>}
+
+        {removeError && (
+          <Alert severity="error">
+            Could not remove this rating. Please try again.
+          </Alert>
+        )}
 
         {!isLoading && !isError && ratedMovies.length === 0 && <EmptyRatings />}
 
@@ -104,16 +120,12 @@ const YourRatingsPage = () => {
             ) : view === "grid" ? (
               <RatingsGrid
                 items={visibleMovies}
-                onRemove={(movieId) =>
-                  removeRating.mutate({ movieId, score: null })
-                }
+                onRemove={handleRemove}
               />
             ) : (
               <RatingsList
                 items={visibleMovies}
-                onRemove={(movieId) =>
-                  removeRating.mutate({ movieId, score: null })
-                }
+                onRemove={handleRemove}
               />
             )}
             {hasNextPage && (
