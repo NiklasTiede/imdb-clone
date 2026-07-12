@@ -1,8 +1,6 @@
 export const i18n = {
   general: {
     appName: "IMDb Clone",
-    profile: "Profile",
-    messages: "Messages",
   },
   regex: {
     username: {
@@ -62,9 +60,6 @@ export const i18n = {
     empty: "You have not rated any movies yet.",
     heading: "Your Ratings",
     loadingError: "Error while attempting to load your ratings",
-  },
-  messages: {
-    heading: "Your Messages",
   },
   editMovie: {
     heading: "Edit/Create Movie",

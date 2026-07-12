@@ -53,10 +53,6 @@ const YourCommentsPage = lazyRoute(
   () => import("../../features/engagement"),
   "YourCommentsPage",
 );
-const MessagesPage = lazyRoute(
-  () => import("../../features/notification"),
-  "MessagesPage",
-);
 const FilterPanelPage = lazyRoute(
   () => import("../../features/search"),
   "FilterPanelPage",
@@ -143,10 +139,6 @@ export const routeDefinitions: RouteDefinition[] = [
   {
     path: "/your-comments",
     element: appRoute(privateRoute(RoleNameEnum.User, <YourCommentsPage />)),
-  },
-  {
-    path: "/your-messages",
-    element: appRoute(privateRoute(RoleNameEnum.User, <MessagesPage />)),
   },
   {
     path: "/account-settings",
