@@ -16,7 +16,7 @@ Do not create a parallel theme, global CSS palette, or one-off design system ins
 
 ## Visual Direction
 
-The app should feel like a polished movie catalog: dark cinematic surfaces, IMDb-like brand yellow,
+The app should feel like a polished movie catalog: dark cinematic surfaces, warm cinematic brand gold,
 clear poster/media hierarchy, restrained density, and practical browsing controls.
 
 Existing semantic colors:

@@ -3,7 +3,6 @@ import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router";
 import { i18n } from "../../i18n";
-import { movieColors } from "../../theme";
 
 type BrandLogoProps = {
   compact?: boolean;
@@ -26,24 +25,18 @@ const BrandLogo = ({ compact = false, sx }: BrandLogoProps) => (
     to="/"
   >
     <Box
+      alt=""
       aria-hidden="true"
+      component="img"
+      data-testid="brand-mark"
+      src="/brand-logo.svg"
       sx={{
-        alignItems: "center",
-        bgcolor: movieColors.brand,
-        borderRadius: 1,
-        boxShadow: "inset 0 -1px 0 rgba(0,0,0,0.24)",
-        color: movieColors.brandInk,
-        display: "flex",
+        display: "block",
         flex: "0 0 auto",
-        fontSize: compact ? 13 : 14,
-        fontWeight: 900,
-        height: compact ? 28 : 34,
-        justifyContent: "center",
+        height: compact ? 32 : 42,
         width: compact ? 32 : 42,
       }}
-    >
-      IM
-    </Box>
+    />
     <Box sx={{ display: "grid", minWidth: 0 }}>
       <Typography
         component="span"
@@ -69,7 +62,7 @@ const BrandLogo = ({ compact = false, sx }: BrandLogoProps) => (
             whiteSpace: "nowrap",
           }}
         >
-          Movies, ratings, watchlists
+          {i18n.general.tagline}
         </Typography>
       )}
     </Box>

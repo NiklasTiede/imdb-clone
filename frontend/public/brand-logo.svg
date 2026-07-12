@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="brand-logo-title">
+  <title id="brand-logo-title">IMDb Clone clapperboard logo</title>
+  <rect width="512" height="512" rx="112" fill="#0e1626"/>
+  <g transform="translate(256 256) scale(1.18) translate(-256 -256)">
+    <g transform="rotate(-16 124 232)">
+      <rect x="112" y="156" width="288" height="48" rx="12" fill="#f5c518"/>
+      <g fill="#0e1626">
+        <path d="M140 204 168 156H198L170 204Z"/>
+        <path d="M204 204 232 156H262L234 204Z"/>
+        <path d="M268 204 296 156H326L298 204Z"/>
+        <path d="M332 204 360 156H390L362 204Z"/>
+      </g>
+    </g>
+    <rect x="112" y="212" width="288" height="48" rx="12" fill="#f5c518"/>
+    <g fill="#0e1626">
+      <path d="M140 260 168 212H198L170 260Z"/>
+      <path d="M204 260 232 212H262L234 260Z"/>
+      <path d="M268 260 296 212H326L298 260Z"/>
+      <path d="M332 260 360 212H390L362 260Z"/>
+    </g>
+    <rect x="112" y="268" width="288" height="132" rx="18" fill="#f5c518"/>
+    <g fill="#0e1626" opacity=".85">
+      <rect x="140" y="296" width="160" height="18" rx="9"/>
+      <rect x="140" y="334" width="104" height="18" rx="9"/>
+    </g>
+  </g>
+</svg>
