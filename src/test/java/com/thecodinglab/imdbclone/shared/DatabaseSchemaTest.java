@@ -22,7 +22,10 @@ class DatabaseSchemaTest extends BaseContainers {
             "2:create spring session tables",
             "3:credential model and token hardening",
             "4:social login identity providers",
-            "5:create webauthn tables");
+            "5:create webauthn tables",
+            "6:create discovery events",
+            "7:use varchar for discovery hashes",
+            "8:persist movie discovery theme embeddings");
   }
 
   @Test

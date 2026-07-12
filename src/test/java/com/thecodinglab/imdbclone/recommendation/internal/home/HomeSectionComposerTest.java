@@ -83,8 +83,8 @@ class HomeSectionComposerTest {
             .featured(new HomeSectionCatalog(), "seed", seenMovieIds);
 
     assertThat(featured).hasSize(3);
-    assertThat(seenMovieIds).containsExactlyInAnyOrderElementsOf(
-        featured.stream().map(MovieRecord::id).toList());
+    assertThat(seenMovieIds)
+        .containsExactlyInAnyOrderElementsOf(featured.stream().map(MovieRecord::id).toList());
   }
 
   private HomeSectionDefinition definition() {
