@@ -23,6 +23,8 @@ type MovieCarouselProps = {
   onViewAll?: () => void;
   onScrollPositionChange?: (position: number) => void;
   onMovieOpen?: (movieId: number, position: number) => void;
+  onImpression?: () => void;
+  getMovieCaption?: (movie: Movie) => string | undefined;
   loading?: boolean;
 };
 
@@ -34,9 +36,13 @@ const MovieCarousel = ({
   onViewAll,
   onScrollPositionChange,
   onMovieOpen,
+  onImpression,
+  getMovieCaption,
   loading = false,
 }: MovieCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const hasReportedImpression = useRef(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -65,6 +71,34 @@ const MovieCarousel = ({
     updateScrollState();
   }, [initialScrollLeft, updateScrollState]);
 
+  useEffect(() => {
+    const element = sectionRef.current;
+    if (!element || !onImpression || loading || movies.length === 0 || hasReportedImpression.current) {
+      return;
+    }
+    const reportOnce = () => {
+      if (!hasReportedImpression.current) {
+        hasReportedImpression.current = true;
+        onImpression();
+      }
+    };
+    if (typeof IntersectionObserver === "undefined") {
+      reportOnce();
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          reportOnce();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [loading, movies.length, onImpression]);
+
   const scroll = (direction: "left" | "right") => {
     const element = scrollRef.current;
     if (!element) {
@@ -86,7 +120,7 @@ const MovieCarousel = ({
   };
 
   return (
-    <Box component="section" sx={{ mb: 5 }}>
+    <Box component="section" ref={sectionRef} sx={{ mb: 5 }}>
       <Stack
         direction="row"
         sx={{
@@ -200,6 +234,13 @@ const MovieCarousel = ({
                   movie={movie}
                   onOpen={(movieId) => onMovieOpen?.(movieId, index)}
                 />
+                {getMovieCaption?.(movie) && (
+                  <Typography
+                    sx={{ color: "text.secondary", fontSize: 11, lineHeight: 1.4, mt: 0.75 }}
+                  >
+                    {getMovieCaption(movie)}
+                  </Typography>
+                )}
               </Box>
             ))}
       </Box>

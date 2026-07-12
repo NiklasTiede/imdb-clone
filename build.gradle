@@ -180,6 +180,19 @@ def integrationTest = tasks.register('integrationTest', Test) {
 	shouldRunAfter tasks.named('test')
 }
 
+tasks.register('searchRelevanceEvaluation', Test) {
+	description = 'Reports deterministic baseline metrics from the versioned search relevance fixture.'
+	group = LifecycleBasePlugin.VERIFICATION_GROUP
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	testLogging {
+		showStandardStreams = true
+	}
+	useJUnitPlatform {
+		includeTags 'search-evaluation'
+	}
+}
+
 jacoco {
 	toolVersion = "0.8.14"
 }

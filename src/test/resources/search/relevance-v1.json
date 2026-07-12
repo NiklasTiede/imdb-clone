@@ -1,0 +1,8 @@
+{
+  "version": "search-relevance-v1",
+  "cases": [
+    { "id": "exact-title", "query": "the godfather", "relevanceByMovieId": { "101": 3, "102": 2, "103": 1 }, "rankedMovieIds": [101, 102, 103], "latencyMs": 42 },
+    { "id": "intent", "query": "space horror", "relevanceByMovieId": { "201": 3, "202": 2, "203": 1 }, "rankedMovieIds": [202, 201, 203], "latencyMs": 58 },
+    { "id": "miss", "query": "an impossible title", "relevanceByMovieId": {}, "rankedMovieIds": [], "latencyMs": 31 }
+  ]
+}

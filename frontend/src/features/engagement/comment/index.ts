@@ -5,3 +5,4 @@ export {
   updateCommentMutationOptions,
 } from "./api/commentMutations";
 export { commentQueries, commentQueryKeys } from "./api/commentQueries";
+export { default as YourCommentsPage } from "./pages/YourCommentsPage";

@@ -166,6 +166,26 @@ public class MovieSearchQueryBuilder {
                               .field("imdbRatingCount")
                               .gte(JsonData.of(criteria.minImdbRatingCount())))));
     }
+    if (criteria.minCommunityRating() != null) {
+      filters.add(
+          Query.of(
+              query ->
+                  query.range(
+                      range ->
+                          range
+                              .field("rating")
+                              .gte(JsonData.of(criteria.minCommunityRating())))));
+    }
+    if (criteria.minCommunityRatingCount() != null) {
+      filters.add(
+          Query.of(
+              query ->
+                  query.range(
+                      range ->
+                          range
+                              .field("ratingCount")
+                              .gte(JsonData.of(criteria.minCommunityRatingCount())))));
+    }
 
     BoolQuery.Builder query = QueryBuilders.bool().filter(filters);
     if (!criteria.excludedMovieIds().isEmpty()) {

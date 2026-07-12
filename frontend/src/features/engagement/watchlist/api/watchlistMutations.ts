@@ -8,7 +8,10 @@ export type ToggleWatchlistVariables = {
   isBookmarked: boolean;
 };
 
-export const toggleWatchlistMutationOptions = (queryClient?: QueryClient) => ({
+export const toggleWatchlistMutationOptions = (
+  queryClient?: QueryClient,
+  { onAdded }: { onAdded?: (movieId: number) => void } = {},
+) => ({
   mutationFn: async ({ movieId, isBookmarked }: ToggleWatchlistVariables) => {
     if (isBookmarked) {
       await watchlistApi.deleteWatchedMovie(movieId);
@@ -16,8 +19,11 @@ export const toggleWatchlistMutationOptions = (queryClient?: QueryClient) => ({
       await watchlistApi.watchMovie(movieId);
     }
   },
-  onSuccess: async () => {
+  onSuccess: async (_data: unknown, variables: ToggleWatchlistVariables) => {
     await queryClient?.invalidateQueries({ queryKey: watchlistQueryKeys.all });
+    if (!variables.isBookmarked) {
+      onAdded?.(variables.movieId);
+    }
   },
 });
 

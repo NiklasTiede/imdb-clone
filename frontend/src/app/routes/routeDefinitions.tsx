@@ -49,6 +49,10 @@ const YourRatingsPage = lazyRoute(
   () => import("../../features/engagement"),
   "YourRatingsPage",
 );
+const YourCommentsPage = lazyRoute(
+  () => import("../../features/engagement"),
+  "YourCommentsPage",
+);
 const MessagesPage = lazyRoute(
   () => import("../../features/notification"),
   "MessagesPage",
@@ -135,6 +139,10 @@ export const routeDefinitions: RouteDefinition[] = [
   {
     path: "/your-watchlist",
     element: appRoute(privateRoute(RoleNameEnum.User, <WatchlistPage />)),
+  },
+  {
+    path: "/your-comments",
+    element: appRoute(privateRoute(RoleNameEnum.User, <YourCommentsPage />)),
   },
   {
     path: "/your-messages",

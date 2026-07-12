@@ -2,6 +2,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
@@ -14,6 +15,12 @@ import { Link as RouterLink } from "react-router";
 import { movieColors } from "../../../theme";
 
 const settings = [
+  {
+    icon: <ForumOutlinedIcon fontSize="small" />,
+    name: "YourComments",
+    to: "/your-comments",
+    text: "Your comments",
+  },
   {
     icon: <StarBorderIcon fontSize="small" />,
     name: "YourRatings",

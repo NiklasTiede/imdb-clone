@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
-import { useCallback, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import { authSession, useAuthSession } from "../../../shared/auth";
 import {
@@ -18,15 +18,22 @@ import HomeFeedEndState from "../components/HomeFeedEndState";
 import HomeFeedSentinel from "../components/HomeFeedSentinel";
 import FeaturedMovieHero from "../components/FeaturedMovieHero";
 import MovieCarousel from "../components/MovieCarousel";
+import TonightModePanel from "../components/TonightModePanel";
 import { useHomeFeedRestoration } from "../hooks/useHomeFeedRestoration";
 import type { HomeFeedMovie, HomeFeedSection } from "../model/homeFeed";
-import { reportHomeMovieOpen } from "../observability/discoveryEvents";
+import {
+  reportHomeMovieOpen,
+  reportHomeSectionImpression,
+  reportHomeWatchlistAdded,
+} from "../observability/discoveryEvents";
 import {
   getCarouselScrollPosition,
   getHomeFeedInstanceId,
   setCarouselScrollPosition,
   startNewHomeFeedSession,
 } from "../model/homeFeedSession";
+
+const emptyMovieIds = new Set<number>();
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -39,6 +46,7 @@ const HomePage = () => {
   const homeFeed = useHomeFeed(feedInstanceId);
   const pages = homeFeed.data?.pages ?? [];
   const featuredMovie = pages[0]?.featuredMovie ?? null;
+  const strategyVersion = pages[0]?.strategyVersion ?? "home-structured-v1";
   const sections: HomeFeedSection[] = pages.flatMap((page) => page.sections ?? []);
   useHomeFeedRestoration(feedInstanceId, sections.length);
 
@@ -47,7 +55,15 @@ const HomePage = () => {
   );
 
   const toggleWatchlist = useMutation({
-    ...toggleWatchlistMutationOptions(queryClient),
+    ...toggleWatchlistMutationOptions(queryClient, {
+      onAdded: (movieId) =>
+        reportHomeWatchlistAdded({
+          feedInstanceId,
+          movieId,
+          sectionId: "featured",
+          strategyVersion,
+        }),
+    }),
     onError: () =>
       setErrorMessage("Could not update your watchlist. Please try again."),
   });
@@ -89,6 +105,7 @@ const HomePage = () => {
   const isInitialLoading = homeFeed.isPending && pages.length === 0;
   const hasInitialError = homeFeed.isError && pages.length === 0;
   const isExhausted = !homeFeed.hasNextPage && pages.length > 0;
+  const tonightModeAfterSectionIndex = Math.min(1, sections.length - 1);
 
   return (
     <Box sx={{ backgroundColor: "background.default", minHeight: "100vh" }}>
@@ -107,36 +124,51 @@ const HomePage = () => {
             onViewMovie={handleViewMovie}
           />
         </Box>
-
         {isInitialLoading &&
           ["Discovering something great", "A fresh place to start", "More to explore"].map(
             (title) => <MovieCarousel key={title} title={title} movies={[]} loading />,
           )}
 
-        {sections.map((section) => {
+        {sections.map((section, index) => {
           const sectionId = section.id ?? section.title ?? "home-section";
           const movies: HomeFeedMovie[] = (section.items ?? [])
             .map((item) => item.movie)
             .filter((movie): movie is HomeFeedMovie => movie !== undefined);
           return (
-            <MovieCarousel
-              key={sectionId}
-              initialScrollLeft={getCarouselScrollPosition(sectionId)}
-              movies={movies}
-              onScrollPositionChange={(position) =>
-                setCarouselScrollPosition(sectionId, position)
-              }
-              onMovieOpen={(movieId, position) =>
-                reportHomeMovieOpen({
-                  feedInstanceId,
-                  movieId,
-                  position,
-                  sectionId,
-                })
-              }
-              title={section.title ?? "Movie picks"}
-              {...(section.subtitle ? { subtitle: section.subtitle } : {})}
-            />
+            <Fragment key={sectionId}>
+              <MovieCarousel
+                initialScrollLeft={getCarouselScrollPosition(sectionId)}
+                movies={movies}
+                onScrollPositionChange={(position) =>
+                  setCarouselScrollPosition(sectionId, position)
+                }
+                onMovieOpen={(movieId, position) =>
+                  reportHomeMovieOpen({
+                    feedInstanceId,
+                    movieId,
+                    position,
+                    sectionId,
+                    strategyVersion,
+                  })
+                }
+                onImpression={() =>
+                  reportHomeSectionImpression({
+                    feedInstanceId,
+                    sectionId,
+                    strategyVersion,
+                  })
+                }
+                title={section.title ?? "Movie picks"}
+                {...(section.subtitle ? { subtitle: section.subtitle } : {})}
+              />
+              {index === tonightModeAfterSectionIndex && (
+                <Box sx={{ px: { xs: 2, md: 0 } }}>
+                  <TonightModePanel
+                    watchedMovieIds={watchedMovieIds ?? emptyMovieIds}
+                  />
+                </Box>
+              )}
+            </Fragment>
           );
         })}
 

@@ -300,6 +300,24 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/MovieSearchReindexJobResponse"
+  /api/recommendations/tonight:
+    post:
+      tags:
+      - recommendation-controller
+      operationId: tonight
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TonightModeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TonightModeResponse"
   /api/recommendations/home-feed:
     post:
       tags:
@@ -318,6 +336,20 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/HomeFeedResponse"
+  /api/recommendations/discovery-events:
+    post:
+      tags:
+      - recommendation-controller
+      operationId: recordDiscoveryEvent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscoveryEventRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
   /api/movie/get-movies:
     post:
       tags:
@@ -600,6 +632,28 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/MovieRecommendationSet"
+  /api/recommendations/discovery-events/summary:
+    get:
+      tags:
+      - recommendation-controller
+      operationId: discoveryEventSummary
+      parameters:
+      - name: days
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 7
+          maximum: 90
+          minimum: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DiscoveryEventSummary"
   /api/movie/search/{primaryTitle}:
     get:
       tags:
@@ -1401,6 +1455,109 @@ components:
           format: date-time
         errorMessage:
           type: string
+    TonightModeRequest:
+      type: object
+      properties:
+        maxRuntimeMinutes:
+          type: integer
+          format: int32
+          maximum: 360
+          minimum: 10
+        movieGenres:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          maxItems: 8
+          minItems: 0
+          uniqueItems: true
+        mood:
+          type: string
+          enum:
+          - ESCAPIST
+          - LIGHT
+          - ROMANTIC
+          - TENSE
+          - THOUGHT_PROVOKING
+        era:
+          type: string
+          enum:
+          - CLASSIC
+          - EIGHTIES
+          - NINETIES
+          - TWO_THOUSANDS
+          - MODERN
+        movieType:
+          type: string
+          enum:
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
+        includeWatched:
+          type: boolean
+        excludedMovieIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          maxItems: 500
+          minItems: 0
+        seed:
+          type: string
+          maxLength: 100
+          minLength: 0
+    TonightModeResponse:
+      type: object
+      properties:
+        seed:
+          type: string
+        picks:
+          type: array
+          items:
+            $ref: "#/components/schemas/TonightPick"
+    TonightPick:
+      type: object
+      properties:
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+        explanation:
+          type: string
     HomeFeedRequest:
       type: object
       properties:
@@ -1462,6 +1619,50 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/HomeFeedItem"
+    DiscoveryEventRequest:
+      type: object
+      properties:
+        eventId:
+          type: string
+          maxLength: 128
+          minLength: 16
+        eventType:
+          type: string
+          enum:
+          - SECTION_IMPRESSION
+          - MOVIE_OPEN
+          - WATCHLIST_ADDED
+          - RATING_SUBMITTED
+          - MOVIE_DISMISSED
+        sessionId:
+          type: string
+          maxLength: 128
+          minLength: 16
+        feedInstanceId:
+          type: string
+          maxLength: 120
+          minLength: 0
+        sectionId:
+          type: string
+          maxLength: 120
+          minLength: 0
+        position:
+          type: integer
+          format: int32
+        movieId:
+          type: integer
+          format: int64
+        strategyVersion:
+          type: string
+          maxLength: 80
+          minLength: 0
+      required:
+      - eventId
+      - eventType
+      - feedInstanceId
+      - sectionId
+      - sessionId
+      - strategyVersion
     MovieIdsRequest:
       type: object
       properties:
@@ -1584,6 +1785,20 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MovieRecommendation"
+    DiscoveryEventSummary:
+      type: object
+      properties:
+        days:
+          type: integer
+          format: int32
+        totalEvents:
+          type: integer
+          format: int64
+        eventsByType:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
     PagedResponseCommentRecord:
       type: object
       properties:

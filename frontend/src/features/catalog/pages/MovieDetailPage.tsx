@@ -11,6 +11,7 @@ import { Link as RouterLink, useLocation, useNavigate } from "react-router";
 import { authSession, useAuthSession } from "../../../shared/auth";
 import PageContent from "../../../shared/layout/PageContent";
 import StatusState from "../../../shared/layout/StatusState";
+import { recordDiscoveryEvent } from "../../../shared/observability/discoveryEvents";
 import {
   rateMovieMutationOptions,
   ratingQueries,
@@ -56,7 +57,17 @@ const MovieDetailPage = () => {
   );
 
   const toggleWatchlist = useMutation({
-    ...toggleWatchlistMutationOptions(queryClient),
+    ...toggleWatchlistMutationOptions(queryClient, {
+      onAdded: (movieId) =>
+        recordDiscoveryEvent({
+          eventType: "WATCHLIST_ADDED",
+          feedInstanceId: "movie-detail",
+          movieId,
+          position: 0,
+          sectionId: "movie-hero",
+          strategyVersion: "movie-detail-v1",
+        }),
+    }),
     onError: () =>
       setFeedback({
         message: "Could not update your watchlist. Please try again.",
@@ -154,16 +165,27 @@ const MovieDetailPage = () => {
   };
 
   const handleRate = (score: number | null) => {
-    if (!username || movie.id === undefined) {
+    const ratedMovieId = movie.id;
+    if (!username || ratedMovieId === undefined) {
       setIsRatingOpen(false);
       requestAuthentication("rate");
       return;
     }
 
     rateMovie.mutate(
-      { movieId: movie.id, score },
+      { movieId: ratedMovieId, score },
       {
         onSuccess: () => {
+          if (score !== null) {
+            recordDiscoveryEvent({
+              eventType: "RATING_SUBMITTED",
+              feedInstanceId: "movie-detail",
+              movieId: ratedMovieId,
+              position: 0,
+              sectionId: "movie-hero",
+              strategyVersion: "movie-detail-v1",
+            });
+          }
           setIsRatingOpen(false);
           setFeedback({
             message: score === null ? "Rating removed." : "Rating saved.",

@@ -11,6 +11,10 @@ export const commentQueryKeys = {
   all: ["comments"] as const,
   movie: (movieId: number) =>
     [...commentQueryKeys.all, "movie", movieId] as const,
+  currentUser: (username: string, page: number, size: number) =>
+    [...commentQueryKeys.all, "current-user", username, page, size] as const,
+  currentUserAllPages: (username: string) =>
+    [...commentQueryKeys.all, "current-user", username] as const,
   authors: (accountIds: number[]) =>
     ["account", "public-summaries", accountIds] as const,
 };

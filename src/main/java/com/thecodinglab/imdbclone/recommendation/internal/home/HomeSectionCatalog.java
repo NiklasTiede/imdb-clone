@@ -31,6 +31,18 @@ class HomeSectionCatalog {
               HomeSectionFamily.BROAD_QUALITY,
               criteria(1990, null, null, null, Set.of(), MovieType.MOVIE, 7.0f, 500)),
           section(
+              "community-favorites",
+              "Community favorites",
+              "Highly rated by people in this community",
+              HomeSectionFamily.BROAD_QUALITY,
+              communityCriteria(1980, null, 7.0f, 5)),
+          section(
+              "underseen-gems",
+              "Underseen gems",
+              "Strong ratings, waiting for a wider audience",
+              HomeSectionFamily.BROAD_QUALITY,
+              criteria(1980, null, null, null, Set.of(), MovieType.MOVIE, 7.5f, 100)),
+          section(
               "top-horror",
               "Top horror",
               "Chills worth staying up for",
@@ -342,6 +354,22 @@ class HomeSectionCatalog {
         movieType,
         minRating,
         minRatingCount,
+        Set.of());
+  }
+
+  private MovieDiscoveryCriteria communityCriteria(
+      Integer minYear, Integer maxYear, Float minCommunityRating, Integer minCommunityRatingCount) {
+    return new MovieDiscoveryCriteria(
+        minYear,
+        maxYear,
+        null,
+        null,
+        Set.of(),
+        MovieType.MOVIE,
+        6.5f,
+        100,
+        minCommunityRating,
+        minCommunityRatingCount,
         Set.of());
   }
 }

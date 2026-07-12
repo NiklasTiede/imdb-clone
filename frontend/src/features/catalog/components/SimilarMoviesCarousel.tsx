@@ -21,8 +21,11 @@ const SimilarMoviesCarousel = ({ movieId }: SimilarMoviesCarouselProps) => {
       sx={{ borderTop: "1px solid", borderColor: "divider", pt: { xs: 3, md: 4 } }}
     >
       <MovieCarousel
+        getMovieCaption={(movie) =>
+          query.data?.find((item) => item.movie.id === movie.id)?.explanation
+        }
         loading={query.isPending}
-        movies={query.data ?? []}
+        movies={(query.data ?? []).map((item) => item.movie)}
         subtitle="More movies chosen for their shared themes, era, and genre"
         title="Similar movies"
       />
