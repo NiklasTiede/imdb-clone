@@ -489,11 +489,15 @@ test("saves a rating in the authenticated dialog flow", async ({ page }) => {
   await page.getByRole("button", { name: "Your rating: 6" }).click();
   const dialog = page.getByRole("dialog", { name: "Rate this movie" });
   await expect(dialog).toBeVisible();
-  await dialog.locator("label").filter({ hasText: "9 out of 10" }).click();
+  const nineStarRating = dialog.getByRole("radio", { name: "9 out of 10" });
+  await nineStarRating.focus();
+  await page.keyboard.press("Space");
+  await expect(nineStarRating).toBeChecked();
   await dialog.getByRole("button", { name: "Save rating" }).click();
 
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Rating saved.")).toBeVisible();
+  expect(savedRating).toBe(9);
   await expect(
     page.getByRole("button", { name: "Your rating: 9" }),
   ).toBeVisible();
