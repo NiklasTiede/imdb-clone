@@ -144,10 +144,20 @@ const TonightModePanel = ({ watchedMovieIds = new Set() }: TonightModePanelProps
   );
 };
 
-const PickerRow = <T extends string | number | undefined>({ label, onSelect, options, selected }: { label: string; onSelect: (value: T) => void; options: { label: string; value: T }[]; selected: T }) => (
+const PickerRow = <T extends string | number>({
+  label,
+  onSelect,
+  options,
+  selected,
+}: {
+  label: string;
+  onSelect: (value: T | undefined) => void;
+  options: { label: string; value: T | undefined }[];
+  selected: T | undefined;
+}) => (
   <Stack direction="row" spacing={0.75} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap" }}>
     <Typography sx={{ color: "text.secondary", fontSize: 12, minWidth: 118 }}>{label}</Typography>
-    {options.map((option) => <Chip key={option.label} label={option.label} onClick={() => onSelect(option.value)} size="small" color={selected === option.value ? "primary" : "default"} variant={selected === option.value ? "filled" : "outlined"} />)}
+    {options.map((option) => <Chip key={option.label} label={option.label} onClick={() => onSelect(selected === option.value ? undefined : option.value)} size="small" color={selected === option.value ? "primary" : "default"} variant={selected === option.value ? "filled" : "outlined"} />)}
   </Stack>
 );
 

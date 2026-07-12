@@ -73,4 +73,15 @@ describe("TonightModePanel", () => {
     expect(nextRequest).toEqual(expect.objectContaining({ seed: "tonight-seed" }));
     expect(new Set(nextRequest?.excludedMovieIds)).toEqual(new Set([4, 11, 12, 13]));
   });
+
+  test("clears a selected single-choice filter when it is clicked again", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    await user.click(screen.getByText("Edge of seat"));
+    await user.click(screen.getByText("Edge of seat"));
+    await user.click(screen.getByRole("button", { name: "Pick tonight's movies" }));
+
+    expect(mocks.getTonightPicks.mock.calls[0]?.[0]).not.toHaveProperty("mood");
+  });
 });
