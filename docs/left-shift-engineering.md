@@ -77,7 +77,7 @@ Frontend observations from 2026-07-11:
 | Candidate | Adapt transport types into feature-owned domain types | Normalize wire arrays/sets and establish required fields at one seam. |
 | Candidate | Use discriminated unions for application state | Make impossible authentication, upload, and mutation states unrepresentable. |
 | Candidate | Split Node and jsdom Vitest projects | Avoid browser-environment startup for pure logic tests. |
-| Candidate | Fail on unexpected console warnings and errors | Prevent React warnings and observability noise from hiding real failures. |
+| Adopted | Fail on unexpected console warnings and errors | Prevent React warnings and observability noise from hiding real failures. |
 | Candidate | Benchmark the Vitest thread pool repeatedly | Adopt it only if the median improvement is stable and tests remain isolated. |
 | Candidate | Add lint, Vitest, and generated-client drift gates to CI | Ensure CI exercises the same frontend verification expected locally. |
 
@@ -395,6 +395,21 @@ The first adopted contract is `AccountSessionResponse`. Its ID, username, email,
 required in the generated TypeScript interface, so consumers and coding agents get compile-time
 feedback if they construct or assume an incomplete authenticated session. Runtime validation remains
 valuable at this trust boundary because generated TypeScript types cannot validate server data.
+
+## Frontend Console-Output Policy
+
+Vitest fails a test when it emits an unexpected `console.warn` or `console.error`. Tests for behavior
+that intentionally logs a warning or error must replace that console method locally and assert the
+expected call. Do not introduce message allow-lists: they make changed framework warnings or error
+details invisible again.
+
+The adoption trial exposed eight React lifecycle mistakes. Seven AppBar tests reset external
+authentication and timer state before their mounted component tree had been removed; the fixture now
+unmounts first and supplies authenticated profile data through the query cache. One input test called
+the DOM focus method outside Testing Library's React update boundary and now uses `fireEvent.focus`.
+Two reporter-failure tests intentionally warn and now verify that contract explicitly. A deliberate
+unexpected warning made the negative-control test fail, and the cleaned full suite passed 278 tests
+across 95 files in about 25 seconds.
 
 ## References
 

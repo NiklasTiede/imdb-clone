@@ -1,26 +1,43 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, vi } from "vitest";
+import { accountQueries } from "../../api/accountProfileQueries";
 import { authSession } from "../../auth";
-import { accountApi } from "../../api/moviesApi";
 import AppBarTop from "./AppBarTop";
 
 vi.mock("../../auth/logoutSession", () => ({
   logoutSession: vi.fn().mockResolvedValue(undefined),
 }));
 
+let unmountAppBar: (() => void) | undefined;
+
 const LocationProbe = () => {
   const location = useLocation();
   return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
 };
 
-const renderAppBar = (initialPath = "/movie-search") => {
+const renderAppBar = (
+  initialPath = "/movie-search",
+  currentProfile: { imageUrlToken?: string } = {},
+) => {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+    defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
-  return render(
+  if (authSession.isAuthenticated()) {
+    queryClient.setQueryData(
+      accountQueries.currentProfile().queryKey,
+      currentProfile,
+    );
+  }
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialPath]}>
         <AppBarTop />
@@ -30,20 +47,22 @@ const renderAppBar = (initialPath = "/movie-search") => {
       </MemoryRouter>
     </QueryClientProvider>,
   );
+  unmountAppBar = view.unmount;
+  return view;
 };
 
 describe("AppBarTop", () => {
   beforeEach(() => {
+    unmountAppBar = undefined;
     vi.useRealTimers();
     authSession.resetForTests();
-    vi.spyOn(accountApi, "getCurrentAccountProfile").mockResolvedValue({
-      data: {},
-    } as never);
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    // Unmount before resetting this module's external session and timer state.
+    unmountAppBar?.();
     authSession.resetForTests();
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -75,11 +94,7 @@ describe("AppBarTop", () => {
       roles: ["ROLE_USER"],
       username: "niklas",
     });
-    vi.mocked(accountApi.getCurrentAccountProfile).mockResolvedValue({
-      data: { imageUrlToken: "avatar-token" },
-    } as never);
-
-    renderAppBar();
+    renderAppBar("/movie-search", { imageUrlToken: "avatar-token" });
 
     expect(
       (

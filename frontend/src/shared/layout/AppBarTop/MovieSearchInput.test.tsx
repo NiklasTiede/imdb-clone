@@ -64,7 +64,7 @@ describe("MovieSearchInput", () => {
       />,
     );
     const searchInput = screen.getByRole("textbox", { name: "search movies" });
-    searchInput.focus();
+    fireEvent.focus(searchInput);
 
     fireEvent.keyDown(searchInput, {
       key: "Enter",

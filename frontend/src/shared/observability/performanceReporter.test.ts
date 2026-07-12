@@ -37,6 +37,9 @@ describe("performanceReporter", () => {
   });
 
   it("swallows reporter failures so observability cannot break the app", () => {
+    const warning = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
     const reporter: PerformanceReporter = {
       report: () => {
         throw new Error("collector unavailable");
@@ -46,9 +49,16 @@ describe("performanceReporter", () => {
     configurePerformanceReporter(reporter);
 
     expect(() => reportPerformanceEvent(createEvent())).not.toThrow();
+    expect(warning).toHaveBeenCalledWith(
+      "[frontend-observability] reporter failed",
+      expect.any(Error),
+    );
   });
 
   it("swallows async reporter failures without unhandled rejections", async () => {
+    const warning = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
     const unhandledRejections: unknown[] = [];
     const trackUnhandledRejection = (reason: unknown): void => {
       unhandledRejections.push(reason);
@@ -67,6 +77,10 @@ describe("performanceReporter", () => {
       await Promise.resolve();
 
       expect(unhandledRejections).toEqual([]);
+      expect(warning).toHaveBeenCalledWith(
+        "[frontend-observability] reporter failed",
+        expect.any(Error),
+      );
     } finally {
       process.off("unhandledRejection", trackUnhandledRejection);
     }
