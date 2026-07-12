@@ -1,17 +1,13 @@
 import {
   MovieSearchRequest,
   MovieSearchRequestMovieGenreEnum,
-  MovieSearchRequestMovieTypeEnum,
 } from "../../../client/movies/generator-output";
 
 export type SearchUrlState = {
   filters: MovieSearchRequest;
   page: number;
   query: string | null;
-  sort: SearchSort;
 };
-
-export type SearchSort = "relevance" | "rating_desc";
 
 export type SearchUrlPatch = {
   genre?: MovieSearchRequestMovieGenreEnum | null;
@@ -20,8 +16,6 @@ export type SearchUrlPatch = {
   minRuntime?: number | null;
   minYear?: number | null;
   page?: number;
-  sort?: SearchSort;
-  type?: MovieSearchRequestMovieTypeEnum | null;
 };
 
 export const parseSearchUrlState = (search: string): SearchUrlState => {
@@ -29,15 +23,12 @@ export const parseSearchUrlState = (search: string): SearchUrlState => {
   const query = params.get("q") ?? params.get("query");
   const pageParam = Number.parseInt(params.get("page") ?? "1", 10);
   const genre = parseGenre(params.get("genre"));
-  const movieType = parseMovieType(params.get("type"));
   const minYear = parseMinYear(params.get("minYear"));
   const maxYear = parseNumberParam(params.get("maxYear"));
   const minRuntime = parseNumberParam(params.get("minRuntime"));
   const maxRuntime = parseNumberParam(params.get("maxRuntime"));
-  const sort = parseSort(params.get("sort"));
   const filters: MovieSearchRequest = {
     ...(genre ? { movieGenre: new Set([genre]) } : {}),
-    ...(movieType ? { movieType } : {}),
     ...(minYear !== null ? { minStartYear: minYear } : {}),
     ...(maxYear !== null ? { maxStartYear: maxYear } : {}),
     ...(minRuntime !== null ? { minRuntimeMinutes: minRuntime } : {}),
@@ -48,7 +39,6 @@ export const parseSearchUrlState = (search: string): SearchUrlState => {
     filters,
     page: Number.isFinite(pageParam) && pageParam > 1 ? pageParam - 1 : 0,
     query: query?.trim() || null,
-    sort,
   };
 };
 
@@ -60,19 +50,13 @@ export const createSearchUrl = (
   const updatesPagination = patch.page !== undefined;
 
   setEnumParam(params, "genre", patch.genre);
-  setEnumParam(params, "type", patch.type);
   setNumberParam(params, "minYear", patch.minYear);
   setNumberParam(params, "maxYear", patch.maxYear);
   setNumberParam(params, "minRuntime", patch.minRuntime);
   setNumberParam(params, "maxRuntime", patch.maxRuntime);
 
-  if (patch.sort !== undefined) {
-    if (patch.sort === "relevance") {
-      params.delete("sort");
-    } else {
-      params.set("sort", patch.sort);
-    }
-  }
+  params.delete("sort");
+  params.delete("type");
 
   if (updatesPagination) {
     if (patch.page && patch.page > 1) {
@@ -90,12 +74,10 @@ export const createSearchUrl = (
 
 const hasFilterOrSortPatch = (patch: SearchUrlPatch): boolean =>
   patch.genre !== undefined ||
-  patch.type !== undefined ||
   patch.minYear !== undefined ||
   patch.maxYear !== undefined ||
   patch.minRuntime !== undefined ||
-  patch.maxRuntime !== undefined ||
-  patch.sort !== undefined;
+  patch.maxRuntime !== undefined;
 
 const setEnumParam = (
   params: URLSearchParams,
@@ -125,22 +107,6 @@ const setNumberParam = (
     return;
   }
   params.set(key, String(value));
-};
-
-const parseSort = (sort: string | null): SearchSort =>
-  sort === "rating_desc" ? "rating_desc" : "relevance";
-
-const parseMovieType = (
-  movieType: string | null,
-): MovieSearchRequestMovieTypeEnum | null => {
-  if (!movieType) {
-    return null;
-  }
-
-  const movieTypes = Object.values(MovieSearchRequestMovieTypeEnum);
-  return movieTypes.includes(movieType as MovieSearchRequestMovieTypeEnum)
-    ? (movieType as MovieSearchRequestMovieTypeEnum)
-    : null;
 };
 
 const parseGenre = (

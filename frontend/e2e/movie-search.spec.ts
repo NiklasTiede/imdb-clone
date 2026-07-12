@@ -75,12 +75,39 @@ async function stubItFollowsSearch(page: Page) {
 }
 
 async function stubMoviePosters(page: Page) {
-  await page.route("**/imdb-clone/movies/*.jpg", async (route) => {
+  await page.route("**/imdb-clone/movies/**", async (route) => {
     await route.fulfill({
       contentType: "image/jpeg",
       body: Buffer.from(transparentPixel, "base64"),
     });
   });
+}
+
+async function stubGenreSearch(page: Page) {
+  const requestedGenres: Array<string | null> = [];
+
+  await page.route("**/api/search/movies**", async (route) => {
+    const body = route.request().postDataJSON() as {
+      movieGenre?: string[];
+    };
+    const genre = body.movieGenre?.[0] ?? null;
+    requestedGenres.push(genre);
+    const movie = genre === "HORROR" ? itFollows : nightcrawler;
+
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        content: [movie],
+        last: true,
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+      }),
+    });
+  });
+
+  return { requestedGenres };
 }
 
 test.beforeEach(async ({ page }) => {
@@ -113,7 +140,7 @@ test("searches movies and renders a seeded poster", async ({ page }) => {
   await expect(page.getByText("2014 · 117 min")).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
-    /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_300x450\.jpg/,
+    /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_300x450\.webp/,
   );
 });
 
@@ -136,7 +163,7 @@ test("searches for a multi-word lowercase movie title", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByAltText("movie poster")).toHaveAttribute(
     "src",
-    /itFollowsPosterToken_size_300x450\.jpg/,
+    /itFollowsPosterToken_size_300x450\.webp/,
   );
   searchRequest.expectRequestedQuery();
 });
@@ -174,6 +201,57 @@ test("opens a movie detail page from search results", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByAltText("Nightcrawler poster")).toHaveAttribute(
     "src",
-    /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_600x900\.jpg/,
+    /9BGAIYNfdY90aIkV66dIJ6Olee7JGn_size_600x900\.webp/,
   );
+});
+
+test("replaces genre filters and fetches fresh results", async ({ page }) => {
+  const search = await stubGenreSearch(page);
+  await stubMoviePosters(page);
+
+  await page.goto("/movie-search?query=the");
+  await page.getByRole("button", { name: "All genres" }).click();
+  await page.getByRole("menuitem", { name: "Horror" }).click();
+
+  await expect(page).toHaveURL(/genre=HORROR/);
+  await expect(
+    page
+      .getByRole("grid", { name: "Search results" })
+      .getByRole("link", { name: /It Follows/ }),
+  ).toBeVisible();
+
+  await page.locator("button").filter({ hasText: "Horror" }).click();
+  await page.getByRole("menuitem", { name: "Drama" }).click();
+
+  await expect(page).toHaveURL(/genre=DRAMA/);
+  await expect(
+    page
+      .getByRole("grid", { name: "Search results" })
+      .getByRole("link", { name: /Nightcrawler/ }),
+  ).toBeVisible();
+  expect(search.requestedGenres).toContain("HORROR");
+  expect(search.requestedGenres).toContain("DRAMA");
+});
+
+test("uses the compact mobile filter drawer", async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "mobile-chromium",
+    "The mobile drawer is only visible in the mobile project.",
+  );
+  await stubGenreSearch(page);
+  await stubMoviePosters(page);
+
+  await page.goto("/movie-search?query=the");
+  await page.getByRole("button", { name: "Filters" }).click();
+
+  await expect(page.getByText("Filter movies")).toBeVisible();
+  await page.getByRole("button", { name: "Horror", exact: true }).click();
+  await page.getByRole("button", { name: "Show results" }).click();
+
+  await expect(page).toHaveURL(/genre=HORROR/);
+  await expect(
+    page
+      .getByRole("grid", { name: "Search results" })
+      .getByRole("link", { name: /It Follows/ }),
+  ).toBeVisible();
 });

@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import {
-  MovieSearchRequestMovieGenreEnum,
-  MovieSearchRequestMovieTypeEnum,
-} from "../../../client/movies/generator-output";
+import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generator-output";
 import { createSearchUrl, parseSearchUrlState } from "./searchUrlState";
 
 describe("parseSearchUrlState", () => {
@@ -11,16 +8,14 @@ describe("parseSearchUrlState", () => {
       filters: {},
       page: 0,
       query: "Nightcrawler",
-      sort: "relevance",
     });
   });
 
-  test("supports the planned q parameter and converts page to zero-based API pagination", () => {
+  test("supports q and converts page to zero-based API pagination", () => {
     expect(parseSearchUrlState("?q=it%20follows&page=3")).toEqual({
       filters: {},
       page: 2,
       query: "it follows",
-      sort: "relevance",
     });
   });
 
@@ -29,7 +24,6 @@ describe("parseSearchUrlState", () => {
       filters: {},
       page: 0,
       query: null,
-      sort: "relevance",
     });
   });
 
@@ -43,11 +37,10 @@ describe("parseSearchUrlState", () => {
       },
       page: 1,
       query: null,
-      sort: "rating_desc",
     });
   });
 
-  test("parses movie type filters from the filter page", () => {
+  test("ignores retired movie-type and sort parameters", () => {
     expect(
       parseSearchUrlState(
         "?type=TV_SERIES&minYear=1995&maxYear=2018&minRuntime=80&maxRuntime=140",
@@ -58,20 +51,18 @@ describe("parseSearchUrlState", () => {
         maxStartYear: 2018,
         minRuntimeMinutes: 80,
         minStartYear: 1995,
-        movieType: MovieSearchRequestMovieTypeEnum.TvSeries,
       },
       page: 0,
       query: null,
-      sort: "relevance",
     });
   });
 
-  test("updates filter params and resets pagination", () => {
+  test("updates filter params, retires legacy params, and resets pagination", () => {
     expect(
-      createSearchUrl("?q=the&page=4&type=TV_SERIES", {
+      createSearchUrl("?q=the&page=4&type=TV_SERIES&sort=rating_desc", {
         genre: MovieSearchRequestMovieGenreEnum.Horror,
       }),
-    ).toBe("?q=the&type=TV_SERIES&genre=HORROR");
+    ).toBe("?q=the&genre=HORROR");
   });
 
   test("removes empty filter params and keeps explicit page changes", () => {
@@ -79,7 +70,6 @@ describe("parseSearchUrlState", () => {
       createSearchUrl("?q=the&genre=HORROR&sort=rating_desc", {
         genre: null,
         page: 3,
-        sort: "relevance",
       }),
     ).toBe("?q=the&page=3");
   });

@@ -2,7 +2,6 @@ import {
   MovieRecordMovieGenreEnum,
   MovieRecordMovieTypeEnum,
   MovieSearchRequestMovieGenreEnum,
-  MovieSearchRequestMovieTypeEnum,
 } from "../../../client/movies/generator-output";
 import type { MovieRecord } from "../../../client/movies/generator-output";
 
@@ -16,9 +15,6 @@ export type MovieType = MovieRecordMovieTypeEnum;
 
 export const MovieSearchGenre = MovieSearchRequestMovieGenreEnum;
 export type MovieSearchGenre = MovieSearchRequestMovieGenreEnum;
-
-export const MovieSearchType = MovieSearchRequestMovieTypeEnum;
-export type MovieSearchType = MovieSearchRequestMovieTypeEnum;
 
 type MoviePosterTokenSource = Pick<MovieRecord, "posterImageToken">;
 

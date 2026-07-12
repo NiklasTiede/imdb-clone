@@ -6,10 +6,8 @@ describe("SearchHeader", () => {
   test("renders query and total result count", () => {
     render(
       <SearchHeader
-        onSortChange={() => undefined}
         onViewChange={() => undefined}
         query="Nightcrawler"
-        sort="relevance"
         totalCount={12}
         view="grid"
       />,
@@ -19,8 +17,6 @@ describe("SearchHeader", () => {
       screen.getByRole("heading", { name: 'Results for "Nightcrawler"' }),
     ).toBeTruthy();
     expect(screen.getByText("12 movies")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /sort by most relevant/i }))
-      .toBeTruthy();
     expect(screen.getByRole("button", { name: "Grid view" })).toBeTruthy();
   });
 });

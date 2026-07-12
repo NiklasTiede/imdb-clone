@@ -13,12 +13,11 @@ import SearchResultsPagination from "../components/SearchResultsPagination";
 import { createSearchUrl, parseSearchUrlState } from "../utils/searchUrlState";
 import { useLocalStorageState } from "../../../shared/hooks/useLocalStorageState";
 import PageContent from "../../../shared/layout/PageContent";
-import type { SearchSort, SearchUrlPatch } from "../utils/searchUrlState";
+import type { SearchUrlPatch } from "../utils/searchUrlState";
 import {
   SEARCH_RESULTS_MAX_WIDTH_PX,
   SEARCH_VIEW_STORAGE_KEY,
   shouldShowSearchEmptyState,
-  sortSearchMovies,
   type SearchView,
 } from "./MovieSearchPage.utils";
 
@@ -40,7 +39,7 @@ const MovieSearchPage = () => {
       size: 24,
     }),
   );
-  const movies = sortSearchMovies(data?.content ?? [], searchState.sort);
+  const movies = data?.content ?? [];
   const hasSearchCriteria =
     searchState.query !== null || Object.keys(searchState.filters).length > 0;
   const showEmptyState = shouldShowSearchEmptyState({
@@ -62,7 +61,6 @@ const MovieSearchPage = () => {
       maxYear: null,
       minRuntime: null,
       minYear: null,
-      type: null,
     });
   };
   const hasActiveFilters = Object.keys(searchState.filters).length > 0;
@@ -71,10 +69,8 @@ const MovieSearchPage = () => {
     <PageContent maxWidth={`${SEARCH_RESULTS_MAX_WIDTH_PX}px`}>
       <Stack spacing={2.5}>
         <SearchHeader
-          onSortChange={(sort: SearchSort) => updateSearchUrl({ sort })}
           onViewChange={setView}
           query={searchState.query}
-          sort={searchState.sort}
           totalCount={data?.totalElements}
           view={view}
         />

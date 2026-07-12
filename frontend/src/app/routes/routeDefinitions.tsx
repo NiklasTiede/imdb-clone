@@ -53,10 +53,6 @@ const YourCommentsPage = lazyRoute(
   () => import("../../features/engagement"),
   "YourCommentsPage",
 );
-const FilterPanelPage = lazyRoute(
-  () => import("../../features/search"),
-  "FilterPanelPage",
-);
 const MovieSearchPage = lazyRoute(
   () => import("../../features/search"),
   "MovieSearchPage",
@@ -100,7 +96,6 @@ export const routeDefinitions: RouteDefinition[] = [
   { path: "/", element: appRoute(<HomePage />) },
   { path: "/movie-search", element: appRoute(<MovieSearchPage />) },
   { path: "/movie", element: appRoute(<MovieDetailPage />) },
-  { path: "/filter", element: appRoute(<FilterPanelPage />) },
   {
     path: "/login",
     element: authRoute({

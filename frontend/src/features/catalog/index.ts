@@ -15,7 +15,6 @@ export {
   getMoviePosterToken,
   MovieGenre,
   MovieSearchGenre,
-  MovieSearchType,
   MovieType,
 } from "./model/movie";
 export type { Movie } from "./model/movie";

@@ -3,7 +3,6 @@ import {
   SEARCH_RESULTS_MAX_WIDTH_PX,
   SEARCH_VIEW_STORAGE_KEY,
   shouldShowSearchEmptyState,
-  sortSearchMovies,
 } from "./MovieSearchPage.utils";
 
 describe("MovieSearchPage layout", () => {
@@ -19,19 +18,6 @@ describe("MovieSearchPage layout", () => {
 
   test("uses a stable local storage key for the preferred results view", () => {
     expect(SEARCH_VIEW_STORAGE_KEY).toBe("search.view");
-  });
-
-  test("sorts filter-only result rows by IMDb rating descending", () => {
-    expect(
-      sortSearchMovies(
-        [
-          { id: 1, primaryTitle: "Low", imdbRating: 6.1 },
-          { id: 2, primaryTitle: "High", imdbRating: 8.3 },
-          { id: 3, primaryTitle: "Missing" },
-        ],
-        "rating_desc",
-      ).map((movie) => movie.primaryTitle),
-    ).toEqual(["High", "Low", "Missing"]);
   });
 
   test("does not show the empty state while an error is visible", () => {

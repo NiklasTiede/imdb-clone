@@ -11,10 +11,22 @@ export type MovieSearchQueryParams = {
   size: number;
 };
 
+export const normalizeSearchFiltersForKey = (
+  filters: MovieSearchRequest,
+) => ({
+  maxRuntimeMinutes: filters.maxRuntimeMinutes ?? null,
+  maxStartYear: filters.maxStartYear ?? null,
+  minRuntimeMinutes: filters.minRuntimeMinutes ?? null,
+  minStartYear: filters.minStartYear ?? null,
+  movieGenre: Array.from(filters.movieGenre ?? []).sort(),
+  movieType: filters.movieType ?? null,
+});
+
 export const searchQueries = {
   movies: ({ filters, page, query, size }: MovieSearchQueryParams) => {
     const normalizedQuery = query?.trim() || null;
     const hasFilters = Object.keys(filters).length > 0;
+    const filterKey = normalizeSearchFiltersForKey(filters);
 
     return {
       enabled: normalizedQuery !== null || hasFilters,
@@ -30,7 +42,7 @@ export const searchQueries = {
         );
         return response.data;
       },
-      queryKey: ["search", "movies", normalizedQuery, filters, page, size],
+      queryKey: ["search", "movies", normalizedQuery, filterKey, page, size],
     };
   },
 };
