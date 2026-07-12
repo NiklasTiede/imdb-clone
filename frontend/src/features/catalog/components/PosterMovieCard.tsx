@@ -21,6 +21,7 @@ type MovieCardProps = {
   isBookmarked?: boolean;
   onOpen?: ((movieId: number) => void) | undefined;
   onToggleBookmark?: ((movieId: number) => void) | undefined;
+  showTitle?: boolean;
 };
 
 const MovieCard = ({
@@ -28,9 +29,11 @@ const MovieCard = ({
   isBookmarked = false,
   onOpen,
   onToggleBookmark,
+  showTitle = true,
 }: MovieCardProps) => {
   const detailUrl = `/movie?id=${movie.id ?? ""}`;
   const title = movie.primaryTitle ?? "Untitled movie";
+  const meta = formatMovieMeta(movie);
   const showBookmark = onToggleBookmark && movie.id !== undefined;
 
   return (
@@ -42,6 +45,7 @@ const MovieCard = ({
       }}
     >
       <CardActionArea
+        aria-label={[title, meta].filter(Boolean).join(", ")}
         component={Link}
         onClick={() => {
           if (movie.id !== undefined) {
@@ -60,6 +64,7 @@ const MovieCard = ({
             opacity: 1,
           },
         }}
+        title={title}
       >
         <Box
           className={posterHoverTargetClassName}
@@ -145,22 +150,35 @@ const MovieCard = ({
           )}
         </Box>
 
+        {showTitle && (
+          <Typography
+            sx={{
+              display: "-webkit-box",
+              fontSize: 13,
+              fontWeight: 600,
+              lineHeight: 1.25,
+              mt: 1,
+              overflow: "hidden",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 2,
+            }}
+          >
+            {title}
+          </Typography>
+        )}
         <Typography
           sx={{
-            display: "-webkit-box",
-            fontSize: 13,
-            fontWeight: 600,
-            lineHeight: 1.25,
-            mt: 1,
-            overflow: "hidden",
-            WebkitBoxOrient: "vertical",
-            WebkitLineClamp: 2,
+            color: showTitle ? "text.secondary" : "text.disabled",
+            fontSize: showTitle ? 12 : 11,
+            fontWeight: showTitle ? 400 : 600,
+            letterSpacing: showTitle ? 0 : "0.035em",
+            minHeight: 18,
+            mt: showTitle ? 0.25 : 0.45,
+            px: showTitle ? 0 : 0.5,
+            textAlign: showTitle ? "left" : "center",
           }}
         >
-          {title}
-        </Typography>
-        <Typography sx={{ color: "text.secondary", fontSize: 12, mt: 0.25 }}>
-          {formatMovieMeta(movie)}
+          {meta}
         </Typography>
       </CardActionArea>
     </Card>

@@ -233,6 +233,7 @@ const MovieCarousel = ({
                 <PosterMovieCard
                   movie={movie}
                   onOpen={(movieId) => onMovieOpen?.(movieId, index)}
+                  showTitle={false}
                 />
                 {getMovieCaption?.(movie) && (
                   <Typography
