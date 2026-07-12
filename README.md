@@ -1,12 +1,16 @@
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
-    <img alt="IMDb Clone logo" width="460" src="docs/assets/imdb-clone-logo.jpg" />
+    <img alt="IMDb Clone clapperboard logo" width="104" src="frontend/public/brand-logo.svg" />
   </a>
 </p>
 
-<h2 align="center">
-  IMDb Clone - a production-style React + Spring Boot app with OpenSearch, object storage, and k3s GitOps.
-</h2>
+<h1 align="center">IMDb Clone</h1>
+
+<p align="center">
+  <strong>Discover, rate, remember.</strong><br />
+  A production-style React + Spring Boot movie application with explainable discovery,
+  OpenSearch, object storage, and k3s GitOps.
+</p>
 
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Live Demo</a>
@@ -54,17 +58,20 @@ movies are stored in PostgreSQL, searched through OpenSearch, served with poster
 S3-compatible object storage, and deployed to a self-hosted Kubernetes cluster through GitOps.
 
 The project is intentionally kept close to a real web application architecture: generated API clients, explicit seed
-data, JWT-based authentication, automated CI/CD, infrastructure manifests, and local developer workflows are all part of
-the repository.
+data, server-side session authentication, automated CI/CD, infrastructure manifests, and local developer workflows are
+all part of the repository.
 
 ## What This Project Demonstrates
 
-- Modular Spring Boot backend with PostgreSQL, Flyway, Spring Security, JWT auth, OpenAPI, and Testcontainers.
+- Modular Spring Boot backend with PostgreSQL, Flyway, Spring Security, JDBC sessions, CSRF protection, OpenAPI, and
+  Testcontainers.
 - React frontend with TypeScript, Material UI, TanStack Query, generated Axios clients, and feature-oriented structure.
-- OpenSearch-backed movie search with PostgreSQL as the relational source of truth.
+- Password, Google, GitHub, and WebAuthn passkey login methods attached to one account model.
+- Hybrid lexical and semantic OpenSearch retrieval plus reusable, explainable recommendation strategies.
 - S3-compatible media storage through RustFS for movie posters, backdrops, and profile images.
 - Repeatable local development with Docker Compose, lightweight seed data, and explicit search reindexing.
 - Self-hosted k3s deployment with Argo CD, Traefik ingress, cert-manager HTTPS, and encrypted GitOps secrets.
+- Left-shift build safeguards across Java, TypeScript, architecture, API contracts, tests, and dependency resolution.
 - Version-gated release workflow that builds Docker images and updates Kubernetes image digests from one `VERSION` file.
 
 ## Architecture
@@ -144,16 +151,20 @@ Kubernetes manifests and home-cluster notes live in
 | Data | PostgreSQL 18, OpenSearch 3 |
 | Media | RustFS, S3-compatible object storage, WebP poster/backdrop variants |
 | API | OpenAPI spec, generated Axios client |
-| Testing | JUnit, Spring Boot Test, Testcontainers, Vitest, React Testing Library |
+| Authentication | Spring Session JDBC, CSRF, password login, Google/GitHub OAuth2, WebAuthn passkeys |
+| Testing | JUnit, Spring Boot Test, Testcontainers, jqwik, JaCoCo, Vitest, React Testing Library, Playwright |
+| Build safety | Error Prone, NullAway/JSpecify, strict TypeScript, typed ESLint, API-contract drift checks |
 | Delivery | Docker, GitHub Actions, k3s, Argo CD, Traefik, cert-manager, SOPS/age |
 
 ## Features
 
-- Browse and search a seeded movie catalog with poster and backdrop media.
-- View movie detail pages with metadata, ratings, trailers, and engagement data.
-- Register and log in with JWT-backed authentication.
-- Maintain account settings and profile images.
-- Rate movies, write comments, and manage watched movies.
+- Explore a progressive, session-stable discovery feed with three featured movies and curated carousel sections.
+- Ask Tonight Mode for three diverse, explained picks constrained by mood, runtime, genres, era, and watched history.
+- Search through hybrid title/metadata and semantic retrieval with catalog filters and measured ranking foundations.
+- View backdrop-led movie pages with metadata, ratings, trailers, similar movies, sharing, and community comments.
+- Register and sign in with a password, Google, GitHub, or a passkey through hardened server-side sessions.
+- Manage account settings, profile images, passkeys, ratings, watchlists, and authored comments.
+- Review server-backed rating insights and use the watchlist's explainable three-choice decision helper.
 - Rebuild the OpenSearch index from PostgreSQL through an explicit admin flow.
 - Seed local and production-like environments with versioned movie/media images.
 
@@ -242,9 +253,10 @@ make help                            # list grouped workflow targets
 ./gradlew integrationTest              # backend integration tests
 ./gradlew build jacocoTestReport       # backend CI-equivalent check
 ./gradlew spotlessApply                # format backend code
+cd frontend && yarn typecheck          # browser, Vite, and Playwright TypeScript checks
+cd frontend && yarn lint               # type-aware frontend linting
+cd frontend && yarn test               # frontend unit and component tests
 cd frontend && yarn build              # frontend production build
-cd frontend && yarn test               # frontend tests
-cd frontend && yarn run lint           # frontend linting
 ```
 
 The frontend API client is generated from the backend OpenAPI spec. If backend contracts change, start the backend and
@@ -257,11 +269,14 @@ yarn run build:moviesGen
 ```
 
 Generated client files under `frontend/src/client/movies/generator-output` should not be edited manually.
+CI also compares the backend's runtime OpenAPI document with the checked-in frontend specification, ignoring only the
+environment-specific server URL, so contract drift fails before client generation can silently use stale types.
 
 ## Release And Deployment
 
-Application releases are controlled by the root [`VERSION`](./VERSION) file. A version bump on `master` triggers the CD
-workflow, which:
+Every push runs backend verification plus frontend client generation, linting, tests, type checking, and a production
+build. Application releases are controlled by the root [`VERSION`](./VERSION) file. A version bump on `master` also
+triggers the CD workflow, which:
 
 1. runs backend and frontend checks,
 2. builds Linux AMD64 backend and frontend Docker images,

@@ -58,38 +58,40 @@ than a separate carousel implementation in each feature.
   create, edit, and delete workflows with bounded author-summary loading.
 - A versioned anonymous similar-movies contract now reuses stored OpenSearch embeddings and returns
   diversified content-based results with stable reason codes and explanations. The movie-detail
-  carousel that consumes it is still pending.
+  page presents those results in the shared poster carousel above community comments.
 
 ### Homepage
 
-- The homepage contains one featured movie followed by three fixed genre rows: horror, thriller,
-  and science fiction.
-- Each genre query retrieves 20 results, sorts by IMDb rating in the frontend, and displays at most
-  15 movies.
-- The same categories and ordering are requested on every visit.
-- The current carousel component already supports horizontal scrolling, loading states, and a
-  `View all` action.
+- The homepage leads with three curated featured movies and a versioned, backend-owned catalog of
+  editorial and semantic carousel sections.
+- A feed instance keeps section selection, order, loaded pages, and carousel positions stable while
+  the user navigates within one discovery session. Users can explicitly request a fresh mix.
+- Progressive loading appends bounded sections without discarding earlier results, preserves useful
+  fallback rows, and reports section impressions and movie selections.
+- Tonight Mode returns three diverse, explained choices and supports mood, runtime, genre, era, and
+  watched-title constraints without repeating rejected choices in the current session.
 
 ### Search relevance
 
-- Non-empty searches retrieve up to 100 lexical and 100 semantic candidates, then combine them
-  with equal-weight reciprocal rank fusion using a fixed rank constant of 60.
-- Lexical ranking strongly boosts titles and multiplies scores by IMDb rating-count popularity;
-  semantic ranking uses one embedding built from title, type, year, runtime, genres, and synopsis.
-- Hybrid results are capped at four pages. A user-selected rating sort is currently applied in the
-  frontend to one returned page rather than being part of the backend ranking contract.
-- There is no representative relevance benchmark, query analytics, score explanation, or tuning
-  process, so improvements cannot yet be measured reliably.
+- Non-empty searches retrieve a bounded 100-to-500 candidate window. Confident title queries stay
+  lexical; descriptive discovery queries combine lexical and semantic results with weighted
+  reciprocal rank fusion and deterministic tie-breaking.
+- Semantic retrieval uses versioned embedding text built from title, type, year, runtime, genres,
+  and synopsis. Failures or empty embeddings fall back to lexical results instead of failing the
+  search.
+- Search modes, latency, and result counts are measured. Versioned deterministic and live evaluation
+  fixtures report MRR, nDCG, precision, zero-result rate, and p95 latency.
+- The evaluation corpus is still small and must grow before weights, analyzers, or embedding changes
+  can be treated as objectively tuned.
 
-### Unfinished topbar destinations
+### Account and administration destinations
 
 - The edit icon is visible only to administrators and `/editing` is role-protected, but the page is
   currently a placeholder.
-- The notification icon links authenticated users to `/your-messages`, which is also a placeholder.
-- The backend already exposes paginated comments by username, making an authored-comments page
-  possible without a new persistence model.
-- Authored comments are user activity, not private messages. The route label and icon should match
-  the first delivered behavior; actual notifications need their own event and unread-state model.
+- The misleading messages/notification placeholder has been removed. Authenticated users can browse
+  and manage their authored comments through `/your-comments`.
+- Actual notifications still need an event, delivery, and unread-state model before returning to the
+  navigation.
 
 ### Personal library
 
@@ -109,67 +111,19 @@ Goal: finish the remaining discovery and fallback work around the delivered broa
 
 - Provide an intentional no-trailer state instead of omitting the media band without explanation.
 - Surface the adult classification when relevant and finish any remaining metadata fallback polish.
-- Add a similar-movies band backed by the shared recommendation platform.
-
-#### Similar movies
-
-- Add a dedicated similar-movies query that excludes the current movie.
-- Combine semantic embedding similarity with shared genres, movie type, release period, and rating
-  quality.
-- Avoid a row filled with near-duplicates by diversifying genres, years, or franchises where data
-  permits.
-- Return a compact explanation such as `Similar themes` or `More science-fiction thrillers` when
-  the matching strategy can support it.
-- Reuse the existing poster carousel and movie-card contracts.
+- Provide an intentional fallback when similar-movie candidates or their embeddings are unavailable.
 
 ### 2. Expand homepage discovery
 
-Goal: make repeat visits expose different high-quality parts of the catalog.
+Goal: evolve the delivered progressive feed and Tonight Mode using measured discovery outcomes.
 
-- Increase each carousel's useful result pool so users can scroll beyond the first viewport.
-- Replace hard-coded React queries with a catalog of homepage section definitions. Each definition
-  should contain a stable identifier, title, subtitle, query strategy, and optional `View all`
-  destination.
-- Build a mixture of section types:
-  - Highly rated movies by genre
-  - Recent releases with sufficient rating confidence
-  - Underseen or underrated movies
-  - Movies from a decade or era
-  - Movie-type rows such as miniseries, documentaries, or TV movies
-  - Semantic themes such as space exploration, courtroom tension, found family, or slow-burn
-    mysteries
-  - Community favorites once enough local ratings exist
-- Shuffle eligible sections once per page visit using a feed seed. Keep the selected order stable
-  while that page remains open so queries and layout do not jump during rerenders.
-- Avoid showing the same movie in adjacent rows and limit repetition across the whole loaded feed.
-- Preserve a small set of high-confidence fallback rows when a specialized query has too few
-  results.
-
-#### Progressive section loading
-
-- Implement an infinite vertical feed of carousel sections, not an endless single-column list of
-  movie cards.
-- Load an initial group of sections, then request another group as a sentinel approaches the
-  viewport.
-- Put an explicit upper bound on sections per visit and provide a retry state when a later group
-  fails.
-- Keep already loaded sections in place when fetching the next group.
-- Make browser back navigation restore the feed seed, loaded sections, and carousel positions.
-- Track section impressions and movie opens through the existing observability pipeline before
-  using engagement signals for ranking.
-
-#### What should I watch tonight?
-
-- Turn the existing pick-for-me concept into a focused decision flow rather than another large
-  result grid.
-- Let users constrain runtime, mood, genres, era, movie type, and whether watched titles are
-  allowed.
-- Return three strong, diverse choices with a short explanation for each recommendation.
-- Support `Show me three others` without repeating rejected candidates during the session.
-- Allow anonymous use with content-based recommendations and improve results for signed-in users
-  from their explicit preferences and history.
-- Record lightweight feedback such as selected, rejected, already watched, or not interested so
-  the recommendation platform can learn without forcing a rating.
+- Expand the section catalog only where seeded data can produce credible, non-repetitive results.
+- Evaluate section order, repetition, and candidate diversity with the recorded impression and
+  selection events before adding opaque personalization.
+- Add explicit Tonight Mode feedback such as selected, rejected, already watched, or not interested
+  only with clear user controls over how those signals are used.
+- Use authenticated taste signals incrementally while keeping anonymous editorial and content-based
+  discovery strong.
 
 ### 3. Improve search relevance
 
@@ -416,16 +370,19 @@ after its user outcome and data requirements are clear.
    desktop/mobile placement.
 5. **Movie comments (delivered)** - anonymous reading, authenticated list/create/edit/delete, and
    bounded author-summary loading are available on movie details.
-6. **Your comments** - make authored comments discoverable and manageable from the user area.
+6. **Your comments (delivered)** - authored comments are discoverable and manageable from the user
+   area with movie context.
 7. **Search relevance tuning** - tune weighted fusion, lexical popularity, candidate retrieval, and
    server-side sorting against the benchmark.
-8. **Similar movies** - deliver the first recommendation surface using the shared platform.
-9. **Homepage section catalog and Tonight Mode** - add stable per-visit mixing and constrained,
-   explainable movie picks before infinite loading.
-10. **Progressive homepage feed** - add section pagination, deduplication, restoration, and metrics.
+8. **Similar movies (delivered)** - the detail page consumes diversified, explained results from the
+   shared recommendation platform.
+9. **Homepage section catalog and Tonight Mode (delivered)** - stable discovery mixes and
+   constrained, explainable movie picks are available.
+10. **Progressive homepage feed (delivered)** - section pagination, restoration, bounded loading,
+    and discovery metrics are available.
 11. **Movie journal and rewatches** - add dated diary entries, notes, tags, and historical viewings.
-12. **Custom lists, taste statistics, and portability** - build the personal library, yearly
-   summaries, and safe import/export.
+12. **Custom lists, yearly summaries, and portability** - initial rating/watchlist taste insights
+   are delivered; named lists, yearly summaries, and safe import/export remain.
 13. **Administrator movie editing** - deliver search/select and safe single-movie editing before
    delete or bulk operations.
 14. **Catalog enrichment and advanced personalization** - add people and richer metadata, then use
@@ -437,7 +394,7 @@ frontend behavior tests, responsive Playwright coverage, and production observab
 ## Open Product Decisions
 
 - Should third-party YouTube content require an explicit consent click?
-- Should homepage variation change on every reload, once per browser session, or once per day?
+- How long should one restorable discovery session remain active before a fresh mix is preferable?
 - Which section definitions are editorially curated and which may be generated from semantic text?
 - What minimum IMDb/community rating count makes a `top-rated` or `hidden gem` row credible?
 - Should comments default to newest first or preserve conversation order oldest first?
@@ -445,7 +402,8 @@ frontend behavior tests, responsive Playwright coverage, and production observab
 - When should authenticated recommendations become personalized rather than generally editorial?
 - Which search queries form the initial relevance benchmark, and who decides what is relevant?
 - Should title-like and descriptive queries use different fusion weights or an explicit search mode?
-- Should `/your-messages` become `/your-comments` or a broader `/activity` destination?
+- Should ratings, watchlist, and comments remain dedicated destinations or eventually form a broader
+  activity view?
 - Which movie mutations belong in the first admin release: edit only, create and edit, or deletion
   as well?
 - Which user interactions may influence recommendations, and how can users inspect or reset that
