@@ -79,7 +79,7 @@ Frontend observations from 2026-07-11:
 | Candidate | Split Node and jsdom Vitest projects | Avoid browser-environment startup for pure logic tests. |
 | Adopted | Fail on unexpected console warnings and errors | Prevent React warnings and observability noise from hiding real failures. |
 | Candidate | Benchmark the Vitest thread pool repeatedly | Adopt it only if the median improvement is stable and tests remain isolated. |
-| Candidate | Add lint, Vitest, and generated-client drift gates to CI | Ensure CI exercises the same frontend verification expected locally. |
+| Adopted | Add lint, Vitest, and generated-client drift gates to CI | Ensure CI exercises the same frontend verification expected locally. |
 
 ## Repository And Agent Harness Opportunities
 
@@ -430,6 +430,29 @@ fifth state without a corresponding exhaustive branch failed TypeScript compilat
 boundary and was reverted. The full trial passed 281 tests across 96 files, ESLint, and all three
 TypeScript projects. Expand this pattern only when another workflow has similarly state-specific data
 or demonstrated invalid combinations.
+
+## Frontend CI And Contract-Drift Policy
+
+The frontend CI job generates the API client from the checked-in OpenAPI document, then runs ESLint,
+Vitest, and the typechecked production build as separate fail-fast steps. Keep these commands aligned
+with the local verification interface; a small workflow test protects their presence and ordering.
+Client generation must precede checks because generated output is intentionally ignored rather than
+stored in Git.
+
+The backend integration lane compares the complete runtime OpenAPI document with
+`frontend/src/client/imdb-clone-backend.yaml` as parsed data. It ignores only the top-level `servers`
+entry because that URL depends on the machine used to generate the document. Endpoint, request,
+response, schema, required-field, and nullable changes fail the build until the frontend contract is
+refreshed and its client can be regenerated. The test inherits the shared controller fixture, so the
+full integration suite does not create another Spring or Testcontainers context for this check.
+
+The adoption trial found that frontend CI previously ran neither lint nor its unit tests. Client
+generation could also succeed against a stale checked-in document because it did not compare that
+document with the backend. The live semantic comparison passed, and an in-memory contract mutation
+was detected as a negative control. Client generation, ESLint, 285 tests across 96 files, all three
+TypeScript projects, the production build, the focused backend contract test, and Spotless passed.
+The complete frontend sequence took about 54 seconds locally, roughly 41 seconds more than generation
+plus build alone; this CI-only cost is accepted for the additional regression and drift feedback.
 
 ## References
 

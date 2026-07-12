@@ -13,6 +13,29 @@ describe("CI workflow configuration", () => {
       path.join(repositoryRoot, ".github", "workflows", "e2e.yaml"),
       "utf8",
     );
+  const continuousIntegrationWorkflow = (): string =>
+    readFileSync(
+      path.join(
+        repositoryRoot,
+        ".github",
+        "workflows",
+        "continuous-integration.yaml",
+      ),
+      "utf8",
+    );
+
+  test("frontend CI generates its client before linting, testing, and building", () => {
+    const workflow = continuousIntegrationWorkflow();
+    const generateClient = workflow.indexOf("run: yarn run build:moviesGen");
+    const lint = workflow.indexOf("run: yarn lint");
+    const testFrontend = workflow.indexOf("run: yarn test");
+    const build = workflow.indexOf("run: yarn build");
+
+    expect(generateClient).toBeGreaterThan(-1);
+    expect(lint).toBeGreaterThan(generateClient);
+    expect(testFrontend).toBeGreaterThan(lint);
+    expect(build).toBeGreaterThan(testFrontend);
+  });
 
   test("RustFS readiness accepts the authenticated health endpoint response", () => {
     const workflow = e2eWorkflow();
