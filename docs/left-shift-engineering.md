@@ -75,7 +75,7 @@ Frontend observations from 2026-07-11:
 | Adopted | Parse high-risk trust seams with runtime schemas | Validate authenticated session responses and login navigation state before use; expand only where boundary risk justifies a schema. |
 | Adopted | Strengthen OpenAPI required and nullable contracts incrementally | Generate useful transport types by documenting guaranteed response fields; the first contract covers authenticated sessions. |
 | Candidate | Adapt transport types into feature-owned domain types | Normalize wire arrays/sets and establish required fields at one seam. |
-| Candidate | Use discriminated unions for application state | Make impossible authentication, upload, and mutation states unrepresentable. |
+| Adopted incrementally | Use discriminated unions for application state | Make impossible authentication, upload, and mutation states unrepresentable. |
 | Candidate | Split Node and jsdom Vitest projects | Avoid browser-environment startup for pure logic tests. |
 | Adopted | Fail on unexpected console warnings and errors | Prevent React warnings and observability noise from hiding real failures. |
 | Candidate | Benchmark the Vitest thread pool repeatedly | Adopt it only if the median improvement is stable and tests remain isolated. |
@@ -410,6 +410,26 @@ the DOM focus method outside Testing Library's React update boundary and now use
 Two reporter-failure tests intentionally warn and now verify that contract explicitly. A deliberate
 unexpected warning made the negative-control test fail, and the cleaned full suite passed 278 tests
 across 95 files in about 25 seconds.
+
+## Frontend Application-State Policy
+
+Use discriminated unions for closed, multi-step workflows whose states own different data. Keep
+booleans, nullable values, and TanStack Query's existing result model for simple toggles, optional
+feedback, and server requests; wrapping those mechanically would reduce readability without removing
+meaningful invalid combinations.
+
+Profile-image selection is the first adopted workflow. Its `idle`, `reading`, `previewing`, and
+`ready` variants replace six independently mutable values. A ready upload now necessarily owns the
+selected file, decoded image, crop, preview source, and image orientation. The reducer keeps each
+asynchronous `FileReader` completion attached to its file, fixing a race where an older preview could
+previously be paired with the latest selected file. Stale completions are ignored, crop actions are
+accepted only when ready, and closing returns every active state to idle.
+
+Focused reducer tests reproduce out-of-order reads and verify the legal transitions. A deliberate
+fifth state without a corresponding exhaustive branch failed TypeScript compilation at the `never`
+boundary and was reverted. The full trial passed 281 tests across 96 files, ESLint, and all three
+TypeScript projects. Expand this pattern only when another workflow has similarly state-specific data
+or demonstrated invalid combinations.
 
 ## References
 

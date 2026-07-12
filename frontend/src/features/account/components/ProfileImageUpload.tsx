@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, { useReducer } from "react";
 import {
   Box,
   Button,
@@ -16,10 +16,14 @@ import { mediaMutationKeys, storeUserProfilePhoto } from "../../media";
 import { useSnackbar } from "notistack";
 import {
   buildCanvasCrop,
-  createCenteredSquareCrop,
   getProfilePhotoUploadErrorMessage,
   PROFILE_PHOTO_CROP_STAGE_SIZE,
 } from "./profilePhotoCropper";
+import {
+  getProfileImageDialogState,
+  initialProfileImageUploadState,
+  profileImageUploadReducer,
+} from "./profileImageUploadState";
 
 type ProfileImageUploadProps = {
   buttonVariant?: ButtonProps["variant"];
@@ -30,13 +34,18 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
+  const [uploadState, dispatch] = useReducer(
+    profileImageUploadReducer,
+    initialProfileImageUploadState,
+  );
+  const dialogState = getProfileImageDialogState(uploadState);
   const uploadProfilePhoto = useMutation({
     mutationFn: storeUserProfilePhoto,
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: mediaMutationKeys.currentProfile,
       });
-      setOpen(false);
+      dispatch({ type: "closed" });
     },
     onError: (error) => {
       enqueueSnackbar(getProfilePhotoUploadErrorMessage(error), {
@@ -45,57 +54,54 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     },
   });
 
-  const [open, setOpen] = useState(false);
-  const [src, setSrc] = useState<string | null>(null);
-  const [crop, setCrop] = useState<Crop>();
-  const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
-  const [imageFit, setImageFit] = useState<"wide" | "tall">("wide");
-  const [file, setFile] = useState<File | null>(null);
-
-  useLayoutEffect(() => {
-    if (imageRef) {
-      setCrop(createCenteredSquareCrop(imageRef.width, imageRef.height));
-    }
-  }, [imageFit, imageRef]);
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.currentTarget.files?.item(0);
 
     if (selectedFile) {
+      dispatch({ file: selectedFile, type: "file-selected" });
       const reader = new FileReader();
       reader.addEventListener("load", () => {
         if (typeof reader.result === "string") {
-          setSrc(reader.result);
+          dispatch({
+            file: selectedFile,
+            src: reader.result,
+            type: "file-read",
+          });
+        } else {
+          dispatch({ file: selectedFile, type: "file-read-failed" });
         }
       });
+      reader.addEventListener("error", () => {
+        dispatch({ file: selectedFile, type: "file-read-failed" });
+      });
       reader.readAsDataURL(selectedFile);
-      setFile(selectedFile);
-      setOpen(true);
     }
     e.currentTarget.value = "";
   };
 
   const handleCropComplete = (crop: PixelCrop) => {
-    setCrop(crop);
+    dispatch({ crop, type: "crop-changed" });
   };
 
   const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
-    const image = event.currentTarget;
-
-    setImageFit(image.naturalWidth >= image.naturalHeight ? "wide" : "tall");
-    setImageRef(image);
+    dispatch({ image: event.currentTarget, type: "image-loaded" });
   };
 
   const handleUpload = async () => {
-    if (imageRef && crop?.width && crop.height && file) {
-      try {
-        const croppedImage = await getCroppedImage(imageRef, crop, file.name);
-        uploadProfilePhoto.mutate(croppedImage);
-      } catch (error) {
-        enqueueSnackbar(getProfilePhotoUploadErrorMessage(error), {
-          variant: "error",
-        });
-      }
+    if (uploadState.status !== "ready") {
+      return;
+    }
+    try {
+      const croppedImage = await getCroppedImage(
+        uploadState.image,
+        uploadState.crop,
+        uploadState.file.name,
+      );
+      uploadProfilePhoto.mutate(croppedImage);
+    } catch (error) {
+      enqueueSnackbar(getProfilePhotoUploadErrorMessage(error), {
+        variant: "error",
+      });
     }
   };
 
@@ -160,10 +166,10 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
           Upload
         </Button>
       </label>
-      {src && (
+      {dialogState && (
         <Dialog
-          open={open}
-          onClose={() => setOpen(false)}
+          open
+          onClose={() => dispatch({ type: "closed" })}
           maxWidth="md"
           fullWidth
         >
@@ -196,7 +202,9 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
               }}
             >
               <ReactCrop
-                {...(crop === undefined ? {} : { crop })}
+                {...(dialogState.status === "ready"
+                  ? { crop: dialogState.crop }
+                  : {})}
                 circularCrop
                 aspect={1}
                 onComplete={handleCropComplete}
@@ -207,23 +215,34 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
                 }}
               >
                 <img
-                  src={src}
+                  src={dialogState.src}
                   alt="Selected profile"
                   onLoad={handleImageLoad}
                   style={{
                     display: "block",
-                    height: imageFit === "tall" ? "100%" : "auto",
+                    height:
+                      dialogState.status === "ready" &&
+                      dialogState.imageFit === "tall"
+                        ? "100%"
+                        : "auto",
                     maxHeight: "100%",
                     maxWidth: "100%",
                     objectFit: "contain",
-                    width: imageFit === "wide" ? "100%" : "auto",
+                    width:
+                      dialogState.status !== "ready" ||
+                      dialogState.imageFit === "wide"
+                        ? "100%"
+                        : "auto",
                   }}
                 />
               </ReactCrop>
             </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpen(false)} color="primary">
+            <Button
+              onClick={() => dispatch({ type: "closed" })}
+              color="primary"
+            >
               Cancel
             </Button>
             <Button
@@ -231,7 +250,9 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
                 void handleUpload();
               }}
               color="primary"
-              disabled={uploadProfilePhoto.isPending}
+              disabled={
+                uploadProfilePhoto.isPending || uploadState.status !== "ready"
+              }
             >
               Upload
             </Button>
