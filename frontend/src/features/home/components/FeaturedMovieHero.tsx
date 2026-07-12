@@ -112,7 +112,18 @@ const FeaturedMovieHero = ({
           </Typography>
         </Box>
         <Typography sx={{ color: "text.secondary", fontSize: 12 }}>
-          Three standouts, refreshed with every new mix
+          <Box
+            component="span"
+            sx={{ display: { xs: "inline", sm: "none" } }}
+          >
+            One standout, refreshed with every new mix
+          </Box>
+          <Box
+            component="span"
+            sx={{ display: { xs: "none", sm: "inline" } }}
+          >
+            Three standouts, refreshed with every new mix
+          </Box>
         </Typography>
       </Stack>
 
@@ -179,6 +190,7 @@ const FeaturedMovieCard = ({
         border: "1px solid",
         borderColor: "divider",
         borderRadius: 1,
+        display: { xs: primary ? "block" : "none", sm: "block" },
         gridColumn: { xs: "auto", sm: primary ? "1 / -1" : "auto", md: "auto" },
         gridRow: { md: primary ? "1 / span 2" : "auto" },
         minHeight: { md: primary ? 440 : 212 },
@@ -356,10 +368,34 @@ const humanize = (value: string) =>
 const FeaturedMovieSkeleton = () => (
   <Box component="section" sx={{ mb: 5 }}>
     <Skeleton variant="text" width={140} height={34} sx={{ mb: 2 }} />
-    <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", md: "1.85fr 0.9fr" }, minHeight: { md: 440 } }}>
-      <Skeleton variant="rounded" sx={{ gridRow: { md: "1 / span 2" }, minHeight: { xs: 280, md: 440 } }} />
-      <Skeleton variant="rounded" sx={{ minHeight: 212 }} />
-      <Skeleton variant="rounded" sx={{ minHeight: 212 }} />
+    <Box
+      sx={{
+        display: "grid",
+        gap: 1.5,
+        gridTemplateColumns: {
+          xs: "1fr",
+          sm: "repeat(2, minmax(0, 1fr))",
+          md: "1.85fr 0.9fr",
+        },
+        minHeight: { md: 440 },
+      }}
+    >
+      <Skeleton
+        variant="rounded"
+        sx={{
+          gridColumn: { sm: "1 / -1", md: "auto" },
+          gridRow: { md: "1 / span 2" },
+          minHeight: { xs: 280, md: 440 },
+        }}
+      />
+      <Skeleton
+        variant="rounded"
+        sx={{ display: { xs: "none", sm: "block" }, minHeight: 212 }}
+      />
+      <Skeleton
+        variant="rounded"
+        sx={{ display: { xs: "none", sm: "block" }, minHeight: 212 }}
+      />
     </Box>
   </Box>
 );

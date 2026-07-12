@@ -337,19 +337,46 @@ const TonightChoices = ({
           )}
         </Stack>
         <Box
+          aria-label="Tonight's movie choices"
+          component="ul"
+          data-testid="tonight-mode-choices"
           sx={{
             display: "grid",
-            gap: 2,
+            gap: { xs: 1.75, sm: 2 },
+            gridAutoColumns: { xs: "144px", sm: "auto" },
+            gridAutoFlow: { xs: "column", sm: "row" },
             gridTemplateColumns: {
-              xs: "repeat(1, minmax(0, 1fr))",
-              sm: "repeat(3, 180px)",
-              md: "repeat(3, 200px)",
+              xs: "none",
+              sm: "repeat(3, minmax(0, 1fr))",
             },
-            justifyContent: { sm: "center" },
+            justifyContent: { xs: "start", sm: "center" },
+            listStyle: "none",
+            maxWidth: { sm: 632 },
+            mx: { xs: -1.5, sm: "auto" },
+            my: 0,
+            overflowX: { xs: "auto", sm: "visible" },
+            overscrollBehaviorX: "contain",
+            pb: { xs: 1.5, sm: 0 },
+            pt: { xs: 1.5, sm: 0 },
+            px: { xs: 1.5, sm: 0 },
+            scrollPaddingInline: { xs: 12, sm: 0 },
+            scrollSnapType: { xs: "x mandatory", sm: "none" },
+            scrollbarColor: `${movieColors.brand} transparent`,
+            scrollbarWidth: "thin",
+            WebkitOverflowScrolling: "touch",
           }}
         >
-          {picks.map((pick) => (
-            <Box key={pick.movie.id} sx={{ minWidth: 0 }}>
+          {picks.slice(0, 3).map((pick) => (
+            <Box
+              component="li"
+              key={pick.movie.id}
+              sx={{
+                minWidth: 0,
+                position: "relative",
+                scrollSnapAlign: { xs: "start", sm: "none" },
+                "&:hover, &:focus-within": { zIndex: 1 },
+              }}
+            >
               <PosterMovieCard movie={pick.movie} />
               <Typography
                 sx={{

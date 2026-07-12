@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router";
@@ -7,6 +7,36 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import TonightModePanel from "./TonightModePanel";
 
 const mocks = vi.hoisted(() => ({ getTonightPicks: vi.fn() }));
+
+const tonightPicks = [
+  {
+    explanation: "Fits your time tonight.",
+    movie: {
+      id: 11,
+      imdbRating: 8.1,
+      primaryTitle: "First choice",
+      runtimeMinutes: 98,
+    },
+  },
+  {
+    explanation: "A different mood.",
+    movie: {
+      id: 12,
+      imdbRating: 7.9,
+      primaryTitle: "Second choice",
+      runtimeMinutes: 104,
+    },
+  },
+  {
+    explanation: "A great closer.",
+    movie: {
+      id: 13,
+      imdbRating: 7.8,
+      primaryTitle: "Third choice",
+      runtimeMinutes: 112,
+    },
+  },
+];
 
 vi.mock("../api/tonightMode", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../api/tonightMode")>()),
@@ -29,35 +59,7 @@ describe("TonightModePanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getTonightPicks.mockResolvedValue({
-      picks: [
-        {
-          explanation: "Fits your time tonight.",
-          movie: {
-            id: 11,
-            imdbRating: 8.1,
-            primaryTitle: "First choice",
-            runtimeMinutes: 98,
-          },
-        },
-        {
-          explanation: "A different mood.",
-          movie: {
-            id: 12,
-            imdbRating: 7.9,
-            primaryTitle: "Second choice",
-            runtimeMinutes: 104,
-          },
-        },
-        {
-          explanation: "A great closer.",
-          movie: {
-            id: 13,
-            imdbRating: 7.8,
-            primaryTitle: "Third choice",
-            runtimeMinutes: 112,
-          },
-        },
-      ],
+      picks: tonightPicks,
       seed: "tonight-seed",
     });
   });
@@ -88,6 +90,31 @@ describe("TonightModePanel", () => {
         movieGenres: new Set(["THRILLER"]),
       }),
     );
+  });
+
+  test("renders at most three choices in the swipeable results list", async () => {
+    const user = userEvent.setup();
+    mocks.getTonightPicks.mockResolvedValueOnce({
+      picks: [
+        ...tonightPicks,
+        {
+          explanation: "An extra result that should stay hidden.",
+          movie: { id: 14, primaryTitle: "Fourth choice", runtimeMinutes: 90 },
+        },
+      ],
+      seed: "tonight-seed",
+    });
+    renderPanel();
+
+    await user.click(
+      screen.getByRole("button", { name: "Pick tonight's movies" }),
+    );
+
+    const choices = await screen.findByRole("list", {
+      name: "Tonight's movie choices",
+    });
+    expect(within(choices).getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.queryByRole("link", { name: /fourth choice/i })).toBeNull();
   });
 
   test("excludes prior choices when asking for another three", async () => {
