@@ -21,6 +21,7 @@ const getShownMovieIds = (pages: HomeFeedResponse[]) =>
     new Set(
       pages.flatMap((page) => [
         page.featuredMovie?.id,
+        ...(page.featuredMovies ?? []).map((movie) => movie.id),
         ...(page.sections ?? []).flatMap((section) =>
           (section.items ?? []).map((item) => item.movie?.id),
         ),

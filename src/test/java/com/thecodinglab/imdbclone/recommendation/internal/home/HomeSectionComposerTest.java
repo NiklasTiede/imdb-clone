@@ -73,6 +73,20 @@ class HomeSectionComposerTest {
     verify(candidateProvider).findSemanticCandidates(any(), any(), eq(90));
   }
 
+  @Test
+  void featured_selectsThreeMoviesAndReservesThemFromLaterSections() {
+    when(candidateProvider.findCandidates(any(), eq(90))).thenReturn(movies(1, 12));
+    Set<Long> seenMovieIds = new java.util.HashSet<>();
+
+    List<MovieRecord> featured =
+        new HomeSectionComposer(candidateProvider, themeEmbeddingProvider)
+            .featured(new HomeSectionCatalog(), "seed", seenMovieIds);
+
+    assertThat(featured).hasSize(3);
+    assertThat(seenMovieIds).containsExactlyInAnyOrderElementsOf(
+        featured.stream().map(MovieRecord::id).toList());
+  }
+
   private HomeSectionDefinition definition() {
     return new HomeSectionDefinition(
         "section",

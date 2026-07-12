@@ -45,8 +45,13 @@ const HomePage = () => {
 
   const homeFeed = useHomeFeed(feedInstanceId);
   const pages = homeFeed.data?.pages ?? [];
-  const featuredMovie = pages[0]?.featuredMovie ?? null;
-  const strategyVersion = pages[0]?.strategyVersion ?? "home-structured-v1";
+  const firstPage = pages[0];
+  const featuredMovies = firstPage?.featuredMovies?.length
+    ? firstPage.featuredMovies
+    : firstPage?.featuredMovie
+      ? [firstPage.featuredMovie]
+      : [];
+  const strategyVersion = firstPage?.strategyVersion ?? "home-structured-v2";
   const sections: HomeFeedSection[] = pages.flatMap((page) => page.sections ?? []);
   useHomeFeedRestoration(feedInstanceId, sections.length);
 
@@ -68,25 +73,28 @@ const HomePage = () => {
       setErrorMessage("Could not update your watchlist. Please try again."),
   });
 
-  const isFeaturedBookmarked = Boolean(
-    featuredMovie?.id !== undefined && watchedMovieIds?.has(featuredMovie.id),
-  );
-
-  const handleViewMovie = () => {
-    if (featuredMovie?.id !== undefined) {
-      void navigate(`/movie?id=${featuredMovie.id}`);
+  const handleViewMovie = (movie: HomeFeedMovie, position: number) => {
+    if (movie.id !== undefined) {
+      reportHomeMovieOpen({
+        feedInstanceId,
+        movieId: movie.id,
+        position,
+        sectionId: "featured",
+        strategyVersion,
+      });
+      void navigate(`/movie?id=${movie.id}`);
     }
   };
 
-  const handleToggleFeaturedBookmark = () => {
-    if (!username || featuredMovie?.id === undefined) {
+  const handleToggleFeaturedBookmark = (movie: HomeFeedMovie) => {
+    if (!username || movie.id === undefined) {
       setErrorMessage("Please log in to manage your watchlist.");
       return;
     }
 
     toggleWatchlist.mutate({
-      isBookmarked: isFeaturedBookmarked,
-      movieId: featuredMovie.id,
+      isBookmarked: Boolean(watchedMovieIds?.has(movie.id)),
+      movieId: movie.id,
     });
   };
 
@@ -116,10 +124,17 @@ const HomePage = () => {
         <Box sx={{ px: { xs: 2, md: 0 } }}>
           <FeaturedMovieHero
             error={hasInitialError}
-            movie={featuredMovie}
+            movies={featuredMovies}
             loading={isInitialLoading}
-            isBookmarked={isFeaturedBookmarked}
+            bookmarkedMovieIds={watchedMovieIds ?? emptyMovieIds}
             isBookmarkLoading={toggleWatchlist.isPending}
+            onImpression={() =>
+              reportHomeSectionImpression({
+                feedInstanceId,
+                sectionId: "featured",
+                strategyVersion,
+              })
+            }
             onToggleBookmark={handleToggleFeaturedBookmark}
             onViewMovie={handleViewMovie}
           />

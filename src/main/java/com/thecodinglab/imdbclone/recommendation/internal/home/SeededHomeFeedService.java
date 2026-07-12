@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SeededHomeFeedService implements HomeFeedService {
 
-  static final String STRATEGY_VERSION = "home-structured-v1";
+  static final String STRATEGY_VERSION = "home-structured-v2";
   private static final int SECTIONS_PER_PAGE = 3;
   private static final int MAX_SECTIONS_PER_FEED = 24;
 
@@ -37,9 +37,9 @@ public class SeededHomeFeedService implements HomeFeedService {
     }
 
     Set<Long> seenMovieIds = new HashSet<>(request.excludedMovieIds());
-    MovieRecord featuredMovie = null;
+    List<MovieRecord> featuredMovies = List.of();
     if (offset == 0) {
-      featuredMovie = sectionComposer.featured(sectionCatalog, seed, seenMovieIds);
+      featuredMovies = sectionComposer.featured(sectionCatalog, seed, seenMovieIds);
     }
 
     List<HomeFeedSection> sections = new ArrayList<>();
@@ -57,7 +57,8 @@ public class SeededHomeFeedService implements HomeFeedService {
     return new HomeFeedResponse(
         seed,
         STRATEGY_VERSION,
-        featuredMovie,
+        featuredMovies.isEmpty() ? null : featuredMovies.getFirst(),
+        featuredMovies,
         List.copyOf(sections),
         exhausted ? null : HomeFeedCursor.encode(inspected),
         exhausted);

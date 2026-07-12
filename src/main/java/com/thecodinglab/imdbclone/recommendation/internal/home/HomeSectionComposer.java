@@ -2,9 +2,12 @@ package com.thecodinglab.imdbclone.recommendation.internal.home;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryCandidateProvider;
 import com.thecodinglab.imdbclone.catalog.api.MovieDiscoveryThemeEmbeddingProvider;
+import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.recommendation.api.HomeFeedItem;
 import com.thecodinglab.imdbclone.recommendation.api.HomeFeedSection;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Component;
@@ -13,6 +16,8 @@ import org.springframework.stereotype.Component;
 class HomeSectionComposer {
 
   private static final int MINIMUM_SECTION_SIZE = 8;
+  private static final int FEATURED_CANDIDATE_POOL_SIZE = 12;
+  private static final int FEATURED_MOVIE_COUNT = 3;
 
   private final MovieDiscoveryCandidateProvider candidateProvider;
   private final MovieDiscoveryThemeEmbeddingProvider themeEmbeddingProvider;
@@ -47,17 +52,44 @@ class HomeSectionComposer {
         movies.stream().map(movie -> new HomeFeedItem(movie, definition.subtitle())).toList());
   }
 
-  MovieRecord featured(HomeSectionCatalog catalog, String feedSeed, Set<Long> seenMovieIds) {
+  List<MovieRecord> featured(HomeSectionCatalog catalog, String feedSeed, Set<Long> seenMovieIds) {
     List<MovieRecord> candidates =
         candidateProvider.findCandidates(catalog.featuredCriteria().excluding(seenMovieIds), 90);
     List<MovieRecord> ranked =
-        ranker.rank(candidates, seenMovieIds, HomeFeedSeed.derive(feedSeed, "featured"), 1);
-    if (ranked.isEmpty()) {
-      return null;
-    }
-    MovieRecord featured = ranked.getFirst();
-    seenMovieIds.add(featured.id());
+        ranker.rank(
+            candidates,
+            seenMovieIds,
+            HomeFeedSeed.derive(feedSeed, "featured"),
+            FEATURED_CANDIDATE_POOL_SIZE);
+    List<MovieRecord> featured = selectGenreDiverse(ranked, FEATURED_MOVIE_COUNT);
+    featured.stream().map(MovieRecord::id).forEach(seenMovieIds::add);
     return featured;
+  }
+
+  private List<MovieRecord> selectGenreDiverse(List<MovieRecord> ranked, int limit) {
+    List<MovieRecord> selected = new ArrayList<>();
+    Set<MovieGenre> representedGenres = new HashSet<>();
+
+    for (MovieRecord movie : ranked) {
+      if (selected.size() >= limit) {
+        break;
+      }
+      Set<MovieGenre> genres = movie.movieGenre() == null ? Set.of() : movie.movieGenre();
+      if (selected.isEmpty() || genres.stream().noneMatch(representedGenres::contains)) {
+        selected.add(movie);
+        representedGenres.addAll(genres);
+      }
+    }
+
+    for (MovieRecord movie : ranked) {
+      if (selected.size() >= limit) {
+        break;
+      }
+      if (!selected.contains(movie)) {
+        selected.add(movie);
+      }
+    }
+    return List.copyOf(selected);
   }
 
   private List<MovieRecord> findCandidates(

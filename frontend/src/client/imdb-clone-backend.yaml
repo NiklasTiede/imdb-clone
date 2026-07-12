@@ -1596,6 +1596,10 @@ components:
           type: string
         featuredMovie:
           $ref: "#/components/schemas/MovieRecord"
+        featuredMovies:
+          type: array
+          items:
+            $ref: "#/components/schemas/MovieRecord"
         sections:
           type: array
           items:

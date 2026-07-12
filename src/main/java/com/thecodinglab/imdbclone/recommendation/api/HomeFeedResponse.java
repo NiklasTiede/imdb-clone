@@ -7,6 +7,7 @@ public record HomeFeedResponse(
     String seed,
     String strategyVersion,
     MovieRecord featuredMovie,
+    List<MovieRecord> featuredMovies,
     List<HomeFeedSection> sections,
     String nextCursor,
     boolean exhausted) {}

@@ -80,8 +80,9 @@ class RecommendationControllerTest extends BaseControllerIntegrationTest {
                 .content("{\"feedInstanceId\":\"controller-test-feed\",\"excludedMovieIds\":[]}"))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.strategyVersion").value("home-structured-v1"))
+        .andExpect(jsonPath("$.strategyVersion").value("home-structured-v2"))
         .andExpect(jsonPath("$.seed").isNotEmpty())
+        .andExpect(jsonPath("$.featuredMovies").isArray())
         .andExpect(jsonPath("$.sections").isArray());
   }
 
