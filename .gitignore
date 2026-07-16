@@ -99,3 +99,16 @@ yarn-error.log*
 .superpowers/
 design/
 screenshots/
+
+# Python Movie Concierge
+/agent/.venv/
+/agent/.pytest_cache/
+/agent/.import_linter_cache/
+/agent/.ruff_cache/
+/agent/.coverage
+/agent/htmlcov/
+/agent/**/__pycache__/
+/agent/**/*.py[cod]
+/agent/.env
+/agent/.env.*
+/.uv-cache/

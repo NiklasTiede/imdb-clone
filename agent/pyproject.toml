@@ -1,0 +1,104 @@
+[build-system]
+requires = ["hatchling>=1.28,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "imdb-movie-concierge"
+version = "0.1.0"
+description = "Agent orchestration service for the IMDb Clone Movie Concierge"
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "fastapi>=0.128,<1",
+    "prometheus-client>=0.23,<1",
+    "pydantic>=2.12,<3",
+    "pydantic-settings>=2.12,<3",
+    "structlog>=25.5,<26",
+    "uvicorn[standard]>=0.40,<1",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28,<1",
+    "httpx2>=2,<3",
+    "import-linter>=2.7,<3",
+    "pyright>=1.1.408,<2",
+    "pytest>=9,<10",
+    "pytest-asyncio>=1.3,<2",
+    "pytest-cov>=7,<8",
+    "ruff>=0.14,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/imdb_agent"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "ASYNC",
+    "B",
+    "C4",
+    "E",
+    "F",
+    "I",
+    "PERF",
+    "PIE",
+    "RUF",
+    "S",
+    "SIM",
+    "TC",
+    "UP",
+]
+ignore = [
+    "S104", # Binding the container server to all interfaces is intentional.
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.pyright]
+include = ["src", "tests"]
+exclude = [".venv"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.14"
+typeCheckingMode = "strict"
+reportImportCycles = "error"
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+asyncio_mode = "strict"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["imdb_agent"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.importlinter]
+root_package = "imdb_agent"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "The concierge Module is independent of Adapters"
+type = "forbidden"
+source_modules = ["imdb_agent.concierge"]
+forbidden_modules = ["imdb_agent.adapters", "imdb_agent.web", "fastapi", "pydantic_ai"]
+
+[[tool.importlinter.contracts]]
+name = "The web Adapter does not assemble outbound Adapters"
+type = "forbidden"
+source_modules = ["imdb_agent.web"]
+forbidden_modules = ["imdb_agent.adapters"]
