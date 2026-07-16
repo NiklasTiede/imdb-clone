@@ -7,7 +7,8 @@ work, and keep completed items in the release notes rather than growing this doc
 ## Product Direction
 
 The application should become a place where users can both inspect a movie in depth and continue
-discovering movies without repeatedly seeing the same small set of results.
+discovering movies without repeatedly seeing the same small set of results. A conversational
+Concierge should help users turn vague intent into a choice without replacing effective browsing.
 
 Guiding principles:
 
@@ -18,6 +19,8 @@ Guiding principles:
 - Treat search relevance as a measured product capability, not a one-time ranking implementation.
 - Use PostgreSQL as the source of truth and OpenSearch as the derived discovery index.
 - Prefer explainable editorial queries before introducing opaque personalization.
+- Ground conversational discovery in the same measured catalog and recommendation capabilities as
+  the rest of the application.
 - Treat authentication as a first-class responsive experience, with balanced composition on desktop
   and focused, efficient forms on mobile.
 - Preserve fast loading, responsive layouts, keyboard access, and useful empty states as content
@@ -26,7 +29,7 @@ Guiding principles:
 ## Strategic Long-Term Goals
 
 The product should evolve as a personal movie discovery and journal application with a deep,
-inspectable catalog. The first five strategic stages are:
+inspectable catalog. The first six strategic stages are:
 
 1. **Search relevance and recommendation foundation** - measure retrieval quality and establish a
    reusable, explainable recommendation capability.
@@ -34,9 +37,11 @@ inspectable catalog. The first five strategic stages are:
    similar movies.
 3. **Fresh discovery** - build the dynamic homepage, progressive carousel feed, and a focused
    `What should I watch tonight?` experience.
-4. **Personal movie journal** - support diary entries, watched dates, rewatches, notes, tags, and
+4. **Movie Concierge** - add a grounded, eval-driven conversational surface over search,
+   recommendations, and later explicitly approved personal actions.
+5. **Personal movie journal** - support diary entries, watched dates, rewatches, notes, tags, and
    authored activity.
-5. **Personal library and taste** - add custom lists, taste statistics, annual summaries, and
+6. **Personal library and taste** - add custom lists, taste statistics, annual summaries, and
    portable import/export.
 
 These stages reinforce one another. Recommendation is a cross-cutting platform used by search,
@@ -171,7 +176,26 @@ make ranking changes objectively testable.
   reindex or model change is deployed.
 - Add dashboards for search latency, embedding failures, zero-result rate, and result selection.
 
-### 4. Administrator catalog management
+### 4. Deliver the Movie Concierge
+
+Goal: help a user move from vague entertainment intent to a confident, grounded movie choice.
+
+- Follow the living [Movie Concierge product vision](movie-concierge.md) and
+  [architecture decision](adr/0001-movie-concierge-architecture.md).
+- Start with a text-first, read-only experience for search, movie details, similar movies, and
+  Tonight Mode.
+- Keep retrieval, ranking, explanations, domain state, and authorization in their existing Java
+  modules; Python orchestrates them through protected MCP tools.
+- Evaluate tool selection, arguments, groundedness, constraint satisfaction, latency, and cost
+  before comparing models or expanding capabilities.
+- Add production rate, concurrency, token, tool-loop, timeout, cancellation, privacy, trace, and
+  cost controls before public deployment.
+- Require delegated identity, explicit approval, reauthorization, and idempotency before adding
+  watchlist or rating mutations.
+- Treat voice and future browser/OS agents as replaceable interaction adapters over the same tools
+  and policies.
+
+### 5. Administrator catalog management
 
 Goal: turn the existing admin edit action into a focused catalog-management workspace.
 
@@ -191,7 +215,7 @@ Goal: turn the existing admin edit action into a focused catalog-management work
 - Later additions may include bulk imports, data-quality queues, missing-media reports, and
   duplicate detection.
 
-### 5. User comments and activity
+### 6. User comments and activity
 
 Goal: replace the empty messages destination with an honest, useful view of the signed-in user's
 community activity.
@@ -214,7 +238,7 @@ Actual notifications should be a later, separate capability:
 - Persist read/unread state and show a badge only when unread notifications exist.
 - Do not present authored comments as conversations or imply private messaging.
 
-### 6. Discovery API
+### 7. Discovery API
 
 Goal: move homepage composition and similarity rules out of individual React hooks.
 
@@ -229,7 +253,7 @@ Goal: move homepage composition and similarity rules out of individual React hoo
   visits.
 - Define minimum rating-count thresholds so tiny samples do not dominate `top-rated` sections.
 
-### 7. Catalog enrichment
+### 8. Catalog enrichment
 
 Goal: support richer detail pages and better recommendation signals with additional source data.
 
@@ -380,12 +404,16 @@ after its user outcome and data requirements are clear.
    constrained, explainable movie picks are available.
 10. **Progressive homepage feed (delivered)** - section pagination, restoration, bounded loading,
     and discovery metrics are available.
-11. **Movie journal and rewatches** - add dated diary entries, notes, tags, and historical viewings.
-12. **Custom lists, yearly summaries, and portability** - initial rating/watchlist taste insights
+11. **Movie Concierge foundation and walking skeleton** - add the strict Python deployable,
+    protected Java MCP search seam, typed SSE, and one grounded React search journey.
+12. **Movie Concierge read-only MVP** - add details, similar movies, Tonight Mode, bounded
+    multi-turn refinement, eval gates, and production cost/quality observability.
+13. **Movie journal and rewatches** - add dated diary entries, notes, tags, and historical viewings.
+14. **Custom lists, yearly summaries, and portability** - initial rating/watchlist taste insights
    are delivered; named lists, yearly summaries, and safe import/export remain.
-13. **Administrator movie editing** - deliver search/select and safe single-movie editing before
+15. **Administrator movie editing** - deliver search/select and safe single-movie editing before
    delete or bulk operations.
-14. **Catalog enrichment and advanced personalization** - add people and richer metadata, then use
+16. **Catalog enrichment and advanced personalization** - add people and richer metadata, then use
    account activity only when enough meaningful signals exist.
 
 Each slice should be independently deployable and include backend tests where contracts change,
@@ -412,6 +440,9 @@ frontend behavior tests, responsive Playwright coverage, and production observab
 - How should the current rating behave when diary entries preserve historical ratings?
 - Which custom-list and diary fields are public by default?
 - Which external import formats should be officially supported and tested?
+- Which model and prompt version best satisfy the Concierge quality, latency, and cost evals?
+- What redacted production trace content and retention period are acceptable for conversational
+  discovery?
 
 ## Idea Template
 
