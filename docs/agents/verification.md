@@ -52,6 +52,33 @@ Notes:
 - Vitest includes `frontend/src/**/*.{test,spec}.{ts,tsx}`.
 - Playwright tests live in `frontend/e2e` and use desktop/mobile Chromium projects.
 
+## Movie Concierge Agent Checks
+
+Run aggregate targets from the repository root. Run narrow uv commands from `agent`.
+
+| Task | Command |
+| --- | --- |
+| Install locked environment | `make agent-sync` |
+| One deterministic test | `cd agent && uv run pytest tests/path/test_file.py` |
+| Format check | `make verify-agent-format` |
+| Ruff lint | `make verify-agent-lint` |
+| Strict Pyright | `make verify-agent-types` |
+| Import and architecture contracts | `make verify-agent-architecture` |
+| All deterministic tests | `make verify-agent-tests` |
+| Agent CI-equivalent check | `make verify-agent` |
+| Image build | `make docker-build-agent` |
+| Image health/non-root smoke | `make container-smoke-agent` |
+
+Notes:
+
+- Deterministic tests and evals require no model key, Java process, database, OpenSearch index, or
+  network access.
+- `verify-agent` runs formatting, linting, typing, architecture, and tests in fast-failure order.
+- Run the image checks when the Dockerfile, dependency graph, startup, settings, health, or runtime
+  packaging changes.
+- A cross-deployable MCP or SSE contract change requires targeted tests on both sides of that Seam
+  and each affected deployable's complete gate.
+
 ## Generated API Client
 
 If backend API contracts change, start the backend first and then run:
@@ -75,6 +102,7 @@ Do not manually edit files in `frontend/src/client/movies/generator-output`.
 | Seed lightweight catalog | `make seed-light SEED_VERSION=2026-05-17` |
 | Rebuild search index | `make reindex-local-search` |
 | Start frontend | `cd frontend && yarn start` |
+| Start Movie Concierge foundation | `make run-agent` |
 | Stop services | `make docker-compose-dev-down` |
 
 Expected local URLs:
@@ -83,6 +111,8 @@ Expected local URLs:
 - Actuator: `http://localhost:8081/actuator/health`
 - OpenAPI: `http://localhost:8080/v3/api-docs.yaml`
 - Frontend: `http://localhost:3000`
+- Movie Concierge health: `http://localhost:8090/healthz`
+- Movie Concierge metrics: `http://localhost:8090/metrics`
 - Object storage API: `http://localhost:9000`
 - RustFS console: `http://localhost:9001`
 - OpenSearch: `http://localhost:9200`
@@ -93,6 +123,8 @@ Expected local URLs:
 | --- | --- |
 | Backend image | `docker build --platform linux/amd64 -t imdb-clone-backend .` |
 | Frontend image | `cd frontend && docker build --platform linux/amd64 -t imdb-clone-frontend .` |
+| Agent image | `make docker-build-agent` |
+| Agent container smoke | `make container-smoke-agent` |
 
 ## Kubernetes Checks
 

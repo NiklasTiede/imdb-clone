@@ -7,6 +7,7 @@ encryption, and live cluster changes.
 
 Related docs:
 
+- `../../agent/AGENTS.md` - Python Movie Concierge architecture and commands.
 - `verification.md` - compact verification matrix.
 - `../left-shift-engineering.md` - experiments for earlier, deterministic defect feedback.
 - `../development.md` - local development and troubleshooting.
@@ -35,6 +36,7 @@ Prefer slices that can be reviewed independently:
 - Backend endpoint: DTOs, controller, module service, validation, tests, generated OpenAPI impact.
 - Persistence: entity/repository/query, Flyway migration, schema/test data, integration tests.
 - Search/media: OpenSearch projection or RustFS/S3 behavior with focused integration coverage.
+- Agent: product/eval policy, FastAPI/SSE Adapter, MCP/model Adapters, and deterministic tests.
 - Deployment: Dockerfile, workflow, Kustomize manifest, SOPS secret shape, rollout validation.
 - Docs: guidance, troubleshooting, command matrix, ADR or architecture notes.
 
@@ -59,6 +61,7 @@ Deterministic commands must perform:
 - Java formatting with `./gradlew spotlessApply`,
 - backend test/build execution with Gradle,
 - frontend lint/test/build execution with Yarn,
+- Python formatting, linting, strict typing, import contracts, and tests through `make verify-agent`,
 - Docker image builds,
 - Kustomize rendering,
 - SOPS encryption/decryption,
@@ -141,6 +144,36 @@ yarn build
 yarn e2e
 ```
 
+## Movie Concierge Agent Task Template
+
+Before editing:
+
+- Read `../../agent/AGENTS.md`, `../movie-concierge.md`, and the active implementation plan.
+- Identify whether behavior belongs to the Concierge product Module, web Adapter, outbound Adapter,
+  settings Seam, eval dataset, or composition root.
+- Confirm whether a change affects the typed browser event contract, Java MCP tool contract, model
+  behavior, or production telemetry.
+
+Implementation checklist:
+
+- Keep `imdb_agent.concierge` independent of FastAPI, Pydantic AI, and concrete Adapters.
+- Keep provider, MCP, persistence, and telemetry types behind their Adapters.
+- Add strict validation at external Seams and keep secret values out of errors, logs, and traces.
+- Add deterministic tests or synthetic eval cases before live-provider checks.
+- Use bounded Prometheus labels and safe correlation fields.
+- Update the lock file only through uv.
+
+Verification options:
+
+```bash
+cd agent && uv run pytest tests/path/test_file.py
+cd agent && uv run ruff check src/imdb_agent/path tests/path
+cd agent && uv run pyright src/imdb_agent/path tests/path
+make verify-agent
+make docker-build-agent
+make container-smoke-agent
+```
+
 ## Deployment Task Template
 
 Before editing:
@@ -182,6 +215,8 @@ commands run, their results, and any skipped checks.
 When reviewing agent changes, lead with findings before summary:
 
 - Does the change respect backend module boundaries and frontend feature ownership?
+- Does Agent code preserve the Concierge Module, Adapter, and composition-root dependency direction?
+- Are agent tests and evals deterministic without provider credentials or Java infrastructure?
 - Are API request and response shapes typed and validated?
 - Was generated code produced by the generator rather than edited manually?
 - Are frontend UI changes consistent with `docs/design.md`, `frontend/src/theme.ts`, and shared layout primitives?

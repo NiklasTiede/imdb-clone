@@ -9,6 +9,8 @@ repository root unless a command says otherwise.
 - Docker with Compose
 - Node.js 24
 - Yarn
+- Python 3.14
+- uv
 - Make
 - Optional for deployment validation: `kubectl`, cluster access, and SOPS/age tooling
 
@@ -16,6 +18,7 @@ Check local tools:
 
 ```bash
 make check-local-tools
+make check-agent-tools
 ```
 
 ## Repository Layout
@@ -26,6 +29,8 @@ make check-local-tools
 - Backend tests: `src/test/java/com/thecodinglab/imdbclone`
 - Frontend source: `frontend/src`
 - Frontend e2e tests: `frontend/e2e`
+- Movie Concierge source: `agent/src/imdb_agent`
+- Movie Concierge tests and evals: `agent/tests` and `agent/evals`
 - Local stateful services: `compose.yaml`
 - k3s GitOps manifests: `infrastructure/clusters/home/apps`
 - Seed pipeline: `infrastructure/movie-seed`
@@ -148,9 +153,31 @@ These are defined in `frontend/.env.development` for local development and in
 `frontend/.env.production` for production builds. Use `.env.local` or `.env.*.local` for private local
 overrides; those files are ignored by Git.
 
+## Run The Movie Concierge Foundation
+
+Create the locked Python 3.14 environment and start the FastAPI process:
+
+```bash
+make agent-sync
+make run-agent
+```
+
+The foundation listens on `http://localhost:8090` and currently needs no model key, Java process,
+database, or search index. Check:
+
+```bash
+curl -fsS http://localhost:8090/healthz
+curl -fsS http://localhost:8090/readyz
+curl -fsS http://localhost:8090/metrics
+```
+
+The application does not load a working-directory `.env` file implicitly. Use exported
+`IMDB_AGENT_*` variables or pass an explicit ignored env file through development tooling when a
+later milestone introduces credentials. Never commit `agent/.env` or `agent/.env.*`.
+
 ## Run Full Stack Locally
 
-Use three terminals:
+Use four terminals when developing all deployables:
 
 1. Stateful services:
 
@@ -170,6 +197,14 @@ Use three terminals:
    cd frontend
    yarn start
    ```
+
+4. Movie Concierge:
+
+   ```bash
+   make run-agent
+   ```
+
+The M1 foundation is independent of Java. MCP integration is added in a later milestone.
 
 Optional initial seed after backend startup:
 
@@ -232,6 +267,28 @@ yarn playwright test --project=desktop-chromium
 yarn playwright test --project=mobile-chromium
 ```
 
+## Movie Concierge Agent Checks
+
+Run the stable full gate from the repository root:
+
+```bash
+make verify-agent
+```
+
+Use narrow checks while developing:
+
+```bash
+cd agent
+uv run pytest tests/web/test_health.py
+uv run pytest tests/concierge/test_eval_dataset.py
+uv run ruff check src/imdb_agent/web tests/web
+uv run pyright src/imdb_agent/web tests/web
+uv run lint-imports
+```
+
+The full gate checks Ruff formatting and linting, strict Pyright, import contracts, architecture
+tests, and all deterministic pytest tests. Live-provider evals will be separate opt-in checks.
+
 ## Generated API Client
 
 The frontend API client is generated from the backend OpenAPI spec.
@@ -270,6 +327,15 @@ docker build --platform linux/amd64 -t imdb-clone-frontend .
 ```
 
 The frontend Dockerfile installs Java because `openapi-generator-cli` runs during the image build.
+
+Movie Concierge image and smoke test:
+
+```bash
+make docker-build-agent
+make container-smoke-agent
+```
+
+The agent image contains runtime dependencies only and runs as numeric non-root user `10001`.
 
 ## Kubernetes And k3s Validation
 
@@ -349,6 +415,14 @@ Frontend build/runtime variables:
 - `VITE_IMDB_CLONE_BACKEND_ADDRESS`
 - `VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`
 
+Movie Concierge foundation variables:
+
+- `IMDB_AGENT_ENVIRONMENT` (`local`, `test`, or `production`)
+- `IMDB_AGENT_VERSION`
+- `IMDB_AGENT_HOST`
+- `IMDB_AGENT_PORT`
+- `IMDB_AGENT_MCP_BEARER_TOKEN` (reserved for the protected MCP milestone; never log it)
+
 Secret handling:
 
 - Local override files such as `.env.local` and `.env.*.local` are ignored.
@@ -363,6 +437,7 @@ Port already in use:
 
 - Frontend needs `3000` because Vite uses `strictPort: true`.
 - Backend uses `8080`; management/health uses `8081`.
+- Movie Concierge uses `8090`.
 - PostgreSQL uses `5432`, OpenSearch uses `9200`, RustFS uses `9000` and `9001`.
 
 Backend cannot connect to services:
@@ -395,6 +470,14 @@ Testcontainers tests fail:
 - If containers are stale, stop Compose services only if they conflict with the test; do not delete
   volumes unless explicitly approved.
 
+Movie Concierge environment or dependency setup fails:
+
+- Run `make check-agent-tools` and confirm `python3 --version` and `uv run python --version` report
+  Python 3.14.
+- Run `make agent-sync`; do not edit `uv.lock` manually.
+- Invalid settings intentionally fail with a redacted `invalid Movie Concierge configuration`
+  message. Check only the relevant `IMDB_AGENT_*` values without printing secrets.
+
 ## Verification Matrix
 
 | Area | Commands |
@@ -404,6 +487,9 @@ Testcontainers tests fail:
 | Frontend tests | `cd frontend && yarn test` |
 | Frontend build | `cd frontend && yarn build` |
 | Frontend e2e | `cd frontend && yarn e2e` |
+| Agent locked install | `make agent-sync` |
+| Agent format/lint/type/architecture/tests | `make verify-agent` |
+| Agent targeted test | `cd agent && uv run pytest tests/path/test_file.py` |
 | Backend targeted fast test | `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"` |
 | Backend fast tests | `./gradlew test` |
 | Backend targeted integration test | `./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"` |
@@ -413,6 +499,8 @@ Testcontainers tests fail:
 | Backend formatting | `./gradlew spotlessApply` |
 | Backend image | `docker build --platform linux/amd64 -t imdb-clone-backend .` |
 | Frontend image | `cd frontend && docker build --platform linux/amd64 -t imdb-clone-frontend .` |
+| Agent image | `make docker-build-agent` |
+| Agent image smoke | `make container-smoke-agent` |
 | k3s manifest render | `kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml` |
 | k3s namespace status | `kubectl -n imdb-clone get deploy,svc,ingress` |
 | k3s rollout status | `kubectl -n imdb-clone rollout status deploy/imdb-clone-backend` and frontend equivalent |

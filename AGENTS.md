@@ -1,7 +1,7 @@
 # IMDB Clone Agent Guide
 
-Full-stack movie database app with a Spring Boot backend, React frontend, PostgreSQL,
-OpenSearch, RustFS/S3-compatible object storage, and k3s GitOps deployment.
+Movie application with a Spring Boot domain backend, React frontend, Python Movie Concierge,
+PostgreSQL, OpenSearch, RustFS/S3-compatible object storage, and k3s GitOps deployment.
 
 This is the auto-loaded fast-start contract. Keep detailed guidance in linked docs:
 
@@ -10,11 +10,16 @@ This is the auto-loaded fast-start contract. Keep detailed guidance in linked do
 - `docs/left-shift-engineering.md` - compiler, type, test, and agent-feedback experiments.
 - `docs/development.md` - local setup, env vars, smoke checks, troubleshooting.
 - `docs/design.md` - frontend design system, theme tokens, layout primitives.
+- `docs/movie-concierge.md` - product vision, MVP boundary, trust model, and milestones for the
+  Python Movie Concierge.
 - `infrastructure/kubernetes/README.md` - k3s, Argo CD, SOPS/age, home-cluster notes.
 
 ## Working Directory
 
 Run commands from the repository root unless a command says otherwise.
+
+Before modifying `agent/`, read `agent/AGENTS.md`. For work spanning multiple deployables, read
+every applicable nested guide before planning changes.
 
 ## Terminology
 
@@ -28,6 +33,8 @@ Run commands from the repository root unless a command says otherwise.
 - Media: posters, backdrops, profile photos, and files stored through RustFS/S3.
 - Search Index: OpenSearch projection derived from PostgreSQL movie data.
 - Deployment: k3s manifests, Argo CD root app, ingress, cert-manager, and SOPS secrets.
+- Movie Concierge: conversational discovery surface that orchestrates Java-owned catalog
+  and recommendation capabilities; it is not a second search or recommendation engine.
 
 ## Project Map
 
@@ -41,6 +48,7 @@ Run commands from the repository root unless a command says otherwise.
 - `frontend/src/client/imdb-clone-backend.yaml` - checked-in OpenAPI spec.
 - `frontend/src/client/movies/generator-output/` - generated Axios client; do not edit manually.
 - `frontend/e2e/` - Playwright tests.
+- `agent/` - Python Movie Concierge deployable; read `agent/AGENTS.md` before changing it.
 - `compose.yaml` - local PostgreSQL, OpenSearch, RustFS, and seed services.
 - `infrastructure/clusters/home/apps/` - k3s GitOps manifests rendered by Kustomize.
 - `.codex/skills/` - Codex-specific reusable skills/tooling, not general project docs.
@@ -67,6 +75,16 @@ Frontend:
 - Keep server-state fetches/mutations in TanStack Query wrappers under feature `api` folders.
 - Prefer existing Material UI and theme patterns.
 
+Agent:
+
+- Read `agent/AGENTS.md` before editing the Python deployable.
+- Keep product policy and Interfaces in `imdb_agent.concierge`, inbound FastAPI code in
+  `imdb_agent.web`, concrete outbound Adapters in `imdb_agent.adapters`, and assembly in
+  `imdb_agent.bootstrap`.
+- Access Java-owned domain behavior only through MCP; never query its PostgreSQL database or
+  OpenSearch index directly.
+- Keep tests and evals deterministic and provider-independent by default.
+
 Infrastructure:
 
 - Local services are owned by `compose.yaml` and Make targets.
@@ -83,6 +101,8 @@ cd frontend && yarn install && yarn run build:moviesGen && yarn start
 make seed-local-users
 make seed-light SEED_VERSION=2026-05-17
 make reindex-local-search
+make agent-sync
+make run-agent
 make docker-compose-dev-down
 ```
 
@@ -95,6 +115,7 @@ Verification:
 cd frontend && yarn run lint
 cd frontend && yarn test
 cd frontend && yarn build
+make verify-agent
 kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
 ```
 

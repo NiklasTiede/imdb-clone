@@ -6,7 +6,7 @@
 
 **First release:** Read-only text concierge
 
-**Current milestone:** M1 Python deployable foundation
+**Current milestone:** M1 foundation completed; M2 Java read-only MCP Seam is next
 
 ## Vision
 
@@ -269,7 +269,7 @@ image, Make targets, and CI. **Exit:** the empty service is reproducibly buildab
 without Java, React, an LLM key, or Kubernetes. The execution-ready plan is
 [Movie Concierge foundation](superpowers/plans/2026-07-16-movie-concierge-foundation.md).
 
-**Status:** Ready for implementation.
+**Status:** Completed on 2026-07-16.
 
 ### M2 — Java read-only MCP seam
 
