@@ -1,0 +1,15 @@
+.coverage
+.env
+.env.*
+.git
+.import_linter_cache
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.venv
+Dockerfile*
+evals
+htmlcov
+tests
+**/__pycache__
+**/*.py[cod]

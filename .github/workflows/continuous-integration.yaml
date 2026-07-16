@@ -1,4 +1,4 @@
-name: CI - Build / Test for BE and FE Service
+name: CI - Build / Test Deployables
 
 on:
   push:
@@ -81,3 +81,29 @@ jobs:
 
       - name: Build
         run: yarn build
+
+  agent-build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: '3.14'
+          enable-cache: true
+          cache-dependency-glob: agent/uv.lock
+
+      - name: Install locked agent dependencies
+        run: make agent-sync
+
+      - name: Verify agent
+        run: make verify-agent
+
+      - name: Build agent image
+        run: make docker-build-agent
+
+      - name: Smoke-test agent image
+        run: make container-smoke-agent

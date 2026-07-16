@@ -14,12 +14,16 @@ K8S_RENDER_OUTPUT ?= /tmp/imdb-clone-home-apps.yaml
 K8S_SCHEMA_OUTPUT ?= /tmp/imdb-clone-home-apps-schema.yaml
 KUBECONFORM_IMAGE ?= ghcr.io/yannh/kubeconform:v0.6.7
 OPENAPI_CHECK_DIR ?= /tmp/imdb-clone-openapi-check
+AGENT_DIR = agent
+AGENT_IMAGE ?= imdb-clone-agent:local
+AGENT_SMOKE_PORT ?= 18090
+UV_CACHE_DIR ?= $(CURDIR)/.uv-cache
 
 .DEFAULT_GOAL := help
 
 ##@ Prerequisites
 
-.PHONY: check-local-tools check-seed-tools check-verification-tools
+.PHONY: check-local-tools check-agent-tools check-seed-tools check-verification-tools
 
 check-local-tools: ## check tools needed for the README local workflow
 	@missing=0; \
@@ -35,6 +39,20 @@ check-local-tools: ## check tools needed for the README local workflow
 	fi; \
 	if [ $$missing -eq 0 ]; then \
 		echo "All local development tools are available."; \
+	else \
+		exit 1; \
+	fi
+
+check-agent-tools: ## check tools needed for Python agent development
+	@missing=0; \
+	for tool in uv docker curl; do \
+		if ! command -v $$tool >/dev/null 2>&1; then \
+			echo "missing: $$tool"; \
+			missing=1; \
+		fi; \
+	done; \
+	if [ $$missing -eq 0 ]; then \
+		echo "All agent development tools are available."; \
 	else \
 		exit 1; \
 	fi
@@ -188,6 +206,40 @@ docker-build-frontend: ## build frontend docker image from Dockerfile
 
 docker-run-frontend: ## run frontend docker container
 	docker run --name $(DOCKER_IMG_FRONTEND) -p 3000:3000 $(DOCKER_IMG_FRONTEND)
+
+##@ Movie Concierge Agent
+
+.PHONY: agent-sync run-agent verify-agent-format verify-agent-lint verify-agent-types verify-agent-architecture verify-agent-tests verify-agent docker-build-agent container-smoke-agent
+
+agent-sync: ## sync the locked Python agent development environment
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv sync --locked --all-groups
+
+run-agent: ## run the local Python agent foundation on port 8090
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run uvicorn imdb_agent.bootstrap:create_app --factory --host 127.0.0.1 --port 8090 --no-access-log
+
+verify-agent-format: ## check Python agent formatting
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run ruff format --check .
+
+verify-agent-lint: ## lint the Python agent
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run ruff check .
+
+verify-agent-types: ## run strict Pyright for the Python agent
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run pyright
+
+verify-agent-architecture: ## verify Python agent import contracts and architecture tests
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run lint-imports
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run pytest tests/test_architecture.py
+
+verify-agent-tests: ## run deterministic Python agent tests
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run pytest
+
+verify-agent: verify-agent-format verify-agent-lint verify-agent-types verify-agent-architecture verify-agent-tests ## run the complete Python agent gate
+
+docker-build-agent: ## build the Python agent image
+	docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(AGENT_IMAGE) $(AGENT_DIR)
+
+container-smoke-agent: ## smoke-test the Python agent image, endpoints, and non-root user
+	AGENT_IMAGE=$(AGENT_IMAGE) AGENT_DOCKER_PLATFORM=$(APP_DOCKER_PLATFORM) AGENT_SMOKE_PORT=$(AGENT_SMOKE_PORT) ./$(AGENT_DIR)/tests/container/smoke.sh
 
 ##@ Verification
 
