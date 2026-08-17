@@ -82,6 +82,7 @@ dependencies {
 
 	//-- Servlet
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
 
 	//-- Validation
 	implementation 'org.springframework.boot:spring-boot-starter-validation'

@@ -16,7 +16,7 @@ import com.thecodinglab.imdbclone.catalog.api.MovieSearchReindexJobResponse;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchReindexJobStatus;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
-import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchService;
+import com.thecodinglab.imdbclone.catalog.internal.search.OpenSearchMovieSearchService;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchEmbeddingTextBuilder;
@@ -48,7 +48,7 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
 
   @Autowired private MovieSearchIndexMaintenance movieSearchIndexMaintenance;
 
-  @Autowired private MovieSearchService movieSearchService;
+  @Autowired private OpenSearchMovieSearchService movieSearchService;
 
   @Autowired private MovieSearchEmbeddingTextBuilder movieSearchEmbeddingTextBuilder;
 

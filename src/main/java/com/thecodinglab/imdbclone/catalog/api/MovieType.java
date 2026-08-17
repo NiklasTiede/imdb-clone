@@ -2,7 +2,7 @@ package com.thecodinglab.imdbclone.catalog.api;
 
 import org.springframework.modulith.NamedInterface;
 
-@NamedInterface({"reference", "ratings", "recommendation"})
+@NamedInterface({"reference", "ratings", "recommendation", "assistant"})
 public enum MovieType {
   SHORT,
   MOVIE,

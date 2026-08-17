@@ -20,6 +20,7 @@ class ModulithArchitectureTest {
   private static final Set<String> EXPECTED_MODULES =
       Set.of(
           "account",
+          "assistant",
           "catalog",
           "engagement",
           "identity",
@@ -88,6 +89,9 @@ class ModulithArchitectureTest {
 
   @Test
   void catalogConsumersUseNarrowNamedInterfaces() {
+    assertThat(readString(MODULE_ROOT.resolve("assistant/package-info.java")))
+        .contains("catalog::assistant")
+        .doesNotContain("catalog::api");
     assertThat(readString(MODULE_ROOT.resolve("engagement/package-info.java")))
         .contains("catalog::reference", "catalog::ratings")
         .doesNotContain("catalog::api");

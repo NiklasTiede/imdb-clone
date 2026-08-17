@@ -1,9 +1,9 @@
 package com.thecodinglab.imdbclone.catalog.web;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieSearch;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchReindexJobResponse;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
-import com.thecodinglab.imdbclone.catalog.internal.search.MovieSearchService;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchReindexAlreadyRunningException;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchReindexJobs;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
@@ -22,12 +22,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/search")
 public class SearchController {
 
-  private final MovieSearchService movieSearchService;
+  private final MovieSearch movieSearch;
   private final MovieSearchReindexJobs movieSearchReindexJobs;
 
-  public SearchController(
-      MovieSearchService movieSearchService, MovieSearchReindexJobs movieSearchReindexJobs) {
-    this.movieSearchService = movieSearchService;
+  public SearchController(MovieSearch movieSearch, MovieSearchReindexJobs movieSearchReindexJobs) {
+    this.movieSearch = movieSearch;
     this.movieSearchReindexJobs = movieSearchReindexJobs;
   }
 
@@ -38,7 +37,7 @@ public class SearchController {
       @RequestParam(defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page") int page,
       @RequestParam(defaultValue = Pagination.DEFAULT_PAGE_SIZE, value = "size") int size) {
     return new ResponseEntity<>(
-        movieSearchService.searchMovies(query, request, page, size), HttpStatus.OK);
+        movieSearch.searchMovies(query, request, page, size), HttpStatus.OK);
   }
 
   @PostMapping("/movies/reindex")

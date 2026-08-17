@@ -8,6 +8,7 @@ import com.thecodinglab.imdbclone.identity.internal.security.ratelimit.AuthRateL
 import com.thecodinglab.imdbclone.identity.internal.security.webauthn.AuditingUserCredentialRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -55,6 +56,7 @@ public class WebSecurityConfig {
   }
 
   @Bean
+  @Order(2)
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
 

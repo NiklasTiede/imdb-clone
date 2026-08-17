@@ -61,8 +61,10 @@ Backend:
 
 - Public contracts live in `api`; web adapters in `web`; concrete services, repositories, mappers,
   and persistence types under each module's `internal` package.
-- Modules are `account`, `catalog`, `engagement`, `identity`, `media`, `notification`,
+- Modules are `account`, `assistant`, `catalog`, `engagement`, `identity`, `media`, `notification`,
   `recommendation`, and `shared`.
+- Keep Spring AI MCP transport mapping and workload authentication in `assistant`; call Java-owned
+  domain behavior only through narrow named interfaces such as `catalog::assistant`.
 - Use existing `ProblemDetail` and `GlobalExceptionHandler` style for API errors.
 - Flyway owns schema migrations. Do not edit existing migrations unless explicitly asked.
 

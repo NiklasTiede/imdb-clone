@@ -3,7 +3,9 @@ package com.thecodinglab.imdbclone.catalog.api;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.Set;
+import org.springframework.modulith.NamedInterface;
 
+@NamedInterface("assistant")
 public record MovieSearchRequest(
     @Min(1850) @Max(2030) Integer minStartYear,
     @Min(1850) @Max(2030) Integer maxStartYear,

@@ -182,7 +182,14 @@ Checksum generation is trust-on-first-use, not independent provenance verificati
 requested dependency/version changes before accepting generated metadata, and never regenerate the
 file merely to silence a verification failure. Resolving `spotlessApply` is required because its
 Google Java Format dependency is provisioned lazily and does not appear in the ordinary dependency
-report. The current graph contains 394 lock entries and 5,606 checksum-metadata lines. A fully
+report.
+
+IntelliJ also resolves `*-sources.jar` attachments for navigation. These are explicitly trusted by
+the narrow Gradle-documented filename rule in `verification-metadata.xml`; they are not used on the
+compile or runtime classpaths. Do not broaden that rule to ordinary JARs, POMs, Gradle module
+metadata, or plugins, which remain checksum-verified.
+
+The current graph contains 399 lock entries and 5,718 verification-metadata lines. A fully
 offline test passed; a deliberate checksum mismatch failed at project configuration and was reverted
 after proving the gate.
 

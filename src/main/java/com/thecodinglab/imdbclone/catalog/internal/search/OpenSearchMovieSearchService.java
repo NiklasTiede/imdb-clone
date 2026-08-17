@@ -9,6 +9,7 @@ import static com.thecodinglab.imdbclone.shared.logging.Log.MOVIE_ID;
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieSearch;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.internal.search.embedding.MovieEmbeddingClient;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
@@ -40,7 +41,7 @@ import org.springframework.stereotype.Service;
 
 // spotless:off
 @Service
-public class OpenSearchMovieSearchService implements MovieSearchService {
+public class OpenSearchMovieSearchService implements MovieSearch {
 
   private static final Logger logger = LoggerFactory.getLogger(OpenSearchMovieSearchService.class);
   private final OpenSearchClient openSearchClient;
@@ -73,7 +74,6 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
     this.movieSearchMetrics = movieSearchMetrics;
   }
 
-  @Override
   public void indexMovie(MovieSearchDocument movie) {
     IndexResponse indexResponse;
     try {
@@ -102,7 +102,6 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
     }
   }
 
-  @Override
   public void indexMovies(List<MovieSearchDocument> movies) {
     BulkRequest.Builder br = new BulkRequest.Builder();
     for (MovieSearchDocument movie : movies) {
@@ -138,7 +137,6 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
   /**
    * Search Single Document by ID
    */
-  @Override
   public MovieSearchDocument getMovieDocumentById(Long movieId) {
     try {
       GetResponse<MovieSearchDocument> response = openSearchClient
@@ -158,7 +156,6 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
   /**
    * Search movies by Primary Title
    */
-  @Override
   public List<MovieSearchDocument> searchMoviesByPrimaryTitle(String searchText) {
     SearchResponse<MovieSearchDocument> response;
     try {
@@ -182,7 +179,6 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
   /**
    * Search movies by range of ratings
    */
-  @Override
   public List<MovieSearchDocument> searchMoviesByRatingRange(float minRating, float maxRating) {
     try {
       SearchResponse<MovieSearchDocument> response = openSearchClient
@@ -299,7 +295,6 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
     }
   }
 
-  @Override
   public PagedResponse<MovieRecord> searchMoviesSemantically(
       String query, MovieSearchRequest request, int page, int size) {
     long startedAt = movieSearchMetrics.start();
@@ -384,7 +379,6 @@ public class OpenSearchMovieSearchService implements MovieSearchService {
     return response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
   }
 
-  @Override
   public BoolQuery buildBoolQuery(String query, MovieSearchRequest request) {
     return movieSearchQueryBuilder.buildBoolQuery(query, request);
   }

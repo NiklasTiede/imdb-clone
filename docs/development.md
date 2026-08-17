@@ -204,7 +204,8 @@ Use four terminals when developing all deployables:
    make run-agent
    ```
 
-The M1 foundation is independent of Java. MCP integration is added in a later milestone.
+The Python foundation and Java MCP seam can still be started and debugged independently. The Python
+MCP client and headless Concierge orchestration are added in M3.
 
 Optional initial seed after backend startup:
 
@@ -223,6 +224,46 @@ curl -fsS http://localhost:9200/_cluster/health
 ```
 
 Then open `http://localhost:3000`.
+
+### Local Java MCP seam
+
+The development profile enables the stateless Spring AI MCP endpoint at `http://localhost:8080/mcp`
+with the local-only bearer value from `application-dev.properties`. Production keeps this endpoint
+disabled until its encrypted secret and network policy are installed.
+
+Each MCP operation is an independent JSON-RPC request. After the backend is running, inspect the
+server and its generated tool schema with:
+
+```bash
+MCP_TOKEN=local-development-mcp-token
+
+curl -fsS http://localhost:8080/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H "Authorization: Bearer ${MCP_TOKEN}" \
+  --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"local-debugger","version":"1.0.0"}}}'
+
+curl -fsS http://localhost:8080/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H "Authorization: Bearer ${MCP_TOKEN}" \
+  --data '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+```
+
+With PostgreSQL, OpenSearch, embeddings, seed data, and the backend ready, call the first grounded
+tool directly:
+
+```bash
+curl -fsS http://localhost:8080/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H "Authorization: Bearer ${MCP_TOKEN}" \
+  --data '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"search_movies","arguments":{"query":"thoughtful science fiction under two hours","maxRuntimeMinutes":120,"movieType":"MOVIE","limit":3}}}'
+```
+
+The result includes MCP text content for broad client compatibility and a versioned
+`structuredContent` object for the Python agent. The tool returns only compact catalog data and
+never contacts PostgreSQL or OpenSearch outside the Catalog module.
 
 ## Backend Checks
 
@@ -415,13 +456,18 @@ Frontend build/runtime variables:
 - `VITE_IMDB_CLONE_BACKEND_ADDRESS`
 - `VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`
 
-Movie Concierge foundation variables:
+Movie Concierge variables:
 
 - `IMDB_AGENT_ENVIRONMENT` (`local`, `test`, or `production`)
 - `IMDB_AGENT_VERSION`
 - `IMDB_AGENT_HOST`
 - `IMDB_AGENT_PORT`
-- `IMDB_AGENT_MCP_BEARER_TOKEN` (reserved for the protected MCP milestone; never log it)
+- `IMDB_AGENT_MCP_BEARER_TOKEN` (the Python client credential; never log it)
+
+Java MCP production variables/config-tree entries:
+
+- `movie_concierge_mcp_enabled` (defaults to `false` in production)
+- `movie_concierge_mcp_bearer_token` (required and non-empty whenever MCP is enabled)
 
 Secret handling:
 

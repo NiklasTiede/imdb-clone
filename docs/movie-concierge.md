@@ -6,7 +6,7 @@
 
 **First release:** Read-only text concierge
 
-**Current milestone:** M1 foundation completed; M2 Java read-only MCP Seam is next
+**Current milestone:** M2 implemented and verified locally; owner review precedes M3
 
 ## Vision
 
@@ -274,9 +274,12 @@ without Java, React, an LLM key, or Kubernetes. The execution-ready plan is
 ### M2 — Java read-only MCP seam
 
 Add one protected, stateless MCP adapter and expose the smallest useful public catalog search
-interface. Start with `search_movies`, then add details, similar movies, and Tonight Mode through
-existing domain interfaces. **Exit:** MCP contract and security tests prove that Python needs no
-direct data-store access.
+interface. This milestone contains `search_movies`; details, similar movies, and Tonight Mode remain
+later read-only MVP slices through existing domain interfaces. **Exit:** MCP contract and security
+tests prove that Python needs no direct data-store access. The execution-ready plan and verification
+record are [Movie Concierge MCP search](superpowers/plans/2026-07-16-movie-concierge-mcp-search.md).
+
+**Status:** Implemented and verified locally on 2026-07-16; pending owner review and commit.
 
 ### M3 — Headless Concierge core
 
