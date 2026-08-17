@@ -75,6 +75,35 @@ class TonightModeTest {
         .hasSize(3);
   }
 
+  @Test
+  void enforcesIncludedAndExcludedGenresAgainstTheReturnedCandidatePool() {
+    when(candidateProvider.findCandidates(any(), any(Integer.class)))
+        .thenReturn(
+            List.of(
+                movie(1, MovieGenre.HORROR),
+                movie(2, MovieGenre.COMEDY),
+                movie(3, MovieGenre.COMEDY),
+                movie(4, MovieGenre.DRAMA)));
+
+    var result =
+        service()
+            .choose(
+                new TonightModeRequest(
+                    120,
+                    Set.of(MovieGenre.COMEDY),
+                    Set.of(MovieGenre.HORROR),
+                    TonightMood.LIGHT,
+                    null,
+                    MovieType.MOVIE,
+                    false,
+                    List.of(),
+                    "seed"));
+
+    assertThat(result.picks())
+        .extracting(pick -> pick.movie().id())
+        .containsExactlyInAnyOrder(2L, 3L);
+  }
+
   private TonightMode service() {
     return new TonightMode(candidateProvider);
   }

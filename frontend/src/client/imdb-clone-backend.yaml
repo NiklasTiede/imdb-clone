@@ -1702,6 +1702,42 @@ components:
           maxItems: 8
           minItems: 0
           uniqueItems: true
+        excludedMovieGenres:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          maxItems: 8
+          minItems: 0
+          uniqueItems: true
         mood:
           type: string
           enum:

@@ -2,6 +2,7 @@ package com.thecodinglab.imdbclone.recommendation.internal.tonight;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieType;
 import com.thecodinglab.imdbclone.recommendation.api.TonightEra;
 import com.thecodinglab.imdbclone.recommendation.api.TonightMood;
 import java.util.Set;
@@ -38,6 +39,16 @@ final class TonightPreferences {
 
   static boolean matches(
       MovieRecord movie, Integer maxRuntimeMinutes, Set<MovieGenre> genres, TonightEra era) {
+    return matches(movie, maxRuntimeMinutes, genres, Set.of(), era, null);
+  }
+
+  static boolean matches(
+      MovieRecord movie,
+      Integer maxRuntimeMinutes,
+      Set<MovieGenre> genres,
+      Set<MovieGenre> excludedGenres,
+      TonightEra era,
+      MovieType movieType) {
     if (movie == null) {
       return false;
     }
@@ -48,6 +59,14 @@ final class TonightPreferences {
     if (!genres.isEmpty()
         && (movie.movieGenre() == null
             || java.util.Collections.disjoint(movie.movieGenre(), genres))) {
+      return false;
+    }
+    if (!excludedGenres.isEmpty()
+        && movie.movieGenre() != null
+        && !java.util.Collections.disjoint(movie.movieGenre(), excludedGenres)) {
+      return false;
+    }
+    if (movieType != null && movie.movieType() != movieType) {
       return false;
     }
     YearRange years = yearsFor(era);

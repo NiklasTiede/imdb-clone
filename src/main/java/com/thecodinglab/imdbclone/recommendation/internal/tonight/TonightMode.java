@@ -37,12 +37,23 @@ class TonightMode implements TonightModeService {
             years.maximum(),
             30,
             request.maxRuntimeMinutes(),
-            genres,
+            Set.of(),
             type,
             6.0f,
             50,
             excluded);
-    List<MovieRecord> pool = candidates.findCandidates(criteria, CANDIDATE_LIMIT);
+    List<MovieRecord> pool =
+        candidates.findCandidates(criteria, CANDIDATE_LIMIT).stream()
+            .filter(
+                movie ->
+                    TonightPreferences.matches(
+                        movie,
+                        request.maxRuntimeMinutes(),
+                        genres,
+                        request.excludedMovieGenres(),
+                        request.era(),
+                        type))
+            .toList();
     List<MovieRecord> picks = pickThree(pool, seed, excluded);
     return new TonightModeResponse(
         seed,

@@ -30,7 +30,10 @@ class McpToolRegistrationConfig {
 
   @Bean
   List<McpStatelessServerFeatures.SyncToolSpecification> movieConciergeToolSpecifications(
-      MovieSearchMcpTool movieSearchMcpTool) {
-    return SyncMcpAnnotationProviders.statelessToolSpecifications(List.of(movieSearchMcpTool));
+      MovieSearchMcpTool movieSearchMcpTool,
+      MovieDetailsMcpTool movieDetailsMcpTool,
+      MovieRecommendationMcpTools movieRecommendationMcpTools) {
+    return SyncMcpAnnotationProviders.statelessToolSpecifications(
+        List.of(movieSearchMcpTool, movieDetailsMcpTool, movieRecommendationMcpTools));
   }
 }

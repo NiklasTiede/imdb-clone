@@ -20,7 +20,7 @@ public class MovieSearchMcpTool {
   private static final int DEFAULT_LIMIT = 5;
   private static final int MAX_LIMIT = 10;
   private static final int MAX_QUERY_LENGTH = 200;
-  private static final int MAX_DESCRIPTION_LENGTH = 600;
+  private static final String TOOL_NAME = "search_movies";
 
   private final MovieSearch movieSearch;
   private final MovieSearchToolMetrics metrics;
@@ -83,19 +83,19 @@ public class MovieSearchMcpTool {
               limit);
       PagedResponse<MovieRecord> result =
           movieSearch.searchMovies(input.query(), input.request(), 0, input.limit());
-      metrics.record("success", startedAt);
+      metrics.record(TOOL_NAME, "success", startedAt);
       return new MovieSearchToolResult(
           "1.0",
-          result.getContent().stream().map(MovieSearchMcpTool::toToolMovie).toList(),
+          result.getContent().stream().map(MovieToolMovie::from).toList(),
           result.getTotalElements(),
           result.getTotalElements() > result.getContent().size());
     } catch (IllegalArgumentException ex) {
-      metrics.record("invalid_request", startedAt);
+      metrics.record(TOOL_NAME, "invalid_request", startedAt);
       throw ex;
     } catch (RuntimeException ex) {
-      metrics.record("failure", startedAt);
+      metrics.record(TOOL_NAME, "failure", startedAt);
       logger.error("MCP search_movies tool failed with error type [{}]", ex.getClass().getName());
-      throw new MovieSearchToolException("Movie search is temporarily unavailable.");
+      throw new MovieConciergeToolException("Movie search is temporarily unavailable.");
     }
   }
 
@@ -150,34 +150,5 @@ public class MovieSearchMcpTool {
     }
   }
 
-  private static MovieSearchToolResult.Movie toToolMovie(MovieRecord movie) {
-    return new MovieSearchToolResult.Movie(
-        movie.id(),
-        movie.primaryTitle(),
-        movie.originalTitle(),
-        movie.movieType(),
-        movie.startYear(),
-        movie.runtimeMinutes(),
-        movie.movieGenre(),
-        movie.imdbRating(),
-        movie.imdbRatingCount(),
-        truncate(movie.description()),
-        movie.posterImageToken());
-  }
-
-  private static String truncate(String value) {
-    if (value == null || value.length() <= MAX_DESCRIPTION_LENGTH) {
-      return value;
-    }
-    return value.substring(0, MAX_DESCRIPTION_LENGTH);
-  }
-
   private record SearchInput(String query, MovieSearchRequest request, int limit) {}
-
-  private static final class MovieSearchToolException extends RuntimeException {
-
-    private MovieSearchToolException(String message) {
-      super(message);
-    }
-  }
 }

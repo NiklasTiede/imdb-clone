@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import org.springframework.modulith.NamedInterface;
 
-@NamedInterface("reference")
+@NamedInterface({"reference", "assistant"})
 public interface MovieReferenceService {
 
   MovieRecord findMovieById(Long movieId);

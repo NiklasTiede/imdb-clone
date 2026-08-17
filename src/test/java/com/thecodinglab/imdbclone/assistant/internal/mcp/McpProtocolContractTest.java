@@ -8,9 +8,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.thecodinglab.imdbclone.assistant.internal.security.McpSecurityProperties;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
+import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearch;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
+import com.thecodinglab.imdbclone.recommendation.api.MovieRecommendation;
+import com.thecodinglab.imdbclone.recommendation.api.MovieRecommendationSet;
+import com.thecodinglab.imdbclone.recommendation.api.RecommendationReason;
+import com.thecodinglab.imdbclone.recommendation.api.RecommendationService;
+import com.thecodinglab.imdbclone.recommendation.api.TonightModeResponse;
+import com.thecodinglab.imdbclone.recommendation.api.TonightModeService;
+import com.thecodinglab.imdbclone.recommendation.api.TonightPick;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -98,18 +106,29 @@ class McpProtocolContractTest {
   }
 
   @Test
-  void toolsListPublishesOnlyTheBoundedReadOnlyMovieSearchContract() throws Exception {
+  void toolsListPublishesOnlyTheFourBoundedReadOnlyMovieContracts() throws Exception {
     mockMvc
         .perform(authenticatedMcpRequest(toolsListRequest()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.result.tools.length()").value(1))
-        .andExpect(jsonPath("$.result.tools[0].name").value("search_movies"))
-        .andExpect(jsonPath("$.result.tools[0].annotations.readOnlyHint").value(true))
-        .andExpect(jsonPath("$.result.tools[0].annotations.destructiveHint").value(false))
-        .andExpect(jsonPath("$.result.tools[0].annotations.openWorldHint").value(false))
-        .andExpect(jsonPath("$.result.tools[0].inputSchema.properties.query.type").value("string"))
-        .andExpect(jsonPath("$.result.tools[0].inputSchema.properties.limit.type").value("integer"))
-        .andExpect(jsonPath("$.result.tools[0].outputSchema.properties.movies").exists());
+        .andExpect(jsonPath("$.result.tools.length()").value(4))
+        .andExpect(
+            jsonPath("$.result.tools[*].name")
+                .value(
+                    org.hamcrest.Matchers.containsInAnyOrder(
+                        "search_movies",
+                        "get_movie_details",
+                        "get_similar_movies",
+                        "get_tonight_picks")))
+        .andExpect(
+            jsonPath("$.result.tools[*].annotations.readOnlyHint")
+                .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(true))))
+        .andExpect(
+            jsonPath("$.result.tools[*].annotations.destructiveHint")
+                .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(false))))
+        .andExpect(
+            jsonPath("$.result.tools[*].annotations.openWorldHint")
+                .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(false))))
+        .andExpect(jsonPath("$.result.tools[*].outputSchema.properties.movies").exists());
   }
 
   @Test
@@ -238,6 +257,49 @@ class McpProtocolContractTest {
     MeterRegistry meterRegistry() {
       return new SimpleMeterRegistry();
     }
+
+    @Bean
+    MovieReferenceService movieReferenceService() {
+      return new StubMovieReferenceService();
+    }
+
+    @Bean
+    RecommendationService recommendationService() {
+      return (movieId, limit) ->
+          new MovieRecommendationSet(
+              "contract-test",
+              List.of(
+                  new MovieRecommendation(
+                      CapturingMovieSearch.movie(),
+                      RecommendationReason.SIMILAR_THEMES,
+                      "A grounded explanation.")));
+    }
+
+    @Bean
+    TonightModeService tonightModeService() {
+      return request ->
+          new TonightModeResponse(
+              "contract-seed",
+              List.of(new TonightPick(CapturingMovieSearch.movie(), "Fits the constraints.")));
+    }
+  }
+
+  static final class StubMovieReferenceService implements MovieReferenceService {
+
+    @Override
+    public MovieRecord findMovieById(Long movieId) {
+      return CapturingMovieSearch.movie();
+    }
+
+    @Override
+    public List<MovieRecord> findMoviesByIds(java.util.Collection<Long> movieIds) {
+      return List.of(CapturingMovieSearch.movie());
+    }
+
+    @Override
+    public PagedResponse<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size) {
+      return new PagedResponse<>(List.of(CapturingMovieSearch.movie()), page, size, 1, 1, true);
+    }
   }
 
   static final class CapturingMovieSearch implements MovieSearch {
@@ -269,7 +331,7 @@ class McpProtocolContractTest {
       failure.set(exception);
     }
 
-    private static MovieRecord movie() {
+    static MovieRecord movie() {
       return new MovieRecord(
           42L,
           "tt2543164",
