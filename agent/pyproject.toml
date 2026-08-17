@@ -12,6 +12,7 @@ dependencies = [
     "fastapi>=0.128,<1",
     "prometheus-client>=0.23,<1",
     "pydantic>=2.12,<3",
+    "pydantic-ai[openai-realtime]==2.31.0",
     "pydantic-settings>=2.12,<3",
     "structlog>=25.5,<26",
     "uvicorn[standard]>=0.40,<1",

@@ -1,6 +1,6 @@
 # Movie Concierge MCP Search Implementation Plan
 
-**Status:** Implemented and verified locally; pending owner review
+**Status:** Completed
 
 **Milestone:** M2 — Java read-only MCP Seam
 

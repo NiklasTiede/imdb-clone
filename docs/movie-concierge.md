@@ -6,7 +6,7 @@
 
 **First release:** Read-only text concierge
 
-**Current milestone:** M2 implemented and verified locally; owner review precedes M3
+**Current milestone:** M2 completed; M3 headless Concierge core is next
 
 ## Vision
 
@@ -134,8 +134,9 @@ The load-bearing architecture is recorded in
 [ADR 0001](adr/0001-movie-concierge-architecture.md). The intended stack is:
 
 - **Python service:** Python 3.14 target, uv, FastAPI/Uvicorn, Pydantic v2 and
-  pydantic-settings, Pydantic AI 2.x, pytest, strict Pyright, curated Ruff rules, Import Linter, and
-  a small architecture test.
+  pydantic-settings, Pydantic AI 2.31.0, pytest, strict Pyright, curated Ruff rules, Import Linter,
+  and a small architecture test. The initial exact framework pin keeps the newly released Realtime
+  surface reproducible while M3 establishes its adapter boundary and regression tests.
 - **Java MCP server:** Spring Boot and Spring AI 2.x, stateless Streamable HTTP, Spring Security,
   safe exception mapping, and tools that call existing public module interfaces.
 - **Frontend:** the existing React/TypeScript/Material UI application, an application-owned typed
@@ -279,7 +280,7 @@ later read-only MVP slices through existing domain interfaces. **Exit:** MCP con
 tests prove that Python needs no direct data-store access. The execution-ready plan and verification
 record are [Movie Concierge MCP search](superpowers/plans/2026-07-16-movie-concierge-mcp-search.md).
 
-**Status:** Implemented and verified locally on 2026-07-16; pending owner review and commit.
+**Status:** Completed after local verification and owner review.
 
 ### M3 — Headless Concierge core
 
