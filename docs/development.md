@@ -147,23 +147,37 @@ yarn start
 The frontend runs on `http://localhost:3000` and expects:
 
 - `VITE_IMDB_CLONE_BACKEND_ADDRESS`
+- `VITE_IMDB_CLONE_CONCIERGE_ADDRESS` (optional; local Vite uses `/concierge-api`)
 - `VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`
 
 These are defined in `frontend/.env.development` for local development and in
 `frontend/.env.production` for production builds. Use `.env.local` or `.env.*.local` for private local
 overrides; those files are ignored by Git.
 
-## Run The Movie Concierge Foundation
+## Run The Movie Concierge
 
-Create the locked Python 3.14 environment and start the FastAPI process:
+Create the locked Python 3.14 environment, then copy the safe key template to the one exact ignored
+path read by the service:
 
 ```bash
 make agent-sync
+mkdir -p .secrets
+cp agent/movie-concierge.local.env.example .secrets/movie-concierge.local.env
+chmod 600 .secrets/movie-concierge.local.env
+```
+
+Edit only `.secrets/movie-concierge.local.env` and replace the placeholder `OPENAI_API_KEY`. Do not
+source, print, log, screenshot, or commit this file. A shell `OPENAI_API_KEY`, `.env`, or
+`agent/.env` is not read. Configure a hard `$20` budget on the dedicated OpenAI project because it
+is the authoritative limit across process restarts.
+
+With the Java backend running, start the Luna-powered service:
+
+```bash
 make run-agent
 ```
 
-The foundation listens on `http://localhost:8090` and currently needs no model key, Java process,
-database, or search index. Check:
+The service listens on `http://localhost:8090`. Check:
 
 ```bash
 curl -fsS http://localhost:8090/healthz
@@ -171,9 +185,14 @@ curl -fsS http://localhost:8090/readyz
 curl -fsS http://localhost:8090/metrics
 ```
 
-The application does not load a working-directory `.env` file implicitly. Use exported
-`IMDB_AGENT_*` variables or pass an explicit ignored env file through development tooling when a
-later milestone introduces credentials. Never commit `agent/.env` or `agent/.env.*`.
+For deterministic UI/API development without a model key, Java, database, or search index:
+
+```bash
+make run-agent-fake
+```
+
+This fake mode must be selected explicitly. It exercises the same typed browser contract and
+in-memory session behavior without pretending to validate model quality or MCP interoperability.
 
 ## Run Full Stack Locally
 
@@ -204,8 +223,10 @@ Use four terminals when developing all deployables:
    make run-agent
    ```
 
-The Python foundation and Java MCP seam can still be started and debugged independently. The Python
-MCP client and headless Concierge orchestration are added in M3.
+Vite proxies `/concierge-api` to the Python service. The public launcher is available to anonymous
+and authenticated users; frontend client IDs combine a stable browser ID with the current account
+ID so switching accounts starts an isolated conversation. Python holds bounded history only in
+memory, and a Python restart intentionally clears it.
 
 Optional initial seed after backend startup:
 
@@ -250,8 +271,8 @@ curl -fsS http://localhost:8080/mcp \
   --data '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
 ```
 
-With PostgreSQL, OpenSearch, embeddings, seed data, and the backend ready, call the first grounded
-tool directly:
+With PostgreSQL, OpenSearch, embeddings, seed data, and the backend ready, call a grounded tool
+directly:
 
 ```bash
 curl -fsS http://localhost:8080/mcp \
@@ -263,7 +284,9 @@ curl -fsS http://localhost:8080/mcp \
 
 The result includes MCP text content for broad client compatibility and a versioned
 `structuredContent` object for the Python agent. The tool returns only compact catalog data and
-never contacts PostgreSQL or OpenSearch outside the Catalog module.
+never contacts PostgreSQL or OpenSearch outside the owning Java module. `tools/list` exposes exactly
+`search_movies`, `get_movie_details`, `get_similar_movies`, and `get_tonight_picks`; their
+annotations declare them read-only, idempotent, non-destructive, and closed-world.
 
 ## Backend Checks
 
@@ -315,6 +338,24 @@ Run the stable full gate from the repository root:
 ```bash
 make verify-agent
 ```
+
+This includes the executable 20-case deterministic Pydantic Evals report. It requires no key,
+provider network, Java process, or data service. Run one case while iterating with:
+
+```bash
+make eval-agent AGENT_EVAL_CASE=tonight-mode-refinement
+```
+
+Live Luna evals are deliberately absent from CI and need both the environment opt-in and the
+`--live` path selected by the Make target:
+
+```bash
+IMDB_AGENT_LIVE_EVALS_ENABLED=true \
+  make eval-agent-live AGENT_EVAL_CASE=exact-title-search
+```
+
+Fault-injection-only cases are excluded from live runs. Start with one case, check its `usage`
+event and OpenAI project usage, and stay inside the `$20` project budget.
 
 Use narrow checks while developing:
 
@@ -377,6 +418,11 @@ make container-smoke-agent
 ```
 
 The agent image contains runtime dependencies only and runs as numeric non-root user `10001`.
+
+Agent Prometheus metrics include bounded run outcomes/duration, active runs, known tool names,
+provider input/cache-read/cache-write/output tokens, estimated USD cost, and SSE disconnects. Logs
+record stable failure codes and exception types only; they do not contain prompts, bodies, tool
+payloads, client/conversation IDs, authorization headers, or keys.
 
 ## Kubernetes And k3s Validation
 
@@ -454,6 +500,8 @@ Important backend configuration areas:
 Frontend build/runtime variables:
 
 - `VITE_IMDB_CLONE_BACKEND_ADDRESS`
+- `VITE_IMDB_CLONE_CONCIERGE_ADDRESS` (optional; Vite proxies `/concierge-api` to port `8090` by
+  default)
 - `VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`
 
 Movie Concierge variables:
@@ -462,7 +510,12 @@ Movie Concierge variables:
 - `IMDB_AGENT_VERSION`
 - `IMDB_AGENT_HOST`
 - `IMDB_AGENT_PORT`
+- `IMDB_AGENT_MODEL_BACKEND` (`openai` by default; use `fake` only for deterministic development)
+- `IMDB_AGENT_MODEL_NAME` (`gpt-5.6-luna` by default)
 - `IMDB_AGENT_MCP_BEARER_TOKEN` (the Python client credential; never log it)
+- `IMDB_AGENT_PROJECT_COST_LIMIT_USD` (cannot exceed `$20`)
+- `IMDB_AGENT_RUN_COST_LIMIT_USD`, model/tool/token limits, and timeout settings
+- `IMDB_AGENT_LIVE_EVALS_ENABLED` (defaults to `false` and still requires the `--live` CLI flag)
 
 Java MCP production variables/config-tree entries:
 
@@ -473,6 +526,9 @@ Secret handling:
 
 - Local override files such as `.env.local` and `.env.*.local` are ignored.
 - `.secrets/` is ignored and must not be printed or committed.
+- The Movie Concierge reads `OPENAI_API_KEY` only from the exact ignored
+  `.secrets/movie-concierge.local.env` file. A shell variable with that name is intentionally
+  ignored.
 - Kubernetes secret manifests use SOPS/age as `*.sops.yaml`.
 - `.sops.yaml` defines encryption rules for `infrastructure/clusters/home/*.sops.yaml` files.
 - Do not replace encrypted SOPS content with plaintext.

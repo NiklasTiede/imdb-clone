@@ -2,11 +2,11 @@
 
 **Status:** Accepted product direction
 
-**Last updated:** 2026-07-16
+**Last updated:** 2026-08-18
 
 **First release:** Read-only text concierge
 
-**Current milestone:** M2 completed; M3 headless Concierge core is next
+**Current milestone:** Local read-only MVP completed; production deployment remains deferred
 
 ## Vision
 
@@ -57,7 +57,7 @@ to those clients.
 
 ## First User Experience
 
-The first interface is text based. A `Movie Concierge` action in the application header opens a
+The first interface is text based. A public `Ask Concierge` action opens a
 right-side drawer on desktop and a full-screen panel on small screens. It contains a short
 capability introduction and suggested prompts such as:
 
@@ -93,7 +93,7 @@ React application performs the navigation; navigation is not an LLM tool with ar
 - Similar-movie discovery through the existing recommendation capability.
 - Tonight Mode choices with mood, genre, runtime, era, and exclusion constraints.
 - Multi-turn refinement with bounded conversation history.
-- Typed streaming text, status, movie-card, error, and completion events.
+- Typed streaming text, status, movie-card, error, usage, and completion events.
 - Provider-independent agent code and deterministic model/tool fakes.
 - A versioned eval set covering normal, ambiguous, adversarial, and failure cases.
 - Local metrics, structured logs, trace hooks, token usage, and estimated-cost accounting before
@@ -133,17 +133,19 @@ short-lived delegated identity that Java verifies independently.
 The load-bearing architecture is recorded in
 [ADR 0001](adr/0001-movie-concierge-architecture.md). The intended stack is:
 
-- **Python service:** Python 3.14 target, uv, FastAPI/Uvicorn, Pydantic v2 and
+- **Python service:** Python 3.14, uv, FastAPI/Uvicorn, Pydantic v2 and
   pydantic-settings, Pydantic AI 2.31.0, pytest, strict Pyright, curated Ruff rules, Import Linter,
-  and a small architecture test. The initial exact framework pin keeps the newly released Realtime
-  surface reproducible while M3 establishes its adapter boundary and regression tests.
+  and enforced architecture tests. The exact framework pin keeps the Realtime surface reproducible;
+  provider/framework types remain inside adapters so a future `Agent.realtime()` channel can reuse
+  product policy and Java tools.
 - **Java MCP server:** Spring Boot and Spring AI 2.x, stateless Streamable HTTP, Spring Security,
   safe exception mapping, and tools that call existing public module interfaces.
 - **Frontend:** the existing React/TypeScript/Material UI application, an application-owned typed
   SSE client, and structured result components.
-- **Models:** provider-selected through configuration. The initial primary and challenger are run
-  through the same eval set before either is promoted. Model names, prices, and context limits are
-  deployment configuration rather than architecture decisions.
+- **Models:** `gpt-5.6-luna` is the initial text model because it supports streaming and function
+  calling at the cost-sensitive tier. Provider selection remains configuration, and later models
+  run through the same eval set before promotion. The provider adapter is replaceable so the same
+  product ports can later back a Pydantic AI realtime/voice channel.
 - **Telemetry:** OpenTelemetry-compatible traces, Prometheus metrics, structured JSON logs,
   Grafana dashboards and alerts, and Langfuse for LLM traces, prompt versions, datasets, and scores.
 
@@ -288,11 +290,19 @@ Add the Pydantic AI agent, MCP client, provider adapter, typed events, bounded r
 deterministic model/MCP fakes, and an eval command. **Exit:** a local `curl` request can stream a
 grounded structured search response through Java.
 
+**Status:** Completed locally on 2026-08-18 with bounded Pydantic AI/Luna execution, all four MCP
+tools, typed SSE, isolated in-memory sessions, safe failures, metrics, deterministic fakes, and an
+executable Pydantic Evals suite.
+
 ### M4 — React walking skeleton
 
-Add the header launcher, responsive text panel, typed SSE client, concise progress states, and one
+Add the public launcher, responsive text panel, typed SSE client, concise progress states, and one
 structured movie-result component using existing UI primitives. **Exit:** one happy path and one
 failure path work end to end in the browser.
+
+**Status:** Completed locally on 2026-08-18. The launcher is public, the panel is responsive, the
+client runtime-validates streamed events, and grounded tool results render automatically as known
+movie cards. Component and desktop/mobile Playwright coverage exercise the flow.
 
 ### M5 — Production guardrails
 
@@ -308,6 +318,10 @@ structured comparisons, capability discovery, and the production eval regression
 user can reliably reach a confident movie choice, and an operator can diagnose quality, latency,
 tool, provider, and cost failures.
 
+**Local status:** The four-tool, multi-turn, bounded-history, capability-discovery, and deterministic
+eval scope is complete. Durable production state, production tracing/export, traffic-derived SLOs,
+and deployment remain future work.
+
 ### M7 — Personal actions
 
 Add delegated user identity and durable proposal/approval/reauthorization/idempotency behavior
@@ -320,9 +334,9 @@ Evaluate realtime voice after the text product demonstrates repeated value. Reus
 policies, events, approval model, and evals. **Exit:** voice is an adapter to the product rather than
 a parallel agent implementation.
 
-The **local MVP** is reached after M4 for one end-to-end search journey. The **read-only product MVP**
-is reached after M6. Each milestone should land as small, cohesive commits on `master`; no feature
-branch is required for the current single-developer workflow.
+The **local read-only MVP** is complete on `feat/movie-concierge-agent`. The **production read-only
+MVP** still requires the production portions of M5/M6. Deployment and k3s resources are deliberately
+outside the local feature branch.
 
 ## Open Decisions
 
