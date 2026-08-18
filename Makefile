@@ -275,7 +275,7 @@ verify-openapi-drift: ## compare checked-in OpenAPI/client output with a running
 	mkdir -p $(OPENAPI_CHECK_DIR)
 	curl -fsS http://localhost:8080/v3/api-docs.yaml > $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml
 	diff -u frontend/src/client/imdb-clone-backend.yaml $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml
-	cd ./frontend; yarn openapi-generator-cli generate -i $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml -g typescript-axios -o $(OPENAPI_CHECK_DIR)/generator-output
+	cd ./frontend; yarn openapi-generator-cli generate -i $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml -g typescript-axios -t ./openapi-templates/typescript-axios -o $(OPENAPI_CHECK_DIR)/generator-output
 	diff -qr --exclude=FILES frontend/src/client/movies/generator-output $(OPENAPI_CHECK_DIR)/generator-output
 
 ##@ Docker housekeeping
