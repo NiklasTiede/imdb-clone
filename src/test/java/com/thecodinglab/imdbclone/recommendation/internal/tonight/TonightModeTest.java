@@ -104,6 +104,30 @@ class TonightModeTest {
         .containsExactlyInAnyOrder(2L, 3L);
   }
 
+  @Test
+  void groundsTheExplanationInAGenrePresentOnTheMovie() {
+    when(candidateProvider.findCandidates(any(), any(Integer.class)))
+        .thenReturn(List.of(movie(1, MovieGenre.DRAMA)));
+
+    var result =
+        service()
+            .choose(
+                new TonightModeRequest(
+                    120,
+                    Set.of(MovieGenre.HISTORY, MovieGenre.DRAMA),
+                    Set.of(),
+                    TonightMood.THOUGHT_PROVOKING,
+                    null,
+                    MovieType.MOVIE,
+                    false,
+                    List.of(),
+                    "seed"));
+
+    assertThat(result.picks().getFirst().explanation())
+        .contains("brings drama energy")
+        .doesNotContain("history energy");
+  }
+
   private TonightMode service() {
     return new TonightMode(candidateProvider);
   }

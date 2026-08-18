@@ -116,16 +116,17 @@ class TonightMode implements TonightModeService {
           "matches a "
               + request.mood().name().toLowerCase(Locale.ROOT).replace('_', ' ')
               + " mood");
-    if (!genres.isEmpty())
-      parts.add(
-          "brings "
-              + genres.stream()
-                  .findFirst()
-                  .orElseThrow()
-                  .name()
-                  .toLowerCase(Locale.ROOT)
-                  .replace('_', ' ')
-              + " energy");
+    if (!genres.isEmpty() && movie.movieGenre() != null)
+      movie.movieGenre().stream()
+          .filter(genres::contains)
+          .sorted(Comparator.comparing(Enum::name))
+          .findFirst()
+          .ifPresent(
+              genre ->
+                  parts.add(
+                      "brings "
+                          + genre.name().toLowerCase(Locale.ROOT).replace('_', ' ')
+                          + " energy"));
     if (movie.imdbRating() != null)
       parts.add(String.format(Locale.ROOT, "has a %.1f IMDb rating", movie.imdbRating()));
     return String.join(" · ", parts);
