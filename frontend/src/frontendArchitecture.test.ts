@@ -14,6 +14,7 @@ describe("frontend feature architecture", () => {
     expect(featureDirectoryNames()).toEqual([
       "account",
       "catalog",
+      "concierge",
       "engagement",
       "home",
       "identity",
