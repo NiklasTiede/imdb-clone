@@ -65,9 +65,22 @@ async def test_function_model_executes_tool_loop_and_emits_grounded_cards() -> N
                     "imdbRatingCount": 800000,
                     "description": "A grounded synopsis.",
                     "posterImageToken": "poster-token",
-                }
+                },
+                {
+                    "movieId": 43,
+                    "primaryTitle": "The Arrival",
+                    "originalTitle": "The Arrival",
+                    "type": "MOVIE",
+                    "startYear": 1996,
+                    "runtimeMinutes": 115,
+                    "genres": ["SCI_FI"],
+                    "imdbRating": 6.2,
+                    "imdbRatingCount": 40000,
+                    "description": "A nearby search candidate.",
+                    "posterImageToken": None,
+                },
             ],
-            "totalMatches": 1,
+            "totalMatches": 2,
             "moreAvailable": False,
         }
 
@@ -86,7 +99,8 @@ async def test_function_model_executes_tool_loop_and_emits_grounded_cards() -> N
     ]
 
     assert calls == 2
-    assert any(isinstance(event, MovieCardEvent) and event.movie.movie_id == 42 for event in events)
+    cards = [event.movie for event in events if isinstance(event, MovieCardEvent)]
+    assert [movie.movie_id for movie in cards] == [42]
     assert "".join(event.delta for event in events if isinstance(event, TextEvent)) == (
         "Arrival is the grounded match."
     )

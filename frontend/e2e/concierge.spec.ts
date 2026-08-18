@@ -102,19 +102,37 @@ test("public concierge streams a grounded movie into its responsive drawer", asy
     expect(Math.abs((bounds?.width ?? 0) - 440)).toBeLessThanOrEqual(1);
   }
 
-  await page
-    .getByRole("textbox", { name: "Ask the Movie Concierge" })
-    .fill("Find a thoughtful science-fiction movie");
+  const input = page.getByRole("textbox", { name: "Ask the Movie Concierge" });
+  await expect(input).toHaveCSS("color", "rgba(255, 255, 255, 0.92)");
+  expect(
+    await input.evaluate((element) =>
+      getComputedStyle(element, "::placeholder").getPropertyValue("color"),
+    ),
+  ).toBe("rgba(255, 255, 255, 0.62)");
+
+  await input.fill("Find a thoughtful science-fiction movie");
   await page.getByRole("button", { name: "Send concierge message" }).click();
 
   await expect(
     page.getByText("Arrival is a grounded match from this catalog."),
   ).toBeVisible();
   await expect(page.getByTestId("concierge-movie-card")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Arrival" })).toHaveAttribute(
-    "href",
-    "/movie?id=42",
+  const movieCard = page.getByTestId("concierge-movie-card");
+  await expect(movieCard.getByText("2016")).toHaveCSS(
+    "color",
+    "rgba(255, 255, 255, 0.78)",
   );
+  await expect(movieCard.getByText("116 min")).toHaveCSS(
+    "color",
+    "rgba(255, 255, 255, 0.78)",
+  );
+  await expect(movieCard.getByText("7.9")).toHaveCSS(
+    "color",
+    "rgba(255, 255, 255, 0.92)",
+  );
+  await expect(
+    movieCard.getByRole("link", { name: "Arrival" }),
+  ).toHaveAttribute("href", "/movie?id=42");
   expect(clientIds).toHaveLength(2);
   expect(clientIds[0]).toMatch(/^browser-[a-f0-9-]{36}:anonymous$/);
   expect(clientIds[1]).toBe(clientIds[0]);

@@ -33,7 +33,9 @@ const streamResponse = (): Response =>
           explanation: "A thoughtful science-fiction drama.",
         },
       }) +
-      event("text", 3, { delta: "Arrival is grounded in the catalog." }) +
+      event("text", 3, {
+        delta: "The movie is **_Arrival_ (2016)**.",
+      }) +
       event("usage", 4, {
         usage: {
           model: "deterministic-test",
@@ -104,8 +106,9 @@ describe("ConciergeExperience", () => {
     );
 
     expect(
-      await screen.findByText("Arrival is grounded in the catalog."),
+      await screen.findByText("Arrival", { selector: "em" }),
     ).toBeVisible();
+    expect(screen.queryByText(/\*\*_/)).not.toBeInTheDocument();
     expect(screen.getByTestId("concierge-movie-card")).toBeVisible();
     expect(screen.getByRole("link", { name: "Arrival" })).toHaveAttribute(
       "href",

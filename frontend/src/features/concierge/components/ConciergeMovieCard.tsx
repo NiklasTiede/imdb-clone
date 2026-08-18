@@ -48,15 +48,21 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
         direction="row"
         spacing={1.1}
         useFlexGap
-        sx={{ alignItems: "center", color: "text.secondary", mb: 1 }}
+        sx={{ alignItems: "center", mb: 1 }}
       >
         {movie.startYear != null && (
-          <Typography sx={{ fontSize: 11 }}>{movie.startYear}</Typography>
+          <Typography sx={{ color: "rgba(255,255,255,0.78)", fontSize: 11 }}>
+            {movie.startYear}
+          </Typography>
         )}
         {movie.runtimeMinutes != null && (
-          <Stack direction="row" spacing={0.35} sx={{ alignItems: "center" }}>
-            <AccessTimeRoundedIcon sx={{ fontSize: 13 }} />
-            <Typography sx={{ fontSize: 11 }}>
+          <Stack
+            direction="row"
+            spacing={0.35}
+            sx={{ alignItems: "center", color: "rgba(255,255,255,0.78)" }}
+          >
+            <AccessTimeRoundedIcon sx={{ color: "inherit", fontSize: 13 }} />
+            <Typography sx={{ color: "inherit", fontSize: 11 }}>
               {movie.runtimeMinutes} min
             </Typography>
           </Stack>
@@ -64,7 +70,7 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
         {movie.imdbRating != null && (
           <Stack direction="row" spacing={0.25} sx={{ alignItems: "center" }}>
             <StarRoundedIcon sx={{ color: movieColors.rating, fontSize: 15 }} />
-            <Typography sx={{ color: "text.primary", fontSize: 11 }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.92)", fontSize: 11 }}>
               {movie.imdbRating.toFixed(1)}
             </Typography>
           </Stack>

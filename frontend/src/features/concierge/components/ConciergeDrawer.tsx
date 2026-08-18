@@ -15,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
+import Markdown from "react-markdown";
 import { movieColors } from "../../../theme";
 import { useConciergeChat } from "../hooks/useConciergeChat";
 import type { ChatTurn } from "../model/concierge";
@@ -207,10 +208,15 @@ const ConciergeDrawer = ({ clientId, onClose, open }: ConciergeDrawerProps) => {
                 "& .MuiInputBase-root": {
                   bgcolor: alpha("#ffffff", 0.045),
                   borderRadius: 2,
+                  color: "rgba(255,255,255,0.92)",
                   fontSize: 12,
                   pb: 1,
                   pr: 6,
                   pt: 1,
+                },
+                "& .MuiInputBase-input::placeholder": {
+                  color: "rgba(255,255,255,0.62)",
+                  opacity: 1,
                 },
                 "& fieldset": { borderColor: alpha("#ffffff", 0.12) },
                 "& .Mui-focused fieldset": {
@@ -273,25 +279,7 @@ const ChatMessage = ({ turn }: { turn: ChatTurn }) => {
         maxWidth: isUser ? "86%" : "100%",
       }}
     >
-      {turn.text && (
-        <Typography
-          sx={{
-            bgcolor: isUser ? alpha(movieColors.info, 0.14) : "transparent",
-            border: isUser
-              ? `1px solid ${alpha(movieColors.info, 0.2)}`
-              : "none",
-            borderRadius: isUser ? "16px 16px 4px 16px" : 0,
-            color: isUser ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.84)",
-            fontSize: 12.5,
-            lineHeight: 1.65,
-            px: isUser ? 1.6 : 0.4,
-            py: isUser ? 1.1 : 0,
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          {turn.text}
-        </Typography>
-      )}
+      {turn.text && <MessageText isUser={isUser} text={turn.text} />}
       {turn.movies.length > 0 && (
         <Stack spacing={1} sx={{ mt: turn.text ? 1.25 : 0 }}>
           {turn.movies.map((movie) => (
@@ -305,6 +293,51 @@ const ChatMessage = ({ turn }: { turn: ChatTurn }) => {
         </Alert>
       )}
     </Box>
+  );
+};
+
+const messageTextSx = {
+  color: "rgba(255,255,255,0.84)",
+  fontSize: 12.5,
+  lineHeight: 1.65,
+  "& p": { m: 0 },
+  "& p + p": { mt: 1 },
+  "& strong": { color: "rgba(255,255,255,0.96)", fontWeight: 750 },
+  "& ul, & ol": { my: 0.75, pl: 2.5 },
+  "& li + li": { mt: 0.35 },
+} as const;
+
+const MessageText = ({ isUser, text }: { isUser: boolean; text: string }) => {
+  if (!isUser) {
+    return (
+      <Box sx={{ ...messageTextSx, px: 0.4 }}>
+        <Markdown
+          allowedElements={["p", "strong", "em", "ul", "ol", "li", "br"]}
+          skipHtml
+          unwrapDisallowed
+        >
+          {text}
+        </Markdown>
+      </Box>
+    );
+  }
+
+  return (
+    <Typography
+      sx={{
+        bgcolor: alpha(movieColors.info, 0.14),
+        border: `1px solid ${alpha(movieColors.info, 0.2)}`,
+        borderRadius: "16px 16px 4px 16px",
+        color: "rgba(255,255,255,0.92)",
+        fontSize: 12.5,
+        lineHeight: 1.65,
+        px: 1.6,
+        py: 1.1,
+        whiteSpace: "pre-wrap",
+      }}
+    >
+      {text}
+    </Typography>
   );
 };
 

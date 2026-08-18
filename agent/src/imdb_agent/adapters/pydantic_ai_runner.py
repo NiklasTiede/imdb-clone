@@ -39,7 +39,12 @@ from imdb_agent.concierge.events import (
     UsageEvent,
     UsageSummary,
 )
-from imdb_agent.concierge.policy import SYSTEM_POLICY, TOOL_STATUSES, build_user_prompt
+from imdb_agent.concierge.policy import (
+    SYSTEM_POLICY,
+    TOOL_STATUSES,
+    build_user_prompt,
+    select_movies_for_display,
+)
 from imdb_agent.concierge.ports import ToolInvocation
 from imdb_agent.concierge.service import ConciergeRunError
 
@@ -191,6 +196,7 @@ class PydanticAIConciergeRunner:
 
     async def stream(self, request: RunRequest) -> AsyncIterator[RunnerEvent]:
         shown_movie_ids: set[int] = set()
+        tool_arguments: dict[str, dict[str, Any]] = {}
         try:
             async with (
                 self._semaphore,
@@ -203,11 +209,13 @@ class PydanticAIConciergeRunner:
             ):
                 async for event in events:
                     if isinstance(event, FunctionToolCallEvent):
+                        arguments = event.part.args_as_dict()
+                        tool_arguments[event.tool_call_id] = arguments
                         if request.trace_sink is not None:
                             request.trace_sink.record_tool_call(
                                 ToolInvocation(
                                     name=event.part.tool_name,
-                                    arguments=event.part.args_as_dict(),
+                                    arguments=arguments,
                                 )
                             )
                         status = TOOL_STATUSES.get(event.part.tool_name)
@@ -215,8 +223,13 @@ class PydanticAIConciergeRunner:
                             yield StatusEvent(status=status)
                     elif isinstance(event, FunctionToolResultEvent):
                         if isinstance(event.part, ToolReturnPart):
-                            for movie in _parse_grounded_movies(
+                            movies = _parse_grounded_movies(
                                 event.part.tool_name, event.part.content
+                            )
+                            for movie in select_movies_for_display(
+                                event.part.tool_name,
+                                movies,
+                                tool_arguments.get(event.tool_call_id, {}),
                             ):
                                 if movie.movie_id not in shown_movie_ids:
                                     shown_movie_ids.add(movie.movie_id)
