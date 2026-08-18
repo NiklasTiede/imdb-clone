@@ -18,6 +18,9 @@ dependencies = [
     "uvicorn[standard]>=0.40,<1",
 ]
 
+[project.scripts]
+imdb-agent-eval = "imdb_agent.eval_cli:main"
+
 [dependency-groups]
 dev = [
     "httpx>=0.28,<1",

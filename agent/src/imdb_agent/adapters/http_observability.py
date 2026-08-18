@@ -70,15 +70,17 @@ def create_http_metrics(settings: Settings) -> HttpMetrics:
     )
 
 
-def install_http_observability(app: FastAPI, settings: Settings) -> None:
+def install_http_observability(
+    app: FastAPI, settings: Settings, metrics: HttpMetrics | None = None
+) -> HttpMetrics:
     """Install bounded HTTP metrics and safe correlation at the composition root."""
 
-    metrics = create_http_metrics(settings)
+    resolved_metrics = metrics or create_http_metrics(settings)
     logger = structlog.get_logger()
 
     async def metrics_endpoint() -> Response:
         return Response(
-            content=generate_latest(metrics.registry),
+            content=generate_latest(resolved_metrics.registry),
             media_type=CONTENT_TYPE_LATEST,
         )
 
@@ -100,7 +102,7 @@ def install_http_observability(app: FastAPI, settings: Settings) -> None:
         request_id = valid_request_id(request.headers.get("X-Request-ID"))
         started_at = perf_counter()
         status_code = 500
-        metrics.in_progress.labels(method=method).inc()
+        resolved_metrics.in_progress.labels(method=method).inc()
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(request_id=request_id)
 
@@ -113,9 +115,9 @@ def install_http_observability(app: FastAPI, settings: Settings) -> None:
             duration_seconds = perf_counter() - started_at
             route = route_template(request)
             status = str(status_code)
-            metrics.in_progress.labels(method=method).dec()
-            metrics.requests.labels(method=method, route=route, status=status).inc()
-            metrics.duration.labels(method=method, route=route, status=status).observe(
+            resolved_metrics.in_progress.labels(method=method).dec()
+            resolved_metrics.requests.labels(method=method, route=route, status=status).inc()
+            resolved_metrics.duration.labels(method=method, route=route, status=status).observe(
                 duration_seconds
             )
             log_method = logger.error if status_code >= 500 else logger.info
@@ -134,6 +136,7 @@ def install_http_observability(app: FastAPI, settings: Settings) -> None:
             structlog.contextvars.clear_contextvars()
 
     app.middleware("http")(observe_request)
+    return resolved_metrics
 
 
 def valid_request_id(candidate: str | None) -> str:

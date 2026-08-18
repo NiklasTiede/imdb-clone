@@ -10,7 +10,7 @@ def test_read_only_eval_dataset_is_valid_and_versioned() -> None:
     dataset = load_eval_dataset(DATASET_PATH)
 
     assert dataset.version == "read-only-v1"
-    assert len(dataset.cases) == 16
+    assert len(dataset.cases) == 20
     assert len({case.id for case in dataset.cases}) == len(dataset.cases)
 
 
@@ -20,12 +20,18 @@ def test_read_only_eval_dataset_covers_failure_and_safety_behavior() -> None:
 
     assert {
         "budget",
+        "adversarial",
+        "ambiguous",
         "capability-discovery",
         "clarification",
+        "constraint-refinement",
+        "grounding",
         "multi-turn",
         "mutation",
         "no-results",
+        "normal",
         "prompt-injection",
+        "tool-error",
         "tool-failure",
         "tool-result-injection",
     } <= tags

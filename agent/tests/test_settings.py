@@ -4,7 +4,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from imdb_agent.settings import ConfigurationError, DeploymentEnvironment, load_settings
+from imdb_agent.settings import (
+    ConfigurationError,
+    DeploymentEnvironment,
+    load_openai_secrets,
+    load_settings,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -46,3 +51,24 @@ def test_secret_is_redacted_from_settings_representation(
 
     assert sensitive_value not in repr(settings)
     assert sensitive_value not in str(settings.model_dump())
+
+
+def test_openai_key_is_loaded_only_from_explicit_secret_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("OPENAI_API_KEY", "must-not-be-used")
+    secret_file = tmp_path / "movie-concierge.local.env"
+    secret_file.write_text("OPENAI_API_KEY=file-only-value\n", encoding="utf-8")
+
+    secrets = load_openai_secrets(secret_file)
+
+    assert secrets.openai_api_key.get_secret_value() == "file-only-value"
+    assert "file-only-value" not in repr(secrets)
+
+
+def test_openai_secret_file_rejects_unknown_or_missing_fields(tmp_path: Path) -> None:
+    secret_file = tmp_path / "movie-concierge.local.env"
+    secret_file.write_text("UNEXPECTED=value\n", encoding="utf-8")
+
+    with pytest.raises(ConfigurationError, match="OpenAI credentials are unavailable"):
+        load_openai_secrets(secret_file)

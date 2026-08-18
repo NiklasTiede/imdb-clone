@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from pytest import fixture
 
 from imdb_agent.bootstrap import create_app
-from imdb_agent.settings import DeploymentEnvironment, Settings
+from imdb_agent.settings import DeploymentEnvironment, ModelBackend, Settings
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 def app() -> FastAPI:
     settings = Settings(
         environment=DeploymentEnvironment.TEST,
+        model_backend=ModelBackend.FAKE,
         version="test-version",
     )
     return create_app(settings)

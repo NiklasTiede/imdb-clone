@@ -17,6 +17,7 @@ docker run \
   --name "${CONTAINER_NAME}" \
   --platform "${PLATFORM}" \
   --publish "127.0.0.1:${PORT}:8090" \
+  --env IMDB_AGENT_MODEL_BACKEND=fake \
   "${IMAGE}" >/dev/null
 
 ready=false

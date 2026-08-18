@@ -1,0 +1,101 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+    from decimal import Decimal
+
+    from imdb_agent.concierge.events import GroundedMovie, RunnerEvent, UsageSummary
+
+
+@dataclass(frozen=True, slots=True)
+class ConversationMessage:
+    role: str
+    content: str
+    movies: tuple[GroundedMovie, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class ToolInvocation:
+    name: str
+    arguments: dict[str, object]
+
+
+class RunTraceSink(Protocol):
+    def record_tool_call(self, invocation: ToolInvocation) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class RunRequest:
+    conversation_id: str
+    message: str
+    history: tuple[ConversationMessage, ...]
+    trace_sink: RunTraceSink | None = None
+
+
+class ConciergeRunner(Protocol):
+    def stream(self, request: RunRequest) -> AsyncIterator[RunnerEvent]: ...
+
+
+class ConversationNotFoundError(LookupError):
+    """Conversation is absent or belongs to another client."""
+
+
+class ConversationBusyError(RuntimeError):
+    """A conversation already has an active turn."""
+
+
+class ConversationStore(Protocol):
+    async def create(self, client_id: str) -> str: ...
+
+    async def begin_turn(
+        self, client_id: str, conversation_id: str, message: str
+    ) -> tuple[ConversationMessage, ...]: ...
+
+    async def complete_turn(
+        self,
+        client_id: str,
+        conversation_id: str,
+        response: ConversationMessage,
+    ) -> None: ...
+
+    async def fail_turn(self, client_id: str, conversation_id: str) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class BudgetReservation:
+    amount_usd: Decimal
+
+
+class BudgetExhaustedError(RuntimeError):
+    """The configured process inference budget cannot fund another run."""
+
+
+class CostLedger(Protocol):
+    async def reserve(self) -> BudgetReservation: ...
+
+    async def settle(
+        self,
+        reservation: BudgetReservation,
+        actual_cost_usd: Decimal | None,
+        *,
+        succeeded: bool,
+    ) -> None: ...
+
+
+class RunObserver(Protocol):
+    def started(self) -> None: ...
+
+    def tool_called(self, tool_name: str) -> None: ...
+
+    def finished(
+        self,
+        *,
+        outcome: str,
+        duration_seconds: float,
+        usage: UsageSummary | None,
+    ) -> None: ...
+
+    def disconnected(self) -> None: ...

@@ -52,6 +52,8 @@ class EvalCase(StrictModel):
             raise ValueError("allowed tools must be unique")
         if len(forbidden) != len(self.forbidden_tools):
             raise ValueError("forbidden tools must be unique")
+        if self.messages[-1].role != "user":
+            raise ValueError("the final eval message must be a user request")
         return self
 
 

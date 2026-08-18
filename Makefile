@@ -209,13 +209,25 @@ docker-run-frontend: ## run frontend docker container
 
 ##@ Movie Concierge Agent
 
-.PHONY: agent-sync run-agent verify-agent-format verify-agent-lint verify-agent-types verify-agent-architecture verify-agent-tests verify-agent docker-build-agent container-smoke-agent
+.PHONY: agent-sync run-agent run-agent-fake eval-agent eval-agent-live verify-agent-format verify-agent-lint verify-agent-types verify-agent-architecture verify-agent-tests verify-agent docker-build-agent container-smoke-agent
+
+AGENT_EVAL_CASE ?=
+AGENT_EVAL_CASE_FLAG = $(if $(AGENT_EVAL_CASE),--case $(AGENT_EVAL_CASE),)
 
 agent-sync: ## sync the locked Python agent development environment
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv sync --locked --all-groups
 
-run-agent: ## run the local Python agent foundation on port 8090
+run-agent: ## run the local Luna-powered Movie Concierge on port 8090
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run uvicorn imdb_agent.bootstrap:create_app --factory --host 127.0.0.1 --port 8090 --no-access-log
+
+run-agent-fake: ## run the deterministic Movie Concierge without a model key or Java
+	cd $(AGENT_DIR) && IMDB_AGENT_MODEL_BACKEND=fake UV_CACHE_DIR=$(UV_CACHE_DIR) uv run uvicorn imdb_agent.bootstrap:create_app --factory --host 127.0.0.1 --port 8090 --no-access-log
+
+eval-agent: ## run the complete deterministic Movie Concierge eval set
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run imdb-agent-eval $(AGENT_EVAL_CASE_FLAG)
+
+eval-agent-live: ## run opt-in Luna evals; also requires IMDB_AGENT_LIVE_EVALS_ENABLED=true
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run imdb-agent-eval --live $(AGENT_EVAL_CASE_FLAG)
 
 verify-agent-format: ## check Python agent formatting
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run ruff format --check .
@@ -232,6 +244,7 @@ verify-agent-architecture: ## verify Python agent import contracts and architect
 
 verify-agent-tests: ## run deterministic Python agent tests
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run pytest
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run imdb-agent-eval
 
 verify-agent: verify-agent-format verify-agent-lint verify-agent-types verify-agent-architecture verify-agent-tests ## run the complete Python agent gate
 
