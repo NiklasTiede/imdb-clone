@@ -3,6 +3,14 @@ import { i18n } from "../../../i18n";
 
 export const PROFILE_PHOTO_UPLOAD_SIZE = 800;
 export const PROFILE_PHOTO_CROP_STAGE_SIZE = 520;
+export const PROFILE_PHOTO_MAX_FILE_BYTES = 10 * 1024 * 1024;
+export const PROFILE_PHOTO_MAX_PIXELS = 25_000_000;
+
+const PROFILE_PHOTO_ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
 
 type CanvasCropInput = {
   crop: Pick<PixelCrop, "x" | "y" | "width" | "height">;
@@ -28,6 +36,32 @@ type ProblemDetailResponse = {
       message?: unknown;
     };
   };
+};
+
+export const validateProfilePhotoFile = (file: File): string | null => {
+  if (!PROFILE_PHOTO_ALLOWED_TYPES.has(file.type)) {
+    return "Choose a JPEG, PNG, or WebP image.";
+  }
+  if (file.size > PROFILE_PHOTO_MAX_FILE_BYTES) {
+    return "Profile photos must be smaller than 10 MB.";
+  }
+  return null;
+};
+
+export const validateProfilePhotoDimensions = (
+  width: number,
+  height: number,
+): string | null => {
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0 ||
+    width * height > PROFILE_PHOTO_MAX_PIXELS
+  ) {
+    return "This image is too large to process safely.";
+  }
+  return null;
 };
 
 export function createCenteredSquareCrop(width: number, height: number): Crop {

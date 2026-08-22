@@ -24,6 +24,10 @@ import {
   initialProfileImageUploadState,
   profileImageUploadReducer,
 } from "./profileImageUploadState";
+import {
+  validateProfilePhotoDimensions,
+  validateProfilePhotoFile,
+} from "./profilePhotoCropper";
 
 type ProfileImageUploadProps = {
   buttonVariant?: ButtonProps["variant"];
@@ -58,6 +62,12 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
     const selectedFile = e.currentTarget.files?.item(0);
 
     if (selectedFile) {
+      const validationError = validateProfilePhotoFile(selectedFile);
+      if (validationError) {
+        enqueueSnackbar(validationError, { variant: "error" });
+        e.currentTarget.value = "";
+        return;
+      }
       dispatch({ file: selectedFile, type: "file-selected" });
       const reader = new FileReader();
       reader.addEventListener("load", () => {
@@ -84,7 +94,20 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   };
 
   const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
-    dispatch({ image: event.currentTarget, type: "image-loaded" });
+    if (uploadState.status !== "previewing") {
+      return;
+    }
+    const image = event.currentTarget;
+    const validationError = validateProfilePhotoDimensions(
+      image.naturalWidth,
+      image.naturalHeight,
+    );
+    if (validationError) {
+      enqueueSnackbar(validationError, { variant: "error" });
+      dispatch({ file: uploadState.file, type: "file-read-failed" });
+      return;
+    }
+    dispatch({ image, type: "image-loaded" });
   };
 
   const handleUpload = async () => {
@@ -214,10 +237,21 @@ const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
                   maxWidth: "100%",
                 }}
               >
-                <img
-                  src={dialogState.src}
-                  alt="Selected profile"
-                  onLoad={handleImageLoad}
+                  <img
+                    src={dialogState.src}
+                    alt="Selected profile"
+                    onLoad={handleImageLoad}
+                    onError={() => {
+                      if (uploadState.status === "previewing") {
+                        dispatch({
+                          file: uploadState.file,
+                          type: "file-read-failed",
+                        });
+                      }
+                      enqueueSnackbar("This image could not be decoded.", {
+                        variant: "error",
+                      });
+                    }}
                   style={{
                     display: "block",
                     height:

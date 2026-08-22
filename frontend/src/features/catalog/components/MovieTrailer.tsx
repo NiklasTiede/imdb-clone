@@ -50,7 +50,7 @@ const MovieTrailer = ({
           component="iframe"
           src={embedUrl}
           title={`${movieTitle} trailer`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allow="autoplay; encrypted-media; picture-in-picture"
           allowFullScreen
           loading="lazy"
           referrerPolicy="strict-origin-when-cross-origin"

@@ -4,6 +4,8 @@ import {
   buildCanvasCrop,
   createCenteredSquareCrop,
   getProfilePhotoUploadErrorMessage,
+  validateProfilePhotoDimensions,
+  validateProfilePhotoFile,
 } from "./profilePhotoCropper";
 
 describe("profilePhotoCropper", () => {
@@ -46,5 +48,25 @@ describe("profilePhotoCropper", () => {
         },
       }),
     ).toBe("Profile photo cannot be less than [500] in width.");
+  });
+
+  test("rejects unsupported or oversized files before preview decoding", () => {
+    expect(
+      validateProfilePhotoFile(new File(["svg"], "avatar.svg", { type: "image/svg+xml" })),
+    ).toBe("Choose a JPEG, PNG, or WebP image.");
+    expect(
+      validateProfilePhotoFile(
+        new File([new Uint8Array(10 * 1024 * 1024 + 1)], "avatar.jpg", {
+          type: "image/jpeg",
+        }),
+      ),
+    ).toBe("Profile photos must be smaller than 10 MB.");
+  });
+
+  test("rejects images with unsafe pixel dimensions", () => {
+    expect(validateProfilePhotoDimensions(5000, 5000)).toBeNull();
+    expect(validateProfilePhotoDimensions(6000, 5000)).toBe(
+      "This image is too large to process safely.",
+    );
   });
 });
