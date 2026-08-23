@@ -359,19 +359,20 @@ environment-specific server URL, so contract drift fails before client generatio
 
 ## Release And Deployment
 
-Every push runs backend verification plus frontend client generation, linting, tests, type checking, and a production
-build. Application releases are controlled by the root [`VERSION`](./VERSION) file. A version bump on `master` also
-triggers the CD workflow, which:
+Every pull request targeting `master` runs backend verification plus frontend client generation, linting, tests, type
+checking, and a production build. The same gates run again on merged `master` commits. Application releases are
+controlled by the root [`VERSION`](./VERSION) file. A version bump merged to `master` triggers the CD workflow, which:
 
 1. runs backend, frontend, and deterministic agent checks,
 2. builds Linux AMD64 backend, frontend, and agent Docker images,
 3. pushes versioned images to Docker Hub,
 4. resolves immutable image digests,
-5. updates the home-cluster Kubernetes manifests,
-6. lets Argo CD reconcile the live cluster from Git.
+5. updates the home-cluster Kubernetes manifests on a dedicated release branch,
+6. opens a deployment pull request containing the three immutable image digests,
+7. lets Argo CD reconcile the live cluster only after that pull request passes CI and is merged.
 
-Infrastructure-only changes under `infrastructure/clusters/home` can be deployed through a normal push to `master`
-without publishing new application images.
+Infrastructure-only changes under `infrastructure/clusters/home` can be deployed through a normal reviewed pull
+request without publishing new application images.
 
 ## Project Structure
 

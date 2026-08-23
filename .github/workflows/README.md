@@ -5,7 +5,8 @@ frontend, and Python Movie Concierge. Production infrastructure is reconciled fr
 
 ## Continuous integration
 
-Every branch push runs separate jobs for:
+Every pull request targeting `master`, every merged `master` commit, and a deliberate manual run
+starts separate jobs for:
 
 - Java 25 backend build, tests, integration tests, JaCoCo, compiler checks, and dependency safety.
 - React client generation, linting, tests, strict TypeScript, and production build.
@@ -30,19 +31,26 @@ opt-in and never receive credentials in ordinary CI.
 4. Resolve immutable image digests.
 5. Update only `backend.yaml`, `frontend.yaml`, and `agent.yaml` in the home-cluster GitOps tree.
 6. Strictly verify that all three manifests use the requested release version and immutable digest.
-7. Commit the digest update and create the annotated release tag.
-8. Let Argo CD reconcile the cluster from Git.
+7. Commit the digest update to `release/v<VERSION>-deployment` and create the annotated release tag.
+8. Open a deployment pull request instead of pushing directly to protected `master`.
+9. Approve the bot-created PR's CI run, review the three digest changes, and merge it.
+10. Let Argo CD reconcile the cluster from the merged Git state.
 
-Feature-branch CI permits manifests to keep referencing the last released digests while `VERSION`
+Pull-request CI permits manifests to keep referencing the last released digests while `VERSION`
 prepares the next release. The strict version match is enabled only inside CD after the new images
 exist, preventing Argo CD from attempting to pull a not-yet-published tag.
+
+The repository must allow GitHub Actions to create pull requests under **Settings → Actions →
+General → Workflow permissions**. Pull-request CI created with the repository `GITHUB_TOKEN` needs
+one manual approval from a user with write access. No personal access token or protected-branch
+bypass is required.
 
 Provider and MCP credentials are not available to GitHub Actions. The agent build and deterministic
 verification path requires neither an OpenAI key nor a running Java service.
 
 Infrastructure-only changes under `infrastructure/clusters/home` do not require a `VERSION` bump or
-new application images. After normal CI and review, a merge to `master` lets Argo CD reconcile those
-manifests directly.
+new application images. After pull-request CI and review, a merge to `master` lets Argo CD reconcile
+those manifests directly.
 
 Movie seed images are independent data releases. Their Argo CD Application has automated sync
 disabled, so normal releases never reseed PostgreSQL or RustFS.
