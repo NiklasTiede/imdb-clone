@@ -230,6 +230,11 @@ immutable digests, and commits the three GitOps image updates for Argo CD. Infra
 changes do not rebuild application images; after CI and review, Argo CD reconciles their merged
 manifests directly from Git.
 
+During release preparation, the manifests deliberately remain pinned to the last published image
+digests. Branch CI validates those immutable references without requiring them to match the pending
+`VERSION`. After building the new images, CD enables strict `EXPECTED_APP_VERSION` validation and
+updates all three manifests atomically. This avoids a temporary reference to an unpublished image.
+
 Argo CD is exposed for home LAN access at
 `https://argocd.imdb-clone.the-coding-lab.com`. The route is intended for
 operator use only and is restricted by Traefik middleware.

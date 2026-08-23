@@ -29,8 +29,13 @@ opt-in and never receive credentials in ordinary CI.
 3. Push `v<VERSION>` and `latest` tags to Docker Hub.
 4. Resolve immutable image digests.
 5. Update only `backend.yaml`, `frontend.yaml`, and `agent.yaml` in the home-cluster GitOps tree.
-6. Commit the digest update and create the annotated release tag.
-7. Let Argo CD reconcile the cluster from Git.
+6. Strictly verify that all three manifests use the requested release version and immutable digest.
+7. Commit the digest update and create the annotated release tag.
+8. Let Argo CD reconcile the cluster from Git.
+
+Feature-branch CI permits manifests to keep referencing the last released digests while `VERSION`
+prepares the next release. The strict version match is enabled only inside CD after the new images
+exist, preventing Argo CD from attempting to pull a not-yet-published tag.
 
 Provider and MCP credentials are not available to GitHub Actions. The agent build and deterministic
 verification path requires neither an OpenAI key nor a running Java service.

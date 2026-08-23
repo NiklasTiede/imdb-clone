@@ -22,18 +22,73 @@ def assert_contract(condition, message)
   raise message unless condition
 end
 
+def deployment_container(documents, deployment_name, container_name)
+  deployment = resource(documents, "Deployment", deployment_name, "imdb-clone")
+  container = deployment.dig("spec", "template", "spec", "containers").find do |candidate|
+    candidate["name"] == container_name
+  end
+  raise "missing #{container_name} container" if container.nil?
+
+  [deployment, container]
+end
+
+def pinned_image_version(image, repository)
+  match = image.match(
+    /\A#{Regexp.escape(repository)}:v(?<version>\d+\.\d+\.\d+)@sha256:[0-9a-f]{64}\z/
+  )
+  raise "#{repository} image must use a semantic tag and immutable digest" if match.nil?
+
+  match[:version]
+end
+
 agent = resource(documents, "Deployment", "imdb-clone-agent", "imdb-clone")
 pod_spec = agent.dig("spec", "template", "spec")
 container = pod_spec.fetch("containers").find { |candidate| candidate["name"] == "agent" }
 raise "missing agent container" if container.nil?
 
-release_version = File.read(File.join(repository_root, "VERSION")).strip
-assert_contract(
-  container["image"].match?(
-    /\Aniklastiede\/imdb-clone-agent:v#{Regexp.escape(release_version)}(?:@sha256:[0-9a-f]{64})?\z/
-  ),
-  "agent image must match the pending shared release"
+backend, backend_container = deployment_container(
+  documents,
+  "imdb-clone-backend",
+  "backend"
 )
+_frontend, frontend_container = deployment_container(
+  documents,
+  "imdb-clone-frontend",
+  "frontend"
+)
+image_versions = {
+  "agent" => pinned_image_version(
+    container.fetch("image"),
+    "niklastiede/imdb-clone-agent"
+  ),
+  "backend" => pinned_image_version(
+    backend_container.fetch("image"),
+    "niklastiede/imdb-clone-backend"
+  ),
+  "frontend" => pinned_image_version(
+    frontend_container.fetch("image"),
+    "niklastiede/imdb-clone-frontend"
+  )
+}
+
+expected_app_version = ENV["EXPECTED_APP_VERSION"]
+unless expected_app_version.nil? || expected_app_version.empty?
+  assert_contract(
+    expected_app_version.match?(/\A\d+\.\d+\.\d+\z/),
+    "EXPECTED_APP_VERSION must be semantic"
+  )
+  release_version = File.read(File.join(repository_root, "VERSION")).strip
+  assert_contract(
+    release_version == expected_app_version,
+    "strict image verification must match VERSION"
+  )
+  image_versions.each do |deployable, image_version|
+    assert_contract(
+      image_version == expected_app_version,
+      "#{deployable} image must match release v#{expected_app_version}"
+    )
+  end
+end
 
 assert_contract(agent.dig("spec", "replicas") == 1, "agent pilot must use one replica")
 assert_contract(
@@ -92,12 +147,6 @@ assert_contract(
   encrypted_values.all? { |value| value.start_with?("ENC[AES256_GCM,") },
   "runtime secret contains plaintext"
 )
-
-backend = resource(documents, "Deployment", "imdb-clone-backend", "imdb-clone")
-backend_container = backend.dig("spec", "template", "spec", "containers").find do |candidate|
-  candidate["name"] == "backend"
-end
-raise "missing backend container" if backend_container.nil?
 
 backend_environment = backend_container.fetch("env").to_h do |entry|
   [entry.fetch("name"), entry["value"]]
@@ -186,6 +235,10 @@ end
 assert_contract(
   workflow.include?("APP_VERSION=${{ steps.version.outputs.value }}"),
   "agent build metadata must use the unprefixed release version"
+)
+assert_contract(
+  workflow.include?("EXPECTED_APP_VERSION: ${{ steps.version.outputs.value }}"),
+  "CD must strictly verify every released image version"
 )
 
 puts "Movie Concierge production manifest contracts passed."

@@ -156,6 +156,8 @@ jobs:
 
       - name: Verify Movie Concierge production contracts
         run: make verify-movie-concierge-production
+        env:
+          EXPECTED_APP_VERSION: ${{ steps.version.outputs.value }}
 
       - name: Render and validate observability charts
         run: make verify-observability-charts
