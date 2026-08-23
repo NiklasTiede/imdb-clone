@@ -8,15 +8,19 @@ resources:
   - letsencrypt-cluster-issuer.yaml
   - traefik-middlewares.yaml
   - backend-runtime.sops.yaml
+  - movie-concierge-runtime.sops.yaml
   - postgresql-credentials.sops.yaml
   - rustfs-credentials.sops.yaml
   - backend.yaml
   - frontend.yaml
+  - agent.yaml
+  - agent-network-policy.yaml
   - llama-cpp.yaml
   - opensearch.yaml
   - observability-grafana-admin.sops.yaml
   - observability-grafana-viewer.sops.yaml
   - observability/dashboards
+  - observability/agent-alerts.yaml
   - observability.yaml
   - ingress.yaml
   - postgresql.yaml

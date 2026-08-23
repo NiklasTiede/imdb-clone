@@ -75,6 +75,19 @@ jobs:
         working-directory: frontend
         run: yarn build
 
+      - name: Install uv and Python 3.14
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: agent/uv.lock
+
+      - name: Install locked agent dependencies
+        run: make agent-sync
+
+      - name: Verify agent
+        run: make verify-agent
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -103,38 +116,59 @@ jobs:
             --push \
             .
 
+      - name: Build and push agent image
+        working-directory: agent
+        run: |
+          docker buildx build \
+            --platform linux/amd64 \
+            --build-arg "APP_VERSION=${{ steps.version.outputs.value }}" \
+            -t "${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-agent:${{ steps.version.outputs.tag }}" \
+            -t "${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-agent:latest" \
+            --push \
+            .
+
       - name: Resolve image digests
         id: digests
         run: |
           backend_image="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:${{ steps.version.outputs.tag }}"
           frontend_image="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:${{ steps.version.outputs.tag }}"
+          agent_image="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-agent:${{ steps.version.outputs.tag }}"
           backend_digest="$(docker buildx imagetools inspect "$backend_image" --format '{{.Manifest.Digest}}')"
           frontend_digest="$(docker buildx imagetools inspect "$frontend_image" --format '{{.Manifest.Digest}}')"
-          echo "backend=${backend_digest}" >> "$GITHUB_OUTPUT"
-          echo "frontend=${frontend_digest}" >> "$GITHUB_OUTPUT"
+          agent_digest="$(docker buildx imagetools inspect "$agent_image" --format '{{.Manifest.Digest}}')"
+          {
+            echo "backend=${backend_digest}"
+            echo "frontend=${frontend_digest}"
+            echo "agent=${agent_digest}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update home-cluster app image manifests
         run: |
           backend_ref="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:${{ steps.version.outputs.tag }}@${{ steps.digests.outputs.backend }}"
           frontend_ref="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:${{ steps.version.outputs.tag }}@${{ steps.digests.outputs.frontend }}"
+          agent_ref="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-agent:${{ steps.version.outputs.tag }}@${{ steps.digests.outputs.agent }}"
           sed -i "s|image: .*imdb-clone-backend:.*|image: ${backend_ref}|" infrastructure/clusters/home/apps/backend.yaml
           sed -i "s|image: .*imdb-clone-frontend:.*|image: ${frontend_ref}|" infrastructure/clusters/home/apps/frontend.yaml
+          sed -i "s|image: .*imdb-clone-agent:.*|image: ${agent_ref}|" infrastructure/clusters/home/apps/agent.yaml
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4
 
-      - name: Validate kustomize render
-        run: kubectl kustomize infrastructure/clusters/home/apps >/tmp/home-apps.yaml
+      - name: Verify Movie Concierge production contracts
+        run: make verify-movie-concierge-production
+
+      - name: Validate rendered Kubernetes schemas
+        run: make verify-kubernetes-schema
 
       - name: Commit manifest update
         run: |
-          if git diff --quiet infrastructure/clusters/home/apps/backend.yaml infrastructure/clusters/home/apps/frontend.yaml; then
+          if git diff --quiet infrastructure/clusters/home/apps/backend.yaml infrastructure/clusters/home/apps/frontend.yaml infrastructure/clusters/home/apps/agent.yaml; then
             echo "Manifests already point at ${{ steps.version.outputs.tag }}"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add infrastructure/clusters/home/apps/backend.yaml infrastructure/clusters/home/apps/frontend.yaml
+          git add infrastructure/clusters/home/apps/backend.yaml infrastructure/clusters/home/apps/frontend.yaml infrastructure/clusters/home/apps/agent.yaml
           git commit -m "chore(release): update app image digests [skip ci]"
           git push
 

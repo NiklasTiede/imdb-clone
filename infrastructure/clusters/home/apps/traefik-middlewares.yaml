@@ -32,6 +32,42 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
+  name: imdb-clone-concierge-rate-limit
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  rateLimit:
+    average: 12
+    period: 1m
+    burst: 4
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: imdb-clone-concierge-inflight
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  inFlightReq:
+    amount: 4
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: imdb-clone-concierge-strip-prefix
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  stripPrefix:
+    prefixes:
+      - /concierge-api
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
   name: imdb-clone-public-rate-limit
   namespace: databases
   annotations:

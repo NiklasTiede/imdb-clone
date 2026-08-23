@@ -1,0 +1,164 @@
+# frozen_string_literal: true
+
+require "json"
+require "yaml"
+
+rendered_path = ARGV.fetch(0, "/tmp/imdb-clone-home-apps.yaml")
+repository_root = File.expand_path("../../../..", __dir__)
+documents = YAML.load_stream(File.read(rendered_path)).compact
+
+def resource(documents, kind, name, namespace = nil)
+  match = documents.find do |document|
+    document["kind"] == kind &&
+      document.dig("metadata", "name") == name &&
+      (namespace.nil? || document.dig("metadata", "namespace") == namespace)
+  end
+  raise "missing #{kind}/#{name}" if match.nil?
+
+  match
+end
+
+def assert_contract(condition, message)
+  raise message unless condition
+end
+
+agent = resource(documents, "Deployment", "imdb-clone-agent", "imdb-clone")
+pod_spec = agent.dig("spec", "template", "spec")
+container = pod_spec.fetch("containers").find { |candidate| candidate["name"] == "agent" }
+raise "missing agent container" if container.nil?
+
+release_version = File.read(File.join(repository_root, "VERSION")).strip
+assert_contract(
+  container["image"].match?(
+    /\Aniklastiede\/imdb-clone-agent:v#{Regexp.escape(release_version)}(?:@sha256:[0-9a-f]{64})?\z/
+  ),
+  "agent image must match the pending shared release"
+)
+
+assert_contract(agent.dig("spec", "replicas") == 1, "agent pilot must use one replica")
+assert_contract(
+  agent.dig("spec", "strategy") == { "type" => "Recreate" },
+  "in-memory pilot must never run overlapping replicas"
+)
+assert_contract(pod_spec["automountServiceAccountToken"] == false, "agent token mount must be off")
+assert_contract(pod_spec.dig("securityContext", "runAsNonRoot") == true, "agent must be non-root")
+assert_contract(
+  pod_spec.dig("securityContext", "seccompProfile", "type") == "RuntimeDefault",
+  "agent must use RuntimeDefault seccomp"
+)
+assert_contract(
+  container.dig("securityContext", "readOnlyRootFilesystem") == true,
+  "agent root filesystem must be read-only"
+)
+assert_contract(
+  container.dig("securityContext", "allowPrivilegeEscalation") == false,
+  "agent privilege escalation must be disabled"
+)
+assert_contract(
+  container.dig("securityContext", "capabilities", "drop") == ["ALL"],
+  "agent must drop every Linux capability"
+)
+assert_contract(container.key?("startupProbe"), "agent startup probe is required")
+assert_contract(container.key?("readinessProbe"), "agent readiness probe is required")
+assert_contract(container.key?("livenessProbe"), "agent liveness probe is required")
+assert_contract(container.dig("resources", "requests", "memory"), "agent memory request is required")
+assert_contract(container.dig("resources", "limits", "memory"), "agent memory limit is required")
+
+environment = container.fetch("env").to_h { |entry| [entry.fetch("name"), entry["value"]] }
+assert_contract(environment["IMDB_AGENT_ENVIRONMENT"] == "production", "production mode required")
+assert_contract(environment["IMDB_AGENT_MAX_CONCURRENT_RUNS"] == "2", "run limit drifted")
+assert_contract(environment["IMDB_AGENT_MAX_REQUEST_BODY_BYTES"] == "4096", "body limit drifted")
+assert_contract(environment["IMDB_AGENT_PROJECT_COST_LIMIT_USD"] == "20.00", "cost cap drifted")
+assert_contract(!environment.key?("OPENAI_API_KEY"), "provider key must never be an environment value")
+assert_contract(
+  !environment.key?("IMDB_AGENT_MCP_BEARER_TOKEN"),
+  "MCP token must never be an environment value"
+)
+
+secret = resource(documents, "Secret", "movie-concierge-runtime", "imdb-clone")
+encrypted_values = secret.fetch("stringData").values
+assert_contract(encrypted_values.length == 2, "runtime secret must contain exactly two fields")
+assert_contract(
+  encrypted_values.all? { |value| value.start_with?("ENC[AES256_GCM,") },
+  "runtime secret contains plaintext"
+)
+
+backend = resource(documents, "Deployment", "imdb-clone-backend", "imdb-clone")
+backend_container = backend.dig("spec", "template", "spec", "containers").find do |candidate|
+  candidate["name"] == "backend"
+end
+raise "missing backend container" if backend_container.nil?
+
+backend_environment = backend_container.fetch("env").to_h do |entry|
+  [entry.fetch("name"), entry["value"]]
+end
+assert_contract(
+  backend_environment["movie_concierge_mcp_enabled"] == "true",
+  "Java production MCP must be enabled"
+)
+assert_contract(
+  backend_container.fetch("volumeMounts").any? do |mount|
+    mount["name"] == "movie-concierge-runtime" && mount["readOnly"] == true
+  end,
+  "backend must mount the MCP token read-only"
+)
+
+ingress = resource(documents, "Ingress", "imdb-clone-concierge-public", "imdb-clone")
+paths = ingress.fetch("spec").fetch("rules").flat_map { |rule| rule.dig("http", "paths") }
+assert_contract(paths.map { |path| path["path"] } == ["/concierge-api/v1"], "public agent path drifted")
+
+network_policy = resource(
+  documents,
+  "NetworkPolicy",
+  "imdb-clone-agent-least-privilege",
+  "imdb-clone"
+)
+assert_contract(
+  network_policy.dig("spec", "policyTypes").sort == %w[Egress Ingress],
+  "agent must be isolated in both directions"
+)
+assert_contract(network_policy.dig("spec", "ingress").length == 2, "agent ingress allowlist drifted")
+assert_contract(network_policy.dig("spec", "egress").length == 3, "agent egress allowlist drifted")
+
+service_monitor = resource(documents, "ServiceMonitor", "imdb-clone-agent", "imdb-clone")
+assert_contract(
+  service_monitor.dig("spec", "endpoints", 0, "path") == "/metrics",
+  "agent metrics scrape path drifted"
+)
+
+rules = resource(documents, "PrometheusRule", "imdb-clone-agent", "imdb-clone")
+alert_names = rules.dig("spec", "groups").flat_map do |group|
+  group.fetch("rules").map { |rule| rule["alert"] }.compact
+end
+%w[
+  MovieConciergeDown
+  MovieConciergeHighErrorRate
+  MovieConciergeMcpFailures
+  MovieConciergeProviderFailures
+  MovieConciergeCapacityRejected
+  MovieConciergeBudgetExhausted
+  MovieConciergeProcessBudgetNearlyExhausted
+].each do |alert_name|
+  assert_contract(alert_names.include?(alert_name), "missing alert #{alert_name}")
+end
+
+dashboard_manifest = YAML.load_file(
+  File.join(
+    repository_root,
+    "infrastructure/clusters/home/apps/observability/dashboards/agent-overview.yaml"
+  )
+)
+dashboard = JSON.parse(dashboard_manifest.dig("data", "agent-overview.json"))
+assert_contract(dashboard["uid"] == "imdb-agent-overview", "agent dashboard UID drifted")
+assert_contract(dashboard.fetch("panels").length >= 10, "agent dashboard is incomplete")
+
+workflow = File.read(File.join(repository_root, ".github/workflows/continuous-deployment.yaml"))
+%w[make\ verify-agent imdb-clone-agent APP_VERSION agent.yaml].each do |contract|
+  assert_contract(workflow.include?(contract.tr("\\", "")), "CD agent contract is missing #{contract}")
+end
+assert_contract(
+  workflow.include?("APP_VERSION=${{ steps.version.outputs.value }}"),
+  "agent build metadata must use the unprefixed release version"
+)
+
+puts "Movie Concierge production manifest contracts passed."

@@ -23,7 +23,7 @@ UV_CACHE_DIR ?= $(CURDIR)/.uv-cache
 
 ##@ Prerequisites
 
-.PHONY: check-local-tools check-agent-tools check-seed-tools check-verification-tools
+.PHONY: check-local-tools check-agent-tools check-seed-tools check-verification-tools check-kubernetes-verification-tools
 
 check-local-tools: ## check tools needed for the README local workflow
 	@missing=0; \
@@ -85,6 +85,20 @@ check-verification-tools: check-local-tools ## check extra tools needed for veri
 	done; \
 	if [ $$missing -eq 0 ]; then \
 		echo "All verification tools are available."; \
+	else \
+		exit 1; \
+	fi
+
+check-kubernetes-verification-tools: ## check tools needed for deterministic Kubernetes verification
+	@missing=0; \
+	for tool in docker kubectl ruby; do \
+		if ! command -v $$tool >/dev/null 2>&1; then \
+			echo "missing: $$tool"; \
+			missing=1; \
+		fi; \
+	done; \
+	if [ $$missing -eq 0 ]; then \
+		echo "All Kubernetes verification tools are available."; \
 	else \
 		exit 1; \
 	fi
@@ -256,9 +270,9 @@ container-smoke-agent: ## smoke-test the Python agent image, endpoints, and non-
 
 ##@ Verification
 
-.PHONY: verify-kubernetes-render verify-kubernetes-schema verify-openapi-drift
+.PHONY: verify-kubernetes-render verify-kubernetes-schema verify-movie-concierge-production verify-openapi-drift
 
-verify-kubernetes-render: check-verification-tools ## render home-cluster Kubernetes manifests
+verify-kubernetes-render: check-kubernetes-verification-tools ## render home-cluster Kubernetes manifests
 	kubectl kustomize infrastructure/clusters/home/apps > $(K8S_RENDER_OUTPUT)
 
 verify-kubernetes-schema: verify-kubernetes-render ## validate rendered Kubernetes manifests with pinned kubeconform
@@ -269,6 +283,9 @@ verify-kubernetes-schema: verify-kubernetes-render ## validate rendered Kubernet
 		-summary \
 		-ignore-missing-schemas \
 		< $(K8S_SCHEMA_OUTPUT)
+
+verify-movie-concierge-production: verify-kubernetes-render ## verify production agent GitOps and guardrail contracts
+	ruby infrastructure/clusters/home/tests/verify_movie_concierge.rb $(K8S_RENDER_OUTPUT)
 
 verify-openapi-drift: ## compare checked-in OpenAPI/client output with a running backend
 	rm -rf $(OPENAPI_CHECK_DIR)

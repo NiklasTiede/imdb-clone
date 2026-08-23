@@ -1,6 +1,32 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  name: imdb-clone-concierge-public
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+    traefik.ingress.kubernetes.io/router.middlewares: imdb-clone-imdb-clone-concierge-rate-limit@kubernetescrd,imdb-clone-imdb-clone-concierge-inflight@kubernetescrd,imdb-clone-imdb-clone-concierge-strip-prefix@kubernetescrd,imdb-clone-imdb-clone-security-headers@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - imdb-clone.the-coding-lab.com
+      secretName: imdb-clone-public-tls
+  rules:
+    - host: imdb-clone.the-coding-lab.com
+      http:
+        paths:
+          - path: /concierge-api/v1
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-agent
+                port:
+                  name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
   name: imdb-clone-public
   namespace: imdb-clone
   annotations:

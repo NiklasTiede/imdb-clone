@@ -1,0 +1,204 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: imdb-clone-agent
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+automountServiceAccountToken: false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imdb-clone-agent
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app.kubernetes.io/name: imdb-clone-agent
+    app.kubernetes.io/component: concierge
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: imdb-clone-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: imdb-clone-agent
+        app.kubernetes.io/component: concierge
+    spec:
+      serviceAccountName: imdb-clone-agent
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: agent
+          image: niklastiede/imdb-clone-agent:v1.1.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 8090
+              protocol: TCP
+          env:
+            - name: IMDB_AGENT_ENVIRONMENT
+              value: production
+            - name: IMDB_AGENT_MODEL_BACKEND
+              value: openai
+            - name: IMDB_AGENT_MODEL_NAME
+              value: gpt-5.6-luna
+            - name: IMDB_AGENT_MCP_URL
+              value: http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp
+            - name: IMDB_AGENT_SECRETS_DIRECTORY
+              value: /run/secrets/movie-concierge
+            - name: IMDB_AGENT_ALLOWED_HOSTS
+              value: '["imdb-clone.the-coding-lab.com","imdb-clone-agent","imdb-clone-agent.imdb-clone","imdb-clone-agent.imdb-clone.svc","imdb-clone-agent.imdb-clone.svc.cluster.local"]'
+            - name: IMDB_AGENT_MCP_INIT_TIMEOUT_SECONDS
+              value: "5"
+            - name: IMDB_AGENT_MCP_READ_TIMEOUT_SECONDS
+              value: "12"
+            - name: IMDB_AGENT_PROVIDER_TIMEOUT_SECONDS
+              value: "20"
+            - name: IMDB_AGENT_RUN_TIMEOUT_SECONDS
+              value: "30"
+            - name: IMDB_AGENT_MAX_CONCURRENT_RUNS
+              value: "2"
+            - name: IMDB_AGENT_MAX_CONVERSATIONS
+              value: "500"
+            - name: IMDB_AGENT_MAX_REQUEST_BODY_BYTES
+              value: "4096"
+            - name: IMDB_AGENT_MAX_MODEL_REQUESTS
+              value: "4"
+            - name: IMDB_AGENT_MAX_TOOL_CALLS
+              value: "6"
+            - name: IMDB_AGENT_MAX_INPUT_TOKENS
+              value: "12000"
+            - name: IMDB_AGENT_MAX_OUTPUT_TOKENS
+              value: "1500"
+            - name: IMDB_AGENT_PROJECT_COST_LIMIT_USD
+              value: "20.00"
+            - name: IMDB_AGENT_RUN_COST_LIMIT_USD
+              value: "0.25"
+            - name: IMDB_AGENT_LIVE_EVALS_ENABLED
+              value: "false"
+            - name: TMPDIR
+              value: /tmp
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: imdb-clone-agent.imdb-clone.svc.cluster.local
+            periodSeconds: 2
+            timeoutSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: imdb-clone-agent.imdb-clone.svc.cluster.local
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: imdb-clone-agent.imdb-clone.svc.cluster.local
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: runtime-secrets
+              mountPath: /run/secrets/movie-concierge
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: runtime-secrets
+          secret:
+            secretName: movie-concierge-runtime
+            defaultMode: 0440
+            items:
+              - key: openai-api-key
+                path: openai-api-key
+              - key: mcp-bearer-token
+                path: mcp-bearer-token
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: imdb-clone-agent
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+  labels:
+    app.kubernetes.io/name: imdb-clone-agent
+    app.kubernetes.io/component: concierge
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: imdb-clone-agent
+  ports:
+    - name: http
+      port: 8090
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: imdb-clone-agent
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+  labels:
+    app.kubernetes.io/name: imdb-clone-agent
+spec:
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: imdb-clone-agent
+  namespaceSelector:
+    matchNames:
+      - imdb-clone
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: movie-concierge-runtime
+    namespace: imdb-clone
+    annotations:
+        argocd.argoproj.io/sync-wave: "0"
+type: Opaque
+stringData:
+    openai-api-key: ENC[AES256_GCM,data:P6rWCRrSPhTameSSaAV4VrXn2Ggt53HW56jlaDb+eDu6WOlBcksLyXCfWIMc8ZiDtTkXWRCL7sXjVOqvQcnavVgc11N9uw+3mtY6YbfeGMD501N6kqSwkz6XahiDyVhlyI+G91Jkp0RCnzuJYF9ziR5WfzhHaQRrO8atRWDfqNR63J3GakBgFcyqlt805efNgJXbx9VYYpTyipATJeccg8wCSI8=,iv:ECHb/zAK/sVI5N052N4NtnMXtAbxE+CzK3iVJNhXCug=,tag:WbxXLJiYCXLpaUHQ4nxi3w==,type:str]
+    mcp-bearer-token: ENC[AES256_GCM,data:0dB6QDi/PMhJvJQvAjb/qFp+EYOKg6mPx1NenFbCD/H4OXB32GsZF6lu6nilUctPmO5I46m3D0l3df5FHDzYYQ==,iv:vWZD/y+vheU7glU7AouA6tGik+Kn1cr3ej0CA2kOXzA=,tag:HRVdNZjk6px/TNm7NzBQng==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBsYVZERDB1bS9XSzZQNTVJ
+            SUNLUW9GWHNjWWlJd3YzTFFMTXRxMlhVZEdFCnV0RVFiWWk5cExWUkM0cGMwa1FJ
+            QzJBdy9naVoydi93V3B5REYzdVlOeWsKLS0tIGc0OFJZRnBMQ25USmlCUTVNenBZ
+            K3orc2QwTFM1a0x0M1ZVRjlTcVUxaDgKsyfpu2J1CSEsoZOI15bMWRQaM2P0IBdO
+            8Nk5+X+5BiX8UYdd8/IdMe/uNjMcI0rB6eVXd2a6ba6TOOwLWMBPRQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1erem2t02nlncp53ehrjjyqcwd6uhfr2vrl6saf4c53esr99vv9ms2wgpw0
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-08-23T16:36:00Z"
+    mac: ENC[AES256_GCM,data:oScwxkNvEZcG8T4E2TAmt67HjCDk98e3JZCKlKt8NHN9exr1g6GV6A0IB9LG3HINnTeP/R/sU9oYpVA5fxOjFa149iGRUgHpgTwYJPH0JcDxX61k/9/zzrasTRKt/BgD+CokWnl+PZzyGVk7U1tpkKz6l7EIR1kDtLKAPM/fDp8=,iv:H+1x9Dd8Z7/B72M5Evt39Fa7RDQikR685EpMzH6BLDc=,tag:NWPOQq123elSS/TBD0wGHA==,type:str]
+    version: 3.13.2

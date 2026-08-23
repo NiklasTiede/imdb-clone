@@ -27,6 +27,8 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
+            - name: movie_concierge_mcp_enabled
+              value: "true"
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://imdb-clone-postgresql.databases.svc.cluster.local:5432/movie_db
             - name: OPENSEARCH_URIS
@@ -51,6 +53,10 @@ spec:
           envFrom:
             - secretRef:
                 name: backend-runtime
+          volumeMounts:
+            - name: movie-concierge-runtime
+              mountPath: /run/secrets/movie-concierge
+              readOnly: true
           readinessProbe:
             tcpSocket:
               port: management
@@ -72,6 +78,14 @@ spec:
             limits:
               cpu: "1"
               memory: 1536Mi
+      volumes:
+        - name: movie-concierge-runtime
+          secret:
+            secretName: movie-concierge-runtime
+            defaultMode: 0440
+            items:
+              - key: mcp-bearer-token
+                path: movie_concierge_mcp_bearer_token
 ---
 apiVersion: v1
 kind: Service

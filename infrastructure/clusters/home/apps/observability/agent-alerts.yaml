@@ -1,0 +1,110 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: imdb-clone-agent
+  namespace: imdb-clone
+  labels:
+    app.kubernetes.io/name: imdb-clone-agent
+spec:
+  groups:
+    - name: imdb-clone-agent.availability
+      rules:
+        - alert: MovieConciergeDown
+          expr: absent(up{job="imdb-clone-agent"}) or up{job="imdb-clone-agent"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Movie Concierge is unavailable
+            description: Prometheus has been unable to scrape the Movie Concierge for five minutes.
+        - alert: MovieConciergeHighErrorRate
+          expr: |
+            (
+              sum(rate(imdb_agent_runs_total{outcome!="success"}[10m]))
+              /
+              clamp_min(sum(rate(imdb_agent_runs_total[10m])), 0.001)
+            ) > 0.25
+            and sum(increase(imdb_agent_runs_total[10m])) >= 5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Movie Concierge error rate is elevated
+            description: More than 25 percent of at least five recent runs have failed.
+        - alert: MovieConciergeHighLatency
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (le) (rate(imdb_agent_run_duration_seconds_bucket[15m]))
+            ) > 25
+            and sum(increase(imdb_agent_runs_total[15m])) >= 5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Movie Concierge p95 latency is elevated
+            description: Run p95 has remained above 25 seconds with meaningful traffic.
+    - name: imdb-clone-agent.dependencies
+      rules:
+        - alert: MovieConciergeMcpFailures
+          expr: increase(imdb_agent_runs_total{outcome="tool_unavailable"}[10m]) >= 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Movie Concierge cannot use Java movie tools
+            description: At least three recent agent runs failed at the protected MCP boundary.
+        - alert: MovieConciergeProviderFailures
+          expr: increase(imdb_agent_runs_total{outcome="provider_unavailable"}[10m]) >= 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Movie Concierge provider failures are elevated
+            description: At least three recent agent runs failed at the model provider boundary.
+        - alert: MovieConciergeCapacityRejected
+          expr: increase(imdb_agent_runs_total{outcome="capacity_exhausted"}[10m]) >= 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Movie Concierge is rejecting runs at capacity
+            description: The deliberately small production pilot needs traffic or capacity review.
+        - alert: MovieConciergeBudgetExhausted
+          expr: increase(imdb_agent_runs_total{outcome="budget_exhausted"}[5m]) > 0
+          for: 0m
+          labels:
+            severity: critical
+          annotations:
+            summary: Movie Concierge process budget is exhausted
+            description: No new model run can start until the budget configuration is reviewed.
+    - name: imdb-clone-agent.cost
+      rules:
+        - alert: MovieConciergeDailyCostWarning
+          expr: sum(increase(imdb_agent_model_estimated_cost_usd_total[24h])) > 10
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Movie Concierge estimated daily cost exceeded 10 USD
+            description: Compare the operational estimate with the authoritative provider project budget.
+        - alert: MovieConciergeDailyCostCritical
+          expr: sum(increase(imdb_agent_model_estimated_cost_usd_total[24h])) > 18
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Movie Concierge estimated daily cost approached the 20 USD pilot cap
+            description: Disable public traffic or adjust the provider project only after operator review.
+        - alert: MovieConciergeProcessBudgetNearlyExhausted
+          expr: |
+            max(imdb_agent_process_budget_committed_usd)
+            /
+            clamp_min(max(imdb_agent_guardrail_limit{limit="project_cost_usd"}), 0.01)
+            > 0.8
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Movie Concierge consumed over 80 percent of its process budget
+            description: The in-memory process budget and authoritative provider project budget need review.

@@ -107,3 +107,21 @@ jobs:
 
       - name: Smoke-test agent image
         run: make container-smoke-agent
+
+  infrastructure-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.35.0'
+
+      - name: Verify Movie Concierge production contracts
+        run: make verify-movie-concierge-production
+
+      - name: Validate rendered Kubernetes schemas
+        run: make verify-kubernetes-schema
