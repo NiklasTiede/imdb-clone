@@ -1,8 +1,12 @@
 name: CI - Build / Test Deployables
 
 on:
+  pull_request:
+    branches:
+      - master
   push:
-    branches: ['*']
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:

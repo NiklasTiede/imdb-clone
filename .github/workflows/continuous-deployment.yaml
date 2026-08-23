@@ -10,6 +10,11 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+
+concurrency:
+  group: versioned-app-release
+  cancel-in-progress: false
 
 jobs:
   release-app:
@@ -30,13 +35,21 @@ jobs:
             echo "VERSION must be semver without leading v, got: $version" >&2
             exit 1
           fi
-          echo "value=$version" >> "$GITHUB_OUTPUT"
-          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          {
+            echo "value=$version"
+            echo "tag=v$version"
+            echo "branch=release/v${version}-deployment"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Ensure release tag does not exist
+      - name: Ensure release refs do not exist
         run: |
           if git rev-parse --verify --quiet "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null; then
             echo "Release tag ${{ steps.version.outputs.tag }} already exists" >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --heads origin \
+            "refs/heads/${{ steps.version.outputs.branch }}" >/dev/null; then
+            echo "Release branch ${{ steps.version.outputs.branch }} already exists" >&2
             exit 1
           fi
 
@@ -165,17 +178,20 @@ jobs:
       - name: Validate rendered Kubernetes schemas
         run: make verify-kubernetes-schema
 
-      - name: Commit manifest update
+      - name: Commit deployment manifest update
+        env:
+          RELEASE_BRANCH: ${{ steps.version.outputs.branch }}
         run: |
           if git diff --quiet infrastructure/clusters/home/apps/backend.yaml infrastructure/clusters/home/apps/frontend.yaml infrastructure/clusters/home/apps/agent.yaml; then
-            echo "Manifests already point at ${{ steps.version.outputs.tag }}"
-            exit 0
+            echo "No deployment manifest changes for ${{ steps.version.outputs.tag }}" >&2
+            exit 1
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$RELEASE_BRANCH"
           git add infrastructure/clusters/home/apps/backend.yaml infrastructure/clusters/home/apps/frontend.yaml infrastructure/clusters/home/apps/agent.yaml
-          git commit -m "chore(release): update app image digests [skip ci]"
-          git push
+          git commit -m "chore(release): deploy ${{ steps.version.outputs.tag }} image digests"
+          git push --set-upstream origin "$RELEASE_BRANCH"
 
       - name: Create release tag
         run: |
@@ -184,3 +200,33 @@ jobs:
           git tag -a "${{ steps.version.outputs.tag }}" "${{ github.sha }}" \
             -m "Release ${{ steps.version.outputs.tag }}"
           git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Create deployment pull request
+        id: deployment-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_BRANCH: ${{ steps.version.outputs.branch }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          body="$(printf '%s\n' \
+            "## Deployment" \
+            "" \
+            "Deploys the immutable backend, frontend, and Movie Concierge images published as ${RELEASE_TAG}." \
+            "" \
+            "The release workflow verified all three image versions and Kubernetes production contracts before opening this pull request." \
+            "Merging it lets Argo CD reconcile the production cluster from Git." \
+            "" \
+            "This pull request was created by the versioned app release workflow.")"
+          pr_url="$(gh pr create \
+            --base master \
+            --head "$RELEASE_BRANCH" \
+            --title "chore(release): deploy ${RELEASE_TAG}" \
+            --body "$body")"
+          echo "url=$pr_url" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Deployment pull request"
+            echo
+            echo "$pr_url"
+            echo
+            echo "Approve its CI run, review the three digest changes, and merge it to deploy through Argo CD."
+          } >> "$GITHUB_STEP_SUMMARY"

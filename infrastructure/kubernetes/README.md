@@ -224,16 +224,19 @@ make verify-movie-concierge-production
 make verify-kubernetes-schema
 ```
 
-Do not use `kubectl apply` for a release. An intentional shared `VERSION` change on `master` starts
-the version-gated workflow, which tests and publishes backend, frontend, and agent images, resolves
-immutable digests, and commits the three GitOps image updates for Argo CD. Infrastructure-only
-changes do not rebuild application images; after CI and review, Argo CD reconciles their merged
-manifests directly from Git.
+Do not use `kubectl apply` for a release. An intentional shared `VERSION` change merged to `master`
+starts the version-gated workflow, which tests and publishes backend, frontend, and agent images,
+resolves immutable digests, and opens a deployment pull request with the three GitOps image updates.
+After its CI run is approved and the digest changes are reviewed, merging the pull request lets Argo
+CD reconcile production. Infrastructure-only changes do not rebuild application images; after
+pull-request CI and review, Argo CD reconciles their merged manifests directly from Git.
 
 During release preparation, the manifests deliberately remain pinned to the last published image
-digests. Branch CI validates those immutable references without requiring them to match the pending
-`VERSION`. After building the new images, CD enables strict `EXPECTED_APP_VERSION` validation and
-updates all three manifests atomically. This avoids a temporary reference to an unpublished image.
+digests. Pull-request CI validates those immutable references without requiring them to match the
+pending `VERSION`. After building the new images, CD enables strict `EXPECTED_APP_VERSION` validation and
+updates all three manifests atomically on `release/v<VERSION>-deployment`. This avoids a temporary
+reference to an unpublished image and prevents the release workflow from bypassing protected
+`master`.
 
 Argo CD is exposed for home LAN access at
 `https://argocd.imdb-clone.the-coding-lab.com`. The route is intended for

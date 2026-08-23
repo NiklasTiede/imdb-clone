@@ -300,7 +300,10 @@ container-smoke-agent: ## smoke-test the Python agent image, endpoints, and non-
 
 ##@ Verification
 
-.PHONY: verify-kubernetes-render verify-seed-release verify-kubernetes-schema verify-movie-concierge-production verify-observability-production verify-observability-charts verify-openapi-drift
+.PHONY: verify-release-workflows verify-kubernetes-render verify-seed-release verify-kubernetes-schema verify-movie-concierge-production verify-observability-production verify-observability-charts verify-openapi-drift
+
+verify-release-workflows: ## verify protected-branch CI and release PR contracts
+	ruby infrastructure/clusters/home/tests/verify_release_workflows.rb
 
 verify-kubernetes-render: check-kubernetes-verification-tools ## render home-cluster Kubernetes manifests
 	kubectl kustomize infrastructure/clusters/home/apps > $(K8S_RENDER_OUTPUT)
@@ -310,7 +313,7 @@ verify-seed-release: verify-kubernetes-render ## verify normal releases cannot r
 	ruby infrastructure/clusters/home/tests/verify_seed_release.rb \
 		$(K8S_RENDER_OUTPUT) $(K8S_SEED_RENDER_OUTPUT)
 
-verify-kubernetes-schema: verify-seed-release verify-movie-concierge-production verify-observability-production ## validate rendered Kubernetes manifests with pinned kubeconform
+verify-kubernetes-schema: verify-release-workflows verify-seed-release verify-movie-concierge-production verify-observability-production ## validate rendered Kubernetes manifests with pinned kubeconform
 	ruby -ryaml -e 'ARGV.each { |path| YAML.load_stream(File.read(path)).each { |doc| next if doc.nil?; doc.delete("sops") if doc.is_a?(Hash); puts YAML.dump(doc) } }' \
 		$(K8S_RENDER_OUTPUT) $(K8S_SEED_RENDER_OUTPUT) > $(K8S_SCHEMA_OUTPUT)
 	docker run --rm -i $(KUBECONFORM_IMAGE) \

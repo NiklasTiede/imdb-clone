@@ -228,17 +228,4 @@ dashboard = JSON.parse(dashboard_manifest.dig("data", "agent-overview.json"))
 assert_contract(dashboard["uid"] == "imdb-agent-overview", "agent dashboard UID drifted")
 assert_contract(dashboard.fetch("panels").length >= 10, "agent dashboard is incomplete")
 
-workflow = File.read(File.join(repository_root, ".github/workflows/continuous-deployment.yaml"))
-%w[make\ verify-agent imdb-clone-agent APP_VERSION agent.yaml].each do |contract|
-  assert_contract(workflow.include?(contract.tr("\\", "")), "CD agent contract is missing #{contract}")
-end
-assert_contract(
-  workflow.include?("APP_VERSION=${{ steps.version.outputs.value }}"),
-  "agent build metadata must use the unprefixed release version"
-)
-assert_contract(
-  workflow.include?("EXPECTED_APP_VERSION: ${{ steps.version.outputs.value }}"),
-  "CD must strictly verify every released image version"
-)
-
 puts "Movie Concierge production manifest contracts passed."
