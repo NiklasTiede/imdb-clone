@@ -24,7 +24,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-// spotless:off
 class AuthenticationControllerTest extends BaseControllerIntegrationTest {
 
   @Autowired private RestTestClient restTestClient;
@@ -55,10 +54,12 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
   void checkUsernameAvailability_existingUsername() {
     restTestClient
         .get()
-        .uri(uriBuilder -> uriBuilder
-            .path("/api/auth/check-username-availability")
-            .queryParam("username", "test_user_one")
-            .build())
+        .uri(
+            uriBuilder ->
+                uriBuilder
+                    .path("/api/auth/check-username-availability")
+                    .queryParam("username", "test_user_one")
+                    .build())
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -71,10 +72,12 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
   void checkEmailAvailability_availableEmail() {
     restTestClient
         .get()
-        .uri(uriBuilder -> uriBuilder
-            .path("/api/auth/check-email-availability")
-            .queryParam("email", "new-user@example.com")
-            .build())
+        .uri(
+            uriBuilder ->
+                uriBuilder
+                    .path("/api/auth/check-email-availability")
+                    .queryParam("email", "new-user@example.com")
+                    .build())
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -191,7 +194,8 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.status").value(401))
-        .andExpect(jsonPath("$.detail").value("Sorry, you're not authorized to access this resource."))
+        .andExpect(
+            jsonPath("$.detail").value("Sorry, you're not authorized to access this resource."))
         .andExpect(jsonPath("$.instance").value("/api/auth/login"));
   }
 
@@ -260,4 +264,3 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
     restTestClient.post().uri("/csrf-protected").exchange().expectStatus().isForbidden();
   }
 }
-// spotless:on

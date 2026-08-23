@@ -39,7 +39,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-// spotless:off
 @Service
 public class OpenSearchMovieSearchService implements MovieSearch {
 
@@ -77,19 +76,16 @@ public class OpenSearchMovieSearchService implements MovieSearch {
   public void indexMovie(MovieSearchDocument movie) {
     IndexResponse indexResponse;
     try {
-      indexResponse = openSearchClient
-          .index(idx -> idx
-              .index(MOVIES_INDEX)
-              .id(movie.getId().toString())
-              .document(movie));
+      indexResponse =
+          openSearchClient.index(
+              idx -> idx.index(MOVIES_INDEX).id(movie.getId().toString()).document(movie));
 
       if (logger.isInfoEnabled()) {
         logger.info(
-                "Document of type Movie with [{}] of index [{}] was [{}].",
-                kv(MOVIE_ID, indexResponse.id()),
-                indexResponse.index(),
-                indexResponse.result().jsonValue()
-        );
+            "Document of type Movie with [{}] of index [{}] was [{}].",
+            kv(MOVIE_ID, indexResponse.id()),
+            indexResponse.index(),
+            indexResponse.result().jsonValue());
       }
     } catch (IOException | OpenSearchException ex) {
       logger.error(
@@ -105,11 +101,10 @@ public class OpenSearchMovieSearchService implements MovieSearch {
   public void indexMovies(List<MovieSearchDocument> movies) {
     BulkRequest.Builder br = new BulkRequest.Builder();
     for (MovieSearchDocument movie : movies) {
-      br.operations(op -> op
-          .index(idx -> idx
-              .index(MOVIES_INDEX)
-              .id(movie.getId().toString())
-              .document(movie)));
+      br.operations(
+          op ->
+              op.index(
+                  idx -> idx.index(MOVIES_INDEX).id(movie.getId().toString()).document(movie)));
     }
     BulkResponse result;
     try {
@@ -122,7 +117,8 @@ public class OpenSearchMovieSearchService implements MovieSearch {
               .collect(Collectors.toSet()),
           result.items().size());
     } catch (IOException | OpenSearchException ex) {
-      throw new OpenSearchOperationException("Error while indexing a Movie Document in OpenSearch", ex);
+      throw new OpenSearchOperationException(
+          "Error while indexing a Movie Document in OpenSearch", ex);
     }
     if (result.errors()) {
       logger.error("Bulk had errors");
@@ -134,41 +130,40 @@ public class OpenSearchMovieSearchService implements MovieSearch {
     }
   }
 
-  /**
-   * Search Single Document by ID
-   */
+  /** Search Single Document by ID */
   public MovieSearchDocument getMovieDocumentById(Long movieId) {
     try {
-      GetResponse<MovieSearchDocument> response = openSearchClient
-          .get(g -> g
-                  .index(MOVIES_INDEX)
-                  .id(movieId.toString()),
-              MovieSearchDocument.class);
+      GetResponse<MovieSearchDocument> response =
+          openSearchClient.get(
+              g -> g.index(MOVIES_INDEX).id(movieId.toString()), MovieSearchDocument.class);
 
-      logger.info("Movie document with primaryTitle [{}] was found.", response.source() != null ? response.source().getPrimaryTitle() : null);
+      logger.info(
+          "Movie document with primaryTitle [{}] was found.",
+          response.source() != null ? response.source().getPrimaryTitle() : null);
       return response.source();
     } catch (IOException | OpenSearchException ex) {
       logger.error("Movie document with [{}] was not found", kv(MOVIE_ID, movieId));
-      throw new OpenSearchOperationException("Error while retrieving a Movie Document by ID in OpenSearch", ex);
+      throw new OpenSearchOperationException(
+          "Error while retrieving a Movie Document by ID in OpenSearch", ex);
     }
   }
 
-  /**
-   * Search movies by Primary Title
-   */
+  /** Search movies by Primary Title */
   public List<MovieSearchDocument> searchMoviesByPrimaryTitle(String searchText) {
     SearchResponse<MovieSearchDocument> response;
     try {
-      response = openSearchClient
-          .search(s -> s
-                  .index(MOVIES_INDEX)
-                  .query(q -> q
-                      .match(m -> m
-                          .field("primaryTitle")
-                          .query(FieldValue.of(searchText)))),
+      response =
+          openSearchClient.search(
+              s ->
+                  s.index(MOVIES_INDEX)
+                      .query(
+                          q ->
+                              q.match(
+                                  m -> m.field("primaryTitle").query(FieldValue.of(searchText)))),
               MovieSearchDocument.class);
     } catch (IOException | OpenSearchException ex) {
-      throw new OpenSearchOperationException("Error while searching for a Movie Document by primaryTitle in OpenSearch", ex);
+      throw new OpenSearchOperationException(
+          "Error while searching for a Movie Document by primaryTitle in OpenSearch", ex);
     }
     List<MovieSearchDocument> movies =
         response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
@@ -176,32 +171,36 @@ public class OpenSearchMovieSearchService implements MovieSearch {
     return movies;
   }
 
-  /**
-   * Search movies by range of ratings
-   */
+  /** Search movies by range of ratings */
   public List<MovieSearchDocument> searchMoviesByRatingRange(float minRating, float maxRating) {
     try {
-      SearchResponse<MovieSearchDocument> response = openSearchClient
-          .search(s -> s
-                  .index(MOVIES_INDEX)
-                  .query(q -> q
-                      .range(r -> r
-                          .field("imdbRating")
-                          .gte(JsonData.of(minRating))
-                          .lte(JsonData.of(maxRating)))),
+      SearchResponse<MovieSearchDocument> response =
+          openSearchClient.search(
+              s ->
+                  s.index(MOVIES_INDEX)
+                      .query(
+                          q ->
+                              q.range(
+                                  r ->
+                                      r.field("imdbRating")
+                                          .gte(JsonData.of(minRating))
+                                          .lte(JsonData.of(maxRating)))),
               MovieSearchDocument.class);
       List<MovieSearchDocument> movies =
           response.hits().hits().stream().map(Hit::source).filter(Objects::nonNull).toList();
-      logger.info("Document search by ratings between [{}] and [{}] gave [{}] results.",minRating, maxRating, movies.size());
+      logger.info(
+          "Document search by ratings between [{}] and [{}] gave [{}] results.",
+          minRating,
+          maxRating,
+          movies.size());
       return movies;
     } catch (IOException | OpenSearchException ex) {
-      throw new OpenSearchOperationException("Error while searching for a Movie Document by rating range in OpenSearch", ex);
+      throw new OpenSearchOperationException(
+          "Error while searching for a Movie Document by rating range in OpenSearch", ex);
     }
   }
 
-  /**
-   * Searches movies using title-aware lexical ranking or semantic discovery, plus filters.
-   */
+  /** Searches movies using title-aware lexical ranking or semantic discovery, plus filters. */
   @Override
   public PagedResponse<MovieRecord> searchMovies(
       String query, MovieSearchRequest request, int page, int size) {
@@ -215,12 +214,8 @@ public class OpenSearchMovieSearchService implements MovieSearch {
     SearchResponse<MovieSearchDocument> response;
 
     SearchRequest searchRequest =
-        SearchRequest.of(s -> s
-            .index(MOVIES_INDEX)
-            .query(q -> q.bool(boolQuery))
-            .from(page * size)
-            .size(size)
-        );
+        SearchRequest.of(
+            s -> s.index(MOVIES_INDEX).query(q -> q.bool(boolQuery)).from(page * size).size(size));
 
     try {
       response = openSearchClient.search(searchRequest, MovieSearchDocument.class);
@@ -249,8 +244,12 @@ public class OpenSearchMovieSearchService implements MovieSearch {
 
     List<MovieSearchDocument> lexicalResults = documents(lexicalResponse);
     if (movieSearchQueryIntentClassifier.isConfidentTitleQuery(query, lexicalResults)) {
-      PagedResponse<MovieRecord> result = toPagedCandidateMovieResponse(
-          lexicalResults, page, size, accessibleTotalHits(lexicalResponse, lexicalResults.size()));
+      PagedResponse<MovieRecord> result =
+          toPagedCandidateMovieResponse(
+              lexicalResults,
+              page,
+              size,
+              accessibleTotalHits(lexicalResponse, lexicalResults.size()));
       movieSearchMetrics.record(TITLE, result.getTotalElements(), startedAt);
       return result;
     }
@@ -259,8 +258,12 @@ public class OpenSearchMovieSearchService implements MovieSearch {
       float[] queryEmbedding = movieEmbeddingClient.embedText(query);
       if (queryEmbedding == null || queryEmbedding.length == 0) {
         logger.warn("Movie query embedding was empty; falling back to lexical results");
-        PagedResponse<MovieRecord> result = toPagedCandidateMovieResponse(
-            lexicalResults, page, size, accessibleTotalHits(lexicalResponse, lexicalResults.size()));
+        PagedResponse<MovieRecord> result =
+            toPagedCandidateMovieResponse(
+                lexicalResults,
+                page,
+                size,
+                accessibleTotalHits(lexicalResponse, lexicalResults.size()));
         movieSearchMetrics.record(LEXICAL_FALLBACK, result.getTotalElements(), startedAt);
         return result;
       }
@@ -288,8 +291,12 @@ public class OpenSearchMovieSearchService implements MovieSearch {
       return result;
     } catch (IOException | RuntimeException ex) {
       logger.warn("Semantic movie search failed; falling back to lexical results", ex);
-      PagedResponse<MovieRecord> result = toPagedCandidateMovieResponse(
-          lexicalResults, page, size, accessibleTotalHits(lexicalResponse, lexicalResults.size()));
+      PagedResponse<MovieRecord> result =
+          toPagedCandidateMovieResponse(
+              lexicalResults,
+              page,
+              size,
+              accessibleTotalHits(lexicalResponse, lexicalResults.size()));
       movieSearchMetrics.record(LEXICAL_FALLBACK, result.getTotalElements(), startedAt);
       return result;
     }
@@ -353,25 +360,26 @@ public class OpenSearchMovieSearchService implements MovieSearch {
     Pageable pageable = PageRequest.of(page, size);
 
     return PagedResponse.from(
-        new PageImpl<>(pageContent, pageable, totalHits).map(movieSearchDocumentMapper::toMovieRecord));
+        new PageImpl<>(pageContent, pageable, totalHits)
+            .map(movieSearchDocumentMapper::toMovieRecord));
   }
 
   private int accessibleTotalHits(
       SearchResponse<MovieSearchDocument> response, int candidateCount) {
-    long totalHits = response.hits().total() == null ? candidateCount : response.hits().total().value();
+    long totalHits =
+        response.hits().total() == null ? candidateCount : response.hits().total().value();
     return (int) Math.min(totalHits, candidateCount);
   }
 
   private int hybridCandidateSize(int page, int size) {
     long requestedWindow = (long) (page + 1) * size * 2;
     return (int)
-        Math.min(
-            MAX_HYBRID_CANDIDATE_SIZE,
-            Math.max(MIN_HYBRID_CANDIDATE_SIZE, requestedWindow));
+        Math.min(MAX_HYBRID_CANDIDATE_SIZE, Math.max(MIN_HYBRID_CANDIDATE_SIZE, requestedWindow));
   }
 
   private List<MovieSearchDocument> searchDocuments(SearchRequest request) throws IOException {
-    SearchResponse<MovieSearchDocument> response = openSearchClient.search(request, MovieSearchDocument.class);
+    SearchResponse<MovieSearchDocument> response =
+        openSearchClient.search(request, MovieSearchDocument.class);
     return documents(response);
   }
 
@@ -383,4 +391,3 @@ public class OpenSearchMovieSearchService implements MovieSearch {
     return movieSearchQueryBuilder.buildBoolQuery(query, request);
   }
 }
-// spotless:on

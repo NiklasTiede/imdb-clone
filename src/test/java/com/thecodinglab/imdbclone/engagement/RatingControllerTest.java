@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-// spotless:off
 class RatingControllerTest extends BaseControllerIntegrationTest {
 
   private static final long MOVIE_ID = 1L;
@@ -72,12 +71,18 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
-                    .jsonPath("$.page").isEqualTo(0)
-                    .jsonPath("$.number").doesNotExist()
-                    .jsonPath("$.pageable").doesNotExist()
-                    .jsonPath("$.content[0].rating").isEqualTo(8.5)
-                    .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
-                    .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));
+                    .jsonPath("$.page")
+                    .isEqualTo(0)
+                    .jsonPath("$.number")
+                    .doesNotExist()
+                    .jsonPath("$.pageable")
+                    .doesNotExist()
+                    .jsonPath("$.content[0].rating")
+                    .isEqualTo(8.5)
+                    .jsonPath("$.content[0].accountId")
+                    .isEqualTo(ACCOUNT_ID)
+                    .jsonPath("$.content[0].movieId")
+                    .isEqualTo(MOVIE_ID));
 
     mockMvc
         .perform(
@@ -212,4 +217,3 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
   }
 }
-// spotless:on

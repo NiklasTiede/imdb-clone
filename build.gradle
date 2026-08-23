@@ -62,9 +62,8 @@ spotless {
 		targetExclude 'src/main/java/**/payload/*.java', 'src/main/java/**/payload/**/*.java'
 		importOrder()
 		removeUnusedImports()
-		googleJavaFormat()
+		googleJavaFormat('1.35.0')
 		trimTrailingWhitespace()
-		toggleOffOn()
 	}
 }
 

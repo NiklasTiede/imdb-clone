@@ -12,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-// spotless:off
 class AccountControllerTest extends BaseControllerIntegrationTest {
 
   @Autowired private RestTestClient restTestClient;
@@ -31,7 +30,8 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
             spec ->
                 spec.expectBody()
-                    .jsonPath("$.status").isEqualTo(401)
+                    .jsonPath("$.status")
+                    .isEqualTo(401)
                     .jsonPath("$.detail")
                     .isEqualTo("Sorry, you're not authorized to access this resource.")
                     .jsonPath("$.instance")
@@ -60,13 +60,20 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
-                    .jsonPath("$.username").isEqualTo("test_user_two")
-                    .jsonPath("$.email").doesNotExist()
-                    .jsonPath("$.phone").doesNotExist()
-                    .jsonPath("$.birthday").doesNotExist()
-                    .jsonPath("$.ratingsCount").isEqualTo(0)
-                    .jsonPath("$.watchlistCount").isEqualTo(0)
-                    .jsonPath("$.commentsCount").isEqualTo(0));
+                    .jsonPath("$.username")
+                    .isEqualTo("test_user_two")
+                    .jsonPath("$.email")
+                    .doesNotExist()
+                    .jsonPath("$.phone")
+                    .doesNotExist()
+                    .jsonPath("$.birthday")
+                    .doesNotExist()
+                    .jsonPath("$.ratingsCount")
+                    .isEqualTo(0)
+                    .jsonPath("$.watchlistCount")
+                    .isEqualTo(0)
+                    .jsonPath("$.commentsCount")
+                    .isEqualTo(0));
   }
 
   @Test
@@ -81,12 +88,18 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
-                    .jsonPath("$.length()").isEqualTo(2)
-                    .jsonPath("$[0].id").isEqualTo(2)
-                    .jsonPath("$[0].username").isEqualTo("test_user_two")
-                    .jsonPath("$[0].displayName").isEqualTo("")
-                    .jsonPath("$[0].email").doesNotExist()
-                    .jsonPath("$[1].id").isEqualTo(1));
+                    .jsonPath("$.length()")
+                    .isEqualTo(2)
+                    .jsonPath("$[0].id")
+                    .isEqualTo(2)
+                    .jsonPath("$[0].username")
+                    .isEqualTo("test_user_two")
+                    .jsonPath("$[0].displayName")
+                    .isEqualTo("")
+                    .jsonPath("$[0].email")
+                    .doesNotExist()
+                    .jsonPath("$[1].id")
+                    .isEqualTo(1));
   }
 
   @Test
@@ -128,4 +141,3 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
                     .isEqualTo("User with username [missing_user] not found in database."));
   }
 }
-// spotless:on

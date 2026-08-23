@@ -31,7 +31,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-// spotless:off
 class MovieControllerTest extends BaseControllerIntegrationTest {
 
   private static final String TEST_MOVIE_PREFIX = "movie-controller-integration-test";
@@ -52,7 +51,8 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
 
   @AfterEach
   void cleanup() {
-    jdbcTemplate.update("delete from scheduled_tasks where task_name = ?", "movie-search-projection");
+    jdbcTemplate.update(
+        "delete from scheduled_tasks where task_name = ?", "movie-search-projection");
     movieRepository.findAll().stream()
         .filter(movie -> movie.getPrimaryTitle() != null)
         .filter(movie -> movie.getPrimaryTitle().startsWith(TEST_MOVIE_PREFIX))
@@ -74,18 +74,22 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
 
     // Act and Assert
     restTestClient
-            .get()
-            .uri("/api/movie/{movieId}", invalidIdFormat)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isBadRequest()
-            .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
-            .expectAll(
-                    spec -> spec.expectStatus().isBadRequest(),
-                    spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
-                    spec -> spec.expectBody()
-                            .jsonPath("$.detail").isEqualTo("Failed to convert 'movieId' with value: '%s'".formatted(invalidIdFormat))
-            );
+        .get()
+        .uri("/api/movie/{movieId}", invalidIdFormat)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectStatus()
+        .isBadRequest()
+        .expectHeader()
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .expectAll(
+            spec -> spec.expectStatus().isBadRequest(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.detail")
+                    .isEqualTo(
+                        "Failed to convert 'movieId' with value: '%s'".formatted(invalidIdFormat)));
   }
 
   @Test
@@ -95,16 +99,18 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
 
     // Act and Assert
     restTestClient
-            .get()
-            .uri("/api/movie/{movieId}", nonExistentMovieId)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectAll(
-                    spec -> spec.expectStatus().isNotFound(),
-                    spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
-                    spec -> spec.expectBody()
-                            .jsonPath("$.detail").isEqualTo("Movie with id [%d] not found in database.".formatted(nonExistentMovieId))
-            );
+        .get()
+        .uri("/api/movie/{movieId}", nonExistentMovieId)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isNotFound(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.detail")
+                    .isEqualTo(
+                        "Movie with id [%d] not found in database.".formatted(nonExistentMovieId)));
   }
 
   @Test
@@ -114,18 +120,21 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
 
     // Act and Assert
     restTestClient
-            .get()
-            .uri("/api/movie/{movieId}", existingMovie)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectAll(
-                    spec -> spec.expectStatus().isOk(),
-                    spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-                    spec -> spec.expectBody()
-                            .jsonPath("$.id").isEqualTo(existingMovie)
-                            .jsonPath("$.primaryTitle").isEqualTo("testMovieOnePri")
-                            .jsonPath("$.startYear").isEqualTo(2010)
-            );
+        .get()
+        .uri("/api/movie/{movieId}", existingMovie)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.id")
+                    .isEqualTo(existingMovie)
+                    .jsonPath("$.primaryTitle")
+                    .isEqualTo("testMovieOnePri")
+                    .jsonPath("$.startYear")
+                    .isEqualTo(2010));
   }
 
   @Test
@@ -135,21 +144,26 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
 
     // Act and Assert
     restTestClient
-            .post()
-            .uri("/api/movie/get-movies")
-            .accept(MediaType.APPLICATION_JSON)
-            .body(nonExistingMovies)
-            .exchange()
-            .expectAll(
-                    spec -> spec.expectStatus().isOk(),
-                    spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-                    spec -> spec.expectBody()
-                            .jsonPath("$.page").isEqualTo(0)
-                            .jsonPath("$.number").doesNotExist()
-                            .jsonPath("$.pageable").doesNotExist()
-                            .jsonPath("$.content").exists()
-                            .jsonPath("$.content[0].primaryTitle").doesNotExist()
-            );
+        .post()
+        .uri("/api/movie/get-movies")
+        .accept(MediaType.APPLICATION_JSON)
+        .body(nonExistingMovies)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.page")
+                    .isEqualTo(0)
+                    .jsonPath("$.number")
+                    .doesNotExist()
+                    .jsonPath("$.pageable")
+                    .doesNotExist()
+                    .jsonPath("$.content")
+                    .exists()
+                    .jsonPath("$.content[0].primaryTitle")
+                    .doesNotExist());
   }
 
   @Test
@@ -159,23 +173,30 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
 
     // Act and Assert
     restTestClient
-            .post()
-            .uri("/api/movie/get-movies")
-            .accept(MediaType.APPLICATION_JSON)
-            .body(existingMovies)
-            .exchange()
-            .expectAll(
-                    spec -> spec.expectStatus().isOk(),
-                    spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-                    spec -> spec.expectBody()
-                            .jsonPath("$.page").isEqualTo(0)
-                            .jsonPath("$.number").doesNotExist()
-                            .jsonPath("$.pageable").doesNotExist()
-                            .jsonPath("$.content[0].id").isEqualTo(1)
-                            .jsonPath("$.content[0].primaryTitle").isEqualTo("testMovieOnePri")
-                            .jsonPath("$.content[1].id").isEqualTo(2)
-                            .jsonPath("$.content[1].primaryTitle").isEqualTo("testMovieTwoPri")
-            );
+        .post()
+        .uri("/api/movie/get-movies")
+        .accept(MediaType.APPLICATION_JSON)
+        .body(existingMovies)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.page")
+                    .isEqualTo(0)
+                    .jsonPath("$.number")
+                    .doesNotExist()
+                    .jsonPath("$.pageable")
+                    .doesNotExist()
+                    .jsonPath("$.content[0].id")
+                    .isEqualTo(1)
+                    .jsonPath("$.content[0].primaryTitle")
+                    .isEqualTo("testMovieOnePri")
+                    .jsonPath("$.content[1].id")
+                    .isEqualTo(2)
+                    .jsonPath("$.content[1].primaryTitle")
+                    .isEqualTo("testMovieTwoPri"));
   }
 
   @Test
@@ -317,4 +338,3 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
     return objectMapper.readValue(response, MovieRecord.class);
   }
 }
-// spotless:on

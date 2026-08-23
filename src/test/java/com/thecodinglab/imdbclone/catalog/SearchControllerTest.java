@@ -35,7 +35,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-// spotless:off
 class SearchControllerTest extends BaseControllerIntegrationTest {
 
   @Autowired private RestTestClient restTestClient;
@@ -68,30 +67,37 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
 
     // Act and Assert
     restTestClient
-            .post()
-            .uri(uriBuilder -> uriBuilder
+        .post()
+        .uri(
+            uriBuilder ->
+                uriBuilder
                     .path("/api/search/movies")
                     .queryParam("query", "testMovieOnePri")
                     .build())
-            .body(request)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectAll(spec -> spec.expectStatus().isOk(),
-                    spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
-                    spec -> spec.expectBody()
-                            .jsonPath("$.page").isEqualTo(0)
-                            .jsonPath("$.number").doesNotExist()
-                            .jsonPath("$.pageable").doesNotExist()
-                            .jsonPath("$.content[0].id").isEqualTo(1)
-                            .jsonPath("$.content[0].primaryTitle").isEqualTo("testMovieOnePri")
-            );
+        .body(request)
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.page")
+                    .isEqualTo(0)
+                    .jsonPath("$.number")
+                    .doesNotExist()
+                    .jsonPath("$.pageable")
+                    .doesNotExist()
+                    .jsonPath("$.content[0].id")
+                    .isEqualTo(1)
+                    .jsonPath("$.content[0].primaryTitle")
+                    .isEqualTo("testMovieOnePri"));
   }
 
   @Test
   void search_withBlankQueryAndFilters_returnsMatchingMovies() {
     // Arrange
-    var request =
-        new MovieSearchRequest(2011, null, null, null, Set.of(MovieGenre.DRAMA), null);
+    var request = new MovieSearchRequest(2011, null, null, null, Set.of(MovieGenre.DRAMA), null);
 
     // Act and Assert
     restTestClient
@@ -151,11 +157,14 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
 
     Assertions.assertThat(movieSearchRepository.count()).isEqualTo(expectedMovies);
     Map<String, Object> embeddingMapping =
-        propertyMapping(openSearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "embedding");
+        propertyMapping(
+            openSearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "embedding");
     Map<String, Object> primaryTitleMapping =
-        propertyMapping(openSearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "primaryTitle");
+        propertyMapping(
+            openSearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "primaryTitle");
     Map<String, Object> originalTitleMapping =
-        propertyMapping(openSearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "originalTitle");
+        propertyMapping(
+            openSearchOperations.indexOps(MovieSearchDocument.class).getMapping(), "originalTitle");
 
     Assertions.assertThat(primaryTitleMapping).containsEntry("type", "search_as_you_type");
     Assertions.assertThat(originalTitleMapping).containsEntry("type", "search_as_you_type");
@@ -194,7 +203,8 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
   }
 
   @SuppressWarnings("unchecked")
-  private static Map<String, Object> propertyMapping(Map<String, Object> mapping, String propertyName) {
+  private static Map<String, Object> propertyMapping(
+      Map<String, Object> mapping, String propertyName) {
     Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
     return (Map<String, Object>) properties.get(propertyName);
   }
@@ -220,7 +230,8 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
       }
       sleepBeforeNextStatusCheck();
     }
-    throw new AssertionError("Timed out waiting for reindex job [%s], latest status [%s]".formatted(jobId, latestJob));
+    throw new AssertionError(
+        "Timed out waiting for reindex job [%s], latest status [%s]".formatted(jobId, latestJob));
   }
 
   private static void sleepBeforeNextStatusCheck() {
@@ -232,4 +243,3 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
     }
   }
 }
-// spotless:on

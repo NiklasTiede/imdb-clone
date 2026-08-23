@@ -22,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
-// spotless:off
 class CommentControllerTest extends BaseControllerIntegrationTest {
 
   private static final long MOVIE_ID = 1L;
@@ -76,12 +75,18 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
-                    .jsonPath("$.id").isEqualTo(createdComment.id())
-                    .jsonPath("$.message").isEqualTo(TEST_COMMENT_PREFIX + " created")
-                    .jsonPath("$.accountId").isEqualTo(ACCOUNT_ID)
-                    .jsonPath("$.movieId").isEqualTo(MOVIE_ID)
-                    .jsonPath("$.createdAtInUtc").isNotEmpty()
-                    .jsonPath("$.modifiedAtInUtc").isNotEmpty());
+                    .jsonPath("$.id")
+                    .isEqualTo(createdComment.id())
+                    .jsonPath("$.message")
+                    .isEqualTo(TEST_COMMENT_PREFIX + " created")
+                    .jsonPath("$.accountId")
+                    .isEqualTo(ACCOUNT_ID)
+                    .jsonPath("$.movieId")
+                    .isEqualTo(MOVIE_ID)
+                    .jsonPath("$.createdAtInUtc")
+                    .isNotEmpty()
+                    .jsonPath("$.modifiedAtInUtc")
+                    .isNotEmpty());
 
     var updateRequest = new UpdateCommentRequest(TEST_COMMENT_PREFIX + " updated");
 
@@ -110,12 +115,18 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
-                    .jsonPath("$.page").isEqualTo(0)
-                    .jsonPath("$.number").doesNotExist()
-                    .jsonPath("$.pageable").doesNotExist()
-                    .jsonPath("$.content[0].message").isEqualTo(TEST_COMMENT_PREFIX + " updated")
-                    .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
-                    .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));
+                    .jsonPath("$.page")
+                    .isEqualTo(0)
+                    .jsonPath("$.number")
+                    .doesNotExist()
+                    .jsonPath("$.pageable")
+                    .doesNotExist()
+                    .jsonPath("$.content[0].message")
+                    .isEqualTo(TEST_COMMENT_PREFIX + " updated")
+                    .jsonPath("$.content[0].accountId")
+                    .isEqualTo(ACCOUNT_ID)
+                    .jsonPath("$.content[0].movieId")
+                    .isEqualTo(MOVIE_ID));
 
     restTestClient
         .get()
@@ -127,12 +138,18 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
             spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
             spec ->
                 spec.expectBody()
-                    .jsonPath("$.page").isEqualTo(0)
-                    .jsonPath("$.number").doesNotExist()
-                    .jsonPath("$.pageable").doesNotExist()
-                    .jsonPath("$.content[0].message").isEqualTo(TEST_COMMENT_PREFIX + " updated")
-                    .jsonPath("$.content[0].accountId").isEqualTo(ACCOUNT_ID)
-                    .jsonPath("$.content[0].movieId").isEqualTo(MOVIE_ID));
+                    .jsonPath("$.page")
+                    .isEqualTo(0)
+                    .jsonPath("$.number")
+                    .doesNotExist()
+                    .jsonPath("$.pageable")
+                    .doesNotExist()
+                    .jsonPath("$.content[0].message")
+                    .isEqualTo(TEST_COMMENT_PREFIX + " updated")
+                    .jsonPath("$.content[0].accountId")
+                    .isEqualTo(ACCOUNT_ID)
+                    .jsonPath("$.content[0].movieId")
+                    .isEqualTo(MOVIE_ID));
 
     mockMvc
         .perform(
@@ -184,4 +201,3 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
         .andExpect(jsonPath("$.message").value("message must not be blank"));
   }
 }
-// spotless:on
