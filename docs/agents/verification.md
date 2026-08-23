@@ -133,6 +133,7 @@ Expected local URLs:
 | Render home app manifests | `kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml` |
 | Render home app manifests via Make | `make verify-kubernetes-render` |
 | Validate rendered manifests with pinned kubeconform | `make verify-kubernetes-schema` |
+| Verify Movie Concierge production contracts | `make verify-movie-concierge-production` |
 | Check Argo CD apps | `kubectl get applications -n argocd` |
 | Check app namespace | `kubectl -n imdb-clone get deploy,svc,ingress` |
 | Backend rollout status | `kubectl -n imdb-clone rollout status deploy/imdb-clone-backend` |

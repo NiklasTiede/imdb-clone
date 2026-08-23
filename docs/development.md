@@ -185,6 +185,10 @@ curl -fsS http://localhost:8090/readyz
 curl -fsS http://localhost:8090/metrics
 ```
 
+Production uses a separate file boundary. It never reuses a shell key: the SOPS-encrypted
+`movie-concierge-runtime` Secret is mounted read-only at `/run/secrets/movie-concierge`, while local
+development continues to read only `.secrets/movie-concierge.local.env`.
+
 For deterministic UI/API development without a model key, Java, database, or search index:
 
 ```bash
@@ -419,10 +423,11 @@ make container-smoke-agent
 
 The agent image contains runtime dependencies only and runs as numeric non-root user `10001`.
 
-Agent Prometheus metrics include bounded run outcomes/duration, active runs, known tool names,
-provider input/cache-read/cache-write/output tokens, estimated USD cost, and SSE disconnects. Logs
-record stable failure codes and exception types only; they do not contain prompts, bodies, tool
-payloads, client/conversation IDs, authorization headers, or keys.
+Agent Prometheus metrics include bounded run outcomes/duration, first-event latency, active runs,
+configured guardrail limits, known tool names, provider input/cache-read/cache-write/output tokens,
+estimated USD cost, process-budget commitment, and SSE disconnects. Logs record stable failure
+codes only; they do not contain prompts, bodies, tool payloads, client/conversation IDs,
+authorization headers, or keys.
 
 ## Kubernetes And k3s Validation
 
@@ -436,6 +441,8 @@ Render without applying:
 
 ```bash
 kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
+make verify-movie-concierge-production
+make verify-kubernetes-schema
 ```
 
 Read-only cluster checks, when kube access is available:
@@ -512,14 +519,20 @@ Movie Concierge variables:
 - `IMDB_AGENT_PORT`
 - `IMDB_AGENT_MODEL_BACKEND` (`openai` by default; use `fake` only for deterministic development)
 - `IMDB_AGENT_MODEL_NAME` (`gpt-5.6-luna` by default)
-- `IMDB_AGENT_MCP_BEARER_TOKEN` (the Python client credential; never log it)
+- `IMDB_AGENT_SECRETS_DIRECTORY` (required in production; points to read-only projected files)
+- `IMDB_AGENT_MCP_BEARER_TOKEN` (local/test compatibility only; production ignores it in favor of
+  the mounted file)
+- `IMDB_AGENT_ALLOWED_HOSTS` (JSON list; production forbids wildcard hosts)
+- `IMDB_AGENT_MAX_CONCURRENT_RUNS`, `IMDB_AGENT_MAX_CONVERSATIONS`, and
+  `IMDB_AGENT_MAX_REQUEST_BODY_BYTES`
 - `IMDB_AGENT_PROJECT_COST_LIMIT_USD` (cannot exceed `$20`)
 - `IMDB_AGENT_RUN_COST_LIMIT_USD`, model/tool/token limits, and timeout settings
 - `IMDB_AGENT_LIVE_EVALS_ENABLED` (defaults to `false` and still requires the `--live` CLI flag)
 
 Java MCP production variables/config-tree entries:
 
-- `movie_concierge_mcp_enabled` (defaults to `false` in production)
+- `movie_concierge_mcp_enabled` (defaults to `false`; the production GitOps Deployment sets it to
+  `true` only with the mounted workload token)
 - `movie_concierge_mcp_bearer_token` (required and non-empty whenever MCP is enabled)
 
 Secret handling:
@@ -529,6 +542,8 @@ Secret handling:
 - The Movie Concierge reads `OPENAI_API_KEY` only from the exact ignored
   `.secrets/movie-concierge.local.env` file. A shell variable with that name is intentionally
   ignored.
+- Production reads the OpenAI and MCP credentials only from the SOPS-backed files beneath
+  `/run/secrets/movie-concierge`; neither credential is a Python environment variable.
 - Kubernetes secret manifests use SOPS/age as `*.sops.yaml`.
 - `.sops.yaml` defines encryption rules for `infrastructure/clusters/home/*.sops.yaml` files.
 - Do not replace encrypted SOPS content with plaintext.

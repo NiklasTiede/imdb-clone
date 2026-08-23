@@ -20,7 +20,7 @@ cp agent/movie-concierge.local.env.example .secrets/movie-concierge.local.env
 chmod 600 .secrets/movie-concierge.local.env
 ```
 
-The only supported credential field is `OPENAI_API_KEY`. The service reads it directly from
+The only supported local credential field is `OPENAI_API_KEY`. The service reads it directly from
 `.secrets/movie-concierge.local.env`; it does not read a shell `OPENAI_API_KEY` or a working-directory
 dotenv file. Never print, source, log, screenshot, or commit the secret file. Configure a $20 hard
 project budget in the OpenAI dashboard as the authoritative cross-process spending limit.
@@ -106,6 +106,58 @@ make docker-build-agent
 make container-smoke-agent
 ```
 
+## Production pilot contract
+
+The home-cluster pilot remains a single process with bounded, in-memory conversation state. It
+stores at most 500 conversations, evicts the least-recently-used inactive session at that bound,
+and intentionally loses all history on restart. Deployments use `Recreate` so two independent
+session and budget ledgers never overlap; a rollout therefore has a short controlled unavailability
+window. There is no agent database or user-specific data.
+
+Production credentials come only from the SOPS-encrypted `movie-concierge-runtime` Kubernetes
+Secret. Kubernetes projects two read-only files under `/run/secrets/movie-concierge`:
+
+- `openai-api-key` for the provider Adapter;
+- `mcp-bearer-token` for the protected Java workload boundary.
+
+The Java backend receives only the MCP file, never the OpenAI credential. Production startup fails
+with a redacted configuration error when either projected file is missing, invalid, or accessible
+to other Unix users. Local startup continues to use the exact ignored dotenv path documented above.
+Neither mode accepts an `OPENAI_API_KEY` environment variable.
+
+The public browser contract is same-origin at `/concierge-api/v1`. Traefik strips only the
+`/concierge-api` prefix and applies a dedicated per-source rate limit plus a four-request global
+in-flight limit. `/healthz`, `/readyz`, and `/metrics` are not public ingress paths. The application
+also enforces:
+
+- a 4 KiB request-body limit before FastAPI parses the body;
+- 600 characters per message and strict typed request models;
+- two active agent runs, rejected immediately rather than queued when saturated;
+- four model requests, six tool calls, 12,000 input tokens, 1,500 output tokens, 30 seconds, and
+  $0.25 per run;
+- a $20 process budget as a final local guard, with the provider project cap remaining authoritative
+  across restarts.
+
+Prometheus collects bounded HTTP, run, outcome, first-event latency, tool, token, provider-estimated
+cost, process-budget, saturation, and disconnect metrics. The `IMDb Clone / Movie Concierge`
+Grafana dashboard visualizes those signals. PrometheusRules cover availability, errors, latency,
+MCP/provider failures, capacity, and cost. Alertmanager is deliberately not installed yet, so rules
+are visible in Prometheus/Grafana but do not send notifications.
+
+Validate the complete production contract without deploying:
+
+```bash
+make verify-agent
+make docker-build-agent
+make container-smoke-agent
+make verify-movie-concierge-production
+make verify-kubernetes-schema
+```
+
+Do not apply these manifests directly. The version-gated release workflow builds all three app
+images, pins their Docker digests, and updates the existing GitOps tree after an intentional
+`VERSION` release.
+
 ## Package map
 
 ```text
@@ -114,7 +166,7 @@ src/imdb_agent/
 ├── web/          FastAPI and typed SSE inbound adapter
 ├── adapters/     Pydantic AI/OpenAI/MCP, memory, eval, logging, metrics, and fakes
 ├── bootstrap.py  composition root
-└── settings.py   validated non-secret settings and exact secret-file loading
+└── settings.py   validated non-secret settings and environment-specific secret-file loading
 ```
 
 See [`AGENTS.md`](AGENTS.md) for Python-specific architecture rules and

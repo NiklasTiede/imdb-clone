@@ -6,7 +6,7 @@
 
 **First release:** Read-only text concierge
 
-**Current milestone:** Local read-only MVP completed; production deployment remains deferred
+**Current milestone:** Production pilot foundation implemented; deployment remains deferred
 
 ## Vision
 
@@ -311,6 +311,13 @@ cancellation, trace propagation, redaction controls, image release/CD, k3s resou
 ServiceMonitor, dashboards, and alerts. **Exit:** a deliberately constrained canary can run in k3s
 with costs and failures visible.
 
+**Foundation status:** Implemented on `feat/movie-concierge-production-pilot` without deploying.
+The existing namespace now has a GitOps contract for file-mounted SOPS credentials, hardened
+single-pod execution, same-origin routing, release automation, NetworkPolicy, Prometheus scraping,
+an initial Grafana dashboard, aggregate alert rules, bounded public traffic, and redacted failures.
+OpenTelemetry/Langfuse, durable history, Alertmanager delivery, and traffic-derived threshold tuning
+remain deliberately outside this pilot.
+
 ### M6 — Read-only production MVP
 
 Complete the four read-only tools, multi-turn constraint refinement, bounded durable history,
@@ -334,9 +341,9 @@ Evaluate realtime voice after the text product demonstrates repeated value. Reus
 policies, events, approval model, and evals. **Exit:** voice is an adapter to the product rather than
 a parallel agent implementation.
 
-The **local read-only MVP** is complete on `feat/movie-concierge-agent`. The **production read-only
-MVP** still requires the production portions of M5/M6. Deployment and k3s resources are deliberately
-outside the local feature branch.
+The **local read-only MVP** is complete. The **production pilot foundation** is implemented but not
+deployed. A reviewed version release and post-release observation period are required before it can
+be called the production read-only MVP.
 
 ## Open Decisions
 

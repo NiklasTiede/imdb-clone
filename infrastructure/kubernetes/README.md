@@ -140,6 +140,52 @@ The initial Prometheus setup collects Kubernetes node and workload metrics,
 kubelet/cAdvisor metrics, kube-state-metrics, and the backend Spring Boot
 Actuator endpoint at `/actuator/prometheus`.
 
+## Movie Concierge production pilot
+
+The Movie Concierge runs as one hardened Python pod in the existing `imdb-clone` namespace. It has
+no database, PVC, second namespace, or user-specific credentials. Browser traffic stays same-origin:
+Traefik routes `/concierge-api/v1` to the agent and strips `/concierge-api`; health and Prometheus
+endpoints are cluster-internal only. Its `Recreate` update strategy prevents two independent
+in-memory session and budget ledgers from overlapping, at the cost of a short rollout interruption.
+
+`movie-concierge-runtime.sops.yaml` owns exactly two encrypted values:
+
+- the OpenAI project key, projected only into the Python pod;
+- one random MCP bearer token, projected into both Python and Java using different filenames.
+
+Edit or rotate this file only through SOPS with the ignored age key:
+
+```bash
+SOPS_AGE_KEY_FILE=.secrets/sops/age/keys.txt \
+  sops infrastructure/clusters/home/apps/movie-concierge-runtime.sops.yaml
+```
+
+Never decrypt it into the repository, shell history, logs, screenshots, or documentation. Set the
+dedicated OpenAI project to a hard $20 pilot budget before release; the in-memory agent ledger is a
+defense-in-depth limit and resets with the pod.
+
+The Agent NetworkPolicy allows ingress only from Traefik and Prometheus. Egress is limited to
+cluster DNS, Java MCP on port 8080, and public non-private IPv4 destinations on HTTPS port 443. The
+pod runs as UID/GID 10001 with no service-account token, no privilege escalation or Linux
+capabilities, RuntimeDefault seccomp, a read-only root filesystem, and a 16 MiB memory-backed `/tmp`.
+
+Prometheus scrapes `/metrics` through an internal ServiceMonitor. The Grafana sidecar loads the
+`IMDb Clone / Movie Concierge` dashboard. Prometheus alert rules are installed, but Alertmanager is
+intentionally disabled, so there is no notification delivery yet.
+
+Validate locally without touching the cluster:
+
+```bash
+make verify-movie-concierge-production
+make verify-kubernetes-schema
+```
+
+Do not use `kubectl apply` for a release. This pilot branch carries the next shared `VERSION`; merge
+it only as an intentional production release after review. That master push starts the version-gated
+workflow, which tests and publishes backend, frontend, and agent images, resolves immutable digests,
+and commits the three GitOps manifest updates for Argo CD. Before that merge, no workflow or cluster
+deployment is triggered.
+
 Argo CD is exposed for home LAN access at
 `https://argocd.imdb-clone.the-coding-lab.com`. The route is intended for
 operator use only and is restricted by Traefik middleware.

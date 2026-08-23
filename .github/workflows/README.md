@@ -11,7 +11,7 @@ non-root image, and executes its container smoke test without provider credentia
 
 ## Version-Gated App Releases
 
-`VERSION` is the shared backend/frontend app version. Pushes to `master`
+`VERSION` is the shared backend/frontend/Movie Concierge app version. Pushes to `master`
 run CI, but app images are published only when `VERSION` changes or the CD
 workflow is manually dispatched.
 
@@ -19,13 +19,19 @@ For version `0.2.2`, the workflow publishes:
 
 - `niklastiede/imdb-clone-backend:v0.2.2`
 - `niklastiede/imdb-clone-frontend:v0.2.2`
+- `niklastiede/imdb-clone-agent:v0.2.2`
 
-The Movie Concierge image is not published or deployed by CD in M1. Image publication and k3s
-manifests enter with the production-guardrails milestone.
+The release job runs the deterministic Python gate before publishing. It builds the agent with the
+shared release version embedded in `imdb_agent_build_info`; provider and MCP secrets are never
+available to GitHub Actions and are not needed for build or verification.
 
 After publishing, the workflow resolves Docker digests and commits updates to
-`infrastructure/clusters/home/apps/backend.yaml` and `frontend.yaml`. Argo CD
+`infrastructure/clusters/home/apps/backend.yaml`, `frontend.yaml`, and `agent.yaml`. Argo CD
 then deploys those manifest changes.
+
+The first concierge pilot branch includes the next `VERSION` and an image tag matching it. Merging
+that branch is therefore the explicit release action; merely pushing the feature branch does not
+publish an image or mutate the cluster.
 
 The Playwright e2e workflow is also manual-only. It starts
 PostgreSQL, OpenSearch, Object Storage, the Spring Boot backend, and the
