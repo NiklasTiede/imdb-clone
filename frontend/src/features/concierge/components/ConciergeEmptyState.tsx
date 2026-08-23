@@ -42,7 +42,13 @@ const ConciergeEmptyState = ({
     </Box>
     <Typography
       component="h2"
-      sx={{ fontSize: 24, fontWeight: 750, letterSpacing: -0.7, mb: 1 }}
+      sx={{
+        color: "text.primary",
+        fontSize: 24,
+        fontWeight: 750,
+        letterSpacing: -0.7,
+        mb: 1,
+      }}
     >
       What fits tonight?
     </Typography>

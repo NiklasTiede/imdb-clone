@@ -1,26 +1,17 @@
 import { Route, Routes } from "react-router";
-import { appTheme } from "./theme";
-import {
-  Box,
-  CircularProgress,
-  CssBaseline,
-  ThemeProvider,
-} from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { Suspense } from "react";
 import { routeDefinitions } from "./app/routes/routeDefinitions";
 
 function App() {
   return (
-    <ThemeProvider theme={appTheme}>
-      <CssBaseline />
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          {routeDefinitions.map((route) => (
-            <Route key={route.path} path={route.path} element={route.element} />
-          ))}
-        </Routes>
-      </Suspense>
-    </ThemeProvider>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
+        {routeDefinitions.map((route) => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
+      </Routes>
+    </Suspense>
   );
 }
 

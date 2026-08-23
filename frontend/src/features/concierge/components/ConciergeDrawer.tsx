@@ -62,6 +62,7 @@ const ConciergeDrawer = ({ clientId, onClose, open }: ConciergeDrawerProps) => {
             background: `radial-gradient(circle at 85% 0%, ${alpha(movieColors.brand, 0.09)}, transparent 28%), ${movieColors.surfaceInset}`,
             borderLeft: `1px solid ${alpha("#ffffff", 0.1)}`,
             boxShadow: "-28px 0 70px rgba(0,0,0,0.42)",
+            color: "text.primary",
             maxWidth: "100vw",
             width: { xs: "100vw", sm: 440 },
           },
@@ -95,7 +96,9 @@ const ConciergeDrawer = ({ clientId, onClose, open }: ConciergeDrawerProps) => {
             <AutoAwesomeRoundedIcon sx={{ fontSize: 19 }} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 14, fontWeight: 750 }}>
+            <Typography
+              sx={{ color: "text.primary", fontSize: 14, fontWeight: 750 }}
+            >
               Movie Concierge
             </Typography>
             <Stack direction="row" spacing={0.7} sx={{ alignItems: "center" }}>
@@ -163,7 +166,9 @@ const ConciergeDrawer = ({ clientId, onClose, open }: ConciergeDrawerProps) => {
                   <MoreHorizRoundedIcon
                     sx={{ color: movieColors.brand, fontSize: 18 }}
                   />
-                  <Typography sx={{ fontSize: 10.5 }}>{status}</Typography>
+                  <Typography sx={{ color: "text.secondary", fontSize: 10.5 }}>
+                    {status}
+                  </Typography>
                 </Stack>
               )}
             </Stack>
@@ -255,11 +260,11 @@ const ConciergeDrawer = ({ clientId, onClose, open }: ConciergeDrawerProps) => {
               px: 0.3,
             }}
           >
-            <Typography sx={{ color: "rgba(255,255,255,0.38)", fontSize: 9.5 }}>
+            <Typography sx={{ color: "text.secondary", fontSize: 9.5 }}>
               Read-only preview · Verify details before deciding
             </Typography>
             {usage && (
-              <Typography sx={{ color: "rgba(255,255,255,0.32)", fontSize: 9 }}>
+              <Typography sx={{ color: "text.secondary", fontSize: 9 }}>
                 {usage.totalTokens.toLocaleString()} tokens
               </Typography>
             )}
