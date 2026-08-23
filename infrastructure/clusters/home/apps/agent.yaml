@@ -43,7 +43,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: agent
-          image: niklastiede/imdb-clone-agent:v1.1.0
+          image: niklastiede/imdb-clone-agent:v1.1.0@sha256:17b84cce9683a412d342b5d6eb87fd09533612ffccc20505cac2adbf2c2bbd54
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
