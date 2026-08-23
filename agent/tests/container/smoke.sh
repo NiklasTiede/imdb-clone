@@ -16,6 +16,10 @@ docker run \
   --detach \
   --name "${CONTAINER_NAME}" \
   --platform "${PLATFORM}" \
+  --read-only \
+  --cap-drop ALL \
+  --security-opt no-new-privileges \
+  --tmpfs /tmp:rw,noexec,nosuid,size=16m \
   --publish "127.0.0.1:${PORT}:8090" \
   --env IMDB_AGENT_MODEL_BACKEND=fake \
   "${IMAGE}" >/dev/null

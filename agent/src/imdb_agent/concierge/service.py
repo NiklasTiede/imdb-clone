@@ -46,6 +46,28 @@ class ConciergeRunError(RuntimeError):
         self.retryable = retryable
 
 
+class _RunCapacityExhaustedError(RuntimeError):
+    """The process already has the configured number of active model runs."""
+
+
+class _RunCapacity:
+    def __init__(self, maximum: int) -> None:
+        self._maximum = maximum
+        self._active = 0
+        self._lock = asyncio.Lock()
+
+    async def try_acquire(self) -> bool:
+        async with self._lock:
+            if self._active >= self._maximum:
+                return False
+            self._active += 1
+            return True
+
+    async def release(self) -> None:
+        async with self._lock:
+            self._active = max(0, self._active - 1)
+
+
 class ConciergeService:
     def __init__(
         self,
@@ -54,11 +76,13 @@ class ConciergeService:
         conversations: ConversationStore,
         cost_ledger: CostLedger,
         observer: RunObserver,
+        max_concurrent_runs: int = 2,
     ) -> None:
         self._runner = runner
         self._conversations = conversations
         self._cost_ledger = cost_ledger
         self._observer = observer
+        self._capacity = _RunCapacity(max_concurrent_runs)
 
     async def create_conversation(self, client_id: str) -> str:
         return await self._conversations.create(client_id)
@@ -68,10 +92,13 @@ class ConciergeService:
     ) -> AsyncIterator[ConciergeEvent]:
         started_at = perf_counter()
         sequence = 0
-        outcome = CompletionOutcome.ERROR
+        completion_outcome = CompletionOutcome.ERROR
+        metric_outcome = "internal_error"
         usage = None
         reservation = None
         turn_started = False
+        capacity_acquired = False
+        first_event_observed = False
         text_parts: list[str] = []
         movies_by_id: dict[int, GroundedMovie] = {}
         self._observer.started()
@@ -82,6 +109,9 @@ class ConciergeService:
             return event.model_copy(update={"sequence": sequence})
 
         try:
+            capacity_acquired = await self._capacity.try_acquire()
+            if not capacity_acquired:
+                raise _RunCapacityExhaustedError
             history = await self._conversations.begin_turn(client_id, conversation_id, message)
             turn_started = True
             reservation = await self._cost_ledger.reserve()
@@ -93,6 +123,9 @@ class ConciergeService:
                 history=history,
             )
             async for event in self._runner.stream(request):
+                if not first_event_observed:
+                    self._observer.first_event(perf_counter() - started_at)
+                    first_event_observed = True
                 if isinstance(event, TextEvent):
                     text_parts.append(event.delta)
                 elif event.type == "movie-card":
@@ -116,14 +149,18 @@ class ConciergeService:
                 ),
             )
             turn_started = False
-            outcome = CompletionOutcome.SUCCESS
-            await self._cost_ledger.settle(
-                reservation,
-                usage.estimated_cost_usd if usage is not None else None,
-                succeeded=True,
+            completion_outcome = CompletionOutcome.SUCCESS
+            metric_outcome = "success"
+            self._observer.budget_committed(
+                await self._cost_ledger.settle(
+                    reservation,
+                    usage.estimated_cost_usd if usage is not None else None,
+                    succeeded=True,
+                )
             )
             reservation = None
         except ConversationNotFoundError:
+            metric_outcome = "conversation_not_found"
             yield next_event(
                 ErrorEvent(
                     code="conversation_not_found",
@@ -132,6 +169,7 @@ class ConciergeService:
                 )
             )
         except ConversationBusyError:
+            metric_outcome = "conversation_busy"
             yield next_event(
                 ErrorEvent(
                     code="conversation_busy",
@@ -140,14 +178,25 @@ class ConciergeService:
                 )
             )
         except BudgetExhaustedError:
+            metric_outcome = "budget_exhausted"
             yield next_event(
                 ErrorEvent(
                     code="project_budget_exhausted",
-                    message="The local model budget is exhausted. No model request was sent.",
+                    message="The model budget is exhausted. No model request was sent.",
                     retryable=False,
                 )
             )
+        except _RunCapacityExhaustedError:
+            metric_outcome = "capacity_exhausted"
+            yield next_event(
+                ErrorEvent(
+                    code="concierge_busy",
+                    message="The Movie Concierge is at capacity. Please try again shortly.",
+                    retryable=True,
+                )
+            )
         except ConciergeRunError as error:
+            metric_outcome = error.code
             yield next_event(
                 ErrorEvent(
                     code=error.code,
@@ -156,10 +205,12 @@ class ConciergeService:
                 )
             )
         except asyncio.CancelledError:
-            outcome = CompletionOutcome.CANCELLED
+            completion_outcome = CompletionOutcome.CANCELLED
+            metric_outcome = "cancelled"
             self._observer.disconnected()
             raise
         except Exception:
+            metric_outcome = "internal_error"
             yield next_event(
                 ErrorEvent(
                     code="concierge_unavailable",
@@ -171,11 +222,17 @@ class ConciergeService:
             if turn_started:
                 await self._conversations.fail_turn(client_id, conversation_id)
             if reservation is not None:
-                await self._cost_ledger.settle(reservation, None, succeeded=False)
+                self._observer.budget_committed(
+                    await self._cost_ledger.settle(reservation, None, succeeded=False)
+                )
+            if capacity_acquired:
+                await self._capacity.release()
             self._observer.finished(
-                outcome=outcome.value,
+                outcome=metric_outcome,
                 duration_seconds=perf_counter() - started_at,
                 usage=usage,
             )
 
-        yield next_event(CompletionEvent(conversation_id=conversation_id, outcome=outcome))
+        yield next_event(
+            CompletionEvent(conversation_id=conversation_id, outcome=completion_outcome)
+        )

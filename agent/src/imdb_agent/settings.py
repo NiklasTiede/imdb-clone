@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Protocol, cast
 
 from dotenv import dotenv_values
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
 
 from imdb_agent import __version__
@@ -14,6 +14,8 @@ from imdb_agent import __version__
 LOCAL_OPENAI_SECRETS_FILE = (
     Path(__file__).resolve().parents[3] / ".secrets" / "movie-concierge.local.env"
 )
+OPENAI_API_KEY_SECRET_NAME = "openai-api-key"  # noqa: S105 - mounted filename, not a key
+MCP_BEARER_TOKEN_SECRET_NAME = "mcp-bearer-token"  # noqa: S105 - mounted filename
 
 
 class DeploymentEnvironment(StrEnum):
@@ -57,10 +59,17 @@ class Settings(BaseSettings):
     model_name: str = Field(default="gpt-5.6-luna", min_length=1, max_length=100)
     mcp_url: str = "http://localhost:8080/mcp"
     mcp_bearer_token: SecretStr = SecretStr("local-development-mcp-token")
+    secrets_directory: Path | None = None
+    allowed_hosts: list[str] = Field(
+        default_factory=lambda: ["localhost", "127.0.0.1", "testserver"]
+    )
     mcp_init_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
     mcp_read_timeout_seconds: float = Field(default=12.0, gt=0, le=60)
     run_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
     provider_timeout_seconds: float = Field(default=20.0, gt=0, le=60)
+    max_concurrent_runs: int = Field(default=2, ge=1, le=8)
+    max_conversations: int = Field(default=500, ge=10, le=10_000)
+    max_request_body_bytes: int = Field(default=4_096, ge=1_024, le=65_536)
     max_model_requests: int = Field(default=4, ge=1, le=8)
     max_tool_calls: int = Field(default=6, ge=1, le=12)
     max_input_tokens: int = Field(default=12_000, ge=1_000, le=50_000)
@@ -73,6 +82,20 @@ class Settings(BaseSettings):
     def json_logs(self) -> bool:
         return self.environment is not DeploymentEnvironment.LOCAL
 
+    @model_validator(mode="after")
+    def validate_production_boundaries(self) -> Settings:
+        if self.environment is not DeploymentEnvironment.PRODUCTION:
+            return self
+        if self.model_backend is not ModelBackend.OPENAI:
+            raise ValueError("production requires the OpenAI model backend")
+        if self.secrets_directory is None or not self.secrets_directory.is_absolute():
+            raise ValueError("production requires an absolute mounted secrets directory")
+        if not self.allowed_hosts or "*" in self.allowed_hosts:
+            raise ValueError("production requires an explicit trusted-host allowlist")
+        if "localhost" in self.mcp_url or "127.0.0.1" in self.mcp_url:
+            raise ValueError("production requires a cluster-local MCP URL")
+        return self
+
 
 def load_settings(env_file: Path | None = None) -> Settings:
     """Load settings without implicitly trusting a working-directory dotenv file."""
@@ -84,19 +107,61 @@ def load_settings(env_file: Path | None = None) -> Settings:
         raise ConfigurationError("invalid Movie Concierge configuration") from None
 
 
-class OpenAISecrets(BaseModel):
-    """Credential shape loaded only from the dedicated ignored local file."""
+class RuntimeSecrets(BaseModel):
+    """Credentials resolved from one environment-specific file boundary."""
 
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
-    openai_api_key: SecretStr = Field(alias="OPENAI_API_KEY", min_length=1)
+    openai_api_key: SecretStr = Field(min_length=12)
+    mcp_bearer_token: SecretStr = Field(min_length=20)
 
 
-def load_openai_secrets(path: Path = LOCAL_OPENAI_SECRETS_FILE) -> OpenAISecrets:
+class _LocalOpenAISecrets(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    openai_api_key: SecretStr = Field(alias="OPENAI_API_KEY", min_length=12)
+
+
+def load_runtime_secrets(settings: Settings) -> RuntimeSecrets:
+    if settings.environment is DeploymentEnvironment.PRODUCTION:
+        secrets_directory = settings.secrets_directory
+        if secrets_directory is None:
+            raise ConfigurationError("production Movie Concierge credentials are unavailable")
+        try:
+            return RuntimeSecrets(
+                openai_api_key=SecretStr(
+                    _read_mounted_secret(secrets_directory / OPENAI_API_KEY_SECRET_NAME)
+                ),
+                mcp_bearer_token=SecretStr(
+                    _read_mounted_secret(secrets_directory / MCP_BEARER_TOKEN_SECRET_NAME)
+                ),
+            )
+        except OSError, ValidationError:
+            raise ConfigurationError(
+                "production Movie Concierge credentials are unavailable"
+            ) from None
+
+    local_openai = load_local_openai_secrets()
+    return RuntimeSecrets(
+        openai_api_key=local_openai.openai_api_key,
+        mcp_bearer_token=settings.mcp_bearer_token,
+    )
+
+
+def load_local_openai_secrets(
+    path: Path = LOCAL_OPENAI_SECRETS_FILE,
+) -> _LocalOpenAISecrets:
     try:
         values = dict(dotenv_values(path))
-        return OpenAISecrets.model_validate(values)
+        return _LocalOpenAISecrets.model_validate(values)
     except OSError, ValidationError:
         raise ConfigurationError(
             "OpenAI credentials are unavailable in .secrets/movie-concierge.local.env"
         ) from None
+
+
+def _read_mounted_secret(path: Path) -> str:
+    mode = path.stat().st_mode
+    if mode & 0o007:
+        raise OSError("mounted secret must not be accessible to other users")
+    return path.read_text(encoding="utf-8").strip()

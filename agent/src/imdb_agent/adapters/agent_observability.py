@@ -6,13 +6,18 @@ from typing import TYPE_CHECKING
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from imdb_agent.concierge.events import UsageSummary
+    from imdb_agent.settings import Settings
 
 
 @dataclass(frozen=True, slots=True)
 class AgentMetrics:
     runs: Counter
     duration: Histogram
+    first_event_duration: Histogram
+    process_budget_committed: Gauge
     active: Gauge
     tool_calls: Counter
     tokens: Counter
@@ -24,6 +29,12 @@ class AgentMetrics:
 
     def tool_called(self, tool_name: str) -> None:
         self.tool_calls.labels(tool=tool_name).inc()
+
+    def first_event(self, duration_seconds: float) -> None:
+        self.first_event_duration.observe(duration_seconds)
+
+    def budget_committed(self, amount_usd: Decimal) -> None:
+        self.process_budget_committed.set(float(amount_usd))
 
     def finished(
         self,
@@ -50,7 +61,29 @@ class AgentMetrics:
         self.disconnects.inc()
 
 
-def create_agent_metrics(registry: CollectorRegistry) -> AgentMetrics:
+def create_agent_metrics(registry: CollectorRegistry, settings: Settings) -> AgentMetrics:
+    guardrail_limit = Gauge(
+        "imdb_agent_guardrail_limit",
+        "Configured process guardrail limits by bounded kind.",
+        ("limit",),
+        registry=registry,
+    )
+    for limit, value in (
+        ("max_concurrent_runs", settings.max_concurrent_runs),
+        ("max_input_tokens", settings.max_input_tokens),
+        ("max_output_tokens", settings.max_output_tokens),
+        ("project_cost_usd", float(settings.project_cost_limit_usd)),
+        ("run_cost_usd", float(settings.run_cost_limit_usd)),
+    ):
+        guardrail_limit.labels(limit=limit).set(value)
+
+    process_budget_committed = Gauge(
+        "imdb_agent_process_budget_committed_usd",
+        "Pessimistic cost committed by the process-local inference budget ledger.",
+        registry=registry,
+    )
+    process_budget_committed.set(0)
+
     return AgentMetrics(
         runs=Counter(
             "imdb_agent_runs",
@@ -64,6 +97,12 @@ def create_agent_metrics(registry: CollectorRegistry) -> AgentMetrics:
             ("outcome",),
             registry=registry,
         ),
+        first_event_duration=Histogram(
+            "imdb_agent_first_event_duration_seconds",
+            "Time from accepted run to the first model or tool event.",
+            registry=registry,
+        ),
+        process_budget_committed=process_budget_committed,
         active=Gauge(
             "imdb_agent_runs_active",
             "Movie Concierge runs currently active.",

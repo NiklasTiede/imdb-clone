@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from imdb_agent.adapters.evaluation import report_passed, run_eval_suite
 from imdb_agent.adapters.pydantic_ai_runner import PydanticAIConciergeRunner
 from imdb_agent.concierge.evaluation import load_eval_dataset
-from imdb_agent.settings import load_openai_secrets, load_settings
+from imdb_agent.settings import load_runtime_secrets, load_settings
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -42,7 +42,7 @@ async def _run(*, live: bool, case_id: str | None, progress: bool) -> int:
             return 2
         runner = PydanticAIConciergeRunner(
             settings=settings,
-            secrets=load_openai_secrets(),
+            secrets=load_runtime_secrets(settings),
         )
 
     report = await run_eval_suite(

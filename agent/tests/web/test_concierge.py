@@ -92,3 +92,30 @@ def test_wrong_client_receives_no_conversation_data(client: TestClient) -> None:
     assert events[0]["type"] == "error"
     assert events[0]["code"] == "conversation_not_found"
     assert not any(event["type"] == "movie-card" for event in events)
+
+
+def test_rejects_oversized_request_before_json_parsing(client: TestClient) -> None:
+    response = client.post(
+        "/v1/conversations",
+        headers={
+            "X-Concierge-Client-ID": "browser-client-0001",
+            "Content-Type": "application/json",
+        },
+        content=b"x" * 4_097,
+    )
+
+    assert response.status_code == 413
+    assert response.json() == {"detail": "Request body too large."}
+
+
+def test_rejects_untrusted_host(client: TestClient) -> None:
+    response = client.post(
+        "/v1/conversations",
+        headers={
+            "Host": "attacker.example",
+            "X-Concierge-Client-ID": "browser-client-0001",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.text == "Invalid host header"

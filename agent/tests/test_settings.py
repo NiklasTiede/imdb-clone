@@ -1,23 +1,31 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import pytest
 
 from imdb_agent.settings import (
     ConfigurationError,
     DeploymentEnvironment,
-    load_openai_secrets,
+    Settings,
+    load_local_openai_secrets,
+    load_runtime_secrets,
     load_settings,
 )
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def test_settings_load_prefixed_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("IMDB_AGENT_ENVIRONMENT", "production")
     monkeypatch.setenv("IMDB_AGENT_PORT", "9000")
+    monkeypatch.setenv("IMDB_AGENT_SECRETS_DIRECTORY", "/run/secrets/movie-concierge")
+    monkeypatch.setenv(
+        "IMDB_AGENT_MCP_URL",
+        "http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp",
+    )
+    monkeypatch.setenv(
+        "IMDB_AGENT_ALLOWED_HOSTS",
+        '["imdb-clone.the-coding-lab.com","imdb-clone-agent.imdb-clone.svc"]',
+    )
 
     settings = load_settings()
 
@@ -58,12 +66,12 @@ def test_openai_key_is_loaded_only_from_explicit_secret_file(
 ) -> None:
     monkeypatch.setenv("OPENAI_API_KEY", "must-not-be-used")
     secret_file = tmp_path / "movie-concierge.local.env"
-    secret_file.write_text("OPENAI_API_KEY=file-only-value\n", encoding="utf-8")
+    secret_file.write_text("OPENAI_API_KEY=file-only-synthetic-value\n", encoding="utf-8")
 
-    secrets = load_openai_secrets(secret_file)
+    secrets = load_local_openai_secrets(secret_file)
 
-    assert secrets.openai_api_key.get_secret_value() == "file-only-value"
-    assert "file-only-value" not in repr(secrets)
+    assert secrets.openai_api_key.get_secret_value() == "file-only-synthetic-value"
+    assert "file-only-synthetic-value" not in repr(secrets)
 
 
 def test_openai_secret_file_rejects_unknown_or_missing_fields(tmp_path: Path) -> None:
@@ -71,4 +79,73 @@ def test_openai_secret_file_rejects_unknown_or_missing_fields(tmp_path: Path) ->
     secret_file.write_text("UNEXPECTED=value\n", encoding="utf-8")
 
     with pytest.raises(ConfigurationError, match="OpenAI credentials are unavailable"):
-        load_openai_secrets(secret_file)
+        load_local_openai_secrets(secret_file)
+
+
+def test_production_secrets_are_loaded_from_private_mounted_files(tmp_path: Path) -> None:
+    secrets_directory = tmp_path / "movie-concierge"
+    secrets_directory.mkdir()
+    openai_file = secrets_directory / "openai-api-key"
+    mcp_file = secrets_directory / "mcp-bearer-token"
+    openai_file.write_text("synthetic-openai-production-key\n", encoding="utf-8")
+    mcp_file.write_text("synthetic-mcp-production-token\n", encoding="utf-8")
+    openai_file.chmod(0o440)
+    mcp_file.chmod(0o440)
+    settings = Settings(
+        environment=DeploymentEnvironment.PRODUCTION,
+        secrets_directory=secrets_directory,
+        mcp_url="http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp",
+        allowed_hosts=["imdb-clone.the-coding-lab.com"],
+    )
+
+    secrets = load_runtime_secrets(settings)
+
+    assert secrets.openai_api_key.get_secret_value() == "synthetic-openai-production-key"
+    assert secrets.mcp_bearer_token.get_secret_value() == "synthetic-mcp-production-token"
+    assert "synthetic-openai-production-key" not in repr(secrets)
+    assert "synthetic-mcp-production-token" not in repr(secrets)
+
+
+def test_production_rejects_world_readable_secret_files(tmp_path: Path) -> None:
+    secrets_directory = tmp_path / "movie-concierge"
+    secrets_directory.mkdir()
+    (secrets_directory / "openai-api-key").write_text(
+        "synthetic-openai-production-key\n", encoding="utf-8"
+    )
+    mcp_file = secrets_directory / "mcp-bearer-token"
+    mcp_file.write_text("synthetic-mcp-production-token\n", encoding="utf-8")
+    mcp_file.chmod(0o440)
+    settings = Settings(
+        environment=DeploymentEnvironment.PRODUCTION,
+        secrets_directory=secrets_directory,
+        mcp_url="http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp",
+        allowed_hosts=["imdb-clone.the-coding-lab.com"],
+    )
+
+    with pytest.raises(
+        ConfigurationError, match="production Movie Concierge credentials are unavailable"
+    ):
+        load_runtime_secrets(settings)
+
+
+@pytest.mark.parametrize(
+    ("overrides", "expected_message"),
+    [
+        ({"secrets_directory": None}, "mounted secrets directory"),
+        ({"allowed_hosts": ["*"]}, "trusted-host allowlist"),
+        ({"mcp_url": "http://localhost:8080/mcp"}, "cluster-local MCP URL"),
+    ],
+)
+def test_production_rejects_unsafe_boundaries(
+    overrides: dict[str, object], expected_message: str
+) -> None:
+    values: dict[str, object] = {
+        "environment": DeploymentEnvironment.PRODUCTION,
+        "secrets_directory": Path("/run/secrets/movie-concierge"),
+        "mcp_url": "http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp",
+        "allowed_hosts": ["imdb-clone.the-coding-lab.com"],
+    }
+    values.update(overrides)
+
+    with pytest.raises(ValueError, match=expected_message):
+        Settings.model_validate(values)

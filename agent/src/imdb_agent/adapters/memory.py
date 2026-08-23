@@ -19,21 +19,34 @@ class _Conversation:
     client_id: str
     messages: list[ConversationMessage] = field(default_factory=lambda: list[ConversationMessage]())
     active: bool = False
+    access_order: int = 0
 
 
 class InMemoryConversationStore:
     """Process-local bounded sessions; a restart intentionally clears every conversation."""
 
-    def __init__(self, *, max_messages: int = 16, max_content_chars: int = 12_000) -> None:
+    def __init__(
+        self,
+        *,
+        max_conversations: int = 500,
+        max_messages: int = 16,
+        max_content_chars: int = 12_000,
+    ) -> None:
+        self._max_conversations = max_conversations
         self._max_messages = max_messages
         self._max_content_chars = max_content_chars
         self._conversations: dict[str, _Conversation] = {}
         self._lock = asyncio.Lock()
+        self._access_order = 0
 
     async def create(self, client_id: str) -> str:
         async with self._lock:
+            self._make_space()
             conversation_id = uuid4().hex
-            self._conversations[conversation_id] = _Conversation(client_id=client_id)
+            self._conversations[conversation_id] = _Conversation(
+                client_id=client_id,
+                access_order=self._next_access_order(),
+            )
             return conversation_id
 
     async def begin_turn(
@@ -44,6 +57,7 @@ class InMemoryConversationStore:
             if conversation.active:
                 raise ConversationBusyError
             conversation.active = True
+            conversation.access_order = self._next_access_order()
             history = tuple(conversation.messages)
             conversation.messages.append(ConversationMessage(role="user", content=message))
             self._trim(conversation)
@@ -59,6 +73,7 @@ class InMemoryConversationStore:
             conversation = self._owned(client_id, conversation_id)
             conversation.messages.append(response)
             conversation.active = False
+            conversation.access_order = self._next_access_order()
             self._trim(conversation)
 
     async def fail_turn(self, client_id: str, conversation_id: str) -> None:
@@ -70,6 +85,7 @@ class InMemoryConversationStore:
             if conversation.active and conversation.messages:
                 conversation.messages.pop()
             conversation.active = False
+            conversation.access_order = self._next_access_order()
 
     async def snapshot(
         self, client_id: str, conversation_id: str
@@ -92,6 +108,21 @@ class InMemoryConversationStore:
             > self._max_content_chars
         ):
             conversation.messages.pop(0)
+
+    def _make_space(self) -> None:
+        if len(self._conversations) < self._max_conversations:
+            return
+        inactive = (
+            (conversation_id, conversation)
+            for conversation_id, conversation in self._conversations.items()
+            if not conversation.active
+        )
+        oldest_id, _oldest = min(inactive, key=lambda item: item[1].access_order)
+        del self._conversations[oldest_id]
+
+    def _next_access_order(self) -> int:
+        self._access_order += 1
+        return self._access_order
 
 
 class InMemoryCostLedger:
@@ -118,7 +149,7 @@ class InMemoryCostLedger:
         actual_cost_usd: Decimal | None,
         *,
         succeeded: bool,
-    ) -> None:
+    ) -> Decimal:
         async with self._lock:
             self._reserved_usd = max(Decimal(0), self._reserved_usd - reservation.amount_usd)
             charged = (
@@ -127,6 +158,7 @@ class InMemoryCostLedger:
                 else reservation.amount_usd
             )
             self._committed_usd = min(self._project_limit_usd, self._committed_usd + charged)
+            return self._committed_usd
 
     @property
     def committed_usd(self) -> Decimal:

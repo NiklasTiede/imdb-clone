@@ -59,7 +59,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
     from imdb_agent.concierge.ports import RunRequest
-    from imdb_agent.settings import OpenAISecrets, Settings
+    from imdb_agent.settings import RuntimeSecrets, Settings
 
 
 class _ToolModel(BaseModel):
@@ -125,7 +125,7 @@ class _TonightResult(_ToolModel):
 class PydanticAIConciergeRunner:
     """Pydantic AI/OpenAI/MCP Adapter behind the provider-neutral Concierge Interface."""
 
-    def __init__(self, *, settings: Settings, secrets: OpenAISecrets) -> None:
+    def __init__(self, *, settings: Settings, secrets: RuntimeSecrets) -> None:
         api_key = secrets.openai_api_key.get_secret_value()
         openai_client = AsyncOpenAI(
             api_key=api_key,
@@ -142,7 +142,7 @@ class PydanticAIConciergeRunner:
         )
         toolset = MCPToolset(
             settings.mcp_url,
-            headers={"Authorization": f"Bearer {settings.mcp_bearer_token.get_secret_value()}"},
+            headers={"Authorization": f"Bearer {secrets.mcp_bearer_token.get_secret_value()}"},
             include_return_schema=True,
             init_timeout=settings.mcp_init_timeout_seconds,
             max_retries=0,
@@ -167,7 +167,6 @@ class PydanticAIConciergeRunner:
         )
         self._model_name = settings.model_name
         self._run_timeout_seconds = settings.run_timeout_seconds
-        self._semaphore = asyncio.Semaphore(2)
         self._logger = structlog.get_logger()
 
     @classmethod
@@ -190,7 +189,6 @@ class PydanticAIConciergeRunner:
         )
         runner._model_name = model_name
         runner._run_timeout_seconds = run_timeout_seconds
-        runner._semaphore = asyncio.Semaphore(2)
         runner._logger = structlog.get_logger()
         return runner
 
@@ -199,7 +197,6 @@ class PydanticAIConciergeRunner:
         tool_arguments: dict[str, dict[str, Any]] = {}
         try:
             async with (
-                self._semaphore,
                 asyncio.timeout(self._run_timeout_seconds),
                 self._agent.run_stream_events(
                     build_user_prompt(request.message, request.history),

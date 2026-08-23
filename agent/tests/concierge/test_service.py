@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -12,12 +13,16 @@ from imdb_agent.concierge.events import (
     CompletionOutcome,
     ErrorEvent,
     MovieCardEvent,
+    TextEvent,
     UsageSummary,
 )
+from imdb_agent.concierge.ports import ConversationNotFoundError, RunRequest
 from imdb_agent.concierge.service import ConciergeService
 
 if TYPE_CHECKING:
-    from imdb_agent.concierge.events import ConciergeEvent
+    from collections.abc import AsyncIterator
+
+    from imdb_agent.concierge.events import ConciergeEvent, RunnerEvent
 
 pytestmark = pytest.mark.asyncio
 
@@ -26,9 +31,17 @@ class RecordingObserver:
     def __init__(self) -> None:
         self.outcomes: list[str] = []
         self.disconnects = 0
+        self.first_event_durations: list[float] = []
+        self.committed_budget: list[Decimal] = []
 
     def started(self) -> None:
         return None
+
+    def first_event(self, duration_seconds: float) -> None:
+        self.first_event_durations.append(duration_seconds)
+
+    def budget_committed(self, amount_usd: Decimal) -> None:
+        self.committed_budget.append(amount_usd)
 
     def tool_called(self, tool_name: str) -> None:
         return None
@@ -107,6 +120,7 @@ async def test_streams_typed_grounded_events_and_persists_bounded_history() -> N
     assert [message.role for message in history] == ["user", "assistant"]
     assert history[-1].movies[0].movie_id == 42
     assert ledger.committed_usd == 0
+    assert observer.committed_budget == [Decimal(0)]
     assert observer.outcomes == ["success"]
 
 
@@ -157,3 +171,69 @@ async def test_project_budget_rejects_request_before_runner_is_called() -> None:
     assert first[-1].outcome == "success"
     assert isinstance(second[0], ErrorEvent)
     assert second[0].code == "project_budget_exhausted"
+
+
+class BlockingRunner:
+    def __init__(self) -> None:
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+
+    async def stream(self, request: RunRequest) -> AsyncIterator[RunnerEvent]:
+        self.started.set()
+        await self.release.wait()
+        yield TextEvent(delta="Capacity released.")
+
+
+async def test_global_capacity_rejects_without_queueing_or_calling_second_run() -> None:
+    store = InMemoryConversationStore()
+    runner = BlockingRunner()
+    observer = RecordingObserver()
+    service = ConciergeService(
+        runner=runner,
+        conversations=store,
+        cost_ledger=InMemoryCostLedger(
+            project_limit_usd=Decimal("20"),
+            per_run_limit_usd=Decimal("0.25"),
+        ),
+        observer=observer,
+        max_concurrent_runs=1,
+    )
+    first_conversation = await service.create_conversation("browser-client-0001")
+    second_conversation = await service.create_conversation("browser-client-0002")
+    first_task = asyncio.create_task(
+        collect_events(
+            service,
+            client_id="browser-client-0001",
+            conversation_id=first_conversation,
+            message="Find Arrival.",
+        )
+    )
+    await runner.started.wait()
+
+    second = await collect_events(
+        service,
+        client_id="browser-client-0002",
+        conversation_id=second_conversation,
+        message="Find another.",
+    )
+    runner.release.set()
+    await first_task
+
+    assert isinstance(second[0], ErrorEvent)
+    assert second[0].code == "concierge_busy"
+    assert isinstance(second[-1], CompletionEvent)
+    assert second[-1].outcome == "error"
+    assert "capacity_exhausted" in observer.outcomes
+
+
+async def test_conversation_store_evicts_oldest_inactive_session_at_bound() -> None:
+    store = InMemoryConversationStore(max_conversations=2)
+    first = await store.create("browser-client-0001")
+    second = await store.create("browser-client-0002")
+
+    third = await store.create("browser-client-0003")
+
+    with pytest.raises(ConversationNotFoundError):
+        await store.snapshot("browser-client-0001", first)
+    assert await store.snapshot("browser-client-0002", second) == ()
+    assert await store.snapshot("browser-client-0003", third) == ()
