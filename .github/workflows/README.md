@@ -29,6 +29,10 @@ After publishing, the workflow resolves Docker digests and commits updates to
 `infrastructure/clusters/home/apps/backend.yaml`, `frontend.yaml`, and `agent.yaml`. Argo CD
 then deploys those manifest changes.
 
+Catalog seed images are independent data releases. The `imdb-clone-seed` Argo Application has
+automated sync disabled, so changing `VERSION` or deploying application images never reruns the
+production seed.
+
 The first concierge pilot branch includes the next `VERSION` and an image tag matching it. Merging
 that branch is therefore the explicit release action; merely pushing the feature branch does not
 publish an image or mutate the cluster.

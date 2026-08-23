@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: imdb-clone-full-seed
+  name: imdb-clone-full-seed-v0-2-2
   namespace: databases
 spec:
   backoffLimit: 1
@@ -10,7 +10,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: seed
-          image: niklastiede/imdb-clone-seed:full-v0.2.1
+          image: niklastiede/imdb-clone-seed:full-v0.2.2
           args: ["all"]
           env:
             - name: POSTGRES_HOST
@@ -46,4 +46,4 @@ spec:
             - name: SEED_NAME
               value: full
             - name: SEED_VERSION
-              value: v0.2.1
+              value: v0.2.2

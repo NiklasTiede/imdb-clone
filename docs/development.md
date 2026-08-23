@@ -437,10 +437,15 @@ Home-cluster manifests are rendered from:
 infrastructure/clusters/home/apps
 ```
 
+The production movie seed is a separate, manually synchronized Argo Application. Its versioned Job
+lives under `infrastructure/clusters/home/maintenance/movie-seed` and is never executed by an
+ordinary `home-root` application release.
+
 Render without applying:
 
 ```bash
 kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
+make verify-seed-release
 make verify-movie-concierge-production
 make verify-kubernetes-schema
 ```

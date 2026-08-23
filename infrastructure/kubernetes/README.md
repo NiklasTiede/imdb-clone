@@ -65,12 +65,30 @@ ansible-playbook site.yml
 
 ## Movie Seed Job
 
-`seed-job.example.yaml` documents the Kubernetes Job shape for the versioned full
-seed image. Copy it into the GitOps app tree once PostgreSQL and RustFS services
-exist in k3s, replace the image tag and secret names, then let Argo CD apply it.
+Production seeding is deliberately separate from normal app releases. The automated `home-root`
+Application owns a child Application named `imdb-clone-seed`, but that child has automated sync
+explicitly disabled. Its manifests live under
+`infrastructure/clusters/home/maintenance/movie-seed`; changing `VERSION`, backend, frontend, or
+agent images cannot execute them.
 
-The seed job is idempotent. Rerunning it upserts movie rows and uploads media
+The seed release is a normal versioned Job rather than an Argo hook. Its immutable name, image tag,
+label, and `SEED_VERSION` must change together for a new dataset. A completed Job remains visible as
+the applied seed version, and synchronizing the same revision again does not create another pod.
+The seed itself remains idempotent: an intentional new run upserts movie rows and uploads media
 objects without deleting existing catalog data.
+
+For a deliberate data release:
+
+1. Build and publish the versioned full seed image.
+2. Update the Job name, image, version label, and `SEED_VERSION` in
+   `infrastructure/clusters/home/maintenance/movie-seed/job.yaml`.
+3. Merge and verify that only the `imdb-clone-seed` Application is `OutOfSync`.
+4. In Argo CD, open `imdb-clone-seed`, review its diff, and select **Sync**. Enable pruning when
+   replacing an older completed seed Job.
+5. Observe the Job to completion, then rebuild the OpenSearch movie index explicitly.
+
+`seed-job.example.yaml` remains a standalone reference for a new environment. It is not part of the
+automated home-cluster render.
 
 After the seed job completes, rebuild the OpenSearch movie index explicitly
 through the backend admin endpoint. The backend does not reindex movies as an
@@ -79,6 +97,20 @@ application startup side effect.
 The home-cluster GitOps tree also contains `rustfs-bucket-job.yaml`, an
 idempotent Argo CD hook that creates the `imdb-clone` bucket and makes
 `imdb-clone/movies/*` publicly readable before seeded media is served.
+
+### Recovering a stale root sync
+
+If `home-root` is `Synced` and `Healthy`, all workloads are ready, the referenced hook Job no longer
+exists, but `operationState.phase` still says `Running`, terminate only that stale Argo operation:
+
+```bash
+argocd app terminate-op home-root --app-namespace argocd
+```
+
+The same action is available as **Terminate** on the running operation in the Argo CD UI. Confirm
+the preconditions first; do not terminate a Job that is genuinely still seeding and do not delete
+Deployments, namespaces, databases, PVCs, or seed data. Once this change is deployed, normal root
+syncs contain no full-seed hook and cannot recreate that stuck state.
 
 ## Public Hosts
 
