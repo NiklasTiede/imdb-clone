@@ -146,8 +146,10 @@ The load-bearing architecture is recorded in
   calling at the cost-sensitive tier. Provider selection remains configuration, and later models
   run through the same eval set before promotion. The provider adapter is replaceable so the same
   product ports can later back a Pydantic AI realtime/voice channel.
-- **Telemetry:** OpenTelemetry-compatible traces, Prometheus metrics, structured JSON logs,
-  Grafana dashboards and alerts, and Langfuse for LLM traces, prompt versions, datasets, and scores.
+- **Telemetry:** OpenTelemetry traces in Tempo, Prometheus metrics, structured JSON logs in Loki,
+  Grafana dashboards and alerts, and provider-independent Pydantic Evals. A dedicated LLM
+  observability product is optional later if its additional semantic views justify another
+  datastore and a separately approved content-retention policy.
 
 Pydantic AI is the initial orchestration framework because the first product is a bounded tool-using
 agent with typed dependencies, outputs, streaming events, usage limits, MCP support, and code-first
@@ -212,11 +214,14 @@ views:
 2. **Structured logs** explain application and integration failures using correlation IDs and safe
    error codes. They never contain secrets, authorization headers, raw prompts, or unrestricted tool
    payloads.
-3. **OpenTelemetry and Langfuse** show one trace per agent run with model and tool spans, prompt
-   version, release, latency, usage, estimated cost, and eval scores. Langfuse has its own UI and
-   datastore; it is not the backing store for Grafana.
+3. **OpenTelemetry and Tempo** show one trace per agent run with content-free model and tool spans,
+   release, latency, usage, and estimated cost. W3C propagation connects FastAPI, outbound MCP, and
+   Java work; Grafana links Tempo traces and Loki log entries through trace IDs.
 4. **Evals** detect semantic failures that infrastructure metrics cannot see, including wrong tools,
    weak arguments, hallucinated facts, ignored constraints, and regressions between models.
+
+Operator endpoints, private tunnels, Grafana access, and the trace-to-log incident workflow are
+documented in the [production operations runbook](operations.md).
 
 Required bounded metrics include:
 
@@ -248,14 +253,16 @@ rather than invented before traffic exists.
 ### Privacy boundary
 
 Default LLM tracing often captures prompts, tool arguments, and tool results, which conflicts with
-the repository's existing policy of avoiding raw queries, bodies, and user identifiers. Production
-trace export remains disabled until field-level redaction, sampling, retention, deletion, separate
-development/production projects, and secret filtering are explicitly configured and tested.
-Self-hosting does not remove this privacy decision.
+the repository's policy of avoiding raw queries, bodies, and user identifiers. Production export
+therefore uses Pydantic AI `InstrumentationSettings` with content, binary content, tool payloads,
+and serialized model-request parameters disabled. HTTP request/response bodies and authorization
+headers are not captured. The low-volume pilot samples all agent traces, keeps them in the
+self-hosted Tempo instance for three days, and keeps logs in Loki for seven days. Export failures
+are fail-open for user requests.
 
-Langfuse Cloud in an appropriate EU region is the preferred first production experiment because a
-self-hosted Langfuse stack adds substantial stateful infrastructure. Self-hosting can be revisited
-when data-governance requirements and cluster capacity justify it.
+A hosted or self-hosted LLM-observability product must remain opt-in until content retention,
+regional processing, deletion, access control, and separate development/production projects are
+explicitly approved. Self-hosting alone does not remove that privacy decision.
 
 ## Milestones
 
@@ -315,8 +322,10 @@ with costs and failures visible.
 The existing namespace now has a GitOps contract for file-mounted SOPS credentials, hardened
 single-pod execution, same-origin routing, release automation, NetworkPolicy, Prometheus scraping,
 an initial Grafana dashboard, aggregate alert rules, bounded public traffic, and redacted failures.
-OpenTelemetry/Langfuse, durable history, Alertmanager delivery, and traffic-derived threshold tuning
-remain deliberately outside this pilot.
+Durable history, Alertmanager delivery, a semantic LLM-observability product, and traffic-derived
+threshold tuning remain deliberately outside this pilot. Privacy-safe OpenTelemetry export through
+Alloy into Tempo and cluster-wide Loki logging are implemented in GitOps and require a reviewed
+release before they become the live production path.
 
 ### M6 — Read-only production MVP
 
@@ -325,9 +334,9 @@ structured comparisons, capability discovery, and the production eval regression
 user can reliably reach a confident movie choice, and an operator can diagnose quality, latency,
 tool, provider, and cost failures.
 
-**Local status:** The four-tool, multi-turn, bounded-history, capability-discovery, and deterministic
-eval scope is complete. Durable production state, production tracing/export, traffic-derived SLOs,
-and deployment remain future work.
+**Local status:** The four-tool, multi-turn, bounded-history, capability-discovery, deterministic
+eval, and privacy-safe production tracing scope is complete. Durable production state,
+traffic-derived SLOs, and deployment remain future work.
 
 ### M7 — Personal actions
 
@@ -351,6 +360,6 @@ be called the production read-only MVP.
 - The provider/model that wins the measured quality/latency/cost comparison.
 - Conversation retention duration and the production store topology.
 - The end-user authentication and delegated-token design between React, Python, and Java.
-- Production trace sampling and whether any redacted prompt content may be retained.
+- Whether a future semantic trace system may retain any separately approved redacted content.
 - Baseline-derived service objectives and monthly cost alert thresholds.
 - Whether a later approval workflow needs Pydantic Graph or a durable execution engine.

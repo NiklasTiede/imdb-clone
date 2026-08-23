@@ -19,6 +19,7 @@ AGENT_DIR = agent
 AGENT_IMAGE ?= imdb-clone-agent:local
 AGENT_SMOKE_PORT ?= 18090
 UV_CACHE_DIR ?= $(CURDIR)/.uv-cache
+CLUSTER_ACCESS_SCRIPT = scripts/cluster-access
 
 .DEFAULT_GOAL := help
 
@@ -153,6 +154,34 @@ reindex-local-search: ## rebuild local OpenSearch movie index from PostgreSQL
 	curl -fsS -X POST -H "Authorization: Bearer $$TOKEN" \
 		http://localhost:8080/api/search/movies/reindex
 
+##@ Production operator access
+
+.PHONY: cluster-access-start cluster-access-status cluster-access-stop cluster-copy-postgres-password cluster-copy-rustfs-access-key cluster-copy-rustfs-secret-key cluster-copy-grafana-admin-password cluster-copy-grafana-viewer-password
+
+cluster-access-start: ## start private SSH-backed cluster service tunnels
+	./$(CLUSTER_ACCESS_SCRIPT) start
+
+cluster-access-status: ## show private cluster tunnel health and endpoints
+	./$(CLUSTER_ACCESS_SCRIPT) status
+
+cluster-access-stop: ## stop only private tunnels created by the access script
+	./$(CLUSTER_ACCESS_SCRIPT) stop
+
+cluster-copy-postgres-password: ## copy the PostgreSQL application password to the macOS clipboard
+	./$(CLUSTER_ACCESS_SCRIPT) copy-postgres-password
+
+cluster-copy-rustfs-access-key: ## copy the RustFS access key to the macOS clipboard
+	./$(CLUSTER_ACCESS_SCRIPT) copy-rustfs-access-key
+
+cluster-copy-rustfs-secret-key: ## copy the RustFS secret key to the macOS clipboard
+	./$(CLUSTER_ACCESS_SCRIPT) copy-rustfs-secret-key
+
+cluster-copy-grafana-admin-password: ## copy the Grafana admin password to the macOS clipboard
+	./$(CLUSTER_ACCESS_SCRIPT) copy-grafana-admin-password
+
+cluster-copy-grafana-viewer-password: ## copy the Grafana viewer password to the macOS clipboard
+	./$(CLUSTER_ACCESS_SCRIPT) copy-grafana-viewer-password
+
 ##@ Seed images
 
 .PHONY: prepare-seed-light prepare-seed-full build-seed-light build-seed-full publish-seed-light publish-seed-full push-seed-light push-seed-full
@@ -271,7 +300,7 @@ container-smoke-agent: ## smoke-test the Python agent image, endpoints, and non-
 
 ##@ Verification
 
-.PHONY: verify-kubernetes-render verify-seed-release verify-kubernetes-schema verify-movie-concierge-production verify-openapi-drift
+.PHONY: verify-kubernetes-render verify-seed-release verify-kubernetes-schema verify-movie-concierge-production verify-observability-production verify-observability-charts verify-openapi-drift
 
 verify-kubernetes-render: check-kubernetes-verification-tools ## render home-cluster Kubernetes manifests
 	kubectl kustomize infrastructure/clusters/home/apps > $(K8S_RENDER_OUTPUT)
@@ -281,7 +310,7 @@ verify-seed-release: verify-kubernetes-render ## verify normal releases cannot r
 	ruby infrastructure/clusters/home/tests/verify_seed_release.rb \
 		$(K8S_RENDER_OUTPUT) $(K8S_SEED_RENDER_OUTPUT)
 
-verify-kubernetes-schema: verify-seed-release ## validate rendered Kubernetes manifests with pinned kubeconform
+verify-kubernetes-schema: verify-seed-release verify-movie-concierge-production verify-observability-production ## validate rendered Kubernetes manifests with pinned kubeconform
 	ruby -ryaml -e 'ARGV.each { |path| YAML.load_stream(File.read(path)).each { |doc| next if doc.nil?; doc.delete("sops") if doc.is_a?(Hash); puts YAML.dump(doc) } }' \
 		$(K8S_RENDER_OUTPUT) $(K8S_SEED_RENDER_OUTPUT) > $(K8S_SCHEMA_OUTPUT)
 	docker run --rm -i $(KUBECONFORM_IMAGE) \
@@ -292,6 +321,12 @@ verify-kubernetes-schema: verify-seed-release ## validate rendered Kubernetes ma
 
 verify-movie-concierge-production: verify-kubernetes-render ## verify production agent GitOps and guardrail contracts
 	ruby infrastructure/clusters/home/tests/verify_movie_concierge.rb $(K8S_RENDER_OUTPUT)
+
+verify-observability-production: verify-kubernetes-render ## verify logging, tracing, storage, and private-access contracts
+	ruby infrastructure/clusters/home/tests/verify_observability.rb $(K8S_RENDER_OUTPUT)
+
+verify-observability-charts: check-kubernetes-verification-tools ## render pinned observability charts and validate Alloy
+	./infrastructure/clusters/home/tests/verify_observability_charts.sh
 
 verify-openapi-drift: ## compare checked-in OpenAPI/client output with a running backend
 	rm -rf $(OPENAPI_CHECK_DIR)

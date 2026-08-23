@@ -96,6 +96,14 @@ spec:
               value: "0.25"
             - name: IMDB_AGENT_LIVE_EVALS_ENABLED
               value: "false"
+            - name: IMDB_AGENT_OTEL_TRACING_ENABLED
+              value: "true"
+            - name: IMDB_AGENT_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: http://alloy.observability.svc.cluster.local:4318/v1/traces
+            - name: IMDB_AGENT_OTEL_EXPORT_TIMEOUT_SECONDS
+              value: "5"
+            - name: IMDB_AGENT_OTEL_TRACE_SAMPLE_RATIO
+              value: "1.0"
             - name: TMPDIR
               value: /tmp
           startupProbe:

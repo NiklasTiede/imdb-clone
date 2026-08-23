@@ -4,6 +4,8 @@
 
 **Date:** 2026-07-16
 
+**Updated:** 2026-08-23
+
 ## Context
 
 The application needs a conversational movie-discovery capability that demonstrates production
@@ -86,22 +88,27 @@ Python owns bounded conversation and later approval-orchestration state behind r
 interfaces. Java remains the source of truth for catalog, identity, watchlist, rating, and other
 business state.
 
-An ephemeral repository is acceptable for the local walking skeleton. Production conversation
-state uses a separate schema or database, explicit expiry, bounded history, and a documented
-retention policy. Chat transcripts are not silently converted into durable taste signals.
+The first low-volume production pilot deliberately uses bounded in-memory state, one replica, and a
+`Recreate` rollout strategy. Conversations are isolated by browser/account client identifier and
+are lost on restart. Durable conversation state requires a separate schema or database, explicit
+expiry, bounded history, and a documented retention policy. Chat transcripts are never silently
+converted into durable taste signals.
 
 ### 6. Separate operational telemetry from LLM engineering telemetry
 
-The service exposes bounded Prometheus metrics and structured logs to the existing operational
-stack. It emits OpenTelemetry-compatible traces with shared correlation context across Python, MCP,
-and Java. Langfuse receives selected LLM traces, prompt versions, usage/cost data, datasets, and
-scores and provides its own UI and datastore.
+The service exposes bounded Prometheus metrics and structured logs to the operational stack. It
+emits OpenTelemetry traces with shared W3C correlation context across FastAPI, Pydantic AI, MCP,
+and Java. Grafana Alloy collects cluster logs into Loki and forwards OTLP traces into Tempo; Grafana
+provides metrics, log, and trace views plus cross-links.
 
-Grafana is not backed by Langfuse. Critical operational and cost aggregates are emitted to
-Prometheus directly so alerting does not depend on the LLM trace system.
+Pydantic AI instrumentation explicitly excludes prompts, completions, binary content, tool
+arguments/results, and serialized model-request parameters. The FastAPI layer also redacts concrete
+conversation paths, query strings, client addresses, ports, and user agents. Logs and traces have
+short explicit retention, and high-cardinality identifiers never become metric or Loki labels.
 
-Production LLM trace export is opt-in after redaction, sampling, retention, secret filtering, and
-environment separation are verified. High-cardinality identifiers never become metric labels.
+A dedicated semantic LLM-observability product remains optional. Introducing one requires a
+separate decision covering content retention, regional processing, access, deletion, and additional
+stateful infrastructure. Operational metrics and alerts must not depend on it.
 
 ### 7. Defer user mutations until delegated authorization exists
 
@@ -118,18 +125,19 @@ execution, idempotency, expiry, and an audit trail. Java remains the final autho
 React / TypeScript
   └── typed chat request + SSE
       └── Python Movie Concierge
-          ├── Pydantic AI → configured LLM provider
-          ├── bounded conversation state
-          └── MCP client → Spring MCP adapter
-                            └── public Java module interfaces
-                                ├── Catalog → PostgreSQL / OpenSearch
-                                ├── Recommendation
-                                └── later Engagement / Identity
+          ├── Pydantic AI → OpenAI model
+          ├── bounded in-memory conversation state
+          └── protected MCP client → Spring MCP adapter
+                                      └── public Java module interfaces
+                                          ├── Catalog → PostgreSQL / OpenSearch
+                                          ├── Recommendation
+                                          └── later Engagement / Identity
 
 Telemetry
-  ├── Prometheus + Grafana: health, latency, errors, saturation, tokens, cost, alerts
-  ├── structured log pipeline: safe correlated failure detail
-  └── OpenTelemetry + Langfuse UI: run/model/tool traces, prompts, usage, scores
+  ├── Prometheus → Grafana: health, latency, errors, saturation, tokens, cost, alerts
+  ├── workloads/events/k3s → Alloy → Loki → Grafana: correlated operational logs
+  ├── Python/Pydantic AI/MCP/Java → Alloy → Tempo → Grafana: content-free traces
+  └── Pydantic Evals: deterministic quality, grounding, safety, and tool-use regression
 ```
 
 ## Consequences
@@ -142,7 +150,7 @@ Telemetry
 - Typed application events prevent provider/framework details from leaking into React.
 - Pydantic AI keeps the initial harness small while leaving a clear escalation path to graphs or
   durable workflows.
-- Independent operational metrics and LLM traces support both alerting and semantic debugging.
+- Independent metrics, logs, traces, and evals support alerting and semantic debugging.
 
 ### Costs and risks
 
@@ -151,7 +159,8 @@ Telemetry
 - Cross-runtime authentication and trace propagation require explicit design and tests.
 - SSE disconnects must cancel downstream model and tool work to avoid wasted cost.
 - Model output remains nondeterministic; deterministic tests and eval gates are both required.
-- LLM traces can contain substantially more sensitive content than ordinary application telemetry.
+- Default LLM instrumentation can contain substantially more sensitive content than ordinary
+  telemetry, so privacy settings and their regression tests are load-bearing controls.
 - Python 3.14 support must be proven across the locked dependency set and CI.
 
 ## Alternatives Considered

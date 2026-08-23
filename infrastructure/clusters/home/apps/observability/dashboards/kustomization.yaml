@@ -3,5 +3,6 @@ kind: Kustomization
 resources:
   - agent-overview.yaml
   - backend-overview.yaml
+  - cluster-logs.yaml
   - postgresql-overview.yaml
   - system-overview.yaml

@@ -12,6 +12,8 @@ Related docs:
 - `../left-shift-engineering.md` - experiments for earlier, deterministic defect feedback.
 - `../development.md` - local development and troubleshooting.
 - `../design.md` - frontend design system and visual consistency rules.
+- `../movie-concierge.md` - Movie Concierge product and architecture boundaries.
+- `../operations.md` - production access, observability, and incident workflow.
 
 ## Operating Model
 

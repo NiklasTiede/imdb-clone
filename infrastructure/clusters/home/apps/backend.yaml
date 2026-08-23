@@ -37,6 +37,12 @@ spec:
               value: http://imdb-clone-rustfs.databases.svc.cluster.local:9000
             - name: IMDB_CLONE_CATALOG_SEARCH_EMBEDDING_BASE_URL
               value: http://imdb-clone-llama-cpp.databases.svc.cluster.local:8080
+            - name: MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT
+              value: http://alloy.observability.svc.cluster.local:4318/v1/traces
+            - name: MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_TIMEOUT
+              value: 5s
+            - name: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+              value: "0.1"
             - name: SPRING_APPLICATION_JSON
               value: |-
                 {

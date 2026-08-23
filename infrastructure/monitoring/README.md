@@ -1,36 +1,54 @@
+# Observability
 
-# Observability: Metrics and Logs
+Production observability is GitOps-managed in `infrastructure/clusters/home/apps`, not deployed from
+the Compose files in this directory.
 
-Data about internals of our system help us to troubleshoot problems and act 
-preemptive. Metrics about server resources, the containerized application and provided 
-infrastructure (database, search engine, cache etc.) can, combined with alerting, help 
-us act early and fast to keep our system operational.
-
-## Metrics: Prometheus / Grafana
-
-Prometheus stores metrics on a pull-based mechanism in a time-series database and provides a nice query
-language (PromQL) to search for these metrics and display them with Grafana. Spring boot serves these 
-metrics via actuator resources. Other technologies need dedicated exporters to export metrics to Prometheus.
-
-For deploying Prometheus and Grafana we need to pull the images, copy the 
-[docker-compose-metrics.yaml](./metrics/docker-compose-metrics.yaml) and [prometheus.yaml](./metrics/prometheus.yml)
-into the folder where we run the `docker-compose up` command.
-
-```bash
-docker pull prom/prometheus
-docker pull grafana/grafana
-
-docker-compose -f docker-compose-metrics.yaml up -d
+```mermaid
+flowchart LR
+  pods["Kubernetes workloads"] -- "stdout logs" --> alloy["Grafana Alloy"]
+  events["Kubernetes Events"] --> alloy
+  k3s["k3s systemd service"] --> alloy
+  python["Python Movie Concierge"] -- "OTLP traces" --> alloy
+  java["Spring Boot backend"] -- "OTLP traces" --> alloy
+  alloy --> loki[("Loki · 7 days")]
+  alloy --> tempo[("Tempo · 3 days")]
+  python -- "bounded metrics" --> prometheus[("Prometheus · 7 days")]
+  java -- "Actuator metrics" --> prometheus
+  loki --> grafana["Grafana"]
+  tempo --> grafana
+  prometheus --> grafana
 ```
 
-Prometheus should be reachable on port 9500 and Grafana on port 3000. The docker-compose and
-prometheus file contains also different exporters for all the other services. You can also
-find the json files of the dashboards in the [grafana-dashboards](./metrics/grafana-dashboards) 
-folder.
+The stack provides:
 
-- image of some grafana dashboard
+- Prometheus for infrastructure, backend, and bounded Movie Concierge metrics and alert rules.
+- Loki for logs from every Kubernetes namespace, Kubernetes Events, Traefik access logs, and the
+  k3s service journal.
+- Tempo for privacy-safe Python/Pydantic AI/MCP/Java distributed traces.
+- Alloy as the per-node log collector and internal OTLP receiver.
+- Grafana dashboards, Explore, trace-to-log links, and the authenticated demo viewer.
 
-I have also port forwarded the Grafana instance, and you have read access to the dashboards
-showing metrics about the servers resources, the spring boots backend and other infrastructure of 
-this project  (see [imdb-clone-metrics.the-coding-lab.com](https://imdb-clone-metrics.the-coding-lab.com))
+Agent tracing excludes prompts, completions, bodies, tool payloads, concrete conversation IDs,
+query strings, client addresses, headers, and user-agent values. Loki and Tempo APIs remain
+private `ClusterIP` services.
 
+## Access and verification
+
+Use the [production operations runbook](../../docs/operations.md) for Grafana, private tunnels,
+read-only API checks, and incident response.
+
+Render and validate the complete stack without deploying:
+
+```bash
+make verify-observability-production
+make verify-observability-charts
+make verify-kubernetes-schema
+```
+
+Alert rules are evaluated by Prometheus, but Alertmanager notification delivery is intentionally
+disabled until an operator destination is selected and secured.
+
+## Legacy files
+
+The `metrics/` Compose stack and its old dashboards are retained for historical reference only.
+They are not used by k3s, Argo CD, the production Grafana instance, or the current local workflow.

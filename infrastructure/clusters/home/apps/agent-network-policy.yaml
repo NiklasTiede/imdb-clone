@@ -54,6 +54,16 @@ spec:
         - protocol: TCP
           port: 8080
     - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: alloy
+      ports:
+        - protocol: TCP
+          port: 4318
+    - to:
         - ipBlock:
             cidr: 0.0.0.0/0
             except:

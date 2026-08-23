@@ -429,6 +429,14 @@ estimated USD cost, process-budget commitment, and SSE disconnects. Logs record 
 codes only; they do not contain prompts, bodies, tool payloads, client/conversation IDs,
 authorization headers, or keys.
 
+Production traces are sent over OTLP/HTTP from Python and Spring Boot to Alloy, then stored in
+Tempo. Pydantic AI content capture and model-request serialization are disabled. Trace context is
+propagated through the Python MCP HTTP client so a single trace can correlate FastAPI, model/tool,
+and Java MCP work. Concrete conversation paths, query strings, client network data, and user agents
+are redacted from inbound spans. Loki receives logs from all Kubernetes namespaces plus Kubernetes
+Events. Use the private endpoints and DBeaver settings in [`operations.md`](operations.md); do not
+expose the database or observability APIs with an ingress.
+
 ## Kubernetes And k3s Validation
 
 Home-cluster manifests are rendered from:
@@ -447,6 +455,8 @@ Render without applying:
 kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
 make verify-seed-release
 make verify-movie-concierge-production
+make verify-observability-production
+make verify-observability-charts
 make verify-kubernetes-schema
 ```
 

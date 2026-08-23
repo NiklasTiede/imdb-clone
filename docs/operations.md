@@ -1,0 +1,146 @@
+# Production Operations
+
+This runbook is the operator entry point for the home k3s cluster. Public application traffic uses
+HTTPS ingress. Databases, search, object-storage administration, metrics APIs, logs, traces, and
+Argo CD remain private and are reached through SSH-backed Kubernetes port-forwards.
+
+## Public URLs
+
+| Surface | URL | Access |
+| --- | --- | --- |
+| IMDb Clone | `https://imdb-clone.the-coding-lab.com` | Public |
+| Backend API | `https://backend.imdb-clone.the-coding-lab.com` | Public application API |
+| Public movie media | `https://object-storage.imdb-clone.the-coding-lab.com` | Public objects only |
+| Grafana | `https://grafana.imdb-clone.the-coding-lab.com` | Authenticated read-only viewer |
+| Argo CD | `https://argocd.imdb-clone.the-coding-lab.com` | Operator IP allowlist |
+
+Treat the Grafana viewer credentials as private. Loki contains operational metadata from every
+namespace even though the application deliberately excludes prompts, responses, authorization
+headers, secrets, and unrestricted tool payloads from logs and traces.
+
+Copy the viewer password directly to the macOS clipboard without printing it:
+
+```bash
+make cluster-copy-grafana-viewer-password
+```
+
+## Private Operator Tunnels
+
+From the repository root, start and inspect all tunnels:
+
+```bash
+make cluster-access-start
+make cluster-access-status
+```
+
+Stop only the processes created by the access script:
+
+```bash
+make cluster-access-stop
+```
+
+The script defaults to `robotnik@um560`. Override `CLUSTER_SSH_TARGET` when DNS or the SSH user is
+different. It stores only process IDs and non-secret SSH diagnostics below the macOS temporary
+directory. It does not write credentials to disk or print them.
+
+| Service | Local endpoint | Purpose |
+| --- | --- | --- |
+| PostgreSQL | `localhost:15432` | DBeaver or `psql` |
+| OpenSearch | `http://localhost:19200` | Search API inspection |
+| RustFS S3 API | `http://localhost:19000` | S3-compatible API |
+| RustFS Console | `http://localhost:19001` | Object-storage administration |
+| Grafana admin | `http://localhost:13000` | Full Grafana administration |
+| Prometheus | `http://localhost:19090` | PromQL and HTTP API |
+| Loki | `http://localhost:13100` | Log HTTP API through the Loki gateway |
+| Tempo | `http://localhost:13200` | Trace HTTP API |
+| Argo CD | `https://localhost:18443` | Private Argo CD API and UI |
+
+Use `make cluster-copy-grafana-admin-password` for the private Grafana administrator login. The
+script copies the value to the macOS clipboard without printing or storing it.
+
+These services remain `ClusterIP`; do not add public database, OpenSearch, Loki, Tempo, Prometheus,
+or RustFS-console ingresses.
+
+## DBeaver PostgreSQL Connection
+
+Use a normal PostgreSQL connection after starting the tunnels:
+
+| Field | Value |
+| --- | --- |
+| Host | `localhost` |
+| Port | `15432` |
+| Database | `movie_db` |
+| Username | `postgres_user` |
+| SSL | Disabled; SSH already protects the transport |
+
+Copy the application password directly to the macOS clipboard without displaying it:
+
+```bash
+make cluster-copy-postgres-password
+```
+
+Paste it into DBeaver and let DBeaver store it in the macOS Keychain. Use the application account
+for routine inspection; do not use the PostgreSQL administrator account unless a runbook explicitly
+requires it.
+
+## RustFS Console
+
+Start the tunnels, open `http://localhost:19001`, and copy the two credentials without printing
+them:
+
+```bash
+make cluster-copy-rustfs-access-key
+make cluster-copy-rustfs-secret-key
+```
+
+The console is enabled inside the cluster but has no ingress. Public traffic continues to reach
+only the dedicated movie-media service on port `9000`.
+
+## Logs, Metrics, And Traces
+
+Use Grafana Explore through `http://localhost:13000` for operator work:
+
+- Prometheus contains bounded application and cluster metrics.
+- Loki contains pod logs from every namespace, Kubernetes Events, and the node's k3s systemd
+  service logs with seven-day retention.
+- Traefik emits JSON operational and access logs without client addresses, request paths, query
+  parameters, request lines, or headers.
+- Tempo contains OpenTelemetry traces with three-day retention.
+- The `IMDb Clone / Cluster Logs` dashboard is the starting point for workload failures.
+- The `IMDb Clone / Movie Concierge` dashboard remains the starting point for agent cost, latency,
+  tool, and failure metrics.
+
+Agent logs and traces include safe correlation and operational fields only. They must never contain
+raw prompts, model completions, tool arguments/results, authorization headers, API keys, account
+IDs, conversation IDs, or movie IDs. Trace and request identifiers are structured fields rather
+than Prometheus or Loki labels.
+
+Useful read-only checks after starting the tunnels:
+
+```bash
+curl -fsS http://localhost:19090/-/ready
+curl -fsS http://localhost:13100/ready
+curl -fsS http://localhost:13200/ready
+curl -fsS http://localhost:19200/_cluster/health
+```
+
+To inspect current cluster state without a tunnel:
+
+```bash
+ssh robotnik@um560 'kubectl get pods -A'
+ssh robotnik@um560 'kubectl get applications -n argocd'
+```
+
+## Incident Workflow
+
+1. Check Argo CD health and the affected Deployment rollout.
+2. Open the relevant Grafana dashboard and establish when the symptom started.
+3. Filter Loki by namespace, application, and the time window.
+4. Follow a `trace_id` from a structured log entry into Tempo.
+5. Inspect the FastAPI, Pydantic AI model/tool, and Java MCP spans without exposing content.
+6. Confirm Prometheus alert and resource trends before changing the workload.
+7. Apply fixes through Git and Argo CD. Do not mutate a stateful production resource directly.
+
+Alert rules are evaluated by Prometheus. Alertmanager notification delivery is still intentionally
+disabled; choosing and securing an email, Slack, or another notification destination is a separate
+operator decision.

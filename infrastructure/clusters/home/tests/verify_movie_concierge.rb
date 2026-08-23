@@ -69,6 +69,16 @@ assert_contract(environment["IMDB_AGENT_ENVIRONMENT"] == "production", "producti
 assert_contract(environment["IMDB_AGENT_MAX_CONCURRENT_RUNS"] == "2", "run limit drifted")
 assert_contract(environment["IMDB_AGENT_MAX_REQUEST_BODY_BYTES"] == "4096", "body limit drifted")
 assert_contract(environment["IMDB_AGENT_PROJECT_COST_LIMIT_USD"] == "20.00", "cost cap drifted")
+assert_contract(environment["IMDB_AGENT_OTEL_TRACING_ENABLED"] == "true", "tracing must be on")
+assert_contract(
+  environment["IMDB_AGENT_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"] ==
+    "http://alloy.observability.svc.cluster.local:4318/v1/traces",
+  "agent traces must use the cluster-local Alloy endpoint"
+)
+assert_contract(
+  environment["IMDB_AGENT_OTEL_TRACE_SAMPLE_RATIO"] == "1.0",
+  "the low-volume agent must retain complete traces"
+)
 assert_contract(!environment.key?("OPENAI_API_KEY"), "provider key must never be an environment value")
 assert_contract(
   !environment.key?("IMDB_AGENT_MCP_BEARER_TOKEN"),
@@ -97,6 +107,11 @@ assert_contract(
   "Java production MCP must be enabled"
 )
 assert_contract(
+  backend_environment["MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT"] ==
+    "http://alloy.observability.svc.cluster.local:4318/v1/traces",
+  "backend traces must use the cluster-local Alloy endpoint"
+)
+assert_contract(
   backend_container.fetch("volumeMounts").any? do |mount|
     mount["name"] == "movie-concierge-runtime" && mount["readOnly"] == true
   end,
@@ -118,7 +133,19 @@ assert_contract(
   "agent must be isolated in both directions"
 )
 assert_contract(network_policy.dig("spec", "ingress").length == 2, "agent ingress allowlist drifted")
-assert_contract(network_policy.dig("spec", "egress").length == 3, "agent egress allowlist drifted")
+egress = network_policy.dig("spec", "egress")
+assert_contract(egress.length == 4, "agent egress allowlist drifted")
+assert_contract(
+  egress.any? do |rule|
+    rule.fetch("ports", []).any? { |port| port["port"] == 4318 } &&
+      rule.fetch("to", []).any? do |destination|
+        destination.dig("namespaceSelector", "matchLabels", "kubernetes.io/metadata.name") ==
+          "observability" &&
+          destination.dig("podSelector", "matchLabels", "app.kubernetes.io/name") == "alloy"
+      end
+  end,
+  "agent OTLP egress must be limited to Alloy"
+)
 
 service_monitor = resource(documents, "ServiceMonitor", "imdb-clone-agent", "imdb-clone")
 assert_contract(

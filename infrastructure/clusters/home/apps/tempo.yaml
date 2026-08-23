@@ -1,0 +1,85 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tempo
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://grafana-community.github.io/helm-charts
+    chart: tempo
+    targetRevision: 2.2.4
+    helm:
+      releaseName: tempo
+      valuesObject:
+        tempo:
+          reportingEnabled: false
+          memBallastSizeMbs: 0
+          retention: 72h
+          metricsGenerator:
+            enabled: true
+            remoteWriteUrl: http://observability-kube-prometh-prometheus.observability.svc.cluster.local:9090/api/v1/write
+            processor:
+              service_graphs: {}
+              span_metrics:
+                enable_target_info: true
+            storage:
+              path: /var/tempo/metrics
+            traces_storage:
+              path: /var/tempo/generator-wal
+          overrides:
+            defaults:
+              metrics_generator:
+                processors:
+                  - service-graphs
+                  - span-metrics
+          receivers:
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: 0.0.0.0:4317
+                http:
+                  endpoint: 0.0.0.0:4318
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 750m
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          storage:
+            trace:
+              backend: local
+              local:
+                path: /var/tempo/traces
+              wal:
+                path: /var/tempo/wal
+        persistence:
+          enabled: true
+          enableStatefulSetAutoDeletePVC: false
+          storageClassName: local-path
+          accessModes:
+            - ReadWriteOnce
+          size: 5Gi
+        serviceAccount:
+          automountServiceAccountToken: false
+        serviceMonitor:
+          enabled: true
+          interval: 30s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

@@ -1,0 +1,43 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: observability-stack-alerts
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: imdb-clone-observability
+spec:
+  groups:
+    - name: observability-stack-availability
+      rules:
+        - alert: LokiUnavailable
+          expr: absent(up{namespace="observability", service=~"loki.*"} == 1)
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Loki is unavailable
+            description: Prometheus has not observed a healthy Loki target for ten minutes.
+        - alert: TempoUnavailable
+          expr: absent(up{namespace="observability", service="tempo"} == 1)
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Tempo is unavailable
+            description: Prometheus has not observed a healthy Tempo target for ten minutes.
+        - alert: AlloyUnavailable
+          expr: absent(up{namespace="observability", service="alloy"} == 1)
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Alloy is unavailable
+            description: Prometheus has not observed a healthy Alloy target for ten minutes.
+        - alert: LokiDiscardingLogs
+          expr: sum(rate(loki_discarded_samples_total[10m])) > 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Loki is discarding log entries
+            description: Loki has discarded one or more log entries during the last ten minutes.

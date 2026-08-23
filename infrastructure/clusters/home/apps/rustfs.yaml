@@ -26,7 +26,7 @@ spec:
         config:
           rustfs:
             address: ":9000"
-            console_enable: "false"
+            console_enable: "true"
             console_address: ":9001"
             region: "us-east-1"
         service:

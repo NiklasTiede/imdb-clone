@@ -144,6 +144,20 @@ Grafana dashboard visualizes those signals. PrometheusRules cover availability, 
 MCP/provider failures, capacity, and cost. Alertmanager is deliberately not installed yet, so rules
 are visible in Prometheus/Grafana but do not send notifications.
 
+Production also exports one OpenTelemetry trace per sampled HTTP/agent run through the internal
+Alloy OTLP endpoint to Tempo. Pydantic AI contributes child spans for model requests and tool calls;
+HTTPX propagates W3C trace context across the protected MCP request, and Spring Boot continues the
+trace in Java. `InstrumentationSettings` disables prompts, completions, binary content, tool
+arguments/results, and serialized model request parameters. FastAPI instrumentation does not
+capture request or response bodies; it replaces concrete conversation paths, query strings, client
+addresses, ports, and user agents with bounded route metadata. Agent logs add `trace_id` and
+`span_id` only while a valid span is active, allowing Grafana to move between Loki logs and Tempo
+traces.
+
+The agent samples all traces during this low-volume pilot. Tempo retains them for three days and
+Loki retains structured logs for seven days. Both stores and their APIs remain cluster-internal;
+see [`docs/operations.md`](../docs/operations.md) for private operator access.
+
 Validate the complete production contract without deploying:
 
 ```bash
@@ -151,6 +165,8 @@ make verify-agent
 make docker-build-agent
 make container-smoke-agent
 make verify-movie-concierge-production
+make verify-observability-production
+make verify-observability-charts
 make verify-kubernetes-schema
 ```
 

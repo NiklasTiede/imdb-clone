@@ -24,6 +24,44 @@ spec:
             kubeSchedulerAlerting: false
             kubeSchedulerRecording: false
         grafana:
+          additionalDataSources:
+            - name: Loki
+              uid: loki
+              type: loki
+              access: proxy
+              editable: false
+              url: http://loki-gateway.observability.svc.cluster.local
+              jsonData:
+                derivedFields:
+                  - name: Trace ID
+                    matcherRegex: '"trace_id":"([0-9a-f]{32})"'
+                    datasourceUid: tempo
+                    url: '$${__value.raw}'
+                  - name: Trace ID (Java)
+                    matcherRegex: '"traceId":"([0-9a-f]{32})"'
+                    datasourceUid: tempo
+                    url: '$${__value.raw}'
+                maxLines: 2000
+            - name: Tempo
+              uid: tempo
+              type: tempo
+              access: proxy
+              editable: false
+              url: http://tempo.observability.svc.cluster.local:3200
+              jsonData:
+                nodeGraph:
+                  enabled: true
+                serviceMap:
+                  datasourceUid: prometheus
+                tracesToLogsV2:
+                  datasourceUid: loki
+                  spanStartTimeShift: -1m
+                  spanEndTimeShift: 1m
+                  tags:
+                    - key: service.name
+                      value: service
+                  filterByTraceID: true
+                  filterBySpanID: false
           admin:
             existingSecret: observability-grafana-admin
           adminUser: admin
@@ -83,6 +121,7 @@ spec:
           ingress:
             enabled: false
           prometheusSpec:
+            enableRemoteWriteReceiver: true
             serviceDiscoveryRole: EndpointSlice
             podMonitorNamespaceSelector: {}
             podMonitorSelector: {}

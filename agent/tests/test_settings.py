@@ -149,3 +149,23 @@ def test_production_rejects_unsafe_boundaries(
 
     with pytest.raises(ValueError, match=expected_message):
         Settings.model_validate(values)
+
+
+def test_tracing_requires_a_valid_otlp_traces_endpoint() -> None:
+    with pytest.raises(ValueError, match="must end with /v1/traces"):
+        Settings(
+            otel_tracing_enabled=True,
+            otel_exporter_otlp_traces_endpoint="http://localhost:4318",
+        )
+
+
+def test_production_tracing_requires_cluster_local_alloy() -> None:
+    with pytest.raises(ValueError, match="cluster-local Alloy endpoint"):
+        Settings(
+            environment=DeploymentEnvironment.PRODUCTION,
+            secrets_directory=Path("/run/secrets/movie-concierge"),
+            mcp_url="http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp",
+            allowed_hosts=["imdb-clone.the-coding-lab.com"],
+            otel_tracing_enabled=True,
+            otel_exporter_otlp_traces_endpoint="https://telemetry.example/v1/traces",
+        )

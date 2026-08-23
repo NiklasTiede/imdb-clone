@@ -12,6 +12,8 @@ This is the auto-loaded fast-start contract. Keep detailed guidance in linked do
 - `docs/design.md` - frontend design system, theme tokens, layout primitives.
 - `docs/movie-concierge.md` - product vision, MVP boundary, trust model, and milestones for the
   Python Movie Concierge.
+- `docs/operations.md` - production URLs, private service access, DBeaver, observability, and
+  incident workflow.
 - `infrastructure/kubernetes/README.md` - k3s, Argo CD, SOPS/age, home-cluster notes.
 
 ## Working Directory
@@ -51,6 +53,8 @@ every applicable nested guide before planning changes.
 - `agent/` - Python Movie Concierge deployable; read `agent/AGENTS.md` before changing it.
 - `compose.yaml` - local PostgreSQL, OpenSearch, RustFS, and seed services.
 - `infrastructure/clusters/home/apps/` - k3s GitOps manifests rendered by Kustomize.
+- `scripts/cluster-access` - private SSH-backed production service tunnels and safe credential
+  clipboard helpers.
 - `.codex/skills/` - Codex-specific reusable skills/tooling, not general project docs.
 - `docs/agents/` - detailed agent workflow and verification guidance.
 - `docs/assets/` - README/docs images.
@@ -105,6 +109,7 @@ make seed-light SEED_VERSION=2026-05-17
 make reindex-local-search
 make agent-sync
 make run-agent
+make cluster-access-status
 make docker-compose-dev-down
 ```
 
@@ -118,6 +123,8 @@ cd frontend && yarn run lint
 cd frontend && yarn test
 cd frontend && yarn build
 make verify-agent
+make verify-observability-charts
+make verify-kubernetes-schema
 kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
 ```
 

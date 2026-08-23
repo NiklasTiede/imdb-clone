@@ -6,8 +6,12 @@
     </springProfile>
 
     <springProfile name="prod">
+        <springProperty scope="context" name="serviceName" source="spring.application.name"
+                        defaultValue="imdb-clone-backend"/>
         <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <customFields>{"service":"${serviceName}","environment":"production"}</customFields>
+            </encoder>
         </appender>
         <root level="INFO">
             <appender-ref ref="jsonConsoleAppender"/>

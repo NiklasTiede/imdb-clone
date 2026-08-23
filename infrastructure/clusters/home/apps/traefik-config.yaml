@@ -7,6 +7,27 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   valuesContent: |-
+    logs:
+      general:
+        format: json
+      access:
+        enabled: true
+        format: json
+        bufferingSize: 100
+        fields:
+          general:
+            defaultmode: keep
+            names:
+              ClientAddr: drop
+              ClientHost: drop
+              ClientPort: drop
+              ClientUsername: drop
+              RequestAddr: drop
+              RequestLine: drop
+              RequestPath: drop
+          headers:
+            defaultmode: drop
+            names: {}
     service:
       spec:
         externalTrafficPolicy: Local

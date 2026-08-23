@@ -123,5 +123,8 @@ jobs:
       - name: Verify Movie Concierge production contracts
         run: make verify-movie-concierge-production
 
+      - name: Render and validate observability charts
+        run: make verify-observability-charts
+
       - name: Validate rendered Kubernetes schemas
         run: make verify-kubernetes-schema

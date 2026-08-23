@@ -21,7 +21,11 @@ resources:
   - observability-grafana-viewer.sops.yaml
   - observability/dashboards
   - observability/agent-alerts.yaml
+  - observability/stack-alerts.yaml
   - observability.yaml
+  - loki.yaml
+  - tempo.yaml
+  - alloy.yaml
   - ingress.yaml
   - postgresql.yaml
   - rustfs.yaml

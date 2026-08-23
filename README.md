@@ -9,13 +9,17 @@
 <p align="center">
   <strong>Discover, rate, remember.</strong><br />
   A production-style React + Spring Boot movie application with explainable discovery,
-  OpenSearch, object storage, and k3s GitOps.
+  an AI Movie Concierge, OpenSearch, full-stack observability, and k3s GitOps.
 </p>
 
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Live Demo</a>
   ·
   <a href="https://backend.imdb-clone.the-coding-lab.com/api/movie/1" target="_blank">Backend API</a>
+  ·
+  <a href="./agent/README.md">Movie Concierge</a>
+  ·
+  <a href="./docs/operations.md">Operations</a>
   ·
   <a href="./infrastructure/kubernetes/README.md">Kubernetes Setup</a>
 </p>
@@ -55,7 +59,9 @@
 
 IMDb Clone is a full-stack movie catalog built as a production-style reference application. It goes beyond a CRUD demo:
 movies are stored in PostgreSQL, searched through OpenSearch, served with poster and backdrop media from
-S3-compatible object storage, and deployed to a self-hosted Kubernetes cluster through GitOps.
+S3-compatible object storage, and discovered conversationally through a Python AI agent that calls
+Java-owned movie capabilities over MCP. The complete system is deployed to a self-hosted Kubernetes
+cluster through GitOps.
 
 The project is intentionally kept close to a real web application architecture: generated API clients, explicit seed
 data, server-side session authentication, automated CI/CD, infrastructure manifests, and local developer workflows are
@@ -66,11 +72,15 @@ all part of the repository.
 - Modular Spring Boot backend with PostgreSQL, Flyway, Spring Security, JDBC sessions, CSRF protection, OpenAPI, and
   Testcontainers.
 - React frontend with TypeScript, Material UI, TanStack Query, generated Axios clients, and feature-oriented structure.
+- Python 3.14 Movie Concierge with FastAPI, Pydantic AI, typed streaming events, bounded tool use,
+  deterministic evals, cost limits, and Java-owned MCP tools.
 - Password, Google, GitHub, and WebAuthn passkey login methods attached to one account model.
 - Hybrid lexical and semantic OpenSearch retrieval plus reusable, explainable recommendation strategies.
 - S3-compatible media storage through RustFS for movie posters, backdrops, and profile images.
 - Repeatable local development with Docker Compose, lightweight seed data, and explicit search reindexing.
 - Self-hosted k3s deployment with Argo CD, Traefik ingress, cert-manager HTTPS, and encrypted GitOps secrets.
+- Production observability with Prometheus metrics, Loki logs, Tempo traces, Grafana dashboards,
+  Kubernetes Events, privacy-safe agent telemetry, and Python-to-Java trace propagation.
 - Left-shift build safeguards across Java, TypeScript, architecture, API contracts, tests, and dependency resolution.
 - Version-gated release workflow that builds Docker images and updates Kubernetes image digests from one `VERSION` file.
 
@@ -81,9 +91,11 @@ Runtime containers:
 ```mermaid
 flowchart LR
   browser["Browser"]
+  model["OpenAI model"]
 
   subgraph app["IMDb Clone"]
     frontend["React Frontend"]
+    agent["Python Movie Concierge<br/>FastAPI + Pydantic AI"]
     backend["Spring Boot API"]
   end
 
@@ -94,8 +106,11 @@ flowchart LR
   end
 
   browser --> frontend
-  frontend --> backend
+  frontend -- "REST" --> backend
+  frontend -- "chat + SSE" --> agent
   frontend --> rustfs
+  agent -- "bounded model calls" --> model
+  agent -- "protected MCP tools" --> backend
   backend --> postgres
   backend --> opensearch
   backend --> rustfs
@@ -105,15 +120,59 @@ flowchart LR
 The backend owns the application domain and persists movie, identity, account, and engagement data in PostgreSQL.
 OpenSearch is used as a derived search index and can be rebuilt explicitly from PostgreSQL. RustFS provides
 S3-compatible object storage for public movie media and private account uploads. The React frontend talks to the backend
-through generated API clients and loads public media through the object-storage host.
+through generated API clients and loads public media through the object-storage host. Its Movie Concierge surface streams
+typed events from the Python service; Python can discover movies only through protected MCP tools owned by Java and never
+queries PostgreSQL or OpenSearch directly.
+
+Observability pipeline:
+
+```mermaid
+flowchart LR
+  subgraph sources["Telemetry sources"]
+    workloads["Kubernetes workloads"]
+    events["Kubernetes Events"]
+    k3s["k3s systemd service"]
+    traefik["Traefik access logs"]
+    agentTelemetry["Python Movie Concierge"]
+    backendTelemetry["Spring Boot API"]
+  end
+
+  subgraph stores["Collection and storage"]
+    alloy["Grafana Alloy"]
+    prometheus[("Prometheus<br/>metrics · 7 days")]
+    loki[("Loki<br/>logs · 7 days")]
+    tempo[("Tempo<br/>traces · 3 days")]
+  end
+
+  grafana["Grafana<br/>dashboards + Explore"]
+
+  workloads -- "pod logs" --> alloy
+  events -- "event stream" --> alloy
+  k3s -- "journal" --> alloy
+  traefik -- "privacy-filtered logs" --> alloy
+  agentTelemetry -- "OTLP traces" --> alloy
+  backendTelemetry -- "OTLP traces" --> alloy
+  alloy -- "logs" --> loki
+  alloy -- "traces" --> tempo
+  agentTelemetry -- "bounded metrics" --> prometheus
+  backendTelemetry -- "Actuator metrics" --> prometheus
+  prometheus --> grafana
+  loki --> grafana
+  tempo --> grafana
+```
+
+Alloy collects logs and privacy-safe Python/Java traces without storing them itself. Prometheus
+scrapes bounded application and cluster metrics. Grafana provides the shared query and dashboard
+surface over Prometheus, Loki, and Tempo; the detailed retention, privacy, and access contracts are
+documented in the [observability guide](./infrastructure/monitoring/README.md).
 
 Delivery pipeline:
 
 ```mermaid
 flowchart LR
   version["VERSION bump"]
-  ci["GitHub Actions"]
-  registry["Docker Hub"]
+  ci["GitHub Actions<br/>Java + React + Python gates"]
+  registry["Docker Hub<br/>backend + frontend + agent images"]
   manifests["Kubernetes manifests"]
   argocd["Argo CD"]
   cluster["k3s home cluster"]
@@ -137,10 +196,12 @@ The public deployment runs on a Minisforum UM560 home server as a single-node k3
 - Frontend: [https://imdb-clone.the-coding-lab.com/](https://imdb-clone.the-coding-lab.com/)
 - Backend API: [https://backend.imdb-clone.the-coding-lab.com/](https://backend.imdb-clone.the-coding-lab.com/)
 - Movie media: [https://object-storage.imdb-clone.the-coding-lab.com/](https://object-storage.imdb-clone.the-coding-lab.com/)
+- Grafana: [https://grafana.imdb-clone.the-coding-lab.com/](https://grafana.imdb-clone.the-coding-lab.com/)
 
 Kubernetes manifests and home-cluster notes live in
 [infrastructure/kubernetes](./infrastructure/kubernetes/README.md) and
-[infrastructure/clusters/home](./infrastructure/clusters/home).
+[infrastructure/clusters/home](./infrastructure/clusters/home). Private database, search, storage,
+metrics, log, trace, and Argo CD access is documented in the [production operations runbook](./docs/operations.md).
 
 ## Tech Stack
 
@@ -148,6 +209,7 @@ Kubernetes manifests and home-cluster notes live in
 | --- | --- |
 | Backend | Java 25, Spring Boot 4, Spring Security, Spring Data JPA, Flyway |
 | Frontend | React 19, TypeScript 6, Material UI 9, TanStack Query, Vite |
+| Agent | Python 3.14, FastAPI, Pydantic AI 2.31, Pydantic Evals, uv, MCP, SSE |
 | Data | PostgreSQL 18, OpenSearch 3 |
 | Media | RustFS, S3-compatible object storage, WebP poster/backdrop variants |
 | API | OpenAPI spec, generated Axios client |
@@ -155,10 +217,12 @@ Kubernetes manifests and home-cluster notes live in
 | Testing | JUnit, Spring Boot Test, Testcontainers, jqwik, JaCoCo, Vitest, React Testing Library, Playwright |
 | Build safety | Error Prone, NullAway/JSpecify, strict TypeScript, typed ESLint, API-contract drift checks |
 | Delivery | Docker, GitHub Actions, k3s, Argo CD, Traefik, cert-manager, SOPS/age |
+| Observability | OpenTelemetry, Grafana Alloy, Prometheus, Loki, Tempo, Grafana |
 
 ## Features
 
 - Explore a progressive, session-stable discovery feed with three featured movies and curated carousel sections.
+- Ask the Movie Concierge by text and receive grounded answers plus automatically rendered movie cards.
 - Ask Tonight Mode for three diverse, explained picks constrained by mood, runtime, genres, era, and watched history.
 - Search through hybrid title/metadata and semantic retrieval with catalog filters and measured ranking foundations.
 - View backdrop-led movie pages with metadata, ratings, trailers, similar movies, sharing, and community comments.
@@ -175,6 +239,7 @@ Kubernetes manifests and home-cluster notes live in
 - Java 25
 - Docker with Compose
 - Node.js 24 and Yarn
+- Python 3.14 and uv for the Movie Concierge
 - Make
 
 The root [`Makefile`](./Makefile) is a command index for common workflows. It assumes these tools are installed
@@ -234,11 +299,28 @@ yarn start
 
 The frontend runs on [http://localhost:3000](http://localhost:3000).
 
+### 5. Start The Movie Concierge
+
+For deterministic UI work without Java or a provider key:
+
+```bash
+make agent-sync
+make run-agent-fake
+```
+
+The real local agent reads its OpenAI key only from the ignored
+`.secrets/movie-concierge.local.env` file and starts with `make run-agent`. Follow the complete
+credential, budget, MCP, eval, and safety instructions in the
+[Movie Concierge README](./agent/README.md); never export or commit the key.
+
 ## Development Workflow
 
 Detailed workflow docs:
 
 - [Development Guide](./docs/development.md) for local setup, env vars, smoke checks, and troubleshooting.
+- [Movie Concierge](./agent/README.md) for Python setup, runtime contracts, evals, and production guardrails.
+- [Movie Concierge Architecture](./docs/movie-concierge.md) for product boundaries and future milestones.
+- [Production Operations](./docs/operations.md) for URLs, private tunnels, DBeaver, logs, traces, and incidents.
 - [Agentic Engineering](./docs/agents/README.md) for agent workflow, task templates, verification, and review.
 - [Left-Shift Engineering Roadmap](./docs/left-shift-engineering.md) for planned compiler, type, test, and agent-feedback experiments.
 - [Frontend Design System](./docs/design.md) for theme tokens, shared layout primitives, and UI consistency.
@@ -257,6 +339,9 @@ cd frontend && yarn typecheck          # browser, Vite, and Playwright TypeScrip
 cd frontend && yarn lint               # type-aware frontend linting
 cd frontend && yarn test               # frontend unit and component tests
 cd frontend && yarn build              # frontend production build
+make verify-agent                      # Python formatting, types, architecture, tests, and deterministic evals
+make verify-observability-charts       # render Loki, Tempo, and Alloy and validate Alloy configuration
+make verify-kubernetes-schema          # render and validate the complete home-cluster GitOps tree
 ```
 
 The frontend API client is generated from the backend OpenAPI spec. If backend contracts change, start the backend and
@@ -278,8 +363,8 @@ Every push runs backend verification plus frontend client generation, linting, t
 build. Application releases are controlled by the root [`VERSION`](./VERSION) file. A version bump on `master` also
 triggers the CD workflow, which:
 
-1. runs backend and frontend checks,
-2. builds Linux AMD64 backend and frontend Docker images,
+1. runs backend, frontend, and deterministic agent checks,
+2. builds Linux AMD64 backend, frontend, and agent Docker images,
 3. pushes versioned images to Docker Hub,
 4. resolves immutable image digests,
 5. updates the home-cluster Kubernetes manifests,
@@ -293,7 +378,9 @@ without publishing new application images.
 ```text
 src/main/java/com/thecodinglab/imdbclone   Spring Boot backend modules
 frontend/src                               React frontend source
+agent/src/imdb_agent                       Python Movie Concierge modules
 compose.yaml                               Local Docker Compose services
 infrastructure/clusters/home               k3s GitOps manifests
 infrastructure/movie-seed                  Movie and media seed pipeline
+docs/operations.md                         Production access and incident runbook
 ```

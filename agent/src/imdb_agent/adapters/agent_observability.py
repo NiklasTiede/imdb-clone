@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import structlog
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
 if TYPE_CHECKING:
@@ -26,9 +27,11 @@ class AgentMetrics:
 
     def started(self) -> None:
         self.active.inc()
+        structlog.get_logger().info("concierge_run_started")
 
     def tool_called(self, tool_name: str) -> None:
         self.tool_calls.labels(tool=tool_name).inc()
+        structlog.get_logger().info("concierge_tool_called", tool=tool_name)
 
     def first_event(self, duration_seconds: float) -> None:
         self.first_event_duration.observe(duration_seconds)
@@ -56,6 +59,22 @@ class AgentMetrics:
             )
             self.tokens.labels(model=usage.model, direction="output").inc(usage.output_tokens)
             self.estimated_cost.labels(model=usage.model).inc(float(usage.estimated_cost_usd))
+        usage_fields: dict[str, object] = {}
+        if usage is not None:
+            usage_fields = {
+                "estimated_cost_usd": str(usage.estimated_cost_usd),
+                "input_tokens": usage.input_tokens,
+                "model": usage.model,
+                "output_tokens": usage.output_tokens,
+                "requests": usage.requests,
+                "tool_calls": usage.tool_calls,
+            }
+        structlog.get_logger().info(
+            "concierge_run_completed",
+            duration_ms=round(duration_seconds * 1000, 3),
+            outcome=outcome,
+            **usage_fields,
+        )
 
     def disconnected(self) -> None:
         self.disconnects.inc()

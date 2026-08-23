@@ -1,55 +1,38 @@
+# Legacy Deployment Definitions
 
-# Deployment: Locally for Development
+This directory contains the project's former Docker Compose and Docker Swarm deployment assets.
+They are retained for historical reference and are not the current production path.
 
-When running this app locally we need to spin up 3 docker 
-containers.
- 
-- PostgreSQL - Rel. Database
-- OpenSearch - SearchEngine
-- RustFS - S3-compatible object storage
+## Current supported paths
 
-For normal local development, run the root `compose.yaml`.
+Local development uses the repository root:
 
 ```bash
-docker compose up -d
-```
-
-The development setup uses some unsafe but simple credentials. 
-Now we can start the backend:
-
-```bash
+make docker-compose-dev-up
 ./gradlew bootRun
+make run-agent
+cd frontend && yarn start
 ```
 
-And then start the frontend
+Production uses k3s, Argo CD, immutable application image digests, and SOPS-encrypted secrets:
 
-```bash
-cd frontend
-yarn install
-yarn start
-```
+- [k3s and GitOps guide](../kubernetes/README.md)
+- [production operations runbook](../../docs/operations.md)
+- [home-cluster manifests](../clusters/home)
+- [release workflow documentation](../../.github/workflows/README.md)
 
-# Deployment: Production on Home Server
+The production application consists of the React frontend, Spring Boot backend, Python Movie
+Concierge, PostgreSQL, OpenSearch, RustFS, Traefik/cert-manager, and the Prometheus/Loki/Tempo/
+Grafana/Alloy observability stack.
 
-In this configuration we use some generated safe credentials.
-Besides the before mentioned containers we will also
-deploy a spring boot and react container and handle the 
-incoming traffic with traefik to enable encryption (SSL).
+Do not use the Compose or Swarm files below for a new production release. In particular, they do
+not represent the current agent service, GitOps security boundaries, observability setup, database
+seeding lifecycle, or immutable release process.
 
-You can download the content of this `/production` directory onto 
-a server and deploy everything by running.
+## Historical content
 
-```bash
-# generate credentials
-./generate_credentials.sh
+- `development/`: superseded development Compose definition.
+- `production/`: superseded home-server Compose deployment.
+- `production/docker-swarm-deploy/`: abandoned Swarm experiment.
 
-# deploy stateful apps
-docker compose -f docker-compose.stateful-apps.yaml up -d
-
-# deploy stateless apps
-docker compose -f docker-compose.stateless-apps.yaml up -d
-```
-
-But this process also involves port-forwarding of your server, setting up DNS
-with your domain and configuring ddclient to update DNS for public IP address. 
-So for each case some additional work has to be done.
+These files may be removed in a separate cleanup once their historical value is no longer needed.

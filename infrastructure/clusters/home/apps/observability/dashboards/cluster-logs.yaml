@@ -1,0 +1,156 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: observability-dashboard-cluster-logs
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+  annotations:
+    grafana_folder: IMDB Clone
+data:
+  cluster-logs.json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": false,
+      "graphTooltip": 1,
+      "links": [],
+      "panels": [
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "gridPos": {"h": 7, "w": 16, "x": 0, "y": 0},
+          "id": 1,
+          "options": {"legend": {"displayMode": "table", "placement": "right", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [
+            {
+              "datasource": {"type": "loki", "uid": "loki"},
+              "editorMode": "code",
+              "expr": "sum(count_over_time({cluster=\"home-k3s\", namespace=~\"$namespace\", app=~\"$app\"}[$__auto])) by (namespace)",
+              "legendFormat": "{{namespace}}",
+              "queryType": "range",
+              "refId": "A"
+            }
+          ],
+          "title": "Log volume by namespace",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 7, "w": 8, "x": 16, "y": 0},
+          "id": 2,
+          "options": {"dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": false, "showCommonLabels": false, "showLabels": false, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true},
+          "targets": [
+            {
+              "datasource": {"type": "loki", "uid": "loki"},
+              "editorMode": "code",
+              "expr": "{cluster=\"home-k3s\", namespace=~\"$namespace\", app=~\"$app\"} |~ \"(?i)error|exception|failed|critical\"",
+              "queryType": "range",
+              "refId": "A"
+            }
+          ],
+          "title": "Recent errors",
+          "type": "logs"
+        },
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 12, "w": 16, "x": 0, "y": 7},
+          "id": 3,
+          "options": {"dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": true, "showCommonLabels": false, "showLabels": false, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true},
+          "targets": [
+            {
+              "datasource": {"type": "loki", "uid": "loki"},
+              "editorMode": "code",
+              "expr": "{cluster=\"home-k3s\", namespace=~\"$namespace\", app=~\"$app\", container=~\"$container\"} |~ \"$search\"",
+              "queryType": "range",
+              "refId": "A"
+            }
+          ],
+          "title": "Cluster workload logs",
+          "type": "logs"
+        },
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 12, "w": 8, "x": 16, "y": 7},
+          "id": 4,
+          "options": {"dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": false, "showCommonLabels": false, "showLabels": false, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true},
+          "targets": [
+            {
+              "datasource": {"type": "loki", "uid": "loki"},
+              "editorMode": "code",
+              "expr": "{cluster=\"home-k3s\", job=\"integrations/kubernetes/eventhandler\"}",
+              "queryType": "range",
+              "refId": "A"
+            }
+          ],
+          "title": "Kubernetes events",
+          "type": "logs"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 41,
+      "tags": ["imdb-clone", "logs", "kubernetes"],
+      "templating": {
+        "list": [
+          {
+            "allValue": ".*",
+            "current": {"text": "All", "value": "$__all"},
+            "datasource": {"type": "loki", "uid": "loki"},
+            "definition": "label_values(namespace)",
+            "includeAll": true,
+            "label": "Namespace",
+            "name": "namespace",
+            "query": "label_values(namespace)",
+            "refresh": 1,
+            "type": "query"
+          },
+          {
+            "allValue": ".*",
+            "current": {"text": "All", "value": "$__all"},
+            "datasource": {"type": "loki", "uid": "loki"},
+            "definition": "label_values({namespace=~\"$namespace\"}, app)",
+            "includeAll": true,
+            "label": "Application",
+            "name": "app",
+            "query": "label_values({namespace=~\"$namespace\"}, app)",
+            "refresh": 1,
+            "type": "query"
+          },
+          {
+            "allValue": ".*",
+            "current": {"text": "All", "value": "$__all"},
+            "datasource": {"type": "loki", "uid": "loki"},
+            "definition": "label_values({namespace=~\"$namespace\", app=~\"$app\"}, container)",
+            "includeAll": true,
+            "label": "Container",
+            "name": "container",
+            "query": "label_values({namespace=~\"$namespace\", app=~\"$app\"}, container)",
+            "refresh": 1,
+            "type": "query"
+          },
+          {
+            "current": {"text": ".*", "value": ".*"},
+            "label": "Search regex",
+            "name": "search",
+            "query": ".*",
+            "type": "textbox"
+          }
+        ]
+      },
+      "time": {"from": "now-1h", "to": "now"},
+      "timezone": "browser",
+      "title": "Cluster Logs",
+      "uid": "imdb-clone-cluster-logs",
+      "version": 1
+    }

@@ -1,60 +1,50 @@
+# CI/CD Workflows
 
-# Current Git Workflow
+The repository has three independently verified deployables: the Spring Boot backend, React
+frontend, and Python Movie Concierge. Production infrastructure is reconciled from Git by Argo CD.
 
-For the beginning I will just work directly on the
-master-branch. CI will be triggered with every
-push.
+## Continuous integration
 
-CI verifies the Java backend, React frontend, and Python Movie Concierge independently. The Agent
-job installs the locked Python 3.14 environment, runs the strict verification gate, builds the
-non-root image, and executes its container smoke test without provider credentials.
+Every branch push runs separate jobs for:
 
-## Version-Gated App Releases
+- Java 25 backend build, tests, integration tests, JaCoCo, compiler checks, and dependency safety.
+- React client generation, linting, tests, strict TypeScript, and production build.
+- Python 3.14 locked dependency sync, Ruff, Pyright, architecture contracts, deterministic tests and
+  evals, non-root image build, and container smoke test without provider credentials.
+- Home-cluster manifest contracts, pinned observability Helm rendering, Alloy validation, and
+  Kubernetes schema validation.
 
-`VERSION` is the shared backend/frontend/Movie Concierge app version. Pushes to `master`
-run CI, but app images are published only when `VERSION` changes or the CD
-workflow is manually dispatched.
+The manual Playwright workflow starts PostgreSQL, OpenSearch, RustFS, the backend, and the frontend.
+Concierge browser behavior uses deterministic intercepted SSE responses there; the agent itself is
+covered by its Python contract tests and container smoke test. Live model evals remain explicitly
+opt-in and never receive credentials in ordinary CI.
 
-For version `0.2.2`, the workflow publishes:
+## Version-gated application releases
 
-- `niklastiede/imdb-clone-backend:v0.2.2`
-- `niklastiede/imdb-clone-frontend:v0.2.2`
-- `niklastiede/imdb-clone-agent:v0.2.2`
+`VERSION` is the shared backend/frontend/agent release version. A semantic-version change on
+`master`, or a deliberate manual CD dispatch, performs the release:
 
-The release job runs the deterministic Python gate before publishing. It builds the agent with the
-shared release version embedded in `imdb_agent_build_info`; provider and MCP secrets are never
-available to GitHub Actions and are not needed for build or verification.
+1. Re-run backend, frontend, agent, and GitOps validation.
+2. Build Linux AMD64 images for all three deployables.
+3. Push `v<VERSION>` and `latest` tags to Docker Hub.
+4. Resolve immutable image digests.
+5. Update only `backend.yaml`, `frontend.yaml`, and `agent.yaml` in the home-cluster GitOps tree.
+6. Commit the digest update and create the annotated release tag.
+7. Let Argo CD reconcile the cluster from Git.
 
-After publishing, the workflow resolves Docker digests and commits updates to
-`infrastructure/clusters/home/apps/backend.yaml`, `frontend.yaml`, and `agent.yaml`. Argo CD
-then deploys those manifest changes.
+Provider and MCP credentials are not available to GitHub Actions. The agent build and deterministic
+verification path requires neither an OpenAI key nor a running Java service.
 
-Catalog seed images are independent data releases. The `imdb-clone-seed` Argo Application has
-automated sync disabled, so changing `VERSION` or deploying application images never reruns the
-production seed.
+Infrastructure-only changes under `infrastructure/clusters/home` do not require a `VERSION` bump or
+new application images. After normal CI and review, a merge to `master` lets Argo CD reconcile those
+manifests directly.
 
-The first concierge pilot branch includes the next `VERSION` and an image tag matching it. Merging
-that branch is therefore the explicit release action; merely pushing the feature branch does not
-publish an image or mutate the cluster.
+Movie seed images are independent data releases. Their Argo CD Application has automated sync
+disabled, so normal releases never reseed PostgreSQL or RustFS.
 
-The Playwright e2e workflow is also manual-only. It starts
-PostgreSQL, OpenSearch, Object Storage, the Spring Boot backend, and the
-Vite frontend before running the browser tests. This keeps the
-regular push CI fast while still making full-stack browser checks
-available before larger merges or releases.
+## Production topology
 
-There's only one kubernetes 'production' namespace 
-on Kubernetes.
-
-# Planned Feature-Branch Git Workflow
-
-In the future, trunk-based development should be introduced.
-Feature branches which are connected to issues will be created 
-and merged with pull requests after a review process. These 
-short-lived branches will enable merging small changes
-continuously and keeping master branch as source of truth.
-
-Furthermore, two Kubernetes namespaces (production and 
-integration) will be created with a master- and a develop-branch 
-so that changes can be thoroughly tested on integration 
-environment before it can be released on production.
+There is one production application namespace plus dedicated `databases`, `observability`,
+`argocd`, and supporting system namespaces. There is no duplicated canary database environment.
+See the [k3s guide](../../infrastructure/kubernetes/README.md) for GitOps details and the
+[operations runbook](../../docs/operations.md) for URLs, private access, and incident handling.

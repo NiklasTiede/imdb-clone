@@ -1,0 +1,260 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: alloy
+    targetRevision: 1.11.1
+    helm:
+      releaseName: alloy
+      valuesObject:
+        global:
+          podSecurityContext:
+            runAsNonRoot: true
+            runAsUser: 473
+            runAsGroup: 473
+            fsGroup: 473
+            supplementalGroups:
+              # systemd-journal on the home-cluster node
+              - 999
+            seccompProfile:
+              type: RuntimeDefault
+        crds:
+          create: false
+        controller:
+          type: daemonset
+          terminationGracePeriodSeconds: 30
+          volumes:
+            extra:
+              - name: storage
+                emptyDir: {}
+        alloy:
+          enableReporting: false
+          storagePath: /var/lib/alloy
+          extraEnv:
+            - name: ALLOY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          mounts:
+            varlog: true
+            extra:
+              - name: storage
+                mountPath: /var/lib/alloy
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          extraPorts:
+            - name: otlp-grpc
+              port: 4317
+              targetPort: 4317
+              protocol: TCP
+              appProtocol: h2c
+            - name: otlp-http
+              port: 4318
+              targetPort: 4318
+              protocol: TCP
+          configMap:
+            content: |-
+              logging {
+                level  = "info"
+                format = "json"
+              }
+
+              discovery.kubernetes "pods" {
+                role = "pod"
+
+                selectors {
+                  role  = "pod"
+                  field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+                }
+              }
+
+              discovery.relabel "pod_logs" {
+                targets = discovery.kubernetes.pods.targets
+
+                rule {
+                  source_labels = ["__meta_kubernetes_namespace"]
+                  target_label  = "namespace"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_name"]
+                  target_label  = "pod"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_container_name"]
+                  target_label  = "container"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_node_name"]
+                  target_label  = "node"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                  target_label  = "app"
+                  regex         = "(.+)"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                  target_label  = "service"
+                  regex         = "(.+)"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_label_app"]
+                  target_label  = "app"
+                  regex         = "(.+)"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_label_app"]
+                  target_label  = "service"
+                  regex         = "(.+)"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+                  target_label  = "job"
+                  separator     = "/"
+                  replacement   = "$1"
+                }
+              }
+
+              loki.source.kubernetes "pod_logs" {
+                targets    = discovery.relabel.pod_logs.output
+                forward_to = [loki.process.pod_logs.receiver]
+              }
+
+              loki.process "pod_logs" {
+                stage.static_labels {
+                  values = {
+                    cluster = "home-k3s",
+                  }
+                }
+
+                stage.json {
+                  expressions = {
+                    event      = "event",
+                    request_id = "request_id",
+                    span_id    = "span_id",
+                    spanId     = "spanId",
+                    trace_id   = "trace_id",
+                    traceId    = "traceId",
+                  }
+                }
+
+                stage.structured_metadata {
+                  values = {
+                    event      = "event",
+                    request_id = "request_id",
+                    span_id    = "span_id",
+                    spanId     = "spanId",
+                    trace_id   = "trace_id",
+                    traceId    = "traceId",
+                  }
+                }
+
+                forward_to = [loki.write.cluster.receiver]
+              }
+
+              loki.source.journal "k3s" {
+                path       = "/var/log/journal"
+                max_age    = "24h"
+                matches    = "_SYSTEMD_UNIT=k3s.service"
+                forward_to = [loki.write.cluster.receiver]
+
+                labels = {
+                  app       = "k3s",
+                  cluster   = "home-k3s",
+                  job       = "systemd-journal",
+                  namespace = "kube-system",
+                  node      = sys.env("ALLOY_NODE_NAME"),
+                  service   = "k3s",
+                  unit      = "k3s.service",
+                }
+              }
+
+              loki.source.kubernetes_events "cluster" {
+                job_name   = "integrations/kubernetes/eventhandler"
+                log_format = "logfmt"
+                forward_to = [loki.process.cluster_events.receiver]
+              }
+
+              loki.process "cluster_events" {
+                stage.static_labels {
+                  values = {
+                    cluster = "home-k3s",
+                  }
+                }
+
+                forward_to = [loki.write.cluster.receiver]
+              }
+
+              loki.write "cluster" {
+                endpoint {
+                  url = "http://loki-gateway.observability.svc.cluster.local/loki/api/v1/push"
+                }
+              }
+
+              otelcol.receiver.otlp "cluster" {
+                grpc {
+                  endpoint = "0.0.0.0:4317"
+                }
+
+                http {
+                  endpoint = "0.0.0.0:4318"
+                }
+
+                output {
+                  traces = [otelcol.processor.batch.traces.input]
+                }
+              }
+
+              otelcol.processor.batch "traces" {
+                timeout         = "5s"
+                send_batch_size = 512
+
+                output {
+                  traces = [otelcol.exporter.otlphttp.tempo.input]
+                }
+              }
+
+              otelcol.exporter.otlphttp "tempo" {
+                client {
+                  endpoint = "http://tempo.observability.svc.cluster.local:4318"
+                }
+              }
+        serviceMonitor:
+          enabled: true
+          interval: 30s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

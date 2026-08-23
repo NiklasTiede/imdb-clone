@@ -4,6 +4,7 @@ from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from typing import Protocol, cast
+from urllib.parse import urlsplit
 
 from dotenv import dotenv_values
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError, model_validator
@@ -77,6 +78,10 @@ class Settings(BaseSettings):
     project_cost_limit_usd: Decimal = Field(default=Decimal("20.00"), gt=0, le=20)
     run_cost_limit_usd: Decimal = Field(default=Decimal("0.25"), gt=0, le=1)
     live_evals_enabled: bool = False
+    otel_tracing_enabled: bool = False
+    otel_exporter_otlp_traces_endpoint: str | None = None
+    otel_export_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
+    otel_trace_sample_ratio: float = Field(default=1.0, ge=0, le=1)
 
     @property
     def json_logs(self) -> bool:
@@ -84,6 +89,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_boundaries(self) -> Settings:
+        self._validate_otel_endpoint()
         if self.environment is not DeploymentEnvironment.PRODUCTION:
             return self
         if self.model_backend is not ModelBackend.OPENAI:
@@ -95,6 +101,22 @@ class Settings(BaseSettings):
         if "localhost" in self.mcp_url or "127.0.0.1" in self.mcp_url:
             raise ValueError("production requires a cluster-local MCP URL")
         return self
+
+    def _validate_otel_endpoint(self) -> None:
+        endpoint = self.otel_exporter_otlp_traces_endpoint
+        if not self.otel_tracing_enabled:
+            return
+        if endpoint is None:
+            raise ValueError("OpenTelemetry tracing requires an OTLP traces endpoint")
+        parsed = urlsplit(endpoint)
+        if parsed.scheme not in {"http", "https"} or parsed.hostname is None:
+            raise ValueError("OpenTelemetry requires a valid HTTP OTLP traces endpoint")
+        if not parsed.path.endswith("/v1/traces"):
+            raise ValueError("OpenTelemetry OTLP traces endpoint must end with /v1/traces")
+        if self.environment is DeploymentEnvironment.PRODUCTION and parsed.hostname != (
+            "alloy.observability.svc.cluster.local"
+        ):
+            raise ValueError("production OpenTelemetry must use the cluster-local Alloy endpoint")
 
 
 def load_settings(env_file: Path | None = None) -> Settings:

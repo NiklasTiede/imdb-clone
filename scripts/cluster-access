@@ -1,0 +1,224 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly CLUSTER_SSH_TARGET="${CLUSTER_SSH_TARGET:-robotnik@um560}"
+readonly CLUSTER_ACCESS_TMP_ROOT="${TMPDIR:-/tmp}"
+readonly CLUSTER_ACCESS_STATE_DIR="${CLUSTER_ACCESS_TMP_ROOT%/}/imdb-clone-cluster-access-${UID}"
+
+usage() {
+  cat <<'EOF'
+Usage: scripts/cluster-access <command>
+
+Commands:
+  start                         Start all private operator tunnels.
+  status                        Show tunnel health and local endpoints.
+  stop                          Stop only tunnels started by this script.
+  copy-postgres-password        Copy the application database password to the clipboard.
+  copy-rustfs-access-key        Copy the RustFS access key to the clipboard.
+  copy-rustfs-secret-key        Copy the RustFS secret key to the clipboard.
+  copy-grafana-admin-password   Copy the Grafana admin password to the clipboard.
+  copy-grafana-viewer-password  Copy the Grafana viewer password to the clipboard.
+
+Set CLUSTER_SSH_TARGET to override the default SSH destination robotnik@um560.
+EOF
+}
+
+require_command() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Missing required command: $1" >&2
+    exit 1
+  fi
+}
+
+for_each_tunnel() {
+  local callback="$1"
+  local failed=0
+  while IFS='|' read -r name local_port namespace service service_port scheme; do
+    if ! "${callback}" "${name}" "${local_port}" "${namespace}" "${service}" "${service_port}" "${scheme}"; then
+      failed=1
+    fi
+  done <<'EOF'
+postgresql|15432|databases|imdb-clone-postgresql|5432|postgresql
+opensearch|19200|databases|imdb-clone-opensearch|9200|http
+rustfs-api|19000|databases|imdb-clone-rustfs|9000|http
+rustfs-console|19001|databases|imdb-clone-rustfs-svc|9001|http
+grafana|13000|observability|observability-grafana|80|http
+prometheus|19090|observability|observability-kube-prometh-prometheus|9090|http
+loki|13100|observability|loki-gateway|80|http
+tempo|13200|observability|tempo|3200|http
+argocd|18443|argocd|argocd-server|443|https
+EOF
+  return "${failed}"
+}
+
+pid_file() {
+  printf '%s/%s.pid' "${CLUSTER_ACCESS_STATE_DIR}" "$1"
+}
+
+log_file() {
+  printf '%s/%s.log' "${CLUSTER_ACCESS_STATE_DIR}" "$1"
+}
+
+is_running() {
+  local file
+  file="$(pid_file "$1")"
+  [[ -f "${file}" ]] || return 1
+  local pid
+  pid="$(<"${file}")"
+  [[ "${pid}" =~ ^[0-9]+$ ]] || return 1
+  kill -0 "${pid}" 2>/dev/null
+}
+
+start_tunnel() {
+  local name="$1"
+  local local_port="$2"
+  local namespace="$3"
+  local service="$4"
+  local service_port="$5"
+  local scheme="$6"
+  local file
+  file="$(pid_file "${name}")"
+
+  if is_running "${name}"; then
+    echo "already running: ${name}"
+    return
+  fi
+
+  if lsof -nP -iTCP:"${local_port}" -sTCP:LISTEN >/dev/null 2>&1; then
+    echo "cannot start ${name}: local port ${local_port} is already in use" >&2
+    return 1
+  fi
+
+  nohup ssh \
+    -o BatchMode=yes \
+    -o ConnectTimeout=10 \
+    -o ExitOnForwardFailure=yes \
+    -o ServerAliveInterval=30 \
+    -o ServerAliveCountMax=3 \
+    -L "${local_port}:127.0.0.1:${local_port}" \
+    "${CLUSTER_SSH_TARGET}" \
+    "kubectl -n '${namespace}' port-forward --address=127.0.0.1 'service/${service}' '${local_port}:${service_port}'" \
+    </dev/null >"$(log_file "${name}")" 2>&1 &
+  local pid=$!
+  printf '%s\n' "${pid}" >"${file}"
+  sleep 1
+
+  if ! kill -0 "${pid}" 2>/dev/null; then
+    echo "failed to start ${name}; inspect $(log_file "${name}")" >&2
+    rm -f "${file}"
+    return 1
+  fi
+
+  echo "started ${name}: ${scheme}://localhost:${local_port}"
+}
+
+show_tunnel() {
+  local name="$1"
+  local local_port="$2"
+  local _namespace="$3"
+  local _service="$4"
+  local _service_port="$5"
+  local scheme="$6"
+
+  if is_running "${name}" && lsof -nP -iTCP:"${local_port}" -sTCP:LISTEN >/dev/null 2>&1; then
+    printf '%-16s %-8s %s://localhost:%s\n' "${name}" "running" "${scheme}" "${local_port}"
+  else
+    printf '%-16s %-8s %s://localhost:%s\n' "${name}" "stopped" "${scheme}" "${local_port}"
+  fi
+}
+
+stop_tunnel() {
+  local name="$1"
+  local local_port="$2"
+  local namespace="$3"
+  local service="$4"
+  local service_port="$5"
+  local _scheme="$6"
+  local file
+  file="$(pid_file "${name}")"
+
+  if [[ ! -f "${file}" ]]; then
+    echo "already stopped: ${name}"
+    return
+  fi
+
+  local pid
+  pid="$(<"${file}")"
+  if ! [[ "${pid}" =~ ^[0-9]+$ ]] || ! kill -0 "${pid}" 2>/dev/null; then
+    rm -f "${file}"
+    echo "removed stale state: ${name}"
+    return
+  fi
+
+  local command
+  command="$(ps -p "${pid}" -o command= 2>/dev/null || true)"
+  if [[ "${command}" != *"${CLUSTER_SSH_TARGET}"* ]] \
+    || [[ "${command}" != *"service/${service}"* ]] \
+    || [[ "${command}" != *"${local_port}:${service_port}"* ]] \
+    || [[ "${command}" != *"${namespace}"* ]]; then
+    echo "refusing to stop unrecognized process ${pid} for ${name}" >&2
+    return 1
+  fi
+
+  kill "${pid}"
+  rm -f "${file}"
+  echo "stopped ${name}"
+}
+
+copy_secret() {
+  local namespace="$1"
+  local secret="$2"
+  local key="$3"
+  local description="$4"
+  require_command pbcopy
+  require_command ruby
+
+  ssh \
+    -o BatchMode=yes \
+    -o ConnectTimeout=10 \
+    "${CLUSTER_SSH_TARGET}" \
+    "kubectl -n '${namespace}' get secret '${secret}' -o 'jsonpath={.data.${key}}'" \
+    | ruby -rbase64 -e 'print Base64.strict_decode64(STDIN.read)' \
+    | pbcopy
+  echo "Copied ${description} to the clipboard without printing it."
+}
+
+main() {
+  require_command ssh
+  require_command lsof
+  mkdir -p "${CLUSTER_ACCESS_STATE_DIR}"
+
+  case "${1:-}" in
+    start)
+      for_each_tunnel start_tunnel
+      ;;
+    status)
+      for_each_tunnel show_tunnel
+      ;;
+    stop)
+      for_each_tunnel stop_tunnel
+      ;;
+    copy-postgres-password)
+      copy_secret databases imdb-clone-postgresql password "PostgreSQL application password"
+      ;;
+    copy-rustfs-access-key)
+      copy_secret databases imdb-clone-rustfs RUSTFS_ACCESS_KEY "RustFS access key"
+      ;;
+    copy-rustfs-secret-key)
+      copy_secret databases imdb-clone-rustfs RUSTFS_SECRET_KEY "RustFS secret key"
+      ;;
+    copy-grafana-admin-password)
+      copy_secret observability observability-grafana-admin admin-password "Grafana admin password"
+      ;;
+    copy-grafana-viewer-password)
+      copy_secret observability observability-grafana-viewer viewer-password "Grafana viewer password"
+      ;;
+    *)
+      usage
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"

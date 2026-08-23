@@ -1,6 +1,10 @@
-This folder tracks the Kubernetes migration for the home-server deployment.
+# Kubernetes And k3s
 
-Target first milestone:
+This folder owns the current home-server deployment. For daily operator URLs, private service
+tunnels, DBeaver, logs, traces, and incident response, use the
+[production operations runbook](../../docs/operations.md).
+
+Current platform:
 
 - Ansible bootstraps Ubuntu 24 LTS on `robotnik@um560`.
 - k3s runs as a single-node Kubernetes cluster.
@@ -19,22 +23,22 @@ Verify the cluster over SSH:
 
 ```bash
 ssh robotnik@um560
-sudo kubectl get nodes
-sudo kubectl get pods -A
-sudo kubectl get applications -n argocd
+kubectl get nodes
+kubectl get pods -A
+kubectl get applications -n argocd
 ```
 
 Open Argo CD privately through SSH port-forwarding:
 
 ```bash
 ssh -L 8080:localhost:8080 robotnik@um560 \
-  "sudo kubectl -n argocd port-forward svc/argocd-server 8080:443"
+  "kubectl -n argocd port-forward svc/argocd-server 8080:443"
 ```
 
 Then open `https://localhost:8080` locally. The initial admin password can be read on the server:
 
 ```bash
-sudo kubectl -n argocd get secret argocd-initial-admin-secret \
+kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath='{.data.password}' | base64 -d
 ```
 
@@ -147,30 +151,37 @@ Grafana and Prometheus run inside the `observability` namespace through the
 account. Retrieve the generated viewer password from the cluster:
 
 ```bash
-ssh robotnik@um560 \
-  "sudo kubectl -n observability get secret observability-grafana-viewer \
-    -o jsonpath='{.data.viewer-password}' | base64 -d"
+make cluster-copy-grafana-viewer-password
 ```
 
-Grafana can still be opened privately through an SSH tunnel:
+Grafana can still be opened privately through the standard operator tunnels:
 
 ```bash
-ssh -L 3001:localhost:3001 robotnik@um560 \
-  "sudo kubectl -n observability port-forward svc/observability-grafana 3001:80"
+make cluster-access-start
 ```
 
-Then open `http://localhost:3001`. The Grafana admin user is `admin`. Retrieve
-the generated admin password from the cluster:
+Then open `http://localhost:13000`. The Grafana admin user is `admin`. Copy the generated password
+without displaying it:
 
 ```bash
-ssh robotnik@um560 \
-  "sudo kubectl -n observability get secret observability-grafana-admin \
-    -o jsonpath='{.data.admin-password}' | base64 -d"
+make cluster-copy-grafana-admin-password
 ```
 
 The initial Prometheus setup collects Kubernetes node and workload metrics,
 kubelet/cAdvisor metrics, kube-state-metrics, and the backend Spring Boot
 Actuator endpoint at `/actuator/prometheus`.
+
+Loki stores seven days of logs from every Kubernetes workload, Kubernetes Events, and the k3s
+systemd service on each node. Grafana Alloy runs on every node, forwards logs to Loki, and accepts
+internal OTLP traffic on ports `4317` and `4318`. Tempo stores three days of traces from the Python
+Concierge and Java backend. Grafana links trace IDs in structured logs to the matching Tempo trace.
+Traefik emits JSON access logs while dropping client addresses, request paths and lines, query
+parameters, and every request header.
+
+For the standard private PostgreSQL, OpenSearch, RustFS, Grafana, Prometheus, Loki, Tempo, and Argo
+CD tunnels, use `make cluster-access-start` instead of maintaining individual forwarding commands.
+See [`docs/operations.md`](../../docs/operations.md) for endpoint inventory, DBeaver setup,
+credential handling, and the incident workflow.
 
 ## Movie Concierge production pilot
 
@@ -197,9 +208,10 @@ dedicated OpenAI project to a hard $20 pilot budget before release; the in-memor
 defense-in-depth limit and resets with the pod.
 
 The Agent NetworkPolicy allows ingress only from Traefik and Prometheus. Egress is limited to
-cluster DNS, Java MCP on port 8080, and public non-private IPv4 destinations on HTTPS port 443. The
-pod runs as UID/GID 10001 with no service-account token, no privilege escalation or Linux
-capabilities, RuntimeDefault seccomp, a read-only root filesystem, and a 16 MiB memory-backed `/tmp`.
+cluster DNS, Java MCP on port 8080, Alloy OTLP/HTTP on port 4318, and public non-private IPv4
+destinations on HTTPS port 443. The pod runs as UID/GID 10001 with no service-account token, no
+privilege escalation or Linux capabilities, RuntimeDefault seccomp, a read-only root filesystem,
+and a 16 MiB memory-backed `/tmp`.
 
 Prometheus scrapes `/metrics` through an internal ServiceMonitor. The Grafana sidecar loads the
 `IMDb Clone / Movie Concierge` dashboard. Prometheus alert rules are installed, but Alertmanager is
@@ -212,11 +224,11 @@ make verify-movie-concierge-production
 make verify-kubernetes-schema
 ```
 
-Do not use `kubectl apply` for a release. This pilot branch carries the next shared `VERSION`; merge
-it only as an intentional production release after review. That master push starts the version-gated
-workflow, which tests and publishes backend, frontend, and agent images, resolves immutable digests,
-and commits the three GitOps manifest updates for Argo CD. Before that merge, no workflow or cluster
-deployment is triggered.
+Do not use `kubectl apply` for a release. An intentional shared `VERSION` change on `master` starts
+the version-gated workflow, which tests and publishes backend, frontend, and agent images, resolves
+immutable digests, and commits the three GitOps image updates for Argo CD. Infrastructure-only
+changes do not rebuild application images; after CI and review, Argo CD reconciles their merged
+manifests directly from Git.
 
 Argo CD is exposed for home LAN access at
 `https://argocd.imdb-clone.the-coding-lab.com`. The route is intended for

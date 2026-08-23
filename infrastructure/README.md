@@ -1,38 +1,46 @@
+# Infrastructure
 
-# Provisionally Setup
+The current production platform is a single-node k3s cluster reconciled through Argo CD. Local
+development uses the root `compose.yaml`; older Docker Compose and Docker Swarm definitions remain
+only as historical references and are not the production deployment path.
 
-These are the containers I'm running:
+## Current platform
 
-- React (Frontend) Container
-- Spring Boot (Backend) Container
-- PostgreSQL Database Container
-- OpenSearch (SearchEngine) Container
-- RustFS (S3-compatible object storage) Container
-- Traefik (reverse proxy) Container
+- React frontend, Spring Boot backend, and Python Movie Concierge application images.
+- PostgreSQL as the domain source of truth and OpenSearch as a rebuildable search projection.
+- RustFS as S3-compatible movie and account media storage.
+- Traefik ingress and cert-manager HTTPS.
+- Prometheus metrics, Loki logs, Tempo traces, Grafana dashboards, and Grafana Alloy collection.
+- SOPS/age encrypted Kubernetes secrets and version-gated GitHub Actions releases.
 
-For CI / CD I use GitHub Workflows.
+Production manifests and cluster instructions live in
+[`clusters/home`](clusters/home) and the [k3s README](kubernetes/README.md). Operator URLs, private
+SSH tunnels, DBeaver access, credentials, and incident handling are centralized in the
+[production operations runbook](../docs/operations.md).
 
-# Set Up PostgreSQL Database
+## Directory map
 
-The application schema is managed through PostgreSQL Flyway migrations. I created an
-[entity-relationship diagram](datamodel.puml) to simplify schema creation.
+| Path | Purpose | Status |
+| --- | --- | --- |
+| [`clusters/home`](clusters/home) | Argo CD applications and k3s resources | Production source of truth |
+| [`kubernetes`](kubernetes/README.md) | Home-cluster bootstrap and release guidance | Current |
+| [`movie-seed`](movie-seed/README.md) | Versioned PostgreSQL and RustFS data releases | Current |
+| [`object-storage`](object-storage/README.md) | RustFS/S3 development assets and notes | Current |
+| [`monitoring`](monitoring/README.md) | Observability stack overview | Current overview; legacy Compose assets retained |
+| [`deployment`](deployment/README.md) | Historical Compose/Swarm deployments | Legacy only |
 
-The legacy IMDb dataset processing notes live under `infrastructure/movie-seed/data-processing`.
+The PostgreSQL schema is owned by Flyway migrations under `src/main/resources/db/migration`. The
+PlantUML data-model sources are [`imdb-clone-data-model.puml`](imdb-clone-data-model.puml) and
+[`imdb-clone-physical-schema.puml`](imdb-clone-physical-schema.puml).
 
-## Process Movies / Rating Datasets
+## Verification
 
-For this I used the powerful capabilities of the Python framework Pandas which can easily process big datasets. 
-All steps are verifiable through a [jupyter notebook](movie-seed/data-processing/process_movie_dataset.ipynb).
+Run from the repository root without applying anything to the cluster:
 
-- download `title.basics.tsv.gz` and `title.ratings.tsv.gz` from [IMDb](https://www.imdb.com/interfaces/)
-- process dataset using Python, Pandas, Numpy:
-  - replace empty values by '\N'
-  - remove incorrect values (consistent datatype per column)
-  - merge Rating-, Movie- and image/description dataframes
-  - set `tconst` as index
+```bash
+make verify-observability-production
+make verify-observability-charts
+make verify-kubernetes-schema
+```
 
-Instead of rerunning the jupyter notebook you can also just download the 
-[Processed Dataset](https://www.dropbox.com/s/rzmhet4qf2joczz/processed_imdb_movies.csv?dl=0).
-
-## Create Database Tables and import data
-- execute the PostgreSQL Flyway migrations from `src/main/resources/db/migration`
+Deployments must flow through Git and Argo CD. Do not use ad hoc `kubectl apply` for releases.
