@@ -169,9 +169,11 @@ without displaying it:
 make cluster-copy-grafana-admin-password
 ```
 
-The initial Prometheus setup collects Kubernetes node and workload metrics,
-kubelet/cAdvisor metrics, kube-state-metrics, and the backend Spring Boot
-Actuator endpoint at `/actuator/prometheus`.
+Prometheus collects Kubernetes node and workload metrics, kubelet/cAdvisor metrics,
+kube-state-metrics, the backend Spring Boot Actuator endpoint at `/actuator/prometheus`, the Python
+Concierge endpoint at `/metrics`, and llama.cpp's native embedding metrics. The React application
+sends validated anonymous Web Vitals, browser errors, and coarse request timings to a same-origin
+backend collector, which publishes them as low-cardinality `imdb_frontend_*` series.
 
 Loki stores seven days of logs from every Kubernetes workload, Kubernetes Events, and the k3s
 systemd service on each node. Grafana Alloy runs on every node, forwards logs to Loki, and accepts
@@ -226,7 +228,7 @@ privilege escalation or Linux capabilities, RuntimeDefault seccomp, a read-only 
 and a 16 MiB memory-backed `/tmp`.
 
 Prometheus scrapes `/metrics` through an internal ServiceMonitor. The Grafana sidecar loads the
-`IMDB Clone – Operations Overview` operator landing page plus Backend, Movie Concierge,
+`IMDB Clone – Operations Overview` operator landing page plus Backend, Frontend, Movie Concierge,
 Infrastructure, Cluster Logs, and data-service drill-down dashboards. Prometheus alert rules are
 installed. Alertmanager remains intentionally disabled, so there is no notification delivery yet.
 
