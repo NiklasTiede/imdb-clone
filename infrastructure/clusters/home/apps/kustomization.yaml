@@ -25,6 +25,8 @@ resources:
   - observability.yaml
   - loki.yaml
   - tempo.yaml
+  - pyroscope.yaml
+  - pyroscope-network-policy.yaml
   - alloy.yaml
   - ingress.yaml
   - postgresql.yaml

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+if [ -n "${PYROSCOPE_SERVER_ADDRESS:-}" ]; then
+  exec java -javaagent:/opt/pyroscope/pyroscope.jar -jar /app.jar
+fi
+
+exec java -jar /app.jar

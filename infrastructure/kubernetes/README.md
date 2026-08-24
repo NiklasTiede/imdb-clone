@@ -175,11 +175,21 @@ Loki stores seven days of logs from every Kubernetes workload, Kubernetes Events
 systemd service on each node. Grafana Alloy runs on every node, forwards logs to Loki, and accepts
 internal OTLP traffic on ports `4317` and `4318`. Tempo stores three days of traces from the Python
 Concierge and Java backend. Grafana links trace IDs in structured logs to the matching Tempo trace.
+Tempo's local-blocks processor powers TraceQL metrics and Traces Drilldown. A private, persistent
+single-binary Pyroscope stores continuous profiles from the Spring Boot backend and Python
+Concierge; Grafana's Profiles Drilldown and trace-to-profile link query it without exposing its API.
 Traefik emits JSON access logs while dropping client addresses, request paths and lines, query
 parameters, and every request header.
 
-For the standard private PostgreSQL, OpenSearch, RustFS, Grafana, Prometheus, Loki, Tempo, and Argo
-CD tunnels, use `make cluster-access-start` instead of maintaining individual forwarding commands.
+For the standard private PostgreSQL, OpenSearch, RustFS, Grafana, Prometheus, Loki, Tempo,
+Pyroscope, and Argo CD tunnels, use `make cluster-access-start` instead of maintaining individual
+forwarding commands.
+
+Profiler activation is image-compatible during GitOps reconciliation: the backend image entrypoint
+loads its bundled Java agent only when the existing manifest supplies `PYROSCOPE_SERVER_ADDRESS`,
+while the new Python image enables the cluster-local profiler from its production default. The old
+`v1.2.0` images ignore the Java settings and receive no unknown Python settings, so merging the
+infrastructure cannot break workloads before the versioned image release completes.
 See [`docs/operations.md`](../../docs/operations.md) for endpoint inventory, DBeaver setup,
 credential handling, and the incident workflow.
 
@@ -208,8 +218,8 @@ dedicated OpenAI project to a hard $20 pilot budget before release; the in-memor
 defense-in-depth limit and resets with the pod.
 
 The Agent NetworkPolicy allows ingress only from Traefik and Prometheus. Egress is limited to
-cluster DNS, Java MCP on port 8080, Alloy OTLP/HTTP on port 4318, and public non-private IPv4
-destinations on HTTPS port 443. The pod runs as UID/GID 10001 with no service-account token, no
+cluster DNS, Java MCP on port 8080, Alloy OTLP/HTTP on port 4318, Pyroscope on port 4040, and public
+non-private IPv4 destinations on HTTPS port 443. The pod runs as UID/GID 10001 with no service-account token, no
 privilege escalation or Linux capabilities, RuntimeDefault seccomp, a read-only root filesystem,
 and a 16 MiB memory-backed `/tmp`.
 

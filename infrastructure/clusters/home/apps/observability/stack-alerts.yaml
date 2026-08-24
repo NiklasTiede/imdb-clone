@@ -25,6 +25,14 @@ spec:
           annotations:
             summary: Tempo is unavailable
             description: Prometheus has not observed a healthy Tempo target for ten minutes.
+        - alert: PyroscopeUnavailable
+          expr: absent(up{namespace="observability", service="pyroscope"} == 1)
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Pyroscope is unavailable
+            description: Prometheus has not observed a healthy Pyroscope target for ten minutes.
         - alert: AlloyUnavailable
           expr: absent(up{namespace="observability", service="alloy"} == 1)
           for: 10m

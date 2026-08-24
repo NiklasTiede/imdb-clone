@@ -79,8 +79,8 @@ all part of the repository.
 - S3-compatible media storage through RustFS for movie posters, backdrops, and profile images.
 - Repeatable local development with Docker Compose, lightweight seed data, and explicit search reindexing.
 - Self-hosted k3s deployment with Argo CD, Traefik ingress, cert-manager HTTPS, and encrypted GitOps secrets.
-- Production observability with Prometheus metrics, Loki logs, Tempo traces, Grafana dashboards,
-  Kubernetes Events, privacy-safe agent telemetry, and Python-to-Java trace propagation.
+- Production observability with Prometheus metrics, Loki logs, Tempo traces, continuous Java/Python
+  profiles in Pyroscope, Grafana drilldowns, Kubernetes Events, and privacy-safe trace propagation.
 - Left-shift build safeguards across Java, TypeScript, architecture, API contracts, tests, and dependency resolution.
 - Version-gated release workflow that builds Docker images and updates Kubernetes image digests from one `VERSION` file.
 
@@ -142,9 +142,10 @@ flowchart LR
     prometheus[("Prometheus<br/>metrics · 7 days")]
     loki[("Loki<br/>logs · 7 days")]
     tempo[("Tempo<br/>traces · 3 days")]
+    pyroscope[("Pyroscope<br/>CPU + allocation profiles")]
   end
 
-  grafana["Grafana<br/>dashboards + Explore"]
+  grafana["Grafana<br/>dashboards + Drilldown"]
 
   workloads -- "pod logs" --> alloy
   events -- "event stream" --> alloy
@@ -152,6 +153,8 @@ flowchart LR
   traefik -- "privacy-filtered logs" --> alloy
   agentTelemetry -- "OTLP traces" --> alloy
   backendTelemetry -- "OTLP traces" --> alloy
+  agentTelemetry -- "CPU + allocation samples" --> pyroscope
+  backendTelemetry -- "JFR CPU + allocation + lock samples" --> pyroscope
   alloy -- "logs" --> loki
   alloy -- "traces" --> tempo
   agentTelemetry -- "bounded metrics" --> prometheus
@@ -159,12 +162,13 @@ flowchart LR
   prometheus --> grafana
   loki --> grafana
   tempo --> grafana
+  pyroscope --> grafana
 ```
 
 Alloy collects logs and privacy-safe Python/Java traces without storing them itself. Prometheus
 scrapes bounded application and cluster metrics. Grafana provides the shared query and dashboard
-surface over Prometheus, Loki, and Tempo; the detailed retention, privacy, and access contracts are
-documented in the [observability guide](./infrastructure/monitoring/README.md).
+surface over Prometheus, Loki, Tempo, and Pyroscope; the detailed retention, privacy, and access
+contracts are documented in the [observability guide](./infrastructure/monitoring/README.md).
 
 Delivery pipeline:
 
@@ -217,7 +221,7 @@ metrics, log, trace, and Argo CD access is documented in the [production operati
 | Testing | JUnit, Spring Boot Test, Testcontainers, jqwik, JaCoCo, Vitest, React Testing Library, Playwright |
 | Build safety | Error Prone, NullAway/JSpecify, strict TypeScript, typed ESLint, API-contract drift checks |
 | Delivery | Docker, GitHub Actions, k3s, Argo CD, Traefik, cert-manager, SOPS/age |
-| Observability | OpenTelemetry, Grafana Alloy, Prometheus, Loki, Tempo, Grafana |
+| Observability | OpenTelemetry, Grafana Alloy, Prometheus, Loki, Tempo, Pyroscope, Grafana |
 
 ## Features
 
@@ -340,7 +344,7 @@ cd frontend && yarn lint               # type-aware frontend linting
 cd frontend && yarn test               # frontend unit and component tests
 cd frontend && yarn build              # frontend production build
 make verify-agent                      # Python formatting, types, architecture, tests, and deterministic evals
-make verify-observability-charts       # render Loki, Tempo, and Alloy and validate Alloy configuration
+make verify-observability-charts       # render Loki, Tempo, Pyroscope, and Alloy; validate Alloy configuration
 make verify-kubernetes-schema          # render and validate the complete home-cluster GitOps tree
 ```
 

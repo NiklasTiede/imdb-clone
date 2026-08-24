@@ -169,3 +169,50 @@ def test_production_tracing_requires_cluster_local_alloy() -> None:
             otel_tracing_enabled=True,
             otel_exporter_otlp_traces_endpoint="https://telemetry.example/v1/traces",
         )
+
+
+def test_profiling_requires_a_valid_pyroscope_server_address() -> None:
+    with pytest.raises(ValueError, match="valid HTTP Pyroscope server address"):
+        Settings(
+            profiling_enabled=True,
+            profiling_server_address="http://localhost:4040/ingest?token=private",
+        )
+
+
+def test_production_profiling_requires_cluster_local_pyroscope() -> None:
+    with pytest.raises(ValueError, match="cluster-local Pyroscope endpoint"):
+        Settings(
+            environment=DeploymentEnvironment.PRODUCTION,
+            secrets_directory=Path("/run/secrets/movie-concierge"),
+            mcp_url="http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp",
+            allowed_hosts=["imdb-clone.the-coding-lab.com"],
+            profiling_enabled=True,
+            profiling_server_address="https://profiles.example",
+        )
+
+
+def test_production_enables_private_profiling_by_default() -> None:
+    settings = Settings(
+        environment=DeploymentEnvironment.PRODUCTION,
+        secrets_directory=Path("/run/secrets/movie-concierge"),
+        mcp_url="http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp",
+        allowed_hosts=["imdb-clone.the-coding-lab.com"],
+    )
+
+    assert settings.profiling_active is True
+    assert settings.effective_profiling_server_address == (
+        "http://pyroscope.observability.svc.cluster.local:4040"
+    )
+
+
+def test_production_profiling_can_be_disabled_explicitly() -> None:
+    settings = Settings(
+        environment=DeploymentEnvironment.PRODUCTION,
+        secrets_directory=Path("/run/secrets/movie-concierge"),
+        mcp_url="http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp",
+        allowed_hosts=["imdb-clone.the-coding-lab.com"],
+        profiling_enabled=False,
+    )
+
+    assert settings.profiling_active is False
+    assert settings.effective_profiling_server_address is None

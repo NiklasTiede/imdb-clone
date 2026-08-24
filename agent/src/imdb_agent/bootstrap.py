@@ -11,6 +11,7 @@ from imdb_agent.adapters.http_observability import (
 )
 from imdb_agent.adapters.logging import configure_logging
 from imdb_agent.adapters.memory import InMemoryConversationStore, InMemoryCostLedger
+from imdb_agent.adapters.profiling import configure_profiling
 from imdb_agent.adapters.pydantic_ai_runner import PydanticAIConciergeRunner
 from imdb_agent.adapters.telemetry import configure_telemetry
 from imdb_agent.concierge.service import ConciergeService
@@ -28,7 +29,11 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
 
     resolved_settings = settings or load_settings()
     configure_logging(json_output=resolved_settings.json_logs)
-    telemetry = configure_telemetry(resolved_settings)
+    profiling = configure_profiling(resolved_settings)
+    telemetry = configure_telemetry(
+        resolved_settings,
+        profiling_enabled=profiling.enabled,
+    )
     resolved_runner = runner or _create_runner(resolved_settings)
     http_metrics = create_http_metrics(resolved_settings)
     observer = create_agent_metrics(http_metrics.registry, resolved_settings)
@@ -53,6 +58,8 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
     )
     install_http_observability(app, resolved_settings, http_metrics)
     telemetry.instrument_app(app)
+    if profiling.enabled:
+        atexit.register(profiling.shutdown)
     if telemetry.enabled:
         atexit.register(telemetry.shutdown)
     return app

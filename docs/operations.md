@@ -1,8 +1,8 @@
 # Production Operations
 
 This runbook is the operator entry point for the home k3s cluster. Public application traffic uses
-HTTPS ingress. Databases, search, object-storage administration, metrics APIs, logs, traces, and
-Argo CD remain private and are reached through SSH-backed Kubernetes port-forwards.
+HTTPS ingress. Databases, search, object-storage administration, metrics APIs, logs, traces,
+profiles, and Argo CD remain private and are reached through SSH-backed Kubernetes port-forwards.
 
 ## Public URLs
 
@@ -53,13 +53,14 @@ directory. It does not write credentials to disk or print them.
 | Prometheus | `http://localhost:19090` | PromQL and HTTP API |
 | Loki | `http://localhost:13100` | Log HTTP API through the Loki gateway |
 | Tempo | `http://localhost:13200` | Trace HTTP API |
+| Pyroscope | `http://localhost:14040` | Profile HTTP API |
 | Argo CD | `https://localhost:18443` | Private Argo CD API and UI |
 
 Use `make cluster-copy-grafana-admin-password` for the private Grafana administrator login. The
 script copies the value to the macOS clipboard without printing or storing it.
 
-These services remain `ClusterIP`; do not add public database, OpenSearch, Loki, Tempo, Prometheus,
-or RustFS-console ingresses.
+These services remain `ClusterIP`; do not add public database, OpenSearch, Loki, Tempo, Pyroscope,
+Prometheus, or RustFS-console ingresses.
 
 ## DBeaver PostgreSQL Connection
 
@@ -96,9 +97,10 @@ make cluster-copy-rustfs-secret-key
 The console is enabled inside the cluster but has no ingress. Public traffic continues to reach
 only the dedicated movie-media service on port `9000`.
 
-## Logs, Metrics, And Traces
+## Logs, Metrics, Traces, And Profiles
 
-Use Grafana Explore through `http://localhost:13000` for operator work:
+Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views through
+`http://localhost:13000` for operator work:
 
 - Prometheus contains bounded application and cluster metrics.
 - Loki contains pod logs from every namespace, Kubernetes Events, and the node's k3s systemd
@@ -106,6 +108,12 @@ Use Grafana Explore through `http://localhost:13000` for operator work:
 - Traefik emits JSON operational and access logs without client addresses, request paths, query
   parameters, request lines, or headers.
 - Tempo contains OpenTelemetry traces with three-day retention.
+- Tempo TraceQL metrics and Traces Drilldown are backed by its local-blocks processor.
+- Pyroscope contains continuously sampled Python CPU/allocation profiles and Java JFR
+  CPU/allocation/lock profiles. Allocation profiles show allocation hot paths, not the amount of
+  memory still retained; use Prometheus process/JVM memory metrics for current memory usage.
+- A Tempo trace can open the CPU profile for the same service and time window. Python root spans
+  additionally carry Pyroscope profile correlation IDs for span-level analysis.
 - The `IMDb Clone / Cluster Logs` dashboard is the starting point for workload failures.
 - The `IMDb Clone / Movie Concierge` dashboard remains the starting point for agent cost, latency,
   tool, and failure metrics.
@@ -121,6 +129,7 @@ Useful read-only checks after starting the tunnels:
 curl -fsS http://localhost:19090/-/ready
 curl -fsS http://localhost:13100/ready
 curl -fsS http://localhost:13200/ready
+curl -fsS http://localhost:14040/ready
 curl -fsS http://localhost:19200/_cluster/health
 ```
 
@@ -138,8 +147,10 @@ ssh robotnik@um560 'kubectl get applications -n argocd'
 3. Filter Loki by namespace, application, and the time window.
 4. Follow a `trace_id` from a structured log entry into Tempo.
 5. Inspect the FastAPI, Pydantic AI model/tool, and Java MCP spans without exposing content.
-6. Confirm Prometheus alert and resource trends before changing the workload.
-7. Apply fixes through Git and Argo CD. Do not mutate a stateful production resource directly.
+6. Open Profiles Drilldown for the affected service and time window; compare CPU, allocation, and
+   Java lock hot paths with the trace latency.
+7. Confirm Prometheus alert and resource trends before changing the workload.
+8. Apply fixes through Git and Argo CD. Do not mutate a stateful production resource directly.
 
 Alert rules are evaluated by Prometheus. Alertmanager notification delivery is still intentionally
 disabled; choosing and securing an email, Slack, or another notification destination is a separate

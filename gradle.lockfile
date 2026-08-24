@@ -121,6 +121,7 @@ io.prometheus:prometheus-metrics-exposition-formats:1.5.1=productionRuntimeClass
 io.prometheus:prometheus-metrics-exposition-textformats:1.5.1=productionRuntimeClasspath,runtimeClasspath,testRuntimeClasspath
 io.prometheus:prometheus-metrics-model:1.5.1=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 io.prometheus:prometheus-metrics-tracer-common:1.5.1=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
+io.pyroscope:agent:2.9.1=pyroscopeAgent
 io.swagger.core.v3:swagger-annotations-jakarta:2.2.47=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 io.swagger.core.v3:swagger-core-jakarta:2.2.47=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 io.swagger.core.v3:swagger-models-jakarta:2.2.47=compileClasspath,productionRuntimeClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath

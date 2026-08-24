@@ -42,6 +42,14 @@ repositories {
 	mavenCentral()
 }
 
+configurations {
+	pyroscopeAgent {
+		canBeConsumed = false
+		canBeResolved = true
+		transitive = false
+	}
+}
+
 dependencyLocking {
 	lockAllConfigurations()
 	lockMode = LockMode.STRICT
@@ -68,6 +76,8 @@ spotless {
 }
 
 dependencies {
+	pyroscopeAgent 'io.pyroscope:agent:2.9.1'
+
 	errorprone 'com.google.errorprone:error_prone_core:2.50.0'
 	errorprone 'com.uber.nullaway:nullaway:0.13.7'
 	compileOnly 'org.jspecify:jspecify:1.0.0'
@@ -150,6 +160,12 @@ dependencies {
 	testImplementation "org.opensearch:opensearch-testcontainers:${opensearchTestcontainersVersion}"
 
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.register('copyPyroscopeAgent', Copy) {
+	from configurations.pyroscopeAgent
+	into layout.buildDirectory.dir('pyroscope')
+	rename { 'pyroscope.jar' }
 }
 
 tasks.named('compileJava') {

@@ -20,6 +20,8 @@ dependencies = [
     "pydantic>=2.12,<3",
     "pydantic-ai[openai-realtime]==2.31.0",
     "pydantic-settings>=2.12,<3",
+    "pyroscope-io==1.2.1",
+    "pyroscope-otel==1.1.0",
     "structlog>=25.5,<26",
     "uvicorn[standard]>=0.40,<1",
 ]

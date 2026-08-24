@@ -54,6 +54,41 @@ render_chart \
   2.2.4
 
 render_chart \
+  infrastructure/clusters/home/apps/pyroscope.yaml \
+  pyroscope \
+  pyroscope \
+  https://grafana.github.io/helm-charts \
+  1.20.3
+
+ruby -ryaml -e '
+  documents = YAML.load_stream(File.read(ARGV.fetch(0))).compact
+  stateful_set = documents.find do |document|
+    document["kind"] == "StatefulSet" && document.dig("metadata", "name") == "pyroscope"
+  end
+  raise "Pyroscope StatefulSet missing" if stateful_set.nil?
+  container = stateful_set.dig("spec", "template", "spec", "containers").find do |candidate|
+    candidate["name"] == "pyroscope"
+  end
+  raise "Pyroscope resource limits missing" unless container.dig("resources", "limits", "memory") == "1Gi"
+  claims = stateful_set.dig("spec", "volumeClaimTemplates") || []
+  data_claim = claims.find { |claim| claim.dig("metadata", "name") == "data" }
+  raise "Pyroscope persistent data volume missing" if data_claim.nil?
+  raise "Pyroscope storage drifted" unless data_claim.dig("spec", "resources", "requests", "storage") == "10Gi"
+  service = documents.find do |document|
+    document["kind"] == "Service" && document.dig("metadata", "name") == "pyroscope"
+  end
+  raise "private Pyroscope service missing" unless service&.dig("spec", "type") == "ClusterIP"
+  monitor = documents.find do |document|
+    document["kind"] == "ServiceMonitor" && document.dig("metadata", "name") == "pyroscope"
+  end
+  raise "Pyroscope ServiceMonitor missing" if monitor.nil?
+  embedded_alloy = documents.any? do |document|
+    document.dig("metadata", "name")&.start_with?("pyroscope-alloy")
+  end
+  raise "Pyroscope must not deploy a duplicate Alloy" if embedded_alloy
+' "${verification_dir}/pyroscope-rendered.yaml"
+
+render_chart \
   infrastructure/clusters/home/apps/alloy.yaml \
   alloy \
   alloy \

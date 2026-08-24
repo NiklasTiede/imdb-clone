@@ -154,8 +154,20 @@ addresses, ports, and user agents with bounded route metadata. Agent logs add `t
 `span_id` only while a valid span is active, allowing Grafana to move between Loki logs and Tempo
 traces.
 
+Production also enables continuous profiling against the private Pyroscope service. The Python
+runtime samples CPU at 50 Hz and allocations at an average 512 KiB interval, uploading every 15
+seconds. It does not attach PID, thread identity, prompts, request data, conversation identifiers,
+or tool content. `pyroscope-otel` associates root OpenTelemetry spans with profile samples so
+Grafana can move from a trace to the relevant CPU profile. Profiling is disabled by default outside
+production and initialization/export failures do not break concierge requests. Production defaults
+to the cluster-local endpoint so the manifest stays compatible with the previously published agent
+image during the two-step image release; `IMDB_AGENT_PROFILING_ENABLED=false` is the kill switch.
+
+Allocation profiles show which stacks allocate memory; they are not a retained-heap measurement.
+Use Prometheus process metrics to answer how much memory the pod currently consumes.
+
 The agent samples all traces during this low-volume pilot. Tempo retains them for three days and
-Loki retains structured logs for seven days. Both stores and their APIs remain cluster-internal;
+Loki retains structured logs for seven days. Tempo, Loki, and Pyroscope remain cluster-internal;
 see [`docs/operations.md`](../docs/operations.md) for private operator access.
 
 Validate the complete production contract without deploying:

@@ -17,6 +17,7 @@ LOCAL_OPENAI_SECRETS_FILE = (
 )
 OPENAI_API_KEY_SECRET_NAME = "openai-api-key"  # noqa: S105 - mounted filename, not a key
 MCP_BEARER_TOKEN_SECRET_NAME = "mcp-bearer-token"  # noqa: S105 - mounted filename
+PRODUCTION_PYROSCOPE_SERVER_ADDRESS = "http://pyroscope.observability.svc.cluster.local:4040"
 
 
 class DeploymentEnvironment(StrEnum):
@@ -82,14 +83,41 @@ class Settings(BaseSettings):
     otel_exporter_otlp_traces_endpoint: str | None = None
     otel_export_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
     otel_trace_sample_ratio: float = Field(default=1.0, ge=0, le=1)
+    profiling_enabled: bool | None = None
+    profiling_server_address: str | None = None
+    profiling_sample_rate: int = Field(default=50, ge=10, le=100)
+    profiling_memory_enabled: bool = True
+    profiling_memory_sample_size_bytes: int = Field(
+        default=512 * 1_024,
+        ge=128 * 1_024,
+        le=8 * 1_024 * 1_024,
+    )
+    profiling_upload_interval_seconds: int = Field(default=15, ge=10, le=60)
 
     @property
     def json_logs(self) -> bool:
         return self.environment is not DeploymentEnvironment.LOCAL
 
+    @property
+    def profiling_active(self) -> bool:
+        if self.profiling_enabled is not None:
+            return self.profiling_enabled
+        return self.environment is DeploymentEnvironment.PRODUCTION
+
+    @property
+    def effective_profiling_server_address(self) -> str | None:
+        if not self.profiling_active:
+            return None
+        if self.profiling_server_address is not None:
+            return self.profiling_server_address
+        if self.environment is DeploymentEnvironment.PRODUCTION:
+            return PRODUCTION_PYROSCOPE_SERVER_ADDRESS
+        return None
+
     @model_validator(mode="after")
     def validate_production_boundaries(self) -> Settings:
         self._validate_otel_endpoint()
+        self._validate_profiling_endpoint()
         if self.environment is not DeploymentEnvironment.PRODUCTION:
             return self
         if self.model_backend is not ModelBackend.OPENAI:
@@ -117,6 +145,28 @@ class Settings(BaseSettings):
             "alloy.observability.svc.cluster.local"
         ):
             raise ValueError("production OpenTelemetry must use the cluster-local Alloy endpoint")
+
+    def _validate_profiling_endpoint(self) -> None:
+        endpoint = self.effective_profiling_server_address
+        if not self.profiling_active:
+            return
+        if endpoint is None:
+            raise ValueError("profiling requires a Pyroscope server address")
+        parsed = urlsplit(endpoint)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or parsed.hostname is None
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.query
+            or parsed.fragment
+            or parsed.path not in {"", "/"}
+        ):
+            raise ValueError("profiling requires a valid HTTP Pyroscope server address")
+        if self.environment is DeploymentEnvironment.PRODUCTION and (
+            parsed.hostname != "pyroscope.observability.svc.cluster.local" or parsed.port != 4040
+        ):
+            raise ValueError("production profiling must use the cluster-local Pyroscope endpoint")
 
 
 def load_settings(env_file: Path | None = None) -> Settings:
