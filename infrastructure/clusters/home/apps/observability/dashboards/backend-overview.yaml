@@ -28,11 +28,139 @@ data:
       },
       "editable": true,
       "fiscalYearStartMonth": 0,
-      "graphTooltip": 0,
+      "graphTooltip": 1,
       "id": null,
-      "links": [],
+      "links": [
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Operations",
+          "tooltip": "Open Operations with the current time range",
+          "type": "link",
+          "url": "/d/imdb-operations-overview/imdb-clone-operations-overview"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Backend",
+          "tooltip": "Open Backend with the current time range",
+          "type": "link",
+          "url": "/d/imdb-backend-overview/imdb-clone-backend"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Concierge",
+          "tooltip": "Open Concierge with the current time range",
+          "type": "link",
+          "url": "/d/imdb-agent-overview/imdb-clone-movie-concierge"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "PostgreSQL",
+          "tooltip": "Open PostgreSQL with the current time range",
+          "type": "link",
+          "url": "/d/imdb-postgresql-overview/postgresql"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Infrastructure",
+          "tooltip": "Open Infrastructure with the current time range",
+          "type": "link",
+          "url": "/d/imdb-system-overview/imdb-clone-system"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Logs",
+          "tooltip": "Open Logs with the current time range",
+          "type": "link",
+          "url": "/d/imdb-clone-cluster-logs/cluster-logs"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Traces",
+          "tooltip": "Open Traces with the current time range",
+          "type": "link",
+          "url": "/a/grafana-exploretraces-app/"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Profiles",
+          "tooltip": "Open Profiles with the current time range",
+          "type": "link",
+          "url": "/a/grafana-pyroscope-app/explore"
+        }
+      ],
       "liveNow": false,
       "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": [
+
+          ],
+          "title": "Reliability",
+          "type": "row"
+        },
         {
           "datasource": {
             "type": "prometheus",
@@ -43,34 +171,30 @@ data:
               "color": {
                 "mode": "thresholds"
               },
-              "decimals": 2,
-              "mappings": [],
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "yellow",
-                    "value": 25
-                  },
-                  {
-                    "color": "red",
-                    "value": 100
                   }
                 ]
               },
-              "unit": "reqps"
+              "unit": "reqps",
+              "decimals": 2
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 0
+            "y": 1
           },
           "id": 1,
           "options": {
@@ -89,7 +213,6 @@ data:
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -97,15 +220,15 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\"}[$__rate_interval]))",
-              "instant": false,
-              "legendFormat": "requests",
+              "expr": "sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__rate_interval])) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
           "title": "Request Rate",
-          "type": "stat"
+          "type": "stat",
+          "description": "User-facing backend requests per second in the selected evaluation window."
         },
         {
           "datasource": {
@@ -117,8 +240,9 @@ data:
               "color": {
                 "mode": "thresholds"
               },
-              "decimals": 2,
-              "mappings": [],
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -128,23 +252,28 @@ data:
                   },
                   {
                     "color": "yellow",
-                    "value": 0.1
+                    "value": 1
                   },
                   {
                     "color": "red",
-                    "value": 1
+                    "value": 5
                   }
                 ]
               },
-              "unit": "reqps"
+              "unit": "percent",
+              "decimals": 2,
+              "min": 0,
+              "max": 100
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 0
+            "y": 1
           },
           "id": 2,
           "options": {
@@ -163,7 +292,6 @@ data:
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -171,15 +299,15 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", status=~\"5..\"}[$__rate_interval]))",
-              "instant": false,
-              "legendFormat": "5xx",
+              "expr": "100 * (sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\", status=~\"5..\"}[$__rate_interval])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__rate_interval])), 0.001)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "5xx Rate",
-          "type": "stat"
+          "title": "5xx Error Rate",
+          "type": "stat",
+          "description": "Share of user-facing requests returning HTTP 5xx; zero is shown when no errors occur."
         },
         {
           "datasource": {
@@ -191,8 +319,9 @@ data:
               "color": {
                 "mode": "thresholds"
               },
-              "decimals": 0,
-              "mappings": [],
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -202,7 +331,7 @@ data:
                   },
                   {
                     "color": "yellow",
-                    "value": 250
+                    "value": 500
                   },
                   {
                     "color": "red",
@@ -210,15 +339,18 @@ data:
                   }
                 ]
               },
-              "unit": "ms"
+              "unit": "ms",
+              "decimals": 0
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 0
+            "y": 1
           },
           "id": 3,
           "options": {
@@ -237,7 +369,6 @@ data:
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -245,15 +376,15 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "1000 * sum(rate(http_server_requests_seconds_sum{job=\"imdb-clone-backend\", uri!=\"/**\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\"}[$__rate_interval]))",
-              "instant": false,
-              "legendFormat": "avg",
+              "expr": "(1000 * histogram_quantile(0.95, sum by (le) (increase(http_server_requests_seconds_bucket{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__range]))) and on() (sum(increase(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__range])) > 0)) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Avg Latency",
-          "type": "stat"
+          "title": "Request p95",
+          "type": "stat",
+          "description": "95th percentile latency across user-facing backend requests in the selected dashboard range; zero means the range has no requests."
         },
         {
           "datasource": {
@@ -265,8 +396,9 @@ data:
               "color": {
                 "mode": "thresholds"
               },
-              "decimals": 0,
-              "mappings": [],
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -284,15 +416,18 @@ data:
                   }
                 ]
               },
-              "unit": "none"
+              "unit": "none",
+              "decimals": 0
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 0
+            "y": 1
           },
           "id": 4,
           "options": {
@@ -311,7 +446,6 @@ data:
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -319,15 +453,30 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"imdb-clone\", pod=~\"imdb-clone-backend-.*\", container=\"backend\"}[$__range]))",
-              "instant": false,
-              "legendFormat": "restarts",
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"imdb-clone\", pod=~\"imdb-clone-backend-.*\", container=\"backend\"}[$__range])) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
           "title": "Backend Restarts",
-          "type": "stat"
+          "type": "stat",
+          "description": "Backend container restarts during the selected dashboard range."
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 5
+          },
+          "id": 101,
+          "panels": [
+
+          ],
+          "title": "HTTP",
+          "type": "row"
         },
         {
           "datasource": {
@@ -339,58 +488,17 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
               "unit": "reqps"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 4
+            "y": 6
           },
           "id": 5,
           "options": {
@@ -415,7 +523,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum by (method, uri, status) (rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\"}[$__rate_interval]))",
+              "expr": "sum by (method, uri, status) (rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__rate_interval]))",
               "legendFormat": "{{method}} {{uri}} {{status}}",
               "range": true,
               "refId": "A"
@@ -434,58 +542,17 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
               "unit": "ms"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 4
+            "y": 6
           },
           "id": 6,
           "options": {
@@ -510,8 +577,8 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "1000 * sum by (uri) (rate(http_server_requests_seconds_sum{job=\"imdb-clone-backend\", uri!=\"/**\"}[$__rate_interval])) / sum by (uri) (rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\"}[$__rate_interval]))",
-              "legendFormat": "{{uri}} avg",
+              "expr": "1000 * sum by (uri) (rate(http_server_requests_seconds_sum{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__rate_interval])) / clamp_min(sum by (uri) (rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__rate_interval])), 0.001)",
+              "legendFormat": "avg {{uri}}",
               "range": true,
               "refId": "A"
             },
@@ -521,13 +588,13 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "1000 * max by (uri) (http_server_requests_seconds_max{job=\"imdb-clone-backend\", uri!=\"/**\"})",
-              "legendFormat": "{{uri}} max",
+              "expr": "1000 * max by (uri) (http_server_requests_seconds_max{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"})",
+              "legendFormat": "max {{uri}}",
               "range": true,
               "refId": "B"
             }
           ],
-          "title": "HTTP Latency By Route",
+          "title": "Average And Maximum Latency By Route",
           "type": "timeseries"
         },
         {
@@ -540,58 +607,17 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
               "unit": "ms"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 12
+            "y": 14
           },
           "id": 11,
           "options": {
@@ -616,8 +642,8 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "1000 * histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[5m])))",
-              "legendFormat": "{{uri}} p95",
+              "expr": "1000 * histogram_quantile(0.95, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__rate_interval]))) and on(uri) (sum by (uri) (rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__rate_interval])) > 0)",
+              "legendFormat": "p95 {{uri}}",
               "range": true,
               "refId": "A"
             },
@@ -627,13 +653,13 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "1000 * histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[5m])))",
-              "legendFormat": "{{uri}} p99",
+              "expr": "1000 * histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__rate_interval]))) and on(uri) (sum by (uri) (rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__rate_interval])) > 0)",
+              "legendFormat": "p99 {{uri}}",
               "range": true,
               "refId": "B"
             }
           ],
-          "title": "HTTP p95/p99 Latency By Route",
+          "title": "HTTP p95 And p99 Latency By Route",
           "type": "timeseries"
         },
         {
@@ -646,58 +672,17 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
               "unit": "reqps"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 12
+            "y": 14
           },
           "id": 12,
           "options": {
@@ -748,8 +733,9 @@ data:
                 },
                 "inspect": false
               },
-              "decimals": 1,
-              "mappings": [],
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -769,13 +755,15 @@ data:
               },
               "unit": "ms"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
-            "w": 12,
+            "w": 24,
             "x": 0,
-            "y": 20
+            "y": 22
           },
           "id": 13,
           "options": {
@@ -790,7 +778,6 @@ data:
             },
             "showHeader": true
           },
-          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -798,11 +785,11 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "topk(10, 1000 * sum by (uri) (increase(http_server_requests_seconds_sum{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__range])) / sum by (uri) (increase(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__range])))",
-              "format": "table",
-              "legendFormat": "{{uri}}",
+              "expr": "topk(10, (1000 * sum by (uri) (increase(http_server_requests_seconds_sum{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__range])) / clamp_min(sum by (uri) (increase(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__range])), 1)) and on(uri) (sum by (uri) (increase(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri!=\"/**\", uri!=\"UNKNOWN\"}[$__range])) > 0))",
+              "legendFormat": "{{namespace}}/{{pod}}",
               "range": false,
               "refId": "A",
+              "format": "table",
               "instant": true
             }
           ],
@@ -812,22 +799,33 @@ data:
               "id": "organize",
               "options": {
                 "excludeByName": {
-                  "Time": true,
-                  "__name__": true,
-                  "job": true
+                  "Time": true
                 },
                 "indexByName": {
-                  "uri": 0,
-                  "Value": 1
                 },
                 "renameByName": {
-                  "Value": "Avg latency",
-                  "uri": "Route"
+                  "Value": "Average latency"
                 }
               }
             }
           ],
-          "type": "table"
+          "type": "table",
+          "description": "Average latency for routes that received requests during the selected range; empty routes are removed instead of producing NaN."
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 30
+          },
+          "id": 102,
+          "panels": [
+
+          ],
+          "title": "Database",
+          "type": "row"
         },
         {
           "datasource": {
@@ -839,40 +837,9 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
+              "unit": "percentunit",
+              "min": 0,
+              "max": 1,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -889,17 +856,17 @@ data:
                     "value": 0.9
                   }
                 ]
-              },
-              "unit": "percentunit",
-              "decimals": 2
+              }
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
-            "x": 12,
-            "y": 20
+            "x": 0,
+            "y": 31
           },
           "id": 14,
           "options": {
@@ -924,14 +891,15 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "hikaricp_connections_active{job=\"imdb-clone-backend\"} / hikaricp_connections_max{job=\"imdb-clone-backend\"}",
-              "legendFormat": "active / max",
+              "expr": "sum(hikaricp_connections_active{job=\"imdb-clone-backend\"}) / clamp_min(sum(hikaricp_connections_max{job=\"imdb-clone-backend\"}), 1)",
+              "legendFormat": "active / capacity",
               "range": true,
               "refId": "A"
             }
           ],
           "title": "Database Pool Saturation",
-          "type": "timeseries"
+          "type": "timeseries",
+          "description": "Aggregate active connections divided by aggregate pool capacity across current backend replicas."
         },
         {
           "datasource": {
@@ -943,58 +911,108 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+              "unit": "short"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 31
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
               },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
+              "editorMode": "code",
+              "expr": "sum(hikaricp_connections_active{job=\"imdb-clone-backend\"}) or vector(0)",
+              "legendFormat": "active",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(hikaricp_connections_idle{job=\"imdb-clone-backend\"}) or vector(0)",
+              "legendFormat": "idle",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(hikaricp_connections_pending{job=\"imdb-clone-backend\"}) or vector(0)",
+              "legendFormat": "pending",
+              "range": true,
+              "refId": "C"
+            }
+          ],
+          "title": "Database Pool Connections",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 39
+          },
+          "id": 103,
+          "panels": [
+
+          ],
+          "title": "Runtime",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
               },
               "unit": "bytes"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 28
+            "y": 40
           },
           "id": 7,
           "options": {
@@ -1038,282 +1056,17 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "decimals": 0,
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 28
-          },
-          "id": 8,
-          "options": {
-            "legend": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "expr": "hikaricp_connections_active{job=\"imdb-clone-backend\"}",
-              "legendFormat": "active",
-              "range": true,
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "expr": "hikaricp_connections_idle{job=\"imdb-clone-backend\"}",
-              "legendFormat": "idle",
-              "range": true,
-              "refId": "B"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "expr": "hikaricp_connections_pending{job=\"imdb-clone-backend\"}",
-              "legendFormat": "pending",
-              "range": true,
-              "refId": "C"
-            }
-          ],
-          "title": "Database Pool Connections",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 36
-          },
-          "id": 9,
-          "options": {
-            "legend": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "expr": "process_cpu_usage{job=\"imdb-clone-backend\"}",
-              "legendFormat": "process",
-              "range": true,
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "expr": "system_cpu_usage{job=\"imdb-clone-backend\"}",
-              "legendFormat": "system",
-              "range": true,
-              "refId": "B"
-            }
-          ],
-          "title": "Backend JVM CPU",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
               "unit": "bytes"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 36
+            "y": 40
           },
           "id": 10,
           "options": {
@@ -1338,8 +1091,8 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "container_memory_working_set_bytes{namespace=\"imdb-clone\", pod=~\"imdb-clone-backend-.*\", container=\"backend\"}",
-              "legendFormat": "container memory",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"imdb-clone\", pod=~\"imdb-clone-backend-.*\", container=\"backend\"})",
+              "legendFormat": "container working set",
               "range": true,
               "refId": "A"
             },
@@ -1350,7 +1103,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(jvm_memory_used_bytes{job=\"imdb-clone-backend\", area=\"heap\"})",
-              "legendFormat": "jvm heap",
+              "legendFormat": "JVM heap",
               "range": true,
               "refId": "B"
             }
@@ -1366,36 +1119,100 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "thresholds"
+                "mode": "palette-classic"
               },
-              "decimals": 2,
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "yellow",
-                    "value": 0.1
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
+              "unit": "percentunit",
+              "min": 0
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 48
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(process_cpu_usage{job=\"imdb-clone-backend\"})",
+              "legendFormat": "backend process",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "max(system_cpu_usage{job=\"imdb-clone-backend\"})",
+              "legendFormat": "node",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Backend CPU",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 56
+          },
+          "id": 104,
+          "panels": [
+
+          ],
+          "title": "Security And Guardrails",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
               },
               "unit": "reqps"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 6,
             "w": 12,
             "x": 0,
-            "y": 44
+            "y": 57
           },
           "id": 15,
           "options": {
@@ -1420,8 +1237,8 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum by (rule) (rate(imdb_clone_rate_limit_rejections_total{job=\"imdb-clone-backend\"}[$__rate_interval]))",
-              "legendFormat": "{{rule}}",
+              "expr": "sum(rate(imdb_clone_rate_limit_rejections_total{job=\"imdb-clone-backend\"}[$__rate_interval])) or vector(0)",
+              "legendFormat": "all rejections",
               "range": true,
               "refId": "A"
             }
@@ -1437,36 +1254,19 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "thresholds"
-              },
-              "decimals": 2,
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "yellow",
-                    "value": 0.1
-                  },
-                  {
-                    "color": "red",
-                    "value": 1
-                  }
-                ]
+                "mode": "palette-classic"
               },
               "unit": "reqps"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 6,
             "w": 12,
             "x": 12,
-            "y": 44
+            "y": 57
           },
           "id": 16,
           "options": {
@@ -1491,8 +1291,8 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri=\"/api/auth/login\", status=\"401\"}[$__rate_interval]))",
-              "legendFormat": "password login failures",
+              "expr": "sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri=\"/api/auth/login\", status=\"401\"}[$__rate_interval])) or vector(0)",
+              "legendFormat": "401 login responses",
               "range": true,
               "refId": "A"
             }
@@ -1502,23 +1302,26 @@ data:
         }
       ],
       "refresh": "30s",
-      "schemaVersion": 39,
+      "schemaVersion": 42,
       "tags": [
         "imdb-clone",
         "backend",
         "spring-boot"
       ],
       "templating": {
-        "list": []
+        "list": [
+
+        ]
       },
       "time": {
         "from": "now-6h",
         "to": "now"
       },
-      "timepicker": {},
+      "timepicker": {
+      },
       "timezone": "browser",
       "title": "IMDB Clone Backend",
       "uid": "imdb-backend-overview",
-      "version": 2,
+      "version": 1,
       "weekStart": ""
     }

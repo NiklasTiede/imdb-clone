@@ -226,8 +226,9 @@ privilege escalation or Linux capabilities, RuntimeDefault seccomp, a read-only 
 and a 16 MiB memory-backed `/tmp`.
 
 Prometheus scrapes `/metrics` through an internal ServiceMonitor. The Grafana sidecar loads the
-`IMDb Clone / Movie Concierge` dashboard. Prometheus alert rules are installed, but Alertmanager is
-intentionally disabled, so there is no notification delivery yet.
+`IMDB Clone – Operations Overview` operator landing page plus Backend, Movie Concierge,
+Infrastructure, Cluster Logs, and data-service drill-down dashboards. Prometheus alert rules are
+installed. Alertmanager remains intentionally disabled, so there is no notification delivery yet.
 
 Validate locally without touching the cluster:
 
