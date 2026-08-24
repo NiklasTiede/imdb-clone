@@ -11,8 +11,12 @@ from opentelemetry.instrumentation.fastapi import (  # pyright: ignore[reportMis
 )
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace import ReadableSpan, TracerProvider
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    SpanExporter,
+    SpanExportResult,
+)
 from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 from pydantic_ai import Agent
 from pydantic_ai.models.instrumented import InstrumentationSettings
@@ -21,6 +25,8 @@ from pyroscope.otel import (  # pyright: ignore[reportMissingTypeStubs]
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from fastapi import FastAPI
     from opentelemetry.trace import Span
 
@@ -29,6 +35,32 @@ if TYPE_CHECKING:
 
 _CONVERSATION_MESSAGE_PATH = re.compile(r"^/v1/conversations/[^/]+/messages$")
 _SAFE_STATIC_PATHS = frozenset({"/healthz", "/metrics", "/readyz", "/v1/conversations"})
+_PRIVATE_TRACE_ATTRIBUTE_KEYS = frozenset({"gen_ai.conversation.id"})
+
+
+class AttributeFilteringSpanExporter(SpanExporter):
+    """Remove private span attributes immediately before they leave the process."""
+
+    def __init__(
+        self,
+        delegate: SpanExporter,
+        *,
+        excluded_attribute_keys: frozenset[str],
+    ) -> None:
+        self._delegate = delegate
+        self._excluded_attribute_keys = excluded_attribute_keys
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        sanitized_spans = tuple(
+            _without_attributes(span, self._excluded_attribute_keys) for span in spans
+        )
+        return self._delegate.export(sanitized_spans)
+
+    def shutdown(self) -> None:
+        self._delegate.shutdown()
+
+    def force_flush(self, timeout_millis: int = 30_000) -> bool:
+        return self._delegate.force_flush(timeout_millis)
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,9 +113,12 @@ def configure_telemetry(
 
     provider: TracerProvider | None = None
     try:
-        exporter = OTLPSpanExporter(
-            endpoint=endpoint,
-            timeout=settings.otel_export_timeout_seconds,
+        exporter = AttributeFilteringSpanExporter(
+            OTLPSpanExporter(
+                endpoint=endpoint,
+                timeout=settings.otel_export_timeout_seconds,
+            ),
+            excluded_attribute_keys=_PRIVATE_TRACE_ATTRIBUTE_KEYS,
         )
         provider = TracerProvider(
             resource=Resource.create(
@@ -172,3 +207,30 @@ def privacy_safe_server_request_hook(span: Span, scope: dict[str, object]) -> No
     span.set_attribute("net.peer.port", 0)
     span.set_attribute("http.user_agent", "redacted")
     span.set_attribute("user_agent.original", "redacted")
+
+
+def _without_attributes(
+    span: ReadableSpan,
+    excluded_attribute_keys: frozenset[str],
+) -> ReadableSpan:
+    attributes = span.attributes
+    if attributes is None or excluded_attribute_keys.isdisjoint(attributes):
+        return span
+
+    safe_attributes = {
+        key: value for key, value in attributes.items() if key not in excluded_attribute_keys
+    }
+    return ReadableSpan(
+        name=span.name,
+        context=span.context,
+        parent=span.parent,
+        resource=span.resource,
+        attributes=safe_attributes,
+        events=span.events,
+        links=span.links,
+        kind=span.kind,
+        status=span.status,
+        start_time=span.start_time,
+        end_time=span.end_time,
+        instrumentation_scope=span.instrumentation_scope,
+    )
