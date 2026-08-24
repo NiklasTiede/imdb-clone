@@ -64,6 +64,18 @@ data:
           "icon": "external link",
           "includeVars": false,
           "keepTime": true,
+          "tags": [],
+          "targetBlank": false,
+          "title": "Frontend",
+          "tooltip": "Open Frontend with the current time range",
+          "type": "link",
+          "url": "/d/imdb-frontend-overview/imdb-clone-frontend"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
           "tags": [
 
           ],
@@ -1091,6 +1103,176 @@ data:
           "title": "PVC Usage Trend",
           "type": "timeseries",
           "description": "Historical kubelet-reported backing filesystem usage for the PostgreSQL local-path PVC."
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+          "id": 104,
+          "panels": [],
+          "title": "Contention And Maintenance",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Current movie_db sessions by PostgreSQL state. Idle-in-transaction sessions deserve attention even at low counts.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "short", "min": 0 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 33 },
+          "id": 14,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum by (state) (pg_stat_activity_count{job=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"})",
+              "legendFormat": "{{state}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Sessions By State",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Oldest transaction by state in movie_db. Long active or idle-in-transaction work can retain locks and delay vacuum.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "s", "min": 0 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 33 },
+          "id": 15,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "max by (state) (pg_stat_activity_max_tx_duration{job=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"})",
+              "legendFormat": "{{state}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Longest Transaction",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Locks currently held in movie_db, grouped by PostgreSQL lock mode.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "short", "min": 0 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 33 },
+          "id": 16,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum by (mode) (pg_locks_count{job=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"})",
+              "legendFormat": "{{mode}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Locks By Mode",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Temporary bytes and files created by movie_db queries. Sustained growth can indicate sorts or hashes exceeding work_mem.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "Bps", "min": 0 },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "temporary files/s" },
+                "properties": [
+                  { "id": "unit", "value": "ops" },
+                  { "id": "custom.axisPlacement", "value": "right" }
+                ]
+              }
+            ]
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 41 },
+          "id": 17,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(pg_stat_database_temp_bytes{job=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[$__rate_interval]))",
+              "legendFormat": "temporary bytes/s",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(pg_stat_database_temp_files{job=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[$__rate_interval]))",
+              "legendFormat": "temporary files/s",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Temporary Query Data",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Current write-ahead log footprint and segment count exported from PostgreSQL.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes", "min": 0 },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "segments" },
+                "properties": [
+                  { "id": "unit", "value": "short" },
+                  { "id": "custom.axisPlacement", "value": "right" }
+                ]
+              }
+            ]
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 41 },
+          "id": 18,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "max(pg_wal_size_bytes{job=\"imdb-clone-postgresql-metrics\"})",
+              "legendFormat": "WAL size",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "max(pg_wal_segments{job=\"imdb-clone-postgresql-metrics\"})",
+              "legendFormat": "segments",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "WAL Footprint",
+          "type": "timeseries"
         }
       ],
       "refresh": "30s",

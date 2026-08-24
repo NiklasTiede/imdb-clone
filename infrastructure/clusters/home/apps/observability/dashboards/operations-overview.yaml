@@ -64,6 +64,18 @@ data:
           "icon": "external link",
           "includeVars": false,
           "keepTime": true,
+          "tags": [],
+          "targetBlank": false,
+          "title": "Frontend",
+          "tooltip": "Open Frontend with the current time range",
+          "type": "link",
+          "url": "/d/imdb-frontend-overview/imdb-clone-frontend"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
           "tags": [
 
           ],
@@ -1122,11 +1134,85 @@ data:
         },
         {
           "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 },
+          "id": 105,
+          "panels": [],
+          "title": "Real User Experience",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Validated anonymous frontend signals received in the selected range. Zero can also mean no recent browser traffic.",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "decimals": 0, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }, "unit": "short" }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 11 },
+          "id": 26,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(increase(imdb_frontend_events_accepted_total[$__range])) or vector(0)", "legendFormat": "Value", "range": true, "refId": "A" }],
+          "title": "Frontend Signals",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Anonymous browser errors and unhandled promise rejections in the selected range.",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "decimals": 0, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] }, "unit": "short" }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 11 },
+          "id": 27,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(increase(imdb_frontend_browser_errors_total[$__range])) or vector(0)", "legendFormat": "Value", "range": true, "refId": "A" }],
+          "title": "Browser Errors",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "75th percentile Largest Contentful Paint; good is at or below 2.5 seconds.",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "decimals": 2, "mappings": [{ "options": { "-1": { "color": "text", "index": 0, "text": "No data" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 2.5 }, { "color": "red", "value": 4 }] }, "unit": "s" }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 11 },
+          "id": 28,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (increase(imdb_frontend_web_vital_duration_seconds_bucket{metric=\"lcp\"}[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }],
+          "title": "LCP p75",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "75th percentile Interaction to Next Paint; good is at or below 200 milliseconds.",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "decimals": 2, "mappings": [{ "options": { "-1": { "color": "text", "index": 0, "text": "No data" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.2 }, { "color": "red", "value": 0.5 }] }, "unit": "s" }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 11 },
+          "id": 29,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (increase(imdb_frontend_web_vital_duration_seconds_bucket{metric=\"inp\"}[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }],
+          "title": "INP p75",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "75th percentile Cumulative Layout Shift score; good is at or below 0.1.",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "decimals": 3, "mappings": [{ "options": { "-1": { "color": "text", "index": 0, "text": "No data" } }, "type": "value" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.1 }, { "color": "red", "value": 0.25 }] }, "unit": "short" }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 11 },
+          "id": 30,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (increase(imdb_frontend_web_vital_cls_score_bucket[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }],
+          "title": "CLS p75",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Share of browser-observed backend API calls ending in HTTP, network, or other failures.",
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "decimals": 2, "mappings": [], "max": 100, "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] }, "unit": "percent" }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 11 },
+          "id": 31,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(100 * sum(increase(imdb_frontend_api_request_duration_seconds_count{outcome!=\"success\"}[$__range])) / clamp_min(sum(increase(imdb_frontend_api_request_duration_seconds_count[$__range])), 1)) or vector(0)", "legendFormat": "Value", "range": true, "refId": "A" }],
+          "title": "Browser API Failures",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 10
+            "y": 15
           },
           "id": 102,
           "panels": [
@@ -1168,7 +1254,7 @@ data:
             "h": 4,
             "w": 6,
             "x": 0,
-            "y": 11
+            "y": 16
           },
           "id": 13,
           "options": {
@@ -1244,7 +1330,7 @@ data:
             "h": 4,
             "w": 6,
             "x": 6,
-            "y": 11
+            "y": 16
           },
           "id": 14,
           "options": {
@@ -1320,7 +1406,7 @@ data:
             "h": 4,
             "w": 6,
             "x": 12,
-            "y": 11
+            "y": 16
           },
           "id": 15,
           "options": {
@@ -1398,7 +1484,7 @@ data:
             "h": 4,
             "w": 6,
             "x": 18,
-            "y": 11
+            "y": 16
           },
           "id": 16,
           "options": {
@@ -1430,8 +1516,9 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Budget Used",
-          "type": "stat"
+          "title": "Process Budget",
+          "type": "stat",
+          "description": "Process-local committed spend divided by the configured project limit. This safety guard resets when the agent process restarts; Cost 24h is the durable Prometheus view."
         },
         {
           "collapsed": false,
@@ -1439,7 +1526,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 15
+            "y": 20
           },
           "id": 103,
           "panels": [
@@ -1491,7 +1578,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 0,
-            "y": 16
+            "y": 21
           },
           "id": 17,
           "options": {
@@ -1569,7 +1656,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 4,
-            "y": 16
+            "y": 21
           },
           "id": 18,
           "options": {
@@ -1647,7 +1734,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 8,
-            "y": 16
+            "y": 21
           },
           "id": 19,
           "options": {
@@ -1725,7 +1812,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 12,
-            "y": 16
+            "y": 21
           },
           "id": 20,
           "options": {
@@ -1802,7 +1889,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 16,
-            "y": 16
+            "y": 21
           },
           "id": 21,
           "options": {
@@ -1878,7 +1965,7 @@ data:
             "h": 4,
             "w": 4,
             "x": 20,
-            "y": 16
+            "y": 21
           },
           "id": 22,
           "options": {
@@ -1920,7 +2007,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 20
+            "y": 25
           },
           "id": 104,
           "panels": [
@@ -1977,9 +2064,9 @@ data:
           },
           "gridPos": {
             "h": 4,
-            "w": 6,
+            "w": 8,
             "x": 0,
-            "y": 21
+            "y": 26
           },
           "id": 23,
           "options": {
@@ -2063,9 +2150,9 @@ data:
           },
           "gridPos": {
             "h": 4,
-            "w": 6,
-            "x": 6,
-            "y": 21
+            "w": 8,
+            "x": 8,
+            "y": 26
           },
           "id": 24,
           "options": {
@@ -2109,37 +2196,52 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "palette-classic"
+                "mode": "thresholds"
               },
-              "unit": "percent",
-              "min": 0,
-              "max": 100
+              "mappings": [
+                {
+                  "options": {
+                    "0": { "color": "red", "index": 0, "text": "Down" },
+                    "1": { "color": "green", "index": 1, "text": "Scraped" }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              },
+              "unit": "none"
             },
             "overrides": [
 
             ]
           },
           "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 21
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 26
           },
           "id": 25,
           "options": {
-            "legend": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
               "calcs": [
                 "lastNotNull"
               ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
+              "fields": "",
+              "values": false
             },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "desc"
-            }
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
           "targets": [
             {
@@ -2148,15 +2250,15 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "100 * sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes{namespace=~\"databases|observability\"}) / clamp_min(sum by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes{namespace=~\"databases|observability\"}), 1)",
-              "legendFormat": "{{namespace}} / {{persistentvolumeclaim}}",
+              "expr": "max(up{job=\"imdb-clone-llama-cpp\"}) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "PVC Backing Filesystem Usage",
-          "type": "timeseries",
-          "description": "kubelet storage signal; local-path PVCs share the underlying node filesystem."
+          "title": "Local Embeddings",
+          "type": "stat",
+          "description": "Native llama.cpp metrics scrape health. Detailed embedding load is shown on the Backend dashboard."
         }
       ],
       "refresh": "30s",

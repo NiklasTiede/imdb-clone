@@ -57,6 +57,18 @@ data:
           "keepTime": true,
           "tags": [],
           "targetBlank": false,
+          "title": "Frontend",
+          "tooltip": "Open Frontend with the current time range",
+          "type": "link",
+          "url": "/d/imdb-frontend-overview/imdb-clone-frontend"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [],
+          "targetBlank": false,
           "title": "Concierge",
           "tooltip": "Open Concierge with the current time range",
           "type": "link",

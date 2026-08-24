@@ -78,6 +78,8 @@ metadata:
   namespace: databases
   annotations:
     argocd.argoproj.io/sync-wave: "3"
+  labels:
+    app.kubernetes.io/name: imdb-clone-llama-cpp
 spec:
   type: ClusterIP
   selector:
@@ -86,3 +88,26 @@ spec:
     - name: http
       port: 8080
       targetPort: http
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: imdb-clone-llama-cpp
+  namespace: databases
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app.kubernetes.io/name: imdb-clone-llama-cpp
+spec:
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: imdb-clone-llama-cpp
+  namespaceSelector:
+    matchNames:
+      - databases
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

@@ -64,6 +64,18 @@ data:
           "icon": "external link",
           "includeVars": false,
           "keepTime": true,
+          "tags": [],
+          "targetBlank": false,
+          "title": "Frontend",
+          "tooltip": "Open Frontend with the current time range",
+          "type": "link",
+          "url": "/d/imdb-frontend-overview/imdb-clone-frontend"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
           "tags": [
 
           ],
@@ -1298,6 +1310,226 @@ data:
             }
           ],
           "title": "Password Login Failure Rate",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 64 },
+          "id": 105,
+          "panels": [],
+          "title": "Domain Workloads",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Catalog search traffic split by bounded search mode and whether results were found.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 65 },
+          "id": 17,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum by (mode, result) (rate(imdb_search_requests_total{job=\"imdb-clone-backend\"}[$__rate_interval]))",
+              "legendFormat": "{{mode}} / {{result}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Search Requests",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Mean server-side catalog search duration by search mode. Use HTTP route percentiles above for user-facing tail latency.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 65 },
+          "id": 18,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum by (mode) (rate(imdb_search_duration_seconds_sum{job=\"imdb-clone-backend\"}[$__rate_interval])) / clamp_min(sum by (mode) (rate(imdb_search_duration_seconds_count{job=\"imdb-clone-backend\"}[$__rate_interval])), 0.000001)",
+              "legendFormat": "{{mode}} mean",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Search Mean Latency",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Native llama.cpp embedding throughput and queue pressure used by semantic catalog search.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 65 },
+          "id": 19,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(llamacpp:prompt_tokens_total{job=\"imdb-clone-llama-cpp\"}[$__rate_interval]))",
+              "legendFormat": "prompt tokens/s",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(llamacpp:requests_processing{job=\"imdb-clone-llama-cpp\"})",
+              "legendFormat": "processing",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(llamacpp:requests_deferred{job=\"imdb-clone-llama-cpp\"})",
+              "legendFormat": "deferred",
+              "range": true,
+              "refId": "C"
+            }
+          ],
+          "title": "Local Embedding Load",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 73 },
+          "id": 106,
+          "panels": [],
+          "title": "Runtime Detail",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Mean Hikari connection acquisition time and connection timeouts. A rising mean before saturation indicates database contention.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 74 },
+          "id": 20,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(hikaricp_connections_acquire_seconds_sum{job=\"imdb-clone-backend\"}[$__rate_interval])) / clamp_min(sum(rate(hikaricp_connections_acquire_seconds_count{job=\"imdb-clone-backend\"}[$__rate_interval])), 0.000001)",
+              "legendFormat": "mean acquire",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(rate(hikaricp_connections_timeout_total{job=\"imdb-clone-backend\"}[$__rate_interval]))",
+              "legendFormat": "timeouts/s",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Pool Acquisition And Timeouts",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "JVM stop-the-world pause time per second and pause frequency, split by garbage-collector action.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 74 },
+          "id": 21,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum by (action) (rate(jvm_gc_pause_seconds_sum{job=\"imdb-clone-backend\"}[$__rate_interval]))",
+              "legendFormat": "{{action}} pause s/s",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "JVM GC Pause Time",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Live and peak JVM threads plus process file-descriptor utilization. File descriptors use the right-hand percent axis.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" },
+            "overrides": [
+              {
+                "matcher": { "id": "byName", "options": "file descriptors" },
+                "properties": [
+                  { "id": "unit", "value": "percent" },
+                  { "id": "custom.axisPlacement", "value": "right" }
+                ]
+              }
+            ]
+          },
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 74 },
+          "id": 22,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(jvm_threads_live_threads{job=\"imdb-clone-backend\"})",
+              "legendFormat": "live threads",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum(jvm_threads_peak_threads{job=\"imdb-clone-backend\"})",
+              "legendFormat": "peak threads",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "100 * sum(process_files_open_files{job=\"imdb-clone-backend\"}) / clamp_min(sum(process_files_max_files{job=\"imdb-clone-backend\"}), 1)",
+              "legendFormat": "file descriptors",
+              "range": true,
+              "refId": "C"
+            }
+          ],
+          "title": "Threads And File Descriptors",
           "type": "timeseries"
         }
       ],

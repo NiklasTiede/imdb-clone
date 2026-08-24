@@ -64,6 +64,18 @@ data:
           "icon": "external link",
           "includeVars": false,
           "keepTime": true,
+          "tags": [],
+          "targetBlank": false,
+          "title": "Frontend",
+          "tooltip": "Open Frontend with the current time range",
+          "type": "link",
+          "url": "/d/imdb-frontend-overview/imdb-clone-frontend"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
           "tags": [
 
           ],
@@ -1156,6 +1168,134 @@ data:
           ],
           "type": "table",
           "description": "Only pods with at least one restart during the selected range are shown."
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+          "id": 104,
+          "panels": [],
+          "title": "Saturation And Node Health",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Share of CPU scheduling periods throttled by container limits for application, data, and observability workloads.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "percent", "min": 0 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 41 },
+          "id": 14,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "100 * sum by (namespace, pod) (rate(container_cpu_cfs_throttled_periods_total{namespace=~\"imdb-clone|databases|observability\", container!=\"\"}[$__rate_interval])) / clamp_min(sum by (namespace, pod) (rate(container_cpu_cfs_periods_total{namespace=~\"imdb-clone|databases|observability\", container!=\"\"}[$__rate_interval])), 0.000001)",
+              "legendFormat": "{{namespace}}/{{pod}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Container CPU Throttling",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "One-minute runnable load normalized by logical CPU count. Sustained values above 100% indicate CPU queueing.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "percent", "min": 0 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 41 },
+          "id": 15,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "100 * node_load1 / count by (instance) (node_cpu_seconds_total{mode=\"idle\"})",
+              "legendFormat": "{{instance}} load / cores",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Normalized Node Load",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Receive/transmit drops and errors on physical node interfaces. Persistent drops can explain latency without application errors.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "pps", "min": 0 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 49 },
+          "id": 16,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum by (device) (rate(node_network_receive_drop_total{device!~\"lo|veth.*|cali.*|flannel.*|cni.*\"}[$__rate_interval]))",
+              "legendFormat": "{{device}} receive drops",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum by (device) (rate(node_network_transmit_drop_total{device!~\"lo|veth.*|cali.*|flannel.*|cni.*\"}[$__rate_interval]))",
+              "legendFormat": "{{device}} transmit drops",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "sum by (device) (rate(node_network_receive_errs_total{device!~\"lo|veth.*|cali.*|flannel.*|cni.*\"}[$__rate_interval]) + rate(node_network_transmit_errs_total{device!~\"lo|veth.*|cali.*|flannel.*|cni.*\"}[$__rate_interval]))",
+              "legendFormat": "{{device}} errors",
+              "range": true,
+              "refId": "C"
+            }
+          ],
+          "title": "Physical Network Drops And Errors",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Filesystem inode consumption on writable node filesystems. Disk space can remain available while inode exhaustion blocks writes.",
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "unit": "percent", "min": 0, "max": 100 },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 49 },
+          "id": 17,
+          "options": {
+            "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+            "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "editorMode": "code",
+              "expr": "100 * (1 - node_filesystem_files_free{fstype!~\"tmpfs|overlay|squashfs\"} / clamp_min(node_filesystem_files{fstype!~\"tmpfs|overlay|squashfs\"}, 1))",
+              "legendFormat": "{{mountpoint}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Filesystem Inode Usage",
+          "type": "timeseries"
         }
       ],
       "refresh": "30s",
