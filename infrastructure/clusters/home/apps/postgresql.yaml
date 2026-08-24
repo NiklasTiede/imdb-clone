@@ -29,6 +29,17 @@ spec:
           persistence:
             enabled: true
             size: 10Gi
+          # Preserve the scheduling guarantee while allowing short database bursts.
+          # A 150m CFS ceiling throttled PostgreSQL despite low average CPU usage.
+          resourcesPreset: none
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 50Mi
+            limits:
+              memory: 192Mi
+              ephemeral-storage: 2Gi
           service:
             type: ClusterIP
             ports:
