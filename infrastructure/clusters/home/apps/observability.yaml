@@ -62,11 +62,27 @@ spec:
                       value: service
                   filterByTraceID: true
                   filterBySpanID: false
+                tracesToProfiles:
+                  datasourceUid: pyroscope
+                  profileTypeId: process_cpu:cpu:nanoseconds:cpu:nanoseconds
+                  customQuery: false
+                  tags:
+                    - key: service.name
+                      value: service_name
+            - name: Pyroscope
+              uid: pyroscope
+              type: grafana-pyroscope-datasource
+              access: proxy
+              editable: false
+              url: http://pyroscope.observability.svc.cluster.local:4040
           admin:
             existingSecret: observability-grafana-admin
           adminUser: admin
           defaultDashboardsTimezone: Europe/Zurich
           grafana.ini:
+            plugins:
+              preinstall_sync: grafana-lokiexplore-app@2.5.1,grafana-metricsdrilldown-app@2.5.0,grafana-exploretraces-app@2.1.0,grafana-pyroscope-app@2.3.0
+              preinstall_auto_update: false
             users:
               allow_sign_up: false
               viewers_can_edit: false

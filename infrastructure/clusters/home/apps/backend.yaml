@@ -43,6 +43,28 @@ spec:
               value: 5s
             - name: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
               value: "0.1"
+            - name: PYROSCOPE_APPLICATION_NAME
+              value: imdb-clone-backend
+            - name: PYROSCOPE_SERVER_ADDRESS
+              value: http://pyroscope.observability.svc.cluster.local:4040
+            - name: PYROSCOPE_FORMAT
+              value: jfr
+            - name: PYROSCOPE_PROFILING_INTERVAL
+              value: 20ms
+            - name: PYROSCOPE_PROFILER_EVENT
+              value: itimer
+            - name: PYROSCOPE_PROFILER_ALLOC
+              value: 512k
+            - name: PYROSCOPE_PROFILER_LOCK
+              value: 10ms
+            - name: PYROSCOPE_UPLOAD_INTERVAL
+              value: 15s
+            - name: PYROSCOPE_PROFILE_EXPORT_TIMEOUT
+              value: 5s
+            - name: PYROSCOPE_INGEST_MAX_TRIES
+              value: "2"
+            - name: PYROSCOPE_LABELS
+              value: environment=production
             - name: SPRING_APPLICATION_JSON
               value: |-
                 {

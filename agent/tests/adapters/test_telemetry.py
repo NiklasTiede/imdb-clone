@@ -6,6 +6,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 
 from imdb_agent.adapters.telemetry import (
     TelemetryRuntime,
+    add_profile_correlation,
     configure_telemetry,
     privacy_safe_instrumentation_settings,
     privacy_safe_server_request_hook,
@@ -33,6 +34,21 @@ def test_pydantic_ai_instrumentation_excludes_user_and_tool_content() -> None:
     assert settings.include_content is False
     assert settings.include_binary_content is False
     assert settings.include_model_request_parameters is False
+    provider.shutdown()
+
+
+def test_profile_correlation_tags_root_spans() -> None:
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    add_profile_correlation(provider, enabled=True)
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+
+    with provider.get_tracer("test").start_as_current_span("root"):
+        pass
+
+    attributes = exporter.get_finished_spans()[0].attributes
+    assert attributes is not None
+    assert attributes["pyroscope.profile.id"]
     provider.shutdown()
 
 

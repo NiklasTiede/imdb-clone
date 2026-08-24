@@ -183,7 +183,7 @@ assert_contract(
 )
 assert_contract(network_policy.dig("spec", "ingress").length == 2, "agent ingress allowlist drifted")
 egress = network_policy.dig("spec", "egress")
-assert_contract(egress.length == 4, "agent egress allowlist drifted")
+assert_contract(egress.length == 5, "agent egress allowlist drifted")
 assert_contract(
   egress.any? do |rule|
     rule.fetch("ports", []).any? { |port| port["port"] == 4318 } &&
@@ -194,6 +194,17 @@ assert_contract(
       end
   end,
   "agent OTLP egress must be limited to Alloy"
+)
+assert_contract(
+  egress.any? do |rule|
+    rule.fetch("ports", []).any? { |port| port["port"] == 4040 } &&
+      rule.fetch("to", []).any? do |destination|
+        destination.dig("namespaceSelector", "matchLabels", "kubernetes.io/metadata.name") ==
+          "observability" &&
+          destination.dig("podSelector", "matchLabels", "app.kubernetes.io/name") == "pyroscope"
+      end
+  end,
+  "agent profiling egress must be limited to Pyroscope"
 )
 
 service_monitor = resource(documents, "ServiceMonitor", "imdb-clone-agent", "imdb-clone")

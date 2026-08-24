@@ -22,6 +22,8 @@ spec:
             enabled: true
             remoteWriteUrl: http://observability-kube-prometh-prometheus.observability.svc.cluster.local:9090/api/v1/write
             processor:
+              local_blocks:
+                filter_server_spans: false
               service_graphs: {}
               span_metrics:
                 enable_target_info: true
@@ -33,6 +35,7 @@ spec:
             defaults:
               metrics_generator:
                 processors:
+                  - local-blocks
                   - service-graphs
                   - span-metrics
           receivers:

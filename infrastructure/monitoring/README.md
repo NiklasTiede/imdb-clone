@@ -10,6 +10,8 @@ flowchart LR
   k3s["k3s systemd service"] --> alloy
   python["Python Movie Concierge"] -- "OTLP traces" --> alloy
   java["Spring Boot backend"] -- "OTLP traces" --> alloy
+  python -- "CPU + allocation profiles" --> pyroscope[("Pyroscope · profiles")]
+  java -- "JFR CPU + allocation + lock profiles" --> pyroscope
   alloy --> loki[("Loki · 7 days")]
   alloy --> tempo[("Tempo · 3 days")]
   python -- "bounded metrics" --> prometheus[("Prometheus · 7 days")]
@@ -17,6 +19,7 @@ flowchart LR
   loki --> grafana["Grafana"]
   tempo --> grafana
   prometheus --> grafana
+  pyroscope --> grafana
 ```
 
 The stack provides:
@@ -25,12 +28,16 @@ The stack provides:
 - Loki for logs from every Kubernetes namespace, Kubernetes Events, Traefik access logs, and the
   k3s service journal.
 - Tempo for privacy-safe Python/Pydantic AI/MCP/Java distributed traces.
+- Pyroscope for continuous CPU and allocation profiles from Python plus CPU, allocation, and lock
+  profiles from the Java backend, using bounded sampling, upload intervals, timeouts, and retries.
 - Alloy as the per-node log collector and internal OTLP receiver.
 - Grafana dashboards, Explore, trace-to-log links, and the authenticated demo viewer.
 
-Agent tracing excludes prompts, completions, bodies, tool payloads, concrete conversation IDs,
-query strings, client addresses, headers, and user-agent values. Loki and Tempo APIs remain
-private `ClusterIP` services.
+Agent tracing and profiling exclude prompts, completions, bodies, tool payloads, concrete
+conversation IDs, query strings, client addresses, headers, and user-agent values. Loki, Tempo,
+and Pyroscope APIs remain private `ClusterIP` services. A NetworkPolicy limits Pyroscope to its own
+pod, Grafana, Prometheus, the Java backend, and the Python agent. Allocation profiles identify where
+memory is allocated; use Prometheus JVM/process metrics for current heap or resident-memory totals.
 
 ## Access and verification
 

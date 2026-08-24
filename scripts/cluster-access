@@ -47,6 +47,7 @@ grafana|13000|observability|observability-grafana|80|http
 prometheus|19090|observability|observability-kube-prometh-prometheus|9090|http
 loki|13100|observability|loki-gateway|80|http
 tempo|13200|observability|tempo|3200|http
+pyroscope|14040|observability|pyroscope|4040|http
 argocd|18443|argocd|argocd-server|443|https
 EOF
   return "${failed}"

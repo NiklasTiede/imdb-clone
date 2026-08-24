@@ -434,8 +434,9 @@ Tempo. Pydantic AI content capture and model-request serialization are disabled.
 propagated through the Python MCP HTTP client so a single trace can correlate FastAPI, model/tool,
 and Java MCP work. Concrete conversation paths, query strings, client network data, and user agents
 are redacted from inbound spans. Loki receives logs from all Kubernetes namespaces plus Kubernetes
-Events. Use the private endpoints and DBeaver settings in [`operations.md`](operations.md); do not
-expose the database or observability APIs with an ingress.
+Events. Pyroscope continuously samples Python CPU/allocations and Java JFR CPU/allocations/locks in
+production; it is disabled by default for local runs. Use the private endpoints and DBeaver settings
+in [`operations.md`](operations.md); do not expose the database or observability APIs with an ingress.
 
 ## Kubernetes And k3s Validation
 

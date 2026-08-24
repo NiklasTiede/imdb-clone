@@ -16,6 +16,9 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 from pydantic_ai import Agent
 from pydantic_ai.models.instrumented import InstrumentationSettings
+from pyroscope.otel import (  # pyright: ignore[reportMissingTypeStubs]
+    PyroscopeSpanProcessor,
+)
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -62,7 +65,11 @@ class TelemetryRuntime:
             )
 
 
-def configure_telemetry(settings: Settings) -> TelemetryRuntime:
+def configure_telemetry(
+    settings: Settings,
+    *,
+    profiling_enabled: bool = False,
+) -> TelemetryRuntime:
     """Configure privacy-safe tracing without introducing a hosted telemetry dependency."""
 
     if not settings.otel_tracing_enabled:
@@ -95,6 +102,7 @@ def configure_telemetry(settings: Settings) -> TelemetryRuntime:
                 schedule_delay_millis=5_000,
             )
         )
+        add_profile_correlation(provider, enabled=profiling_enabled)
         Agent.instrument_all(privacy_safe_instrumentation_settings(provider))
         HTTPXClientInstrumentor().instrument(tracer_provider=provider)
         structlog.get_logger().info(
@@ -112,6 +120,13 @@ def configure_telemetry(settings: Settings) -> TelemetryRuntime:
             error_code="otel_setup",
         )
         return TelemetryRuntime()
+
+
+def add_profile_correlation(provider: TracerProvider, *, enabled: bool) -> None:
+    """Tag root spans so Grafana can query their matching profile samples."""
+
+    if enabled:
+        provider.add_span_processor(PyroscopeSpanProcessor())
 
 
 def privacy_safe_instrumentation_settings(
