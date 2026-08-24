@@ -28,7 +28,13 @@ spec:
             address: ":9000"
             console_enable: "true"
             console_address: ":9001"
+            log_level: "warn"
             region: "us-east-1"
+        # Chart 0.3.0 does not checksum its ConfigMap into the pod template.
+        # Keep this explicit override so the log-level change rolls the pod.
+        extraEnv:
+          - name: RUSTFS_OBS_LOGGER_LEVEL
+            value: "warn"
         service:
           type: ClusterIP
           endpoint:

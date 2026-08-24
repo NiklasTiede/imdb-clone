@@ -218,10 +218,50 @@ assert_contract(
 )
 
 rustfs = resource(documents, "Application", "rustfs", "argocd")
+rustfs_values = rustfs.dig("spec", "source", "helm", "valuesObject")
 assert_contract(
-  rustfs.dig("spec", "source", "helm", "valuesObject", "config", "rustfs", "console_enable") ==
-    "true",
+  rustfs_values.dig("config", "rustfs", "console_enable") == "true",
   "RustFS console must be enabled for private tunnel access"
+)
+assert_contract(
+  rustfs_values.dig("config", "rustfs", "log_level") == "warn",
+  "RustFS must suppress info-level scanner noise at the source"
+)
+assert_contract(
+  rustfs_values["extraEnv"] == [
+    {
+      "name" => "RUSTFS_OBS_LOGGER_LEVEL",
+      "value" => "warn"
+    }
+  ],
+  "RustFS log-level changes must alter the pod template until the chart adds ConfigMap checksums"
+)
+
+postgresql = resource(documents, "Application", "postgresql", "argocd")
+postgresql_primary = postgresql.dig(
+  "spec",
+  "source",
+  "helm",
+  "valuesObject",
+  "primary"
+)
+assert_contract(
+  postgresql_primary["resourcesPreset"] == "none",
+  "PostgreSQL must not inherit the throttling-prone nano CPU limit"
+)
+assert_contract(
+  postgresql_primary["resources"] == {
+    "requests" => {
+      "cpu" => "100m",
+      "memory" => "128Mi",
+      "ephemeral-storage" => "50Mi"
+    },
+    "limits" => {
+      "memory" => "192Mi",
+      "ephemeral-storage" => "2Gi"
+    }
+  },
+  "PostgreSQL must keep resource guarantees without a CFS CPU ceiling"
 )
 
 public_ingresses = documents.select { |document| document["kind"] == "Ingress" }
