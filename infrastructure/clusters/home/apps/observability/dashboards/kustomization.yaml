@@ -4,5 +4,6 @@ resources:
   - agent-overview.yaml
   - backend-overview.yaml
   - cluster-logs.yaml
+  - operations-overview.yaml
   - postgresql-overview.yaml
   - system-overview.yaml

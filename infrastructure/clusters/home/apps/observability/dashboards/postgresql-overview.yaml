@@ -28,11 +28,139 @@ data:
       },
       "editable": true,
       "fiscalYearStartMonth": 0,
-      "graphTooltip": 0,
+      "graphTooltip": 1,
       "id": null,
-      "links": [],
+      "links": [
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Operations",
+          "tooltip": "Open Operations with the current time range",
+          "type": "link",
+          "url": "/d/imdb-operations-overview/imdb-clone-operations-overview"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Backend",
+          "tooltip": "Open Backend with the current time range",
+          "type": "link",
+          "url": "/d/imdb-backend-overview/imdb-clone-backend"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Concierge",
+          "tooltip": "Open Concierge with the current time range",
+          "type": "link",
+          "url": "/d/imdb-agent-overview/imdb-clone-movie-concierge"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "PostgreSQL",
+          "tooltip": "Open PostgreSQL with the current time range",
+          "type": "link",
+          "url": "/d/imdb-postgresql-overview/postgresql"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Infrastructure",
+          "tooltip": "Open Infrastructure with the current time range",
+          "type": "link",
+          "url": "/d/imdb-system-overview/imdb-clone-system"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Logs",
+          "tooltip": "Open Logs with the current time range",
+          "type": "link",
+          "url": "/d/imdb-clone-cluster-logs/cluster-logs"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Traces",
+          "tooltip": "Open Traces with the current time range",
+          "type": "link",
+          "url": "/a/grafana-exploretraces-app/"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Profiles",
+          "tooltip": "Open Profiles with the current time range",
+          "type": "link",
+          "url": "/a/grafana-pyroscope-app/explore"
+        }
+      ],
       "liveNow": false,
       "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": [
+
+          ],
+          "title": "Availability And Capacity",
+          "type": "row"
+        },
         {
           "datasource": {
             "type": "prometheus",
@@ -75,13 +203,15 @@ data:
               },
               "unit": "none"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 4,
-            "w": 6,
+            "w": 4,
             "x": 0,
-            "y": 0
+            "y": 1
           },
           "id": 1,
           "options": {
@@ -100,7 +230,6 @@ data:
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -108,14 +237,15 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "max(pg_up{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\"})",
-              "legendFormat": "up",
+              "expr": "max(pg_up{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\"}) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "PostgreSQL Status",
-          "type": "stat"
+          "title": "PostgreSQL",
+          "type": "stat",
+          "description": "Exporter-observed PostgreSQL availability."
         },
         {
           "datasource": {
@@ -127,8 +257,9 @@ data:
               "color": {
                 "mode": "thresholds"
               },
-              "decimals": 0,
-              "mappings": [],
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -146,15 +277,20 @@ data:
                   }
                 ]
               },
-              "unit": "percent"
+              "unit": "percent",
+              "decimals": 1,
+              "min": 0,
+              "max": 100
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 4,
-            "w": 6,
-            "x": 6,
-            "y": 0
+            "w": 4,
+            "x": 4,
+            "y": 1
           },
           "id": 2,
           "options": {
@@ -173,7 +309,6 @@ data:
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -181,8 +316,8 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "100 * sum(pg_stat_database_numbackends{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\"}) / max(pg_settings_max_connections{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\"})",
-              "legendFormat": "connections",
+              "expr": "100 * sum(pg_stat_database_numbackends{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\"}) / clamp_min(max(pg_settings_max_connections{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\"}), 1)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
@@ -200,8 +335,9 @@ data:
               "color": {
                 "mode": "thresholds"
               },
-              "decimals": 1,
-              "mappings": [],
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -213,13 +349,15 @@ data:
               },
               "unit": "bytes"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 4,
-            "w": 6,
-            "x": 12,
-            "y": 0
+            "w": 4,
+            "x": 8,
+            "y": 1
           },
           "id": 3,
           "options": {
@@ -238,7 +376,6 @@ data:
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -247,12 +384,12 @@ data:
               },
               "editorMode": "code",
               "expr": "max(pg_database_size_bytes{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"})",
-              "legendFormat": "movie_db",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Database Size",
+          "title": "Movie DB Size",
           "type": "stat"
         },
         {
@@ -265,8 +402,9 @@ data:
               "color": {
                 "mode": "thresholds"
               },
-              "decimals": 0,
-              "mappings": [],
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -280,15 +418,18 @@ data:
                   }
                 ]
               },
-              "unit": "none"
+              "unit": "none",
+              "decimals": 0
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 4,
-            "w": 6,
-            "x": 18,
-            "y": 0
+            "w": 4,
+            "x": 12,
+            "y": 1
           },
           "id": 4,
           "options": {
@@ -307,7 +448,6 @@ data:
             "textMode": "auto",
             "wideLayout": true
           },
-          "pluginVersion": "12.3.0",
           "targets": [
             {
               "datasource": {
@@ -315,8 +455,8 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(increase(pg_stat_database_deadlocks{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\"}[$__range]))",
-              "legendFormat": "deadlocks",
+              "expr": "sum(increase(pg_stat_database_deadlocks{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\"}[$__range])) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
@@ -332,61 +472,189 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "palette-classic"
+                "mode": "thresholds"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "decimals": 0,
-              "mappings": [],
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
                     "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 3
                   }
                 ]
               },
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 16,
+            "y": 1
+          },
+          "id": 11,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"databases\", pod=~\"imdb-clone-postgresql-.*|imdb-clone-postgresql-0\", container=\"postgresql\"}[$__range])) or vector(0)",
+              "legendFormat": "Value",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Restarts",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              },
+              "unit": "percent",
+              "decimals": 1,
+              "min": 0,
+              "max": 100
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 20,
+            "y": 1
+          },
+          "id": 12,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "100 * sum(kubelet_volume_stats_used_bytes{namespace=\"databases\", persistentvolumeclaim=\"data-imdb-clone-postgresql-0\"}) / clamp_min(sum(kubelet_volume_stats_capacity_bytes{namespace=\"databases\", persistentvolumeclaim=\"data-imdb-clone-postgresql-0\"}), 1)",
+              "legendFormat": "Value",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "PVC Usage",
+          "type": "stat",
+          "description": "kubelet-reported backing filesystem usage for the PostgreSQL local-path PVC."
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 5
+          },
+          "id": 101,
+          "panels": [
+
+          ],
+          "title": "Connections And Transactions",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
               "unit": "short"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 4
+            "y": 6
           },
           "id": 5,
           "options": {
@@ -430,59 +698,17 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "decimals": 2,
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
               "unit": "ops"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 4
+            "y": 6
           },
           "id": 6,
           "options": {
@@ -507,7 +733,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(rate(pg_stat_database_xact_commit{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[5m]))",
+              "expr": "sum(rate(pg_stat_database_xact_commit{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[$__rate_interval]))",
               "legendFormat": "commits",
               "range": true,
               "refId": "A"
@@ -518,7 +744,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(rate(pg_stat_database_xact_rollback{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[5m]))",
+              "expr": "sum(rate(pg_stat_database_xact_rollback{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[$__rate_interval]))",
               "legendFormat": "rollbacks",
               "range": true,
               "refId": "B"
@@ -526,6 +752,21 @@ data:
           ],
           "title": "Transactions",
           "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 14
+          },
+          "id": 102,
+          "panels": [
+
+          ],
+          "title": "Efficiency And Size",
+          "type": "row"
         },
         {
           "datasource": {
@@ -537,41 +778,9 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "decimals": 2,
-              "mappings": [],
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -588,16 +797,17 @@ data:
                     "value": 95
                   }
                 ]
-              },
-              "unit": "percent"
+              }
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 12
+            "y": 15
           },
           "id": 7,
           "options": {
@@ -622,7 +832,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "100 * sum(rate(pg_stat_database_blks_hit{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[5m])) / (sum(rate(pg_stat_database_blks_hit{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[5m])) + sum(rate(pg_stat_database_blks_read{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[5m])))",
+              "expr": "100 * sum(rate(pg_stat_database_blks_hit{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[$__rate_interval])) / clamp_min(sum(rate(pg_stat_database_blks_hit{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[$__rate_interval])) + sum(rate(pg_stat_database_blks_read{namespace=\"databases\", service=\"imdb-clone-postgresql-metrics\", datname=\"movie_db\"}[$__rate_interval])), 0.001)",
               "legendFormat": "movie_db",
               "range": true,
               "refId": "A"
@@ -641,249 +851,17 @@ data:
               "color": {
                 "mode": "palette-classic"
               },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "decimals": 3,
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "cores"
+              "unit": "bytes"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
           "gridPos": {
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 12
-          },
-          "id": 8,
-          "options": {
-            "legend": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"databases\", pod=~\"imdb-clone-postgresql.*\", container=\"postgresql\"}[5m]))",
-              "legendFormat": "{{pod}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "PostgreSQL Pod CPU",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 20
-          },
-          "id": 9,
-          "options": {
-            "legend": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "displayMode": "table",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "prometheus"
-              },
-              "editorMode": "code",
-              "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"databases\", pod=~\"imdb-clone-postgresql.*\", container=\"postgresql\"})",
-              "legendFormat": "{{pod}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "PostgreSQL Pod Memory",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 12,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 2,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              },
-              "unit": "bytes"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 20
+            "y": 15
           },
           "id": 10,
           "options": {
@@ -916,23 +894,223 @@ data:
           ],
           "title": "Database Size By Database",
           "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 23
+          },
+          "id": 103,
+          "panels": [
+
+          ],
+          "title": "Runtime And Storage",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "cores"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 24
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"databases\", pod=~\"imdb-clone-postgresql.*\", container=\"postgresql\"}[$__rate_interval]))",
+              "legendFormat": "postgresql CPU",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "PostgreSQL Pod CPU",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "bytes"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 24
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"databases\", pod=~\"imdb-clone-postgresql.*\", container=\"postgresql\"})",
+              "legendFormat": "working set",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "PostgreSQL Pod Memory",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 75
+                  },
+                  {
+                    "color": "red",
+                    "value": 90
+                  }
+                ]
+              }
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 24
+          },
+          "id": 13,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "100 * sum(kubelet_volume_stats_used_bytes{namespace=\"databases\", persistentvolumeclaim=\"data-imdb-clone-postgresql-0\"}) / clamp_min(sum(kubelet_volume_stats_capacity_bytes{namespace=\"databases\", persistentvolumeclaim=\"data-imdb-clone-postgresql-0\"}), 1)",
+              "legendFormat": "data PVC",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "PVC Usage Trend",
+          "type": "timeseries",
+          "description": "Historical kubelet-reported backing filesystem usage for the PostgreSQL local-path PVC."
         }
       ],
       "refresh": "30s",
-      "schemaVersion": 39,
+      "schemaVersion": 42,
       "tags": [
         "imdb-clone",
         "postgresql",
         "database"
       ],
       "templating": {
-        "list": []
+        "list": [
+
+        ]
       },
       "time": {
         "from": "now-6h",
         "to": "now"
       },
-      "timepicker": {},
+      "timepicker": {
+      },
       "timezone": "browser",
       "title": "PostgreSQL",
       "uid": "imdb-postgresql-overview",

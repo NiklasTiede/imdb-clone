@@ -11,14 +11,156 @@ data:
   agent-overview.json: |-
     {
       "annotations": {
-        "list": []
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
       },
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 1,
       "id": null,
-      "links": [],
+      "links": [
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Operations",
+          "tooltip": "Open Operations with the current time range",
+          "type": "link",
+          "url": "/d/imdb-operations-overview/imdb-clone-operations-overview"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Backend",
+          "tooltip": "Open Backend with the current time range",
+          "type": "link",
+          "url": "/d/imdb-backend-overview/imdb-clone-backend"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Concierge",
+          "tooltip": "Open Concierge with the current time range",
+          "type": "link",
+          "url": "/d/imdb-agent-overview/imdb-clone-movie-concierge"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "PostgreSQL",
+          "tooltip": "Open PostgreSQL with the current time range",
+          "type": "link",
+          "url": "/d/imdb-postgresql-overview/postgresql"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Infrastructure",
+          "tooltip": "Open Infrastructure with the current time range",
+          "type": "link",
+          "url": "/d/imdb-system-overview/imdb-clone-system"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Logs",
+          "tooltip": "Open Logs with the current time range",
+          "type": "link",
+          "url": "/d/imdb-clone-cluster-logs/cluster-logs"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Traces",
+          "tooltip": "Open Traces with the current time range",
+          "type": "link",
+          "url": "/a/grafana-exploretraces-app/"
+        },
+        {
+          "asDropdown": false,
+          "icon": "external link",
+          "includeVars": false,
+          "keepTime": true,
+          "tags": [
+
+          ],
+          "targetBlank": false,
+          "title": "Profiles",
+          "tooltip": "Open Profiles with the current time range",
+          "type": "link",
+          "url": "/a/grafana-pyroscope-app/explore"
+        }
+      ],
+      "liveNow": false,
       "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": [
+
+          ],
+          "title": "Reliability And Latency",
+          "type": "row"
+        },
         {
           "datasource": {
             "type": "prometheus",
@@ -29,39 +171,64 @@ data:
               "color": {
                 "mode": "thresholds"
               },
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  {"color": "green", "value": null},
-                  {"color": "yellow", "value": 25},
-                  {"color": "red", "value": 50}
+                  {
+                    "color": "green",
+                    "value": null
+                  }
                 ]
               },
-              "unit": "none"
+              "unit": "none",
+              "decimals": 0
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
-          "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 1
+          },
           "id": 1,
           "options": {
             "colorMode": "background",
             "graphMode": "area",
             "justifyMode": "auto",
             "orientation": "auto",
-            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-            "textMode": "auto"
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
-              "expr": "sum(increase(imdb_agent_runs_total[$__range]))",
-              "legendFormat": "runs",
+              "expr": "sum(increase(imdb_agent_runs_total[$__range])) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Runs in Range",
-          "type": "stat"
+          "title": "Runs",
+          "type": "stat",
+          "description": "Concierge runs started during the selected dashboard range."
         },
         {
           "datasource": {
@@ -70,43 +237,86 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {"mode": "thresholds"},
-              "decimals": 1,
-              "max": 100,
-              "min": 0,
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "-1": {
+                      "color": "gray",
+                      "index": 0,
+                      "text": "No runs"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  {"color": "red", "value": null},
-                  {"color": "yellow", "value": 75},
-                  {"color": "green", "value": 90}
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 75
+                  },
+                  {
+                    "color": "green",
+                    "value": 90
+                  }
                 ]
               },
-              "unit": "percent"
+              "unit": "percent",
+              "decimals": 1,
+              "min": -1,
+              "max": 100
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
-          "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 4,
+            "y": 1
+          },
           "id": 2,
           "options": {
             "colorMode": "background",
             "graphMode": "area",
             "justifyMode": "auto",
             "orientation": "auto",
-            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-            "textMode": "auto"
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
-              "expr": "100 * sum(increase(imdb_agent_runs_total{outcome=\"success\"}[$__range])) / clamp_min(sum(increase(imdb_agent_runs_total[$__range])), 1)",
-              "legendFormat": "success",
+              "expr": "(100 * sum(increase(imdb_agent_runs_total{outcome=\"success\"}[$__range])) / clamp_min(sum(increase(imdb_agent_runs_total[$__range])), 1) and on() (sum(increase(imdb_agent_runs_total[$__range])) > 0)) or vector(-1)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Run Success Rate",
-          "type": "stat"
+          "title": "Success",
+          "type": "stat",
+          "description": "Successful runs divided by all runs; displays No runs when the selected range has no traffic."
         },
         {
           "datasource": {
@@ -115,40 +325,152 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {"mode": "thresholds"},
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  {"color": "green", "value": null},
-                  {"color": "yellow", "value": 15},
-                  {"color": "red", "value": 25}
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 8
+                  },
+                  {
+                    "color": "red",
+                    "value": 15
+                  }
                 ]
               },
-              "unit": "s"
+              "unit": "s",
+              "decimals": 2
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
-          "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 1
+          },
+          "id": 14,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "(histogram_quantile(0.95, sum by (le) (increase(imdb_agent_first_event_duration_seconds_bucket[$__range]))) and on() (sum(increase(imdb_agent_first_event_duration_seconds_count[$__range])) > 0)) or vector(0)",
+              "legendFormat": "Value",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "First Event p95",
+          "type": "stat",
+          "description": "Time until the first streamed event across the selected dashboard range; zero means the range has no completed observation."
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 15
+                  },
+                  {
+                    "color": "red",
+                    "value": 25
+                  }
+                ]
+              },
+              "unit": "s",
+              "decimals": 2
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 12,
+            "y": 1
+          },
           "id": 3,
           "options": {
             "colorMode": "background",
             "graphMode": "area",
             "justifyMode": "auto",
             "orientation": "auto",
-            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-            "textMode": "auto"
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
-              "expr": "histogram_quantile(0.95, sum by (le) (rate(imdb_agent_run_duration_seconds_bucket[$__rate_interval])))",
-              "legendFormat": "p95",
+              "expr": "(histogram_quantile(0.95, sum by (le) (increase(imdb_agent_run_duration_seconds_bucket[$__range]))) and on() (sum(increase(imdb_agent_runs_total[$__range])) > 0)) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Run Latency p95",
-          "type": "stat"
+          "title": "Run p95",
+          "type": "stat",
+          "description": "End-to-end concierge run latency across the selected dashboard range; zero means the range has no run."
         },
         {
           "datasource": {
@@ -157,40 +479,75 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {"mode": "thresholds"},
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  {"color": "green", "value": null},
-                  {"color": "yellow", "value": 2},
-                  {"color": "red", "value": 3}
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 2
+                  },
+                  {
+                    "color": "red",
+                    "value": 3
+                  }
                 ]
               },
-              "unit": "none"
+              "unit": "none",
+              "decimals": 0
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
-          "gridPos": {"h": 4, "w": 4, "x": 12, "y": 0},
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 16,
+            "y": 1
+          },
           "id": 4,
           "options": {
             "colorMode": "background",
-            "graphMode": "none",
+            "graphMode": "area",
             "justifyMode": "auto",
             "orientation": "auto",
-            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-            "textMode": "auto"
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
-              "expr": "sum(imdb_agent_runs_active)",
-              "legendFormat": "active",
+              "expr": "sum(imdb_agent_runs_active) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
           "title": "Active Runs",
-          "type": "stat"
+          "type": "stat",
+          "description": "Runs currently holding one of the deliberately bounded concurrency slots."
         },
         {
           "datasource": {
@@ -199,41 +556,75 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {"mode": "thresholds"},
-              "decimals": 4,
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+
+              ],
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  {"color": "green", "value": null},
-                  {"color": "yellow", "value": 10},
-                  {"color": "red", "value": 18}
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 3
+                  }
                 ]
               },
-              "unit": "currencyUSD"
+              "unit": "none",
+              "decimals": 0
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
-          "gridPos": {"h": 4, "w": 4, "x": 16, "y": 0},
-          "id": 5,
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 20,
+            "y": 1
+          },
+          "id": 15,
           "options": {
             "colorMode": "background",
             "graphMode": "area",
             "justifyMode": "auto",
             "orientation": "auto",
-            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-            "textMode": "auto"
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
-              "expr": "sum(increase(imdb_agent_model_estimated_cost_usd_total[24h]))",
-              "legendFormat": "24h",
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"imdb-clone\", pod=~\"imdb-clone-agent-.*\", container=\"agent\"}[$__range])) or vector(0)",
+              "legendFormat": "Value",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Estimated Cost 24h",
-          "type": "stat"
+          "title": "Restarts",
+          "type": "stat",
+          "description": "Agent container restarts during the selected dashboard range."
         },
         {
           "datasource": {
@@ -242,58 +633,43 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "color": {"mode": "thresholds"},
-              "decimals": 1,
-              "max": 100,
-              "min": 0,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {"color": "green", "value": null},
-                  {"color": "yellow", "value": 50},
-                  {"color": "red", "value": 80}
-                ]
+              "color": {
+                "mode": "palette-classic"
               },
-              "unit": "percent"
+              "unit": "reqps"
             },
-            "overrides": []
+            "overrides": [
+
+            ]
           },
-          "gridPos": {"h": 4, "w": 4, "x": 20, "y": 0},
-          "id": 6,
-          "options": {
-            "colorMode": "background",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
-            "textMode": "auto"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 5
           },
-          "targets": [
-            {
-              "editorMode": "code",
-              "expr": "100 * max(imdb_agent_process_budget_committed_usd) / clamp_min(max(imdb_agent_guardrail_limit{limit=\"project_cost_usd\"}), 0.01)",
-              "legendFormat": "process budget",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Process Budget Used",
-          "type": "stat"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "fieldConfig": {
-            "defaults": {"color": {"mode": "palette-classic"}, "unit": "reqps"},
-            "overrides": []
-          },
-          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
           "id": 7,
           "options": {
-            "legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true},
-            "tooltip": {"mode": "multi", "sort": "desc"}
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
               "expr": "sum by (outcome) (rate(imdb_agent_runs_total[$__rate_interval]))",
               "legendFormat": "{{outcome}}",
@@ -305,36 +681,74 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "fieldConfig": {
-            "defaults": {"color": {"mode": "palette-classic"}, "unit": "s"},
-            "overrides": []
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "s"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 5
+          },
           "id": 8,
           "options": {
-            "legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true},
-            "tooltip": {"mode": "multi", "sort": "desc"}
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
               "expr": "histogram_quantile(0.50, sum by (le) (rate(imdb_agent_first_event_duration_seconds_bucket[$__rate_interval])))",
-              "legendFormat": "p50 first event",
+              "legendFormat": "first event p50",
               "range": true,
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
               "expr": "histogram_quantile(0.95, sum by (le) (rate(imdb_agent_first_event_duration_seconds_bucket[$__rate_interval])))",
-              "legendFormat": "p95 first event",
+              "legendFormat": "first event p95",
               "range": true,
               "refId": "B"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
               "expr": "histogram_quantile(0.95, sum by (le) (rate(imdb_agent_run_duration_seconds_bucket[$__rate_interval])))",
-              "legendFormat": "p95 complete run",
+              "legendFormat": "run p95",
               "range": true,
               "refId": "C"
             }
@@ -343,122 +757,483 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "fieldConfig": {
-            "defaults": {"color": {"mode": "palette-classic"}, "unit": "ops"},
-            "overrides": []
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 13
           },
-          "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12},
+          "id": 101,
+          "panels": [
+
+          ],
+          "title": "Java MCP Tools",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "ops"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 14
+          },
           "id": 9,
           "options": {
-            "legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true},
-            "tooltip": {"mode": "multi", "sort": "desc"}
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
               "expr": "sum by (tool) (rate(imdb_agent_tool_calls_total[$__rate_interval]))",
-              "legendFormat": "{{tool}}",
+              "legendFormat": "{{tool}} calls/s",
               "range": true,
               "refId": "A"
             }
           ],
           "title": "Java MCP Tool Calls",
-          "type": "timeseries"
+          "type": "timeseries",
+          "description": "Tool invocation throughput. Tool latency and outcome metrics are not instrumented yet."
         },
         {
-          "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "fieldConfig": {
-            "defaults": {"color": {"mode": "palette-classic"}, "unit": "short"},
-            "overrides": []
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 22
           },
-          "gridPos": {"h": 8, "w": 8, "x": 8, "y": 12},
+          "id": 102,
+          "panels": [
+
+          ],
+          "title": "Model Economics",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 10
+                  },
+                  {
+                    "color": "red",
+                    "value": 18
+                  }
+                ]
+              },
+              "unit": "currencyUSD",
+              "decimals": 4
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 23
+          },
+          "id": 5,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(imdb_agent_model_estimated_cost_usd_total[24h])) or vector(0)",
+              "legendFormat": "Value",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Estimated Cost 24h",
+          "type": "stat",
+          "description": "Rolling locally estimated provider cost; the provider project budget remains authoritative."
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 50
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percent",
+              "decimals": 2,
+              "min": 0,
+              "max": 100
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 23
+          },
+          "id": 6,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "100 * max(imdb_agent_process_budget_committed_usd) / clamp_min(max(imdb_agent_guardrail_limit{limit=\"project_cost_usd\"}), 0.01)",
+              "legendFormat": "Value",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Process Budget Used",
+          "type": "stat",
+          "description": "In-memory process budget usage, reset by an agent restart."
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 12,
+            "y": 23
+          },
+          "id": 16,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(imdb_agent_model_tokens_total{direction=\"input\"}[$__range])) or vector(0)",
+              "legendFormat": "Value",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Input Tokens In Range",
+          "type": "stat",
+          "description": "Model input tokens consumed during the selected dashboard range."
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "none",
+              "decimals": 0
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 18,
+            "y": 23
+          },
+          "id": 17,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(imdb_agent_model_tokens_total{direction=\"output\"}[$__range])) or vector(0)",
+              "legendFormat": "Value",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Output Tokens In Range",
+          "type": "stat",
+          "description": "Model output tokens generated during the selected dashboard range."
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 27
+          },
           "id": 10,
           "options": {
-            "legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true},
-            "tooltip": {"mode": "multi", "sort": "desc"}
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
               "expr": "sum by (direction) (rate(imdb_agent_model_tokens_total[$__rate_interval]))",
-              "legendFormat": "{{direction}}",
+              "legendFormat": "{{direction}} tokens/s",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Model Token Rate",
-          "type": "timeseries"
+          "title": "Model Tokens Per Second",
+          "type": "timeseries",
+          "description": "Token throughput split into input, output, cache-read, and cache-write directions."
         },
         {
-          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "fieldConfig": {
-            "defaults": {"color": {"mode": "palette-classic"}, "unit": "reqps"},
-            "overrides": []
-          },
-          "gridPos": {"h": 8, "w": 8, "x": 16, "y": 12},
-          "id": 11,
-          "options": {
-            "legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true},
-            "tooltip": {"mode": "multi", "sort": "desc"}
-          },
-          "targets": [
-            {
-              "editorMode": "code",
-              "expr": "sum by (route, status) (rate(imdb_agent_http_requests_total[$__rate_interval]))",
-              "legendFormat": "{{route}} {{status}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "HTTP Requests",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "fieldConfig": {
-            "defaults": {"color": {"mode": "palette-classic"}, "unit": "none"},
-            "overrides": []
-          },
-          "gridPos": {"h": 7, "w": 12, "x": 0, "y": 20},
-          "id": 12,
-          "options": {
-            "legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true},
-            "tooltip": {"mode": "multi", "sort": "desc"}
-          },
-          "targets": [
-            {
-              "editorMode": "code",
-              "expr": "sum(increase(imdb_agent_sse_disconnects_total[$__range]))",
-              "legendFormat": "SSE disconnects",
-              "range": true,
-              "refId": "A"
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "currencyUSD"
             },
-            {
-              "editorMode": "code",
-              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"imdb-clone\", container=\"agent\"}[$__range]))",
-              "legendFormat": "container restarts",
-              "range": true,
-              "refId": "B"
-            }
-          ],
-          "title": "Disconnects and Restarts",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "fieldConfig": {
-            "defaults": {"color": {"mode": "palette-classic"}, "unit": "currencyUSD"},
-            "overrides": []
+            "overrides": [
+
+            ]
           },
-          "gridPos": {"h": 7, "w": 12, "x": 12, "y": 20},
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 27
+          },
           "id": 13,
           "options": {
-            "legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true},
-            "tooltip": {"mode": "multi", "sort": "desc"}
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
           "targets": [
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
               "expr": "sum(increase(imdb_agent_model_estimated_cost_usd_total[1h]))",
               "legendFormat": "rolling 1h",
@@ -466,6 +1241,10 @@ data:
               "refId": "A"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
               "expr": "sum(increase(imdb_agent_model_estimated_cost_usd_total[24h]))",
               "legendFormat": "rolling 24h",
@@ -473,6 +1252,10 @@ data:
               "refId": "B"
             },
             {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
               "editorMode": "code",
               "expr": "sum(increase(imdb_agent_model_estimated_cost_usd_total[7d]))",
               "legendFormat": "rolling 7d",
@@ -482,16 +1265,272 @@ data:
           ],
           "title": "Estimated Inference Cost",
           "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 35
+          },
+          "id": 103,
+          "panels": [
+
+          ],
+          "title": "Transport And Runtime",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "reqps"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 36
+          },
+          "id": 11,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum by (route, status) (rate(imdb_agent_http_requests_total{route!~\"/healthz|/readyz\"}[$__rate_interval]))",
+              "legendFormat": "{{route}} {{status}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "User-Facing HTTP Requests",
+          "type": "timeseries",
+          "description": "Conversation API traffic only; Kubernetes liveness and readiness probes are excluded."
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "short"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 36
+          },
+          "id": 12,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(imdb_agent_sse_disconnects_total[$__range])) or vector(0)",
+              "legendFormat": "SSE disconnects in range",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"imdb-clone\", pod=~\"imdb-clone-agent-.*\", container=\"agent\"}[$__range])) or vector(0)",
+              "legendFormat": "container restarts in range",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "SSE Disconnects And Restarts",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "cores"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 44
+          },
+          "id": 18,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"imdb-clone\", pod=~\"imdb-clone-agent-.*\", container=\"agent\"}[$__rate_interval]))",
+              "legendFormat": "agent CPU",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Agent CPU",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "unit": "bytes"
+            },
+            "overrides": [
+
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 44
+          },
+          "id": 19,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              },
+              "editorMode": "code",
+              "expr": "sum(container_memory_working_set_bytes{namespace=\"imdb-clone\", pod=~\"imdb-clone-agent-.*\", container=\"agent\"})",
+              "legendFormat": "working set",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Agent Memory",
+          "type": "timeseries"
         }
       ],
       "refresh": "30s",
       "schemaVersion": 42,
-      "tags": ["imdb-clone", "movie-concierge", "agent"],
-      "templating": {"list": []},
-      "time": {"from": "now-6h", "to": "now"},
-      "timepicker": {},
+      "tags": [
+        "imdb-clone",
+        "movie-concierge",
+        "agent"
+      ],
+      "templating": {
+        "list": [
+
+        ]
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {
+      },
       "timezone": "browser",
       "title": "IMDb Clone / Movie Concierge",
       "uid": "imdb-agent-overview",
-      "version": 1
+      "version": 1,
+      "weekStart": ""
     }
