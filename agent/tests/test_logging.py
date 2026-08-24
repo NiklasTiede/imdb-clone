@@ -26,6 +26,7 @@ def test_json_logging_keeps_allowlisted_context_and_discards_payload(
 
     event: dict[str, object] = json.loads(capsys.readouterr().out)
     assert event["event"] == "safe_event"
+    assert event["level"] == "info"
     assert event["request_id"] == "request-123"
     assert "prompt" not in event
 

@@ -43,6 +43,13 @@ assert_contract(
   loki_values.dig("singleBinary", "persistence", "whenDeleted") == "Retain",
   "Loki PVC must survive Application deletion"
 )
+assert_contract(
+  loki_values.dig("lokiCanary", "extraArgs") == [
+    "-streamname=service_name",
+    "-streamvalue=loki-canary"
+  ],
+  "Loki Canary must identify itself in Grafana Logs Drilldown"
+)
 
 tempo = resource(documents, "Application", "tempo", "argocd")
 tempo_values = tempo.dig("spec", "source", "helm", "valuesObject")
@@ -165,6 +172,23 @@ end
 assert_contract(
   alloy_config.include?("_SYSTEMD_UNIT=k3s.service"),
   "journal collection must remain limited to the k3s service"
+)
+[
+  'level      = "level"',
+  'log_level  = "log_level"',
+  'source   = "plain_level"',
+  'level = "plain_level"'
+].each do |level_contract|
+  assert_contract(
+    alloy_config.include?(level_contract),
+    "Alloy log-level normalization missing #{level_contract}"
+  )
+end
+
+coredns_custom = resource(documents, "ConfigMap", "coredns-custom", "kube-system")
+assert_contract(
+  coredns_custom.fetch("data").keys.sort == %w[empty.override empty.server],
+  "CoreDNS optional imports must remain matched without custom DNS behavior"
 )
 
 observability = resource(documents, "Application", "observability", "argocd")

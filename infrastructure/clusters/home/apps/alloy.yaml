@@ -156,11 +156,50 @@ spec:
                 stage.json {
                   expressions = {
                     event      = "event",
+                    level      = "level",
+                    log_level  = "log_level",
                     request_id = "request_id",
                     span_id    = "span_id",
                     spanId     = "spanId",
                     trace_id   = "trace_id",
                     traceId    = "traceId",
+                  }
+                }
+
+                stage.regex {
+                  expression = "^(?:\\d{4}-\\d{2}-\\d{2}T\\S+\\s+)?\\s*\\[?(?P<plain_level>(?i:trace|debug|info|warn(?:ing)?|error|fatal|critical))\\]?(?:\\s|$)"
+                }
+
+                stage.template {
+                  source   = "log_level"
+                  template = "{{ `{{ if eq (ToLower .Value) \"warning\" }}warn{{ else }}{{ ToLower .Value }}{{ end }}` }}"
+                }
+
+                stage.labels {
+                  values = {
+                    level = "log_level",
+                  }
+                }
+
+                stage.template {
+                  source   = "plain_level"
+                  template = "{{ `{{ if eq (ToLower .Value) \"warning\" }}warn{{ else }}{{ ToLower .Value }}{{ end }}` }}"
+                }
+
+                stage.labels {
+                  values = {
+                    level = "plain_level",
+                  }
+                }
+
+                stage.template {
+                  source   = "level"
+                  template = "{{ `{{ if eq (ToLower .Value) \"warning\" }}warn{{ else }}{{ ToLower .Value }}{{ end }}` }}"
+                }
+
+                stage.labels {
+                  values = {
+                    level = "level",
                   }
                 }
 

@@ -115,8 +115,13 @@ ruby -ryaml -e '
 ' "${verification_dir}/alloy-rendered.yaml"
 
 ruby -ryaml -e \
-  'document = YAML.load_file(ARGV.fetch(0)); puts document.dig("spec", "source", "helm", "valuesObject", "alloy", "configMap", "content")' \
-  "${repository_root}/infrastructure/clusters/home/apps/alloy.yaml" \
+  'documents = YAML.load_stream(File.read(ARGV.fetch(0))).compact
+   config_map = documents.find do |document|
+     document["kind"] == "ConfigMap" && document.dig("data", "config.alloy")
+   end
+   raise "rendered Alloy config missing" if config_map.nil?
+   puts config_map.dig("data", "config.alloy")' \
+  "${verification_dir}/alloy-rendered.yaml" \
   >"${verification_dir}/config.alloy"
 
 docker run --rm \
