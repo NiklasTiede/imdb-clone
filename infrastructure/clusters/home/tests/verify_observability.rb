@@ -31,6 +31,28 @@ def container_environment(deployment, container_name)
   container.fetch("env", []).to_h { |entry| [entry["name"], entry["value"]] }
 end
 
+def load_dashboard(repository_root, filename, key)
+  manifest = YAML.load_file(
+    File.join(
+      repository_root,
+      "infrastructure/clusters/home/apps/observability/dashboards",
+      filename
+    )
+  )
+  JSON.parse(manifest.dig("data", key))
+end
+
+def dashboard_panel(dashboard, title)
+  panel = dashboard.fetch("panels").find { |candidate| candidate["title"] == title }
+  raise "missing panel #{title} in #{dashboard.fetch("title")}" if panel.nil?
+
+  panel
+end
+
+def panel_expressions(panel)
+  panel.fetch("targets", []).map { |target| target["expr"] }.compact
+end
+
 loki = resource(documents, "Application", "loki", "argocd")
 loki_values = loki.dig("spec", "source", "helm", "valuesObject")
 assert_contract(loki.dig("spec", "source", "targetRevision") == "7.3.0", "Loki chart drifted")
@@ -373,15 +395,270 @@ end
   assert_contract(alert_names.include?(alert_name), "missing alert #{alert_name}")
 end
 
-dashboard_manifest = YAML.load_file(
-  File.join(
+dashboards = {
+  "Operations" => load_dashboard(
     repository_root,
-    "infrastructure/clusters/home/apps/observability/dashboards/cluster-logs.yaml"
+    "operations-overview.yaml",
+    "operations-overview.json"
+  ),
+  "Backend" => load_dashboard(repository_root, "backend-overview.yaml", "backend-overview.json"),
+  "Concierge" => load_dashboard(repository_root, "agent-overview.yaml", "agent-overview.json"),
+  "PostgreSQL" => load_dashboard(
+    repository_root,
+    "postgresql-overview.yaml",
+    "postgresql-overview.json"
+  ),
+  "Infrastructure" => load_dashboard(
+    repository_root,
+    "system-overview.yaml",
+    "system-overview.json"
+  ),
+  "Logs" => load_dashboard(repository_root, "cluster-logs.yaml", "cluster-logs.json")
+}
+
+expected_dashboard_uids = {
+  "Operations" => "imdb-operations-overview",
+  "Backend" => "imdb-backend-overview",
+  "Concierge" => "imdb-agent-overview",
+  "PostgreSQL" => "imdb-postgresql-overview",
+  "Infrastructure" => "imdb-system-overview",
+  "Logs" => "imdb-clone-cluster-logs"
+}
+expected_navigation = %w[Operations Backend Concierge PostgreSQL Infrastructure Logs Traces Profiles]
+expected_rows = {
+  "Operations" => [
+    "Is It Working?",
+    "Is It Serving Users?",
+    "Agent Usage And Economics",
+    "Does It Have Capacity?",
+    "Dependency Workload Readiness"
+  ],
+  "Backend" => %w[Reliability HTTP Database Runtime Security\ And\ Guardrails],
+  "Concierge" => [
+    "Reliability And Latency",
+    "Java MCP Tools",
+    "Model Economics",
+    "Transport And Runtime"
+  ],
+  "PostgreSQL" => [
+    "Availability And Capacity",
+    "Connections And Transactions",
+    "Efficiency And Size",
+    "Runtime And Storage"
+  ],
+  "Infrastructure" => [
+    "Cluster Capacity",
+    "Resource Trends",
+    "Persistent Storage",
+    "Workload Health"
+  ]
+}
+
+dashboards.each do |name, dashboard|
+  assert_contract(
+    dashboard["uid"] == expected_dashboard_uids.fetch(name),
+    "#{name} dashboard UID drifted"
   )
+  assert_contract(dashboard.fetch("panels").any?, "#{name} dashboard is empty")
+  assert_contract(
+    dashboard.fetch("panels").map { |panel| panel["id"] }.uniq.length ==
+      dashboard.fetch("panels").length,
+    "#{name} dashboard panel IDs must be unique"
+  )
+  dashboard.fetch("panels").each do |panel|
+    position = panel.fetch("gridPos")
+    assert_contract(
+      position["x"] >= 0 && position["w"] > 0 && position["x"] + position["w"] <= 24,
+      "#{name} dashboard panel #{panel.fetch("title")} exceeds the 24-column grid"
+    )
+  end
+  content_panels = dashboard.fetch("panels").reject { |panel| panel["type"] == "row" }
+  content_panels.combination(2).each do |first, second|
+    first_position = first.fetch("gridPos")
+    second_position = second.fetch("gridPos")
+    horizontal_overlap =
+      first_position["x"] < second_position["x"] + second_position["w"] &&
+      second_position["x"] < first_position["x"] + first_position["w"]
+    vertical_overlap =
+      first_position["y"] < second_position["y"] + second_position["h"] &&
+      second_position["y"] < first_position["y"] + first_position["h"]
+    assert_contract(
+      !(horizontal_overlap && vertical_overlap),
+      "#{name} dashboard panels #{first.fetch("title")} and " \
+        "#{second.fetch("title")} overlap"
+    )
+  end
+  links = dashboard.fetch("links")
+  assert_contract(
+    links.map { |link| link["title"] } == expected_navigation,
+    "#{name} dashboard navigation drifted"
+  )
+  assert_contract(
+    links.all? { |link| link["type"] == "link" && link["keepTime"] == true },
+    "#{name} dashboard links must retain the active time range"
+  )
+  next unless expected_rows.key?(name)
+
+  assert_contract(
+    dashboard.fetch("panels").select { |panel| panel["type"] == "row" }
+      .map { |panel| panel["title"] } == expected_rows.fetch(name),
+    "#{name} dashboard information architecture drifted"
+  )
+end
+
+operations = dashboards.fetch("Operations")
+assert_contract(
+  operations.fetch("title") == "IMDB Clone – Operations Overview",
+  "operations dashboard title drifted"
 )
-dashboard = JSON.parse(dashboard_manifest.dig("data", "cluster-logs.json"))
-assert_contract(dashboard["uid"] == "imdb-clone-cluster-logs", "log dashboard UID drifted")
-assert_contract(dashboard.fetch("panels").length >= 4, "log dashboard is incomplete")
+%w[
+  Backend
+  Movie\ Concierge
+  PostgreSQL
+  Active\ Alerts
+  Not\ Ready
+  Pending
+  Backend\ RPS
+  Backend\ 5xx
+  Backend\ p95
+  Agent\ Success
+  First\ Event\ p95
+  Agent\ Run\ p95
+  Agent\ Runs
+  Cost\ 24h
+  Budget\ Used
+  Node\ CPU
+  Node\ Memory
+  Root\ Disk
+  Max\ PVC\ FS
+  Restarts
+  Last\ OOMs
+  OpenSearch\ K8s
+  RustFS\ K8s
+].each do |title|
+  dashboard_panel(operations, title)
+end
+actionable_alerts = panel_expressions(dashboard_panel(operations, "Active Alerts")).join(" ")
+assert_contract(
+  actionable_alerts.include?('alertstate="firing"') &&
+    actionable_alerts.include?("Watchdog|PrometheusNotConnectedToAlertmanagers|InfoInhibitor"),
+  "operations dashboard must suppress known non-actionable alerts"
+)
+%w[OpenSearch\ K8s RustFS\ K8s].each do |title|
+  panel = dashboard_panel(operations, title)
+  assert_contract(
+    panel.fetch("description").include?("Kubernetes") &&
+      panel.fetch("description").include?("not scraped yet"),
+    "#{title} must distinguish workload readiness from service health"
+  )
+end
+
+backend_dashboard = dashboards.fetch("Backend")
+backend_5xx = panel_expressions(dashboard_panel(backend_dashboard, "5xx Error Rate")).join(" ")
+assert_contract(
+  backend_5xx.include?("or vector(0)") && backend_5xx.include?('status=~"5.."'),
+  "backend 5xx rate must return zero when no failures occur"
+)
+backend_p95 = panel_expressions(dashboard_panel(backend_dashboard, "Request p95")).join(" ")
+assert_contract(
+  backend_p95.include?("histogram_quantile(0.95") &&
+    backend_p95.include?("increase(") &&
+    backend_p95.include?("[$__range]") &&
+    backend_p95.include?("or vector(0)"),
+  "backend primary latency must be a null-safe p95"
+)
+slow_routes = panel_expressions(dashboard_panel(backend_dashboard, "Top Slow Routes")).join(" ")
+assert_contract(
+  slow_routes.include?("clamp_min") && slow_routes.include?(" > 0"),
+  "slow routes must exclude zero-request NaN rows"
+)
+pool_saturation = panel_expressions(
+  dashboard_panel(backend_dashboard, "Database Pool Saturation")
+).join(" ")
+pool_connections = panel_expressions(
+  dashboard_panel(backend_dashboard, "Database Pool Connections")
+)
+assert_contract(
+  pool_saturation.include?("sum(hikaricp_connections_active") &&
+    pool_saturation.include?("sum(hikaricp_connections_max") &&
+    pool_connections.all? { |expr| expr.include?("sum(hikaricp_connections_") },
+  "backend Hikari metrics must aggregate current replicas"
+)
+
+agent_dashboard = dashboards.fetch("Concierge")
+agent_http = panel_expressions(dashboard_panel(agent_dashboard, "User-Facing HTTP Requests")).join(" ")
+assert_contract(
+  agent_http.include?('route!~"/healthz|/readyz"'),
+  "agent HTTP traffic must exclude Kubernetes probes"
+)
+dashboard_panel(agent_dashboard, "Model Tokens Per Second")
+dashboard_panel(agent_dashboard, "Agent CPU")
+dashboard_panel(agent_dashboard, "Agent Memory")
+agent_success = panel_expressions(dashboard_panel(agent_dashboard, "Success")).join(" ")
+assert_contract(
+  agent_success.include?("or vector(-1)"),
+  "agent success must distinguish no runs from a zero-percent success rate"
+)
+%w[First\ Event\ p95 Run\ p95].each do |title|
+  expression = panel_expressions(dashboard_panel(agent_dashboard, title)).join(" ")
+  assert_contract(
+    expression.include?("increase(") && expression.include?("[$__range]"),
+    "#{title} must summarize the selected dashboard range"
+  )
+end
+
+system_dashboard = dashboards.fetch("Infrastructure")
+restart_table = panel_expressions(
+  dashboard_panel(system_dashboard, "Pod Restarts In Selected Range")
+).join(" ")
+assert_contract(
+  restart_table.include?(" > 0"),
+  "system restart table must hide zero-value rows"
+)
+%w[Not\ Ready Pending PVC\ Backing\ Filesystem\ Usage Last\ OOMs].each do |title|
+  dashboard_panel(system_dashboard, title)
+end
+
+postgres_dashboard = dashboards.fetch("PostgreSQL")
+dashboard_panel(postgres_dashboard, "Restarts")
+dashboard_panel(postgres_dashboard, "PVC Usage")
+dashboard_panel(postgres_dashboard, "PVC Usage Trend")
+
+operations_resource = resource(
+  documents,
+  "ConfigMap",
+  "observability-dashboard-operations",
+  "observability"
+)
+assert_contract(
+  operations_resource.dig("metadata", "annotations", "grafana_folder") == "IMDB Clone",
+  "operations dashboard must stay in the primary IMDB Clone folder"
+)
+primary_dashboard_resources = %w[
+  observability-dashboard-agent
+  observability-dashboard-backend
+  observability-dashboard-cluster-logs
+  observability-dashboard-operations
+  observability-dashboard-system
+]
+primary_dashboard_resources.each do |name|
+  config_map = resource(documents, "ConfigMap", name, "observability")
+  assert_contract(
+    config_map.dig("metadata", "annotations", "grafana_folder") == "IMDB Clone",
+    "#{name} must stay in the primary IMDB Clone folder"
+  )
+end
+postgres_dashboard_resource = resource(
+  documents,
+  "ConfigMap",
+  "observability-dashboard-postgresql",
+  "observability"
+)
+assert_contract(
+  postgres_dashboard_resource.dig("metadata", "annotations", "grafana_folder") ==
+    "IMDB Clone Data",
+  "PostgreSQL dashboard must stay in the IMDB Clone Data folder"
+)
 
 traefik = resource(documents, "HelmChartConfig", "traefik", "kube-system")
 traefik_values = YAML.safe_load(traefik.dig("spec", "valuesContent"))
