@@ -56,6 +56,7 @@ events:
 - `status` — bounded user-visible progress, never private reasoning;
 - `text` — incremental answer text;
 - `movie-card` — a Java-tool-grounded movie projection;
+- `ui-action` — a strictly typed `open_movie` action containing only a grounded catalog movie ID;
 - `error` — redacted stable code, safe message, and retryability;
 - `usage` — requests, tool calls, input/cache/output tokens, and estimated USD cost;
 - `completion` — terminal outcome and conversation identifier.
@@ -75,9 +76,16 @@ Movie facts are accepted only from four Java-owned tools:
 Python never reads PostgreSQL or OpenSearch. Account mutations, web search, long-term memory, and
 voice are outside this local read-only release.
 
+The model runner cannot emit UI actions directly. After a successful run, provider-independent
+policy requires explicit open intent, one uniquely resolved current-run movie, and a matching
+title, catalog ID, or unambiguous reference. React validates the strict action, requires the
+matching card to have appeared earlier in the same stream, and builds `/movie?id=...` through an
+app-owned route helper. URLs, routes, stale conversation cards, tool failures, and ambiguous results
+never navigate.
+
 ## Evals and verification
 
-Run the deterministic 20-case suite and complete agent gate without a key or network:
+Run the deterministic 27-case suite and complete agent gate without a key or network:
 
 ```bash
 make eval-agent
@@ -85,9 +93,9 @@ make verify-agent
 ```
 
 The dataset covers normal, ambiguous, adversarial, tool-error, grounding, constraint-refinement,
-budget, and unsupported-mutation behavior. Pydantic Evals checks required/allowed tools, important
-arguments, catalog identifier grounding, safe errors, and run bounds. Fault-injection-only cases
-remain deterministic.
+budget, UI-action, and unsupported-mutation behavior. Pydantic Evals checks required/allowed tools,
+important arguments, catalog identifier and UI-action grounding, safe errors, and run bounds.
+Fault-injection-only cases remain deterministic.
 
 Live evals require two deliberate controls and are never part of CI:
 
@@ -138,9 +146,10 @@ also enforces:
 - a $20 process budget as a final local guard, with the provider project cap remaining authoritative
   across restarts.
 
-Prometheus collects bounded HTTP, run, outcome, first-event latency, tool, token, provider-estimated
-cost, process-budget, saturation, and disconnect metrics. The `IMDb Clone / Movie Concierge`
-Grafana dashboard visualizes those signals. PrometheusRules cover availability, errors, latency,
+Prometheus collects bounded HTTP, run, outcome, first-event latency, tool, UI-action decision,
+token, provider-estimated cost, process-budget, saturation, and disconnect metrics. The
+`IMDb Clone / Movie Concierge` Grafana dashboard visualizes those signals. PrometheusRules cover
+availability, errors, latency,
 MCP/provider failures, capacity, and cost. Alertmanager is deliberately not installed yet, so rules
 are visible in Prometheus/Grafana but do not send notifications.
 

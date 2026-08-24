@@ -94,6 +94,8 @@ class RunObserver(Protocol):
 
     def tool_called(self, tool_name: str) -> None: ...
 
+    def ui_action(self, *, action: str, outcome: str) -> None: ...
+
     def finished(
         self,
         *,

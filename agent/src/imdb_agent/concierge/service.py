@@ -13,7 +13,13 @@ from imdb_agent.concierge.events import (
     RunStatus,
     StatusEvent,
     TextEvent,
+    UiActionEvent,
     UsageEvent,
+)
+from imdb_agent.concierge.policy import (
+    UiActionDecisionOutcome,
+    decide_open_movie_action,
+    requests_open_movie,
 )
 from imdb_agent.concierge.ports import (
     BudgetExhaustedError,
@@ -99,6 +105,7 @@ class ConciergeService:
         turn_started = False
         capacity_acquired = False
         first_event_observed = False
+        ui_action_observed = False
         text_parts: list[str] = []
         movies_by_id: dict[int, GroundedMovie] = {}
         self._observer.started()
@@ -159,6 +166,18 @@ class ConciergeService:
                 )
             )
             reservation = None
+            action_decision = decide_open_movie_action(
+                message,
+                tuple(movies_by_id.values()),
+            )
+            if action_decision.outcome is not UiActionDecisionOutcome.NOT_REQUESTED:
+                self._observer.ui_action(
+                    action="open_movie",
+                    outcome=action_decision.outcome,
+                )
+                ui_action_observed = True
+            if action_decision.action is not None:
+                yield next_event(UiActionEvent(action=action_decision.action))
         except ConversationNotFoundError:
             metric_outcome = "conversation_not_found"
             yield next_event(
@@ -219,6 +238,8 @@ class ConciergeService:
                 )
             )
         finally:
+            if not ui_action_observed and requests_open_movie(message):
+                self._observer.ui_action(action="open_movie", outcome="rejected")
             if turn_started:
                 await self._conversations.fail_turn(client_id, conversation_id)
             if reservation is not None:

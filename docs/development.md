@@ -350,7 +350,7 @@ Run the stable full gate from the repository root:
 make verify-agent
 ```
 
-This includes the executable 20-case deterministic Pydantic Evals report. It requires no key,
+This includes the executable 27-case deterministic Pydantic Evals report. It requires no key,
 provider network, Java process, or data service. Run one case while iterating with:
 
 ```bash

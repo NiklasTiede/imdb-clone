@@ -18,7 +18,18 @@ public record FrontendTelemetryEvent(
     @DecimalMin("0.0") @DecimalMax("120000.0") Double value,
     FrontendTelemetryRating rating,
     FrontendApiOperation operation,
-    FrontendRequestOutcome outcome) {
+    FrontendRequestOutcome outcome,
+    FrontendUiActionOutcome uiActionOutcome) {
+
+  public FrontendTelemetryEvent(
+      FrontendTelemetryEventType type,
+      FrontendTelemetryName name,
+      Double value,
+      FrontendTelemetryRating rating,
+      FrontendApiOperation operation,
+      FrontendRequestOutcome outcome) {
+    this(type, name, value, rating, operation, outcome, null);
+  }
 
   private static final EnumSet<FrontendTelemetryName> DURATION_VITALS =
       EnumSet.of(
@@ -44,19 +55,32 @@ public record FrontendTelemetryEvent(
               && value != null
               && operation != null
               && outcome != null
-              && rating == null;
+              && rating == null
+              && uiActionOutcome == null;
       case BROWSER_ERROR ->
           (name == FrontendTelemetryName.BROWSER_ERROR
                   || name == FrontendTelemetryName.UNHANDLED_REJECTION)
               && value == null
               && rating == null
               && operation == null
-              && outcome == null;
+              && outcome == null
+              && uiActionOutcome == null;
+      case UI_ACTION ->
+          name == FrontendTelemetryName.OPEN_MOVIE
+              && value == null
+              && rating == null
+              && operation == null
+              && outcome == null
+              && uiActionOutcome != null;
     };
   }
 
   private boolean validWebVital() {
-    if (value == null || rating == null || operation != null || outcome != null) {
+    if (value == null
+        || rating == null
+        || operation != null
+        || outcome != null
+        || uiActionOutcome != null) {
       return false;
     }
     if (name == FrontendTelemetryName.CLS) {
@@ -71,7 +95,8 @@ public record FrontendTelemetryEvent(
         && value <= maximum
         && rating == null
         && operation == null
-        && outcome == null;
+        && outcome == null
+        && uiActionOutcome == null;
   }
 
   private static boolean isFinite(Double candidate) {

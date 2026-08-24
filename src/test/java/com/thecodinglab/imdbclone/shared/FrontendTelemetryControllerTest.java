@@ -41,6 +41,11 @@ class FrontendTelemetryControllerTest extends BaseControllerIntegrationTest {
                           "name": "CLS",
                           "value": 0.08,
                           "rating": "GOOD"
+                        },
+                        {
+                          "type": "UI_ACTION",
+                          "name": "OPEN_MOVIE",
+                          "uiActionOutcome": "EXECUTED"
                         }
                       ]
                     }
@@ -53,6 +58,7 @@ class FrontendTelemetryControllerTest extends BaseControllerIntegrationTest {
     org.assertj.core.api.Assertions.assertThat(prometheusMeterRegistry.scrape())
         .contains(
             "imdb_frontend_events_accepted_total",
+            "imdb_frontend_ui_actions_total",
             "imdb_frontend_web_vital_cls_score_bucket",
             "imdb_frontend_web_vital_duration_seconds_bucket");
   }
@@ -72,6 +78,26 @@ class FrontendTelemetryControllerTest extends BaseControllerIntegrationTest {
                           "name": "LCP",
                           "value": 999999,
                           "rating": "POOR"
+                        }
+                      ]
+                    }
+                    """))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void rejectsUiActionsWithoutABoundedOutcome() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/observability/frontend")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "events": [
+                        {
+                          "type": "UI_ACTION",
+                          "name": "OPEN_MOVIE"
                         }
                       ]
                     }

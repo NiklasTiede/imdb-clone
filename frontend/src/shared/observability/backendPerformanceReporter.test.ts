@@ -63,6 +63,24 @@ describe("backendPerformanceReporter", () => {
     ).toMatchObject({ operation: "CONCIERGE" });
   });
 
+  it("maps concierge actions without movie, route, or conversation identifiers", () => {
+    const payload = toFrontendTelemetryEvent({
+      context: { ...context, route: "/private/path" },
+      name: "open_movie",
+      outcome: "executed",
+      timestamp: 30,
+      type: "concierge_ui_action",
+    });
+
+    expect(payload).toEqual({
+      name: "OPEN_MOVIE",
+      type: "UI_ACTION",
+      uiActionOutcome: "EXECUTED",
+    });
+    expect(JSON.stringify(payload)).not.toContain("private");
+    expect(JSON.stringify(payload)).not.toContain("movieId");
+  });
+
   it("batches events and flushes without blocking the caller", async () => {
     vi.useFakeTimers();
     const sender = vi.fn().mockResolvedValue(undefined);

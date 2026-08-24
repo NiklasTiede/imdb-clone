@@ -140,3 +140,56 @@ test("public concierge streams a grounded movie into its responsive drawer", asy
   await page.getByRole("button", { name: "Close Movie Concierge" }).click();
   await expect(drawer).toBeHidden();
 });
+
+test("grounded concierge action opens the movie page without leaving an overlay", async ({
+  page,
+}) => {
+  await mockAnonymousShell(page);
+  await page.route("**/api/movie/42", async (route) => {
+    await route.fulfill({ status: 404, body: "" });
+  });
+  await page.route("**/concierge-api/v1/conversations", async (route) => {
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({ conversationId }),
+    });
+  });
+  await page.route(
+    `**/concierge-api/v1/conversations/${conversationId}/messages`,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        body:
+          sse("movie-card", 1, {
+            movie: {
+              movieId: 42,
+              primaryTitle: "Arrival",
+              originalTitle: "Arrival",
+              movieType: "MOVIE",
+              startYear: 2016,
+              runtimeMinutes: 116,
+              genres: ["DRAMA", "SCI_FI"],
+            },
+          }) +
+          sse("text", 2, { delta: "Opening Arrival." }) +
+          sse("ui-action", 3, {
+            action: { type: "open_movie", movieId: 42 },
+          }) +
+          sse("completion", 4, { conversationId, outcome: "success" }),
+      });
+    },
+  );
+
+  await page.goto("/movie-search");
+  await page.getByRole("button", { name: "Ask the Movie Concierge" }).click();
+  const drawer = page.getByRole("dialog", { name: "Movie Concierge" });
+  await page
+    .getByRole("textbox", { name: "Ask the Movie Concierge" })
+    .fill("Open Arrival");
+  await page.getByRole("button", { name: "Send concierge message" }).click();
+
+  await expect(page).toHaveURL(/\/movie\?id=42$/);
+  await expect(drawer).toBeHidden();
+});

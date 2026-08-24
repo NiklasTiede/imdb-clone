@@ -9,6 +9,7 @@ import com.thecodinglab.imdbclone.shared.api.FrontendTelemetryEvent;
 import com.thecodinglab.imdbclone.shared.api.FrontendTelemetryEventType;
 import com.thecodinglab.imdbclone.shared.api.FrontendTelemetryName;
 import com.thecodinglab.imdbclone.shared.api.FrontendTelemetryRating;
+import com.thecodinglab.imdbclone.shared.api.FrontendUiActionOutcome;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +52,15 @@ class FrontendTelemetryMetricsTest {
                     null,
                     null,
                     null,
-                    null))));
+                    null),
+                new FrontendTelemetryEvent(
+                    FrontendTelemetryEventType.UI_ACTION,
+                    FrontendTelemetryName.OPEN_MOVIE,
+                    null,
+                    null,
+                    null,
+                    null,
+                    FrontendUiActionOutcome.EXECUTED))));
 
     assertThat(
             registry
@@ -81,8 +90,15 @@ class FrontendTelemetryMetricsTest {
                 .counter()
                 .count())
         .isEqualTo(1.0d);
+    assertThat(
+            registry
+                .get("imdb.frontend.ui.actions")
+                .tags("action", "open_movie", "outcome", "executed")
+                .counter()
+                .count())
+        .isEqualTo(1.0d);
     assertThat(registry.get("imdb.frontend.events.accepted").counters())
         .extracting(counter -> counter.getId().getTag("type"))
-        .containsExactlyInAnyOrder("api_request", "browser_error", "web_vital");
+        .containsExactlyInAnyOrder("api_request", "browser_error", "ui_action", "web_vital");
   }
 }

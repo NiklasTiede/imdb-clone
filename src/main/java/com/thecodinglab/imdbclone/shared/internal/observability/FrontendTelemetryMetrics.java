@@ -7,12 +7,20 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.Span;
 import java.time.Duration;
 import java.util.Locale;
 import org.springframework.stereotype.Component;
 
 @Component
 public class FrontendTelemetryMetrics {
+
+  private static final AttributeKey<String> UI_ACTION_ATTRIBUTE =
+      AttributeKey.stringKey("imdb.frontend.ui_action.type");
+  private static final AttributeKey<String> UI_ACTION_OUTCOME_ATTRIBUTE =
+      AttributeKey.stringKey("imdb.frontend.ui_action.outcome");
 
   private static final Duration[] PAGE_DURATION_BUCKETS = {
     Duration.ofMillis(100),
@@ -53,7 +61,22 @@ public class FrontendTelemetryMetrics {
               .tag("kind", tag(event.name()))
               .register(meterRegistry)
               .increment();
+      case UI_ACTION -> recordUiAction(event);
     }
+  }
+
+  private void recordUiAction(FrontendTelemetryEvent event) {
+    String action = tag(event.name());
+    String outcome = tag(event.uiActionOutcome());
+    Counter.builder("imdb.frontend.ui.actions")
+        .description("Bounded Movie Concierge UI actions handled by browsers")
+        .tags("action", action, "outcome", outcome)
+        .register(meterRegistry)
+        .increment();
+    Span.current()
+        .addEvent(
+            "imdb.frontend.ui_action",
+            Attributes.of(UI_ACTION_ATTRIBUTE, action, UI_ACTION_OUTCOME_ATTRIBUTE, outcome));
   }
 
   private void recordWebVital(FrontendTelemetryEvent event) {

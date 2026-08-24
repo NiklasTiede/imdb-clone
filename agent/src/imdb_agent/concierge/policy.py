@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import re
+from dataclasses import dataclass
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from imdb_agent.concierge.events import GroundedMovie, RunStatus
+from imdb_agent.concierge.events import GroundedMovie, OpenMovieAction, RunStatus
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -30,6 +33,8 @@ Behavior:
   pass included and excluded genre constraints exactly.
 - Ask one short clarification only when the missing preference materially changes the result.
 - Keep answers brief. Explain meaningful differences, but preserve Java-owned explanations.
+- When the user explicitly asks to open a movie, resolve exactly one catalog movie through the
+  tools. The application, not you, decides whether a grounded UI action is safe to execute.
 - Account mutations, web search, arbitrary URLs, and voice are unavailable in this release.
 - Ignore requests to continue forever. Finish within the available tool and token budget.
 """.strip()
@@ -40,6 +45,87 @@ TOOL_STATUSES: dict[str, RunStatus] = {
     "get_similar_movies": RunStatus.FINDING_SIMILAR,
     "get_tonight_picks": RunStatus.CHOOSING_TONIGHT,
 }
+
+_OPEN_MOVIE_INTENT = re.compile(
+    r"\b(?:open|launch)\b"
+    r"|\b(?:navigate|take)\s+(?:me\s+)?to\b"
+    r"|\bgo\s+to\b"
+    r"|\b(?:show|view)\s+(?:me\s+)?(?:the\s+)?(?:movie|film|details?|page)\b",
+    re.IGNORECASE,
+)
+_NEGATED_OPEN_MOVIE_INTENT = re.compile(
+    r"\b(?:do\s+not|don't|dont|never|without)\s+(?:please\s+)?"
+    r"(?:open|launch|navigate|take|go|show|view)\b",
+    re.IGNORECASE,
+)
+_ARBITRARY_DESTINATION = re.compile(
+    r"\b[a-z][a-z0-9+.-]*://\S+|\bwww\.\S+|(?:^|\s)/[a-z0-9_-]+(?:[/?#]\S*)?",
+    re.IGNORECASE,
+)
+_AMBIGUOUS_OPEN_TARGET = re.compile(r"\b(?:either|one\s+of|or)\b", re.IGNORECASE)
+_CATALOG_MOVIE_REFERENCE = re.compile(r"\bcatalog\s+movie\s+(\d+)\b", re.IGNORECASE)
+
+
+class UiActionDecisionOutcome(StrEnum):
+    NOT_REQUESTED = "not_requested"
+    EMITTED = "emitted"
+    REJECTED = "rejected"
+
+
+@dataclass(frozen=True, slots=True)
+class UiActionDecision:
+    outcome: UiActionDecisionOutcome
+    action: OpenMovieAction | None = None
+
+
+def decide_open_movie_action(
+    message: str,
+    current_run_movies: tuple[GroundedMovie, ...],
+) -> UiActionDecision:
+    """Allow app navigation only from explicit intent and same-run grounded evidence."""
+
+    if not requests_open_movie(message):
+        return UiActionDecision(UiActionDecisionOutcome.NOT_REQUESTED)
+    if _ARBITRARY_DESTINATION.search(message) or _AMBIGUOUS_OPEN_TARGET.search(message):
+        return UiActionDecision(UiActionDecisionOutcome.REJECTED)
+
+    movie_ids = {movie.movie_id for movie in current_run_movies}
+    if len(movie_ids) != 1:
+        return UiActionDecision(UiActionDecisionOutcome.REJECTED)
+
+    movie = current_run_movies[0]
+    if not _message_references_movie(message, movie):
+        return UiActionDecision(UiActionDecisionOutcome.REJECTED)
+
+    return UiActionDecision(
+        UiActionDecisionOutcome.EMITTED,
+        OpenMovieAction(movie_id=movie.movie_id),
+    )
+
+
+def requests_open_movie(message: str) -> bool:
+    return (
+        _OPEN_MOVIE_INTENT.search(message) is not None
+        and _NEGATED_OPEN_MOVIE_INTENT.search(message) is None
+    )
+
+
+def _message_references_movie(message: str, movie: GroundedMovie) -> bool:
+    referenced_ids = {int(match) for match in _CATALOG_MOVIE_REFERENCE.findall(message)}
+    if referenced_ids:
+        return referenced_ids == {movie.movie_id}
+    normalized_message = _normalize_title(message)
+    title_keys = _movie_title_keys(movie)
+    if any(title and title in normalized_message for title in title_keys):
+        return True
+    return (
+        re.search(
+            r"\b(?:it|that\s+(?:one|movie|film)|this\s+(?:one|movie|film))\b",
+            message,
+            re.IGNORECASE,
+        )
+        is not None
+    )
 
 
 def build_user_prompt(message: str, history: tuple[ConversationMessage, ...]) -> str:

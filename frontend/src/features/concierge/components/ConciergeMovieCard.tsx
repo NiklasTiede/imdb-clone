@@ -4,6 +4,7 @@ import { alpha } from "@mui/material/styles";
 import { Box, Card, Chip, Stack, Typography } from "@mui/material";
 import { Link } from "react-router";
 import { MoviePosterImageSize, PosterImage } from "../../../shared/media";
+import { movieDetailPath } from "../../../shared/navigation/appRoutes";
 import { movieColors } from "../../../theme";
 import type { GroundedMovie } from "../model/concierge";
 
@@ -30,7 +31,7 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
     <Box sx={{ minWidth: 0, p: 1.5 }}>
       <Typography
         component={Link}
-        to={`/movie?id=${movie.movieId}`}
+        to={movieDetailPath(movie.movieId)}
         sx={{
           color: "common.white",
           display: "block",

@@ -32,6 +32,7 @@ class EvalCase(StrictModel):
     expected_behavior: list[str] = Field(min_length=1)
     forbidden_behavior: list[str] = Field(min_length=1)
     tags: list[str] = Field(min_length=1)
+    expected_ui_action: Literal["open_movie"] | None = None
 
     @model_validator(mode="after")
     def validate_tool_policy(self) -> Self:

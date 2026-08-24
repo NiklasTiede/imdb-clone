@@ -2,11 +2,11 @@
 
 **Status:** Accepted product direction
 
-**Last updated:** 2026-08-18
+**Last updated:** 2026-08-24
 
 **First release:** Read-only text concierge
 
-**Current milestone:** Production pilot foundation implemented; deployment remains deferred
+**Current milestone:** Production read-only pilot deployed; grounded UI actions in development
 
 ## Vision
 
@@ -83,6 +83,19 @@ A representative journey is:
 The agent may emit a typed navigation suggestion when the user explicitly asks to open a movie. The
 React application performs the navigation; navigation is not an LLM tool with arbitrary URLs.
 
+### Grounded UI-action contract
+
+`open_movie` is an application action, not a provider tool and not a model-generated route. The
+provider-independent Concierge core emits it only after an explicit open request resolves to one
+unique Java-MCP-grounded movie in the current run. Ambiguous, missing, stale, failed, or forged
+grounding emits no action. The event carries only a positive catalog movie ID; React validates the
+strict event, requires the same card to have appeared earlier in that stream, builds the known
+movie-detail route itself, and closes the Concierge overlay.
+
+The same typed action can later be consumed by a realtime voice adapter. Voice may therefore say
+less or nothing while the existing React application executes the already-tested action contract;
+it does not need a second navigation mechanism or permission model.
+
 ## Read-Only MVP
 
 ### In scope
@@ -93,7 +106,7 @@ React application performs the navigation; navigation is not an LLM tool with ar
 - Similar-movie discovery through the existing recommendation capability.
 - Tonight Mode choices with mood, genre, runtime, era, and exclusion constraints.
 - Multi-turn refinement with bounded conversation history.
-- Typed streaming text, status, movie-card, error, usage, and completion events.
+- Typed streaming text, status, movie-card, UI-action, error, usage, and completion events.
 - Provider-independent agent code and deterministic model/tool fakes.
 - A versioned eval set covering normal, ambiguous, adversarial, and failure cases.
 - Local metrics, structured logs, trace hooks, token usage, and estimated-cost accounting before
@@ -318,25 +331,26 @@ cancellation, trace propagation, redaction controls, image release/CD, k3s resou
 ServiceMonitor, dashboards, and alerts. **Exit:** a deliberately constrained canary can run in k3s
 with costs and failures visible.
 
-**Foundation status:** Implemented on `feat/movie-concierge-production-pilot` without deploying.
-The existing namespace now has a GitOps contract for file-mounted SOPS credentials, hardened
+**Status:** Deployed as the constrained home-cluster production pilot. The existing namespace has
+a GitOps contract for file-mounted SOPS credentials, hardened
 single-pod execution, same-origin routing, release automation, NetworkPolicy, Prometheus scraping,
 an initial Grafana dashboard, aggregate alert rules, bounded public traffic, and redacted failures.
 Durable history, Alertmanager delivery, a semantic LLM-observability product, and traffic-derived
 threshold tuning remain deliberately outside this pilot. Privacy-safe OpenTelemetry export through
-Alloy into Tempo and cluster-wide Loki logging are implemented in GitOps and require a reviewed
-release before they become the live production path.
+Alloy into Tempo and cluster-wide Loki logging are live alongside Prometheus/Grafana metrics and
+continuous profiles.
 
 ### M6 — Read-only production MVP
 
-Complete the four read-only tools, multi-turn constraint refinement, bounded durable history,
+Complete the four read-only tools, multi-turn constraint refinement, bounded ephemeral history,
 structured comparisons, capability discovery, and the production eval regression gate. **Exit:** a
 user can reliably reach a confident movie choice, and an operator can diagnose quality, latency,
 tool, provider, and cost failures.
 
-**Local status:** The four-tool, multi-turn, bounded-history, capability-discovery, deterministic
-eval, and privacy-safe production tracing scope is complete. Durable production state,
-traffic-derived SLOs, and deployment remain future work.
+**Status:** The four-tool, multi-turn, bounded in-memory history, capability-discovery,
+deterministic eval, and privacy-safe observability scope is deployed. Conversation history remains
+intentionally process-local and is cleared on restart; durable state and traffic-derived SLOs
+remain future work.
 
 ### M7 — Personal actions
 
@@ -350,9 +364,9 @@ Evaluate realtime voice after the text product demonstrates repeated value. Reus
 policies, events, approval model, and evals. **Exit:** voice is an adapter to the product rather than
 a parallel agent implementation.
 
-The **local read-only MVP** is complete. The **production pilot foundation** is implemented but not
-deployed. A reviewed version release and post-release observation period are required before it can
-be called the production read-only MVP.
+The **read-only production pilot** is deployed and observable. Grounded `open_movie` UI actions are
+the next provider-independent interaction slice; voice, personalization, and mutations remain
+separate future milestones.
 
 ## Open Decisions
 
