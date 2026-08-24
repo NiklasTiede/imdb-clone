@@ -16,6 +16,7 @@ SAFE_LOG_FIELDS: Final = frozenset(
         "estimated_cost_usd",
         "event",
         "input_tokens",
+        "level",
         "log_level",
         "method",
         "model",

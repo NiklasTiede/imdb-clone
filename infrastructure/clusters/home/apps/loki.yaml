@@ -87,6 +87,9 @@ spec:
               memory: 128Mi
         lokiCanary:
           enabled: true
+          extraArgs:
+            - "-streamname=service_name"
+            - "-streamvalue=loki-canary"
           resources:
             requests:
               cpu: 10m

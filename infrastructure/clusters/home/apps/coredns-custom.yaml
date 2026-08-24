@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  empty.override: |
+    # Keep the optional k3s CoreDNS override import matched without changing DNS behavior.
+  empty.server: |
+    # Keep the optional k3s CoreDNS server import matched without changing DNS behavior.
