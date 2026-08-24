@@ -213,6 +213,22 @@ assert_contract(
   "agent metrics scrape path drifted"
 )
 
+llama_service_monitor = resource(
+  documents,
+  "ServiceMonitor",
+  "imdb-clone-llama-cpp",
+  "databases"
+)
+assert_contract(
+  llama_service_monitor.dig("spec", "endpoints", 0, "path") == "/metrics",
+  "llama.cpp metrics scrape path drifted"
+)
+assert_contract(
+  llama_service_monitor.dig("spec", "selector", "matchLabels", "app.kubernetes.io/name") ==
+    "imdb-clone-llama-cpp",
+  "llama.cpp ServiceMonitor must select only the embedding service"
+)
+
 rules = resource(documents, "PrometheusRule", "imdb-clone-agent", "imdb-clone")
 alert_names = rules.dig("spec", "groups").flat_map do |group|
   group.fetch("rules").map { |rule| rule["alert"] }.compact

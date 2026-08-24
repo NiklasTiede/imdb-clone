@@ -79,8 +79,9 @@ all part of the repository.
 - S3-compatible media storage through RustFS for movie posters, backdrops, and profile images.
 - Repeatable local development with Docker Compose, lightweight seed data, and explicit search reindexing.
 - Self-hosted k3s deployment with Argo CD, Traefik ingress, cert-manager HTTPS, and encrypted GitOps secrets.
-- Production observability with Prometheus metrics, Loki logs, Tempo traces, continuous Java/Python
-  profiles in Pyroscope, Grafana drilldowns, Kubernetes Events, and privacy-safe trace propagation.
+- Production observability with anonymous browser Web Vitals, Prometheus metrics, Loki logs, Tempo
+  traces, continuous Java/Python profiles in Pyroscope, Grafana drilldowns, Kubernetes Events, and
+  privacy-safe trace propagation.
 - Left-shift build safeguards across Java, TypeScript, architecture, API contracts, tests, and dependency resolution.
 - Version-gated release workflow that builds Docker images and updates Kubernetes image digests from one `VERSION` file.
 
@@ -133,8 +134,10 @@ flowchart LR
     events["Kubernetes Events"]
     k3s["k3s systemd service"]
     traefik["Traefik access logs"]
+    frontendTelemetry["React browser signals"]
     agentTelemetry["Python Movie Concierge"]
     backendTelemetry["Spring Boot API"]
+    llamaTelemetry["llama.cpp embeddings"]
   end
 
   subgraph stores["Collection and storage"]
@@ -151,6 +154,7 @@ flowchart LR
   events -- "event stream" --> alloy
   k3s -- "journal" --> alloy
   traefik -- "privacy-filtered logs" --> alloy
+  frontendTelemetry -- "anonymous bounded batches" --> backendTelemetry
   agentTelemetry -- "OTLP traces" --> alloy
   backendTelemetry -- "OTLP traces" --> alloy
   agentTelemetry -- "CPU + allocation samples" --> pyroscope
@@ -159,6 +163,7 @@ flowchart LR
   alloy -- "traces" --> tempo
   agentTelemetry -- "bounded metrics" --> prometheus
   backendTelemetry -- "Actuator metrics" --> prometheus
+  llamaTelemetry -- "native metrics" --> prometheus
   prometheus --> grafana
   loki --> grafana
   tempo --> grafana
@@ -166,9 +171,11 @@ flowchart LR
 ```
 
 Alloy collects logs and privacy-safe Python/Java traces without storing them itself. Prometheus
-scrapes bounded application and cluster metrics. Grafana provides the shared query and dashboard
-surface over Prometheus, Loki, Tempo, and Pyroscope; the detailed retention, privacy, and access
-contracts are documented in the [observability guide](./infrastructure/monitoring/README.md).
+scrapes bounded application, browser-experience, embedding, and cluster metrics. Browser telemetry
+contains only fixed event categories, timings, Web Vital ratings, and coarse API outcomes—never
+URLs, user/session IDs, error messages, stacks, or search text. Grafana provides the shared query
+and dashboard surface over Prometheus, Loki, Tempo, and Pyroscope; the detailed retention, privacy,
+and access contracts are documented in the [observability guide](./infrastructure/monitoring/README.md).
 
 Delivery pipeline:
 

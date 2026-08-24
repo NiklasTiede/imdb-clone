@@ -103,6 +103,9 @@ Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views 
 `http://localhost:13000` for operator work:
 
 - Prometheus contains bounded application and cluster metrics.
+- The frontend sends small same-origin batches containing Web Vitals, app/route timings, coarse API
+  outcomes, and browser-error counts to the backend. The contract cannot carry URLs, messages,
+  stack traces, user/session IDs, search text, or browser fingerprints.
 - Loki contains pod logs from every namespace, Kubernetes Events, and the node's k3s systemd
   service logs with seven-day retention.
 - Alloy normalizes JSON/plaintext levels, Nginx response classes, llama.cpp single-letter
@@ -117,15 +120,22 @@ Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views 
 - A Tempo trace can open the CPU profile for the same service and time window. Python root spans
   additionally carry Pyroscope profile correlation IDs for span-level analysis.
 - The `IMDB Clone – Operations Overview` dashboard is the operator landing page for availability,
-  user-facing latency and errors, agent economics, cluster capacity, workload readiness, and
-  actionable firing alerts.
-- Dashboard navigation preserves the selected time range across Backend, Movie Concierge,
-  PostgreSQL, Infrastructure, Cluster Logs, Traces, and Profiles drill-downs.
+  real-user experience, user-facing latency and errors, agent economics, cluster capacity,
+  workload readiness, and actionable firing alerts.
+- Dashboard navigation preserves the selected time range across Backend, Frontend, Movie
+  Concierge, PostgreSQL, Infrastructure, Cluster Logs, Traces, and Profiles drill-downs.
+- The `IMDB Clone Frontend` dashboard is the real-user view for LCP, INP, CLS, app/route timings,
+  browser-observed API latency and outcomes, and anonymous browser errors. No signal can identify a
+  browser or reconstruct the content of an error.
+- The Backend dashboard includes catalog search, local embedding load, Hikari acquisition, GC,
+  thread, and file-descriptor drill-downs. PostgreSQL adds session, transaction, lock, temporary
+  data, and WAL views; Infrastructure adds throttling, load, network-drop, and inode views.
 - The `IMDb Clone / Cluster Logs` dashboard is the log-focused starting point for workload
   failures.
 - The `IMDb Clone / Movie Concierge` dashboard is the detailed view for agent cost, latency, tool,
   transport, and runtime metrics.
 
+llama.cpp exposes native embedding throughput and queue metrics through an internal ServiceMonitor.
 OpenSearch and RustFS currently expose only Kubernetes workload readiness in the Operations
 Overview. A ready StatefulSet or Deployment proves that Kubernetes considers the workload ready;
 it does not prove native search or object-storage health. Service-native OpenSearch and RustFS

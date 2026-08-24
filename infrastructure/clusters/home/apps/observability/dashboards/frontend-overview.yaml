@@ -1,0 +1,302 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: observability-dashboard-frontend
+  namespace: observability
+  annotations:
+    grafana_folder: IMDB Clone
+  labels:
+    grafana_dashboard: "1"
+data:
+  frontend-overview.json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "Operations", "tooltip": "Open Operations with the current time range", "type": "link", "url": "/d/imdb-operations-overview/imdb-clone-operations-overview" },
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "Backend", "tooltip": "Open Backend with the current time range", "type": "link", "url": "/d/imdb-backend-overview/imdb-clone-backend" },
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "Frontend", "tooltip": "Open Frontend with the current time range", "type": "link", "url": "/d/imdb-frontend-overview/imdb-clone-frontend" },
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "Concierge", "tooltip": "Open Concierge with the current time range", "type": "link", "url": "/d/imdb-agent-overview/imdb-clone-movie-concierge" },
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "PostgreSQL", "tooltip": "Open PostgreSQL with the current time range", "type": "link", "url": "/d/imdb-postgresql-overview/postgresql" },
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "Infrastructure", "tooltip": "Open Infrastructure with the current time range", "type": "link", "url": "/d/imdb-system-overview/imdb-clone-system" },
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "Logs", "tooltip": "Open Logs with the current time range", "type": "link", "url": "/d/imdb-clone-cluster-logs/cluster-logs" },
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "Traces", "tooltip": "Open Traces with the current time range", "type": "link", "url": "/a/grafana-exploretraces-app/" },
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "Profiles", "tooltip": "Open Profiles with the current time range", "type": "link", "url": "/a/grafana-pyroscope-app/explore" }
+      ],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 100,
+          "panels": [],
+          "title": "Reliability",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Anonymous browser errors and unhandled promise rejections received during the selected range.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "decimals": 0,
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+          "id": 1,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(increase(imdb_frontend_browser_errors_total[$__range])) or vector(0)", "legendFormat": "Value", "range": true, "refId": "A" }
+          ],
+          "title": "Browser Errors",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Share of browser-observed backend API calls ending in HTTP, network, or other failures during the selected range.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "decimals": 2,
+              "mappings": [],
+              "max": 100,
+              "min": 0,
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+          "id": 2,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(100 * sum(increase(imdb_frontend_api_request_duration_seconds_count{outcome!=\"success\"}[$__range])) / clamp_min(sum(increase(imdb_frontend_api_request_duration_seconds_count[$__range])), 1)) or vector(0)", "legendFormat": "Value", "range": true, "refId": "A" }
+          ],
+          "title": "Browser API Failures",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Browser-observed p95 for backend API calls over the selected range, including network and rendering-side request overhead.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "decimals": 2,
+              "mappings": [{ "options": { "-1": { "color": "text", "index": 0, "text": "No data" } }, "type": "value" }],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 3 }] },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+          "id": 3,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le) (increase(imdb_frontend_api_request_duration_seconds_bucket[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }
+          ],
+          "title": "Browser API p95",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Validated low-cardinality telemetry events accepted by the backend during the selected range. Zero can also mean no recent browser traffic.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "decimals": 0,
+              "mappings": [],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+          "id": 4,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(increase(imdb_frontend_events_accepted_total[$__range])) or vector(0)", "legendFormat": "Value", "range": true, "refId": "A" }
+          ],
+          "title": "Signals Received",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "id": 101,
+          "panels": [],
+          "title": "Core Web Vitals",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "75th percentile Largest Contentful Paint over the selected range. Good user experience is at or below 2.5 seconds.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "decimals": 2,
+              "mappings": [{ "options": { "-1": { "color": "text", "index": 0, "text": "No data" } }, "type": "value" }],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 2.5 }, { "color": "red", "value": 4 }] },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 6 },
+          "id": 5,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (increase(imdb_frontend_web_vital_duration_seconds_bucket{metric=\"lcp\"}[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }
+          ],
+          "title": "LCP p75",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "75th percentile Interaction to Next Paint over the selected range. Good responsiveness is at or below 200 milliseconds.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "decimals": 2,
+              "mappings": [{ "options": { "-1": { "color": "text", "index": 0, "text": "No data" } }, "type": "value" }],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.2 }, { "color": "red", "value": 0.5 }] },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 8, "y": 6 },
+          "id": 6,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (increase(imdb_frontend_web_vital_duration_seconds_bucket{metric=\"inp\"}[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }
+          ],
+          "title": "INP p75",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "75th percentile Cumulative Layout Shift score over the selected range. Good visual stability is at or below 0.1.",
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "thresholds" },
+              "decimals": 3,
+              "mappings": [{ "options": { "-1": { "color": "text", "index": 0, "text": "No data" } }, "type": "value" }],
+              "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.1 }, { "color": "red", "value": 0.25 }] },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 4, "w": 8, "x": 16, "y": 6 },
+          "id": 7,
+          "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (increase(imdb_frontend_web_vital_cls_score_bucket[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }
+          ],
+          "title": "CLS p75",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Rate of Web Vital samples by browser-provided rating. The browser rating boundaries are the source of truth.",
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" }, "overrides": [] },
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
+          "id": 8,
+          "options": { "legend": { "calcs": ["lastNotNull", "sum"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum by (metric, rating) (rate(imdb_frontend_web_vital_duration_seconds_count[$__rate_interval]))", "legendFormat": "{{metric}} / {{rating}}", "range": true, "refId": "A" },
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum by (rating) (rate(imdb_frontend_web_vital_cls_score_count[$__rate_interval]))", "legendFormat": "cls / {{rating}}", "range": true, "refId": "B" }
+          ],
+          "title": "Web Vital Ratings",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+          "id": 102,
+          "panels": [],
+          "title": "Application Experience",
+          "type": "row"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Browser-observed backend request throughput by fixed product operation and bounded outcome.",
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" }, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 19 },
+          "id": 9,
+          "options": { "legend": { "calcs": ["lastNotNull", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum by (operation, outcome) (rate(imdb_frontend_api_request_duration_seconds_count[$__rate_interval]))", "legendFormat": "{{operation}} / {{outcome}}", "range": true, "refId": "A" }
+          ],
+          "title": "Browser API Requests",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Browser-observed p95 request duration by fixed product operation.",
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" }, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
+          "id": 10,
+          "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le, operation) (rate(imdb_frontend_api_request_duration_seconds_bucket[$__rate_interval])))", "legendFormat": "{{operation}} p95", "range": true, "refId": "A" }
+          ],
+          "title": "Browser API p95 By Operation",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "75th percentile app bootstrap and measured client-side route navigation duration.",
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" }, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 27 },
+          "id": 11,
+          "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (rate(imdb_frontend_app_boot_duration_seconds_bucket[$__rate_interval])))", "legendFormat": "app boot p75", "range": true, "refId": "A" },
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (rate(imdb_frontend_route_navigation_duration_seconds_bucket[$__rate_interval])))", "legendFormat": "route navigation p75", "range": true, "refId": "B" }
+          ],
+          "title": "App And Route Timing",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "description": "Anonymous browser error rate by bounded kind. Raw messages, URLs, stack traces, and user identifiers are never transmitted.",
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" }, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 27 },
+          "id": 12,
+          "options": { "legend": { "calcs": ["lastNotNull", "sum"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
+          "targets": [
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum by (kind) (rate(imdb_frontend_browser_errors_total[$__rate_interval]))", "legendFormat": "{{kind}}", "range": true, "refId": "A" }
+          ],
+          "title": "Browser Error Rate",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 42,
+      "tags": ["imdb-clone", "frontend", "real-user-monitoring"],
+      "templating": { "list": [] },
+      "time": { "from": "now-6h", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "IMDB Clone Frontend",
+      "uid": "imdb-frontend-overview",
+      "version": 1,
+      "weekStart": ""
+    }

@@ -154,6 +154,13 @@ These are defined in `frontend/.env.development` for local development and in
 `frontend/.env.production` for production builds. Use `.env.local` or `.env.*.local` for private local
 overrides; those files are ignored by Git.
 
+Browser observability is best effort and never blocks the UI. Development defaults to a console
+reporter. To exercise the same anonymous batching endpoint used in production, put
+`VITE_OBSERVABILITY_CONSOLE=false` in ignored `frontend/.env.local`, run the backend, and reload the
+frontend. The backend accepts at most 20 validated events per request and exports only bounded
+Prometheus labels; URLs, route parameters, messages, stacks, account/session IDs, search text, and
+browser fingerprints are discarded before transport.
+
 ## Run The Movie Concierge
 
 Create the locked Python 3.14 environment, then copy the safe key template to the one exact ignored
@@ -428,6 +435,11 @@ configured guardrail limits, known tool names, provider input/cache-read/cache-w
 estimated USD cost, process-budget commitment, and SSE disconnects. Logs record stable failure
 codes only; they do not contain prompts, bodies, tool payloads, client/conversation IDs,
 authorization headers, or keys.
+
+The backend also publishes anonymous frontend real-user metrics under `imdb_frontend_*`, while a
+cluster-only ServiceMonitor scrapes llama.cpp's native embedding throughput and queue metrics. The
+Grafana Frontend dashboard uses p75 for Web Vitals and the Backend, PostgreSQL, and Infrastructure
+dashboards expose deeper search, pool, runtime, contention, throttling, network, and inode signals.
 
 Production traces are sent over OTLP/HTTP from Python and Spring Boot to Alloy, then stored in
 Tempo. Pydantic AI content capture and model-request serialization are disabled. Trace context is

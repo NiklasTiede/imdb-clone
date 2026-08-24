@@ -12,9 +12,9 @@ export const createPerformanceEventContext = (
 });
 
 export const isObservabilityEnabled = (): boolean =>
-  import.meta.env.DEV ||
-  import.meta.env.VITE_OBSERVABILITY_ENABLED === "true";
+  import.meta.env.DEV || import.meta.env.VITE_OBSERVABILITY_ENABLED === "true";
 
 export const shouldUseConsoleReporter = (): boolean =>
-  import.meta.env.DEV ||
-  import.meta.env.VITE_OBSERVABILITY_CONSOLE === "true";
+  import.meta.env.VITE_OBSERVABILITY_CONSOLE === "true" ||
+  (import.meta.env.DEV &&
+    import.meta.env.VITE_OBSERVABILITY_CONSOLE !== "false");

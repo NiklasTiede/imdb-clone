@@ -439,6 +439,11 @@ dashboards = {
     "operations-overview.json"
   ),
   "Backend" => load_dashboard(repository_root, "backend-overview.yaml", "backend-overview.json"),
+  "Frontend" => load_dashboard(
+    repository_root,
+    "frontend-overview.yaml",
+    "frontend-overview.json"
+  ),
   "Concierge" => load_dashboard(repository_root, "agent-overview.yaml", "agent-overview.json"),
   "PostgreSQL" => load_dashboard(
     repository_root,
@@ -456,38 +461,54 @@ dashboards = {
 expected_dashboard_uids = {
   "Operations" => "imdb-operations-overview",
   "Backend" => "imdb-backend-overview",
+  "Frontend" => "imdb-frontend-overview",
   "Concierge" => "imdb-agent-overview",
   "PostgreSQL" => "imdb-postgresql-overview",
   "Infrastructure" => "imdb-system-overview",
   "Logs" => "imdb-clone-cluster-logs"
 }
-expected_navigation = %w[Operations Backend Concierge PostgreSQL Infrastructure Logs Traces Profiles]
+expected_navigation = %w[
+  Operations Backend Frontend Concierge PostgreSQL Infrastructure Logs Traces Profiles
+]
 expected_rows = {
   "Operations" => [
     "Is It Working?",
     "Is It Serving Users?",
+    "Real User Experience",
     "Agent Usage And Economics",
     "Does It Have Capacity?",
     "Dependency Workload Readiness"
   ],
-  "Backend" => %w[Reliability HTTP Database Runtime Security\ And\ Guardrails],
+  "Backend" => [
+    "Reliability",
+    "HTTP",
+    "Database",
+    "Runtime",
+    "Security And Guardrails",
+    "Domain Workloads",
+    "Runtime Detail"
+  ],
+  "Frontend" => ["Reliability", "Core Web Vitals", "Application Experience"],
   "Concierge" => [
     "Reliability And Latency",
     "Java MCP Tools",
     "Model Economics",
-    "Transport And Runtime"
+    "Transport And Runtime",
+    "HTTP Detail"
   ],
   "PostgreSQL" => [
     "Availability And Capacity",
     "Connections And Transactions",
     "Efficiency And Size",
-    "Runtime And Storage"
+    "Runtime And Storage",
+    "Contention And Maintenance"
   ],
   "Infrastructure" => [
     "Cluster Capacity",
     "Resource Trends",
     "Persistent Storage",
-    "Workload Health"
+    "Workload Health",
+    "Saturation And Node Health"
   ]
 }
 
@@ -563,7 +584,7 @@ assert_contract(
   Agent\ Run\ p95
   Agent\ Runs
   Cost\ 24h
-  Budget\ Used
+  Process\ Budget
   Node\ CPU
   Node\ Memory
   Root\ Disk
@@ -572,9 +593,21 @@ assert_contract(
   Last\ OOMs
   OpenSearch\ K8s
   RustFS\ K8s
+  Local\ Embeddings
+  Frontend\ Signals
+  Browser\ Errors
+  LCP\ p75
+  INP\ p75
+  CLS\ p75
+  Browser\ API\ Failures
 ].each do |title|
   dashboard_panel(operations, title)
 end
+local_embeddings = panel_expressions(dashboard_panel(operations, "Local Embeddings")).join(" ")
+assert_contract(
+  local_embeddings.include?('up{job="imdb-clone-llama-cpp"}'),
+  "operations must expose native llama.cpp scrape health"
+)
 actionable_alerts = panel_expressions(dashboard_panel(operations, "Active Alerts")).join(" ")
 assert_contract(
   actionable_alerts.include?('alertstate="firing"') &&
@@ -589,6 +622,31 @@ assert_contract(
     "#{title} must distinguish workload readiness from service health"
   )
 end
+
+frontend_dashboard = dashboards.fetch("Frontend")
+%w[
+  Browser\ Errors
+  Browser\ API\ Failures
+  Browser\ API\ p95
+  Signals\ Received
+  LCP\ p75
+  INP\ p75
+  CLS\ p75
+  Browser\ API\ Requests
+  Browser\ API\ p95\ By\ Operation
+  App\ And\ Route\ Timing
+].each do |title|
+  dashboard_panel(frontend_dashboard, title)
+end
+frontend_queries = frontend_dashboard.fetch("panels").flat_map do |panel|
+  panel_expressions(panel)
+end.join(" ")
+assert_contract(
+  frontend_queries.include?("imdb_frontend_web_vital_duration_seconds_bucket") &&
+    frontend_queries.include?("imdb_frontend_browser_errors_total") &&
+    !frontend_queries.match?(/user|session|url|message|stack/i),
+  "frontend dashboard must use only bounded anonymous browser metrics"
+)
 
 backend_dashboard = dashboards.fetch("Backend")
 backend_5xx = panel_expressions(dashboard_panel(backend_dashboard, "5xx Error Rate")).join(" ")
@@ -621,6 +679,11 @@ assert_contract(
     pool_connections.all? { |expr| expr.include?("sum(hikaricp_connections_") },
   "backend Hikari metrics must aggregate current replicas"
 )
+dashboard_panel(backend_dashboard, "Search Requests")
+dashboard_panel(backend_dashboard, "Search Mean Latency")
+dashboard_panel(backend_dashboard, "Local Embedding Load")
+dashboard_panel(backend_dashboard, "Pool Acquisition And Timeouts")
+dashboard_panel(backend_dashboard, "JVM GC Pause Time")
 
 agent_dashboard = dashboards.fetch("Concierge")
 agent_http = panel_expressions(dashboard_panel(agent_dashboard, "User-Facing HTTP Requests")).join(" ")
@@ -643,6 +706,9 @@ assert_contract(
     "#{title} must summarize the selected dashboard range"
   )
 end
+dashboard_panel(agent_dashboard, "Java MCP Mean Latency")
+dashboard_panel(agent_dashboard, "User HTTP p95 By Route")
+dashboard_panel(agent_dashboard, "HTTP Requests In Flight")
 
 system_dashboard = dashboards.fetch("Infrastructure")
 restart_table = panel_expressions(
@@ -660,6 +726,11 @@ postgres_dashboard = dashboards.fetch("PostgreSQL")
 dashboard_panel(postgres_dashboard, "Restarts")
 dashboard_panel(postgres_dashboard, "PVC Usage")
 dashboard_panel(postgres_dashboard, "PVC Usage Trend")
+dashboard_panel(postgres_dashboard, "Sessions By State")
+dashboard_panel(postgres_dashboard, "Longest Transaction")
+dashboard_panel(postgres_dashboard, "Locks By Mode")
+dashboard_panel(postgres_dashboard, "Temporary Query Data")
+dashboard_panel(postgres_dashboard, "WAL Footprint")
 
 operations_resource = resource(
   documents,
@@ -675,6 +746,7 @@ primary_dashboard_resources = %w[
   observability-dashboard-agent
   observability-dashboard-backend
   observability-dashboard-cluster-logs
+  observability-dashboard-frontend
   observability-dashboard-operations
   observability-dashboard-system
 ]
