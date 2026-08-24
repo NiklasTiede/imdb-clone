@@ -50,7 +50,7 @@ data:
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "Anonymous browser errors and unhandled promise rejections received during the selected range.",
+          "description": "Anonymous browser errors and unhandled promise rejections observed by the current backend process. Resets on backend restart or rollout.",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
@@ -65,14 +65,14 @@ data:
           "id": 1,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
           "targets": [
-            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(increase(imdb_frontend_browser_errors_total[$__range])) or vector(0)", "legendFormat": "Value", "range": true, "refId": "A" }
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(imdb_frontend_browser_errors_total) or vector(0)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }
           ],
           "title": "Browser Errors",
           "type": "stat"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "Share of browser-observed backend API calls ending in HTTP, network, or other failures during the selected range.",
+          "description": "Share of browser-observed backend API calls ending in HTTP, network, or other failures for the current backend process. Resets on backend restart or rollout.",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
@@ -89,14 +89,14 @@ data:
           "id": 2,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
           "targets": [
-            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(100 * sum(increase(imdb_frontend_api_request_duration_seconds_count{outcome!=\"success\"}[$__range])) / clamp_min(sum(increase(imdb_frontend_api_request_duration_seconds_count[$__range])), 1)) or vector(0)", "legendFormat": "Value", "range": true, "refId": "A" }
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(100 * sum(imdb_frontend_api_request_duration_seconds_count{outcome!=\"success\"}) / clamp_min(sum(imdb_frontend_api_request_duration_seconds_count), 1)) or vector(0)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }
           ],
           "title": "Browser API Failures",
           "type": "stat"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "Browser-observed p95 for backend API calls over the selected range, including network and rendering-side request overhead.",
+          "description": "Browser-observed p95 for backend API calls handled by the current backend process, including network and rendering-side request overhead. Resets on backend restart or rollout.",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
@@ -111,14 +111,14 @@ data:
           "id": 3,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
           "targets": [
-            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le) (increase(imdb_frontend_api_request_duration_seconds_bucket[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.95, sum by (le) (imdb_frontend_api_request_duration_seconds_bucket)) and on() (sum(imdb_frontend_api_request_duration_seconds_count) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }
           ],
           "title": "Browser API p95",
           "type": "stat"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "Validated low-cardinality telemetry events accepted by the backend during the selected range. Zero can also mean no recent browser traffic.",
+          "description": "Validated low-cardinality telemetry events accepted by the current backend process. Resets on backend restart or rollout.",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
@@ -133,7 +133,7 @@ data:
           "id": 4,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
           "targets": [
-            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(increase(imdb_frontend_events_accepted_total[$__range])) or vector(0)", "legendFormat": "Value", "range": true, "refId": "A" }
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(imdb_frontend_events_accepted_total) or vector(0)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }
           ],
           "title": "Signals Received",
           "type": "stat"
@@ -148,7 +148,7 @@ data:
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "75th percentile Largest Contentful Paint over the selected range. Good user experience is at or below 2.5 seconds.",
+          "description": "75th percentile Largest Contentful Paint observed by the current backend process. Good user experience is at or below 2.5 seconds; resets on backend restart or rollout.",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
@@ -163,14 +163,14 @@ data:
           "id": 5,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
           "targets": [
-            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (increase(imdb_frontend_web_vital_duration_seconds_bucket{metric=\"lcp\"}[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.75, sum by (le) (imdb_frontend_web_vital_duration_seconds_bucket{metric=\"lcp\"})) and on() (sum(imdb_frontend_web_vital_duration_seconds_count{metric=\"lcp\"}) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }
           ],
           "title": "LCP p75",
           "type": "stat"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "75th percentile Interaction to Next Paint over the selected range. Good responsiveness is at or below 200 milliseconds.",
+          "description": "75th percentile Interaction to Next Paint observed by the current backend process. Good responsiveness is at or below 200 milliseconds; resets on backend restart or rollout.",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
@@ -185,14 +185,14 @@ data:
           "id": 6,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
           "targets": [
-            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (increase(imdb_frontend_web_vital_duration_seconds_bucket{metric=\"inp\"}[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.75, sum by (le) (imdb_frontend_web_vital_duration_seconds_bucket{metric=\"inp\"})) and on() (sum(imdb_frontend_web_vital_duration_seconds_count{metric=\"inp\"}) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }
           ],
           "title": "INP p75",
           "type": "stat"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "75th percentile Cumulative Layout Shift score over the selected range. Good visual stability is at or below 0.1.",
+          "description": "75th percentile Cumulative Layout Shift observed by the current backend process. Good visual stability is at or below 0.1; resets on backend restart or rollout.",
           "fieldConfig": {
             "defaults": {
               "color": { "mode": "thresholds" },
@@ -207,21 +207,21 @@ data:
           "id": 7,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
           "targets": [
-            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "histogram_quantile(0.75, sum by (le) (increase(imdb_frontend_web_vital_cls_score_bucket[$__range]))) or vector(-1)", "legendFormat": "Value", "range": true, "refId": "A" }
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.75, sum by (le) (imdb_frontend_web_vital_cls_score_bucket)) and on() (sum(imdb_frontend_web_vital_cls_score_count) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }
           ],
           "title": "CLS p75",
           "type": "stat"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "description": "Rate of Web Vital samples by browser-provided rating. The browser rating boundaries are the source of truth.",
-          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ops" }, "overrides": [] },
+          "description": "Cumulative Web Vital samples by browser-provided rating for the current backend process. Resets on backend restart or rollout; browser rating boundaries are the source of truth.",
+          "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
           "gridPos": { "h": 8, "w": 24, "x": 0, "y": 10 },
           "id": 8,
-          "options": { "legend": { "calcs": ["lastNotNull", "sum"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
+          "options": { "legend": { "calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" } },
           "targets": [
-            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum by (metric, rating) (rate(imdb_frontend_web_vital_duration_seconds_count[$__rate_interval]))", "legendFormat": "{{metric}} / {{rating}}", "range": true, "refId": "A" },
-            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum by (rating) (rate(imdb_frontend_web_vital_cls_score_count[$__rate_interval]))", "legendFormat": "cls / {{rating}}", "range": true, "refId": "B" }
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum by (metric, rating) (imdb_frontend_web_vital_duration_seconds_count)", "legendFormat": "{{metric}} / {{rating}}", "range": true, "refId": "A" },
+            { "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum by (rating) (imdb_frontend_web_vital_cls_score_count)", "legendFormat": "cls / {{rating}}", "range": true, "refId": "B" }
           ],
           "title": "Web Vital Ratings",
           "type": "timeseries"
