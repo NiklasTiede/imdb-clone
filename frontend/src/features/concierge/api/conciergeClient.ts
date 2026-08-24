@@ -1,4 +1,6 @@
 import * as zod from "zod";
+import { createPerformanceEventContext } from "../../../shared/observability/config";
+import { reportPerformanceEvent } from "../../../shared/observability/performanceReporter";
 import { conciergeEventSchema, type ConciergeEvent } from "../model/concierge";
 
 const conversationResponseSchema = zod.object({
@@ -151,12 +153,45 @@ const safeFetch = async (
   input: RequestInfo | URL,
   init: RequestInit,
 ): Promise<Response> => {
+  const startedAt = performance.now();
+  const telemetryUrl =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
   try {
-    return await fetch(input, init);
+    const response = await fetch(input, init);
+    const finishedAt = performance.now();
+    reportPerformanceEvent({
+      context: createPerformanceEventContext(window.location.pathname),
+      ...(response.ok ? {} : { failureKind: "http" as const }),
+      method: init.method ?? "GET",
+      name: "api_request",
+      status: response.status,
+      success: response.ok,
+      timestamp: finishedAt,
+      type: "api_request",
+      url: telemetryUrl,
+      value: Math.max(0, finishedAt - startedAt),
+    });
+    return response;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       throw error;
     }
+    const finishedAt = performance.now();
+    reportPerformanceEvent({
+      context: createPerformanceEventContext(window.location.pathname),
+      failureKind: "network",
+      method: init.method ?? "GET",
+      name: "api_request",
+      success: false,
+      timestamp: finishedAt,
+      type: "api_request",
+      url: telemetryUrl,
+      value: Math.max(0, finishedAt - startedAt),
+    });
     throw new ConciergeClientError(
       "network",
       "The Movie Concierge could not be reached.",

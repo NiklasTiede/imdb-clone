@@ -368,6 +368,20 @@ paths:
       responses:
         "200":
           description: OK
+  /api/observability/frontend:
+    post:
+      tags:
+      - frontend-telemetry-controller
+      operationId: record
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FrontendTelemetryBatch"
+        required: true
+      responses:
+        "204":
+          description: No Content
   /api/movie/get-movies:
     post:
       tags:
@@ -1906,6 +1920,76 @@ components:
       - sectionId
       - sessionId
       - strategyVersion
+    FrontendTelemetryBatch:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/FrontendTelemetryEvent"
+          maxItems: 20
+          minItems: 1
+      required:
+      - events
+    FrontendTelemetryEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - API_REQUEST
+          - APP_BOOT
+          - BROWSER_ERROR
+          - ROUTE_NAVIGATION
+          - WEB_VITAL
+        name:
+          type: string
+          enum:
+          - API_REQUEST
+          - APP_BOOT
+          - BROWSER_ERROR
+          - CLS
+          - FCP
+          - INP
+          - LCP
+          - ROUTE_NAVIGATION
+          - TTFB
+          - UNHANDLED_REJECTION
+        value:
+          type: number
+          format: double
+          maximum: 120000.0
+          minimum: 0.0
+        rating:
+          type: string
+          enum:
+          - GOOD
+          - NEEDS_IMPROVEMENT
+          - POOR
+        operation:
+          type: string
+          enum:
+          - ACCOUNT
+          - AUTHENTICATION
+          - CATALOG
+          - CONCIERGE
+          - ENGAGEMENT
+          - MEDIA
+          - OTHER
+          - RECOMMENDATIONS
+          - SEARCH
+          - WEBAUTHN
+        outcome:
+          type: string
+          enum:
+          - HTTP_4XX
+          - HTTP_5XX
+          - NETWORK_ERROR
+          - OTHER_ERROR
+          - SUCCESS
+      required:
+      - name
+      - type
     MovieIdsRequest:
       type: object
       properties:

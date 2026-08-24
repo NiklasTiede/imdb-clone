@@ -64,7 +64,10 @@ public class WebSecurityConfig {
             csrf ->
                 csrf.csrfTokenRepository(csrfTokenRepository)
                     .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                    .ignoringRequestMatchers("/api/movie/get-movies", "/api/search/movies"))
+                    .ignoringRequestMatchers(
+                        "/api/movie/get-movies",
+                        "/api/observability/frontend",
+                        "/api/search/movies"))
         .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
         .addFilterAfter(authRateLimitFilter, CsrfCookieFilter.class)
         .exceptionHandling(eh -> eh.authenticationEntryPoint(authenticationEntryPoint))
@@ -132,6 +135,8 @@ public class WebSecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/api/recommendations/discovery-events")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/recommendations/tonight")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/observability/frontend")
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/movie/get-movies", "/api/search/movies")
                     .permitAll()

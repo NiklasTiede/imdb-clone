@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import AppProviders from "./app/AppProviders";
 import {
+  registerBackendPerformanceReporting,
   registerBrowserErrorReporting,
   registerWebVitals,
   reportAppBoot,
@@ -11,6 +12,8 @@ import {
 
 const entrypointStart = performance.now();
 
+const cleanupBackendPerformanceReporting =
+  registerBackendPerformanceReporting();
 const cleanupBrowserErrorReporting = registerBrowserErrorReporting();
 registerWebVitals();
 
@@ -29,5 +32,8 @@ root.render(
 reportAppBoot(entrypointStart);
 
 if (import.meta.hot) {
-  import.meta.hot.dispose(cleanupBrowserErrorReporting);
+  import.meta.hot.dispose(() => {
+    cleanupBrowserErrorReporting();
+    cleanupBackendPerformanceReporting();
+  });
 }
