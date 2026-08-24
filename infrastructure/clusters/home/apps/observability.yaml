@@ -90,11 +90,11 @@ spec:
             size: 2Gi
           resources:
             requests:
-              cpu: 50m
-              memory: 128Mi
-            limits:
-              cpu: 500m
+              cpu: 250m
               memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
           sidecar:
             dashboards:
               folderAnnotation: grafana_folder
