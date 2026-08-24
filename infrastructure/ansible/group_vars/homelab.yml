@@ -3,6 +3,7 @@ k3s_version: "v1.34.8+k3s1"
 k3s_node_name: "homelab-um560"
 k3s_kubeconfig: "/etc/rancher/k3s/k3s.yaml"
 k3s_install_script_url: "https://get.k3s.io"
+k3s_inotify_max_user_instances: 1024
 
 argocd_version: "v3.4.1"
 argocd_namespace: "argocd"

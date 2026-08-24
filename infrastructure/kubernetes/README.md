@@ -8,6 +8,8 @@ Current platform:
 
 - Ansible bootstraps Ubuntu 24 LTS on `robotnik@um560`.
 - k3s runs as a single-node Kubernetes cluster.
+- Ansible raises `fs.inotify.max_user_instances` to `1024` so k3s/containerd can sustain
+  cluster-wide log following without exhausting the Ubuntu host default.
 - k3s bundled Traefik and local-path storage stay enabled initially.
 - Argo CD is installed but not exposed publicly.
 - Argo CD watches `infrastructure/clusters/home/apps`.

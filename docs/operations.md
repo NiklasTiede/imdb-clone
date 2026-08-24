@@ -118,6 +118,19 @@ Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views 
 - The `IMDb Clone / Movie Concierge` dashboard remains the starting point for agent cost, latency,
   tool, and failure metrics.
 
+If many unrelated pod streams contain the identical line `failed to create fsnotify watcher: too
+many open files`, treat it as a node log-following capacity problem rather than an application
+error. Alloy's Kubernetes log source can receive that line while opening container log streams and
+store it under each affected target's labels. Ansible owns the persistent host setting in
+`/etc/sysctl.d/99-k3s-inotify.conf`; verify the active value without changing it:
+
+```bash
+ssh robotnik@um560 'cat /proc/sys/fs/inotify/max_user_instances'
+```
+
+The expected value is `1024`. Rerun the Ansible playbook to reconcile drift instead of applying an
+undocumented one-off `sysctl` change.
+
 Agent logs and traces include safe correlation and operational fields only. They must never contain
 raw prompts, model completions, tool arguments/results, authorization headers, API keys, account
 IDs, conversation IDs, or movie IDs. Trace and request identifiers are structured fields rather

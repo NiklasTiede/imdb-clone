@@ -1,4 +1,32 @@
 ---
+- name: Persist inotify capacity for cluster log streaming
+  ansible.builtin.copy:
+    content: |
+      # Managed by Ansible for k3s and container log streaming.
+      fs.inotify.max_user_instances = {{ k3s_inotify_max_user_instances }}
+    dest: /etc/sysctl.d/99-k3s-inotify.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Read current inotify instance capacity
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sysctl
+      - -n
+      - fs.inotify.max_user_instances
+  register: k3s_inotify_current
+  changed_when: false
+
+- name: Apply inotify capacity for cluster log streaming
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sysctl
+      - -w
+      - "fs.inotify.max_user_instances={{ k3s_inotify_max_user_instances }}"
+  when: (k3s_inotify_current.stdout | int) != (k3s_inotify_max_user_instances | int)
+  changed_when: true
+
 - name: Download pinned k3s install script
   ansible.builtin.get_url:
     url: "{{ k3s_install_script_url }}"
