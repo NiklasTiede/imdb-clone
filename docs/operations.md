@@ -114,9 +114,23 @@ Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views 
   memory still retained; use Prometheus process/JVM memory metrics for current memory usage.
 - A Tempo trace can open the CPU profile for the same service and time window. Python root spans
   additionally carry Pyroscope profile correlation IDs for span-level analysis.
-- The `IMDb Clone / Cluster Logs` dashboard is the starting point for workload failures.
-- The `IMDb Clone / Movie Concierge` dashboard remains the starting point for agent cost, latency,
-  tool, and failure metrics.
+- The `IMDB Clone – Operations Overview` dashboard is the operator landing page for availability,
+  user-facing latency and errors, agent economics, cluster capacity, workload readiness, and
+  actionable firing alerts.
+- Dashboard navigation preserves the selected time range across Backend, Movie Concierge,
+  PostgreSQL, Infrastructure, Cluster Logs, Traces, and Profiles drill-downs.
+- The `IMDb Clone / Cluster Logs` dashboard is the log-focused starting point for workload
+  failures.
+- The `IMDb Clone / Movie Concierge` dashboard is the detailed view for agent cost, latency, tool,
+  transport, and runtime metrics.
+
+OpenSearch and RustFS currently expose only Kubernetes workload readiness in the Operations
+Overview. A ready StatefulSet or Deployment proves that Kubernetes considers the workload ready;
+it does not prove native search or object-storage health. Service-native OpenSearch and RustFS
+metrics, Argo CD reconciliation metrics, and Traefik request metrics require separate scrape or
+exporter work and are deliberately not simulated by dashboard queries. Until that follow-up is
+implemented, use the private OpenSearch and RustFS APIs, Argo CD UI, Traefik logs, and Kubernetes
+workload state for deeper diagnosis.
 
 If many unrelated pod streams contain the identical line `failed to create fsnotify watcher: too
 many open files`, treat it as a node log-following capacity problem rather than an application
