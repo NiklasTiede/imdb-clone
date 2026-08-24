@@ -96,6 +96,23 @@ assert_contract(
   pyroscope_values.dig("alloy", "enabled") == false,
   "Pyroscope must reuse the existing Alloy deployment"
 )
+assert_contract(
+  pyroscope.dig("spec", "ignoreDifferences") == [
+    {
+      "group" => "apps",
+      "kind" => "StatefulSet",
+      "name" => "pyroscope",
+      "namespace" => "observability",
+      "jsonPointers" => [
+        "/spec/volumeClaimTemplates/0/apiVersion",
+        "/spec/volumeClaimTemplates/0/kind",
+        "/spec/volumeClaimTemplates/0/spec/volumeMode",
+        "/spec/volumeClaimTemplates/0/status"
+      ]
+    }
+  ],
+  "Pyroscope must ignore only Kubernetes-defaulted StatefulSet PVC fields"
+)
 pyroscope_policy = resource(
   documents,
   "NetworkPolicy",
