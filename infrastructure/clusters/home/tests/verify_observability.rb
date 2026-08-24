@@ -647,6 +647,41 @@ assert_contract(
     !frontend_queries.match?(/user|session|url|message|stack/i),
   "frontend dashboard must use only bounded anonymous browser metrics"
 )
+%w[
+  Browser\ Errors
+  Browser\ API\ Failures
+  Browser\ API\ p95
+  Signals\ Received
+  LCP\ p75
+  INP\ p75
+  CLS\ p75
+].each do |title|
+  panel = dashboard_panel(frontend_dashboard, title)
+  queries = panel_expressions(panel).join(" ")
+  assert_contract(
+    panel.fetch("description").include?("current backend process") &&
+      panel.fetch("targets").all? { |target| target["instant"] == true && target["range"] == false } &&
+      !queries.include?("increase("),
+    "#{title} must remain visible for low-traffic process-local frontend telemetry"
+  )
+end
+%w[
+  Frontend\ Signals
+  Browser\ Errors
+  LCP\ p75
+  INP\ p75
+  CLS\ p75
+  Browser\ API\ Failures
+].each do |title|
+  panel = dashboard_panel(operations, title)
+  queries = panel_expressions(panel).join(" ")
+  assert_contract(
+    panel.fetch("description").include?("current backend process") &&
+      panel.fetch("targets").all? { |target| target["instant"] == true && target["range"] == false } &&
+      !queries.include?("increase("),
+    "operations #{title} must remain visible for low-traffic process-local frontend telemetry"
+  )
+end
 
 backend_dashboard = dashboards.fetch("Backend")
 backend_5xx = panel_expressions(dashboard_panel(backend_dashboard, "5xx Error Rate")).join(" ")
