@@ -199,13 +199,50 @@ assert_contract(
   'level      = "level"',
   'log_level  = "log_level"',
   'source   = "plain_level"',
-  'level = "plain_level"'
+  'level = "plain_level"',
+  'event_type = "type"',
+  'source   = "event_level"',
+  'level = "event_level"'
 ].each do |level_contract|
   assert_contract(
     alloy_config.include?(level_contract),
     "Alloy log-level normalization missing #{level_contract}"
   )
 end
+
+{
+  'selector = "{app=\"imdb-clone-frontend\"} |~ \" [1-3][0-9]{2} [0-9]+ \""' =>
+    'level = "info"',
+  'selector = "{app=\"imdb-clone-frontend\"} |~ \" 4[0-9]{2} [0-9]+ \""' =>
+    'level = "warn"',
+  'selector = "{app=\"imdb-clone-frontend\"} |~ \" 5[0-9]{2} [0-9]+ \""' =>
+    'level = "error"',
+  'selector = "{app=\"imdb-clone-llama-cpp\"} |~ \"^[^ ]+ +T +\""' =>
+    'level = "trace"',
+  'selector = "{app=\"imdb-clone-llama-cpp\"} |~ \"^[^ ]+ +D +\""' =>
+    'level = "debug"',
+  'selector = "{app=\"imdb-clone-llama-cpp\"} |~ \"^[^ ]+ +I +\""' =>
+    'level = "info"',
+  'selector = "{app=\"imdb-clone-llama-cpp\"} |~ \"^[^ ]+ +W +\""' =>
+    'level = "warn"',
+  'selector = "{app=\"imdb-clone-llama-cpp\"} |~ \"^[^ ]+ +E +\""' =>
+    'level = "error"'
+}.each do |selector, expected_level|
+  selector_offset = alloy_config.index(selector)
+  assert_contract(!selector_offset.nil?, "Alloy log-level selector missing #{selector}")
+  match_stage = alloy_config[selector_offset, 280]
+  assert_contract(
+    match_stage.include?(expected_level),
+    "Alloy log-level selector #{selector} must assign #{expected_level}"
+  )
+end
+
+assert_contract(
+  alloy_config.include?(
+    'if eq (ToLower .event_type) \"warning\" }}warn{{ else }}info'
+  ),
+  "Kubernetes event types must map Warning to warn and Normal to info"
+)
 
 coredns_custom = resource(documents, "ConfigMap", "coredns-custom", "kube-system")
 assert_contract(
