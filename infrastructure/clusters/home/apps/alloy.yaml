@@ -172,7 +172,7 @@ spec:
 
                 stage.template {
                   source   = "log_level"
-                  template = "{{ if eq (ToLower .Value) \"warning\" }}warn{{ else }}{{ ToLower .Value }}{{ end }}"
+                  template = "{{ `{{ if eq (ToLower .Value) \"warning\" }}warn{{ else }}{{ ToLower .Value }}{{ end }}` }}"
                 }
 
                 stage.labels {
@@ -183,7 +183,7 @@ spec:
 
                 stage.template {
                   source   = "plain_level"
-                  template = "{{ if eq (ToLower .Value) \"warning\" }}warn{{ else }}{{ ToLower .Value }}{{ end }}"
+                  template = "{{ `{{ if eq (ToLower .Value) \"warning\" }}warn{{ else }}{{ ToLower .Value }}{{ end }}` }}"
                 }
 
                 stage.labels {
@@ -194,7 +194,7 @@ spec:
 
                 stage.template {
                   source   = "level"
-                  template = "{{ if eq (ToLower .Value) \"warning\" }}warn{{ else }}{{ ToLower .Value }}{{ end }}"
+                  template = "{{ `{{ if eq (ToLower .Value) \"warning\" }}warn{{ else }}{{ ToLower .Value }}{{ end }}` }}"
                 }
 
                 stage.labels {
