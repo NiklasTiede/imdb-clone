@@ -105,6 +105,8 @@ Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views 
 - Prometheus contains bounded application and cluster metrics.
 - Loki contains pod logs from every namespace, Kubernetes Events, and the node's k3s systemd
   service logs with seven-day retention.
+- Alloy normalizes JSON/plaintext levels, Nginx response classes, llama.cpp single-letter
+  severities, and Kubernetes Event types into the shared `level` label used by Logs Drilldown.
 - Traefik emits JSON operational and access logs without client addresses, request paths, query
   parameters, request lines, or headers.
 - Tempo contains OpenTelemetry traces with three-day retention.
