@@ -9,8 +9,21 @@ def assert_contract(condition, message)
 end
 
 assert_contract(
-  ci.match?(/on:\n  pull_request:\n    branches:\n      - master\n  push:\n    branches:\n      - master\n/),
-  "CI must verify pull requests and merged master commits"
+  ci.match?(/on:\n  pull_request:\n    branches:\n      - master\n/),
+  "CI must verify pull requests targeting master"
+)
+assert_contract(
+  ci.match?(/  merge_group:\n    types:\n      - checks_requested\n/),
+  "CI must verify merge queue candidates"
+)
+assert_contract(
+  !ci.match?(/^  push:\n    branches:\n      - master$/),
+  "CI must not repeat the full suite after merging to master"
+)
+assert_contract(
+  ci.include?('group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}') &&
+    ci.include?("cancel-in-progress: true"),
+  "CI must cancel superseded pull-request runs"
 )
 %w[backend-build-test frontend-build-test agent-build-test infrastructure-validate].each do |job|
   assert_contract(ci.match?(/^  #{Regexp.escape(job)}:$/), "CI is missing required job #{job}")
