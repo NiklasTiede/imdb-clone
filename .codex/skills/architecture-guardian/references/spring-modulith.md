@@ -18,6 +18,7 @@ Primary files:
 This repository has introduced a clean Modulith baseline. Treat these as the expected backend application modules unless the implementation or an ADR says otherwise:
 
 - `account`
+- `assistant`
 - `catalog`
 - `engagement`
 - `identity`
@@ -31,7 +32,8 @@ The app uses explicit module detection. Do not treat unannotated direct subpacka
 Package roles:
 
 - `api`: module public API and named interfaces
-- `web`: REST controllers and request entrypoints
+- `web`: REST controllers and request entrypoints; protocol-specific inbound Adapters may remain
+  under `internal` when they are not a public Java Module Interface
 - `internal`: module implementation, persistence, security, infrastructure, schedulers, mappers, and search adapters
 - `shared`: shared kernel only; keep it small and stable
 
@@ -56,15 +58,21 @@ If syntax or version details matter, consult current Spring Modulith documentati
 Use actual `package-info.java` files as the source of truth, then compare them with these intended dependency shapes:
 
 - `account` may use engagement profile APIs plus shared kernel interfaces.
+- `assistant` may use only the narrow catalog and recommendation Interfaces intended for agent
+  tools; it owns MCP transport, workload authentication, validation, and safe protocol mapping but
+  not Movie or Recommendation behavior.
 - `catalog` should not depend on other business modules.
 - `engagement` may use narrow catalog reference and ratings interfaces.
 - `identity` may use account APIs and should publish notification events instead of calling notification internals.
 - `media` may use account APIs and narrow catalog media interfaces.
 - `notification` may consume identity events, not identity internals.
-- `recommendation` should stay isolated until it has an explicit integration.
+- `recommendation` may use its narrow catalog recommendation Interface and expose an assistant
+  Interface for Java-owned recommendations without leaking its internals.
 - `shared` should not depend on business modules.
 
-Watch for broad dependencies where a narrow named interface already exists, such as `catalog::api` instead of `catalog::reference`, `catalog::ratings`, or `catalog::media`.
+Watch for broad dependencies where a narrow named Interface already exists, such as `catalog::api`
+instead of `catalog::assistant`, `catalog::reference`, `catalog::ratings`, `catalog::media`, or
+`catalog::recommendation`.
 
 ## Boundary Checks
 
@@ -82,6 +90,8 @@ For each module:
 - `api` packages do not depend on their own `internal` package
 - concrete implementations use domain names, not generic `*ServiceImpl` names
 - new cross-module dependencies update `allowedDependencies` deliberately and narrowly
+- `assistant` does not become a parallel domain layer or access another Module's persistence/search
+  implementation directly
 
 ## Verification Recommendations
 

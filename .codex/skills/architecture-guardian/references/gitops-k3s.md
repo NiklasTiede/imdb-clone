@@ -12,12 +12,15 @@ Primary files:
 - `infrastructure/clusters/home/root-app.yaml`
 - `infrastructure/ansible`
 - `.github/workflows/continuous-deployment.yaml`
+- `.github/workflows/continuous-integration.yaml`
+- `.github/workflows/README.md`
 - `Makefile`
 - `VERSION`
 - `.sops.yaml`
 - `infrastructure/kubernetes/README.md`
 - `docs/development.md`
 - `docs/agents/verification.md`
+- `infrastructure/clusters/home/tests`
 
 ## Checks
 
@@ -28,6 +31,8 @@ Primary files:
 - each app has a clear namespace owner and does not rely on manual post-apply changes
 - generated or runtime-only resources are not committed unless intentionally GitOps-owned
 - local Compose configuration and k3s manifests do not drift on ports, service names, bucket names, or index names
+- the Agent, its least-privilege NetworkPolicy, public ingress path, runtime Secret, ServiceMonitor,
+  alerts, and dashboards remain in the rendered app tree
 
 ### Secrets And Config
 
@@ -36,19 +41,29 @@ Primary files:
 - SOPS decryption path is documented for Argo CD and does not require application source changes
 - ConfigMaps hold non-secret runtime config only
 - frontend public config is separated from backend secrets
+- Movie Concierge provider and MCP credentials are SOPS-encrypted, mounted read-only into the Java
+  and Python workloads that need them, and not exposed as environment values
 
 ### Images And Releases
 
-- image tags or digests are updated by the intended release path
+- backend, frontend, and Agent image tags/digests are updated together by the intended release path
 - manifest image references are pinned enough for repeatable deploys
-- `VERSION` and CD workflow behavior match the documented release model
+- `VERSION` and CD workflow behavior match the documented release model: pull requests verify
+  changes, protected `master` accepts merges, and only the intended merged version change publishes
+  a release
+- the automated digest commit cannot recursively trigger another release
 - app manifests do not point to stale local-only images
+- ordinary releases do not block on or rerun the one-time production seed job
 
 ### Ingress, Certificates, And Exposure
 
 - public hosts are intentional and documented
 - cert-manager issuers, TLS secrets, ingress class, and Traefik middleware names are consistent
 - internal-only services are not exposed through public ingress by accident
+- the public Concierge path remains versioned and protected by request-size, rate, in-flight, host,
+  and security-header controls
+- Java MCP, PostgreSQL, OpenSearch, RustFS, Loki, Tempo, Pyroscope, and Alloy internals are not made
+  public merely for operator access
 - LAN-only routes such as Argo CD keep their access controls
 
 ### Verification
@@ -57,15 +72,22 @@ Primary files:
 - `make verify-kubernetes-schema` or an equivalent kubeconform check validates rendered manifests
 - manifest contract checks assert required resources by `(apiVersion, kind, namespace, name)`
 - live-cluster checks, when requested, are kept separate from normal CI
+- `make verify-movie-concierge-production` and `make verify-observability-charts` validate their
+  focused rendered/chart contracts without mutating the cluster
 
 ## Suggested Contract Tests
 
 - required namespaces exist in rendered output
-- required Argo CD `Application` resources exist for frontend, backend, data services, and observability
+- required Argo CD `Application` resources exist for app workloads, data services, and observability
 - each `*.sops.yaml` resource listed in the app tree remains encrypted
 - backend and frontend ingress hosts match documented public URLs
+- the versioned Concierge ingress routes only to the Agent HTTP service and never exposes Java MCP
 - observability resources are included in kustomization before dependent apps use them
 - backend service exposes the expected app and management ports
+- the Agent stays one replica with `Recreate` while production uses process-local conversation and
+  cost Adapters
+- CI verifies pull requests and merged `master`; CD rejects non-master or unchanged-version release
+  attempts
 
 ## Report Guidance
 

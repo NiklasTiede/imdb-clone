@@ -4,7 +4,7 @@ Use this structure for final reports. Omit empty sections.
 
 ```markdown
 **Architecture Guardian Report**
-Mode: <quick|persistence|backend-modulith|api-contract|frontend|integration|kubernetes|gitops|observability|ai-search|full>
+Mode: <quick|persistence|backend-modulith|api-contract|frontend|agent|integration|kubernetes|gitops|observability|ai-search|full>
 Scope: <short sentence>
 Checks run: <commands or "none">
 
@@ -25,11 +25,12 @@ Checks run: <commands or "none">
 
 **Cross-System Risks**
 
-- <Only include when a finding crosses backend/frontend/storage/search boundaries>
+- <Only include when a finding crosses Java/Agent/frontend/storage/search/deployment seams>
 
 **Suggested Automated Checks**
 
-- <ArchUnit, Spring Modulith verification, schema test, OpenAPI diff, frontend build/test, etc.>
+- <Spring Modulith or Python import contract, schema test, OpenAPI/MCP/SSE check, frontend
+  build/test, manifest/dashboard check, etc.>
 
 **No Issues Found In**
 

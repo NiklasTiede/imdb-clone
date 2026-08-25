@@ -6,6 +6,10 @@ Review the semantic and hybrid movie search architecture: embedding generation,
 llama.cpp/EmbeddingGemma integration, Spring AI adapter usage, OpenSearch vector
 projection, lexical search, RRF ranking, and search-quality evaluation readiness.
 
+This inference path is distinct from the OpenAI Movie Concierge. The Agent consumes Java-owned
+search behavior through MCP and must not call llama.cpp or OpenSearch directly. Use `agent` mode for
+LLM orchestration, grounding, tool policy, and agent evals.
+
 Primary files:
 
 - `compose.yaml`
