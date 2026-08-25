@@ -18,6 +18,8 @@ OPENAPI_CHECK_DIR ?= /tmp/imdb-clone-openapi-check
 AGENT_DIR = agent
 AGENT_IMAGE ?= imdb-clone-agent:local
 AGENT_SMOKE_PORT ?= 18090
+BACKEND_SMOKE_PORT ?= 18081
+FRONTEND_SMOKE_PORT ?= 18080
 UV_CACHE_DIR ?= $(CURDIR)/.uv-cache
 CLUSTER_ACCESS_SCRIPT = scripts/cluster-access
 
@@ -210,7 +212,7 @@ push-seed-full: publish-seed-full ## build and push multi-arch full seed image
 
 ##@ Backend
 
-.PHONY: run-backend generate-jar docker-build-backend docker-run-backend
+.PHONY: run-backend generate-jar docker-build-backend docker-run-backend container-smoke-backend
 
 run-backend: ## bootRun java backend
 	./gradlew bootRun
@@ -219,17 +221,20 @@ generate-jar: ## clean and build jar file (for building docker image)
 	./gradlew clean
 	./gradlew bootJar
 
-DOCKER_IMG_BACKEND = imdb-clone-backend
+DOCKER_IMG_BACKEND ?= imdb-clone-backend:local
 
 docker-build-backend: ## build backend docker image from Dockerfile
 	docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(DOCKER_IMG_BACKEND) .
 
 docker-run-backend: ## run backend docker container
-	docker run --name $(DOCKER_IMG_BACKEND) -p 8080:8080 $(DOCKER_IMG_BACKEND)
+	docker run --name imdb-clone-backend -p 8080:8080 $(DOCKER_IMG_BACKEND)
+
+container-smoke-backend: ## smoke-test backend health probes and non-root read-only runtime
+	BACKEND_IMAGE=$(DOCKER_IMG_BACKEND) BACKEND_DOCKER_PLATFORM=$(APP_DOCKER_PLATFORM) BACKEND_SMOKE_PORT=$(BACKEND_SMOKE_PORT) bash src/test/container/smoke.sh
 
 ##@ Frontend
 
-.PHONY: npm-install generate-client npm-lint run-frontend docker-build-frontend docker-run-frontend
+.PHONY: npm-install generate-client npm-lint run-frontend docker-build-frontend docker-run-frontend container-smoke-frontend
 
 npm-install: ## install NPM dependencies
 	cd ./frontend; yarn install
@@ -243,13 +248,16 @@ npm-lint: ## lint frontend code
 run-frontend: ## run frontend
 	cd ./frontend; yarn run start
 
-DOCKER_IMG_FRONTEND = imdb-clone-frontend
+DOCKER_IMG_FRONTEND ?= imdb-clone-frontend:local
 
 docker-build-frontend: ## build frontend docker image from Dockerfile
 	cd ./frontend; docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(DOCKER_IMG_FRONTEND) .
 
 docker-run-frontend: ## run frontend docker container
-	docker run --name $(DOCKER_IMG_FRONTEND) -p 3000:3000 $(DOCKER_IMG_FRONTEND)
+	docker run --name imdb-clone-frontend -p 3000:8080 $(DOCKER_IMG_FRONTEND)
+
+container-smoke-frontend: ## smoke-test frontend SPA and non-root read-only runtime
+	FRONTEND_IMAGE=$(DOCKER_IMG_FRONTEND) FRONTEND_DOCKER_PLATFORM=$(APP_DOCKER_PLATFORM) FRONTEND_SMOKE_PORT=$(FRONTEND_SMOKE_PORT) bash frontend/tests/container/smoke.sh
 
 ##@ Movie Concierge Agent
 
@@ -300,7 +308,7 @@ container-smoke-agent: ## smoke-test the Python agent image, endpoints, and non-
 
 ##@ Verification
 
-.PHONY: verify-release-workflows verify-kubernetes-render verify-seed-release verify-kubernetes-schema verify-movie-concierge-production verify-observability-production verify-observability-charts verify-openapi-drift
+.PHONY: verify-release-workflows verify-kubernetes-render verify-seed-release verify-kubernetes-schema verify-runtime-hardening verify-movie-concierge-production verify-observability-production verify-observability-charts verify-openapi-drift
 
 verify-release-workflows: ## verify protected-branch CI and release PR contracts
 	ruby infrastructure/clusters/home/tests/verify_release_workflows.rb
@@ -313,7 +321,7 @@ verify-seed-release: verify-kubernetes-render ## verify normal releases cannot r
 	ruby infrastructure/clusters/home/tests/verify_seed_release.rb \
 		$(K8S_RENDER_OUTPUT) $(K8S_SEED_RENDER_OUTPUT)
 
-verify-kubernetes-schema: verify-release-workflows verify-seed-release verify-movie-concierge-production verify-observability-production ## validate rendered Kubernetes manifests with pinned kubeconform
+verify-kubernetes-schema: verify-release-workflows verify-seed-release verify-runtime-hardening verify-movie-concierge-production verify-observability-production ## validate rendered Kubernetes manifests with pinned kubeconform
 	ruby -ryaml -e 'ARGV.each { |path| YAML.load_stream(File.read(path)).each { |doc| next if doc.nil?; doc.delete("sops") if doc.is_a?(Hash); puts YAML.dump(doc) } }' \
 		$(K8S_RENDER_OUTPUT) $(K8S_SEED_RENDER_OUTPUT) > $(K8S_SCHEMA_OUTPUT)
 	docker run --rm -i $(KUBECONFORM_IMAGE) \
@@ -321,6 +329,9 @@ verify-kubernetes-schema: verify-release-workflows verify-seed-release verify-mo
 		-summary \
 		-ignore-missing-schemas \
 		< $(K8S_SCHEMA_OUTPUT)
+
+verify-runtime-hardening: verify-kubernetes-render ## verify backend/frontend non-root runtimes and HTTP probes
+	ruby infrastructure/clusters/home/tests/verify_runtime_hardening.rb $(K8S_RENDER_OUTPUT)
 
 verify-movie-concierge-production: verify-kubernetes-render ## verify production agent GitOps and guardrail contracts
 	ruby infrastructure/clusters/home/tests/verify_movie_concierge.rb $(K8S_RENDER_OUTPUT)

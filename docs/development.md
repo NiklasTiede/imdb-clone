@@ -409,17 +409,21 @@ Do not manually edit files in `frontend/src/client/movies/generator-output`.
 Backend image:
 
 ```bash
-docker build --platform linux/amd64 -t imdb-clone-backend .
+make docker-build-backend
+make container-smoke-backend
 ```
 
 Frontend image:
 
 ```bash
-cd frontend
-docker build --platform linux/amd64 -t imdb-clone-frontend .
+make docker-build-frontend
+make container-smoke-frontend
 ```
 
 The frontend Dockerfile installs Java because `openapi-generator-cli` runs during the image build.
+Backend and frontend runtime images use numeric non-root users and support a read-only root
+filesystem. Their smoke tests run with dropped Linux capabilities and exercise the same HTTP health
+paths used by Kubernetes; the backend smoke also starts the Pyroscope Java agent.
 
 Movie Concierge image and smoke test:
 
