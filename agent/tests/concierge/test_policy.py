@@ -8,6 +8,7 @@ from imdb_agent.concierge.policy import (
     requests_open_movie,
     select_movies_for_display,
 )
+from imdb_agent.concierge.tools import ToolName
 
 
 @pytest.mark.parametrize(
@@ -57,7 +58,7 @@ def test_exact_title_search_only_displays_matching_catalog_card() -> None:
     movies = (_movie(42, "Forrest Gump", 1994), _movie(43, "Forrest Gumpkin", 2020))
 
     selected = select_movies_for_display(
-        "search_movies",
+        ToolName.SEARCH_MOVIES,
         movies,
         {"query": "Forrest Gump (1994)"},
     )
@@ -69,7 +70,7 @@ def test_discovery_search_keeps_multiple_choices() -> None:
     movies = (_movie(42, "Arrival", 2016), _movie(43, "Contact", 1997))
 
     selected = select_movies_for_display(
-        "search_movies",
+        ToolName.SEARCH_MOVIES,
         movies,
         {"query": "thoughtful science fiction"},
     )

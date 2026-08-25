@@ -60,6 +60,15 @@ def test_creates_anonymous_conversation_and_streams_typed_contract(
         "usage",
         "completion",
     }
+    assert {event["type"] for event in events} <= {
+        "status",
+        "text",
+        "movie-card",
+        "ui-action",
+        "error",
+        "usage",
+        "completion",
+    }
     movie_event = next(event for event in events if event["type"] == "movie-card")
     assert cast("dict[str, object]", movie_event["movie"])["primaryTitle"] == "Arrival"
     assert events[-1]["outcome"] == "success"

@@ -13,10 +13,11 @@ from imdb_agent.concierge.events import (
     RunStatus,
     StatusEvent,
     TextEvent,
+    ToolCallEvent,
     UiActionEvent,
-    UsageEvent,
 )
 from imdb_agent.concierge.policy import (
+    TOOL_STATUSES,
     UiActionDecisionOutcome,
     capability_response,
     decide_open_movie_action,
@@ -33,13 +34,6 @@ from imdb_agent.concierge.ports import (
     RunObserver,
     RunRequest,
 )
-
-_STATUS_TO_TOOL = {
-    RunStatus.SEARCHING: "search_movies",
-    RunStatus.FETCHING_DETAILS: "get_movie_details",
-    RunStatus.FINDING_SIMILAR: "get_similar_movies",
-    RunStatus.CHOOSING_TONIGHT: "get_tonight_picks",
-}
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -142,14 +136,16 @@ class ConciergeService:
                     if not first_event_observed:
                         self._observer.first_event(perf_counter() - started_at)
                         first_event_observed = True
+                    if isinstance(event, ToolCallEvent):
+                        self._observer.tool_called(event.tool)
+                        yield next_event(StatusEvent(status=TOOL_STATUSES[event.tool]))
+                        continue
                     if isinstance(event, TextEvent):
                         text_parts.append(event.delta)
                     elif event.type == "movie-card":
                         movies_by_id[event.movie.movie_id] = event.movie
-                    elif isinstance(event, UsageEvent):
-                        usage = event.usage
                     else:
-                        self._observer.tool_called(_STATUS_TO_TOOL[event.status])
+                        usage = event.usage
                     yield next_event(event)
 
             response_text = "".join(text_parts).strip()

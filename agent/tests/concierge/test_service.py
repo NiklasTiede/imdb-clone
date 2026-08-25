@@ -20,6 +20,7 @@ from imdb_agent.concierge.events import (
 )
 from imdb_agent.concierge.ports import ConversationNotFoundError, RunRequest
 from imdb_agent.concierge.service import ConciergeRunError, ConciergeService
+from imdb_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -35,6 +36,7 @@ class RecordingObserver:
         self.disconnects = 0
         self.first_event_durations: list[float] = []
         self.committed_budget: list[Decimal] = []
+        self.tools: list[ToolName] = []
         self.ui_actions: list[tuple[str, str]] = []
 
     def started(self) -> None:
@@ -46,8 +48,8 @@ class RecordingObserver:
     def budget_committed(self, amount_usd: Decimal) -> None:
         self.committed_budget.append(amount_usd)
 
-    def tool_called(self, tool_name: str) -> None:
-        return None
+    def tool_called(self, tool_name: ToolName) -> None:
+        self.tools.append(tool_name)
 
     def ui_action(self, *, action: str, outcome: str) -> None:
         self.ui_actions.append((action, outcome))
@@ -128,6 +130,7 @@ async def test_streams_typed_grounded_events_and_persists_bounded_history() -> N
     assert ledger.committed_usd == 0
     assert observer.committed_budget == [Decimal(0)]
     assert observer.outcomes == ["success"]
+    assert observer.tools == [ToolName.SEARCH_MOVIES]
 
 
 class NeverCalledRunner:

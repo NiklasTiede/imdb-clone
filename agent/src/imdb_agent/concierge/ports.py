@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from imdb_agent.concierge.events import GroundedMovie, RunnerEvent, UsageSummary
+    from imdb_agent.concierge.tools import ToolName
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,21 +19,10 @@ class ConversationMessage:
 
 
 @dataclass(frozen=True, slots=True)
-class ToolInvocation:
-    name: str
-    arguments: dict[str, object]
-
-
-class RunTraceSink(Protocol):
-    def record_tool_call(self, invocation: ToolInvocation) -> None: ...
-
-
-@dataclass(frozen=True, slots=True)
 class RunRequest:
     conversation_id: str
     message: str
     history: tuple[ConversationMessage, ...]
-    trace_sink: RunTraceSink | None = None
 
 
 class ConciergeRunner(Protocol):
@@ -92,7 +82,7 @@ class RunObserver(Protocol):
 
     def budget_committed(self, amount_usd: Decimal) -> None: ...
 
-    def tool_called(self, tool_name: str) -> None: ...
+    def tool_called(self, tool_name: ToolName) -> None: ...
 
     def ui_action(self, *, action: str, outcome: str) -> None: ...
 

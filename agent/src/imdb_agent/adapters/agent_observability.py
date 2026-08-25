@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from imdb_agent.concierge.events import UsageSummary
+    from imdb_agent.concierge.tools import ToolName
     from imdb_agent.settings import Settings
 
 
@@ -31,9 +32,9 @@ class AgentMetrics:
         self.active.inc()
         structlog.get_logger().info("concierge_run_started")
 
-    def tool_called(self, tool_name: str) -> None:
-        self.tool_calls.labels(tool=tool_name).inc()
-        structlog.get_logger().info("concierge_tool_called", tool=tool_name)
+    def tool_called(self, tool_name: ToolName) -> None:
+        self.tool_calls.labels(tool=tool_name.value).inc()
+        structlog.get_logger().info("concierge_tool_called", tool=tool_name.value)
 
     def ui_action(self, *, action: str, outcome: str) -> None:
         self.ui_actions.labels(action=action, outcome=outcome).inc()

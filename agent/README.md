@@ -4,6 +4,141 @@ Local, read-only conversational discovery service for the IMDb Clone. It uses Py
 with `gpt-5.6-luna`, calls the Java domain through protected MCP tools, and streams an
 application-owned event contract to React.
 
+## How the agent works
+
+The Movie Concierge is more than the language model. React owns the user experience, the Python
+service owns orchestration and safety policy, the model provider proposes text and tool calls, and
+Java remains the authority for movie data and recommendations. The colors below mark those system
+and trust boundaries; notably, Python and the model provider have no direct data-store access.
+
+```mermaid
+flowchart TB
+    subgraph reactBoundary["React browser"]
+        reactUi["Concierge UI"]
+        appRouter["Action validator and app router"]
+    end
+
+    subgraph pythonBoundary["Python agent service"]
+        fastApi["FastAPI and typed SSE"]
+        conciergeCore["Concierge policy and orchestration"]
+        modelAdapter["Pydantic AI adapter"]
+        toolCallEvent["Validated ToolCallEvent"]
+        evidence["Bounded metrics and eval evidence"]
+    end
+
+    subgraph providerBoundary["Model provider"]
+        luna["gpt-5.6-luna"]
+    end
+
+    subgraph javaBoundary["Java backend"]
+        mcpBoundary["Protected MCP boundary"]
+        movieCapabilities["Catalog and recommendation capabilities"]
+    end
+
+    subgraph dataBoundary["Java-owned data"]
+        postgres["PostgreSQL"]
+        openSearch["OpenSearch"]
+    end
+
+    reactUi -->|"Message and conversation ID"| fastApi
+    fastApi -->|"Run request"| conciergeCore
+    conciergeCore -->|"Bounded prompt and history"| modelAdapter
+    modelAdapter -.->|"Model request"| luna
+    luna -.->|"Text or proposed tool call"| modelAdapter
+    modelAdapter -->|"Protected MCP request"| mcpBoundary
+    mcpBoundary -->|"Named Java interface"| movieCapabilities
+    movieCapabilities -->|"Catalog authority"| postgres
+    movieCapabilities -->|"Search projection"| openSearch
+    modelAdapter -->|"Accepted tool request"| toolCallEvent
+    toolCallEvent -->|"Status and accounting"| conciergeCore
+    toolCallEvent -->|"Tool and argument assertions"| evidence
+    modelAdapter -->|"Grounded cards, text, usage"| conciergeCore
+    conciergeCore -->|"Typed browser events"| fastApi
+    fastApi -.->|"SSE stream"| reactUi
+    reactUi -->|"Grounded open_movie"| appRouter
+
+    classDef reactNode fill:#1d4ed8,color:#f8fafc,stroke:#93c5fd,stroke-width:2px
+    classDef pythonNode fill:#854d0e,color:#fefce8,stroke:#fde047,stroke-width:2px
+    classDef providerNode fill:#6b21a8,color:#faf5ff,stroke:#d8b4fe,stroke-width:2px
+    classDef javaNode fill:#9a3412,color:#fff7ed,stroke:#fdba74,stroke-width:2px
+    classDef dataNode fill:#334155,color:#f8fafc,stroke:#cbd5e1,stroke-width:2px
+
+    class reactUi,appRouter reactNode
+    class fastApi,conciergeCore,modelAdapter,toolCallEvent,evidence pythonNode
+    class luna providerNode
+    class mcpBoundary,movieCapabilities javaNode
+    class postgres,openSearch dataNode
+
+    style reactBoundary fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#172554
+    style pythonBoundary fill:#fefce8,stroke:#ca8a04,stroke-width:2px,color:#422006
+    style providerBoundary fill:#faf5ff,stroke:#9333ea,stroke-width:2px,color:#3b0764
+    style javaBoundary fill:#fff7ed,stroke:#ea580c,stroke-width:2px,color:#431407
+    style dataBoundary fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#0f172a
+```
+
+A grounded request such as **“Open Arrival”** runs through a bounded agent loop. On every model
+request, Luna decides whether the current context is sufficient for a final answer or whether it
+needs one or more Java-owned tools. Pydantic AI validates proposed calls structurally, executes
+accepted calls through MCP, and adds their typed results to the next model request. The loop stops
+on a final answer, a safe failure, or a configured request, tool, token, time, or cost limit.
+
+```mermaid
+sequenceDiagram
+    title Bounded grounded agent loop
+    actor User
+    box rgb(219, 234, 254) React browser
+        participant ReactUI
+    end
+    box rgb(254, 249, 195) Python agent service
+        participant FastAPI
+        participant ConciergeCore
+        participant PydanticAI
+    end
+    box rgb(243, 232, 255) Model provider
+        participant Luna
+    end
+    box rgb(255, 237, 213) Java backend
+        participant MCP
+        participant MovieDomain
+    end
+
+    User->>ReactUI: Open Arrival
+    ReactUI->>FastAPI: POST message and session
+    FastAPI->>ConciergeCore: Start bounded turn
+    ConciergeCore->>PydanticAI: Prompt and limited history
+    loop Until final answer or configured limit
+        PydanticAI->>Luna: Request with current context
+        alt Context is sufficient
+            Luna-->>PydanticAI: Final grounded answer
+        else More catalog information is needed
+            Luna-->>PydanticAI: Proposed tool call
+            PydanticAI-->>ConciergeCore: Validated ToolCallEvent
+            ConciergeCore-->>FastAPI: Catalog progress status
+            FastAPI-->>ReactUI: SSE status
+            PydanticAI->>MCP: Protected tool call
+            MCP->>MovieDomain: Invoke named capability
+            MovieDomain-->>MCP: Grounded movie data
+            MCP-->>PydanticAI: Typed tool result
+            PydanticAI-->>ConciergeCore: Grounded movie cards
+        end
+    end
+    alt Final answer produced
+        PydanticAI-->>ConciergeCore: Final text and usage
+        ConciergeCore-->>FastAPI: Cards, text, usage and optional open_movie
+    else Limit or dependency failure
+        PydanticAI-->>ConciergeCore: Safe typed failure
+        ConciergeCore-->>FastAPI: Error and completion
+    end
+    FastAPI-->>ReactUI: SSE stream completion
+    ReactUI-->>User: Render grounded result or safe error
+```
+
+The model therefore chooses the next semantic step, but it does not control the loop without
+limits. The current production defaults allow at most four model requests and six tool calls in a
+30-second run, alongside input/output-token and per-run cost limits. Even after a successful model
+answer, the provider-independent Concierge policy emits `open_movie` only when the current run has
+resolved exactly one matching grounded movie; the model cannot supply a URL or route.
+
 ## Local setup
 
 Create the locked Python 3.14 environment:
@@ -94,8 +229,16 @@ make verify-agent
 
 The dataset covers normal, ambiguous, adversarial, tool-error, grounding, constraint-refinement,
 budget, UI-action, and unsupported-mutation behavior. Pydantic Evals checks required/allowed tools,
-important arguments, catalog identifier and UI-action grounding, safe errors, and run bounds.
-Fault-injection-only cases remain deterministic.
+important arguments, required and forbidden text terms, exact safe error codes, catalog identifier
+and UI-action grounding, and run bounds. Qualitative `review_criteria` and `review_risks` remain
+explicitly human-reviewed rather than pretending to be executable assertions. Deterministic
+scenarios and movie fixtures live in the dataset, so extending it does not require adding case-ID
+branches to Python. Fault-injection-only cases remain deterministic.
+
+The Pydantic AI Adapter translates every framework-validated tool call into an internal,
+provider-neutral `ToolCallEvent`. The Concierge uses that single event for user-visible status and
+bounded metrics, while the eval harness uses it for tool and argument assertions. Internal tool
+arguments are never part of the browser SSE contract, logs, traces, or Prometheus labels.
 
 Live evals require two deliberate controls and are never part of CI:
 
@@ -199,7 +342,7 @@ images, pins their Docker digests, and updates the existing GitOps tree after an
 
 ```text
 src/imdb_agent/
-├── concierge/    provider-independent policy, events, ports, sessions, orchestration
+├── concierge/    provider-independent policy, tools, events, eval contract, ports, orchestration
 ├── web/          FastAPI and typed SSE inbound adapter
 ├── adapters/     Pydantic AI/OpenAI/MCP, memory, eval, logging, metrics, and fakes
 ├── bootstrap.py  composition root

@@ -17,6 +17,9 @@ Run aggregate commands from the repository root. Run narrow uv commands from `ag
   Adapters.
 - `imdb_agent.settings` validates environment configuration. Never pass the settings object through
   the product Module as a service locator.
+- Translate framework-validated tool calls into the provider-neutral internal `ToolCallEvent`.
+  Derive status, metrics, and eval evidence from that event; never expose tool arguments through the
+  browser contract or operational telemetry.
 - The Java backend owns Movie, Account, Engagement, Search Index, and Recommendation behavior. Use
   its protected MCP Interface; never access its PostgreSQL database or OpenSearch index directly.
 
@@ -32,6 +35,8 @@ Run aggregate commands from the repository root. Run narrow uv commands from `ag
 - Tests and evals must be deterministic by default and run without a provider key, Java process,
   database, search index, or network access.
 - Keep synthetic eval cases under `evals/`; never copy production prompts or user data into fixtures.
+- Keep executable eval expectations machine-readable. Label qualitative criteria as human review
+  guidance rather than treating inert prose as a passing assertion.
 
 ## Telemetry And Secrets
 
