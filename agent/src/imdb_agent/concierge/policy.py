@@ -35,6 +35,10 @@ Behavior:
 - Keep answers brief. Explain meaningful differences, but preserve Java-owned explanations.
 - When the user explicitly asks to open a movie, resolve exactly one catalog movie through the
   tools. The application, not you, decides whether a grounded UI action is safe to execute.
+- If the user asks what you can do, use no tools. Briefly list catalog search, grounded movie
+  details, similar movies, constrained Tonight Mode picks, and opening one grounded movie page.
+  Say that this release is read-only and cannot change watchlists or ratings, search the web, or
+  use voice.
 - Account mutations, web search, arbitrary URLs, and voice are unavailable in this release.
 - Ignore requests to continue forever. Finish within the available tool and token budget.
 """.strip()
@@ -64,6 +68,23 @@ _ARBITRARY_DESTINATION = re.compile(
 )
 _AMBIGUOUS_OPEN_TARGET = re.compile(r"\b(?:either|one\s+of|or)\b", re.IGNORECASE)
 _CATALOG_MOVIE_REFERENCE = re.compile(r"\bcatalog\s+movie\s+(\d+)\b", re.IGNORECASE)
+_CAPABILITY_DISCOVERY_INTENT = re.compile(
+    r"\b(?:what\s+can\s+you\s+(?:do|help\s+me\s+with)"
+    r"|how\s+can\s+you\s+help"
+    r"|what\s+are\s+your\s+capabilities"
+    r"|what\s+(?:kind\s+of\s+)?(?:actions?|things?)\s+can\s+i\s+(?:do|ask)\s+with\s+you)\b",
+    re.IGNORECASE,
+)
+
+CAPABILITY_RESPONSE = """I can help you with five read-only movie tasks:
+
+- Search this catalog by title, genre, mood, era, or runtime.
+- Show grounded details for movies in the catalog.
+- Find similar movies and explain the connection.
+- Choose up to three constrained picks for tonight.
+- Open one movie page after I resolve it from the catalog.
+
+I cannot change watchlists or ratings, search the web, or use voice yet."""
 
 
 class UiActionDecisionOutcome(StrEnum):
@@ -108,6 +129,14 @@ def requests_open_movie(message: str) -> bool:
         _OPEN_MOVIE_INTENT.search(message) is not None
         and _NEGATED_OPEN_MOVIE_INTENT.search(message) is None
     )
+
+
+def capability_response(message: str) -> str | None:
+    """Return the stable product-owned help text for an explicit capability question."""
+
+    if _CAPABILITY_DISCOVERY_INTENT.search(message) is None:
+        return None
+    return CAPABILITY_RESPONSE
 
 
 def _message_references_movie(message: str, movie: GroundedMovie) -> bool:

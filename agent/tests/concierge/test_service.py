@@ -130,6 +130,46 @@ async def test_streams_typed_grounded_events_and_persists_bounded_history() -> N
     assert observer.outcomes == ["success"]
 
 
+class NeverCalledRunner:
+    async def stream(self, request: RunRequest) -> AsyncIterator[RunnerEvent]:
+        raise AssertionError(f"runner must not handle capability help: {request.message}")
+        yield TextEvent(delta="unreachable")  # pragma: no cover
+
+
+async def test_capability_help_is_local_persisted_and_free_of_model_usage() -> None:
+    store = InMemoryConversationStore()
+    ledger = InMemoryCostLedger(
+        project_limit_usd=Decimal(0),
+        per_run_limit_usd=Decimal("0.25"),
+    )
+    observer = RecordingObserver()
+    service = ConciergeService(
+        runner=NeverCalledRunner(),
+        conversations=store,
+        cost_ledger=ledger,
+        observer=observer,
+        max_concurrent_runs=0,
+    )
+    conversation_id = await service.create_conversation("browser-client-0001")
+
+    events = await collect_events(
+        service,
+        client_id="browser-client-0001",
+        conversation_id=conversation_id,
+        message="What kind of actions can I do with you?",
+    )
+
+    response = next(event.delta for event in events if isinstance(event, TextEvent))
+    assert "Open one movie page" in response
+    assert not any(isinstance(event, UsageEvent) for event in events)
+    assert events[-1].type == "completion"
+    assert events[-1].outcome == "success"
+    history = await store.snapshot("browser-client-0001", conversation_id)
+    assert history[-1].content == response
+    assert ledger.committed_usd == 0
+    assert observer.committed_budget == []
+
+
 async def test_conversations_are_isolated_by_browser_client() -> None:
     service, _store, _ledger, _observer = service_fixture()
     conversation_id = await service.create_conversation("browser-client-0001")

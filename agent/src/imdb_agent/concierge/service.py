@@ -18,6 +18,7 @@ from imdb_agent.concierge.events import (
 )
 from imdb_agent.concierge.policy import (
     UiActionDecisionOutcome,
+    capability_response,
     decide_open_movie_action,
     requests_open_movie,
 )
@@ -109,6 +110,7 @@ class ConciergeService:
         text_parts: list[str] = []
         movies_by_id: dict[int, GroundedMovie] = {}
         self._observer.started()
+        local_response = capability_response(message)
 
         def next_event(event: ConciergeEvent) -> ConciergeEvent:
             nonlocal sequence
@@ -116,32 +118,39 @@ class ConciergeService:
             return event.model_copy(update={"sequence": sequence})
 
         try:
-            capacity_acquired = await self._capacity.try_acquire()
-            if not capacity_acquired:
-                raise _RunCapacityExhaustedError
+            if local_response is None:
+                capacity_acquired = await self._capacity.try_acquire()
+                if not capacity_acquired:
+                    raise _RunCapacityExhaustedError
             history = await self._conversations.begin_turn(client_id, conversation_id, message)
             turn_started = True
-            reservation = await self._cost_ledger.reserve()
-            yield next_event(StatusEvent(status=RunStatus.THINKING))
-
-            request = RunRequest(
-                conversation_id=conversation_id,
-                message=message,
-                history=history,
-            )
-            async for event in self._runner.stream(request):
-                if not first_event_observed:
-                    self._observer.first_event(perf_counter() - started_at)
-                    first_event_observed = True
-                if isinstance(event, TextEvent):
-                    text_parts.append(event.delta)
-                elif event.type == "movie-card":
-                    movies_by_id[event.movie.movie_id] = event.movie
-                elif isinstance(event, UsageEvent):
-                    usage = event.usage
-                else:
-                    self._observer.tool_called(_STATUS_TO_TOOL[event.status])
-                yield next_event(event)
+            if local_response is not None:
+                yield next_event(StatusEvent(status=RunStatus.THINKING))
+                self._observer.first_event(perf_counter() - started_at)
+                first_event_observed = True
+                text_parts.append(local_response)
+                yield next_event(TextEvent(delta=local_response))
+            else:
+                reservation = await self._cost_ledger.reserve()
+                yield next_event(StatusEvent(status=RunStatus.THINKING))
+                request = RunRequest(
+                    conversation_id=conversation_id,
+                    message=message,
+                    history=history,
+                )
+                async for event in self._runner.stream(request):
+                    if not first_event_observed:
+                        self._observer.first_event(perf_counter() - started_at)
+                        first_event_observed = True
+                    if isinstance(event, TextEvent):
+                        text_parts.append(event.delta)
+                    elif event.type == "movie-card":
+                        movies_by_id[event.movie.movie_id] = event.movie
+                    elif isinstance(event, UsageEvent):
+                        usage = event.usage
+                    else:
+                        self._observer.tool_called(_STATUS_TO_TOOL[event.status])
+                    yield next_event(event)
 
             response_text = "".join(text_parts).strip()
             if not response_text:
@@ -158,14 +167,15 @@ class ConciergeService:
             turn_started = False
             completion_outcome = CompletionOutcome.SUCCESS
             metric_outcome = "success"
-            self._observer.budget_committed(
-                await self._cost_ledger.settle(
-                    reservation,
-                    usage.estimated_cost_usd if usage is not None else None,
-                    succeeded=True,
+            if reservation is not None:
+                self._observer.budget_committed(
+                    await self._cost_ledger.settle(
+                        reservation,
+                        usage.estimated_cost_usd if usage is not None else None,
+                        succeeded=True,
+                    )
                 )
-            )
-            reservation = None
+                reservation = None
             action_decision = decide_open_movie_action(
                 message,
                 tuple(movies_by_id.values()),

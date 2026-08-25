@@ -145,6 +145,45 @@ describe("ConciergeExperience", () => {
     );
   });
 
+  it("offers capability discovery as the featured first action", async () => {
+    const capabilityResponse = new Response(
+      event("status", 1, { status: "thinking" }) +
+        event("text", 2, {
+          delta:
+            "I can search the catalog, show grounded details, find similar movies, choose tonight, and open a movie page.",
+        }) +
+        event("completion", 3, { conversationId, outcome: "success" }),
+      { headers: { "Content-Type": "text/event-stream" } },
+    );
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ conversationId }), { status: 201 }),
+      )
+      .mockResolvedValueOnce(capabilityResponse);
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    renderExperience();
+
+    await user.click(
+      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "See what the Concierge can do" }),
+    );
+
+    expect(await screen.findByText(/I can search the catalog/)).toBeVisible();
+    const messageRequest = fetchMock.mock.calls[1];
+    const requestBody = messageRequest?.[1]?.body;
+    expect(typeof requestBody).toBe("string");
+    if (typeof requestBody !== "string") {
+      throw new TypeError("Expected a serialized concierge request body");
+    }
+    expect(JSON.parse(requestBody)).toEqual({
+      message: "What can you do for me?",
+    });
+  });
+
   it("closes the overlay and opens the app-owned route for a grounded action", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
@@ -174,8 +213,10 @@ describe("ConciergeExperience", () => {
       screen.getByRole("button", { name: "Send concierge message" }),
     );
 
-    expect(await screen.findByLabelText("Current route")).toHaveTextContent(
-      "/movie?id=42",
+    await waitFor(() =>
+      expect(screen.getByLabelText("Current route")).toHaveTextContent(
+        "/movie?id=42",
+      ),
     );
     await waitFor(() =>
       expect(

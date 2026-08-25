@@ -12,6 +12,7 @@ from imdb_agent.concierge.events import (
     UsageEvent,
     UsageSummary,
 )
+from imdb_agent.concierge.policy import CAPABILITY_RESPONSE
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -30,12 +31,7 @@ class FakeConciergeRunner:
     ) -> AsyncIterator[StatusEvent | TextEvent | MovieCardEvent | UsageEvent]:
         normalized = request.message.casefold()
         if "what can" in normalized:
-            yield TextEvent(
-                delta=(
-                    "I can search this catalog, explain known movie details, find similar "
-                    "movies, and choose three constrained picks for tonight."
-                )
-            )
+            yield TextEvent(delta=CAPABILITY_RESPONSE)
         elif "watchlist" in normalized or "rate " in normalized:
             yield TextEvent(
                 delta="This release is read-only, so I cannot change watchlists or ratings."

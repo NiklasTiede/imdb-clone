@@ -3,10 +3,45 @@ import pytest
 from imdb_agent.concierge.events import GroundedMovie
 from imdb_agent.concierge.policy import (
     UiActionDecisionOutcome,
+    capability_response,
     decide_open_movie_action,
     requests_open_movie,
     select_movies_for_display,
 )
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "What can you do for me?",
+        "How can you help?",
+        "What are your capabilities?",
+        "What kind of actions can I do with you?",
+    ],
+)
+def test_capability_questions_receive_stable_honest_help(message: str) -> None:
+    response = capability_response(message)
+
+    assert response is not None
+    assert all(
+        term in response.casefold()
+        for term in (
+            "search",
+            "details",
+            "similar",
+            "tonight",
+            "open",
+            "read-only",
+            "watchlists",
+            "ratings",
+            "web",
+            "voice",
+        )
+    )
+
+
+def test_ordinary_discovery_request_does_not_receive_capability_help() -> None:
+    assert capability_response("Find a thoughtful movie for tonight.") is None
 
 
 def _movie(movie_id: int, title: str, year: int) -> GroundedMovie:

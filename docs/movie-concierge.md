@@ -71,6 +71,11 @@ The response streams through typed events. The UI can show concise states such a
 Movie results render with existing poster-card and navigation patterns, not as Markdown links
 invented by the model.
 
+The first prompt is a visible capability guide. Questions such as “What can you do for me?” are
+answered from a stable product-owned response without calling the model or Java tools. It lists
+catalog search, grounded details, similar movies, constrained Tonight Mode picks, and grounded
+movie-page navigation, together with the release's read-only limitations.
+
 A representative journey is:
 
 1. The user describes an imprecise intent.
