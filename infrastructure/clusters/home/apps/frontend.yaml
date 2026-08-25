@@ -1,3 +1,12 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: imdb-clone-frontend
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+automountServiceAccountToken: false
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,27 +24,51 @@ spec:
       labels:
         app.kubernetes.io/name: imdb-clone-frontend
     spec:
+      serviceAccountName: imdb-clone-frontend
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: frontend
           image: niklastiede/imdb-clone-frontend:v1.4.0@sha256:5dc18028f96378fe0c09bfff5f64dd5b6e59cd69a1ceb0c0158632e51af4d01e
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: http
-              containerPort: 80
-          readinessProbe:
-            tcpSocket:
+              containerPort: 8080
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /
               port: http
-            initialDelaySeconds: 5
+            periodSeconds: 2
+            timeoutSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
             periodSeconds: 10
             timeoutSeconds: 3
-            failureThreshold: 6
+            failureThreshold: 3
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /
               port: http
-            initialDelaySeconds: 15
             periodSeconds: 20
             timeoutSeconds: 3
-            failureThreshold: 6
+            failureThreshold: 3
           resources:
             requests:
               cpu: 25m
@@ -43,6 +76,14 @@ spec:
             limits:
               cpu: 250m
               memory: 256Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 16Mi
 ---
 apiVersion: v1
 kind: Service

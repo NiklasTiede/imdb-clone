@@ -16,8 +16,11 @@ RUN yarn run build:moviesGen \
 
 # Stage 2: Set up the Nginx server to serve the application
 FROM nginx:1.30-alpine
-# Copy the built app to the Nginx container
+# The official image already owns uid/gid 101 for nginx. Move every runtime
+# write into /tmp so Kubernetes can mount the root filesystem read-only.
+RUN sed -i '/^user  /d; s!^pid .*;!pid /tmp/nginx.pid;!' /etc/nginx/nginx.conf
 COPY --from=build /app/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+USER 101:101
+EXPOSE 8080
+ENTRYPOINT ["nginx", "-g", "daemon off;"]

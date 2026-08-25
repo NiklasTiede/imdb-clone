@@ -1,3 +1,12 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: imdb-clone-backend
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+automountServiceAccountToken: false
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,15 +24,33 @@ spec:
       labels:
         app.kubernetes.io/name: imdb-clone-backend
     spec:
+      serviceAccountName: imdb-clone-backend
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: backend
           image: niklastiede/imdb-clone-backend:v1.4.0@sha256:802979c20d8f5b999c2f130c676a79c39a67d44470b3bc5d1372591f1c26c3ab
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           ports:
             - name: http
               containerPort: 8080
+              protocol: TCP
             - name: management
               containerPort: 8081
+              protocol: TCP
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
@@ -85,20 +112,29 @@ spec:
             - name: movie-concierge-runtime
               mountPath: /run/secrets/movie-concierge
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: management
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 24
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /actuator/health/readiness
               port: management
-            initialDelaySeconds: 30
             periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 12
+            timeoutSeconds: 3
+            failureThreshold: 3
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /actuator/health/liveness
               port: management
-            initialDelaySeconds: 90
             periodSeconds: 20
-            timeoutSeconds: 5
-            failureThreshold: 6
+            timeoutSeconds: 3
+            failureThreshold: 3
           resources:
             requests:
               cpu: 250m
@@ -114,6 +150,10 @@ spec:
             items:
               - key: mcp-bearer-token
                 path: movie_concierge_mcp_bearer_token
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
 ---
 apiVersion: v1
 kind: Service

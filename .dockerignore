@@ -1,0 +1,14 @@
+**
+!.dockerignore
+!Dockerfile
+!build.gradle
+!settings.gradle
+!gradle.properties
+!gradle.lockfile
+!gradlew
+!gradle/
+!gradle/**
+!src/
+!src/**
+!scripts/
+!scripts/backend-entrypoint

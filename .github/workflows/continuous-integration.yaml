@@ -40,6 +40,12 @@ jobs:
       - name: Build and Test Spring Boot Application
         run: ./gradlew build jacocoTestReport
 
+      - name: Build backend runtime image
+        run: make docker-build-backend
+
+      - name: Smoke-test backend runtime image
+        run: make container-smoke-backend
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v6
         with:
@@ -89,6 +95,14 @@ jobs:
 
       - name: Build
         run: yarn build
+
+      - name: Build frontend runtime image
+        working-directory: .
+        run: make docker-build-frontend
+
+      - name: Smoke-test frontend runtime image
+        working-directory: .
+        run: make container-smoke-frontend
 
   agent-build-test:
     runs-on: ubuntu-latest

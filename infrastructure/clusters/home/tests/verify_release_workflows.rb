@@ -28,6 +28,17 @@ assert_contract(
 %w[backend-build-test frontend-build-test agent-build-test infrastructure-validate].each do |job|
   assert_contract(ci.match?(/^  #{Regexp.escape(job)}:$/), "CI is missing required job #{job}")
 end
+%w[
+  docker-build-backend
+  container-smoke-backend
+  docker-build-frontend
+  container-smoke-frontend
+].each do |target|
+  assert_contract(
+    ci.include?("run: make #{target}"),
+    "CI must run the #{target} runtime image gate"
+  )
+end
 
 assert_contract(release.include?("contents: write"), "release requires contents write permission")
 assert_contract(

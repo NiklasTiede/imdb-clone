@@ -79,6 +79,21 @@ Notes:
 - A cross-deployable MCP or SSE contract change requires targeted tests on both sides of that Seam
   and each affected deployable's complete gate.
 
+## Runtime Image Checks
+
+Run the deployable image checks after changing a Dockerfile, entrypoint, Nginx configuration,
+container user, writable path, or health probe contract.
+
+| Deployable | Image build | Non-root/read-only smoke |
+| --- | --- | --- |
+| Backend | `make docker-build-backend` | `make container-smoke-backend` |
+| Frontend | `make docker-build-frontend` | `make container-smoke-frontend` |
+| Movie Concierge | `make docker-build-agent` | `make container-smoke-agent` |
+
+The backend smoke starts an isolated PostgreSQL container and verifies both Actuator probe
+endpoints. The frontend smoke verifies the SPA fallback. Every smoke runs the application image
+with a read-only root filesystem, all capabilities dropped, and privilege escalation disabled.
+
 ## Generated API Client
 
 If backend API contracts change, start the backend first and then run:
