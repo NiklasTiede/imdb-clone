@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal  # noqa: TC003 - Pydantic resolves this annotation at runtime
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 from pydantic.alias_generators import to_camel
+
+if TYPE_CHECKING:
+    from imdb_agent.concierge.tools import ToolName
 
 
 class EventModel(BaseModel):
@@ -114,6 +118,14 @@ class CompletionEvent(EventModel):
     outcome: CompletionOutcome
 
 
+@dataclass(frozen=True, slots=True)
+class ToolCallEvent:
+    """Internal evidence of one validated tool call; never part of the browser contract."""
+
+    tool: ToolName
+    arguments: dict[str, object]
+
+
 ConciergeEvent = Annotated[
     StatusEvent
     | TextEvent
@@ -128,4 +140,4 @@ ConciergeEvent = Annotated[
 concierge_event_adapter: TypeAdapter[ConciergeEvent] = TypeAdapter(ConciergeEvent)
 
 
-RunnerEvent = StatusEvent | TextEvent | MovieCardEvent | UsageEvent
+RunnerEvent = ToolCallEvent | TextEvent | MovieCardEvent | UsageEvent

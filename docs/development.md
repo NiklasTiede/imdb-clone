@@ -350,8 +350,10 @@ Run the stable full gate from the repository root:
 make verify-agent
 ```
 
-This includes the executable 27-case deterministic Pydantic Evals report. It requires no key,
-provider network, Java process, or data service. Run one case while iterating with:
+This includes the executable 27-case deterministic Pydantic Evals report. It checks the
+machine-readable tool, argument, text, error, grounding, action, and execution expectations while
+keeping qualitative review criteria explicit. Dataset-owned scenarios require no key, provider
+network, Java process, or data service. Run one case while iterating with:
 
 ```bash
 make eval-agent AGENT_EVAL_CASE=tonight-mode-refinement

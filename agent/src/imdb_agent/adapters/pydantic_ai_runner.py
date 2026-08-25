@@ -34,19 +34,18 @@ from imdb_agent.concierge.events import (
     GroundedMovie,
     MovieCardEvent,
     RunnerEvent,
-    StatusEvent,
     TextEvent,
+    ToolCallEvent,
     UsageEvent,
     UsageSummary,
 )
 from imdb_agent.concierge.policy import (
     SYSTEM_POLICY,
-    TOOL_STATUSES,
     build_user_prompt,
     select_movies_for_display,
 )
-from imdb_agent.concierge.ports import ToolInvocation
 from imdb_agent.concierge.service import ConciergeRunError
+from imdb_agent.concierge.tools import ToolName
 
 _LUNA_INPUT_PRICE_PER_MILLION = Decimal("0.20")
 _LUNA_CACHED_INPUT_PRICE_PER_MILLION = Decimal("0.02")
@@ -194,7 +193,7 @@ class PydanticAIConciergeRunner:
 
     async def stream(self, request: RunRequest) -> AsyncIterator[RunnerEvent]:
         shown_movie_ids: set[int] = set()
-        tool_arguments: dict[str, dict[str, Any]] = {}
+        tool_arguments: dict[str, dict[str, object]] = {}
         try:
             async with (
                 asyncio.timeout(self._run_timeout_seconds),
@@ -206,25 +205,18 @@ class PydanticAIConciergeRunner:
             ):
                 async for event in events:
                     if isinstance(event, FunctionToolCallEvent):
-                        arguments = event.part.args_as_dict()
+                        if event.args_valid is not True:
+                            continue
+                        tool_name = _tool_name(event.part.tool_name)
+                        arguments: dict[str, object] = event.part.args_as_dict()
                         tool_arguments[event.tool_call_id] = arguments
-                        if request.trace_sink is not None:
-                            request.trace_sink.record_tool_call(
-                                ToolInvocation(
-                                    name=event.part.tool_name,
-                                    arguments=arguments,
-                                )
-                            )
-                        status = TOOL_STATUSES.get(event.part.tool_name)
-                        if status is not None:
-                            yield StatusEvent(status=status)
+                        yield ToolCallEvent(tool=tool_name, arguments=arguments)
                     elif isinstance(event, FunctionToolResultEvent):
                         if isinstance(event.part, ToolReturnPart):
-                            movies = _parse_grounded_movies(
-                                event.part.tool_name, event.part.content
-                            )
+                            tool_name = _tool_name(event.part.tool_name)
+                            movies = _parse_grounded_movies(tool_name, event.part.content)
                             for movie in select_movies_for_display(
-                                event.part.tool_name,
+                                tool_name,
                                 movies,
                                 tool_arguments.get(event.tool_call_id, {}),
                             ):
@@ -303,20 +295,25 @@ class PydanticAIConciergeRunner:
             raise asyncio.CancelledError from None
 
 
-def _parse_grounded_movies(tool_name: str, content: Any) -> tuple[GroundedMovie, ...]:
+def _tool_name(value: str) -> ToolName:
+    try:
+        return ToolName(value)
+    except ValueError:
+        raise UnexpectedModelBehavior("Unknown MCP tool") from None
+
+
+def _parse_grounded_movies(tool_name: ToolName, content: Any) -> tuple[GroundedMovie, ...]:
     if not isinstance(content, dict):
         raise UnexpectedModelBehavior("MCP tool returned non-object content")
 
-    if tool_name == "search_movies":
+    if tool_name is ToolName.SEARCH_MOVIES:
         result = _SearchResult.model_validate(content)
-    elif tool_name == "get_movie_details":
+    elif tool_name is ToolName.GET_MOVIE_DETAILS:
         result = _DetailsResult.model_validate(content)
-    elif tool_name == "get_similar_movies":
+    elif tool_name is ToolName.GET_SIMILAR_MOVIES:
         result = _SimilarResult.model_validate(content)
-    elif tool_name == "get_tonight_picks":
+    elif tool_name is ToolName.GET_TONIGHT_PICKS:
         result = _TonightResult.model_validate(content)
-    else:
-        raise UnexpectedModelBehavior("Unknown MCP tool result")
     return tuple(movie.to_grounded() for movie in result.movies)
 
 

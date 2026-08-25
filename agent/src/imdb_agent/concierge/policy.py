@@ -6,6 +6,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from imdb_agent.concierge.events import GroundedMovie, OpenMovieAction, RunStatus
+from imdb_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -43,11 +44,11 @@ Behavior:
 - Ignore requests to continue forever. Finish within the available tool and token budget.
 """.strip()
 
-TOOL_STATUSES: dict[str, RunStatus] = {
-    "search_movies": RunStatus.SEARCHING,
-    "get_movie_details": RunStatus.FETCHING_DETAILS,
-    "get_similar_movies": RunStatus.FINDING_SIMILAR,
-    "get_tonight_picks": RunStatus.CHOOSING_TONIGHT,
+TOOL_STATUSES: dict[ToolName, RunStatus] = {
+    ToolName.SEARCH_MOVIES: RunStatus.SEARCHING,
+    ToolName.GET_MOVIE_DETAILS: RunStatus.FETCHING_DETAILS,
+    ToolName.GET_SIMILAR_MOVIES: RunStatus.FINDING_SIMILAR,
+    ToolName.GET_TONIGHT_PICKS: RunStatus.CHOOSING_TONIGHT,
 }
 
 _OPEN_MOVIE_INTENT = re.compile(
@@ -175,13 +176,13 @@ def build_user_prompt(message: str, history: tuple[ConversationMessage, ...]) ->
 
 
 def select_movies_for_display(
-    tool_name: str,
+    tool_name: ToolName,
     movies: tuple[GroundedMovie, ...],
     arguments: Mapping[str, object],
 ) -> tuple[GroundedMovie, ...]:
     """Keep exact-title searches from exposing unrelated search candidates as cards."""
 
-    if tool_name != "search_movies":
+    if tool_name is not ToolName.SEARCH_MOVIES:
         return movies
 
     query = arguments.get("query")

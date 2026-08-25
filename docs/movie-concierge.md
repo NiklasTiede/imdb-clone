@@ -196,6 +196,19 @@ Milestone 0 creates an initial 10–20-case dataset before model integration; it
 tool choice where deterministic, important arguments, forbidden behavior, and grounded output
 expectations.
 
+Executable expectations and human judgment are explicit rather than conflated. Required and
+forbidden tools, important arguments, required and forbidden text terms, safe error codes,
+grounding, UI actions, and run limits are machine checked. `review_criteria` and `review_risks`
+record qualitative judgments such as usefulness, explanation quality, and diversity. Synthetic
+deterministic scenarios and movie fixtures are dataset-owned; they exercise the eval harness
+without a provider key or case-ID branches in Python.
+
+One provider-neutral internal tool-call event is the source of truth for accepted tool execution.
+The model Adapter emits it only after framework validation accepts the complete call. Concierge
+orchestration derives user-visible progress and bounded metrics from it, and evals consume the same
+event for tool and argument assertions. Tool arguments never enter the browser event contract or
+operational telemetry.
+
 The dataset covers:
 
 - exact-title and descriptive discovery;

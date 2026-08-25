@@ -6,13 +6,12 @@ from typing import TYPE_CHECKING
 from imdb_agent.concierge.events import (
     GroundedMovie,
     MovieCardEvent,
-    RunStatus,
-    StatusEvent,
     TextEvent,
+    ToolCallEvent,
     UsageEvent,
     UsageSummary,
 )
-from imdb_agent.concierge.policy import CAPABILITY_RESPONSE
+from imdb_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -28,16 +27,17 @@ class FakeConciergeRunner:
 
     async def stream(
         self, request: RunRequest
-    ) -> AsyncIterator[StatusEvent | TextEvent | MovieCardEvent | UsageEvent]:
+    ) -> AsyncIterator[ToolCallEvent | TextEvent | MovieCardEvent | UsageEvent]:
         normalized = request.message.casefold()
-        if "what can" in normalized:
-            yield TextEvent(delta=CAPABILITY_RESPONSE)
-        elif "watchlist" in normalized or "rate " in normalized:
+        if "watchlist" in normalized or "rate " in normalized:
             yield TextEvent(
                 delta="This release is read-only, so I cannot change watchlists or ratings."
             )
         else:
-            yield StatusEvent(status=RunStatus.SEARCHING)
+            yield ToolCallEvent(
+                tool=ToolName.SEARCH_MOVIES,
+                arguments={"query": request.message},
+            )
             yield MovieCardEvent(movie=fake_arrival())
             yield TextEvent(
                 delta=(
@@ -49,7 +49,7 @@ class FakeConciergeRunner:
             usage=UsageSummary(
                 model="deterministic-fake",
                 requests=0,
-                tool_calls=0,
+                tool_calls=0 if "watchlist" in normalized or "rate " in normalized else 1,
                 input_tokens=0,
                 output_tokens=0,
                 total_tokens=0,
