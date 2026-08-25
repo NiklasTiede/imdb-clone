@@ -41,6 +41,21 @@ const movieCardEventSchema = zod.object({
   movie: groundedMovieSchema,
 });
 
+const openMovieActionSchema = zod
+  .object({
+    type: zod.literal("open_movie"),
+    movieId: zod.number().int().positive(),
+  })
+  .strict();
+
+const uiActionEventSchema = zod
+  .object({
+    type: zod.literal("ui-action"),
+    sequence: zod.number().int().nonnegative(),
+    action: openMovieActionSchema,
+  })
+  .strict();
+
 const errorEventSchema = zod.object({
   type: zod.literal("error"),
   sequence: zod.number().int().nonnegative(),
@@ -78,6 +93,7 @@ export const conciergeEventSchema = zod.discriminatedUnion("type", [
   statusEventSchema,
   textEventSchema,
   movieCardEventSchema,
+  uiActionEventSchema,
   errorEventSchema,
   usageEventSchema,
   completionEventSchema,
@@ -85,6 +101,7 @@ export const conciergeEventSchema = zod.discriminatedUnion("type", [
 
 export type ConciergeEvent = zod.infer<typeof conciergeEventSchema>;
 export type GroundedMovie = zod.infer<typeof groundedMovieSchema>;
+export type OpenMovieAction = zod.infer<typeof openMovieActionSchema>;
 export type UsageSummary = zod.infer<typeof usageEventSchema>["usage"];
 
 export type ChatTurn = {

@@ -2,7 +2,9 @@
 
 ## Scope
 
-Review cross-system behavior between PostgreSQL, OpenSearch, RustFS, JWT/security, durable scheduled tasks, and infrastructure scripts. Use `ai-search` mode for embedding/model/vector-search specifics and `observability` mode for metrics/logging contracts.
+Review cross-system behavior between PostgreSQL, OpenSearch, RustFS, server-session security,
+durable scheduled tasks, and infrastructure scripts. Use `agent` for Movie Concierge/MCP behavior,
+`ai-search` for embedding/model/vector-search specifics, and `observability` for telemetry contracts.
 
 Primary files:
 
@@ -35,16 +37,22 @@ Primary files:
 
 ### Security and Access
 
-- JWT and role checks align with controller semantics
+- Spring Session JDBC, CSRF, password, OAuth2, and WebAuthn behavior align with controller and
+  same-origin frontend semantics; browser JWT authentication is not reintroduced accidentally
+- session, account profile, and credential lifecycle state keep distinct ownership
 - public endpoints do not expose private account data
 - object storage access does not bypass application authorization for protected assets
-- CORS and security config match frontend deployment assumptions
+- ingress routing, cookie attributes, forwarded headers, CSRF, and security config match the
+  same-origin production deployment
+- the protected MCP security chain authenticates only the Agent workload and does not grant
+  delegated end-user authority
 
 ### Infrastructure
 
 - local dev services match Spring configuration
 - seed/import scripts match the current schema
 - production and development compose files do not encode contradictory ports, bucket names, or index names
+- one-time seed/import jobs remain separate from ordinary application releases and repeated startup
 - monitoring/logging configs do not expose secrets; review detailed scrape/dashboard contracts in `observability` mode
 
 ## Verification Recommendations
@@ -54,3 +62,5 @@ Primary files:
 - search tests proving projection updates after catalog/rating changes
 - search projection task tests proving durable repair after indexing failures
 - security tests for public/private endpoint access
+- authentication tests for session persistence, CSRF, OAuth2/WebAuthn ownership, and MCP workload
+  separation

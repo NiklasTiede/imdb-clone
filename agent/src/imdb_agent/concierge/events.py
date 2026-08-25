@@ -82,6 +82,17 @@ class MovieCardEvent(EventModel):
     movie: GroundedMovie
 
 
+class OpenMovieAction(EventModel):
+    type: Literal["open_movie"] = "open_movie"
+    movie_id: int = Field(gt=0)
+
+
+class UiActionEvent(EventModel):
+    type: Literal["ui-action"] = "ui-action"
+    sequence: int = Field(default=0, ge=0)
+    action: OpenMovieAction
+
+
 class ErrorEvent(EventModel):
     type: Literal["error"] = "error"
     sequence: int = Field(default=0, ge=0)
@@ -104,7 +115,13 @@ class CompletionEvent(EventModel):
 
 
 ConciergeEvent = Annotated[
-    StatusEvent | TextEvent | MovieCardEvent | ErrorEvent | UsageEvent | CompletionEvent,
+    StatusEvent
+    | TextEvent
+    | MovieCardEvent
+    | UiActionEvent
+    | ErrorEvent
+    | UsageEvent
+    | CompletionEvent,
     Field(discriminator="type"),
 ]
 

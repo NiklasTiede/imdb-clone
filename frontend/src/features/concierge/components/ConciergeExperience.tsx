@@ -1,11 +1,14 @@
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import { alpha } from "@mui/material/styles";
 import { Button, Fab, useMediaQuery, useTheme } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router";
 import { useAuthSessionSnapshot } from "../../../shared/auth";
+import { movieDetailPath } from "../../../shared/navigation/appRoutes";
 import { movieColors } from "../../../theme";
 import { getConciergeClientId } from "../model/browserIdentity";
 import ConciergeDrawer from "./ConciergeDrawer";
+import type { OpenMovieAction } from "../model/concierge";
 
 const ConciergeExperience = () => {
   const { bootstrapped, session } = useAuthSessionSnapshot();
@@ -27,9 +30,18 @@ const IdentityScopedConcierge = ({
   accountId: number | null;
 }) => {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const theme = useTheme();
   const mobile = useMediaQuery(theme.breakpoints.down("sm"));
   const clientId = getConciergeClientId(accountId);
+  const openMovie = useCallback(
+    (action: OpenMovieAction) => {
+      const destination = movieDetailPath(action.movieId);
+      setOpen(false);
+      void navigate(destination);
+    },
+    [navigate],
+  );
 
   return (
     <>
@@ -85,6 +97,7 @@ const IdentityScopedConcierge = ({
       <ConciergeDrawer
         clientId={clientId}
         onClose={() => setOpen(false)}
+        onUiAction={openMovie}
         open={open}
       />
     </>

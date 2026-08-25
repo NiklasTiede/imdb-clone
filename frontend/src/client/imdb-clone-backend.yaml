@@ -1941,6 +1941,7 @@ components:
           - APP_BOOT
           - BROWSER_ERROR
           - ROUTE_NAVIGATION
+          - UI_ACTION
           - WEB_VITAL
         name:
           type: string
@@ -1952,6 +1953,7 @@ components:
           - FCP
           - INP
           - LCP
+          - OPEN_MOVIE
           - ROUTE_NAVIGATION
           - TTFB
           - UNHANDLED_REJECTION
@@ -1987,6 +1989,11 @@ components:
           - NETWORK_ERROR
           - OTHER_ERROR
           - SUCCESS
+        uiActionOutcome:
+          type: string
+          enum:
+          - EXECUTED
+          - REJECTED
       required:
       - name
       - type

@@ -65,6 +65,28 @@ def test_creates_anonymous_conversation_and_streams_typed_contract(
     assert events[-1]["outcome"] == "success"
 
 
+def test_explicit_open_request_streams_only_a_grounded_movie_action(client: TestClient) -> None:
+    headers = {"X-Concierge-Client-ID": "browser-client-0001"}
+    conversation_id = client.post("/v1/conversations", headers=headers).json()["conversationId"]
+
+    response = client.post(
+        f"/v1/conversations/{conversation_id}/messages",
+        headers=headers,
+        json={"message": "Open Arrival."},
+    )
+    events = parse_sse(response.text)
+
+    card = next(event for event in events if event["type"] == "movie-card")
+    action = next(event for event in events if event["type"] == "ui-action")
+    assert cast("dict[str, object]", card["movie"])["movieId"] == 42
+    assert action == {
+        "type": "ui-action",
+        "sequence": action["sequence"],
+        "action": {"type": "open_movie", "movieId": 42},
+    }
+    assert events.index(card) < events.index(action) < len(events) - 1
+
+
 def test_rejects_invalid_client_identifier_without_echoing_it(client: TestClient) -> None:
     response = client.post(
         "/v1/conversations",

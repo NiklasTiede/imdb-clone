@@ -1,4 +1,12 @@
-import { ConciergeClientError, consumeEventStream } from "./conciergeClient";
+import {
+  ConciergeClientError,
+  consumeEventStream,
+  streamMessage,
+} from "./conciergeClient";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 const event = (value: object): string =>
   `event: message\r\nid: 1\r\ndata: ${JSON.stringify(value)}\r\n\r\n`;
@@ -48,6 +56,83 @@ describe("concierge event stream", () => {
 
     await expect(
       consumeEventStream(streamChunks(payload), () => undefined),
+    ).rejects.toEqual(
+      expect.objectContaining<Partial<ConciergeClientError>>({
+        code: "protocol",
+      }),
+    );
+  });
+
+  it("parses the typed open_movie action", async () => {
+    const events: unknown[] = [];
+
+    await consumeEventStream(
+      streamChunks(
+        event({
+          type: "ui-action",
+          sequence: 1,
+          action: { type: "open_movie", movieId: 42 },
+        }),
+      ),
+      (received) => events.push(received),
+    );
+
+    expect(events).toEqual([
+      {
+        type: "ui-action",
+        sequence: 1,
+        action: { type: "open_movie", movieId: 42 },
+      },
+    ]);
+  });
+
+  it.each([
+    { type: "open_movie", movieId: 42, url: "https://attacker.example" },
+    { type: "open_movie", movieId: 42, route: "/admin" },
+    { type: "open_movie", movieId: 0 },
+  ])("rejects an unsafe UI action payload", async (action) => {
+    await expect(
+      consumeEventStream(
+        streamChunks(event({ type: "ui-action", sequence: 1, action })),
+        () => undefined,
+      ),
+    ).rejects.toEqual(
+      expect.objectContaining<Partial<ConciergeClientError>>({
+        code: "protocol",
+      }),
+    );
+  });
+
+  it("treats completion as the terminal stream event", async () => {
+    const conversationId = "1234567890abcdef1234567890abcdef";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>().mockResolvedValue(
+        new Response(
+          event({
+            type: "completion",
+            sequence: 1,
+            conversationId,
+            outcome: "success",
+          }) +
+            event({
+              type: "ui-action",
+              sequence: 2,
+              action: { type: "open_movie", movieId: 42 },
+            }),
+          { headers: { "Content-Type": "text/event-stream" } },
+        ),
+      ),
+    );
+
+    await expect(
+      streamMessage({
+        clientId: "browser-test:anonymous",
+        conversationId,
+        message: "Open Arrival",
+        onEvent: () => undefined,
+        signal: new AbortController().signal,
+      }),
     ).rejects.toEqual(
       expect.objectContaining<Partial<ConciergeClientError>>({
         code: "protocol",

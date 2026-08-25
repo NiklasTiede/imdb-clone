@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import structlog
+from opentelemetry import trace
 from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram
 
 if TYPE_CHECKING:
@@ -21,6 +22,7 @@ class AgentMetrics:
     process_budget_committed: Gauge
     active: Gauge
     tool_calls: Counter
+    ui_actions: Counter
     tokens: Counter
     estimated_cost: Counter
     disconnects: Counter
@@ -32,6 +34,23 @@ class AgentMetrics:
     def tool_called(self, tool_name: str) -> None:
         self.tool_calls.labels(tool=tool_name).inc()
         structlog.get_logger().info("concierge_tool_called", tool=tool_name)
+
+    def ui_action(self, *, action: str, outcome: str) -> None:
+        self.ui_actions.labels(action=action, outcome=outcome).inc()
+        span = trace.get_current_span()
+        if span.is_recording():
+            span.add_event(
+                "imdb.concierge.ui_action",
+                attributes={
+                    "imdb.concierge.ui_action.type": action,
+                    "imdb.concierge.ui_action.outcome": outcome,
+                },
+            )
+        structlog.get_logger().info(
+            "concierge_ui_action_decided",
+            action=action,
+            outcome=outcome,
+        )
 
     def first_event(self, duration_seconds: float) -> None:
         self.first_event_duration.observe(duration_seconds)
@@ -131,6 +150,12 @@ def create_agent_metrics(registry: CollectorRegistry, settings: Settings) -> Age
             "imdb_agent_tool_calls",
             "Observed Movie Concierge tool calls.",
             ("tool",),
+            registry=registry,
+        ),
+        ui_actions=Counter(
+            "imdb_agent_ui_actions",
+            "Grounded Movie Concierge UI action decisions.",
+            ("action", "outcome"),
             registry=registry,
         ),
         tokens=Counter(

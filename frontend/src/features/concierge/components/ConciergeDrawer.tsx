@@ -18,20 +18,28 @@ import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { movieColors } from "../../../theme";
 import { useConciergeChat } from "../hooks/useConciergeChat";
-import type { ChatTurn } from "../model/concierge";
+import type { ChatTurn, OpenMovieAction } from "../model/concierge";
 import ConciergeEmptyState from "./ConciergeEmptyState";
 import ConciergeMovieCard from "./ConciergeMovieCard";
 
 type ConciergeDrawerProps = {
   clientId: string;
   onClose: () => void;
+  onUiAction: (action: OpenMovieAction) => void;
   open: boolean;
 };
 
-const ConciergeDrawer = ({ clientId, onClose, open }: ConciergeDrawerProps) => {
+const ConciergeDrawer = ({
+  clientId,
+  onClose,
+  onUiAction,
+  open,
+}: ConciergeDrawerProps) => {
   const [draft, setDraft] = useState("");
-  const { isStreaming, reset, send, status, turns, usage } =
-    useConciergeChat(clientId);
+  const { isStreaming, reset, send, status, turns, usage } = useConciergeChat(
+    clientId,
+    onUiAction,
+  );
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {

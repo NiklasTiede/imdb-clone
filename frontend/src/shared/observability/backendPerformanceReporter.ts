@@ -7,6 +7,7 @@ type FrontendTelemetryEvent = {
     | "API_REQUEST"
     | "APP_BOOT"
     | "BROWSER_ERROR"
+    | "UI_ACTION"
     | "ROUTE_NAVIGATION"
     | "WEB_VITAL";
   name:
@@ -17,6 +18,7 @@ type FrontendTelemetryEvent = {
     | "FCP"
     | "INP"
     | "LCP"
+    | "OPEN_MOVIE"
     | "ROUTE_NAVIGATION"
     | "TTFB"
     | "UNHANDLED_REJECTION";
@@ -39,6 +41,7 @@ type FrontendTelemetryEvent = {
     | "NETWORK_ERROR"
     | "OTHER_ERROR"
     | "SUCCESS";
+  uiActionOutcome?: "EXECUTED" | "REJECTED";
 };
 
 type FrontendTelemetryBatch = {
@@ -175,6 +178,14 @@ export const toFrontendTelemetryEvent = (
           event.name === "unhandled_rejection"
             ? "UNHANDLED_REJECTION"
             : "BROWSER_ERROR",
+      };
+    case "concierge_ui_action":
+      return {
+        type: "UI_ACTION",
+        name: "OPEN_MOVIE",
+        uiActionOutcome: event.outcome.toUpperCase() as NonNullable<
+          FrontendTelemetryEvent["uiActionOutcome"]
+        >,
       };
     case "discovery_interaction":
       return undefined;

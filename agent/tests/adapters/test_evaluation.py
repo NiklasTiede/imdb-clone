@@ -21,12 +21,12 @@ AGENT_ROOT = Path(__file__).resolve().parents[2]
 pytestmark = pytest.mark.asyncio
 
 
-async def test_deterministic_eval_suite_passes_all_twenty_cases() -> None:
+async def test_deterministic_eval_suite_passes_all_twenty_seven_cases() -> None:
     report = await run_eval_suite(
         dataset=load_eval_dataset(AGENT_ROOT / "evals" / "read_only_v1.json")
     )
 
-    assert len(report.cases) == 20
+    assert len(report.cases) == 27
     assert report_passed(report)
 
 

@@ -2,6 +2,7 @@ export type PerformanceEventType =
   | "api_request"
   | "app_boot"
   | "browser_error"
+  | "concierge_ui_action"
   | "discovery_interaction"
   | "route_navigation"
   | "web_vital";
@@ -74,10 +75,17 @@ export type DiscoveryInteractionPerformanceEvent = BasePerformanceEvent & {
   sectionId: string;
 };
 
+export type ConciergeUiActionPerformanceEvent = BasePerformanceEvent & {
+  type: "concierge_ui_action";
+  name: "open_movie";
+  outcome: "executed" | "rejected";
+};
+
 export type PerformanceEvent =
   | ApiRequestPerformanceEvent
   | AppBootPerformanceEvent
   | BrowserErrorPerformanceEvent
+  | ConciergeUiActionPerformanceEvent
   | DiscoveryInteractionPerformanceEvent
   | RouteNavigationPerformanceEvent
   | WebVitalPerformanceEvent;

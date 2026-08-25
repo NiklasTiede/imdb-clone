@@ -69,6 +69,9 @@ export const streamMessage = async ({
   }
   let completed = false;
   await consumeEventStream(response.body, (event) => {
+    if (completed) {
+      throw protocolError();
+    }
     if (event.type === "completion") {
       if (event.conversationId !== conversationId) {
         throw protocolError();

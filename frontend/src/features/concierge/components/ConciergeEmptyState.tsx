@@ -4,9 +4,26 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { movieColors } from "../../../theme";
 
 const prompts = [
-  "Something thoughtful under 2 hours",
-  "Three upbeat picks for tonight",
-  "Find a tense science-fiction movie",
+  {
+    label: "See what the Concierge can do",
+    message: "What can you do for me?",
+    featured: true,
+  },
+  {
+    label: "Something thoughtful under 2 hours",
+    message: "Something thoughtful under 2 hours",
+    featured: false,
+  },
+  {
+    label: "Three upbeat picks for tonight",
+    message: "Three upbeat picks for tonight",
+    featured: false,
+  },
+  {
+    label: "Find a tense science-fiction movie",
+    message: "Find a tense science-fiction movie",
+    featured: false,
+  },
 ] as const;
 
 const ConciergeEmptyState = ({
@@ -61,13 +78,21 @@ const ConciergeEmptyState = ({
     <Stack spacing={1}>
       {prompts.map((prompt) => (
         <Button
-          key={prompt}
-          onClick={() => onPrompt(prompt)}
+          key={prompt.label}
+          onClick={() => onPrompt(prompt.message)}
           variant="outlined"
           sx={{
-            borderColor: alpha("#ffffff", 0.11),
-            color: "rgba(255,255,255,0.84)",
+            bgcolor: prompt.featured
+              ? alpha(movieColors.brand, 0.08)
+              : "transparent",
+            borderColor: prompt.featured
+              ? alpha(movieColors.brand, 0.38)
+              : alpha("#ffffff", 0.11),
+            color: prompt.featured
+              ? movieColors.brand
+              : "rgba(255,255,255,0.84)",
             fontSize: 11.5,
+            fontWeight: prompt.featured ? 700 : 500,
             justifyContent: "flex-start",
             lineHeight: 1.4,
             px: 1.5,
@@ -80,7 +105,7 @@ const ConciergeEmptyState = ({
             },
           }}
         >
-          {prompt}
+          {prompt.label}
         </Button>
       ))}
     </Stack>

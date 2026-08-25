@@ -8,6 +8,7 @@ public enum FrontendTelemetryName {
   FCP,
   INP,
   LCP,
+  OPEN_MOVIE,
   ROUTE_NAVIGATION,
   TTFB,
   UNHANDLED_REJECTION

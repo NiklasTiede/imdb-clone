@@ -104,7 +104,8 @@ Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views 
 
 - Prometheus contains bounded application and cluster metrics.
 - The frontend sends small same-origin batches containing Web Vitals, app/route timings, coarse API
-  outcomes, and browser-error counts to the backend. The contract cannot carry URLs, messages,
+  outcomes, bounded Concierge UI-action outcomes, and browser-error counts to the backend. The
+  contract cannot carry URLs, messages,
   stack traces, user/session IDs, search text, or browser fingerprints.
 - Loki contains pod logs from every namespace, Kubernetes Events, and the node's k3s systemd
   service logs with seven-day retention.
@@ -134,6 +135,13 @@ Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views 
   failures.
 - The `IMDb Clone / Movie Concierge` dashboard is the detailed view for agent cost, latency, tool,
   transport, and runtime metrics.
+
+Grounded Concierge navigation exposes two complementary low-cardinality counters:
+`imdb_agent_ui_actions_total{action="open_movie",outcome="emitted|rejected"}` records the server
+policy decision, while
+`imdb_frontend_ui_actions_total{action="open_movie",outcome="executed|rejected"}` records browser
+handling. The corresponding trace events carry only the same action and outcome; movie IDs,
+prompts, routes, accounts, and conversation identifiers are excluded.
 
 llama.cpp exposes native embedding throughput and queue metrics through an internal ServiceMonitor.
 OpenSearch and RustFS currently expose only Kubernetes workload readiness in the Operations

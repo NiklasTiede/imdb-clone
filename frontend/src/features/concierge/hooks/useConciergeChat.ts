@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPerformanceEventContext } from "../../../shared/observability/config";
+import { reportPerformanceEvent } from "../../../shared/observability/performanceReporter";
 import {
   ConciergeClientError,
   createConversation,
@@ -7,13 +9,17 @@ import {
 import type {
   ChatTurn,
   ConciergeEvent,
+  OpenMovieAction,
   UsageSummary,
 } from "../model/concierge";
 import { statusLabels } from "../model/concierge";
 
 const createTurnId = (): string => window.crypto.randomUUID();
 
-export const useConciergeChat = (clientId: string) => {
+export const useConciergeChat = (
+  clientId: string,
+  onUiAction: (action: OpenMovieAction) => void,
+) => {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [usage, setUsage] = useState<UsageSummary | null>(null);
@@ -56,6 +62,8 @@ export const useConciergeChat = (clientId: string) => {
       setIsStreaming(true);
 
       const abortController = new AbortController();
+      const groundedMovieIds = new Set<number>();
+      let actionHandled = false;
       abortRef.current = abortController;
       try {
         const conversationId =
@@ -69,6 +77,24 @@ export const useConciergeChat = (clientId: string) => {
           message,
           signal: abortController.signal,
           onEvent: (event) => {
+            if (event.type === "movie-card") {
+              groundedMovieIds.add(event.movie.movieId);
+            } else if (event.type === "ui-action") {
+              const allowed =
+                !actionHandled && groundedMovieIds.has(event.action.movieId);
+              actionHandled = true;
+              if (!allowed) {
+                reportUiAction("rejected");
+                return;
+              }
+              try {
+                onUiAction(event.action);
+                reportUiAction("executed");
+              } catch {
+                reportUiAction("rejected");
+              }
+              return;
+            }
             applyEvent({
               event,
               assistantTurnId,
@@ -99,10 +125,20 @@ export const useConciergeChat = (clientId: string) => {
         }
       }
     },
-    [clientId],
+    [clientId, onUiAction],
   );
 
   return { isStreaming, reset, send, status, turns, usage };
+};
+
+const reportUiAction = (outcome: "executed" | "rejected"): void => {
+  reportPerformanceEvent({
+    context: createPerformanceEventContext(window.location.pathname),
+    name: "open_movie",
+    outcome,
+    timestamp: performance.now(),
+    type: "concierge_ui_action",
+  });
 };
 
 type ApplyEventArguments = {
