@@ -460,6 +460,7 @@ test("publishes, edits, and deletes an owned movie comment", async ({
 
 test("saves a rating in the authenticated dialog flow", async ({ page }) => {
   let savedRating = 6;
+  let ratingsRequestCount = 0;
   await mockAuthenticatedSession(page);
   await mockMovie(page);
   await mockMovieMedia(page);
@@ -470,6 +471,7 @@ test("saves a rating in the authenticated dialog flow", async ({ page }) => {
     });
   });
   await page.route("**/api/account/niklas/ratings**", async (route) => {
+    ratingsRequestCount += 1;
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -493,8 +495,28 @@ test("saves a rating in the authenticated dialog flow", async ({ page }) => {
   await nineStarRating.focus();
   await page.keyboard.press("Space");
   await expect(nineStarRating).toBeChecked();
+
+  const initialRatingsRequestCount = ratingsRequestCount;
+  const saveResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PUT" &&
+      new URL(response.url()).pathname === "/api/movie-rating/1/rating-score/9" &&
+      response.status() === 200,
+  );
+  const ratingsRefreshResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "GET" &&
+      new URL(response.url()).pathname === "/api/account/niklas/ratings" &&
+      ratingsRequestCount > initialRatingsRequestCount,
+  );
   await dialog.getByRole("button", { name: "Save rating" }).click();
 
+  await saveResponse;
+  const refreshedRatings = await ratingsRefreshResponse;
+  expect(await refreshedRatings.json()).toEqual({
+    content: [{ movieId: 1, rating: 9 }],
+    last: true,
+  });
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Rating saved.")).toBeVisible();
   expect(savedRating).toBe(9);
