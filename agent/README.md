@@ -1,8 +1,14 @@
 # IMDb Clone Movie Concierge
 
-Local, read-only conversational discovery service for the IMDb Clone. It uses Pydantic AI 2.31.0
-with `gpt-5.6-luna`, calls the Java domain through protected MCP tools, and streams an
+Production read-only pilot for conversational discovery in the IMDb Clone. It uses Pydantic AI
+2.31.0 with `gpt-5.6-luna`, calls the Java domain through protected MCP tools, and streams an
 application-owned event contract to React.
+
+The accepted product and trust boundaries live in
+[`docs/movie-concierge.md`](../docs/movie-concierge.md). Ordered work toward personal actions,
+external enrichment, durable scale, and voice lives in the
+[`Movie Concierge long-term roadmap`](../docs/movie-concierge-roadmap.md). This README documents
+only the currently implemented runtime.
 
 ## How the agent works
 
@@ -209,7 +215,7 @@ Movie facts are accepted only from four Java-owned tools:
 - `get_tonight_picks`
 
 Python never reads PostgreSQL or OpenSearch. Account mutations, web search, long-term memory, and
-voice are outside this local read-only release.
+voice are outside the current read-only release.
 
 The model runner cannot emit UI actions directly. After a successful run, provider-independent
 policy requires explicit open intent, one uniquely resolved current-run movie, and a matching
@@ -349,5 +355,6 @@ src/imdb_agent/
 └── settings.py   validated non-secret settings and environment-specific secret-file loading
 ```
 
-See [`AGENTS.md`](AGENTS.md) for Python-specific architecture rules and
-[`docs/movie-concierge.md`](../docs/movie-concierge.md) for product boundaries.
+See [`AGENTS.md`](AGENTS.md) for Python-specific architecture rules,
+[`docs/movie-concierge.md`](../docs/movie-concierge.md) for product boundaries, and the
+[`long-term roadmap`](../docs/movie-concierge-roadmap.md) for ordered capability work.

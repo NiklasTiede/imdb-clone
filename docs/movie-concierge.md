@@ -6,7 +6,8 @@
 
 **First release:** Read-only text concierge
 
-**Current milestone:** Production read-only pilot deployed; grounded UI actions in development
+**Current milestone:** Production read-only pilot and grounded `open_movie` action deployed;
+capability expansion is tracked in the [long-term roadmap](movie-concierge-roadmap.md)
 
 ## Vision
 
@@ -114,8 +115,8 @@ it does not need a second navigation mechanism or permission model.
 - Typed streaming text, status, movie-card, UI-action, error, usage, and completion events.
 - Provider-independent agent code and deterministic model/tool fakes.
 - A versioned eval set covering normal, ambiguous, adversarial, and failure cases.
-- Local metrics, structured logs, trace hooks, token usage, and estimated-cost accounting before
-  production exporters are enabled.
+- Production metrics, structured logs, privacy-safe traces, continuous profiles, token usage, and
+  estimated-cost accounting.
 
 ### Explicitly out of scope
 
@@ -183,18 +184,18 @@ silently downgrade the runtime.
 The Python service owns conversation orchestration state. Java continues to own movie and account
 business state.
 
-The local walking skeleton may use an ephemeral conversation repository behind an interface. The
-production read-only MVP uses a bounded server-side conversation store with expiry and a separate
-schema or database from the Java domain data. History is limited by turns and token budget; older
-content is summarized or discarded deliberately. Long-term taste memory is not inferred from chat
-transcripts.
+The production read-only pilot uses a bounded in-memory conversation repository behind an
+Interface. History is limited by turns, tokens, inactivity, and a process-wide conversation count;
+it is deliberately lost on restart. A future multi-replica release requires a durable Adapter with
+explicit expiry, deletion, schema ownership, and retention policy. Long-term taste memory is never
+inferred silently from chat transcripts.
 
 ## Evaluation Contract
 
-Milestone 0 creates an initial 10–20-case dataset before model integration; it grows to at least
-20–30 cases before the production MVP. Each case records the user prompt, allowed tools, expected
-tool choice where deterministic, important arguments, forbidden behavior, and grounded output
-expectations.
+The current versioned dataset contains 27 deterministic cases. Each case records the user prompt,
+allowed tools, expected tool choice where deterministic, important arguments, forbidden behavior,
+and grounded output expectations. It grows with every new capability and every reproducible
+semantic failure.
 
 Executable expectations and human judgment are explicit rather than conflated. Required and
 forbidden tools, important arguments, required and forbidden text terms, safe error codes,
@@ -295,100 +296,28 @@ A hosted or self-hosted LLM-observability product must remain opt-in until conte
 regional processing, deletion, access control, and separate development/production projects are
 explicitly approved. Self-hosting alone does not remove that privacy decision.
 
-## Milestones
+## Delivery History And Roadmap
 
-### M0 — Product and eval contract
+| Foundation milestone | Status |
+|---|---|
+| M0 — Product and eval contract | Completed |
+| M1 — Python deployable foundation | Completed 2026-07-16 |
+| M2 — Protected Java read-only MCP Seam | Completed |
+| M3 — Headless bounded Concierge core | Completed 2026-08-18 |
+| M4 — React walking skeleton | Completed 2026-08-18 |
+| M5 — Production guardrails and observability | Deployed |
+| M6 — Four-tool read-only production pilot with grounded UI action | Deployed |
 
-Accept this vision and ADR, create the initial eval cases, define prohibited behavior, and record
-baseline latency/cost questions. **Exit:** a framework-independent acceptance contract exists.
-
-### M1 — Python deployable foundation
-
-Create the top-level `agent/` project with the strict toolchain, modular package boundaries,
-FastAPI health/readiness/metrics endpoints, structured logging, deterministic tests, a non-root
-image, Make targets, and CI. **Exit:** the empty service is reproducibly buildable and observable
-without Java, React, an LLM key, or Kubernetes. The execution-ready plan is
-[Movie Concierge foundation](superpowers/plans/2026-07-16-movie-concierge-foundation.md).
-
-**Status:** Completed on 2026-07-16.
-
-### M2 — Java read-only MCP seam
-
-Add one protected, stateless MCP adapter and expose the smallest useful public catalog search
-interface. This milestone contains `search_movies`; details, similar movies, and Tonight Mode remain
-later read-only MVP slices through existing domain interfaces. **Exit:** MCP contract and security
-tests prove that Python needs no direct data-store access. The execution-ready plan and verification
-record are [Movie Concierge MCP search](superpowers/plans/2026-07-16-movie-concierge-mcp-search.md).
-
-**Status:** Completed after local verification and owner review.
-
-### M3 — Headless Concierge core
-
-Add the Pydantic AI agent, MCP client, provider adapter, typed events, bounded run policy,
-deterministic model/MCP fakes, and an eval command. **Exit:** a local `curl` request can stream a
-grounded structured search response through Java.
-
-**Status:** Completed locally on 2026-08-18 with bounded Pydantic AI/Luna execution, all four MCP
-tools, typed SSE, isolated in-memory sessions, safe failures, metrics, deterministic fakes, and an
-executable Pydantic Evals suite.
-
-### M4 — React walking skeleton
-
-Add the public launcher, responsive text panel, typed SSE client, concise progress states, and one
-structured movie-result component using existing UI primitives. **Exit:** one happy path and one
-failure path work end to end in the browser.
-
-**Status:** Completed locally on 2026-08-18. The launcher is public, the panel is responsive, the
-client runtime-validates streamed events, and grounded tool results render automatically as known
-movie cards. Component and desktop/mobile Playwright coverage exercise the flow.
-
-### M5 — Production guardrails
-
-Add workload authentication, rate/concurrency/usage/tool-loop limits, timeouts, disconnect
-cancellation, trace propagation, redaction controls, image release/CD, k3s resources, NetworkPolicy,
-ServiceMonitor, dashboards, and alerts. **Exit:** a deliberately constrained canary can run in k3s
-with costs and failures visible.
-
-**Status:** Deployed as the constrained home-cluster production pilot. The existing namespace has
-a GitOps contract for file-mounted SOPS credentials, hardened
-single-pod execution, same-origin routing, release automation, NetworkPolicy, Prometheus scraping,
-an initial Grafana dashboard, aggregate alert rules, bounded public traffic, and redacted failures.
-Durable history, Alertmanager delivery, a semantic LLM-observability product, and traffic-derived
-threshold tuning remain deliberately outside this pilot. Privacy-safe OpenTelemetry export through
-Alloy into Tempo and cluster-wide Loki logging are live alongside Prometheus/Grafana metrics and
-continuous profiles.
-
-### M6 — Read-only production MVP
-
-Complete the four read-only tools, multi-turn constraint refinement, bounded ephemeral history,
-structured comparisons, capability discovery, and the production eval regression gate. **Exit:** a
-user can reliably reach a confident movie choice, and an operator can diagnose quality, latency,
-tool, provider, and cost failures.
-
-**Status:** The four-tool, multi-turn, bounded in-memory history, capability-discovery,
-deterministic eval, and privacy-safe observability scope is deployed. Conversation history remains
-intentionally process-local and is cleared on restart; durable state and traffic-derived SLOs
-remain future work.
-
-### M7 — Personal actions
-
-Add delegated user identity and durable proposal/approval/reauthorization/idempotency behavior
-before watchlist or rating tools. **Exit:** mutations are attributable, reviewable, safe to retry,
-and authorized again at execution time.
-
-### M8 — Voice and external-agent channels
-
-Evaluate realtime voice after the text product demonstrates repeated value. Reuse the same tools,
-policies, events, approval model, and evals. **Exit:** voice is an adapter to the product rather than
-a parallel agent implementation.
-
-The **read-only production pilot** is deployed and observable. Grounded `open_movie` UI actions are
-the next provider-independent interaction slice; voice, personalization, and mutations remain
-separate future milestones.
+The execution records for the first two implementation slices remain in
+[Movie Concierge foundation](superpowers/plans/2026-07-16-movie-concierge-foundation.md) and
+[Movie Concierge MCP search](superpowers/plans/2026-07-16-movie-concierge-mcp-search.md). Future
+capabilities, delegated identity, safe personal actions, external enrichment, durable scale, and
+voice are ordered with measurable exit evidence in the
+[Movie Concierge long-term roadmap](movie-concierge-roadmap.md).
 
 ## Open Decisions
 
-- Exact initial eval prompts, reviewers, and release thresholds.
+- Review ownership and traffic-derived release thresholds as the eval dataset grows.
 - The provider/model that wins the measured quality/latency/cost comparison.
 - Conversation retention duration and the production store topology.
 - The end-user authentication and delegated-token design between React, Python, and Java.

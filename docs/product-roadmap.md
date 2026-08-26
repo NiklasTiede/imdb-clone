@@ -180,7 +180,8 @@ make ranking changes objectively testable.
 
 Goal: help a user move from vague entertainment intent to a confident, grounded movie choice.
 
-- Follow the living [Movie Concierge product vision](movie-concierge.md) and
+- Follow the living [Movie Concierge product vision](movie-concierge.md),
+  [long-term delivery roadmap](movie-concierge-roadmap.md), and
   [architecture decision](adr/0001-movie-concierge-architecture.md).
 - Start with a text-first, read-only experience for search, movie details, similar movies, and
   Tonight Mode.
@@ -404,10 +405,10 @@ after its user outcome and data requirements are clear.
    constrained, explainable movie picks are available.
 10. **Progressive homepage feed (delivered)** - section pagination, restoration, bounded loading,
     and discovery metrics are available.
-11. **Movie Concierge foundation and walking skeleton** - add the strict Python deployable,
-    protected Java MCP search seam, typed SSE, and one grounded React search journey.
-12. **Movie Concierge read-only MVP** - add details, similar movies, Tonight Mode, bounded
-    multi-turn refinement, eval gates, and production cost/quality observability.
+11. **Movie Concierge foundation and walking skeleton (delivered)** - the strict Python deployable,
+    protected Java MCP search seam, typed SSE, and grounded React search journey are deployed.
+12. **Movie Concierge read-only MVP (delivered)** - details, similar movies, Tonight Mode, bounded
+    multi-turn refinement, grounded navigation, evals, and production observability are deployed.
 13. **Movie journal and rewatches** - add dated diary entries, notes, tags, and historical viewings.
 14. **Custom lists, yearly summaries, and portability** - initial rating/watchlist taste insights
    are delivered; named lists, yearly summaries, and safe import/export remain.
