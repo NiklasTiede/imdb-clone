@@ -260,8 +260,9 @@ Then open `http://localhost:3000`.
 ### Local Java MCP seam
 
 The development profile enables the stateless Spring AI MCP endpoint at `http://localhost:8080/mcp`
-with the local-only bearer value from `application-dev.properties`. Production keeps this endpoint
-disabled until its encrypted secret and network policy are installed.
+with the local-only bearer value from `application-dev.properties`. The home-cluster production
+endpoint is enabled only on the internal Java Service, protected by an encrypted workload token and
+NetworkPolicy, and has no public ingress.
 
 Each MCP operation is an independent JSON-RPC request. After the backend is running, inspect the
 server and its generated tool schema with:

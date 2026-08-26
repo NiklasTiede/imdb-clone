@@ -10,8 +10,10 @@ This is the auto-loaded fast-start contract. Keep detailed guidance in linked do
 - `docs/left-shift-engineering.md` - compiler, type, test, and agent-feedback experiments.
 - `docs/development.md` - local setup, env vars, smoke checks, troubleshooting.
 - `docs/design.md` - frontend design system, theme tokens, layout primitives.
-- `docs/movie-concierge.md` - product vision, MVP boundary, trust model, and milestones for the
-  Python Movie Concierge.
+- `docs/movie-concierge.md` - product vision, delivered contract, and trust model for the Python
+  Movie Concierge.
+- `docs/movie-concierge-roadmap.md` - ordered Agent capabilities, quality/safety tracks, production
+  exit gates, and voice-first target experience.
 - `docs/operations.md` - production URLs, private service access, DBeaver, observability, and
   incident workflow.
 - `infrastructure/kubernetes/README.md` - k3s, Argo CD, SOPS/age, home-cluster notes.

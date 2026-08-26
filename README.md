@@ -19,6 +19,8 @@
   ·
   <a href="./agent/README.md">Movie Concierge</a>
   ·
+  <a href="./docs/movie-concierge-roadmap.md">Agent Roadmap</a>
+  ·
   <a href="./docs/operations.md">Operations</a>
   ·
   <a href="./infrastructure/kubernetes/README.md">Kubernetes Setup</a>
@@ -330,7 +332,9 @@ Detailed workflow docs:
 
 - [Development Guide](./docs/development.md) for local setup, env vars, smoke checks, and troubleshooting.
 - [Movie Concierge](./agent/README.md) for Python setup, runtime contracts, evals, and production guardrails.
-- [Movie Concierge Architecture](./docs/movie-concierge.md) for product boundaries and future milestones.
+- [Movie Concierge Architecture](./docs/movie-concierge.md) for the accepted product and trust boundaries.
+- [Movie Concierge Roadmap](./docs/movie-concierge-roadmap.md) for capabilities, personal actions,
+  external knowledge, safety, scaling, and voice milestones.
 - [Production Operations](./docs/operations.md) for URLs, private tunnels, DBeaver, logs, traces, and incidents.
 - [Agentic Engineering](./docs/agents/README.md) for agent workflow, task templates, verification, and review.
 - [Left-Shift Engineering Roadmap](./docs/left-shift-engineering.md) for planned compiler, type, test, and agent-feedback experiments.
