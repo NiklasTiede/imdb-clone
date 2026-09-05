@@ -14,7 +14,6 @@ import com.thecodinglab.imdbclone.account.internal.persistence.LocalCredentialRe
 import com.thecodinglab.imdbclone.engagement.api.AccountActivityService;
 import com.thecodinglab.imdbclone.engagement.api.EngagementStats;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
-import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,6 +25,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -183,7 +183,7 @@ public class AccountManagement implements AccountService {
       logger.warn(
           "User with [{}] tried to update an account without ADMIN permissions.",
           kv(ACCOUNT_ID, currentAccount.getId()));
-      throw new UnauthorizedException(
+      throw new AccessDeniedException(
           "Account with id [%d] has no permission to update this resource."
               .formatted(currentAccount.getId()));
     }
@@ -204,7 +204,7 @@ public class AccountManagement implements AccountService {
       logger.warn(
           "User with [{}] tried to delete an account without ADMIN permissions.",
           kv(ACCOUNT_ID, currentAccount.getId()));
-      throw new UnauthorizedException(
+      throw new AccessDeniedException(
           "Account with id [%s] has no permission to delete this resource."
               .formatted(currentAccount.getId()));
     }

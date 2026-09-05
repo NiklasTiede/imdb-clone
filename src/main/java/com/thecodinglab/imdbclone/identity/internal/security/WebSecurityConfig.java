@@ -57,7 +57,8 @@ public class WebSecurityConfig {
 
   @Bean
   @Order(2)
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(
+      HttpSecurity http, ProblemDetailAccessDeniedHandler accessDeniedHandler) throws Exception {
     CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
 
     http.csrf(
@@ -65,18 +66,19 @@ public class WebSecurityConfig {
                 csrf.csrfTokenRepository(csrfTokenRepository)
                     .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
                     .ignoringRequestMatchers(
-                        "/api/movie/get-movies",
-                        "/api/observability/frontend",
-                        "/api/search/movies"))
+                        "/api/v1/observability/frontend", "/api/v1/search/movies"))
         .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
         .addFilterAfter(authRateLimitFilter, CsrfCookieFilter.class)
-        .exceptionHandling(eh -> eh.authenticationEntryPoint(authenticationEntryPoint))
+        .exceptionHandling(
+            eh ->
+                eh.authenticationEntryPoint(authenticationEntryPoint)
+                    .accessDeniedHandler(accessDeniedHandler))
         .securityContext(context -> context.securityContextRepository(securityContextRepository()))
         .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
         .logout(
             logout ->
                 logout
-                    .logoutUrl("/api/auth/logout")
+                    .logoutUrl("/api/v1/auth/logout")
                     .deleteCookies("SESSION")
                     .logoutSuccessHandler(
                         new CsrfTokenRefreshingLogoutSuccessHandler(csrfTokenRepository))
@@ -85,16 +87,16 @@ public class WebSecurityConfig {
             ar ->
                 ar.requestMatchers(
                         HttpMethod.GET,
-                        "/api/auth/check-username-availability",
-                        "/api/auth/check-email-availability",
-                        "/api/auth/confirm-email-address",
-                        "/api/auth/reset-password")
+                        "/api/v1/auth/check-username-availability",
+                        "/api/v1/auth/check-email-availability")
                     .permitAll()
                     .requestMatchers(
                         HttpMethod.POST,
-                        "/api/auth/login",
-                        "/api/auth/registration",
-                        "/api/auth/save-new-password")
+                        "/api/v1/auth/login",
+                        "/api/v1/auth/registration",
+                        "/api/v1/auth/password-resets",
+                        "/api/v1/auth/email-confirmations",
+                        "/api/v1/auth/password-reset-requests")
                     .permitAll()
                     .requestMatchers("/oauth2/**", "/login/oauth2/**")
                     .permitAll()
@@ -120,25 +122,25 @@ public class WebSecurityConfig {
                     .permitAll()
                     .requestMatchers(
                         HttpMethod.GET,
-                        "/api/movie/**",
-                        "/api/recommendations/**",
-                        "/api/comment/**",
-                        "/api/account/summaries",
-                        "/api/account/*/profile",
-                        "/api/account/*/comments",
-                        "/api/account/*/watchlist",
-                        "/api/account/*/ratings",
-                        "/api/account/*/library/**")
+                        "/api/v1/movies/**",
+                        "/api/v1/recommendations/**",
+                        "/api/v1/comments/**",
+                        "/api/v1/accounts/summaries",
+                        "/api/v1/accounts/*/profile",
+                        "/api/v1/accounts/*/comments",
+                        "/api/v1/accounts/*/watchlist",
+                        "/api/v1/accounts/*/ratings",
+                        "/api/v1/accounts/*/library/**")
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/recommendations/home-feed")
+                    .requestMatchers(HttpMethod.POST, "/api/v1/recommendations/home-feed")
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/recommendations/discovery-events")
+                    .requestMatchers(HttpMethod.POST, "/api/v1/recommendations/discovery-events")
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/recommendations/tonight")
+                    .requestMatchers(HttpMethod.POST, "/api/v1/recommendations/tonight")
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/observability/frontend")
+                    .requestMatchers(HttpMethod.POST, "/api/v1/observability/frontend")
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/movie/get-movies", "/api/search/movies")
+                    .requestMatchers(HttpMethod.POST, "/api/v1/search/movies")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

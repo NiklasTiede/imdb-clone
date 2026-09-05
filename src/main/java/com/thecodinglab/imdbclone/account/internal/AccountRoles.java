@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,11 +33,14 @@ public class AccountRoles implements RoleService {
 
   @Override
   @Transactional
+  @PreAuthorize("hasRole('ADMIN')")
   public MessageResponse giveAdminRole(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     Collection<Role> roles = account.getRoles();
     Role adminRole = roleRepository.getRoleByRoleName(RoleName.ROLE_ADMIN);
-    roles.add(adminRole);
+    if (!roles.contains(adminRole)) {
+      roles.add(adminRole);
+    }
     account.setRoles(roles);
     Account updatedAccount = accountRepository.save(account);
     logger.info(
@@ -47,6 +51,7 @@ public class AccountRoles implements RoleService {
 
   @Override
   @Transactional
+  @PreAuthorize("hasRole('ADMIN')")
   public MessageResponse removeAdminRole(String username, UserPrincipal currentAccount) {
     Account account = accountRepository.getAccountByUsername(username);
     Collection<Role> roles = account.getRoles();

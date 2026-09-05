@@ -266,7 +266,7 @@ describe("MovieDetailPage", () => {
     await user.click(screen.getByRole("button", { name: "Save rating" }));
 
     await waitFor(() =>
-      expect(mocks.ratingApi.rateMovie).toHaveBeenCalledWith(1, 9),
+      expect(mocks.ratingApi.rateMovie).toHaveBeenCalledWith(1, { score: 9 }),
     );
     expect(await screen.findByText("Rating saved.")).toBeTruthy();
   });

@@ -28,7 +28,7 @@ class ActuatorSecurityTest extends BaseContainers {
 
   @Test
   void prometheusEndpoint_allowsAnonymousScrapes() throws IOException, InterruptedException {
-    get(serverPort, "/api/movie/1");
+    get(serverPort, "/api/v1/movies/1");
 
     HttpResponse<String> response = get(managementPort, "/actuator/prometheus");
 

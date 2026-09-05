@@ -37,7 +37,7 @@ class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
   void getCommentsByAccount_success() {
     restTestClient
         .get()
-        .uri("/api/account/test_user_two/comments?page=0&size=10")
+        .uri("/api/v1/accounts/test_user_two/comments?page=0&size=10")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -59,7 +59,7 @@ class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
   void getWatchlistByAccount_success() {
     restTestClient
         .get()
-        .uri("/api/account/test_user_two/watchlist?page=0&size=10")
+        .uri("/api/v1/accounts/test_user_two/watchlist?page=0&size=10")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -81,7 +81,7 @@ class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
   void getRatingsByAccount_success() {
     restTestClient
         .get()
-        .uri("/api/account/test_user_two/ratings?page=0&size=10")
+        .uri("/api/v1/accounts/test_user_two/ratings?page=0&size=10")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -103,7 +103,7 @@ class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
   void getRatingLibrary_success() {
     restTestClient
         .get()
-        .uri("/api/account/test_user_two/library/ratings?page=0&size=10&sort=SCORE_DESC")
+        .uri("/api/v1/accounts/test_user_two/library/ratings?page=0&size=10&sort=SCORE_DESC")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -125,7 +125,7 @@ class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
   void getWatchlistLibrary_success() {
     restTestClient
         .get()
-        .uri("/api/account/test_user_two/library/watchlist?page=0&size=10&sort=ADDED_AT_DESC")
+        .uri("/api/v1/accounts/test_user_two/library/watchlist?page=0&size=10&sort=ADDED_AT_DESC")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -145,7 +145,7 @@ class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
   void getAccountEngagement_unknownUsername() {
     restTestClient
         .get()
-        .uri("/api/account/missing_user/comments")
+        .uri("/api/v1/accounts/missing_user/comments")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -161,7 +161,7 @@ class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
   void getAccountEngagement_rejectsInvalidPagination() {
     restTestClient
         .get()
-        .uri("/api/account/test_user_two/comments?page=0&size=31")
+        .uri("/api/v1/accounts/test_user_two/comments?page=0&size=31")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(

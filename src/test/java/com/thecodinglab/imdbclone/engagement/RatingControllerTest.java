@@ -51,7 +51,9 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
   void rateListAndDeleteMovie_success() throws Exception {
     mockMvc
         .perform(
-            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
+            put("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"score\": 8.5}")
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -63,7 +65,7 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
 
     restTestClient
         .get()
-        .uri("/api/account/{username}/ratings", "test_user_two")
+        .uri("/api/v1/accounts/{username}/ratings", "test_user_two")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -86,7 +88,7 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            delete("/api/movie-rating/{movieId}", MOVIE_ID)
+            delete("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -94,7 +96,7 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            delete("/api/movie-rating/{movieId}", MOVIE_ID)
+            delete("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -106,7 +108,9 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
   void rateMovie_acceptsTenPointZeroScore() throws Exception {
     mockMvc
         .perform(
-            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.0")
+            put("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"score\": 10.0}")
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -119,33 +123,39 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
   void rateMovie_rejectsTenPointOneScore() throws Exception {
     mockMvc
         .perform(
-            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.1")
+            put("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"score\": 10.1}")
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
-        .andExpect(jsonPath("$.detail").value("Score must be between 0 and 10"));
+        .andExpect(jsonPath("$.code").value("validation_failed"));
   }
 
   @Test
   void rateMovie_rejectsScoreSlightlyAboveTen() throws Exception {
     mockMvc
         .perform(
-            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "10.05")
+            put("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"score\": 10.05}")
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
-        .andExpect(jsonPath("$.detail").value("Score must be between 0 and 10"));
+        .andExpect(jsonPath("$.code").value("validation_failed"));
   }
 
   @Test
   void rateMovie_rejectsScoreThatWouldBeRoundedByTheDatabase() throws Exception {
     mockMvc
         .perform(
-            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.55")
+            put("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"score\": 8.55}")
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -158,20 +168,24 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
   void rateMovie_rejectsNegativeScore() throws Exception {
     mockMvc
         .perform(
-            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "-0.1")
+            put("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"score\": -0.1}")
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
-        .andExpect(jsonPath("$.detail").value("Score must be between 0 and 10"));
+        .andExpect(jsonPath("$.code").value("validation_failed"));
   }
 
   @Test
   void rateUpdateAndDeleteMovie_updatesMovieRatingAggregateImmediately() throws Exception {
     mockMvc
         .perform(
-            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
+            put("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"score\": 8.5}")
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -183,11 +197,13 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "6.5")
+            put("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"score\": 6.5}")
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
-        .andExpect(status().isCreated());
+        .andExpect(status().isOk());
 
     var movieAfterUpdate = movieRepository.getMovieById(MOVIE_ID);
     assertThat(movieAfterUpdate.getRating()).isEqualByComparingTo(new BigDecimal("6.5"));
@@ -195,7 +211,7 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            delete("/api/movie-rating/{movieId}", MOVIE_ID)
+            delete("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -210,7 +226,9 @@ class RatingControllerTest extends BaseControllerIntegrationTest {
   void rateMovie_unauthenticated() throws Exception {
     mockMvc
         .perform(
-            put("/api/movie-rating/{movieId}/rating-score/{score}", MOVIE_ID, "8.5")
+            put("/api/v1/accounts/me/ratings/{movieId}", MOVIE_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"score\": 8.5}")
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnauthorized())

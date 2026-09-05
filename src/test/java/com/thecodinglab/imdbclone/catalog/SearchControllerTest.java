@@ -71,7 +71,7 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
         .uri(
             uriBuilder ->
                 uriBuilder
-                    .path("/api/search/movies")
+                    .path("/api/v1/search/movies")
                     .queryParam("query", "testMovieOnePri")
                     .build())
         .body(request)
@@ -105,7 +105,7 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
         .uri(
             uriBuilder ->
                 uriBuilder
-                    .path("/api/search/movies")
+                    .path("/api/v1/search/movies")
                     .queryParam("query", "")
                     .queryParam("page", 0)
                     .queryParam("size", 20)
@@ -136,7 +136,7 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
         objectMapper.readValue(
             mockMvc
                 .perform(
-                    post("/api/search/movies/reindex")
+                    post("/api/v1/search/movies/reindex")
                         .with(testAdmin())
                         .with(csrf())
                         .accept(MediaType.APPLICATION_JSON))
@@ -195,7 +195,7 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
   void reindexMovies_withUserRoleIsForbidden() throws Exception {
     mockMvc
         .perform(
-            post("/api/search/movies/reindex")
+            post("/api/v1/search/movies/reindex")
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -216,7 +216,7 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
           objectMapper.readValue(
               mockMvc
                   .perform(
-                      get("/api/search/movies/reindex/{jobId}", jobId)
+                      get("/api/v1/search/movies/reindex/{jobId}", jobId)
                           .with(testAdmin())
                           .accept(MediaType.APPLICATION_JSON))
                   .andExpect(status().isOk())

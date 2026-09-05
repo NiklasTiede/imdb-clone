@@ -15,6 +15,7 @@ K8S_SEED_RENDER_OUTPUT ?= /tmp/imdb-clone-movie-seed.yaml
 K8S_SCHEMA_OUTPUT ?= /tmp/imdb-clone-home-apps-schema.yaml
 KUBECONFORM_IMAGE ?= ghcr.io/yannh/kubeconform:v0.6.7
 OPENAPI_CHECK_DIR ?= /tmp/imdb-clone-openapi-check
+IMDB_CLONE_OPENAPI_BASE_URL ?= http://localhost:8080
 AGENT_DIR = agent
 AGENT_IMAGE ?= imdb-clone-agent:local
 AGENT_SMOKE_PORT ?= 18090
@@ -151,10 +152,10 @@ seed-full: ## run full seed against local Docker Compose services
 reindex-local-search: ## rebuild local OpenSearch movie index from PostgreSQL
 	@TOKEN=$$(curl -fsS -H 'Content-Type: application/json' \
 		-d '{"usernameOrEmail":"les_grossman","password":"Encrypted!Pa55worD"}' \
-		http://localhost:8080/api/auth/login \
+		http://localhost:8080/api/v1/auth/login \
 		| sed -n 's/.*"accessToken":"\([^"]*\)".*/\1/p'); \
 	curl -fsS -X POST -H "Authorization: Bearer $$TOKEN" \
-		http://localhost:8080/api/search/movies/reindex
+		http://localhost:8080/api/v1/search/movies/reindex
 
 ##@ Production operator access
 
@@ -345,7 +346,7 @@ verify-observability-charts: check-kubernetes-verification-tools ## render pinne
 verify-openapi-drift: ## compare checked-in OpenAPI/client output with a running backend
 	rm -rf $(OPENAPI_CHECK_DIR)
 	mkdir -p $(OPENAPI_CHECK_DIR)
-	curl -fsS http://localhost:8080/v3/api-docs.yaml > $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml
+	curl -fsS $(IMDB_CLONE_OPENAPI_BASE_URL)/v3/api-docs.yaml > $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml
 	diff -u frontend/src/client/imdb-clone-backend.yaml $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml
 	cd ./frontend; yarn openapi-generator-cli generate -i $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml -g typescript-axios -t ./openapi-templates/typescript-axios -o $(OPENAPI_CHECK_DIR)/generator-output
 	diff -qr --exclude=FILES frontend/src/client/movies/generator-output $(OPENAPI_CHECK_DIR)/generator-output

@@ -1,13 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 
 const mockAnonymousSession = async (page: Page) => {
-  await page.route("**/api/auth/me", async (route) => {
+  await page.route("**/api/v1/auth/me", async (route) => {
     await route.fulfill({ status: 401, body: "" });
   });
 };
 
 const mockAvailableIdentity = async (page: Page) => {
-  await page.route("**/api/auth/check-*-availability**", async (route) => {
+  await page.route("**/api/v1/auth/check-*-availability**", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({ isAvailable: true }),
@@ -69,7 +69,7 @@ test("login presents validation and durable server feedback", async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockAnonymousSession(page);
-  await page.route("**/api/auth/login", async (route) => {
+  await page.route("**/api/v1/auth/login", async (route) => {
     await route.fulfill({
       status: 401,
       contentType: "application/problem+json",
@@ -96,7 +96,7 @@ test("registration redirects with persistent completion feedback", async ({
   await page.setViewportSize({ width: 390, height: 844 });
   await mockAnonymousSession(page);
   await mockAvailableIdentity(page);
-  await page.route("**/api/auth/registration", async (route) => {
+  await page.route("**/api/v1/auth/registration", async (route) => {
     await route.fulfill({
       status: 201,
       contentType: "application/json",
@@ -170,4 +170,46 @@ test("keyboard navigation reaches every authentication method", async ({
     await page.keyboard.press("Tab");
     await expect(target).toBeFocused();
   }
+});
+
+test("email confirmation waits for a click and posts the token", async ({ page }) => {
+  await mockAnonymousSession(page);
+  let confirmations = 0;
+  await page.route("**/api/v1/auth/email-confirmations", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toEqual({ token: "test-confirmation-token" });
+    confirmations += 1;
+    await route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+  });
+  await page.goto("/confirm-email?token=test-confirmation-token");
+  await expect(page.getByRole("heading", { name: "Confirm your email" })).toBeVisible();
+  expect(confirmations).toBe(0);
+  await page.getByRole("button", { name: "Confirm email" }).click();
+  await expect(page.getByRole("alert")).toContainText("Your email is confirmed");
+  expect(confirmations).toBe(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
+});
+
+test("password recovery sends request bodies through the generated client", async ({ page }) => {
+  await mockAnonymousSession(page);
+  await page.route("**/api/v1/auth/password-reset-requests", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toEqual({ email: "member@example.com" });
+    await route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+  });
+  await page.goto("/reset-password");
+  await page.getByRole("textbox", { name: "Email" }).fill("member@example.com");
+  await page.getByRole("button", { name: "Send reset link" }).click();
+  await expect(page.getByRole("alert")).toContainText("reset instructions will arrive");
+
+  await page.route("**/api/v1/auth/password-resets", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toEqual({ token: "test-reset-token", newPassword: "Example!123" });
+    await route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+  });
+  await page.goto("/reset-password?token=test-reset-token");
+  await page.getByLabel(/New password/).fill("Example!123");
+  await page.getByLabel("Confirm password").fill("Example!123");
+  await page.getByRole("button", { name: "Save password" }).click();
+  await expect(page.getByRole("alert")).toContainText("Your password has been updated");
 });

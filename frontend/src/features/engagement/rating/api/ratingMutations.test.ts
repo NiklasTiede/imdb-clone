@@ -30,7 +30,7 @@ describe("rateMovieMutationOptions", () => {
       .build(queryClient, rateMovieMutationOptions())
       .execute({ movieId: 5, score: 8 });
 
-    expect(rateSpy).toHaveBeenCalledWith(5, 8);
+    expect(rateSpy).toHaveBeenCalledWith(5, { score: 8 });
     expect(deleteSpy).not.toHaveBeenCalled();
 
     rateSpy.mockRestore();

@@ -42,9 +42,7 @@ const fillValidRegistration = async (
   await user.type(screen.getByLabelText("Email"), "new@example.com");
   await user.type(screen.getByLabelText("Password"), "Movie!12");
   await user.type(screen.getByLabelText("Confirm password"), "Movie!12");
-  await waitFor(() =>
-    expect(screen.getAllByText("Available")).toHaveLength(2),
-  );
+  await waitFor(() => expect(screen.getAllByText("Available")).toHaveLength(2));
   await waitFor(() =>
     expect(
       screen.getByRole("button", { name: "Create account" }),
@@ -163,7 +161,7 @@ describe("RegistrationPage", () => {
     const user = userEvent.setup();
     vi.mocked(identityMutations.registerAccount).mockRejectedValue({
       response: {
-        data: { invalidParams: { username: "Username is already used" } },
+        data: { errors: { username: "Username is already used" } },
       },
     });
     renderRegistrationPage();

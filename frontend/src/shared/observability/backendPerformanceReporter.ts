@@ -65,7 +65,7 @@ type BackendPerformanceDelivery = {
   reporter: PerformanceReporter;
 };
 
-const TELEMETRY_ENDPOINT = "/api/observability/frontend";
+const TELEMETRY_ENDPOINT = "/api/v1/observability/frontend";
 const DEFAULT_BATCH_SIZE = 12;
 const MAX_SERVER_BATCH_SIZE = 20;
 const DEFAULT_FLUSH_INTERVAL_MS = 2_000;
@@ -99,21 +99,26 @@ const operationFromUrl = (
     return "OTHER";
   }
 
-  if (pathname.startsWith("/api/auth/")) return "AUTHENTICATION";
+  if (pathname.startsWith("/api/v1/auth/")) return "AUTHENTICATION";
   if (pathname.startsWith("/concierge-api/")) return "CONCIERGE";
-  if (pathname.startsWith("/api/account/passkeys")) return "WEBAUTHN";
-  if (pathname.startsWith("/api/account/")) return "ACCOUNT";
-  if (pathname.startsWith("/api/movie/")) return "CATALOG";
-  if (pathname.startsWith("/api/search/")) return "SEARCH";
-  if (pathname.startsWith("/api/recommendations/")) return "RECOMMENDATIONS";
+  if (pathname.startsWith("/api/v1/accounts/me/passkeys")) return "WEBAUTHN";
   if (
-    pathname.startsWith("/api/comment/") ||
-    pathname.startsWith("/api/movie-rating/") ||
-    pathname.startsWith("/api/watched-movie/")
-  ) {
+    pathname.startsWith("/api/v1/comments/") ||
+    /^\/api\/v1\/movies\/[^/]+\/comments$/.test(pathname) ||
+    pathname.startsWith("/api/v1/accounts/me/ratings/") ||
+    pathname.startsWith("/api/v1/accounts/me/watchlist/")
+  )
     return "ENGAGEMENT";
-  }
-  if (pathname.startsWith("/api/file-storage/")) return "MEDIA";
+  if (
+    pathname === "/api/v1/accounts" ||
+    pathname.startsWith("/api/v1/accounts/")
+  )
+    return "ACCOUNT";
+  if (pathname === "/api/v1/movies" || pathname.startsWith("/api/v1/movies/"))
+    return "CATALOG";
+  if (pathname.startsWith("/api/v1/search/")) return "SEARCH";
+  if (pathname.startsWith("/api/v1/recommendations/")) return "RECOMMENDATIONS";
+  if (pathname.startsWith("/api/v1/media/")) return "MEDIA";
   if (pathname.startsWith("/webauthn/") || pathname === "/login/webauthn") {
     return "WEBAUTHN";
   }

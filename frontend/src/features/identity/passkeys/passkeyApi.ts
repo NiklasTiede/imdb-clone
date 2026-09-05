@@ -45,7 +45,7 @@ export const loginWithPasskey = async (): Promise<AccountSessionResponse> => {
   const credential = await get({ publicKey });
   await apiHttpClient.post("/login/webauthn", credential);
 
-  const sessionResponse = await apiHttpClient.get<unknown>("/api/auth/me");
+  const sessionResponse = await apiHttpClient.get<unknown>("/api/v1/auth/me");
   return parseAccountSessionResponse(sessionResponse.data);
 };
 

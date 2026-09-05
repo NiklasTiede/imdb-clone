@@ -1,20 +1,23 @@
 package com.thecodinglab.imdbclone.engagement.web;
 
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
+import com.thecodinglab.imdbclone.engagement.api.RatingRequest;
 import com.thecodinglab.imdbclone.engagement.api.RatingScore;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
-import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.security.CurrentUser;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Parameter;
-import java.math.BigDecimal;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
-@RequestMapping("/api/movie-rating")
+@RequestMapping(path = "/api/v{version}/accounts/me/ratings", version = "1")
 public class RatingController {
 
   private final RatingService ratingService;
@@ -23,23 +26,31 @@ public class RatingController {
     this.ratingService = ratingService;
   }
 
-  @PutMapping("/{movieId}/rating-score/{score}")
-  @PreAuthorize("hasRole('USER')")
+  @PutMapping("/{movieId}")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Existing resource updated",
+      useReturnTypeSchema = true)
+  @ApiResponse(responseCode = "201", description = "Resource created", useReturnTypeSchema = true)
   public ResponseEntity<RatingRecord> rateMovie(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount,
       @PathVariable Long movieId,
-      @PathVariable BigDecimal score) {
-    return new ResponseEntity<>(
-        ratingService.rateMovie(currentAccount, movieId, RatingScore.of(score)),
-        HttpStatus.CREATED);
+      @Valid @RequestBody RatingRequest request) {
+    var result = ratingService.rateMovie(currentAccount, movieId, RatingScore.of(request.score()));
+    return result.created()
+        ? ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().build().toUri())
+            .body(result.resource())
+        : ResponseEntity.ok(result.resource());
   }
 
   @DeleteMapping("/{movieId}")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> deleteRating(
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public ResponseEntity<Void> deleteRating(
       @PathVariable Long movieId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(
-        ratingService.deleteRating(currentAccount, movieId), HttpStatus.NO_CONTENT);
+    ratingService.deleteRating(currentAccount, movieId);
+    return ResponseEntity.noContent().build();
   }
 }

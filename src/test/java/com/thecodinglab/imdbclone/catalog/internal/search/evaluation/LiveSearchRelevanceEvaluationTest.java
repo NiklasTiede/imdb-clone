@@ -70,7 +70,7 @@ class LiveSearchRelevanceEvaluationTest {
         HttpRequest.newBuilder()
             .uri(
                 URI.create(
-                    "%s/api/search/movies?query=%s&page=0&size=%d"
+                    "%s/api/v1/search/movies?query=%s&page=0&size=%d"
                         .formatted(baseUrl, encodedQuery, RESULT_SIZE)))
             .timeout(Duration.ofSeconds(10))
             .header("Content-Type", "application/json")

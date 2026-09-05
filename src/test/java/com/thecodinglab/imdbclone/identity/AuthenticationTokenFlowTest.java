@@ -172,13 +172,13 @@ class AuthenticationTokenFlowTest extends BaseContainers {
 
     mockMvc
         .perform(
-            post("/api/auth/save-new-password")
+            post("/api/v1/auth/password-resets")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     objectMapper.writeValueAsString(
                         new PasswordResetRequest(rawToken, "Changed!Pa55worD"))))
-        .andExpect(status().isCreated());
+        .andExpect(status().isOk());
   }
 
   private VerificationToken onlyTokenForAccount(Long accountId, VerificationTypeEnum type) {

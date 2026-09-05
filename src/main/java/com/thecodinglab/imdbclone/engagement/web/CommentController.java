@@ -4,7 +4,6 @@ import com.thecodinglab.imdbclone.engagement.api.CommentRecord;
 import com.thecodinglab.imdbclone.engagement.api.CommentService;
 import com.thecodinglab.imdbclone.engagement.api.CreateCommentRequest;
 import com.thecodinglab.imdbclone.engagement.api.UpdateCommentRequest;
-import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.security.CurrentUser;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
@@ -15,9 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
-@RequestMapping("/api/comment")
+@RequestMapping(path = "/api/v{version}", version = "1")
 public class CommentController {
 
   private final CommentService commentService;
@@ -26,12 +27,12 @@ public class CommentController {
     this.commentService = commentService;
   }
 
-  @GetMapping("/{commentId}")
+  @GetMapping("/comments/{commentId}")
   public ResponseEntity<CommentRecord> getCommentById(@PathVariable Long commentId) {
     return new ResponseEntity<>(commentService.getComment(commentId), HttpStatus.OK);
   }
 
-  @GetMapping("/{movieId}/comments")
+  @GetMapping("/movies/{movieId}/comments")
   public ResponseEntity<PagedResponse<CommentRecord>> getCommentsByMovieId(
       @PathVariable Long movieId,
       @RequestParam(required = false, defaultValue = Pagination.DEFAULT_PAGE_NUMBER, value = "page")
@@ -42,18 +43,24 @@ public class CommentController {
         commentService.getCommentsByMovieId(movieId, page, size), HttpStatus.OK);
   }
 
-  @PostMapping("/{movieId}")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+  @PostMapping("/movies/{movieId}/comments")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+  @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<CommentRecord> createComment(
       @PathVariable Long movieId,
       @Valid @RequestBody CreateCommentRequest request,
       @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(
-        commentService.createComment(movieId, request, currentAccount), HttpStatus.CREATED);
+    CommentRecord comment = commentService.createComment(movieId, request, currentAccount);
+    return ResponseEntity.created(
+            ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/comments/{id}")
+                .buildAndExpand(comment.id())
+                .toUri())
+        .body(comment);
   }
 
-  @PutMapping("/{commentId}")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+  @PutMapping("/comments/{commentId}")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<CommentRecord> updateComment(
       @PathVariable Long commentId,
       @Valid @RequestBody UpdateCommentRequest request,
@@ -62,12 +69,13 @@ public class CommentController {
         commentService.updateComment(commentId, request, currentAccount), HttpStatus.OK);
   }
 
-  @DeleteMapping("/{commentId}")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> deleteComment(
+  @DeleteMapping("/comments/{commentId}")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public ResponseEntity<Void> deleteComment(
       @PathVariable Long commentId,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {
-    return new ResponseEntity<>(
-        commentService.deleteComment(commentId, currentAccount), HttpStatus.NO_CONTENT);
+    commentService.deleteComment(commentId, currentAccount);
+    return ResponseEntity.noContent().build();
   }
 }

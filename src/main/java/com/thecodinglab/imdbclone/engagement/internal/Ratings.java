@@ -14,8 +14,8 @@ import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
+import com.thecodinglab.imdbclone.shared.api.ResourceWriteResult;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
-import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
 import java.math.BigDecimal;
@@ -26,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +52,8 @@ public class Ratings implements RatingService {
 
   @Override
   @Transactional
-  public RatingRecord rateMovie(UserPrincipal currentAccount, Long movieId, RatingScore score) {
+  public ResourceWriteResult<RatingRecord> rateMovie(
+      UserPrincipal currentAccount, Long movieId, RatingScore score) {
     movieReferenceService.findMovieById(movieId);
     Rating existingRating =
         ratingRepository
@@ -66,7 +68,7 @@ public class Ratings implements RatingService {
     movieRatingAggregateService.applyRatingAggregateDelta(
         movieId, ratingSumDelta, ratingCountDelta);
     logger.info("rating with [{}] was created.", kv(RATING_ID, savedRating.getId()));
-    return ratingMapper.entityToDTO(savedRating);
+    return new ResourceWriteResult<>(ratingMapper.entityToDTO(savedRating), existingRating == null);
   }
 
   @Override
@@ -102,7 +104,7 @@ public class Ratings implements RatingService {
           "WatchedMovie with movieId [%d] and accountId [%d] was deleted"
               .formatted(movieId, currentAccount.getId()));
     } else {
-      throw new UnauthorizedException(
+      throw new AccessDeniedException(
           "Account with id [%d] has no permission to delete this resource."
               .formatted(currentAccount.getId()));
     }

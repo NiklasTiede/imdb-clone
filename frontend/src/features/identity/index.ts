@@ -13,3 +13,5 @@ export type {
   LoginRequest,
   RegistrationRequest,
 } from "./model/identityRequests";
+
+export { default as ConfirmEmailPage } from "./pages/ConfirmEmailPage";

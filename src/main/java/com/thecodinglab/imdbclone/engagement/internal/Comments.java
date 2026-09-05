@@ -14,7 +14,6 @@ import com.thecodinglab.imdbclone.engagement.internal.persistence.Comment;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.CommentRepository;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
-import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
 import java.util.Objects;
@@ -24,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -102,7 +102,7 @@ public class Comments implements CommentService {
       logger.info("comment with [{}] was updated.", kv(COMMENT_ID, updatedComment.getId()));
       return commentMapper.entityToDTO(updatedComment);
     } else {
-      throw new UnauthorizedException(
+      throw new AccessDeniedException(
           "Account with id [%d] has no permission to update this resource."
               .formatted(currentAccount.getId()));
     }
@@ -117,7 +117,7 @@ public class Comments implements CommentService {
       logger.info("comment with [{}] was deleted.", kv(COMMENT_ID, comment.getId()));
       return new MessageResponse("comment with id [%d] was deleted.".formatted(comment.getId()));
     } else {
-      throw new UnauthorizedException(
+      throw new AccessDeniedException(
           "Account with id [%d] has no permission to delete this resource."
               .formatted(currentAccount.getId()));
     }

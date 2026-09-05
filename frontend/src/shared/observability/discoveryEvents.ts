@@ -29,7 +29,7 @@ const createOpaqueId = () => {
 
 const getDiscoverySessionId = () => {
   if (typeof window === "undefined") {
-    return inMemorySessionId ??= createOpaqueId();
+    return (inMemorySessionId ??= createOpaqueId());
   }
 
   try {
@@ -41,14 +41,14 @@ const getDiscoverySessionId = () => {
     window.sessionStorage.setItem(discoverySessionStorageKey, sessionId);
     return sessionId;
   } catch {
-    return inMemorySessionId ??= createOpaqueId();
+    return (inMemorySessionId ??= createOpaqueId());
   }
 };
 
 /** Sends only product interaction metadata; the backend hashes the opaque session and feed ids. */
 export const recordDiscoveryEvent = (event: DiscoveryEvent): void => {
   void apiHttpClient
-    .post("/api/recommendations/discovery-events", {
+    .post("/api/v1/recommendations/discovery-events", {
       ...event,
       eventId: createOpaqueId(),
       sessionId: getDiscoverySessionId(),

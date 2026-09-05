@@ -39,7 +39,7 @@ class WatchedMovieControllerTest extends BaseControllerIntegrationTest {
   void watchListAndDeleteMovie_success() throws Exception {
     mockMvc
         .perform(
-            put("/api/watched-movie/{movieId}/watch", MOVIE_ID)
+            put("/api/v1/accounts/me/watchlist/{movieId}", MOVIE_ID)
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -53,7 +53,7 @@ class WatchedMovieControllerTest extends BaseControllerIntegrationTest {
 
     restTestClient
         .get()
-        .uri("/api/account/{username}/watchlist", "test_user_two")
+        .uri("/api/v1/accounts/{username}/watchlist", "test_user_two")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -80,7 +80,7 @@ class WatchedMovieControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            delete("/api/watched-movie/{movieId}", MOVIE_ID)
+            delete("/api/v1/accounts/me/watchlist/{movieId}", MOVIE_ID)
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -88,7 +88,7 @@ class WatchedMovieControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            delete("/api/watched-movie/{movieId}", MOVIE_ID)
+            delete("/api/v1/accounts/me/watchlist/{movieId}", MOVIE_ID)
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -97,10 +97,31 @@ class WatchedMovieControllerTest extends BaseControllerIntegrationTest {
   }
 
   @Test
+  void repeatedPutPreservesAddedTimestampAndReturnsOk() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/v1/accounts/me/watchlist/{movieId}", MOVIE_ID).with(testUser()).with(csrf()))
+        .andExpect(status().isCreated())
+        .andExpect(
+            org.springframework.test.web.servlet.result.MockMvcResultMatchers.header()
+                .string("Location", "http://localhost/api/v1/accounts/me/watchlist/" + MOVIE_ID));
+    var original =
+        watchedMovieRepository.findByIdMovieIdAndIdAccountId(MOVIE_ID, ACCOUNT_ID).orElseThrow();
+    mockMvc
+        .perform(
+            put("/api/v1/accounts/me/watchlist/{movieId}", MOVIE_ID).with(testUser()).with(csrf()))
+        .andExpect(status().isOk());
+    var repeated =
+        watchedMovieRepository.findByIdMovieIdAndIdAccountId(MOVIE_ID, ACCOUNT_ID).orElseThrow();
+    org.assertj.core.api.Assertions.assertThat(repeated.getCreatedAtInUtc())
+        .isEqualTo(original.getCreatedAtInUtc());
+  }
+
+  @Test
   void watchMovie_unauthenticated() throws Exception {
     mockMvc
         .perform(
-            put("/api/watched-movie/{movieId}/watch", MOVIE_ID)
+            put("/api/v1/accounts/me/watchlist/{movieId}", MOVIE_ID)
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnauthorized())

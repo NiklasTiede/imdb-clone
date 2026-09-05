@@ -100,7 +100,7 @@ const getCurrentUserRatedMovies = async ({
   }
 
   const moviesResponse = await moviesApi.getMoviesByIds(
-    { movieIds: ratedMovieIds },
+    ratedMovieIds,
     0,
     ratedMovieIds.length,
   );

@@ -26,7 +26,7 @@ const fifthMovie = movie(5, "New Discovery Two");
 const sixthMovie = movie(6, "New Discovery Three");
 
 const mockAuthenticatedSession = async (page: Page) => {
-  await page.route("**/api/auth/me", async (route) => {
+  await page.route("**/api/v1/auth/me", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -37,7 +37,7 @@ const mockAuthenticatedSession = async (page: Page) => {
       }),
     });
   });
-  await page.route("**/api/account/me/profile", async (route) => {
+  await page.route("**/api/v1/accounts/me/profile", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({ username: "niklas", email: "niklas@example.com" }),
@@ -55,7 +55,7 @@ test("loads complete ratings insights while browsing additional pages", async ({
   page,
 }) => {
   await mockAuthenticatedSession(page);
-  await page.route("**/api/account/niklas/library/ratings**", async (route) => {
+  await page.route("**/api/v1/accounts/niklas/library/ratings**", async (route) => {
     const requestedPage = Number(
       new URL(route.request().url()).searchParams.get("page") ?? "0",
     );
@@ -121,7 +121,7 @@ test("keeps fresh watchlist choices compact on desktop and readable on mobile", 
   }
   await mockAuthenticatedSession(page);
   await page.route(
-    "**/api/account/niklas/library/watchlist**",
+    "**/api/v1/accounts/niklas/library/watchlist**",
     async (route) => {
       await route.fulfill({
         contentType: "application/json",
@@ -166,7 +166,7 @@ test("keeps fresh watchlist choices compact on desktop and readable on mobile", 
     },
   );
   await page.route(
-    "**/api/recommendations/watchlist-tonight",
+    "**/api/v1/recommendations/watchlist-tonight",
     async (route) => {
       const request = route.request().postDataJSON() as {
         excludedMovieIds?: number[];

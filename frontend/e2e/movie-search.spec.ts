@@ -36,7 +36,7 @@ const itFollows = {
 };
 
 async function stubNightcrawlerSearch(page: Page) {
-  await page.route("**/api/search/movies**", async (route) => {
+  await page.route("**/api/v1/search/movies**", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -54,7 +54,7 @@ async function stubNightcrawlerSearch(page: Page) {
 async function stubItFollowsSearch(page: Page) {
   let requestedQuery: string | null = null;
 
-  await page.route("**/api/search/movies**", async (route) => {
+  await page.route("**/api/v1/search/movies**", async (route) => {
     requestedQuery = new URL(route.request().url()).searchParams.get("query");
     await route.fulfill({
       contentType: "application/json",
@@ -86,7 +86,7 @@ async function stubMoviePosters(page: Page) {
 async function stubGenreSearch(page: Page) {
   const requestedGenres: Array<string | null> = [];
 
-  await page.route("**/api/search/movies**", async (route) => {
+  await page.route("**/api/v1/search/movies**", async (route) => {
     const body = route.request().postDataJSON() as {
       movieGenre?: string[];
     };
@@ -111,7 +111,7 @@ async function stubGenreSearch(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.route("**/api/auth/me", async (route) => {
+  await page.route("**/api/v1/auth/me", async (route) => {
     await route.fulfill({ status: 401, body: "" });
   });
 });
@@ -169,7 +169,7 @@ test("searches for a multi-word lowercase movie title", async ({ page }) => {
 });
 
 test("keeps every character while earlier search results load", async ({ page }) => {
-  await page.route("**/api/search/movies**", async (route) => {
+  await page.route("**/api/v1/search/movies**", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 450));
     await route.fulfill({
       contentType: "application/json",
@@ -218,7 +218,7 @@ test("switches search results into the compact editorial list", async ({ page })
 test("opens a movie detail page from search results", async ({ page }) => {
   await stubNightcrawlerSearch(page);
   await stubMoviePosters(page);
-  await page.route("**/api/movie/2872718", async (route) => {
+  await page.route("**/api/v1/movies/2872718", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify(nightcrawler),

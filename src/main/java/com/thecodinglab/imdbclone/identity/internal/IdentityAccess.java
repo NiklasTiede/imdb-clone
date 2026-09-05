@@ -104,8 +104,7 @@ public class IdentityAccess implements AuthenticationService {
     auditEvents.recordCredentialEvent(
         SecurityAuditEventType.VERIFICATION_TOKEN_ISSUED, account.id(), Map.of());
 
-    String link =
-        identityProperties.backendHost() + "/api/auth/confirm-email-address?token=" + token;
+    String link = identityProperties.frontendHost() + "/confirm-email?token=" + token;
     events.publishEvent(new EmailConfirmationRequested(account.email(), account.username(), link));
     logger.info(
         "confirmation email containing activation token for account with [{}] was requested",

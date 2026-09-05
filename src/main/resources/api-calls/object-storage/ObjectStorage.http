@@ -1,6 +1,6 @@
 
 ### store movie image
-POST {{protocol}}{{host}}:{{port}}/api/file-storage/movie/2872718
+POST {{protocol}}{{host}}:{{port}}/api/v1/media/movies/2872718
 Authorization: Bearer {{adminToken}}
 Content-Type: multipart/form-data; boundary=boundary
 
@@ -22,12 +22,12 @@ Content-Type: image/jpeg
 
 
 ### delete movie image
-DELETE {{protocol}}{{host}}:{{port}}/api/file-storage/movie/2872718
+DELETE {{protocol}}{{host}}:{{port}}/api/v1/media/movies/2872718
 Authorization: Bearer {{adminToken}}
 
 
 ### store user profile photo
-POST {{protocol}}{{host}}:{{port}}/api/file-storage/profile-photo
+POST {{protocol}}{{host}}:{{port}}/api/v1/media/profile-photo
 Authorization: Bearer {{userToken}}
 Content-Type: multipart/form-data; boundary=boundary
 
@@ -44,5 +44,5 @@ Content-Type: image/jpeg
 
 
 ### delete user profile photo
-DELETE {{protocol}}{{host}}:{{port}}/api/file-storage/profile-photo
+DELETE {{protocol}}{{host}}:{{port}}/api/v1/media/profile-photo
 Authorization: Bearer {{userToken}}

@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Validated
-@RequestMapping("/api/account")
+@RequestMapping(path = "/api/v{version}/accounts", version = "1")
 public class AccountEngagementController {
 
   private final AccountActivityService accountActivityService;

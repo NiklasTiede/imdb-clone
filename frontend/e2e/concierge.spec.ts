@@ -6,10 +6,10 @@ const sse = (type: string, sequence: number, payload: object): string =>
   `event: ${type}\nid: ${sequence}\ndata: ${JSON.stringify({ type, sequence, ...payload })}\n\n`;
 
 const mockAnonymousShell = async (page: Page) => {
-  await page.route("**/api/auth/me", async (route) => {
+  await page.route("**/api/v1/auth/me", async (route) => {
     await route.fulfill({ status: 401, body: "" });
   });
-  await page.route("**/api/search/movies**", async (route) => {
+  await page.route("**/api/v1/search/movies**", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -145,7 +145,7 @@ test("grounded concierge action opens the movie page without leaving an overlay"
   page,
 }) => {
   await mockAnonymousShell(page);
-  await page.route("**/api/movie/42", async (route) => {
+  await page.route("**/api/v1/movies/42", async (route) => {
     await route.fulfill({ status: 404, body: "" });
   });
   await page.route("**/concierge-api/v1/conversations", async (route) => {

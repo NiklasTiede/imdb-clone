@@ -8,6 +8,7 @@ import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchReind
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchReindexJobs;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Validated
-@RequestMapping("/api/search")
+@RequestMapping(path = "/api/v{version}/search", version = "1")
 public class SearchController {
 
   private final MovieSearch movieSearch;
@@ -42,6 +43,11 @@ public class SearchController {
 
   @PostMapping("/movies/reindex")
   @PreAuthorize("hasRole('ADMIN')")
+  @ApiResponse(responseCode = "202", description = "Reindex accepted", useReturnTypeSchema = true)
+  @ApiResponse(
+      responseCode = "409",
+      description = "Reindex already running",
+      useReturnTypeSchema = true)
   public ResponseEntity<MovieSearchReindexJobResponse> reindexMovies() {
     try {
       return new ResponseEntity<>(movieSearchReindexJobs.startReindex(), HttpStatus.ACCEPTED);

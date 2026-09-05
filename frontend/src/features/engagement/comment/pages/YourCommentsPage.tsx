@@ -47,7 +47,7 @@ const YourCommentsPage = () => {
   const commentMoviesQuery = useQuery({
     enabled: commentMovieIds.length > 0,
     queryFn: async () =>
-      (await moviesApi.getMoviesByIds({ movieIds: commentMovieIds }, 0, commentMovieIds.length))
+      (await moviesApi.getMoviesByIds(commentMovieIds, 0, commentMovieIds.length))
         .data.content ?? [],
     queryKey: ["catalog", "movies", "comment-context", commentMovieIds] as const,
   });

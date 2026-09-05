@@ -22,7 +22,7 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
   void getCurrentAccount_unauthenticated() {
     restTestClient
         .get()
-        .uri("/api/account/me")
+        .uri("/api/v1/accounts/me")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -35,13 +35,13 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
                     .jsonPath("$.detail")
                     .isEqualTo("Sorry, you're not authorized to access this resource.")
                     .jsonPath("$.instance")
-                    .isEqualTo("/api/account/me"));
+                    .isEqualTo("/api/v1/accounts/me"));
   }
 
   @Test
   void getCurrentAccount_success() throws Exception {
     mockMvc
-        .perform(get("/api/account/me").with(testUser()).accept(MediaType.APPLICATION_JSON))
+        .perform(get("/api/v1/accounts/me").with(testUser()).accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(2))
         .andExpect(jsonPath("$.username").value("test_user_two"))
@@ -52,7 +52,7 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
   void getAccountProfile_success() {
     restTestClient
         .get()
-        .uri("/api/account/{username}/profile", "test_user_two")
+        .uri("/api/v1/accounts/{username}/profile", "test_user_two")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -80,7 +80,7 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
   void getPublicAccountSummaries_success() {
     restTestClient
         .get()
-        .uri("/api/account/summaries?ids=2,1,2")
+        .uri("/api/v1/accounts/summaries?ids=2,1,2")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -106,7 +106,7 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
   void getPublicAccountSummaries_rejectsInvalidIds() {
     restTestClient
         .get()
-        .uri("/api/account/summaries?ids=0")
+        .uri("/api/v1/accounts/summaries?ids=0")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectStatus()
@@ -116,7 +116,8 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
   @Test
   void getCurrentAccountProfile_success() throws Exception {
     mockMvc
-        .perform(get("/api/account/me/profile").with(testUser()).accept(MediaType.APPLICATION_JSON))
+        .perform(
+            get("/api/v1/accounts/me/profile").with(testUser()).accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.username").value("test_user_two"))
         .andExpect(jsonPath("$.email").value("two@web.com"))
@@ -129,7 +130,7 @@ class AccountControllerTest extends BaseControllerIntegrationTest {
   void getAccountProfile_notFound() {
     restTestClient
         .get()
-        .uri("/api/account/{username}/profile", "missing_user")
+        .uri("/api/v1/accounts/{username}/profile", "missing_user")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(

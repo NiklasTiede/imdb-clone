@@ -12,6 +12,7 @@ import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovie;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovieRepository;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
+import com.thecodinglab.imdbclone.shared.api.ResourceWriteResult;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
@@ -47,15 +48,23 @@ public class Watchlist implements WatchedMovieService {
 
   @Override
   @Transactional
-  public WatchedMovieRecord watchMovie(Long movieId, UserPrincipal currentAccount) {
+  public ResourceWriteResult<WatchedMovieRecord> watchMovie(
+      Long movieId, UserPrincipal currentAccount) {
     MovieRecord movie = movieReferenceService.findMovieById(movieId);
+    var existing =
+        watchedMovieRepository.findByIdMovieIdAndIdAccountId(movieId, currentAccount.getId());
+    if (existing.isPresent()) {
+      return new ResourceWriteResult<>(
+          watchedMovieMapper.entityToDTO(existing.get(), movie), false);
+    }
     WatchedMovie watchedMovie = WatchedMovie.create(movieId, currentAccount.getId());
     WatchedMovie savedWatchedMovie = watchedMovieRepository.saveAndFlush(watchedMovie);
     logger.info(
         "Movie with [{}] is watched by account with id [{}].",
         kv(WATCHED_MOVIE_ID, savedWatchedMovie.getId()),
         savedWatchedMovie.getId().getAccountId());
-    return watchedMovieMapper.entityToDTO(savedWatchedMovie, movie);
+    return new ResourceWriteResult<>(
+        watchedMovieMapper.entityToDTO(savedWatchedMovie, movie), true);
   }
 
   @Override

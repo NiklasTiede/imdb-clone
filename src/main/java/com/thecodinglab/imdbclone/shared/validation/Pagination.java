@@ -16,8 +16,8 @@ public class Pagination {
     if (page < 0) {
       throw new BadRequestException("Page number cannot be less than zero.");
     }
-    if (size < 0) {
-      throw new BadRequestException("Size number cannot be less than zero.");
+    if (size <= 0) {
+      throw new BadRequestException("Page size must be greater than zero.");
     }
     if (size > MAX_PAGE_SIZE) {
       throw new BadRequestException(

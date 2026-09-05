@@ -33,7 +33,7 @@ class RecommendationControllerTest extends BaseControllerIntegrationTest {
   void similarMovies_isPublicAndExcludesAnchor() {
     restTestClient
         .get()
-        .uri("/api/recommendations/movies/{movieId}/similar?limit=3", 1)
+        .uri("/api/v1/recommendations/movies/{movieId}/similar?limit=3", 1)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -53,7 +53,7 @@ class RecommendationControllerTest extends BaseControllerIntegrationTest {
   void similarMovies_rejectsInvalidLimit() {
     restTestClient
         .get()
-        .uri("/api/recommendations/movies/{movieId}/similar?limit=31", 1)
+        .uri("/api/v1/recommendations/movies/{movieId}/similar?limit=31", 1)
         .exchange()
         .expectStatus()
         .isBadRequest();
@@ -63,7 +63,7 @@ class RecommendationControllerTest extends BaseControllerIntegrationTest {
   void similarMovies_returnsNotFoundForUnknownMovie() {
     restTestClient
         .get()
-        .uri("/api/recommendations/movies/{movieId}/similar", 999_999)
+        .uri("/api/v1/recommendations/movies/{movieId}/similar", 999_999)
         .exchange()
         .expectStatus()
         .isNotFound();
@@ -73,7 +73,7 @@ class RecommendationControllerTest extends BaseControllerIntegrationTest {
   void homeFeed_isPublicAndReturnsASeededResponse() throws Exception {
     mockMvc
         .perform(
-            post("/api/recommendations/home-feed")
+            post("/api/v1/recommendations/home-feed")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -105,7 +105,7 @@ class RecommendationControllerTest extends BaseControllerIntegrationTest {
     for (int attempt = 0; attempt < 2; attempt++) {
       mockMvc
           .perform(
-              post("/api/recommendations/discovery-events")
+              post("/api/v1/recommendations/discovery-events")
                   .with(csrf())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(request))
@@ -131,7 +131,7 @@ class RecommendationControllerTest extends BaseControllerIntegrationTest {
   void discoveryEventSummary_requiresAdminAndReportsRecordedEvents() throws Exception {
     mockMvc
         .perform(
-            post("/api/recommendations/discovery-events")
+            post("/api/v1/recommendations/discovery-events")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -143,13 +143,13 @@ class RecommendationControllerTest extends BaseControllerIntegrationTest {
     mockMvc
         .perform(
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(
-                "/api/recommendations/discovery-events/summary"))
+                "/api/v1/recommendations/discovery-events/summary"))
         .andExpect(status().isUnauthorized());
 
     mockMvc
         .perform(
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(
-                    "/api/recommendations/discovery-events/summary")
+                    "/api/v1/recommendations/discovery-events/summary")
                 .with(testAdmin()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.eventsByType.SECTION_IMPRESSION").value(1));

@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thecodinglab.imdbclone.catalog.api.MovieGenre;
-import com.thecodinglab.imdbclone.catalog.api.MovieIdsRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieType;
@@ -20,7 +19,6 @@ import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.projection.MovieSearchProjectionTaskHandler;
 import com.thecodinglab.imdbclone.support.BaseControllerIntegrationTest;
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -75,7 +73,7 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
     // Act and Assert
     restTestClient
         .get()
-        .uri("/api/movie/{movieId}", invalidIdFormat)
+        .uri("/api/v1/movies/{movieId}", invalidIdFormat)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectStatus()
@@ -88,8 +86,7 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
             spec ->
                 spec.expectBody()
                     .jsonPath("$.detail")
-                    .isEqualTo(
-                        "Failed to convert 'movieId' with value: '%s'".formatted(invalidIdFormat)));
+                    .isEqualTo("A required request parameter is missing or invalid."));
   }
 
   @Test
@@ -100,7 +97,7 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
     // Act and Assert
     restTestClient
         .get()
-        .uri("/api/movie/{movieId}", nonExistentMovieId)
+        .uri("/api/v1/movies/{movieId}", nonExistentMovieId)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -121,7 +118,7 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
     // Act and Assert
     restTestClient
         .get()
-        .uri("/api/movie/{movieId}", existingMovie)
+        .uri("/api/v1/movies/{movieId}", existingMovie)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -140,14 +137,12 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
   @Test
   void getMoviesByIds_emptyResponse() {
     // Arrange
-    var nonExistingMovies = new MovieIdsRequest(List.of(999999L));
 
     // Act and Assert
     restTestClient
-        .post()
-        .uri("/api/movie/get-movies")
+        .get()
+        .uri("/api/v1/movies?ids=999999")
         .accept(MediaType.APPLICATION_JSON)
-        .body(nonExistingMovies)
         .exchange()
         .expectAll(
             spec -> spec.expectStatus().isOk(),
@@ -169,14 +164,12 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
   @Test
   void getMoviesByIds_success() {
     // Arrange
-    var existingMovies = new MovieIdsRequest(List.of(1L, 2L));
 
     // Act and Assert
     restTestClient
-        .post()
-        .uri("/api/movie/get-movies")
+        .get()
+        .uri("/api/v1/movies?ids=1,2")
         .accept(MediaType.APPLICATION_JSON)
-        .body(existingMovies)
         .exchange()
         .expectAll(
             spec -> spec.expectStatus().isOk(),
@@ -260,7 +253,7 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            put("/api/movie/{movieId}", createdMovie.id())
+            put("/api/v1/movies/{movieId}", createdMovie.id())
                 .with(testAdmin())
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -307,7 +300,7 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            delete("/api/movie/{movieId}", createdMovie.id())
+            delete("/api/v1/movies/{movieId}", createdMovie.id())
                 .with(testAdmin())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -323,7 +316,7 @@ class MovieControllerTest extends BaseControllerIntegrationTest {
     var response =
         mockMvc
             .perform(
-                post("/api/movie/create-movie")
+                post("/api/v1/movies")
                     .with(testAdmin())
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)

@@ -109,7 +109,7 @@ class SecurityHardeningTest extends BaseContainers {
 
     mockMvc
         .perform(
-            post("/api/auth/logout")
+            post("/api/v1/auth/logout")
                 .with(csrf())
                 .cookie(session)
                 .header("X-Forwarded-For", "203.0.113.11"))
@@ -133,7 +133,7 @@ class SecurityHardeningTest extends BaseContainers {
   @Test
   void securityHeadersIncludeReferrerAndPasskeyPolicy() throws Exception {
     mockMvc
-        .perform(get("/api/auth/me"))
+        .perform(get("/api/v1/auth/me"))
         .andExpect(status().isUnauthorized())
         .andExpect(header().string("Referrer-Policy", "no-referrer"))
         .andExpect(header().string("Permissions-Policy", "publickey-credentials-get=(self)"));
@@ -141,7 +141,7 @@ class SecurityHardeningTest extends BaseContainers {
 
   private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder loginRequest(
       LoginRequest request, String clientIp) throws Exception {
-    return post("/api/auth/login")
+    return post("/api/v1/auth/login")
         .with(csrf())
         .header("X-Forwarded-For", clientIp)
         .contentType(MediaType.APPLICATION_JSON)
