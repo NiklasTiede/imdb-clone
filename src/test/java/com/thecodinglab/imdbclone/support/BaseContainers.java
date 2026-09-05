@@ -75,6 +75,8 @@ public class BaseContainers {
 
   static OpenSearchContainer<?> openSearchContainer =
       new OpenSearchContainer<>(openSearchImage)
+          // Disposable index data should not depend on free space in the Docker disk image.
+          .withTmpFs(java.util.Map.of("/usr/share/opensearch/data", "rw,size=256m,mode=1777"))
           .withEnv("DISABLE_INSTALL_DEMO_CONFIG", "true")
           .withEnv("OPENSEARCH_JAVA_OPTS", "-Xms512m -Xmx512m")
           .withStartupTimeout(Duration.ofMinutes(3));

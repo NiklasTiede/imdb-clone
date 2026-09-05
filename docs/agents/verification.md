@@ -27,6 +27,8 @@ Notes:
 - `integrationTest` selects the `integration` tag and uses Testcontainers where PostgreSQL,
   OpenSearch, or RustFS are needed.
 - Docker must be running for `integrationTest`, `check`, and `build`.
+- Testcontainers stores its disposable OpenSearch index in a bounded 256 MiB tmpfs, avoiding
+  read-only index blocks caused by the Docker disk image being near its capacity.
 - `jacocoTestReport` combines coverage from the fast and integration test tasks.
 - Before committing Java, Gradle, or backend test changes, run `./gradlew spotlessApply`.
 
