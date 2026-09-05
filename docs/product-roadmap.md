@@ -222,7 +222,7 @@ Goal: replace the empty messages destination with an honest, useful view of the 
 community activity.
 
 - Rename the initial destination to `Your comments` or `Activity` and use a comment/activity icon.
-- Load the existing paginated `/api/account/{username}/comments` contract.
+- Load the existing paginated `/api/v1/accounts/{username}/comments` contract.
 - Enrich each item with movie title and poster information in one backend response or a bounded
   batch lookup; do not issue one movie request per row.
 - Link each comment back to its movie and, when supported, directly to the comment anchor.

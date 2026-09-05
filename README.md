@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Live Demo</a>
   ·
-  <a href="https://backend.imdb-clone.the-coding-lab.com/api/movie/1" target="_blank">Backend API</a>
+  <a href="https://backend.imdb-clone.the-coding-lab.com/api/v1/movies/1" target="_blank">Backend API</a>
   ·
   <a href="./agent/README.md">Movie Concierge</a>
   ·
@@ -330,6 +330,7 @@ credential, budget, MCP, eval, and safety instructions in the
 
 Detailed workflow docs:
 
+- [REST API Contract](./docs/rest-api.md) for versioning, resource paths, authorization, and recovery flows.
 - [Development Guide](./docs/development.md) for local setup, env vars, smoke checks, and troubleshooting.
 - [Movie Concierge](./agent/README.md) for Python setup, runtime contracts, evals, and production guardrails.
 - [Movie Concierge Architecture](./docs/movie-concierge.md) for the accepted product and trust boundaries.
