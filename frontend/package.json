@@ -63,7 +63,7 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.59.2",
     "vite": "^8.0.11",
-    "vitest": "^4.0.7"
+    "vitest": "^4.1.11"
   },
   "resolutions": {
     "@babel/runtime": "7.29.2",
