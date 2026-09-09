@@ -344,6 +344,54 @@ Do not apply these manifests directly. The version-gated release workflow builds
 images, pins their Docker digests, and updates the existing GitOps tree after an intentional
 `VERSION` release.
 
+## Local Grok voice compatibility probe
+
+The first voice slice is a local development CLI, not a microphone feature in the deployed app.
+It uses Pydantic AI 2.31.0 with the `xai-realtime` extra and pins
+`grok-voice-think-fast-2.0`. The text runner and its OpenAI configuration remain independent.
+
+Store `XAI_API_KEY` in the repository-root `.secrets/movie-concierge-voice.local.env`.
+This file is ignored by Git and read only by the explicit voice probe. Its loader accepts only
+that field, does not interpolate environment variables, and redacts validation failures.
+Do not add it to the existing OpenAI secret file or frontend environment.
+
+From the repository root:
+
+```bash
+make agent-sync
+IMDB_AGENT_LIVE_EVALS_ENABLED=true make probe-agent-voice-live
+IMDB_AGENT_LIVE_EVALS_ENABLED=true make probe-agent-voice-interrupt-live
+```
+
+Each command permits **one billable provider session**, with no automatic retry/reconnect:
+45 seconds including connection setup, at most 15 seconds of input, 20 seconds of collected
+output, three model requests and two successful tool calls. Model settings cap each response
+at 512 tokens; cumulative token limits are checked when usage arrives. The session deadline
+and audio bounds apply independently of provider cost reporting. This is not a guaranteed USD
+spending cap: `estimated_cost_usd: null` means no estimate is available, not zero cost.
+
+The fixed [synthetic fixture](evals/voice/README.md) tests a simulated Forrest Gump lookup and a spoken
+English answer. Voice development initially uses English commands, responses and catalog titles;
+German dialogue is deferred, and movie titles must not be translated before catalog lookup.
+The CLI exits nonzero for failed assertions, provider failures or limits. It emits
+only a content-free JSON report; SDK logs and agent instrumentation are disabled. No key, raw
+transcript, provider frame or tool argument is printed.
+
+Successful execution writes reports and playable WAV files under the Git-ignored
+`agent/.artifacts/voice-probe/`: `completed.json/.wav` and `interrupted.json/.wav`. Each scenario
+overwrites its previous result, bounding retention to the latest two runs; these local synthetic
+artifacts persist until overwritten or manually removed. Failed execution may leave the previous
+run's files in place: use the command exit status, not an old artifact, to judge the current run.
+No production transcripts or microphone recordings belong in this directory.
+
+On macOS, listen with:
+
+```bash
+afplay agent/.artifacts/voice-probe/completed.wav
+```
+
+See [ADR 0003](../docs/adr/0003-movie-concierge-voice-probe.md) for the channel boundary and limits.
+
 ## Package map
 
 ```text

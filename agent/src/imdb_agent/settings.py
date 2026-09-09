@@ -15,6 +15,9 @@ from imdb_agent import __version__
 LOCAL_OPENAI_SECRETS_FILE = (
     Path(__file__).resolve().parents[3] / ".secrets" / "movie-concierge.local.env"
 )
+LOCAL_VOICE_SECRETS_FILE = (
+    Path(__file__).resolve().parents[3] / ".secrets" / "movie-concierge-voice.local.env"
+)
 OPENAI_API_KEY_SECRET_NAME = "openai-api-key"  # noqa: S105 - mounted filename, not a key
 MCP_BEARER_TOKEN_SECRET_NAME = "mcp-bearer-token"  # noqa: S105 - mounted filename
 PRODUCTION_PYROSCOPE_SERVER_ADDRESS = "http://pyroscope.observability.svc.cluster.local:4040"
@@ -192,6 +195,25 @@ class _LocalOpenAISecrets(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
     openai_api_key: SecretStr = Field(alias="OPENAI_API_KEY", min_length=12)
+
+
+class LocalVoiceSecrets(BaseModel):
+    """Opt-in development voice credentials, separate from the text service."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    xai_api_key: SecretStr = Field(alias="XAI_API_KEY", min_length=12)
+
+
+def load_local_voice_secrets(path: Path = LOCAL_VOICE_SECRETS_FILE) -> LocalVoiceSecrets:
+    try:
+        # Credentials are literal values, never expanded from the process environment.
+        values = dict(dotenv_values(path, interpolate=False))
+        return LocalVoiceSecrets.model_validate(values)
+    except OSError, UnicodeError, ValidationError:
+        raise ConfigurationError(
+            "xAI credentials are unavailable in .secrets/movie-concierge-voice.local.env"
+        ) from None
 
 
 def load_runtime_secrets(settings: Settings) -> RuntimeSecrets:

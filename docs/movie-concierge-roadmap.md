@@ -2,9 +2,17 @@
 
 **Status:** Living delivery roadmap
 
-**Last updated:** 2026-08-25
+**Last updated:** 2026-09-09
 
 **Current focus:** Application actions, delegated user capabilities, and richer grounded tools
+
+The [2026-09-09 voice and watchlist slice proposal](superpowers/plans/2026-09-09-movie-concierge-voice-slice.md)
+records the verified baseline and a shorter R1/R2/R3/R7 path toward microphone-driven discovery,
+navigation and personal watchlist actions. It is a proposal, not completed functionality.
+
+The first voice release uses English commands, responses and movie titles, matching the current
+catalog. German dialogue is deferred; even in later German conversations, searches should use
+English catalog titles until localized title lookup is explicitly implemented.
 
 This roadmap turns the accepted [Movie Concierge product vision](movie-concierge.md) into ordered,
 independently releasable outcomes. It is not a release commitment. Each milestone must become a

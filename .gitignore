@@ -101,6 +101,7 @@ design/
 screenshots/
 
 # Python Movie Concierge
+/agent/.artifacts/
 /agent/.venv/
 /agent/.pytest_cache/
 /agent/.import_linter_cache/
