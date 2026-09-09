@@ -3,6 +3,11 @@
 Status: Design proposal with an interactive, development-only preview. No browser voice transport
 or authenticated watchlist action is implemented by this design study.
 
+The normal application now implements local voice using this design: real capture/playback levels,
+Start voice, mute/interrupt/end, and a persistent navigation dock. Activate with `make run-agent-voice`.
+This document's `/voice-design.html` entry remains a simulation; test the real feature in the normal
+app at `http://localhost:3000`. Authenticated watchlist writes remain a separate delivery step.
+
 ## Fit with the current application
 
 The design uses `frontend/src/theme.ts` directly: Manrope Variable, the dark cinematic surfaces,

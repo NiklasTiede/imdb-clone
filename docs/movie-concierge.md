@@ -2,12 +2,16 @@
 
 **Status:** Accepted product direction
 
-**Last updated:** 2026-08-24
+**Last updated:** 2026-09-09
 
 **First release:** Read-only text concierge
 
-**Current milestone:** Production read-only pilot and grounded `open_movie` action deployed;
-capability expansion is tracked in the [long-term roadmap](movie-concierge-roadmap.md)
+**Current milestone:** Production read-only pilot and grounded `open_movie` action deployed.
+Local English voice, delegated watchlist read/add/remove and personal rating set/update/remove
+with library navigation are implemented in the development
+branch; public rollout remains separate. The initial read-only release scope below is historical.
+See [ADR 0004](adr/0004-concierge-session-delegation-and-watchlist.md) and the
+[long-term roadmap](movie-concierge-roadmap.md).
 
 ## Vision
 
@@ -153,7 +157,7 @@ The load-bearing architecture is recorded in
 [ADR 0001](adr/0001-movie-concierge-architecture.md). The intended stack is:
 
 - **Python service:** Python 3.14, uv, FastAPI/Uvicorn, Pydantic v2 and
-  pydantic-settings, Pydantic AI 2.31.0, pytest, strict Pyright, curated Ruff rules, Import Linter,
+  pydantic-settings, Pydantic AI 2.42.0, pytest, strict Pyright, curated Ruff rules, Import Linter,
   and enforced architecture tests. The exact framework pin keeps the Realtime surface reproducible;
   provider/framework types remain inside adapters so a future `Agent.realtime()` channel can reuse
   product policy and Java tools.

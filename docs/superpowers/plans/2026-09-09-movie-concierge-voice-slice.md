@@ -1,10 +1,11 @@
 # Movie Concierge: voice, navigation and personal watchlist
 
-**Status:** Step 0 English probe implemented and live-verified; application voice integration remains pending.
+**Status:** English probe and local application voice implemented; local personal watchlist delegation/read/add/navigation implemented; production rollout remains pending.
 
-**Current example:** Forrest Gump (1994), using `forrest-gump-en.wav` and a fixed 142-minute
+**Probe example:** Forrest Gump (1994), using `forrest-gump-en.wav` and a fixed 142-minute
 test record. This replaces the earlier fictional examples; the tool is still simulated, with no
-live library lookup. Historical probe measurements below refer to their original fixtures.
+live library lookup in the compatibility probe. Application replay uses the real Java catalog.
+Historical probe measurements below refer to their original fixtures.
 **Date:** 2026-09-09
 **Branch inspected:** `feature/agent-roadmap`, including merged backend architecture work.
 
@@ -12,13 +13,36 @@ This narrows the [long-term roadmap](../../movie-concierge-roadmap.md) around th
 experience: talk through the microphone, discover movies, open a film, and add a film to the
 authenticated user's watchlist while opening that list. Python remains the agent runtime.
 
+### Local voice implementation
+
+The normal Concierge now has a real Start voice flow, AudioWorklet capture with sample-rate
+conversion, PCM playback, a measured level indicator and a route-persistent compact dock. Python
+relays a bounded xAI realtime session with the four allowlisted Java MCP tools. Final commands can
+open one grounded movie, including a subsequent “Open it” against session-owned evidence.
+Mute, interrupt, end, permission failure, disconnect and identity reset have explicit cleanup.
+
+The installed Pydantic AI 2.31 API drops input item IDs from public SpeechPart events. A narrow
+connection wrapper preserves their final-transcript correlation through the public codec interface;
+late transcripts cannot be attributed to a newer utterance. No SDK private state is accessed.
+
+Live synthetic replay against the local Java catalog passed both direct navigation (16.13 seconds
+including spoken input) and a runtime question followed by contextual navigation (21.81 seconds).
+These are single-run scenario durations, not microphone latency benchmarks. Browser audio capture,
+playback, navigation and permission-denial tests passed on desktop and mobile Chromium.
+An additional Chromium run using a synthetic microphone fixture passed the complete browser →
+Python → Grok → Java catalog → browser navigation path against the local stack.
+
+Run `make run-agent-voice` and use the normal app at `http://localhost:3000`. The design preview
+remains a separate simulation. The implementation is local-only and now supports delegated personal
+watchlist reads and explicit additions; see `agent/README.md` for activation, protocol limits, replay and remaining rollout work.
+
 **Language scope (user decision):** Build the first voice slice entirely in English: instructions,
 spoken input/output, command interpretation and audio fixtures. Movies predominantly have English
 catalog titles, which must be preserved in searches and replies. German dialogue is deferred;
 future German commands still name movies by their English catalog titles. Localized title lookup
 is a separate future capability.
 
-## Verified baseline
+## Verified baseline before implementation
 
 | Area | Existing behavior | Missing for this slice |
 | --- | --- | --- |
