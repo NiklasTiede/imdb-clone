@@ -157,8 +157,11 @@ becomes EXPIRED, without sending. Successful sends become SENT and likewise eras
 The original token lifetime is preserved rather than restarted at delivery.
 
 A deterministic SHA-256 ID over notification kind and the high-entropy token link coalesces repeated
-publication of the same request. SENT/EXPIRED IDs are retained to prevent replay from reconstructing
-pending content. Concurrent workers cannot send the same locked row. Delivery is nevertheless
+publication of the same request. SENT/EXPIRED IDs are retained until both completion and original
+link expiry are older than the configured retention window (30 days by default). The outbox
+rejects already expired events, so replay cannot reconstruct pending content after metadata
+removal. See [PostgreSQL retention](../database-retention.md). Concurrent workers cannot send the
+same locked row. Delivery is nevertheless
 at least once: SMTP acceptance and the PostgreSQL commit cannot be atomic. A failure after SMTP
 acceptance causes a retry with the same Message-ID; receivers may still show a duplicate. A real
 PostgreSQL test rejects the completion update after the fake SMTP Adapter accepts the mail, then

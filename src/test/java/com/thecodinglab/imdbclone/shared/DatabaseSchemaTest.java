@@ -31,7 +31,9 @@ class DatabaseSchemaTest extends BaseContainers {
             "11:create movie projection work",
             "12:create movie search reindex job",
             "13:reconcile historical rating aggregates",
-            "14:retain retired media tokens");
+            "14:retain retired media tokens",
+            "15:index retention candidates",
+            "16:drop unused oauth authorization tables");
   }
 
   @Test

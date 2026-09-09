@@ -570,6 +570,8 @@ All replicas must receive both keys before any replica begins writing with the n
 The `notification-delivery` db-scheduler task polls every five seconds. SMTP failures retain encrypted
 work and retry after one minute, until the link's original expiry. The worker never extends token
 validity. SENT and EXPIRED rows retain only deduplication metadata; mail content is erased.
+That metadata is removed 30 days after both completion and original link expiry by default.
+See [PostgreSQL retention](database-retention.md) for all policies, configuration and cleanup behavior.
 Observe `notification.delivery.pending`, `notification.delivery.failures`,
 `notification.delivery.sent`, and `notification.delivery.expired` in Actuator metrics; inspect
 `notification_delivery` state, attempts, available_at and expires_at for persistent failure status.

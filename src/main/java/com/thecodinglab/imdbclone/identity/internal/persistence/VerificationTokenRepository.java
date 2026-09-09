@@ -1,8 +1,6 @@
 package com.thecodinglab.imdbclone.identity.internal.persistence;
 
 import jakarta.persistence.LockModeType;
-import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -16,6 +14,4 @@ public interface VerificationTokenRepository extends JpaRepository<VerificationT
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select token from VerificationToken token where token.tokenHash = :tokenHash")
   Optional<VerificationToken> findForConsumption(@Param("tokenHash") String tokenHash);
-
-  List<VerificationToken> findAllByExpiryDateInUtcBefore(Instant expiryDate);
 }

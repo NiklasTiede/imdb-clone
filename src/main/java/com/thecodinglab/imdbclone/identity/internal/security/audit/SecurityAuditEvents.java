@@ -2,7 +2,6 @@ package com.thecodinglab.imdbclone.identity.internal.security.audit;
 
 import java.util.Map;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SecurityAuditEvents {
@@ -25,10 +24,5 @@ public class SecurityAuditEvents {
       String ipAddress,
       Map<String, Object> details) {
     repository.save(new SecurityAuditEvent(type, principal, accountId, ipAddress, details));
-  }
-
-  @Transactional
-  public long deleteEventsOlderThan(java.time.Instant cutoff) {
-    return repository.deleteByOccurredAtBefore(cutoff);
   }
 }

@@ -52,12 +52,14 @@ public class NotificationOutbox {
     jdbc.update(
         """
         insert into notification_delivery(id, kind, key_id, encrypted_payload, expires_at)
-        values (?, ?, ?, ?, ?) on conflict (id) do nothing
+        select ?, ?, ?, ?, ? where ? > current_timestamp
+        on conflict (id) do nothing
         """,
         id,
         message.kind().name(),
         cipher.activeKey(),
         cipher.encrypt(id, message),
+        Timestamp.from(expiresAt),
         Timestamp.from(expiresAt));
   }
 
