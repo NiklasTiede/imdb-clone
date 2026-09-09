@@ -140,6 +140,11 @@ Notes:
 
 ## Run Frontend
 
+Use Yarn Classic 1.22.22 for the frontend, matching CI and Docker. `yarn.lock` is the
+authoritative dependency lockfile. Configure the IDE's package manager to Yarn as well;
+`npm install` creates a competing `package-lock.json` and does not apply the security
+pins in Yarn's `resolutions`.
+
 Install dependencies and start Vite:
 
 ```bash

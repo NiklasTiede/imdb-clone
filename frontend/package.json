@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "yarn@1.22.22",
   "scripts": {
     "start": "vite",
     "preview": "vite preview --host localhost --port 3000",
@@ -31,7 +32,7 @@
     "@mui/icons-material": "9.0.1",
     "@mui/material": "9.0.1",
     "@tanstack/react-query": "^5.100.9",
-    "axios": "1.18.0",
+    "axios": "1.19.0",
     "notistack": "^3.0.2",
     "react": "19.2.6",
     "react-dom": "19.2.6",
@@ -44,7 +45,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
-    "@openapitools/openapi-generator-cli": "2.32.0",
+    "@openapitools/openapi-generator-cli": "2.41.0",
     "@playwright/test": "^1.59.1",
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
@@ -62,15 +63,19 @@
     "prettier": "^3.8.3",
     "typescript": "6.0.3",
     "typescript-eslint": "8.59.2",
-    "vite": "^8.0.11",
+    "vite": "^8.2.2",
     "vitest": "^4.1.11"
   },
   "resolutions": {
+    "@babel/core": "7.29.7",
     "@babel/runtime": "7.29.2",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "axios": "1.18.0",
-    "form-data": "4.0.6"
+    "axios": "1.19.0",
+    "brace-expansion": "5.0.9",
+    "form-data": "4.0.6",
+    "ip-address": "10.7.0",
+    "ws": "8.21.3"
   },
   "browserslist": {
     "production": [
