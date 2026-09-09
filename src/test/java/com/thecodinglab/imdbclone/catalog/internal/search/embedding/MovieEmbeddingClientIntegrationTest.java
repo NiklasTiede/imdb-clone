@@ -6,13 +6,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Import;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-@SpringBootTest(
-    classes = MovieEmbeddingClientIntegrationTest.TestApplication.class,
+@SpringJUnitConfig({LlamaCppEmbeddingConfig.class, MovieEmbeddingClient.class})
+@TestPropertySource(
     properties = {
       "imdb-clone.catalog.search.embedding.base-url=http://localhost:8082",
       "imdb-clone.catalog.search.embedding.model=embeddinggemma"
@@ -31,9 +29,4 @@ class MovieEmbeddingClientIntegrationTest {
     assertThat(embedding).hasSize(768);
     assertThat(embedding).isNotEqualTo(new float[768]);
   }
-
-  @TestConfiguration
-  @EnableAutoConfiguration
-  @Import({LlamaCppEmbeddingConfig.class, MovieEmbeddingClient.class})
-  static class TestApplication {}
 }
