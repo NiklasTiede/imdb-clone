@@ -269,6 +269,10 @@ AGENT_EVAL_CASE_FLAG = $(if $(AGENT_EVAL_CASE),--case $(AGENT_EVAL_CASE),)
 
 .PHONY: probe-agent-voice-live probe-agent-voice-interrupt-live
 
+.PHONY: run-agent-voice
+run-agent-voice: ## run local Movie Concierge with bounded English microphone sessions
+	IMDB_AGENT_VOICE_ENABLED=true $(MAKE) run-agent
+
 probe-agent-voice-live: ## replay synthetic English audio; requires IMDB_AGENT_LIVE_EVALS_ENABLED=true
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --locked imdb-agent-voice-probe --live
 

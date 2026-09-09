@@ -91,10 +91,34 @@ class OpenMovieAction(EventModel):
     movie_id: int = Field(gt=0)
 
 
+class OpenWatchlistAction(EventModel):
+    type: Literal["open_watchlist"] = "open_watchlist"
+    operation_id: str | None = None
+    movie_id: int | None = Field(default=None, gt=0)
+    created: bool | None = None
+    removed: bool | None = None
+
+
+class OpenRatingsAction(EventModel):
+    type: Literal["open_ratings"] = "open_ratings"
+    operation_id: str
+    movie_id: int = Field(gt=0)
+    changed: bool
+    score: float | None = Field(ge=0, le=10)
+    previous_score: float | None = Field(ge=0, le=10)
+
+
+class OpenLoginAction(EventModel):
+    type: Literal["open_login"] = "open_login"
+
+
+ApplicationAction = OpenMovieAction | OpenWatchlistAction | OpenRatingsAction | OpenLoginAction
+
+
 class UiActionEvent(EventModel):
     type: Literal["ui-action"] = "ui-action"
     sequence: int = Field(default=0, ge=0)
-    action: OpenMovieAction
+    action: ApplicationAction
 
 
 class ErrorEvent(EventModel):
@@ -140,4 +164,4 @@ ConciergeEvent = Annotated[
 concierge_event_adapter: TypeAdapter[ConciergeEvent] = TypeAdapter(ConciergeEvent)
 
 
-RunnerEvent = ToolCallEvent | TextEvent | MovieCardEvent | UsageEvent
+RunnerEvent = ToolCallEvent | TextEvent | MovieCardEvent | UsageEvent | UiActionEvent

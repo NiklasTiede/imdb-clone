@@ -20,7 +20,7 @@ class PathScopedTrustedHostMiddleware:
         self._path_prefix = path_prefix
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] == "http" and scope["path"].startswith(self._path_prefix):
+        if scope["type"] in {"http", "websocket"} and scope["path"].startswith(self._path_prefix):
             await self._trusted_app(scope, receive, send)
             return
         await self._app(scope, receive, send)

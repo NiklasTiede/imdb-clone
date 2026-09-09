@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Literal, Self
+from typing import TYPE_CHECKING, Self
 
 import structlog
 from openai import AsyncOpenAI
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import ValidationError
 from pydantic_ai import (
     Agent,
     AgentRunResultEvent,
@@ -26,26 +26,30 @@ from pydantic_ai.exceptions import (
     UnexpectedModelBehavior,
     UsageLimitExceeded,
 )
-from pydantic_ai.mcp import MCPToolset
 from pydantic_ai.models.openai import OpenAIResponsesModel, OpenAIResponsesModelSettings
 from pydantic_ai.providers.openai import OpenAIProvider
 
+from imdb_agent.adapters.catalog_contract import parse_grounded_movies
+from imdb_agent.adapters.personal_tools import PersonalToolGate, base_toolset, personal_policy
 from imdb_agent.concierge.events import (
-    GroundedMovie,
     MovieCardEvent,
+    OpenLoginAction,
+    OpenWatchlistAction,
     RunnerEvent,
     TextEvent,
     ToolCallEvent,
+    UiActionEvent,
     UsageEvent,
     UsageSummary,
 )
+from imdb_agent.concierge.personal import PersonalTurn, receipt_action, requests_watchlist
 from imdb_agent.concierge.policy import (
     SYSTEM_POLICY,
     build_user_prompt,
     select_movies_for_display,
 )
 from imdb_agent.concierge.service import ConciergeRunError
-from imdb_agent.concierge.tools import ToolName
+from imdb_agent.concierge.tools import PERSONAL_TOOLS, ToolName
 
 _LUNA_INPUT_PRICE_PER_MILLION = Decimal("0.20")
 _LUNA_CACHED_INPUT_PRICE_PER_MILLION = Decimal("0.02")
@@ -61,70 +65,13 @@ if TYPE_CHECKING:
     from imdb_agent.settings import RuntimeSecrets, Settings
 
 
-class _ToolModel(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True, strict=True)
-
-
-class _ToolMovie(_ToolModel):
-    movie_id: int = Field(alias="movieId", gt=0)
-    primary_title: str = Field(alias="primaryTitle", min_length=1)
-    original_title: str | None = Field(default=None, alias="originalTitle")
-    type: str
-    start_year: int | None = Field(default=None, alias="startYear")
-    runtime_minutes: int | None = Field(default=None, alias="runtimeMinutes", ge=0)
-    genres: list[str] = Field(default_factory=list)
-    imdb_rating: float | None = Field(default=None, alias="imdbRating", ge=0, le=10)
-    imdb_rating_count: int | None = Field(default=None, alias="imdbRatingCount", ge=0)
-    description: str | None = Field(default=None, max_length=600)
-    poster_image_token: str | None = Field(default=None, alias="posterImageToken")
-    explanation: str | None = Field(default=None, max_length=400)
-
-    def to_grounded(self) -> GroundedMovie:
-        return GroundedMovie(
-            movie_id=self.movie_id,
-            primary_title=self.primary_title,
-            original_title=self.original_title,
-            movie_type=self.type,
-            start_year=self.start_year,
-            runtime_minutes=self.runtime_minutes,
-            genres=tuple(self.genres),
-            imdb_rating=self.imdb_rating,
-            imdb_rating_count=self.imdb_rating_count,
-            description=self.description,
-            poster_image_token=self.poster_image_token,
-            explanation=self.explanation,
-        )
-
-
-class _SearchResult(_ToolModel):
-    schema_version: Literal["1.0"] = Field(alias="schemaVersion")
-    movies: list[_ToolMovie]
-    total_matches: int = Field(alias="totalMatches", ge=0)
-    more_available: bool = Field(alias="moreAvailable")
-
-
-class _DetailsResult(_ToolModel):
-    schema_version: Literal["1.0"] = Field(alias="schemaVersion")
-    movies: list[_ToolMovie]
-    missing_movie_ids: list[int] = Field(alias="missingMovieIds")
-
-
-class _SimilarResult(_ToolModel):
-    schema_version: Literal["1.0"] = Field(alias="schemaVersion")
-    strategy: str
-    movies: list[_ToolMovie]
-
-
-class _TonightResult(_ToolModel):
-    schema_version: Literal["1.0"] = Field(alias="schemaVersion")
-    seed: str
-    movies: list[_ToolMovie]
-
-
 class PydanticAIConciergeRunner:
     """Pydantic AI/OpenAI/MCP Adapter behind the provider-neutral Concierge Interface."""
 
     def __init__(self, *, settings: Settings, secrets: RuntimeSecrets) -> None:
+        self._settings: Settings | None = settings.model_copy(
+            update={"mcp_bearer_token": secrets.mcp_bearer_token}
+        )
         api_key = secrets.openai_api_key.get_secret_value()
         openai_client = AsyncOpenAI(
             api_key=api_key,
@@ -139,22 +86,13 @@ class PydanticAIConciergeRunner:
             max_tokens=settings.max_output_tokens,
             timeout=settings.provider_timeout_seconds,
         )
-        toolset = MCPToolset(
-            settings.mcp_url,
-            headers={"Authorization": f"Bearer {secrets.mcp_bearer_token.get_secret_value()}"},
-            include_return_schema=True,
-            init_timeout=settings.mcp_init_timeout_seconds,
-            max_retries=0,
-            read_timeout=settings.mcp_read_timeout_seconds,
-            tool_error_behavior="failed",
-        )
         self._agent: Agent[None, str] = Agent(
+            deps_type=type(None),
             model=model,
             instructions=SYSTEM_POLICY,
             model_settings=model_settings,
             output_type=str,
             retries=1,
-            toolsets=[toolset],
         )
         self._usage_limits = UsageLimits(
             cost_limit=settings.run_cost_limit_usd,
@@ -180,6 +118,7 @@ class PydanticAIConciergeRunner:
         """Build the Adapter around an injected deterministic Pydantic AI Agent."""
 
         runner = cls.__new__(cls)
+        runner._settings = None
         runner._agent = agent
         runner._usage_limits = usage_limits or UsageLimits(
             request_limit=4,
@@ -192,12 +131,33 @@ class PydanticAIConciergeRunner:
         return runner
 
     async def stream(self, request: RunRequest) -> AsyncIterator[RunnerEvent]:
+        personal = PersonalTurn(
+            movies=next((m.movies for m in reversed(request.history) if m.movies), ())
+        )
+        personal.finalize(request.message)
+        active_agent = self._agent
+        if self._settings is not None:
+            toolset = base_toolset(self._settings)
+            toolset.process_tool_call = PersonalToolGate(request.delegation, personal).call
+            allowed = {name.value for name in ToolName}
+            if request.delegation is None:
+                allowed -= PERSONAL_TOOLS
+            active_agent = Agent(
+                deps_type=type(None),
+                model=self._agent.model,
+                model_settings=self._agent.model_settings,
+                instructions=SYSTEM_POLICY + "\n" + personal_policy(request.delegation is not None),
+                toolsets=[toolset.filtered(lambda _ctx, tool: tool.name in allowed)],
+                retries=1,
+            )
+            active_agent.instrument = False
+        action_sent = False
         shown_movie_ids: set[int] = set()
         tool_arguments: dict[str, dict[str, object]] = {}
         try:
             async with (
                 asyncio.timeout(self._run_timeout_seconds),
-                self._agent.run_stream_events(
+                active_agent.run_stream_events(
                     build_user_prompt(request.message, request.history),
                     conversation_id=request.conversation_id,
                     usage_limits=self._usage_limits,
@@ -212,9 +172,22 @@ class PydanticAIConciergeRunner:
                         tool_arguments[event.tool_call_id] = arguments
                         yield ToolCallEvent(tool=tool_name, arguments=arguments)
                     elif isinstance(event, FunctionToolResultEvent):
-                        if isinstance(event.part, ToolReturnPart):
+                        if (
+                            isinstance(event.part, ToolReturnPart)
+                            and event.part.outcome != "failed"
+                        ):
                             tool_name = _tool_name(event.part.tool_name)
-                            movies = _parse_grounded_movies(tool_name, event.part.content)
+                            if personal.receipt is not None and not action_sent:
+                                action_sent = True
+                                yield UiActionEvent(action=receipt_action(personal.receipt))
+                            elif (
+                                personal.watchlist_read
+                                and requests_watchlist(request.message)
+                                and not action_sent
+                            ):
+                                action_sent = True
+                                yield UiActionEvent(action=OpenWatchlistAction())
+                            movies = parse_grounded_movies(tool_name, event.part.content)
                             for movie in select_movies_for_display(
                                 tool_name,
                                 movies,
@@ -232,6 +205,8 @@ class PydanticAIConciergeRunner:
                         if event.delta.content_delta:
                             yield TextEvent(delta=event.delta.content_delta)
                     elif isinstance(event, AgentRunResultEvent):
+                        if request.delegation is None and requests_watchlist(request.message):
+                            yield UiActionEvent(action=OpenLoginAction())
                         run_usage = event.result.usage
                         estimated_cost, cost_available, cost_basis = resolve_model_cost(
                             model_name=self._model_name,
@@ -300,21 +275,6 @@ def _tool_name(value: str) -> ToolName:
         return ToolName(value)
     except ValueError:
         raise UnexpectedModelBehavior("Unknown MCP tool") from None
-
-
-def _parse_grounded_movies(tool_name: ToolName, content: Any) -> tuple[GroundedMovie, ...]:
-    if not isinstance(content, dict):
-        raise UnexpectedModelBehavior("MCP tool returned non-object content")
-
-    if tool_name is ToolName.SEARCH_MOVIES:
-        result = _SearchResult.model_validate(content)
-    elif tool_name is ToolName.GET_MOVIE_DETAILS:
-        result = _DetailsResult.model_validate(content)
-    elif tool_name is ToolName.GET_SIMILAR_MOVIES:
-        result = _SimilarResult.model_validate(content)
-    elif tool_name is ToolName.GET_TONIGHT_PICKS:
-        result = _TonightResult.model_validate(content)
-    return tuple(movie.to_grounded() for movie in result.movies)
 
 
 def resolve_model_cost(

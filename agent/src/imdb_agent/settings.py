@@ -82,6 +82,12 @@ class Settings(BaseSettings):
     project_cost_limit_usd: Decimal = Field(default=Decimal("20.00"), gt=0, le=20)
     run_cost_limit_usd: Decimal = Field(default=Decimal("0.25"), gt=0, le=1)
     live_evals_enabled: bool = False
+    voice_enabled: bool = False
+    voice_session_seconds: float = Field(default=180.0, ge=15, le=300)
+    voice_max_sessions: int = Field(default=20, ge=1, le=100)
+    voice_allowed_origins: list[str] = Field(
+        default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"]
+    )
     otel_tracing_enabled: bool = False
     otel_exporter_otlp_traces_endpoint: str | None = None
     otel_export_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
@@ -119,6 +125,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_boundaries(self) -> Settings:
+        if self.voice_enabled and self.environment is not DeploymentEnvironment.LOCAL:
+            raise ValueError("voice is currently available only in local development")
         self._validate_otel_endpoint()
         self._validate_profiling_endpoint()
         if self.environment is not DeploymentEnvironment.PRODUCTION:

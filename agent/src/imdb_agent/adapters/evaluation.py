@@ -152,7 +152,7 @@ async def execute_eval_case(runner: ConciergeRunner, case: EvalCase) -> EvalRunO
                 text_parts.append(event.delta)
             elif isinstance(event, MovieCardEvent):
                 movies.append(event.movie)
-            else:
+            elif event.type == "usage":
                 usage = event.usage
     except ConciergeRunError as error:
         error_code = error.code

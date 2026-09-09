@@ -210,6 +210,7 @@ async def test_explicit_open_request_emits_grounded_action_after_current_run_car
     )
     action_event = events[action_index]
     assert isinstance(action_event, UiActionEvent)
+    assert action_event.action.type == "open_movie"
     assert action_event.action.movie_id == 42
     assert card_index < action_index < len(events) - 1
     assert observer.ui_actions == [("open_movie", "emitted")]

@@ -38,6 +38,8 @@ from imdb_agent.concierge.ports import (
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
+    from pydantic import SecretStr
+
 
 class ConciergeRunError(RuntimeError):
     def __init__(self, code: str, safe_message: str, *, retryable: bool) -> None:
@@ -89,7 +91,12 @@ class ConciergeService:
         return await self._conversations.create(client_id)
 
     async def stream_turn(
-        self, *, client_id: str, conversation_id: str, message: str
+        self,
+        *,
+        client_id: str,
+        conversation_id: str,
+        message: str,
+        delegation: SecretStr | None = None,
     ) -> AsyncIterator[ConciergeEvent]:
         started_at = perf_counter()
         sequence = 0
@@ -101,10 +108,20 @@ class ConciergeService:
         capacity_acquired = False
         first_event_observed = False
         ui_action_observed = False
+        runner_action_sent = False
         text_parts: list[str] = []
         movies_by_id: dict[int, GroundedMovie] = {}
         self._observer.started()
         local_response = capability_response(message)
+        if local_response is not None and delegation is not None:
+            local_response = local_response.replace(
+                "five read-only movie tasks", "movie tasks"
+            ).replace(
+                "I cannot change watchlists or ratings or search the web.",
+                "I can read your watchlist, add or remove movies, and set or remove your rating "
+                "after your explicit command. Tell me your rating from 0 to 10. "
+                "Web search is unavailable.",
+            )
 
         def next_event(event: ConciergeEvent) -> ConciergeEvent:
             nonlocal sequence
@@ -131,6 +148,7 @@ class ConciergeService:
                     conversation_id=conversation_id,
                     message=message,
                     history=history,
+                    delegation=delegation,
                 )
                 async for event in self._runner.stream(request):
                     if not first_event_observed:
@@ -139,6 +157,12 @@ class ConciergeService:
                     if isinstance(event, ToolCallEvent):
                         self._observer.tool_called(event.tool)
                         yield next_event(StatusEvent(status=TOOL_STATUSES[event.tool]))
+                        continue
+                    if isinstance(event, UiActionEvent):
+                        runner_action_sent = True
+                        self._observer.ui_action(action=event.action.type, outcome="emitted")
+                        ui_action_observed = True
+                        yield next_event(event)
                         continue
                     if isinstance(event, TextEvent):
                         text_parts.append(event.delta)
@@ -176,13 +200,16 @@ class ConciergeService:
                 message,
                 tuple(movies_by_id.values()),
             )
-            if action_decision.outcome is not UiActionDecisionOutcome.NOT_REQUESTED:
+            if (
+                not runner_action_sent
+                and action_decision.outcome is not UiActionDecisionOutcome.NOT_REQUESTED
+            ):
                 self._observer.ui_action(
                     action="open_movie",
                     outcome=action_decision.outcome,
                 )
                 ui_action_observed = True
-            if action_decision.action is not None:
+            if action_decision.action is not None and not runner_action_sent:
                 yield next_event(UiActionEvent(action=action_decision.action))
         except ConversationNotFoundError:
             metric_outcome = "conversation_not_found"

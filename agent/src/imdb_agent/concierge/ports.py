@@ -7,6 +7,8 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator
     from decimal import Decimal
 
+    from pydantic import SecretStr
+
     from imdb_agent.concierge.events import GroundedMovie, RunnerEvent, UsageSummary
     from imdb_agent.concierge.tools import ToolName
 
@@ -23,6 +25,7 @@ class RunRequest:
     conversation_id: str
     message: str
     history: tuple[ConversationMessage, ...]
+    delegation: SecretStr | None = None
 
 
 class ConciergeRunner(Protocol):

@@ -340,7 +340,7 @@
       "expected_error_code": null,
       "review_criteria": ["Describe catalog search, grounded details, similar movies, constrained Tonight Mode picks, and opening one grounded movie page."],
       "review_risks": ["Advertise account mutations, web search, or voice as available."],
-      "deterministic": {"text": "I can help you with five read-only movie tasks:\n\n- Search this catalog by title, genre, mood, era, or runtime.\n- Show grounded details for movies in the catalog.\n- Find similar movies and explain the connection.\n- Choose up to three constrained picks for tonight.\n- Open one movie page after I resolve it from the catalog.\n\nI cannot change watchlists or ratings, search the web, or use voice yet.", "movie_fixture_ids": []},
+      "deterministic": {"text": "I can help you with five read-only movie tasks:\n\n- Search this catalog by title, genre, mood, era, or runtime.\n- Show grounded details for movies in the catalog.\n- Find similar movies and explain the connection.\n- Choose up to three constrained picks for tonight.\n- Open one movie page after I resolve it from the catalog.\n\nI cannot change watchlists or ratings or search the web.\nFor spoken conversations, use Start voice when it is enabled.", "movie_fixture_ids": []},
       "tags": ["capability-discovery", "unsupported-action"]
     },
     {

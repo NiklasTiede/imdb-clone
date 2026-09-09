@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import hashlib
 import re
 from typing import TYPE_CHECKING, Annotated, Final
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.sse import EventSourceResponse, ServerSentEvent
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from pydantic.alias_generators import to_camel
+
+from imdb_agent.concierge.personal import DelegationRejectedError, DelegationVerifier
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -36,28 +39,51 @@ class MessageRequest(WebModel):
     message: str = Field(min_length=1, max_length=600)
 
 
-def create_concierge_router(service: ConciergeService) -> APIRouter:
+def create_concierge_router(
+    service: ConciergeService, verifier: DelegationVerifier | None = None
+) -> APIRouter:
     router = APIRouter(prefix="/v1", tags=["concierge"])
+
+    async def owner(
+        client_id: Annotated[str, Header(alias="X-Concierge-Client-ID")],
+        delegation: Annotated[str | None, Header(alias="X-Concierge-Delegation")] = None,
+    ) -> str:
+        validated = _validate_client_id(client_id)
+        if delegation is None:
+            return validated
+        if verifier is None or len(delegation) > 1024:
+            raise HTTPException(status_code=401, detail="Sign in again to use your watchlist.")
+        try:
+            binding = await verifier.verify(SecretStr(delegation))
+        except DelegationRejectedError:
+            raise HTTPException(
+                status_code=401, detail="Sign in again to use your watchlist."
+            ) from None
+        return hashlib.sha256(f"{validated}:{binding}".encode()).hexdigest()
 
     async def create_conversation(
         client_id: Annotated[str, Header(alias="X-Concierge-Client-ID")],
+        delegation: Annotated[str | None, Header(alias="X-Concierge-Delegation")] = None,
     ) -> CreateConversationResponse:
-        validated_client_id = _validate_client_id(client_id)
+        validated_client_id = await owner(client_id, delegation)
         conversation_id = await service.create_conversation(validated_client_id)
         return CreateConversationResponse(conversation_id=conversation_id)
+
+    owner_dependency = Depends(owner)
 
     async def send_message(
         conversation_id: Annotated[
             str, Field(pattern=CONVERSATION_ID_PATTERN, min_length=32, max_length=32)
         ],
         request: MessageRequest,
-        client_id: Annotated[str, Header(alias="X-Concierge-Client-ID")],
+        validated_client_id: str = owner_dependency,
+        delegation: Annotated[str | None, Header(alias="X-Concierge-Delegation")] = None,
     ) -> AsyncIterator[ServerSentEvent]:
-        validated_client_id = _validate_client_id(client_id)
         async for event in service.stream_turn(
             client_id=validated_client_id,
             conversation_id=conversation_id,
             message=request.message.strip(),
+            delegation=SecretStr(delegation) if delegation else None,
         ):
             yield ServerSentEvent(
                 data=event,
