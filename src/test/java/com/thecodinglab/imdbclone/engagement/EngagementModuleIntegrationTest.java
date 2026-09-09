@@ -27,6 +27,12 @@ import org.springframework.test.context.jdbc.Sql;
 @Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class EngagementModuleIntegrationTest extends ModulePostgresSupport {
   @Autowired private RatingService ratings;
+  @Autowired private com.thecodinglab.imdbclone.engagement.api.AssistantRatings assistantRatings;
+
+  @Autowired
+  private com.thecodinglab.imdbclone.engagement.api.AssistantWatchlist assistantWatchlist;
+
+  @Autowired private com.thecodinglab.imdbclone.engagement.api.WatchedMovieService watchlist;
   @Autowired private JdbcTemplate jdbc;
   @Autowired private ApplicationContext context;
   @MockitoBean private MovieReferenceService movies;
@@ -69,6 +75,162 @@ class EngagementModuleIntegrationTest extends ModulePostgresSupport {
         .applyRatingAggregateDelta(1L, new BigDecimal("7.0"), 1);
     assertThatThrownBy(() -> ratings.rateMovie(user(), 1L, new RatingScore(new BigDecimal("7.0"))))
         .isInstanceOf(IllegalStateException.class);
+    assertThat(
+            jdbc.queryForObject(
+                "select count(*) from rating where account_id = 2 and movie_id = 1", Integer.class))
+        .isZero();
+  }
+
+  @Test
+  void concurrentAddsCommitOneEntryAndReplayTheSameDurableReceipt() throws Exception {
+    jdbc.update("delete from watched_movie where account_id = 2 and movie_id = 1");
+    // The mapper only forwards the record; persistence validates the real movie FK.
+    org.mockito.Mockito.when(movies.findMovieById(1L)).thenReturn(null);
+    var operation = java.util.UUID.randomUUID();
+    try (var pool = java.util.concurrent.Executors.newFixedThreadPool(6)) {
+      var futures =
+          java.util.stream.IntStream.range(0, 6)
+              .mapToObj(i -> pool.submit(() -> assistantWatchlist.add(2L, 1L, operation)))
+              .toList();
+      var first = futures.getFirst().get();
+      for (var future : futures) assertThat(future.get()).isEqualTo(first);
+      assertThat(first.created()).isTrue();
+    }
+    assertThat(
+            jdbc.queryForObject(
+                "select count(*) from watched_movie where account_id = 2 and movie_id = 1",
+                Integer.class))
+        .isEqualTo(1);
+    assertThat(
+            jdbc.queryForObject(
+                "select count(*) from engagement_action_receipt where account_id = 2 and operation_id = ?",
+                Integer.class,
+                operation))
+        .isEqualTo(1);
+    assertThat(assistantWatchlist.add(2L, 1L, java.util.UUID.randomUUID()).created()).isFalse();
+    assertThatThrownBy(() -> assistantWatchlist.add(2L, 2L, operation))
+        .isInstanceOf(IllegalArgumentException.class);
+    watchlist.deleteWatchedMovie(1L, user());
+    assistantWatchlist.add(2L, 1L, operation);
+    assertThat(
+            jdbc.queryForObject(
+                "select count(*) from watched_movie where account_id = 2 and movie_id = 1",
+                Integer.class))
+        .isZero();
+  }
+
+  @Test
+  void failedCatalogLookupDoesNotPersistAnActionReceipt() {
+    var operation = java.util.UUID.randomUUID();
+    org.mockito.Mockito.when(movies.findMovieById(1L))
+        .thenThrow(new IllegalStateException("synthetic"));
+    assertThatThrownBy(() -> assistantWatchlist.add(2L, 1L, operation))
+        .isInstanceOf(IllegalStateException.class);
+    assertThat(
+            jdbc.queryForObject(
+                "select count(*) from engagement_action_receipt where operation_id = ?",
+                Integer.class,
+                operation))
+        .isZero();
+  }
+
+  @Test
+  void ratingCreateUpdateRemoveReplayAndAccountIsolation() throws Exception {
+    jdbc.update("delete from rating where account_id = 2 and movie_id = 1");
+    var create = java.util.UUID.randomUUID();
+    try (var pool = java.util.concurrent.Executors.newFixedThreadPool(6)) {
+      var futures =
+          java.util.stream.IntStream.range(0, 6)
+              .mapToObj(
+                  i ->
+                      pool.submit(
+                          () -> assistantRatings.rate(2L, 1L, new BigDecimal("8.5"), create)))
+              .toList();
+      var first = futures.getFirst().get();
+      for (var future : futures) assertThat(future.get()).isEqualTo(first);
+      assertThat(first.changed()).isTrue();
+      assertThat(first.previousScore()).isNull();
+    }
+    verify(aggregates).applyRatingAggregateDelta(1L, new BigDecimal("8.5"), 1);
+    var update = assistantRatings.rate(2L, 1L, new BigDecimal("9"), java.util.UUID.randomUUID());
+    assertThat(update.previousScore()).isEqualByComparingTo("8.5");
+    verify(aggregates).applyRatingAggregateDelta(1L, new BigDecimal("0.5"), 0);
+    assertThat(
+            assistantRatings
+                .rate(2L, 1L, new BigDecimal("9.0"), java.util.UUID.randomUUID())
+                .changed())
+        .isFalse();
+    assertThatThrownBy(() -> assistantRatings.rate(2L, 1L, new BigDecimal("7"), create))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> assistantWatchlist.remove(2L, 1L, create))
+        .isInstanceOf(IllegalArgumentException.class);
+    var removal = java.util.UUID.randomUUID();
+    var removed = assistantRatings.remove(2L, 1L, removal);
+    assertThat(removed.previousScore()).isEqualByComparingTo("9");
+    verify(aggregates).applyRatingAggregateDelta(1L, new BigDecimal("-9.0"), -1);
+    assertThat(assistantRatings.remove(2L, 1L, removal)).isEqualTo(removed);
+    assertThat(assistantRatings.remove(2L, 1L, java.util.UUID.randomUUID()).changed()).isFalse();
+    assistantRatings.rate(2L, 1L, new BigDecimal("8.5"), create);
+    assertThat(
+            jdbc.queryForObject(
+                "select count(*) from rating where account_id = 2 and movie_id = 1", Integer.class))
+        .isZero();
+    assistantRatings.rate(2L, 1L, new BigDecimal("6"), java.util.UUID.randomUUID());
+    assistantRatings.remove(2L, 1L, removal);
+    assertThat(
+            jdbc.queryForObject(
+                "select rating from rating where account_id = 2 and movie_id = 1",
+                BigDecimal.class))
+        .isEqualByComparingTo("6");
+    // The same operation ID belongs to a different account and cannot replay another user's
+    // receipt.
+    var other = assistantRatings.rate(1L, 1L, new BigDecimal("7"), create);
+    assertThat(other.score()).isEqualByComparingTo("7");
+    assertThat(
+            jdbc.queryForObject(
+                "select rating from rating where account_id = 2 and movie_id = 1",
+                BigDecimal.class))
+        .isEqualByComparingTo("6");
+  }
+
+  @Test
+  void watchlistRemovalIsIdempotentAndAnOldRemovalCannotDeleteALaterAddition() {
+    assistantWatchlist.add(2L, 1L, java.util.UUID.randomUUID());
+    var operation = java.util.UUID.randomUUID();
+    var removed = assistantWatchlist.remove(2L, 1L, operation);
+    assertThat(removed.changed()).isTrue();
+    assertThat(assistantWatchlist.remove(2L, 1L, operation)).isEqualTo(removed);
+    assertThat(assistantWatchlist.remove(2L, 1L, java.util.UUID.randomUUID()).changed()).isFalse();
+    assistantWatchlist.add(2L, 1L, java.util.UUID.randomUUID());
+    assistantWatchlist.remove(2L, 1L, operation);
+    assertThat(
+            jdbc.queryForObject(
+                "select count(*) from watched_movie where account_id = 2 and movie_id = 1",
+                Integer.class))
+        .isEqualTo(1);
+  }
+
+  @Test
+  void invalidScoresAndAggregateFailuresNeverCommitAReceiptOrPartialRating() {
+    jdbc.update("delete from rating where account_id = 2 and movie_id = 1");
+    for (String score : List.of("-1", "10.1", "8.55")) {
+      assertThatThrownBy(
+              () ->
+                  assistantRatings.rate(2L, 1L, new BigDecimal(score), java.util.UUID.randomUUID()))
+          .isInstanceOf(com.thecodinglab.imdbclone.shared.error.BadRequestException.class);
+    }
+    var operation = java.util.UUID.randomUUID();
+    doThrow(new IllegalStateException("Synthetic Catalog failure"))
+        .when(aggregates)
+        .applyRatingAggregateDelta(1L, new BigDecimal("7.0"), 1);
+    assertThatThrownBy(() -> assistantRatings.rate(2L, 1L, new BigDecimal("7"), operation))
+        .isInstanceOf(IllegalStateException.class);
+    assertThat(
+            jdbc.queryForObject(
+                "select count(*) from engagement_action_receipt where operation_id = ?",
+                Integer.class,
+                operation))
+        .isZero();
     assertThat(
             jdbc.queryForObject(
                 "select count(*) from rating where account_id = 2 and movie_id = 1", Integer.class))

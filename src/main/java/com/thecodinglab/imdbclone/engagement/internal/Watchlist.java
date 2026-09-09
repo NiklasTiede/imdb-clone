@@ -10,6 +10,7 @@ import com.thecodinglab.imdbclone.engagement.api.WatchedMovieService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.WatchedMovieMapper;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovie;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchedMovieRepository;
+import com.thecodinglab.imdbclone.engagement.internal.persistence.WatchlistAccountLock;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
 import com.thecodinglab.imdbclone.shared.api.ResourceWriteResult;
@@ -33,6 +34,7 @@ public class Watchlist implements WatchedMovieService {
 
   private static final Logger logger = LoggerFactory.getLogger(Watchlist.class);
 
+  private final WatchlistAccountLock accountLock;
   private final WatchedMovieRepository watchedMovieRepository;
   private final MovieReferenceService movieReferenceService;
   private final WatchedMovieMapper watchedMovieMapper;
@@ -40,7 +42,9 @@ public class Watchlist implements WatchedMovieService {
   public Watchlist(
       WatchedMovieRepository watchedMovieRepository,
       MovieReferenceService movieReferenceService,
-      WatchedMovieMapper watchedMovieMapper) {
+      WatchedMovieMapper watchedMovieMapper,
+      WatchlistAccountLock accountLock) {
+    this.accountLock = accountLock;
     this.watchedMovieRepository = watchedMovieRepository;
     this.movieReferenceService = movieReferenceService;
     this.watchedMovieMapper = watchedMovieMapper;
@@ -50,14 +54,19 @@ public class Watchlist implements WatchedMovieService {
   @Transactional
   public ResourceWriteResult<WatchedMovieRecord> watchMovie(
       Long movieId, UserPrincipal currentAccount) {
+    return addForAccount(movieId, currentAccount.getId());
+  }
+
+  @Transactional
+  public ResourceWriteResult<WatchedMovieRecord> addForAccount(Long movieId, Long accountId) {
+    accountLock.acquire(accountId);
     MovieRecord movie = movieReferenceService.findMovieById(movieId);
-    var existing =
-        watchedMovieRepository.findByIdMovieIdAndIdAccountId(movieId, currentAccount.getId());
+    var existing = watchedMovieRepository.findByIdMovieIdAndIdAccountId(movieId, accountId);
     if (existing.isPresent()) {
       return new ResourceWriteResult<>(
           watchedMovieMapper.entityToDTO(existing.get(), movie), false);
     }
-    WatchedMovie watchedMovie = WatchedMovie.create(movieId, currentAccount.getId());
+    WatchedMovie watchedMovie = WatchedMovie.create(movieId, accountId);
     WatchedMovie savedWatchedMovie = watchedMovieRepository.saveAndFlush(watchedMovie);
     logger.info(
         "Movie with [{}] is watched by account with id [{}].",
@@ -103,9 +112,19 @@ public class Watchlist implements WatchedMovieService {
         content, page, size, totalElements, totalPages, watchedMovies.isLast());
   }
 
+  @Transactional
+  public boolean removeForAccount(Long movieId, Long accountId) {
+    accountLock.acquire(accountId);
+    var existing = watchedMovieRepository.findByIdMovieIdAndIdAccountId(movieId, accountId);
+    if (existing.isEmpty()) return false;
+    watchedMovieRepository.delete(existing.get());
+    return true;
+  }
+
   @Override
   @Transactional
   public MessageResponse deleteWatchedMovie(Long movieId, UserPrincipal currentAccount) {
+    accountLock.acquire(currentAccount.getId());
     WatchedMovie watchedMovie =
         watchedMovieRepository
             .findByIdMovieIdAndIdAccountId(movieId, currentAccount.getId())

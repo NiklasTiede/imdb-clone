@@ -69,6 +69,15 @@ class McpProtocolContractTest {
   @Autowired private CapturingMovieSearch movieSearch;
   @Autowired private ApplicationContext applicationContext;
 
+  @org.springframework.test.context.bean.override.mockito.MockitoBean
+  private com.thecodinglab.imdbclone.identity.api.ConciergeDelegation delegation;
+
+  @org.springframework.test.context.bean.override.mockito.MockitoBean
+  private com.thecodinglab.imdbclone.engagement.api.AssistantWatchlist personalWatchlist;
+
+  @org.springframework.test.context.bean.override.mockito.MockitoBean
+  private com.thecodinglab.imdbclone.engagement.api.AssistantRatings personalRatings;
+
   @BeforeEach
   void resetMovieSearch() {
     movieSearch.reset();
@@ -106,11 +115,11 @@ class McpProtocolContractTest {
   }
 
   @Test
-  void toolsListPublishesOnlyTheFourBoundedReadOnlyMovieContracts() throws Exception {
+  void toolsListPublishesBoundedCatalogAndDelegatedWatchlistContracts() throws Exception {
     mockMvc
         .perform(authenticatedMcpRequest(toolsListRequest()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.result.tools.length()").value(4))
+        .andExpect(jsonPath("$.result.tools.length()").value(10))
         .andExpect(
             jsonPath("$.result.tools[*].name")
                 .value(
@@ -118,12 +127,20 @@ class McpProtocolContractTest {
                         "search_movies",
                         "get_movie_details",
                         "get_similar_movies",
-                        "get_tonight_picks")))
+                        "get_tonight_picks",
+                        "get_my_context",
+                        "get_my_watchlist",
+                        "add_movie_to_my_watchlist",
+                        "remove_movie_from_my_watchlist",
+                        "set_my_movie_rating",
+                        "remove_my_movie_rating")))
         .andExpect(
-            jsonPath("$.result.tools[*].annotations.readOnlyHint")
+            jsonPath(
+                    "$.result.tools[?(@.name =~ /get_.*/ || @.name == 'search_movies')].annotations.readOnlyHint")
                 .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(true))))
         .andExpect(
-            jsonPath("$.result.tools[*].annotations.destructiveHint")
+            jsonPath(
+                    "$.result.tools[?(@.name =~ /get_.*/ || @.name == 'search_movies' || @.name == 'add_movie_to_my_watchlist')].annotations.destructiveHint")
                 .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(false))))
         .andExpect(
             jsonPath("$.result.tools[*].annotations.openWorldHint")
@@ -207,6 +224,111 @@ class McpProtocolContractTest {
           }
         }
         """;
+  }
+
+  @Test
+  void personalToolSchemaExcludesCredentialsActorsAndOperationIds() throws Exception {
+    mockMvc
+        .perform(authenticatedMcpRequest(toolsListRequest()))
+        .andExpect(status().isOk())
+        .andExpect(
+            jsonPath(
+                    "$.result.tools[?(@.name == 'add_movie_to_my_watchlist')].inputSchema.properties.movieId")
+                .exists())
+        .andExpect(jsonPath("$.result.tools[*].inputSchema.properties.delegation").doesNotExist())
+        .andExpect(jsonPath("$.result.tools[*].inputSchema.properties.operationId").doesNotExist())
+        .andExpect(jsonPath("$.result.tools[*].inputSchema.properties.accountId").doesNotExist());
+  }
+
+  @Test
+  void workloadCredentialsAloneCannotMutateAWatchlist() throws Exception {
+    org.mockito.Mockito.when(delegation.verify(null, "watchlist:add"))
+        .thenThrow(new org.springframework.security.access.AccessDeniedException("Sign in again"));
+    mockMvc
+        .perform(
+            authenticatedMcpRequest(
+                """
+        {"jsonrpc":"2.0","id":9,"method":"tools/call","params":{
+          "name":"add_movie_to_my_watchlist","arguments":{"movieId":42}}}
+        """))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.result.isError").value(true));
+    org.mockito.Mockito.verifyNoInteractions(personalWatchlist);
+  }
+
+  @Test
+  void metadataDelegationDeterminesTheAccountAndCommittedReceipt() throws Exception {
+    var operation = java.util.UUID.randomUUID();
+    org.mockito.Mockito.when(delegation.verify("synthetic-delegation", "watchlist:add"))
+        .thenReturn(
+            new com.thecodinglab.imdbclone.identity.api.ConciergeDelegation.Actor(7L, "binding"));
+    org.mockito.Mockito.when(personalWatchlist.add(7L, 42L, operation))
+        .thenReturn(
+            new com.thecodinglab.imdbclone.engagement.api.AssistantWatchlist.Receipt(
+                operation, 42L, true, java.time.Instant.parse("2026-09-09T12:00:00Z")));
+    mockMvc
+        .perform(
+            authenticatedMcpRequest(
+                """
+        {"jsonrpc":"2.0","id":9,"method":"tools/call","params":{
+          "name":"add_movie_to_my_watchlist","arguments":{"movieId":42},
+          "_meta":{"delegation":"synthetic-delegation","operationId":"%s"}}}
+        """
+                    .formatted(operation)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.result.structuredContent.created").value(true))
+        .andExpect(jsonPath("$.result.structuredContent.movieId").value(42));
+    org.mockito.Mockito.verify(personalWatchlist).add(7L, 42L, operation);
+  }
+
+  @Test
+  void personalMutationToolsRequireTheirOwnDelegationScopeAndPassTheExplicitScore()
+      throws Exception {
+    var operation = java.util.UUID.randomUUID();
+    for (String tool :
+        List.of(
+            "remove_movie_from_my_watchlist", "set_my_movie_rating", "remove_my_movie_rating")) {
+      mockMvc
+          .perform(
+              authenticatedMcpRequest(
+                  """
+          {"jsonrpc":"2.0","id":19,"method":"tools/call","params":{
+            "name":"%s","arguments":{"movieId":42,"score":8.5}}}
+          """
+                      .formatted(tool)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.result.isError").value(true));
+    }
+    org.mockito.Mockito.verifyNoInteractions(personalWatchlist, personalRatings);
+    org.mockito.Mockito.when(delegation.verify("synthetic-delegation", "ratings:set"))
+        .thenReturn(
+            new com.thecodinglab.imdbclone.identity.api.ConciergeDelegation.Actor(7L, "binding"));
+    org.mockito.Mockito.when(
+            personalRatings.rate(7L, 42L, new java.math.BigDecimal("8.5"), operation))
+        .thenReturn(
+            new com.thecodinglab.imdbclone.engagement.api.AssistantActionReceipt(
+                operation,
+                42L,
+                "rating_set",
+                true,
+                new java.math.BigDecimal("8.5"),
+                null,
+                java.time.Instant.now()));
+    mockMvc
+        .perform(
+            authenticatedMcpRequest(
+                """
+        {"jsonrpc":"2.0","id":20,"method":"tools/call","params":{
+          "name":"set_my_movie_rating","arguments":{"movieId":42,"score":8.5},
+          "_meta":{"delegation":"synthetic-delegation","operationId":"%s"}}}
+        """
+                    .formatted(operation)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.result.isError").value(false))
+        .andExpect(jsonPath("$.result.structuredContent.score").value(8.5))
+        .andExpect(jsonPath("$.result.structuredContent.kind").value("rating_set"));
+    org.mockito.Mockito.verify(personalRatings)
+        .rate(7L, 42L, new java.math.BigDecimal("8.5"), operation);
   }
 
   private static String toolsListRequest() {

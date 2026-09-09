@@ -61,17 +61,21 @@ public class Ratings implements RatingService, AccountEngagementLifecycle {
   @Transactional
   public ResourceWriteResult<RatingRecord> rateMovie(
       UserPrincipal currentAccount, Long movieId, RatingScore score) {
-    accountLock.acquire(currentAccount.getId());
+    return rateForAccount(currentAccount.getId(), movieId, score);
+  }
+
+  @Transactional
+  public ResourceWriteResult<RatingRecord> rateForAccount(
+      Long accountId, Long movieId, RatingScore score) {
+    accountLock.acquire(accountId);
     movieReferenceService.findMovieById(movieId);
     Rating existingRating =
-        ratingRepository
-            .findByIdAccountIdAndIdMovieId(currentAccount.getId(), movieId)
-            .orElse(null);
+        ratingRepository.findByIdAccountIdAndIdMovieId(accountId, movieId).orElse(null);
     BigDecimal scoreValue = score.value();
     BigDecimal ratingSumDelta =
         existingRating == null ? scoreValue : scoreValue.subtract(existingRating.getRating());
     int ratingCountDelta = existingRating == null ? 1 : 0;
-    Rating rating = Rating.create(scoreValue, movieId, currentAccount.getId());
+    Rating rating = Rating.create(scoreValue, movieId, accountId);
     Rating savedRating = ratingRepository.save(rating);
     movieRatingAggregateService.applyRatingAggregateDelta(
         movieId, ratingSumDelta, ratingCountDelta);
@@ -117,6 +121,16 @@ public class Ratings implements RatingService, AccountEngagementLifecycle {
           "Account with id [%d] has no permission to delete this resource."
               .formatted(currentAccount.getId()));
     }
+  }
+
+  @Transactional
+  public BigDecimal removeForAccount(Long accountId, Long movieId) {
+    accountLock.acquire(accountId);
+    var rating = ratingRepository.findByIdAccountIdAndIdMovieId(accountId, movieId).orElse(null);
+    if (rating == null) return null;
+    ratingRepository.delete(rating);
+    movieRatingAggregateService.applyRatingAggregateDelta(movieId, rating.getRating().negate(), -1);
+    return rating.getRating();
   }
 
   @Override
