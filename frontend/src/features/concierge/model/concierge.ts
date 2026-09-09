@@ -48,11 +48,36 @@ const openMovieActionSchema = zod
   })
   .strict();
 
+export const applicationActionSchema = zod.discriminatedUnion("type", [
+  openMovieActionSchema,
+  zod
+    .object({
+      type: zod.literal("open_watchlist"),
+      operationId: zod.string().uuid().nullable().optional(),
+      movieId: zod.number().int().positive().nullable().optional(),
+      created: zod.boolean().nullable().optional(),
+      removed: zod.boolean().nullable().optional(),
+    })
+    .strict(),
+  zod
+    .object({
+      type: zod.literal("open_ratings"),
+      operationId: zod.string().uuid(),
+      movieId: zod.number().int().positive(),
+      changed: zod.boolean(),
+      score: zod.number().min(0).max(10).nullable().default(null),
+      previousScore: zod.number().min(0).max(10).nullable().default(null),
+    })
+    .strict(),
+  zod.object({ type: zod.literal("open_login") }).strict(),
+]);
+export type ApplicationAction = zod.infer<typeof applicationActionSchema>;
+
 const uiActionEventSchema = zod
   .object({
     type: zod.literal("ui-action"),
     sequence: zod.number().int().nonnegative(),
-    action: openMovieActionSchema,
+    action: applicationActionSchema,
   })
   .strict();
 

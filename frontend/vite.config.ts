@@ -12,6 +12,7 @@ export default defineConfig({
       },
       "/concierge-api": {
         target: "http://localhost:8090",
+        ws: true,
         rewrite: (path) => path.replace(/^\/concierge-api/, ""),
       },
       "/oauth2": {

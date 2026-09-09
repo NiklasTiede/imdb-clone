@@ -1,4 +1,5 @@
 import {
+  ConciergeDelegationControllerApi,
   AccountEngagementControllerApi,
   AccountControllerApi,
   AuthenticationControllerApi,
@@ -80,6 +81,12 @@ export const fileStorageApi = new FileStorageControllerApi(
 );
 
 export const passkeyManagementApi = new PasskeyManagementControllerApi(
+  moviesApiClientConfig,
+  undefined,
+  apiHttpClient,
+);
+
+export const conciergeDelegationApi = new ConciergeDelegationControllerApi(
   moviesApiClientConfig,
   undefined,
   apiHttpClient,

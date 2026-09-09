@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@mui/material";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -67,12 +68,14 @@ const LocationProbe = () => {
 
 const renderExperience = () =>
   (unmountExperience = render(
-    <ThemeProvider theme={appTheme}>
-      <MemoryRouter>
-        <ConciergeExperience />
-        <LocationProbe />
-      </MemoryRouter>
-    </ThemeProvider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <ThemeProvider theme={appTheme}>
+        <MemoryRouter>
+          <ConciergeExperience />
+          <LocationProbe />
+        </MemoryRouter>
+      </ThemeProvider>
+    </QueryClientProvider>,
   ).unmount);
 
 describe("ConciergeExperience", () => {

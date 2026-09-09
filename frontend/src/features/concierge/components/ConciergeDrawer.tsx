@@ -18,19 +18,24 @@ import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { movieColors } from "../../../theme";
 import { useConciergeChat } from "../hooks/useConciergeChat";
-import type { ChatTurn, OpenMovieAction } from "../model/concierge";
+import type { ChatTurn, ApplicationAction } from "../model/concierge";
 import ConciergeEmptyState from "./ConciergeEmptyState";
 import ConciergeMovieCard from "./ConciergeMovieCard";
 
+import type { ConciergeVoice } from "../hooks/useConciergeVoice";
+import { ConciergeVoicePanel } from "./ConciergeVoicePanel";
+
 type ConciergeDrawerProps = {
+  voice: ConciergeVoice;
   clientId: string;
   onClose: () => void;
-  onUiAction: (action: OpenMovieAction) => void;
+  onUiAction: (action: ApplicationAction) => void;
   open: boolean;
 };
 
 const ConciergeDrawer = ({
   clientId,
+  voice,
   onClose,
   onUiAction,
   open,
@@ -129,7 +134,10 @@ const ConciergeDrawer = ({
               <IconButton
                 aria-label="Start a new concierge conversation"
                 disabled={isStreaming}
-                onClick={reset}
+                onClick={() => {
+                  voice.end();
+                  reset();
+                }}
                 size="small"
                 sx={{ color: "text.secondary" }}
               >
@@ -147,12 +155,18 @@ const ConciergeDrawer = ({
           </IconButton>
         </Stack>
 
+        <ConciergeVoicePanel voice={voice} disabled={isStreaming} />
         <Box
           ref={scrollRef}
           role="log"
           aria-live="polite"
           aria-label="Movie Concierge conversation"
-          sx={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain" }}
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            overscrollBehavior: "contain",
+            display: voice.active ? "none" : "block",
+          }}
         >
           {turns.length === 0 ? (
             <ConciergeEmptyState onPrompt={submit} />
@@ -190,6 +204,7 @@ const ConciergeDrawer = ({
             submit(draft);
           }}
           sx={{
+            display: voice.active ? "none" : "block",
             bgcolor: alpha(movieColors.surface, 0.94),
             borderTop: `1px solid ${alpha("#ffffff", 0.08)}`,
             p: 1.5,
