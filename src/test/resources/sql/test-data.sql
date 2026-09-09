@@ -1,3 +1,8 @@
+delete from media_retired_token;
+delete from movie_search_reindex_job;
+delete from movie_projection_work;
+delete from notification_delivery;
+delete from media_object_work;
 delete from scheduled_tasks;
 delete from comment;
 delete from watched_movie;

@@ -7,8 +7,10 @@ import com.thecodinglab.imdbclone.shared.persistence.DateAudit;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
+@DynamicUpdate
 public class Movie extends DateAudit {
 
   @Id

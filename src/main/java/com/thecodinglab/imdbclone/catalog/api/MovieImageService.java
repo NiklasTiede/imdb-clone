@@ -10,4 +10,6 @@ public interface MovieImageService {
   MovieImageToken updateMovieImageToken(Long movieId, String posterImageToken);
 
   void clearMovieImageToken(Long movieId);
+
+  boolean isMovieImageTokenReferenced(String token);
 }

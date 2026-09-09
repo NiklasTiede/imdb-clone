@@ -1,6 +1,7 @@
 package com.thecodinglab.imdbclone.media.internal;
 
 import java.net.URI;
+import java.time.Duration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -21,7 +22,15 @@ public class ObjectStorageClientConfig {
         .region(Region.US_EAST_1)
         .credentialsProvider(credentialsProvider(properties))
         .forcePathStyle(true)
-        .httpClientBuilder(UrlConnectionHttpClient.builder())
+        .overrideConfiguration(
+            configuration ->
+                configuration
+                    .apiCallTimeout(Duration.ofSeconds(45))
+                    .apiCallAttemptTimeout(Duration.ofSeconds(20)))
+        .httpClientBuilder(
+            UrlConnectionHttpClient.builder()
+                .connectionTimeout(Duration.ofSeconds(5))
+                .socketTimeout(Duration.ofSeconds(20)))
         .build();
   }
 

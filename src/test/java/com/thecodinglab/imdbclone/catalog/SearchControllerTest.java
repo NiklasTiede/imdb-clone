@@ -20,7 +20,6 @@ import com.thecodinglab.imdbclone.catalog.internal.search.OpenSearchMovieSearchS
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocument;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchDocumentRepository;
 import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchEmbeddingTextBuilder;
-import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchIndexMaintenance;
 import com.thecodinglab.imdbclone.support.BaseControllerIntegrationTest;
 import java.util.Collections;
 import java.util.Map;
@@ -37,6 +36,14 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 class SearchControllerTest extends BaseControllerIntegrationTest {
 
+  @Autowired
+  private com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchReindexJobs
+      reindexJobs;
+
+  @Autowired
+  private com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchReindexWorker
+      reindexWorker;
+
   @Autowired private RestTestClient restTestClient;
 
   @Autowired private MockMvc mockMvc;
@@ -44,8 +51,6 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
   @Autowired private MovieRepository movieRepository;
 
   @Autowired private MovieSearchDocumentRepository movieSearchRepository;
-
-  @Autowired private MovieSearchIndexMaintenance movieSearchIndexMaintenance;
 
   @Autowired private OpenSearchMovieSearchService movieSearchService;
 
@@ -57,7 +62,7 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
 
   @BeforeEach
   void indexSeedMovies() {
-    movieSearchIndexMaintenance.reindexMovies();
+    com.thecodinglab.imdbclone.support.SearchIndexFixture.rebuild(reindexJobs, reindexWorker);
   }
 
   @Test
@@ -212,6 +217,7 @@ class SearchControllerTest extends BaseControllerIntegrationTest {
   private MovieSearchReindexJobResponse awaitCompletedReindex(UUID jobId) throws Exception {
     MovieSearchReindexJobResponse latestJob = null;
     for (int attempt = 0; attempt < 50; attempt++) {
+      reindexWorker.recoverPending();
       latestJob =
           objectMapper.readValue(
               mockMvc

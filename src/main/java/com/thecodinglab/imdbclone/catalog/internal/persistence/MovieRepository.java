@@ -13,6 +13,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface MovieRepository extends JpaRepository<Movie, Long> {
 
+  boolean existsByPosterImageToken(String token);
+
   Page<Movie> findByIdIn(List<Long> movieIds, Pageable pageable);
 
   List<Movie> findByIdIn(Collection<Long> movieIds);

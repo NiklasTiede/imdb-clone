@@ -18,23 +18,25 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class MovieSearchProjectionTasksTest {
 
   @Mock private SchedulerClient schedulerClient;
+  @Mock private MovieSearchProjectionWork work;
 
   private MovieSearchProjectionTasks tasks;
 
   @BeforeEach
   void setUp() {
-    tasks = new MovieSearchProjectionTasks(schedulerClient);
+    tasks = new MovieSearchProjectionTasks(schedulerClient, work);
   }
 
   @Test
-  void enqueueUpsert_reschedulesCoalescedMovieProjectionTask() {
+  void enqueueUpsertRecordsChangeAndKeepsAnyExistingWakeup() {
     ArgumentCaptor<SchedulableInstance<MovieSearchProjectionTaskData>> taskCaptor =
         scheduledTaskCaptor();
 
     tasks.enqueueUpsert(42L);
 
+    verify(work).changed(42L);
     verify(schedulerClient)
-        .schedule(taskCaptor.capture(), eq(ScheduleOptions.WHEN_EXISTS_RESCHEDULE));
+        .schedule(taskCaptor.capture(), eq(ScheduleOptions.WHEN_EXISTS_DO_NOTHING));
     var scheduledTask = taskCaptor.getValue();
     assertThat(scheduledTask.getTaskName()).isEqualTo(MovieSearchProjectionTasks.TASK_NAME);
     assertThat(scheduledTask.getId()).isEqualTo("42");
@@ -43,14 +45,15 @@ class MovieSearchProjectionTasksTest {
   }
 
   @Test
-  void enqueueDelete_reschedulesSameMovieProjectionTaskWithDeleteOperation() {
+  void enqueueDeleteRecordsChangeAndKeepsAnyExistingWakeup() {
     ArgumentCaptor<SchedulableInstance<MovieSearchProjectionTaskData>> taskCaptor =
         scheduledTaskCaptor();
 
     tasks.enqueueDelete(42L);
 
+    verify(work).changed(42L);
     verify(schedulerClient)
-        .schedule(taskCaptor.capture(), eq(ScheduleOptions.WHEN_EXISTS_RESCHEDULE));
+        .schedule(taskCaptor.capture(), eq(ScheduleOptions.WHEN_EXISTS_DO_NOTHING));
     var scheduledTask = taskCaptor.getValue();
     assertThat(scheduledTask.getTaskName()).isEqualTo(MovieSearchProjectionTasks.TASK_NAME);
     assertThat(scheduledTask.getId()).isEqualTo("42");

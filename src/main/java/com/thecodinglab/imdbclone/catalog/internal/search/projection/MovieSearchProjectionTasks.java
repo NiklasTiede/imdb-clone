@@ -6,8 +6,10 @@ import com.github.kagkarlsson.scheduler.task.TaskDescriptor;
 import java.time.Instant;
 import java.util.Objects;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class MovieSearchProjectionTasks {
 
   static final String TASK_NAME = "movie-search-projection";
@@ -15,17 +17,26 @@ public class MovieSearchProjectionTasks {
       TaskDescriptor.of(TASK_NAME, MovieSearchProjectionTaskData.class);
 
   private final SchedulerClient schedulerClient;
+  private final MovieSearchProjectionWork work;
 
-  public MovieSearchProjectionTasks(SchedulerClient schedulerClient) {
+  public MovieSearchProjectionTasks(
+      SchedulerClient schedulerClient, MovieSearchProjectionWork work) {
+    this.work = work;
     this.schedulerClient = schedulerClient;
   }
 
   public void enqueueUpsert(Long movieId) {
+    work.changed(movieId);
     schedule(movieId, MovieSearchProjectionOperation.UPSERT);
   }
 
   public void enqueueDelete(Long movieId) {
+    work.changed(movieId);
     schedule(movieId, MovieSearchProjectionOperation.DELETE);
+  }
+
+  public void ensureScheduled(Long movieId) {
+    schedule(movieId, MovieSearchProjectionOperation.UPSERT);
   }
 
   private void schedule(Long movieId, MovieSearchProjectionOperation operation) {
@@ -35,6 +46,6 @@ public class MovieSearchProjectionTasks {
             .instance(requiredMovieId.toString())
             .data(new MovieSearchProjectionTaskData(operation))
             .scheduledTo(Instant.now()),
-        ScheduleOptions.WHEN_EXISTS_RESCHEDULE);
+        ScheduleOptions.WHEN_EXISTS_DO_NOTHING);
   }
 }

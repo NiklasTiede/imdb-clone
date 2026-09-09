@@ -25,7 +25,13 @@ class DatabaseSchemaTest extends BaseContainers {
             "5:create webauthn tables",
             "6:create discovery events",
             "7:use varchar for discovery hashes",
-            "8:persist movie discovery theme embeddings");
+            "8:persist movie discovery theme embeddings",
+            "9:create media object work",
+            "10:create notification delivery",
+            "11:create movie projection work",
+            "12:create movie search reindex job",
+            "13:reconcile historical rating aggregates",
+            "14:retain retired media tokens");
   }
 
   @Test

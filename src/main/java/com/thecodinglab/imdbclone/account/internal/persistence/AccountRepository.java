@@ -17,6 +17,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
   Boolean existsByEmail(String email);
 
+  boolean existsByImageUrlToken(String token);
+
   default Account getAccount(UserPrincipal currentUser) {
     return getAccountByUsername(currentUser.getUsername());
   }

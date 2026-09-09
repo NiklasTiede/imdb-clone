@@ -2,7 +2,7 @@
     id = "media",
     displayName = "Media",
     allowedDependencies = {
-      "account::api",
+      "account::media",
       "account::events",
       "catalog::events",
       "catalog::media",

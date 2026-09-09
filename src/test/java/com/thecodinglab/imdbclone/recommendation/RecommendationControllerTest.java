@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchIndexMaintenance;
 import com.thecodinglab.imdbclone.support.BaseControllerIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,13 +19,21 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 class RecommendationControllerTest extends BaseControllerIntegrationTest {
 
   @Autowired private RestTestClient restTestClient;
-  @Autowired private MovieSearchIndexMaintenance movieSearchIndexMaintenance;
+
+  @Autowired
+  private com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchReindexJobs
+      reindexJobs;
+
+  @Autowired
+  private com.thecodinglab.imdbclone.catalog.internal.search.index.MovieSearchReindexWorker
+      reindexWorker;
+
   @Autowired private MockMvc mockMvc;
   @Autowired private JdbcTemplate jdbcTemplate;
 
   @BeforeEach
   void indexSeedMovies() {
-    movieSearchIndexMaintenance.reindexMovies();
+    com.thecodinglab.imdbclone.support.SearchIndexFixture.rebuild(reindexJobs, reindexWorker);
   }
 
   @Test

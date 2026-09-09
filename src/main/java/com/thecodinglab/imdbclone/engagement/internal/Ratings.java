@@ -6,11 +6,13 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 
 import com.thecodinglab.imdbclone.catalog.api.MovieRatingAggregateService;
 import com.thecodinglab.imdbclone.catalog.api.MovieReferenceService;
+import com.thecodinglab.imdbclone.engagement.api.AccountEngagementLifecycle;
 import com.thecodinglab.imdbclone.engagement.api.RatingRecord;
 import com.thecodinglab.imdbclone.engagement.api.RatingScore;
 import com.thecodinglab.imdbclone.engagement.api.RatingService;
 import com.thecodinglab.imdbclone.engagement.internal.mapper.RatingMapper;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.Rating;
+import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingAccountLock;
 import com.thecodinglab.imdbclone.engagement.internal.persistence.RatingRepository;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
@@ -19,6 +21,7 @@ import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,32 +31,37 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class Ratings implements RatingService {
+public class Ratings implements RatingService, AccountEngagementLifecycle {
 
   private static final Logger logger = LoggerFactory.getLogger(Ratings.class);
   private final MovieReferenceService movieReferenceService;
   private final MovieRatingAggregateService movieRatingAggregateService;
   private final RatingRepository ratingRepository;
   private final RatingMapper ratingMapper;
+  private final RatingAccountLock accountLock;
 
   public Ratings(
       MovieReferenceService movieReferenceService,
       MovieRatingAggregateService movieRatingAggregateService,
       RatingRepository ratingRepository,
-      RatingMapper ratingMapper) {
+      RatingMapper ratingMapper,
+      RatingAccountLock accountLock) {
     this.movieReferenceService = movieReferenceService;
     this.movieRatingAggregateService = movieRatingAggregateService;
     this.ratingRepository = ratingRepository;
     this.ratingMapper = ratingMapper;
+    this.accountLock = accountLock;
   }
 
   @Override
   @Transactional
   public ResourceWriteResult<RatingRecord> rateMovie(
       UserPrincipal currentAccount, Long movieId, RatingScore score) {
+    accountLock.acquire(currentAccount.getId());
     movieReferenceService.findMovieById(movieId);
     Rating existingRating =
         ratingRepository
@@ -86,6 +94,7 @@ public class Ratings implements RatingService {
   @Override
   @Transactional
   public MessageResponse deleteRating(UserPrincipal currentAccount, Long movieId) {
+    accountLock.acquire(currentAccount.getId());
     Rating rating =
         ratingRepository
             .findByIdAccountIdAndIdMovieId(currentAccount.getId(), movieId)
@@ -107,6 +116,22 @@ public class Ratings implements RatingService {
       throw new AccessDeniedException(
           "Account with id [%d] has no permission to delete this resource."
               .formatted(currentAccount.getId()));
+    }
+  }
+
+  @Override
+  @Transactional(propagation = Propagation.MANDATORY)
+  public void removeAccountRatings(Long accountId) {
+    accountLock.acquire(accountId);
+    // A stable movie order avoids opposing lock order when two accounts are removed concurrently.
+    var accountRatings =
+        ratingRepository.findAllByIdAccountId(accountId).stream()
+            .sorted(Comparator.comparing(Rating::getMovieId))
+            .toList();
+    for (Rating rating : accountRatings) {
+      ratingRepository.delete(rating);
+      movieRatingAggregateService.applyRatingAggregateDelta(
+          rating.getMovieId(), rating.getRating().negate(), -1);
     }
   }
 }

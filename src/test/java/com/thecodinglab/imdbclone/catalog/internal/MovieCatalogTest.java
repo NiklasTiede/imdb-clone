@@ -31,6 +31,7 @@ class MovieCatalogTest {
   @Mock private MovieMapper movieMapper;
   @Mock private MovieSearchProjectionTasks movieSearchProjectionTasks;
   @Mock private ApplicationEventPublisher events;
+  @Mock private jakarta.persistence.EntityManager entityManager;
 
   private MovieCatalog movieCatalog;
 
@@ -38,7 +39,12 @@ class MovieCatalogTest {
   void setUp() {
     movieCatalog =
         new MovieCatalog(
-            movieRepository, movieSearchDao, movieMapper, movieSearchProjectionTasks, events);
+            movieRepository,
+            movieSearchDao,
+            movieMapper,
+            movieSearchProjectionTasks,
+            events,
+            entityManager);
   }
 
   @Test

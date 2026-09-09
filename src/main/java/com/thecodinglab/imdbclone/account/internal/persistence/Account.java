@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 
 @Entity
+@org.hibernate.annotations.DynamicUpdate
 @Table(
     uniqueConstraints = {
       @UniqueConstraint(columnNames = {"username"}),
