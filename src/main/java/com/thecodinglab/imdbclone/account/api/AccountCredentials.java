@@ -1,7 +1,9 @@
 package com.thecodinglab.imdbclone.account.api;
 
 import java.util.List;
+import org.springframework.modulith.NamedInterface;
 
+@NamedInterface("identity")
 public record AccountCredentials(
     Long id,
     String firstName,

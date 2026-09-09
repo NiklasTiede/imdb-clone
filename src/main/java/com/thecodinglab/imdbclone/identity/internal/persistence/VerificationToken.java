@@ -1,5 +1,6 @@
 package com.thecodinglab.imdbclone.identity.internal.persistence;
 
+import com.thecodinglab.imdbclone.shared.error.BadRequestException;
 import jakarta.persistence.*;
 import java.time.Instant;
 
@@ -38,6 +39,21 @@ public class VerificationToken {
   }
 
   public VerificationToken() {}
+
+  /** Applies the single-use transition; callers serialize it in the account-change transaction. */
+  public void consume(VerificationTypeEnum expectedPurpose, Instant now) {
+    if (verificationType != expectedPurpose
+        || !now.isBefore(expiryDateInUtc)
+        || consumedAtInUtc != null
+        || (expectedPurpose == VerificationTypeEnum.EMAIL_CONFIRMATION
+            && confirmedAtInUtc != null)) {
+      throw new BadRequestException("Verification token is invalid or no longer usable.");
+    }
+    consumedAtInUtc = now;
+    if (expectedPurpose == VerificationTypeEnum.EMAIL_CONFIRMATION) {
+      confirmedAtInUtc = now;
+    }
+  }
 
   public Long getId() {
     return id;

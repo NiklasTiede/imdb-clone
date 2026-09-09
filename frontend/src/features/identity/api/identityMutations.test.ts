@@ -5,7 +5,7 @@ describe("getRegistrationInvalidParams", () => {
     const invalidParams = getRegistrationInvalidParams({
       response: {
         data: {
-          invalidParams: {
+          errors: {
             email: "Email is already used",
             username: "Username is already used",
           },

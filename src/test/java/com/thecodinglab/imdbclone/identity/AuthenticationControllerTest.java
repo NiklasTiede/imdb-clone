@@ -57,7 +57,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
         .uri(
             uriBuilder ->
                 uriBuilder
-                    .path("/api/auth/check-username-availability")
+                    .path("/api/v1/auth/check-username-availability")
                     .queryParam("username", "test_user_one")
                     .build())
         .accept(MediaType.APPLICATION_JSON)
@@ -75,7 +75,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
         .uri(
             uriBuilder ->
                 uriBuilder
-                    .path("/api/auth/check-email-availability")
+                    .path("/api/v1/auth/check-email-availability")
                     .queryParam("email", "new-user@example.com")
                     .build())
         .accept(MediaType.APPLICATION_JSON)
@@ -94,7 +94,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/auth/registration")
+            post("/api/v1/auth/registration")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -109,7 +109,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
     MvcResult login =
         mockMvc
             .perform(
-                post("/api/auth/login")
+                post("/api/v1/auth/login")
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
@@ -129,7 +129,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
         .isEqualTo(1L);
 
     mockMvc
-        .perform(get("/api/auth/me").cookie(session).accept(MediaType.APPLICATION_JSON))
+        .perform(get("/api/v1/auth/me").cookie(session).accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(1))
         .andExpect(jsonPath("$.username").value("test_user_one"));
@@ -151,7 +151,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/auth/login")
+            post("/api/v1/auth/login")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -172,7 +172,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/auth/login")
+            post("/api/v1/auth/login")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -187,7 +187,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/auth/login")
+            post("/api/v1/auth/login")
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -196,7 +196,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
         .andExpect(jsonPath("$.status").value(401))
         .andExpect(
             jsonPath("$.detail").value("Sorry, you're not authorized to access this resource."))
-        .andExpect(jsonPath("$.instance").value("/api/auth/login"));
+        .andExpect(jsonPath("$.instance").value("/api/v1/auth/login"));
   }
 
   @Test
@@ -205,7 +205,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/auth/login")
+            post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
@@ -215,7 +215,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
   @Test
   void me_unauthenticated() throws Exception {
     mockMvc
-        .perform(get("/api/auth/me").accept(MediaType.APPLICATION_JSON))
+        .perform(get("/api/v1/auth/me").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.status").value(401));
   }
@@ -226,7 +226,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
     MvcResult login =
         mockMvc
             .perform(
-                post("/api/auth/login")
+                post("/api/v1/auth/login")
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
@@ -239,7 +239,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
 
     MvcResult logout =
         mockMvc
-            .perform(post("/api/auth/logout").with(csrf()).cookie(session))
+            .perform(post("/api/v1/auth/logout").with(csrf()).cookie(session))
             .andExpect(status().isOk())
             .andReturn();
 
@@ -255,7 +255,7 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
     assertThat(jdbcTemplate.queryForObject("select count(*) from spring_session", Long.class))
         .isZero();
     mockMvc
-        .perform(get("/api/auth/me").cookie(session).accept(MediaType.APPLICATION_JSON))
+        .perform(get("/api/v1/auth/me").cookie(session).accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isUnauthorized());
   }
 

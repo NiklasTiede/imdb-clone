@@ -1,6 +1,5 @@
 package com.thecodinglab.imdbclone.catalog.internal.search.projection;
 
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,7 +14,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -23,6 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class MovieSearchProjectionTaskHandlerTest {
 
   @Mock private MovieRepository movieRepository;
+  @Mock private MovieSearchProjectionWork work;
+  private final io.micrometer.core.instrument.MeterRegistry meters =
+      new io.micrometer.core.instrument.simple.SimpleMeterRegistry();
   @Mock private MovieSearchDocumentRepository movieSearchRepository;
   @Mock private MovieSearchDocumentMapper movieSearchDocumentMapper;
   @Mock private MovieSearchEmbeddingProjector movieSearchEmbeddingProjector;
@@ -36,7 +37,9 @@ class MovieSearchProjectionTaskHandlerTest {
             movieRepository,
             movieSearchRepository,
             movieSearchDocumentMapper,
-            movieSearchEmbeddingProjector);
+            movieSearchEmbeddingProjector,
+            work,
+            meters);
   }
 
   @Test
@@ -65,12 +68,12 @@ class MovieSearchProjectionTaskHandlerTest {
   }
 
   @Test
-  void project_deleteDeletesMovieDocument() {
+  void project_deleteRechecksTheDatabaseBeforeDeletingMovieDocument() {
     handler.project(MovieSearchProjectionOperation.DELETE, 47L);
 
-    InOrder inOrder = inOrder(movieSearchRepository, movieRepository);
-    inOrder.verify(movieSearchRepository).deleteById(47L);
-    verify(movieRepository, never()).findById(47L);
+    verify(movieSearchRepository).deleteById(47L);
+    verify(movieRepository).findById(47L);
+    verify(work).completed(47L, 0L);
   }
 
   private Movie movieWithId(Long id) {

@@ -48,7 +48,7 @@ class PasskeyManagementControllerTest extends BaseContainers {
     insertCredential(credentialId, userEntityId, "MacBook passkey");
 
     mockMvc
-        .perform(get("/api/account/passkeys").with(testUser()))
+        .perform(get("/api/v1/accounts/me/passkeys").with(testUser()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].credentialId").value(credentialId))
         .andExpect(jsonPath("$[0].label").value("MacBook passkey"))
@@ -65,14 +65,14 @@ class PasskeyManagementControllerTest extends BaseContainers {
 
     mockMvc
         .perform(
-            delete("/api/account/passkeys/{credentialId}", otherUserCredentialId)
+            delete("/api/v1/accounts/me/passkeys/{credentialId}", otherUserCredentialId)
                 .with(csrf())
                 .with(testUser()))
         .andExpect(status().isNotFound());
 
     mockMvc
         .perform(
-            delete("/api/account/passkeys/{credentialId}", credentialId)
+            delete("/api/v1/accounts/me/passkeys/{credentialId}", credentialId)
                 .with(csrf())
                 .with(testUser()))
         .andExpect(status().isNoContent());

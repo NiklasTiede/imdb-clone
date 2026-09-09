@@ -3,6 +3,7 @@
     displayName = "Accounts",
     allowedDependencies = {
       "engagement::profile",
+      "engagement::lifecycle",
       "shared::api",
       "shared::error",
       "shared::persistence",

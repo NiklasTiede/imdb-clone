@@ -1,7 +1,9 @@
 package com.thecodinglab.imdbclone.account.api;
 
 import java.util.Optional;
+import org.springframework.modulith.NamedInterface;
 
+@NamedInterface("identity")
 public interface AccountIdentityService {
 
   boolean isUsernameAvailable(String username);

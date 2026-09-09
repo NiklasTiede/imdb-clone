@@ -24,7 +24,7 @@ class FrontendTelemetryControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/observability/frontend")
+            post("/api/v1/observability/frontend")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -67,7 +67,7 @@ class FrontendTelemetryControllerTest extends BaseControllerIntegrationTest {
   void rejectsMismatchedOrOutOfRangeTelemetry() throws Exception {
     mockMvc
         .perform(
-            post("/api/observability/frontend")
+            post("/api/v1/observability/frontend")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """
@@ -89,7 +89,7 @@ class FrontendTelemetryControllerTest extends BaseControllerIntegrationTest {
   void rejectsUiActionsWithoutABoundedOutcome() throws Exception {
     mockMvc
         .perform(
-            post("/api/observability/frontend")
+            post("/api/v1/observability/frontend")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
                     """

@@ -1,5 +1,5 @@
 
 ### testing CORS
-GET {{protocol}}{{host}}:{{port}}/api/movie/1392190
+GET {{protocol}}{{host}}:{{port}}/api/v1/movies/1392190
 Access-Control-Request-Method: GET
 Origin: http://example.com

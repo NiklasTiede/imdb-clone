@@ -1,20 +1,16 @@
 
 ### get 1 movie by id
-GET {{protocol}}{{host}}:{{port}}/api/movie/2872718
+GET {{protocol}}{{host}}:{{port}}/api/v1/movies/2872718
 Content-Type: application/json
 
 
 ### get multiple movies by an array of ids
-POST {{protocol}}{{host}}:{{port}}/api/movie/get-movies?page=0&size=5
-Content-Type: application/json
-
-{
-  "movieIds": [1457767, 1392190, 942385]
-}
+GET {{protocol}}{{host}}:{{port}}/api/v1/movies?ids=1457767,1392190,942385&page=0&size=5
+Accept: application/json
 
 
 ### add new movie to db
-POST {{protocol}}{{host}}:{{port}}/api/movie/create-movie
+POST {{protocol}}{{host}}:{{port}}/api/v1/movies
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
@@ -31,7 +27,7 @@ Content-Type: application/json
 
 
 ### update existing movie
-PUT {{protocol}}{{host}}:{{port}}/api/movie/5606665
+PUT {{protocol}}{{host}}:{{port}}/api/v1/movies/5606665
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
@@ -48,11 +44,11 @@ Content-Type: application/json
 
 
 ### delete movie
-DELETE {{protocol}}{{host}}:{{port}}/api/movie/5606665
+DELETE {{protocol}}{{host}}:{{port}}/api/v1/movies/5606665
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 
 ### search for movie by primaryTitle
-GET {{protocol}}{{host}}:{{port}}/api/movie/search/My Test Movie?page=0&size=10
+GET {{protocol}}{{host}}:{{port}}/api/v1/movies/search/My Test Movie?page=0&size=10
 Content-Type: application/json

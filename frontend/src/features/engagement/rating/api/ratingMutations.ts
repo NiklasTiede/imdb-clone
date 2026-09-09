@@ -18,7 +18,7 @@ export const rateMovieMutationOptions = (queryClient?: QueryClient) => ({
     if (score === null) {
       await ratingApi.deleteRating(movieId);
     } else {
-      await ratingApi.rateMovie(movieId, score);
+      await ratingApi.rateMovie(movieId, { score });
     }
   },
   onSuccess: async (_data: unknown, variables: RateMovieVariables) => {

@@ -13,7 +13,7 @@ group = 'com.thecodinglab'
 version = '1.0.0'
 
 tasks.named('check') {
-	dependsOn 'spotlessCheck', 'integrationTest', 'jacocoTestCoverageVerification'
+	dependsOn 'spotlessCheck', 'architectureTest', 'integrationTest', 'jacocoTestCoverageVerification'
 }
 
 
@@ -182,7 +182,17 @@ tasks.named('compileTestJava') {
 tasks.named('test') {
 	description = 'Runs fast backend tests without external infrastructure.'
 	useJUnitPlatform {
-		excludeTags 'integration'
+		excludeTags 'integration', 'architecture'
+	}
+}
+
+tasks.register('architectureTest', Test) {
+	description = 'Verifies module boundaries and semantic architecture rules, including negative fixtures.'
+	group = LifecycleBasePlugin.VERIFICATION_GROUP
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform {
+		includeTags 'architecture'
 	}
 }
 
@@ -226,7 +236,7 @@ jacoco {
 }
 
 jacocoTestReport {
-	dependsOn test, integrationTest
+	dependsOn test, integrationTest, tasks.named('architectureTest')
 	executionData tasks.withType(Test)
 	reports {
 		xml.required = true

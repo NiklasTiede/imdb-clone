@@ -21,6 +21,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -30,11 +31,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Validated
-@RequestMapping("/api/recommendations")
+@RequestMapping(path = "/api/v{version}/recommendations", version = "1")
 public class RecommendationController {
 
   private final RecommendationService recommendationService;
@@ -69,6 +71,7 @@ public class RecommendationController {
   }
 
   @PostMapping("/discovery-events")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public ResponseEntity<Void> recordDiscoveryEvent(
       @Valid @RequestBody DiscoveryEventRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentAccount) {

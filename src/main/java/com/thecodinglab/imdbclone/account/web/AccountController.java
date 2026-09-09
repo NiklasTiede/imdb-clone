@@ -14,10 +14,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @Validated
-@RequestMapping("/api/account")
+@RequestMapping(path = "/api/v{version}/accounts", version = "1")
 public class AccountController {
 
   private final AccountService accountService;
@@ -29,7 +31,7 @@ public class AccountController {
   }
 
   @GetMapping("/me")
-  @PreAuthorize("hasRole('USER')")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<AccountSummaryResponse> getCurrentAccount(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(accountService.getCurrentAccount(currentUser), HttpStatus.OK);
@@ -48,7 +50,7 @@ public class AccountController {
   }
 
   @GetMapping("/me/profile")
-  @PreAuthorize("hasRole('USER')")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<AccountProfile> getCurrentAccountProfile(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(
@@ -56,17 +58,23 @@ public class AccountController {
   }
 
   /** Simple generation of Test Accounts */
-  @PostMapping("/add-account")
+  @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
+  @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<AccountCreated> createAccount(
       @Valid @RequestBody CreateAccountRequest request,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(
-        accountService.createAccount(request, currentUser), HttpStatus.CREATED);
+    AccountCreated account = accountService.createAccount(request, currentUser);
+    return ResponseEntity.created(
+            ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{username}/profile")
+                .buildAndExpand(account.username())
+                .toUri())
+        .body(account);
   }
 
   @PutMapping("/{username}")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<UpdatedAccountProfile> updateAccountProfile(
       @PathVariable String username,
       @Valid @RequestBody AccountRecord accountRecord,
@@ -76,15 +84,16 @@ public class AccountController {
   }
 
   @DeleteMapping("/{username}")
-  @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> deleteAccount(
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public ResponseEntity<Void> deleteAccount(
       @PathVariable String username,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(
-        accountService.deleteAccount(username, currentUser), HttpStatus.NO_CONTENT);
+    accountService.deleteAccount(username, currentUser);
+    return ResponseEntity.noContent().build();
   }
 
-  @PutMapping("/{username}/give-admin")
+  @PutMapping("/{username}/roles/admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> giveAdminRole(
       @PathVariable String username,
@@ -92,7 +101,7 @@ public class AccountController {
     return new ResponseEntity<>(roleService.giveAdminRole(username, currentUser), HttpStatus.OK);
   }
 
-  @PutMapping("/{username}/take-admin")
+  @DeleteMapping("/{username}/roles/admin")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<MessageResponse> takeAdminRole(
       @PathVariable String username,

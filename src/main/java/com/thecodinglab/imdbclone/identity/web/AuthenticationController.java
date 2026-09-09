@@ -7,7 +7,6 @@ import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +19,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping(path = "/api/v{version}/auth", version = "1")
 public class AuthenticationController {
 
   private final AuthenticationService authenticationService;
@@ -77,25 +77,30 @@ public class AuthenticationController {
   }
 
   @PostMapping("/registration")
+  @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<MessageResponse> registerAccount(
       @Valid @RequestBody RegistrationRequest request) {
     return new ResponseEntity<>(authenticationService.registerUser(request), HttpStatus.CREATED);
   }
 
-  @GetMapping("/confirm-email-address")
-  public ResponseEntity<MessageResponse> confirmEmailAddress(@RequestParam("token") String token) {
-    return new ResponseEntity<>(authenticationService.confirmEmailAddress(token), HttpStatus.OK);
+  @PostMapping("/email-confirmations")
+  public ResponseEntity<MessageResponse> confirmEmailAddress(
+      @Valid @RequestBody EmailConfirmationRequest request) {
+    return new ResponseEntity<>(
+        authenticationService.confirmEmailAddress(request.token()), HttpStatus.OK);
   }
 
-  @GetMapping("/reset-password")
-  public ResponseEntity<MessageResponse> resetPassword(@RequestParam("email") @Email String email) {
-    return new ResponseEntity<>(authenticationService.resetPassword(email), HttpStatus.OK);
+  @PostMapping("/password-reset-requests")
+  public ResponseEntity<MessageResponse> resetPassword(
+      @Valid @RequestBody PasswordResetEmailRequest request) {
+    return new ResponseEntity<>(
+        authenticationService.resetPassword(request.email()), HttpStatus.OK);
   }
 
-  @PostMapping("/save-new-password")
+  @PostMapping("/password-resets")
   public ResponseEntity<MessageResponse> saveNewPassword(
       @Valid @RequestBody PasswordResetRequest request) {
-    return new ResponseEntity<>(authenticationService.saveNewPassword(request), HttpStatus.CREATED);
+    return new ResponseEntity<>(authenticationService.saveNewPassword(request), HttpStatus.OK);
   }
 
   private AccountSessionResponse toSessionResponse(UserPrincipal user) {

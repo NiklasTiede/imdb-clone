@@ -20,13 +20,13 @@ const watchlistedMovie = {
 };
 
 const mockAnonymousSession = async (page: Page) => {
-  await page.route("**/api/auth/me", async (route) => {
+  await page.route("**/api/v1/auth/me", async (route) => {
     await route.fulfill({ status: 401, body: "" });
   });
 };
 
 const mockAuthenticatedSession = async (page: Page) => {
-  await page.route("**/api/auth/me", async (route) => {
+  await page.route("**/api/v1/auth/me", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -37,7 +37,7 @@ const mockAuthenticatedSession = async (page: Page) => {
       }),
     });
   });
-  await page.route("**/api/account/me/profile", async (route) => {
+  await page.route("**/api/v1/accounts/me/profile", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -66,7 +66,7 @@ test("renders protected watchlist for authenticated users", async ({
 }) => {
   await mockAuthenticatedSession(page);
   await page.route(
-    "**/api/account/test_user/library/watchlist**",
+    "**/api/v1/accounts/test_user/library/watchlist**",
     async (route) => {
       expect(new URL(route.request().url()).searchParams.get("size")).toBe(
         "30",
@@ -126,7 +126,7 @@ test("renders protected watchlist for authenticated users", async ({
 test("renders protected ratings for authenticated users", async ({ page }) => {
   await mockAuthenticatedSession(page);
   await page.route(
-    "**/api/account/test_user/library/ratings**",
+    "**/api/v1/accounts/test_user/library/ratings**",
     async (route) => {
       await route.fulfill({
         contentType: "application/json",

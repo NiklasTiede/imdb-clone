@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@org.springframework.web.bind.annotation.RequestMapping(
+    path = "/api/v{version}/observability",
+    version = "1")
 public class FrontendTelemetryController {
 
   private final FrontendTelemetryMetrics metrics;
@@ -18,7 +21,7 @@ public class FrontendTelemetryController {
     this.metrics = metrics;
   }
 
-  @PostMapping("/api/observability/frontend")
+  @PostMapping("/frontend")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void record(@Valid @RequestBody FrontendTelemetryBatch batch) {
     metrics.record(batch);

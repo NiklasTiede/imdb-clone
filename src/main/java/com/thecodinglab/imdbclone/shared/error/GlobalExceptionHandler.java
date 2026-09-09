@@ -6,7 +6,6 @@ import static net.logstash.logback.argument.StructuredArguments.v;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +33,7 @@ public class GlobalExceptionHandler {
         "Resource was not found for '{}', returning error message: '{}'",
         v(HTTP_RESOURCE_PATH, request.getDescription(false)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    return problemDetail;
+    return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
   }
 
   @ExceptionHandler(BadRequestException.class)
@@ -47,23 +43,7 @@ public class GlobalExceptionHandler {
         "Resource was not posted correctly for '{}', returning error message: '{}'",
         v(HTTP_RESOURCE_PATH, request.getDescription(false)),
         v(EXCEPTION_MESSAGE, ex.getMessage()));
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    return problemDetail;
-  }
-
-  @ExceptionHandler(UnauthorizedException.class)
-  protected final ProblemDetail resolveUnauthorizedException(
-      UnauthorizedException ex, WebRequest request) {
-    logger.warn(
-        "User has no permission for '{}', returning error message: '{}'",
-        v(HTTP_RESOURCE_PATH, request.getDescription(true)),
-        v(EXCEPTION_MESSAGE, ex.getMessage()));
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    return problemDetail;
+    return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
   }
 
   @ExceptionHandler(AuthenticationException.class)
@@ -76,7 +56,6 @@ public class GlobalExceptionHandler {
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(
             HttpStatus.UNAUTHORIZED, "Sorry, you're not authorized to access this resource.");
-    problemDetail.setType(URI.create(""));
     problemDetail.setInstance(URI.create(request.getRequestURI()));
     return problemDetail;
   }
@@ -89,10 +68,7 @@ public class GlobalExceptionHandler {
         v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
         v(EXCEPTION_MESSAGE, ex.getException().getMessage()),
         v(HTTP_RESOURCE_PATH, request.getDescription(true)));
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    return problemDetail;
+    return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
   }
 
   @ExceptionHandler(OpenSearchOperationException.class)
@@ -104,66 +80,45 @@ public class GlobalExceptionHandler {
         v(CUSTOM_EXCEPTION_MESSAGE, ex.getMessage()),
         v(EXCEPTION_MESSAGE, ex.getCause() == null ? null : ex.getCause().getMessage()),
         v(HTTP_RESOURCE_PATH, request.getDescription(true)));
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    return problemDetail;
+    return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
   protected final ProblemDetail resolveHttpMessageNotReadableException(
       HttpMessageNotReadableException ex, WebRequest request) {
-    logger.warn(
-        "User did not provide existing enum '{}', returning error message: '{}'",
-        v(HTTP_RESOURCE_PATH, request.getDescription(false)),
-        v(EXCEPTION_MESSAGE, ex.getMessage()));
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    return problemDetail;
+    return requestProblem("Malformed request body.", "invalid_request_body");
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   protected final ProblemDetail resolveMethodArgumentNotValidException(
       MethodArgumentNotValidException ex, WebRequest request) {
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    Map<String, Object> properties = new HashMap<>();
+    ProblemDetail problem = requestProblem("Request validation failed.", "validation_failed");
+    Map<String, String> errors = new java.util.LinkedHashMap<>();
     ex.getBindingResult()
         .getFieldErrors()
-        .forEach(error -> properties.put(error.getField(), error.getDefaultMessage()));
-    problemDetail.setProperties(properties);
-    logger.warn(
-        "User did not provide valid value for '{}', returning error message: '{}'",
-        v(HTTP_RESOURCE_PATH, request.getDescription(false)),
-        v(EXCEPTION_MESSAGE, ex.getMessage()));
-    return problemDetail;
+        .forEach(error -> errors.putIfAbsent(error.getField(), error.getDefaultMessage()));
+    problem.setProperty("errors", errors);
+    return problem;
   }
 
   @ExceptionHandler(ConstraintViolationException.class)
   protected final ProblemDetail resolveConstraintViolationException(
       ConstraintViolationException ex, WebRequest request) {
-    logger.warn(
-        "Request body validation failed on the following resource: '{}', returning error message: '{}'",
-        v(HTTP_RESOURCE_PATH, request.getDescription(false)),
-        v(EXCEPTION_MESSAGE, ex.getMessage()));
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    return problemDetail;
+    return requestProblem("Request validation failed.", "validation_failed");
   }
 
-  @ExceptionHandler(MissingServletRequestParameterException.class)
-  protected final ProblemDetail resolveMissingServletRequestParameterException(
-      MissingServletRequestParameterException ex, WebRequest request) {
-    logger.warn(
-        "Request parameter validation failed on the following resource: '{}', returning error message: '{}'",
-        v(HTTP_RESOURCE_PATH, request.getDescription(false)),
-        v(EXCEPTION_MESSAGE, ex.getMessage()));
-    ProblemDetail problemDetail =
-        ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-    problemDetail.setType(URI.create(""));
-    return problemDetail;
+  @ExceptionHandler({
+    MissingServletRequestParameterException.class,
+    org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class
+  })
+  protected final ProblemDetail resolveInvalidParameter(Exception ex, WebRequest request) {
+    return requestProblem(
+        "A required request parameter is missing or invalid.", "invalid_parameter");
+  }
+
+  private static ProblemDetail requestProblem(String detail, String code) {
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
+    problem.setProperty("code", code);
+    return problem;
   }
 }

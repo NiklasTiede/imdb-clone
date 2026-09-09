@@ -64,7 +64,7 @@ describe("ratingQueries", () => {
       .queryFn();
 
     expect(ratingsSpy).toHaveBeenCalledWith("ada", 0, 20);
-    expect(moviesSpy).toHaveBeenCalledWith({ movieIds: [7, 9] }, 0, 2);
+    expect(moviesSpy).toHaveBeenCalledWith([7, 9], 0, 2);
     expect(result.content).toEqual([
       {
         movie: { id: 7, primaryTitle: "First Movie" },

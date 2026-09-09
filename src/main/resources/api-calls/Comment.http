@@ -1,16 +1,16 @@
 
 ### get specific comment by id
-GET {{protocol}}{{host}}:{{port}}/api/comment/1
+GET {{protocol}}{{host}}:{{port}}/api/v1/comments/1
 Content-Type: application/json
 
 
 ### get all comments of a movie
-GET {{protocol}}{{host}}:{{port}}/api/comment/120382/comments
+GET {{protocol}}{{host}}:{{port}}/api/v1/movies/120382/comments
 Content-Type: application/json
 
 
 ### comment a movie
-POST {{protocol}}{{host}}:{{port}}/api/comment/120382
+POST {{protocol}}{{host}}:{{port}}/api/v1/movies/120382/comments
 Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
@@ -20,7 +20,7 @@ Content-Type: application/json
 
 
 ### update existing comment
-PUT {{protocol}}{{host}}:{{port}}/api/comment/1
+PUT {{protocol}}{{host}}:{{port}}/api/v1/comments/1
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
@@ -30,6 +30,6 @@ Content-Type: application/json
 
 
 ### delete comment by id
-DELETE {{protocol}}{{host}}:{{port}}/api/comment/6
+DELETE {{protocol}}{{host}}:{{port}}/api/v1/comments/6
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json

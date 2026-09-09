@@ -1,5 +1,5 @@
 ### search movies with filters
-POST {{protocol}}{{host}}:{{port}}/api/search/movies?query=it&page=0&size=20
+POST {{protocol}}{{host}}:{{port}}/api/v1/search/movies?query=it&page=0&size=20
 Content-Type: application/json
 
 {
@@ -13,14 +13,14 @@ Content-Type: application/json
 
 
 ### search movies by title
-POST {{protocol}}{{host}}:{{port}}/api/search/movies?query=Smultronstället&page=0&size=20
+POST {{protocol}}{{host}}:{{port}}/api/v1/search/movies?query=Smultronstället&page=0&size=20
 Content-Type: application/json
 
 {}
 
 
 ### homepage drama carousel
-POST {{protocol}}{{host}}:{{port}}/api/search/movies?query=&page=0&size=20
+POST {{protocol}}{{host}}:{{port}}/api/v1/search/movies?query=&page=0&size=20
 Content-Type: application/json
 
 {
@@ -30,5 +30,5 @@ Content-Type: application/json
 
 
 ### reindex movies from PostgreSQL into OpenSearch
-POST {{protocol}}{{host}}:{{port}}/api/search/movies/reindex
+POST {{protocol}}{{host}}:{{port}}/api/v1/search/movies/reindex
 Authorization: Bearer {{adminToken}}

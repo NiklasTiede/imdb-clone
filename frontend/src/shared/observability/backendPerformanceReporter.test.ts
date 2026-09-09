@@ -24,7 +24,7 @@ describe("backendPerformanceReporter", () => {
       success: true,
       timestamp: 20,
       type: "api_request",
-      url: "/api/search/movies?q=private",
+      url: "/api/v1/search/movies?q=private",
       value: 123.4,
     };
     const errorEvent: PerformanceEvent = {

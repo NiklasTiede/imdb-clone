@@ -3,11 +3,13 @@ import {
   configurePerformanceReporter,
   resetPerformanceReporterForTests,
 } from "../observability/performanceReporter";
+import { authSession } from "../auth";
 import { apiHttpClient } from "./httpClient";
 
 describe("apiHttpClient", () => {
   afterEach(() => {
     resetPerformanceReporterForTests();
+    authSession.resetForTests();
   });
 
   it("does not expose an authorization header to outgoing requests", async () => {
@@ -106,4 +108,26 @@ describe("apiHttpClient", () => {
     ]);
     expect(JSON.stringify(events[0])).not.toContain("secret");
   });
+  it.each([401, 403])(
+    "handles HTTP %i without confusing authentication and authorization",
+    async (status) => {
+      authSession.setSession({
+        id: 2,
+        username: "member",
+        email: "member@example.com",
+        roles: ["ROLE_USER"],
+      });
+      await expect(
+        apiHttpClient.put(
+          "/api/v1/comments/1",
+          {},
+          {
+            adapter: async (config) =>
+              Promise.reject({ config, response: { status } }),
+          },
+        ),
+      ).rejects.toBeDefined();
+      expect(authSession.getSnapshot().session === null).toBe(status === 401);
+    },
+  );
 });

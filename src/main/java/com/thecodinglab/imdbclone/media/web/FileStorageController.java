@@ -1,7 +1,6 @@
 package com.thecodinglab.imdbclone.media.web;
 
 import com.thecodinglab.imdbclone.media.internal.MediaService;
-import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.security.CurrentUser;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,11 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @Validated
-@RequestMapping("/api/file-storage")
+@RequestMapping(path = "/api/v{version}/media", version = "1")
 public class FileStorageController {
 
   private final MediaService mediaService;
@@ -31,7 +31,8 @@ public class FileStorageController {
    * <p>Size is 800x800 (detail view) and 120x120 (AppBar)
    */
   @PostMapping(value = "/profile-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  @PreAuthorize("hasRole('USER')")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+  @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<List<String>> storeUserProfilePhoto(
       @RequestParam("image") MultipartFile multipartFile,
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
@@ -40,11 +41,12 @@ public class FileStorageController {
   }
 
   @DeleteMapping("/profile-photo")
-  @PreAuthorize("hasRole('USER')")
-  public ResponseEntity<MessageResponse> deleteUserProfilePhoto(
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public ResponseEntity<Void> deleteUserProfilePhoto(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
-    return new ResponseEntity<>(
-        new MessageResponse(mediaService.deleteProfilePhoto(currentUser)), HttpStatus.NO_CONTENT);
+    mediaService.deleteProfilePhoto(currentUser);
+    return ResponseEntity.noContent().build();
   }
 
   /**
@@ -52,18 +54,20 @@ public class FileStorageController {
    *
    * <p>Size is 600x900 (detail view) and 120x180 (movie search)
    */
-  @PostMapping(value = "/movie/{movieId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(value = "/movies/{movieId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @PreAuthorize("hasRole('ADMIN')")
+  @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<List<String>> storeMovieImage(
       @PathVariable Long movieId, @RequestParam("image") MultipartFile multipartFile) {
     return new ResponseEntity<>(
         mediaService.storeMovieImage(multipartFile, movieId), HttpStatus.CREATED);
   }
 
-  @DeleteMapping("/movie/{movieId}")
+  @DeleteMapping("/movies/{movieId}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<MessageResponse> deleteMovieImage(@PathVariable Long movieId) {
-    return new ResponseEntity<>(
-        new MessageResponse(mediaService.deleteMovieImage(movieId)), HttpStatus.NO_CONTENT);
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public ResponseEntity<Void> deleteMovieImage(@PathVariable Long movieId) {
+    mediaService.deleteMovieImage(movieId);
+    return ResponseEntity.noContent().build();
   }
 }

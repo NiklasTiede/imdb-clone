@@ -1303,7 +1303,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri=\"/api/auth/login\", status=\"401\"}[$__rate_interval])) or vector(0)",
+              "expr": "sum(rate(http_server_requests_seconds_count{job=\"imdb-clone-backend\", uri=\"/api/v{version}/auth/login\", status=\"401\"}[$__rate_interval])) or vector(0)",
               "legendFormat": "401 login responses",
               "range": true,
               "refId": "A"

@@ -25,7 +25,7 @@ export const registerAccount = async (
 };
 
 type RegistrationErrorResponse = {
-  invalidParams?: Record<string, string>;
+  errors?: Record<string, string>;
 };
 
 export type RegistrationInvalidParams = Partial<
@@ -36,7 +36,7 @@ export const getRegistrationInvalidParams = (
   error: unknown,
 ): RegistrationInvalidParams => {
   const axiosError = error as AxiosError<RegistrationErrorResponse>;
-  const invalidParams = axiosError.response?.data?.invalidParams;
+  const invalidParams = axiosError.response?.data?.errors;
 
   const email = invalidParams?.email;
   const username = invalidParams?.username;

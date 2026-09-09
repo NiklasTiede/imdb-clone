@@ -10,7 +10,7 @@ export const bootstrapSession = (): Promise<void> => {
 
   authSession.markBootstrapStarted();
   bootstrapPromise = apiHttpClient
-    .get<unknown>("/api/auth/me", {
+    .get<unknown>("/api/v1/auth/me", {
       validateStatus: (status) => status === 200 || status === 401,
     })
     .then((response) => {

@@ -2,7 +2,7 @@
     id = "identity",
     displayName = "Identity",
     allowedDependencies = {
-      "account::api",
+      "account::identity",
       "shared::api",
       "shared::error",
       "shared::security",

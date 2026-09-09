@@ -65,7 +65,7 @@ describe("YourCommentsPage", () => {
     });
     mocks.commentApi.deleteComment.mockResolvedValue({});
     mocks.commentApi.updateComment.mockResolvedValue({ data: {} });
-    mocks.moviesApi.getMoviesByIds.mockImplementation(({ movieIds }: { movieIds: number[] }) =>
+    mocks.moviesApi.getMoviesByIds.mockImplementation((movieIds: number[]) =>
       Promise.resolve({
         data: {
           content: movieIds.map((id) => ({
@@ -91,7 +91,7 @@ describe("YourCommentsPage", () => {
     ).toBe("/movie?id=31#comment-1");
     expect(screen.getByText("Your comment on")).toBeTruthy();
     expect(screen.getByText("2001")).toBeTruthy();
-    expect(mocks.moviesApi.getMoviesByIds).toHaveBeenCalledWith({ movieIds: [31] }, 0, 1);
+    expect(mocks.moviesApi.getMoviesByIds).toHaveBeenCalledWith([31], 0, 1);
     expect(
       (await screen.findByAltText("ada profile")).getAttribute("src"),
     ).toContain("profile-photos/ada-avatar-token_size_800x800.jpg");

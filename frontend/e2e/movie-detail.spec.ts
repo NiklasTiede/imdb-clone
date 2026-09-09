@@ -51,13 +51,13 @@ const mockMovie = async (
   movie: MovieFixture = shawshank,
   comments: Array<Record<string, unknown>> = [],
 ) => {
-  await page.route(`**/api/movie/${movie.id}`, async (route) => {
+  await page.route(`**/api/v1/movies/${movie.id}`, async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify(movie),
     });
   });
-  await page.route(`**/api/comment/${movie.id}/comments**`, async (route) => {
+  await page.route(`**/api/v1/movies/${movie.id}/comments**`, async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -70,7 +70,7 @@ const mockMovie = async (
       }),
     });
   });
-  await page.route("**/api/account/summaries**", async (route) => {
+  await page.route("**/api/v1/accounts/summaries**", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify(commentAuthors),
@@ -79,13 +79,13 @@ const mockMovie = async (
 };
 
 const mockAnonymousSession = async (page: Page) => {
-  await page.route("**/api/auth/me", async (route) => {
+  await page.route("**/api/v1/auth/me", async (route) => {
     await route.fulfill({ status: 401, body: "" });
   });
 };
 
 const mockAuthenticatedSession = async (page: Page) => {
-  await page.route("**/api/auth/me", async (route) => {
+  await page.route("**/api/v1/auth/me", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -96,7 +96,7 @@ const mockAuthenticatedSession = async (page: Page) => {
       }),
     });
   });
-  await page.route("**/api/account/me/profile", async (route) => {
+  await page.route("**/api/v1/accounts/me/profile", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({ username: "niklas", email: "niklas@example.com" }),
@@ -375,57 +375,63 @@ test("publishes, edits, and deletes an owned movie comment", async ({
   await mockAuthenticatedSession(page);
   await mockMovie(page, shawshank, comments);
   await mockMovieMedia(page);
-  await page.route("**/api/comment/*", async (route) => {
-    const request = route.request();
-    const pathname = new URL(request.url()).pathname;
-    const commentId = Number(pathname.split("/").at(-1));
-    const payload =
-      request.method() === "POST" || request.method() === "PUT"
-        ? (request.postDataJSON() as { message?: string })
-        : null;
+  await page.route(
+    /\/api\/v1\/(comments\/\d+|movies\/1\/comments)$/,
+    async (route) => {
+      const request = route.request();
+      const pathname = new URL(request.url()).pathname;
+      const commentId = Number(pathname.split("/").at(-1));
+      const payload =
+        request.method() === "POST" || request.method() === "PUT"
+          ? (request.postDataJSON() as { message?: string })
+          : null;
 
-    if (request.method() === "POST" && commentId === 1) {
-      const created = {
-        id: 12,
-        message: payload?.message,
-        accountId: 7,
-        movieId: 1,
-        createdAtInUtc: "2026-07-11T12:00:00Z",
-        modifiedAtInUtc: "2026-07-11T12:00:00Z",
-      };
-      comments.unshift(created);
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify(created),
-        status: 201,
-      });
-      return;
-    }
-
-    if (request.method() === "PUT") {
-      const existing = comments.find((comment) => comment.id === commentId);
-      if (existing) {
-        existing.message = payload?.message;
-        existing.modifiedAtInUtc = "2026-07-11T12:10:00Z";
+      if (
+        request.method() === "POST" &&
+        pathname === "/api/v1/movies/1/comments"
+      ) {
+        const created = {
+          id: 12,
+          message: payload?.message,
+          accountId: 7,
+          movieId: 1,
+          createdAtInUtc: "2026-07-11T12:00:00Z",
+          modifiedAtInUtc: "2026-07-11T12:00:00Z",
+        };
+        comments.unshift(created);
+        await route.fulfill({
+          contentType: "application/json",
+          body: JSON.stringify(created),
+          status: 201,
+        });
+        return;
       }
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify(existing),
-      });
-      return;
-    }
 
-    if (request.method() === "DELETE") {
-      const index = comments.findIndex((comment) => comment.id === commentId);
-      if (index >= 0) {
-        comments.splice(index, 1);
+      if (request.method() === "PUT") {
+        const existing = comments.find((comment) => comment.id === commentId);
+        if (existing) {
+          existing.message = payload?.message;
+          existing.modifiedAtInUtc = "2026-07-11T12:10:00Z";
+        }
+        await route.fulfill({
+          contentType: "application/json",
+          body: JSON.stringify(existing),
+        });
+        return;
       }
-      await route.fulfill({ status: 204 });
-      return;
-    }
 
-    await route.fallback();
-  });
+      if (request.method() === "DELETE") {
+        const index = comments.findIndex((comment) => comment.id === commentId);
+        if (index >= 0) {
+          comments.splice(index, 1);
+        }
+        await route.fulfill({ status: 204 });
+        return;
+      }
+
+      await route.fallback();
+    },
+  );
 
   await page.goto("/movie?id=1");
   await expect(page.getByRole("heading", { name: "Community" })).toBeVisible();
@@ -464,13 +470,13 @@ test("saves a rating in the authenticated dialog flow", async ({ page }) => {
   await mockAuthenticatedSession(page);
   await mockMovie(page);
   await mockMovieMedia(page);
-  await page.route("**/api/account/niklas/watchlist**", async (route) => {
+  await page.route("**/api/v1/accounts/niklas/watchlist**", async (route) => {
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({ content: [], last: true }),
     });
   });
-  await page.route("**/api/account/niklas/ratings**", async (route) => {
+  await page.route("**/api/v1/accounts/niklas/ratings**", async (route) => {
     ratingsRequestCount += 1;
     await route.fulfill({
       contentType: "application/json",
@@ -480,10 +486,8 @@ test("saves a rating in the authenticated dialog flow", async ({ page }) => {
       }),
     });
   });
-  await page.route("**/api/movie-rating/1/rating-score/*", async (route) => {
-    savedRating = Number(
-      new URL(route.request().url()).pathname.split("/").at(-1),
-    );
+  await page.route("**/api/v1/accounts/me/ratings/1", async (route) => {
+    savedRating = (route.request().postDataJSON() as { score: number }).score;
     await route.fulfill({ status: 200, body: "" });
   });
 
@@ -500,13 +504,13 @@ test("saves a rating in the authenticated dialog flow", async ({ page }) => {
   const saveResponse = page.waitForResponse(
     (response) =>
       response.request().method() === "PUT" &&
-      new URL(response.url()).pathname === "/api/movie-rating/1/rating-score/9" &&
+      new URL(response.url()).pathname === "/api/v1/accounts/me/ratings/1" &&
       response.status() === 200,
   );
   const ratingsRefreshResponse = page.waitForResponse(
     (response) =>
       response.request().method() === "GET" &&
-      new URL(response.url()).pathname === "/api/account/niklas/ratings" &&
+      new URL(response.url()).pathname === "/api/v1/accounts/niklas/ratings" &&
       ratingsRequestCount > initialRatingsRequestCount,
   );
   await dialog.getByRole("button", { name: "Save rating" }).click();

@@ -40,6 +40,7 @@ class MediaServiceIntegrationTest extends BaseContainers {
       Path.of("src/main/resources/api-calls/object-storage/raw-profile-photo.jpeg");
 
   @Autowired private MediaService mediaService;
+  @Autowired private com.thecodinglab.imdbclone.media.internal.MediaRecovery recovery;
 
   @Autowired private AccountService accountService;
 
@@ -54,6 +55,45 @@ class MediaServiceIntegrationTest extends BaseContainers {
   @Autowired private MediaStorageProperties storageProperties;
 
   @MockitoBean private MovieSearchProjectionTasks movieSearchProjectionTasks;
+
+  @Autowired private org.springframework.transaction.support.TransactionTemplate transactions;
+
+  @Test
+  void keepsPreviousMovieObjectsWhenReplacementRollsBack() throws Exception {
+    mediaService.storeMovieImage(imageUpload("image", "poster.jpg", MOVIE_IMAGE), 1L);
+    String previous = movieRepository.getMovieById(1L).getPosterImageToken();
+    var replacement = imageUpload("image", "replacement.jpg", MOVIE_IMAGE);
+
+    transactions.executeWithoutResult(
+        status -> {
+          mediaService.storeMovieImage(replacement, 1L);
+          status.setRollbackOnly();
+        });
+
+    recovery.recoverPending();
+    assertThat(movieRepository.getMovieById(1L).getPosterImageToken()).isEqualTo(previous);
+    assertObjectExists(MovieImageConstants.getDetailViewImageName(previous));
+    assertObjectExists(MovieImageConstants.getThumbNailImageName(previous));
+  }
+
+  @Test
+  void keepsProfileObjectsWhenDeletionRollsBack() throws Exception {
+    mediaService.storeProfilePhoto(
+        imageUpload("image", "profile.jpg", PROFILE_PHOTO), currentUser());
+    String previous = accountRepository.getAccountByUsername("test_user_two").getImageUrlToken();
+
+    transactions.executeWithoutResult(
+        status -> {
+          mediaService.deleteProfilePhoto(currentUser());
+          status.setRollbackOnly();
+        });
+
+    recovery.recoverPending();
+    assertThat(accountRepository.getAccountByUsername("test_user_two").getImageUrlToken())
+        .isEqualTo(previous);
+    assertObjectExists(ProfilePhotoConstants.getDetailViewImageName(previous));
+    assertObjectExists(ProfilePhotoConstants.getThumbnailImageName(previous));
+  }
 
   @Test
   void storeMovieImage_updatesMovieTokenAndStoresExpectedObjects() throws Exception {
@@ -85,6 +125,8 @@ class MediaServiceIntegrationTest extends BaseContainers {
 
     mediaService.storeMovieImage(imageUpload("image", "raw-movie-image.jpg", MOVIE_IMAGE), 1L);
 
+    recovery.recoverPending();
+
     String newToken = movieRepository.getMovieById(1L).getPosterImageToken();
     assertThat(newToken).isNotBlank().isNotEqualTo(oldToken);
     assertObjectDoesNotExist(oldDetailImageName);
@@ -103,6 +145,7 @@ class MediaServiceIntegrationTest extends BaseContainers {
     String thumbnailImageName = MovieImageConstants.getThumbNailImageName(posterImageToken);
 
     mediaService.deleteMovieImage(1L);
+    recovery.recoverPending();
 
     assertObjectDoesNotExist(detailImageName);
     assertObjectDoesNotExist(thumbnailImageName);
@@ -147,6 +190,8 @@ class MediaServiceIntegrationTest extends BaseContainers {
     mediaService.storeProfilePhoto(
         imageUpload("image", "raw-profile-photo.jpeg", PROFILE_PHOTO), currentUser);
 
+    recovery.recoverPending();
+
     String newToken = accountRepository.getAccountByUsername("test_user_two").getImageUrlToken();
     assertThat(newToken).isNotBlank().isNotEqualTo(oldToken);
     assertObjectDoesNotExist(oldDetailImageName);
@@ -167,6 +212,7 @@ class MediaServiceIntegrationTest extends BaseContainers {
     String thumbnailImageName = ProfilePhotoConstants.getThumbnailImageName(imageUrlToken);
 
     mediaService.deleteProfilePhoto(currentUser);
+    recovery.recoverPending();
 
     assertObjectDoesNotExist(detailImageName);
     assertObjectDoesNotExist(thumbnailImageName);
@@ -200,6 +246,7 @@ class MediaServiceIntegrationTest extends BaseContainers {
     String thumbnailImageName = ProfilePhotoConstants.getThumbnailImageName(imageUrlToken);
 
     accountService.deleteAccount(account.getUsername(), currentUser);
+    recovery.recoverPending();
 
     assertObjectDoesNotExist(detailImageName);
     assertObjectDoesNotExist(thumbnailImageName);
@@ -218,6 +265,7 @@ class MediaServiceIntegrationTest extends BaseContainers {
     String thumbnailImageName = MovieImageConstants.getThumbNailImageName(posterImageToken);
 
     movieService.deleteMovie(movie.getId());
+    recovery.recoverPending();
 
     assertObjectDoesNotExist(detailImageName);
     assertObjectDoesNotExist(thumbnailImageName);

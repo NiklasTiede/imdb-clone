@@ -1,36 +1,36 @@
 
 ### get current user
-GET {{protocol}}{{host}}:{{port}}/api/account/me
+GET {{protocol}}{{host}}:{{port}}/api/v1/accounts/me
 Authorization: Bearer {{userToken}}
 
 
 ### get current user's editable profile
-GET {{protocol}}{{host}}:{{port}}/api/account/me/profile
+GET {{protocol}}{{host}}:{{port}}/api/v1/accounts/me/profile
 Authorization: Bearer {{userToken}}
 
 
 ### get account-profile
-GET {{protocol}}{{host}}:{{port}}/api/account/les_grossman/profile
+GET {{protocol}}{{host}}:{{port}}/api/v1/accounts/les_grossman/profile
 Content-Type: application/json
 
 
 ### get comments of user
-GET {{protocol}}{{host}}:{{port}}/api/account/les_grossman/comments?page=0&size=10
+GET {{protocol}}{{host}}:{{port}}/api/v1/accounts/les_grossman/comments?page=0&size=10
 Content-Type: application/json
 
 
 ### get watchlist of user
-GET {{protocol}}{{host}}:{{port}}/api/account/les_grossman/watchlist?page=0&size=30
+GET {{protocol}}{{host}}:{{port}}/api/v1/accounts/les_grossman/watchlist?page=0&size=30
 Content-Type: application/json
 
 
 ### get ratings of user
-GET {{protocol}}{{host}}:{{port}}/api/account/les_grossman/ratings
+GET {{protocol}}{{host}}:{{port}}/api/v1/accounts/les_grossman/ratings
 Content-Type: application/json
 
 
 ### update account data
-PUT {{protocol}}{{host}}:{{port}}/api/account/kirk_lazarus
+PUT {{protocol}}{{host}}:{{port}}/api/v1/accounts/kirk_lazarus
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
@@ -44,13 +44,13 @@ Content-Type: application/json
 
 
 ### delete account
-DELETE {{protocol}}{{host}}:{{port}}/api/account/kirk_lazarus
+DELETE {{protocol}}{{host}}:{{port}}/api/v1/accounts/kirk_lazarus
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 
 ### create new account, without email confirmation (simple test acc generation)
-POST {{protocol}}{{host}}:{{port}}/api/account/add-account
+POST {{protocol}}{{host}}:{{port}}/api/v1/accounts
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
@@ -62,12 +62,12 @@ Content-Type: application/json
 
 
 ### give account ADMIN permission
-PUT {{protocol}}{{host}}:{{port}}/api/account/kirk_lazarus/give-admin
+PUT {{protocol}}{{host}}:{{port}}/api/v1/accounts/kirk_lazarus/roles/admin
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 
 ### remove ADMIN permission of an account
-PUT {{protocol}}{{host}}:{{port}}/api/account/kirk_lazarus/take-admin
+DELETE {{protocol}}{{host}}:{{port}}/api/v1/accounts/kirk_lazarus/roles/admin
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json

@@ -12,10 +12,11 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/account/passkeys")
+@RequestMapping(path = "/api/v{version}/accounts/me/passkeys", version = "1")
 public class PasskeyManagementController {
 
   private final PasskeyManagementService passkeyManagementService;
@@ -25,14 +26,15 @@ public class PasskeyManagementController {
   }
 
   @GetMapping
-  @PreAuthorize("hasRole('USER')")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
   public ResponseEntity<List<PasskeyCredentialResponse>> listPasskeys(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser) {
     return new ResponseEntity<>(passkeyManagementService.listPasskeys(currentUser), HttpStatus.OK);
   }
 
   @DeleteMapping("/{credentialId}")
-  @PreAuthorize("hasRole('USER')")
+  @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public ResponseEntity<Void> deletePasskey(
       @Parameter(hidden = true) @CurrentUser UserPrincipal currentUser,
       @PathVariable String credentialId) {

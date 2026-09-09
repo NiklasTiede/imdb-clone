@@ -12,9 +12,10 @@ import com.thecodinglab.imdbclone.account.internal.persistence.AccountRepository
 import com.thecodinglab.imdbclone.account.internal.persistence.LocalCredential;
 import com.thecodinglab.imdbclone.account.internal.persistence.LocalCredentialRepository;
 import com.thecodinglab.imdbclone.engagement.api.AccountActivityService;
+import com.thecodinglab.imdbclone.engagement.api.AccountEngagementLifecycle;
 import com.thecodinglab.imdbclone.engagement.api.EngagementStats;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
-import com.thecodinglab.imdbclone.shared.error.UnauthorizedException;
+import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import com.thecodinglab.imdbclone.shared.security.UserPrincipal;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +44,8 @@ public class AccountManagement implements AccountService {
   private final RegisteredUserRoleProvider registeredUserRoleProvider;
   private final AccountMapper accountMapper;
   private final ApplicationEventPublisher events;
+  private final AccountEngagementLifecycle engagementLifecycle;
+  private final jakarta.persistence.EntityManager entityManager;
 
   public AccountManagement(
       AccountRepository accountRepository,
@@ -50,7 +54,9 @@ public class AccountManagement implements AccountService {
       PasswordEncoder passwordEncoder,
       RegisteredUserRoleProvider registeredUserRoleProvider,
       AccountMapper accountMapper,
-      ApplicationEventPublisher events) {
+      ApplicationEventPublisher events,
+      AccountEngagementLifecycle engagementLifecycle,
+      jakarta.persistence.EntityManager entityManager) {
     this.accountRepository = accountRepository;
     this.localCredentialRepository = localCredentialRepository;
     this.accountActivityService = accountActivityService;
@@ -58,6 +64,8 @@ public class AccountManagement implements AccountService {
     this.registeredUserRoleProvider = registeredUserRoleProvider;
     this.accountMapper = accountMapper;
     this.events = events;
+    this.engagementLifecycle = engagementLifecycle;
+    this.entityManager = entityManager;
   }
 
   @Override
@@ -143,6 +151,7 @@ public class AccountManagement implements AccountService {
   private record ProfileCounts(Long ratingsCount, Long watchedMoviesCount, Long commentsCount) {}
 
   @Override
+  @Transactional
   public AccountCreated createAccount(CreateAccountRequest request, UserPrincipal currentAccount) {
     String username = request.username().toLowerCase(Locale.ROOT);
     String email = request.email().toLowerCase(Locale.ROOT);
@@ -183,7 +192,7 @@ public class AccountManagement implements AccountService {
       logger.warn(
           "User with [{}] tried to update an account without ADMIN permissions.",
           kv(ACCOUNT_ID, currentAccount.getId()));
-      throw new UnauthorizedException(
+      throw new AccessDeniedException(
           "Account with id [%d] has no permission to update this resource."
               .formatted(currentAccount.getId()));
     }
@@ -195,6 +204,20 @@ public class AccountManagement implements AccountService {
     Account account = accountRepository.getAccountByUsername(username);
     if (Objects.equals(account.getId(), currentAccount.getId())
         || UserPrincipal.isCurrentAccountAdmin(currentAccount)) {
+      engagementLifecycle.removeAccountRatings(account.getId());
+      account =
+          accountRepository
+              .findById(account.getId())
+              .orElseThrow(
+                  () ->
+                      new NotFoundException(
+                          "User with username [" + username + "] not found in database."));
+      entityManager.flush();
+      try {
+        entityManager.refresh(account, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+      } catch (jakarta.persistence.EntityNotFoundException exception) {
+        throw new NotFoundException("User with username [" + username + "] not found in database.");
+      }
       String imageUrlToken = account.getImageUrlToken();
       accountRepository.delete(account);
       events.publishEvent(new AccountDeleted(account.getId(), imageUrlToken));
@@ -204,7 +227,7 @@ public class AccountManagement implements AccountService {
       logger.warn(
           "User with [{}] tried to delete an account without ADMIN permissions.",
           kv(ACCOUNT_ID, currentAccount.getId()));
-      throw new UnauthorizedException(
+      throw new AccessDeniedException(
           "Account with id [%s] has no permission to delete this resource."
               .formatted(currentAccount.getId()));
     }

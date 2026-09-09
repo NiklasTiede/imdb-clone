@@ -25,6 +25,10 @@ const RegistrationPage = lazyRoute(
   () => import("../../features/identity"),
   "RegistrationPage",
 );
+const ConfirmEmailPage = lazyRoute(
+  () => import("../../features/identity"),
+  "ConfirmEmailPage",
+);
 const ResetPasswordPage = lazyRoute(
   () => import("../../features/identity"),
   "ResetPasswordPage",
@@ -112,6 +116,15 @@ export const routeDefinitions: RouteDefinition[] = [
       altLabel: "Already have an account?",
       altTo: "/login",
       element: <RegistrationPage />,
+    }),
+  },
+  {
+    path: "/confirm-email",
+    element: authRoute({
+      altActionLabel: "Sign in",
+      altLabel: "Already confirmed?",
+      altTo: "/login",
+      element: <ConfirmEmailPage />,
     }),
   },
   {

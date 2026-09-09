@@ -52,7 +52,7 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
         objectMapper.readValue(
             mockMvc
                 .perform(
-                    post("/api/comment/{movieId}", MOVIE_ID)
+                    post("/api/v1/movies/{movieId}/comments", MOVIE_ID)
                         .with(testUser())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -67,7 +67,7 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
 
     restTestClient
         .get()
-        .uri("/api/comment/{commentId}", createdComment.id())
+        .uri("/api/v1/comments/{commentId}", createdComment.id())
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -92,7 +92,7 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            put("/api/comment/{commentId}", createdComment.id())
+            put("/api/v1/comments/{commentId}", createdComment.id())
                 .with(testUser())
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -107,7 +107,7 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
 
     restTestClient
         .get()
-        .uri("/api/comment/{movieId}/comments", MOVIE_ID)
+        .uri("/api/v1/movies/{movieId}/comments", MOVIE_ID)
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -130,7 +130,7 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
 
     restTestClient
         .get()
-        .uri("/api/account/{username}/comments", "test_user_two")
+        .uri("/api/v1/accounts/{username}/comments", "test_user_two")
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -153,7 +153,7 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            delete("/api/comment/{commentId}", createdComment.id())
+            delete("/api/v1/comments/{commentId}", createdComment.id())
                 .with(testUser())
                 .with(csrf())
                 .accept(MediaType.APPLICATION_JSON))
@@ -161,7 +161,7 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
 
     restTestClient
         .get()
-        .uri("/api/comment/{commentId}", createdComment.id())
+        .uri("/api/v1/comments/{commentId}", createdComment.id())
         .accept(MediaType.APPLICATION_JSON)
         .exchange()
         .expectAll(
@@ -175,7 +175,7 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/comment/{movieId}", MOVIE_ID)
+            post("/api/v1/movies/{movieId}/comments", MOVIE_ID)
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
@@ -190,7 +190,7 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/comment/{movieId}", MOVIE_ID)
+            post("/api/v1/movies/{movieId}/comments", MOVIE_ID)
                 .with(testUser())
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -198,6 +198,6 @@ class CommentControllerTest extends BaseControllerIntegrationTest {
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest())
         .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
-        .andExpect(jsonPath("$.message").value("message must not be blank"));
+        .andExpect(jsonPath("$.errors.message").value("message must not be blank"));
   }
 }

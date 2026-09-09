@@ -101,19 +101,19 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
   private Optional<RateLimitRule> ruleFor(HttpServletRequest request) {
     String method = request.getMethod();
     String path = request.getRequestURI();
-    if ("POST".equals(method) && "/api/auth/login".equals(path)) {
+    if ("POST".equals(method) && "/api/v1/auth/login".equals(path)) {
       return Optional.of(new RateLimitRule("login", properties.getLogin()));
     }
     if ("POST".equals(method) && "/login/webauthn".equals(path)) {
       return Optional.of(new RateLimitRule("passkey-login", properties.getPasskeyLogin()));
     }
-    if ("POST".equals(method) && "/api/auth/registration".equals(path)) {
+    if ("POST".equals(method) && "/api/v1/auth/registration".equals(path)) {
       return Optional.of(new RateLimitRule("registration", properties.getRegistration()));
     }
-    if ("GET".equals(method) && "/api/auth/reset-password".equals(path)) {
+    if ("POST".equals(method) && "/api/v1/auth/password-reset-requests".equals(path)) {
       return Optional.of(new RateLimitRule("password-reset", properties.getPasswordReset()));
     }
-    if ("POST".equals(method) && "/api/auth/save-new-password".equals(path)) {
+    if ("POST".equals(method) && "/api/v1/auth/password-resets".equals(path)) {
       return Optional.of(new RateLimitRule("password-reset", properties.getPasswordReset()));
     }
     if ("GET".equals(method) && PATH_MATCHER.match("/oauth2/authorization/**", path)) {

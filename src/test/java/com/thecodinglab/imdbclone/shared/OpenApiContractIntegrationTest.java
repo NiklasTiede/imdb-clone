@@ -44,6 +44,28 @@ class OpenApiContractIntegrationTest extends BaseControllerIntegrationTest {
         .isEqualTo(expected);
   }
 
+  @Test
+  void documentsVersionedPathsAndActualResponseStatuses() throws Exception {
+    JsonNode contract =
+        JSON_MAPPER.readTree(
+            mockMvc
+                .perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString());
+    JsonNode paths = contract.path("paths");
+    paths.fieldNames().forEachRemaining(path -> assertThat(path).startsWith("/api/v1/"));
+    JsonNode deleted = paths.path("/api/v1/movies/{movieId}").path("delete").path("responses");
+    assertThat(deleted.has("204")).isTrue();
+    assertThat(deleted.path("204").has("content")).isFalse();
+    assertThat(paths.path("/api/v1/movies").path("post").path("responses").has("201")).isTrue();
+    JsonNode rating =
+        paths.path("/api/v1/accounts/me/ratings/{movieId}").path("put").path("responses");
+    assertThat(rating.has("200")).isTrue();
+    assertThat(rating.has("201")).isTrue();
+  }
+
   private static JsonNode withoutEnvironmentSpecificServers(JsonNode contract) {
     if (contract instanceof ObjectNode objectContract) {
       objectContract.remove("servers");

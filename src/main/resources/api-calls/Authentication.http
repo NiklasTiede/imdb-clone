@@ -1,16 +1,16 @@
 
 ### check username availability
-GET {{protocol}}{{host}}:{{port}}/api/auth/check-username-availability?username=notusedusername
+GET {{protocol}}{{host}}:{{port}}/api/v1/auth/check-username-availability?username=notusedusername
 Content-Type: application/json
 
 
 ### check email availability
-GET {{protocol}}{{host}}:{{port}}/api/auth/check-email-availability?email=notused@gmail.com
+GET {{protocol}}{{host}}:{{port}}/api/v1/auth/check-email-availability?email=notused@gmail.com
 Content-Type: application/json
 
 
 ### login
-POST {{protocol}}{{host}}:{{port}}/api/auth/login
+POST {{protocol}}{{host}}:{{port}}/api/v1/auth/login
 Content-Type: application/json
 
 {
@@ -20,7 +20,7 @@ Content-Type: application/json
 
 
 ### login as regular user
-POST {{protocol}}{{host}}:{{port}}/api/auth/login
+POST {{protocol}}{{host}}:{{port}}/api/v1/auth/login
 Content-Type: application/json
 
 {
@@ -30,7 +30,7 @@ Content-Type: application/json
 
 
 ### register
-POST {{protocol}}{{host}}:{{port}}/api/auth/registration
+POST {{protocol}}{{host}}:{{port}}/api/v1/auth/registration
 Content-Type: application/json
 
 {
@@ -41,17 +41,21 @@ Content-Type: application/json
 
 
 ### confirm email token
-GET {{protocol}}{{host}}:{{port}}/api/auth/confirm-email-address?token=a32f1eaa-7b1a-4015-9b27-bf8d6e0bcaf0
+POST {{protocol}}{{host}}:{{port}}/api/v1/auth/email-confirmations
 Content-Type: application/json
+
+{ "token": "a32f1eaa-7b1a-4015-9b27-bf8d6e0bcaf0" }
 
 
 ### reset password
-GET {{protocol}}{{host}}:{{port}}/api/auth/reset-password?email=kirk.lazarus@gmail.com
+POST {{protocol}}{{host}}:{{port}}/api/v1/auth/password-reset-requests
 Content-Type: application/json
+
+{ "email": "kirk.lazarus@gmail.com" }
 
 
 ### save new password
-POST {{protocol}}{{host}}:{{port}}/api/auth/save-new-password
+POST {{protocol}}{{host}}:{{port}}/api/v1/auth/password-resets
 Content-Type: application/json
 
 {

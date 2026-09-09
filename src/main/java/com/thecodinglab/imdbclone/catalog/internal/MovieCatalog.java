@@ -8,6 +8,7 @@ import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import com.thecodinglab.imdbclone.catalog.api.MovieRequest;
 import com.thecodinglab.imdbclone.catalog.api.MovieService;
 import com.thecodinglab.imdbclone.catalog.api.events.MovieDeleted;
+import com.thecodinglab.imdbclone.catalog.api.events.MovieImageReplaced;
 import com.thecodinglab.imdbclone.catalog.internal.mapper.MovieMapper;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.Movie;
 import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieRepository;
@@ -15,11 +16,16 @@ import com.thecodinglab.imdbclone.catalog.internal.persistence.MovieSearchDao;
 import com.thecodinglab.imdbclone.catalog.internal.search.projection.MovieSearchProjectionTasks;
 import com.thecodinglab.imdbclone.shared.api.MessageResponse;
 import com.thecodinglab.imdbclone.shared.api.PagedResponse;
+import com.thecodinglab.imdbclone.shared.error.NotFoundException;
 import com.thecodinglab.imdbclone.shared.validation.Pagination;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,18 +46,21 @@ public class MovieCatalog implements MovieService {
   private final MovieMapper movieMapper;
   private final MovieSearchProjectionTasks movieSearchProjectionTasks;
   private final ApplicationEventPublisher events;
+  private final EntityManager entityManager;
 
   public MovieCatalog(
       final MovieRepository movieRepository,
       MovieSearchDao movieSearchDao,
       MovieMapper movieMapper,
       MovieSearchProjectionTasks movieSearchProjectionTasks,
-      ApplicationEventPublisher events) {
+      ApplicationEventPublisher events,
+      EntityManager entityManager) {
     this.movieRepository = movieRepository;
     this.movieSearchDao = movieSearchDao;
     this.movieMapper = movieMapper;
     this.movieSearchProjectionTasks = movieSearchProjectionTasks;
     this.events = events;
+    this.entityManager = entityManager;
   }
 
   @Override
@@ -101,13 +110,15 @@ public class MovieCatalog implements MovieService {
   public MovieRecord createMovie(MovieRequest movieRequest) {
     Movie movie = movieMapper.dtoToEntity(movieRequest);
     Movie savedMovie = performSave(movie);
+    publishImageChange(savedMovie.getId(), null, savedMovie.getPosterImageToken());
     return movieMapper.entityToDTO(savedMovie);
   }
 
   @Override
   @Transactional
   public MovieRecord updateMovie(Long movieId, MovieRequest movieRequest) {
-    Movie movie = movieRepository.getMovieById(movieId);
+    Movie movie = lockMovie(movieId);
+    String previousImage = movie.getPosterImageToken();
     movie.setPrimaryTitle(movieRequest.primaryTitle());
     movie.setImdbId(movieRequest.imdbId());
     movie.setTmdbId(movieRequest.tmdbId());
@@ -123,13 +134,14 @@ public class MovieCatalog implements MovieService {
     movie.setBackdropImageToken(movieRequest.backdropImageToken());
     movie.setTrailerYoutubeKey(movieRequest.trailerYoutubeKey());
     Movie updatedMovie = performSave(movie);
+    publishImageChange(movieId, previousImage, movie.getPosterImageToken());
     return movieMapper.entityToDTO(updatedMovie);
   }
 
   @Override
   @Transactional
   public MessageResponse deleteMovie(Long movieId) {
-    Movie movie = movieRepository.getMovieById(movieId);
+    Movie movie = lockMovie(movieId);
     performDelete(movie);
     return new MessageResponse(
         "the movie [%s] was deleted successfully.".formatted(movie.getPrimaryTitle()));
@@ -171,18 +183,40 @@ public class MovieCatalog implements MovieService {
   @Override
   @Transactional
   public MovieImageToken updateMovieImageToken(Long movieId, String posterImageToken) {
-    Movie movie = movieRepository.getMovieById(movieId);
+    Movie movie = lockMovie(movieId);
+    String previous = movie.getPosterImageToken();
     movie.setPosterImageToken(posterImageToken);
     Movie savedMovie = performSave(movie);
+    publishImageChange(movieId, previous, posterImageToken);
     return new MovieImageToken(savedMovie.getId(), savedMovie.getPosterImageToken());
   }
 
   @Override
   @Transactional
   public void clearMovieImageToken(Long movieId) {
+    updateMovieImageToken(movieId, null);
+  }
+
+  @Override
+  public boolean isMovieImageTokenReferenced(String token) {
+    return movieRepository.existsByPosterImageToken(token);
+  }
+
+  private Movie lockMovie(Long movieId) {
     Movie movie = movieRepository.getMovieById(movieId);
-    movie.setPosterImageToken(null);
-    performSave(movie);
+    entityManager.flush();
+    try {
+      entityManager.refresh(movie, LockModeType.PESSIMISTIC_WRITE);
+    } catch (EntityNotFoundException exception) {
+      throw new NotFoundException("Movie with id [" + movieId + "] not found in database.");
+    }
+    return movie;
+  }
+
+  private void publishImageChange(Long movieId, String previous, String current) {
+    if (!Objects.equals(previous, current)) {
+      events.publishEvent(new MovieImageReplaced(movieId, previous, current));
+    }
   }
 
   private Movie performSave(Movie movie) {

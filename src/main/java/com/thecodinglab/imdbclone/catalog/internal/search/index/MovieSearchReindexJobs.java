@@ -3,143 +3,55 @@ package com.thecodinglab.imdbclone.catalog.internal.search.index;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchReindexJobResponse;
 import com.thecodinglab.imdbclone.catalog.api.MovieSearchReindexJobStatus;
 import com.thecodinglab.imdbclone.shared.error.NotFoundException;
-import java.time.Instant;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicReference;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MovieSearchReindexJobs {
+  private final JdbcTemplate jdbc;
 
-  private final MovieSearchIndexMaintenance movieSearchIndexMaintenance;
-  private final Executor executor;
-  private final AtomicReference<UUID> activeJobId = new AtomicReference<>();
-  private final ConcurrentMap<UUID, ReindexJob> jobs = new ConcurrentHashMap<>();
-
-  public MovieSearchReindexJobs(
-      MovieSearchIndexMaintenance movieSearchIndexMaintenance,
-      @Qualifier("movieSearchReindexExecutor") Executor executor) {
-    this.movieSearchIndexMaintenance = movieSearchIndexMaintenance;
-    this.executor = executor;
+  public MovieSearchReindexJobs(JdbcTemplate jdbc) {
+    this.jdbc = jdbc;
   }
 
+  @Transactional
   public MovieSearchReindexJobResponse startReindex() {
-    UUID jobId = UUID.randomUUID();
-    ReindexJob job =
-        new ReindexJob(jobId, movieSearchIndexMaintenance.totalMovies(), Instant.now());
-    UUID runningJobId = activeJobId.get();
-    if (!activeJobId.compareAndSet(null, jobId)) {
-      throw new MovieSearchReindexAlreadyRunningException(getStatus(runningJobId));
+    jdbc.queryForObject(
+        "select pg_advisory_xact_lock(hashtextextended('imdb:catalog:reindex-start', 0))",
+        Object.class);
+    var running =
+        jdbc.query("select * from movie_search_reindex_job where status = 'RUNNING'", this::map);
+    if (!running.isEmpty()) {
+      throw new MovieSearchReindexAlreadyRunningException(running.getFirst());
     }
-
-    jobs.put(jobId, job);
-    try {
-      executor.execute(() -> runReindex(job));
-    } catch (RuntimeException ex) {
-      activeJobId.compareAndSet(jobId, null);
-      job.fail(ex);
-      throw ex;
-    }
-    return job.toResponse();
+    UUID id = UUID.randomUUID();
+    jdbc.update(
+        "insert into movie_search_reindex_job(id, total_movies) select ?, count(*) from movie", id);
+    return getStatus(id);
   }
 
+  @Transactional(readOnly = true)
   public MovieSearchReindexJobResponse getStatus(UUID jobId) {
-    ReindexJob job = jobs.get(jobId);
-    if (job == null) {
+    var jobs = jdbc.query("select * from movie_search_reindex_job where id = ?", this::map, jobId);
+    if (jobs.isEmpty()) {
       throw new NotFoundException("Movie search reindex job [%s] was not found.".formatted(jobId));
     }
-    return job.toResponse();
+    return jobs.getFirst();
   }
 
-  private void runReindex(ReindexJob job) {
-    try {
-      long indexedMovies = movieSearchIndexMaintenance.reindexMovies(job::updateProgress);
-      job.complete(indexedMovies);
-    } catch (RuntimeException ex) {
-      job.fail(ex);
-    } finally {
-      activeJobId.compareAndSet(job.id(), null);
-    }
+  private MovieSearchReindexJobResponse map(ResultSet row, int index) throws SQLException {
+    var finished = row.getTimestamp("finished_at");
+    return new MovieSearchReindexJobResponse(
+        row.getObject("id", UUID.class),
+        MovieSearchReindexJobStatus.valueOf(row.getString("status")),
+        row.getLong("indexed_movies"),
+        row.getLong("total_movies"),
+        row.getTimestamp("started_at").toInstant(),
+        finished == null ? null : finished.toInstant(),
+        row.getString("error_message"));
   }
-
-  private static final class ReindexJob {
-    private final UUID id;
-    private final long totalMovies;
-    private final Instant startedAt;
-    private ReindexJobState state = new Running(0);
-
-    private ReindexJob(UUID id, long totalMovies, Instant startedAt) {
-      this.id = id;
-      this.totalMovies = totalMovies;
-      this.startedAt = startedAt;
-    }
-
-    UUID id() {
-      return id;
-    }
-
-    synchronized void updateProgress(long indexedMovies) {
-      if (!(state instanceof Running)) {
-        throw new IllegalStateException("Cannot update a finished reindex job");
-      }
-      state = new Running(indexedMovies);
-    }
-
-    synchronized void complete(long indexedMovies) {
-      state = new Completed(indexedMovies, Instant.now());
-    }
-
-    synchronized void fail(RuntimeException ex) {
-      state = new Failed(state.indexedMovies(), Instant.now(), errorMessage(ex));
-    }
-
-    synchronized MovieSearchReindexJobResponse toResponse() {
-      return switch (state) {
-        case Running running ->
-            response(MovieSearchReindexJobStatus.RUNNING, running.indexedMovies(), null, null);
-        case Completed completed ->
-            response(
-                MovieSearchReindexJobStatus.COMPLETED,
-                completed.indexedMovies(),
-                completed.finishedAt(),
-                null);
-        case Failed failed ->
-            response(
-                MovieSearchReindexJobStatus.FAILED,
-                failed.indexedMovies(),
-                failed.finishedAt(),
-                failed.errorMessage());
-      };
-    }
-
-    private MovieSearchReindexJobResponse response(
-        MovieSearchReindexJobStatus status,
-        long indexedMovies,
-        Instant finishedAt,
-        String errorMessage) {
-      return new MovieSearchReindexJobResponse(
-          id, status, indexedMovies, totalMovies, startedAt, finishedAt, errorMessage);
-    }
-
-    private static String errorMessage(RuntimeException exception) {
-      return exception.getMessage() != null
-          ? exception.getMessage()
-          : exception.getClass().getSimpleName();
-    }
-  }
-
-  private sealed interface ReindexJobState permits Running, Completed, Failed {
-    long indexedMovies();
-  }
-
-  private record Running(long indexedMovies) implements ReindexJobState {}
-
-  private record Completed(long indexedMovies, Instant finishedAt) implements ReindexJobState {}
-
-  private record Failed(long indexedMovies, Instant finishedAt, String errorMessage)
-      implements ReindexJobState {}
 }
