@@ -2,21 +2,24 @@ package com.thecodinglab.imdbclone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+import com.thecodinglab.imdbclone.architecture.BackendArchitectureRules;
+import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
+import java.util.Arrays;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
+import org.springframework.modulith.NamedInterface;
 import org.springframework.modulith.core.ApplicationModule;
 import org.springframework.modulith.core.ApplicationModules;
 
+@Tag("architecture")
 class ModulithArchitectureTest {
-
-  private static final Path MODULE_ROOT = Path.of("src/main/java/com/thecodinglab/imdbclone");
-
+  private static final String ROOT = "com.thecodinglab.imdbclone";
   private static final Set<String> EXPECTED_MODULES =
       Set.of(
           "account",
@@ -28,10 +31,10 @@ class ModulithArchitectureTest {
           "notification",
           "recommendation",
           "shared");
-
-  private static final Pattern INTERNAL_IMPORT =
-      Pattern.compile(
-          "^import\\s+com\\.thecodinglab\\.imdbclone\\.([a-z]+)\\.internal\\.", Pattern.MULTILINE);
+  private static final JavaClasses CLASSES =
+      new ClassFileImporter()
+          .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+          .importPackages(ROOT);
 
   @Test
   void verifiesApplicationModules() {
@@ -40,186 +43,96 @@ class ModulithArchitectureTest {
 
   @Test
   void detectsExpectedApplicationModules() {
-    ApplicationModules modules = ApplicationModules.of(Application.class);
-
-    assertThat(modules.stream().map(ApplicationModule::getIdentifier).map(Object::toString))
+    assertThat(
+            ApplicationModules.of(Application.class).stream()
+                .map(ApplicationModule::getIdentifier)
+                .map(Object::toString))
         .containsExactlyInAnyOrderElementsOf(EXPECTED_MODULES);
+    assertThat(CLASSES).isNotEmpty();
+  }
+
+  @TestFactory
+  Stream<DynamicTest> semanticArchitectureRules() {
+    return new BackendArchitectureRules(ROOT)
+        .all().stream()
+            .map(rule -> DynamicTest.dynamicTest(rule.getDescription(), () -> rule.check(CLASSES)));
   }
 
   @Test
-  void applicationModulesDeclareAllowedDependencies() {
-    assertThat(EXPECTED_MODULES)
-        .allSatisfy(
-            module ->
-                assertThat(readString(MODULE_ROOT.resolve(module).resolve("package-info.java")))
-                    .as(module)
-                    .contains("allowedDependencies"));
-  }
-
-  @Test
-  void apiPackagesAreNamedInterfaces() throws IOException {
-    try (Stream<Path> packageInfos = Files.walk(MODULE_ROOT)) {
-      assertThat(
-              packageInfos
-                  .filter(path -> path.endsWith("api/package-info.java"))
-                  .filter(path -> !readString(path).contains("@NamedInterface(\"api\")"))
-                  .toList())
-          .isEmpty();
+  void applicationModulesDeclareClosedDependencies() throws Exception {
+    String[] unrestricted =
+        (String[])
+            org.springframework.modulith.ApplicationModule.class
+                .getMethod("allowedDependencies")
+                .getDefaultValue();
+    for (String module : EXPECTED_MODULES) {
+      assertThat(dependencies(module))
+          .as(module)
+          .doesNotContainAnyElementsOf(Arrays.asList(unrestricted));
     }
   }
 
   @Test
-  void internalPackagesAreNotNamedInterfaces() throws IOException {
-    try (Stream<Path> packageInfos = Files.walk(MODULE_ROOT)) {
-      assertThat(
-              packageInfos
-                  .filter(path -> path.getFileName().toString().equals("package-info.java"))
-                  .filter(path -> path.toString().contains("/internal/"))
-                  .filter(path -> readString(path).contains("@NamedInterface"))
-                  .toList())
-          .isEmpty();
+  void apiPackagesAreNamedInterfaces() throws Exception {
+    var packages =
+        CLASSES.stream()
+            .map(type -> type.getPackageName())
+            .filter(name -> name.endsWith(".api"))
+            .distinct()
+            .toList();
+    assertThat(packages).isNotEmpty();
+    for (String name : packages) {
+      var annotation =
+          Class.forName(name + ".package-info").getPackage().getAnnotation(NamedInterface.class);
+      assertThat(annotation).as(name).isNotNull();
+      assertThat(annotation.value()).as(name).contains("api");
     }
   }
 
   @Test
-  void registrationRequestBelongsToIdentityModule() {
-    assertThat(Files.exists(MODULE_ROOT.resolve("identity/api/RegistrationRequest.java"))).isTrue();
-    assertThat(Files.exists(MODULE_ROOT.resolve("account/api/RegistrationRequest.java"))).isFalse();
-  }
-
-  @Test
-  void catalogConsumersUseNarrowNamedInterfaces() {
-    assertThat(readString(MODULE_ROOT.resolve("assistant/package-info.java")))
+  void consumersUseNarrowNamedInterfaces() throws Exception {
+    assertThat(dependencies("assistant"))
         .contains("catalog::assistant")
         .doesNotContain("catalog::api");
-    assertThat(readString(MODULE_ROOT.resolve("engagement/package-info.java")))
+    assertThat(dependencies("engagement"))
         .contains("catalog::reference", "catalog::ratings")
         .doesNotContain("catalog::api");
-    assertThat(readString(MODULE_ROOT.resolve("media/package-info.java")))
-        .contains("catalog::media")
-        .doesNotContain("catalog::api");
-    assertThat(readString(MODULE_ROOT.resolve("recommendation/package-info.java")))
+    assertThat(dependencies("media")).contains("catalog::media").doesNotContain("catalog::api");
+    assertThat(dependencies("recommendation"))
         .contains("catalog::recommendation")
         .doesNotContain("catalog::api");
-  }
-
-  @Test
-  void identityPublishesNotificationEventsInsteadOfCallingNotificationModule() throws IOException {
-    assertThat(readString(MODULE_ROOT.resolve("identity/package-info.java")))
-        .doesNotContain("notification");
-    assertThat(readString(MODULE_ROOT.resolve("identity/api/events/package-info.java")))
-        .contains("@NamedInterface(\"events\")");
-    assertThat(readString(MODULE_ROOT.resolve("notification/package-info.java")))
-        .contains("identity::events")
-        .doesNotContain("identity::api");
-    assertThat(Files.exists(MODULE_ROOT.resolve("notification/api/NotificationService.java")))
-        .isFalse();
-    try (Stream<Path> identitySources = Files.walk(MODULE_ROOT.resolve("identity"))) {
-      assertThat(
-              identitySources
-                  .filter(Files::isRegularFile)
-                  .map(this::readString)
-                  .filter(
-                      source ->
-                          source.contains("com.thecodinglab.imdbclone.notification")
-                              || source.contains("NotificationService")
-                              || source.contains("buildConfirmationEmail")
-                              || source.contains("buildPasswordResetEmail")
-                              || source.contains("sendEmail("))
-                  .toList())
-          .isEmpty();
-    }
-  }
-
-  @Test
-  void mediaDoesNotExposeUploadInterfaceAsModuleApi() {
-    assertThat(Files.exists(MODULE_ROOT.resolve("media/api/MediaService.java"))).isFalse();
-  }
-
-  @Test
-  void accountUsesSingleEngagementProfileInterface() throws IOException {
-    assertThat(readString(MODULE_ROOT.resolve("account/package-info.java")))
-        .contains("engagement::profile")
+    assertThat(dependencies("account"))
+        .contains("engagement::profile", "engagement::lifecycle")
         .doesNotContain("engagement::api");
-    try (Stream<Path> accountSources = Files.walk(MODULE_ROOT.resolve("account"))) {
-      assertThat(
-              accountSources
-                  .filter(Files::isRegularFile)
-                  .map(this::readString)
-                  .filter(
-                      source ->
-                          source.contains("CommentService")
-                              || source.contains("RatingService")
-                              || source.contains("WatchedMovieService")
-                              || source.contains("EngagementStatsService"))
-                  .toList())
-          .isEmpty();
-    }
+    assertThat(dependencies("notification")).containsExactly("identity::events");
+    assertThat(dependencies("media")).contains("account::media").doesNotContain("account::api");
+    assertThat(dependencies("identity"))
+        .contains("account::identity")
+        .doesNotContain("account::api");
+    assertThat(dependencies("identity"))
+        .noneMatch(dependency -> dependency.startsWith("notification"));
   }
 
   @Test
-  void concreteImplementationsUseDomainNames() throws IOException {
+  void registrationAndUploadContractsKeepTheirOwnership() {
     assertThat(
-            javaSources().stream()
-                .filter(path -> path.getFileName().toString().endsWith("ServiceImpl.java"))
-                .toList())
-        .isEmpty();
-  }
-
-  @Test
-  void apiPackagesDoNotDependOnModuleInternals() throws IOException {
+            CLASSES.stream()
+                .filter(type -> type.getSimpleName().equals("RegistrationRequest"))
+                .map(type -> type.getPackageName()))
+        .containsExactly(ROOT + ".identity.api");
     assertThat(
-            javaSources().stream()
-                .filter(path -> path.toString().contains("/api/"))
-                .filter(path -> referencesOwnInternalPackage(path))
-                .toList())
-        .isEmpty();
+            CLASSES.stream()
+                .filter(type -> type.getSimpleName().equals("MediaService"))
+                .map(type -> type.getPackageName()))
+        .containsExactly(ROOT + ".media.internal");
   }
 
-  @Test
-  void modulesDoNotImportOtherModulesInternalPackages() throws IOException {
-    assertThat(
-            javaSources().stream()
-                .flatMap(
-                    source ->
-                        importedInternalModules(source)
-                            .filter(targetModule -> !targetModule.equals(moduleName(source)))
-                            .map(targetModule -> source + " imports " + targetModule + ".internal"))
-                .toList())
-        .isEmpty();
-  }
-
-  private List<Path> javaSources() throws IOException {
-    try (Stream<Path> sources = Files.walk(MODULE_ROOT)) {
-      return sources
-          .filter(Files::isRegularFile)
-          .filter(path -> path.toString().endsWith(".java"))
-          .toList();
-    }
-  }
-
-  private boolean referencesOwnInternalPackage(Path source) {
-    String moduleName = moduleName(source);
-
-    return EXPECTED_MODULES.contains(moduleName)
-        && readString(source).contains("com.thecodinglab.imdbclone." + moduleName + ".internal.");
-  }
-
-  private Stream<String> importedInternalModules(Path source) {
-    return INTERNAL_IMPORT.matcher(readString(source)).results().map(result -> result.group(1));
-  }
-
-  private String moduleName(Path source) {
-    Path relativePath = MODULE_ROOT.relativize(source);
-
-    return relativePath.getNameCount() > 1 ? relativePath.getName(0).toString() : "";
-  }
-
-  private String readString(Path path) {
-    try {
-      return Files.readString(path);
-    } catch (Exception ex) {
-      throw new IllegalStateException("Could not read " + path, ex);
-    }
+  private String[] dependencies(String module) throws ClassNotFoundException {
+    var annotation =
+        Class.forName(ROOT + "." + module + ".package-info")
+            .getPackage()
+            .getAnnotation(org.springframework.modulith.ApplicationModule.class);
+    assertThat(annotation).as(module).isNotNull();
+    return annotation.allowedDependencies();
   }
 }

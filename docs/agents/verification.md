@@ -14,22 +14,33 @@ Run from the repository root.
 | Task | Command |
 | --- | --- |
 | One fast backend test | `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"` |
-| All fast backend tests | `./gradlew test` |
+| Fast backend behavior tests | `./gradlew test` |
+| Semantic architecture rules and negative fixtures | `./gradlew architectureTest` |
+| All fast backend checks | `./gradlew test architectureTest` |
+| Isolated PostgreSQL module tests | `./gradlew integrationTest --tests '*ModuleIntegrationTest'` |
 | One backend integration test | `./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"` |
 | All backend integration tests | `./gradlew integrationTest` |
-| All backend tests | `./gradlew test integrationTest` |
+| All backend tests | `./gradlew architectureTest test integrationTest` |
 | Format backend code | `./gradlew spotlessApply` |
 | Backend CI-equivalent check | `./gradlew build jacocoTestReport` |
 
 Notes:
 
-- `test` excludes the JUnit `integration` tag and does not start Testcontainers.
+- `test` excludes the JUnit `integration` and `architecture` tags and does not start Testcontainers.
+- `architectureTest` runs Spring Modulith verification, compiled dependency/annotation rules and
+  deliberately invalid fixtures. It needs no external infrastructure. Both `check`/`build` and CI
+  require it; CI executes it before the broader backend build for early feedback.
 - `integrationTest` selects the `integration` tag and uses Testcontainers where PostgreSQL,
   OpenSearch, or RustFS are needed.
+- `@ApplicationModuleTest` tests for Engagement and Notification run in STANDALONE mode through
+  module Interfaces/events, with PostgreSQL and narrow mocks for outbound contracts. They use no
+  OpenSearch/S3 containers and assert that foreign domain implementations and repositories are absent.
+  They also verify the module's exact JPA entity set. HTTP contract
+  behavior remains covered by the existing full-context controller tests.
 - Docker must be running for `integrationTest`, `check`, and `build`.
 - Testcontainers stores its disposable OpenSearch index in a bounded 256 MiB tmpfs, avoiding
   read-only index blocks caused by the Docker disk image being near its capacity.
-- `jacocoTestReport` combines coverage from the fast and integration test tasks.
+- `jacocoTestReport` combines coverage from behavior, architecture and integration test tasks.
 - Before committing Java, Gradle, or backend test changes, run `./gradlew spotlessApply`.
 
 ## Frontend Checks

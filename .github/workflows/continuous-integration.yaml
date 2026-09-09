@@ -37,6 +37,9 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: ${{ runner.os }}-gradle-
 
+      - name: Verify backend module boundaries and architecture rules
+        run: ./gradlew architectureTest
+
       - name: Build and Test Spring Boot Application
         run: ./gradlew build jacocoTestReport
 

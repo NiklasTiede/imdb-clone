@@ -8,7 +8,8 @@ frontend, and Python Movie Concierge. Production infrastructure is reconciled fr
 Every pull request targeting `master`, every merged `master` commit, and a deliberate manual run
 starts separate jobs for:
 
-- Java 25 backend build, tests, integration tests, JaCoCo, compiler checks, and dependency safety.
+- Java 25 backend architecture gate, build, behavior/module/integration tests, JaCoCo, compiler
+  checks, and dependency safety. `architectureTest` runs first and is also required by Gradle `check`.
 - React client generation, linting, tests, strict TypeScript, and production build.
 - Python 3.14 locked dependency sync, Ruff, Pyright, architecture contracts, deterministic tests and
   evals, non-root image build, and container smoke test without provider credentials.

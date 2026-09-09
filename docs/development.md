@@ -129,7 +129,12 @@ Notes:
 - `seed-local-users` creates roles and demo accounts from `src/main/resources/sql/local-users.sql`.
 - `seed-light` runs the versioned lightweight seed image against local PostgreSQL and RustFS.
 - `reindex-local-search` logs in with a local demo admin account and rebuilds the OpenSearch movie
-  index from PostgreSQL.
+  index from PostgreSQL. Reindex job status and per-film progress survive application restarts.
+  Storage failures keep the job RUNNING with a retry message and retry after one minute. The existing
+  database scheduler must be enabled to process accepted jobs. Rebuild is in place, so search results
+  can be incomplete until it finishes; ordinary movie updates remain available and are projected
+  through the same coordinated writer. Pending/failed attempts are visible through the
+  `catalog.reindex.*` metrics and the Catalog-owned `movie_search_reindex_job` table.
 - The seed pipeline is intended to be idempotent for movie/media upserts and should not wipe local user
   data.
 
@@ -521,6 +526,17 @@ the local embedding service.
 Search operations expose `imdb.search.requests` and `imdb.search.duration` through Micrometer. The
 metrics use bounded `mode` and `result` tags and never record the user's query text.
 
+Incremental projection work is tracked in Catalog's `movie_projection_work` table. Movie changes and
+the desired projection revision commit together. A running projection cannot consume a newer
+revision: the `movie-search-projection-recovery` scheduler task rediscovers pending work every five
+seconds, even when the previous one-time wake-up has already finished. An index failure retains
+work and retries after one minute; a new domain change makes that movie eligible again immediately.
+Inspect `movie_projection_work` attempts/available_at and the `catalog.projection.pending`,
+`catalog.projection.failures`, and `catalog.projection.completed` metrics. Do not delete pending work
+to silence failures: restore the index/embedding dependency and let recovery process current state.
+The bulk reindex workflow remains a separate operation; its durability and concurrency coordination
+are documented in [ADR 0002](adr/0002-backend-consistency-and-module-contracts.md).
+
 ## Environment Variables And Secrets
 
 Backend configuration keys live in:
@@ -538,6 +554,27 @@ Important backend configuration areas:
 - `imdb-clone.media.storage.*`
 - `imdb-clone.notification.*`
 - `imdb-clone.recommendation.*`
+
+Durable email delivery requires `NOTIFICATION_OUTBOX_KEY`: a cryptographically random, base64-encoded
+32-byte secret, shared by all backend replicas and preserved across restarts. It is bound as
+`imdb-clone.notification.outbox.keys.primary`; `active-key` selects the key for new messages.
+The dev profile and automated tests have an explicitly public fixture key. Deployed profiles have
+no default and fail startup when a valid key is missing. Provision the real key through the existing
+secret/configuration mechanism before deploying this version; do not commit or log it.
+
+For rotation, add a new named entry under `imdb-clone.notification.outbox.keys`, retain the previous
+entry, and change `active-key` to the new name. Pending rows carry their key ID. Remove an old key
+only after no PENDING rows reference it. Ciphertext cannot be recovered if its key is lost.
+All replicas must receive both keys before any replica begins writing with the new one.
+
+The `notification-delivery` db-scheduler task polls every five seconds. SMTP failures retain encrypted
+work and retry after one minute, until the link's original expiry. The worker never extends token
+validity. SENT and EXPIRED rows retain only deduplication metadata; mail content is erased.
+Observe `notification.delivery.pending`, `notification.delivery.failures`,
+`notification.delivery.sent`, and `notification.delivery.expired` in Actuator metrics; inspect
+`notification_delivery` state, attempts, available_at and expires_at for persistent failure status.
+Do not print decrypted payloads. SMTP may accept a message before a database failure: the retry uses
+the same Message-ID, but recipient-side deduplication is not guaranteed.
 
 Frontend build/runtime variables:
 
@@ -657,3 +694,21 @@ Movie Concierge environment or dependency setup fails:
 | k3s namespace status | `kubectl -n imdb-clone get deploy,svc,ingress` |
 | k3s rollout status | `kubectl -n imdb-clone rollout status deploy/imdb-clone-backend` and frontend equivalent |
 | API smoke | `curl -fsS http://localhost:8081/actuator/health` and `curl -fsS http://localhost:8080/v3/api-docs.yaml` |
+
+### Backend consistency upgrade notes
+
+V13 corrects historical movie rating aggregates and queues changed movies for search projection in
+one transaction. It preserves source ratings and metadata. NOWAIT table locks reject active writers;
+if migration reports a lock conflict, retry startup after those transactions finish. This avoids
+partially applying corrections or waiting in a conflicting lifecycle lock order.
+
+V14 retains Media retirement tombstones. They reject reattachment of recorded retired tokens and
+trigger periodic idempotent cleanup for late storage writes. Do not prune them while relying on
+those guarantees. `media.retirement.audit_due` shows the recheck backlog; the normal cleanup metrics
+show pending work and failed attempts. Recovery runs through the existing database scheduler.
+
+Media removes database references immediately and deletes stored variants through the recurring
+worker after commit. Former object URLs may remain usable until that cleanup succeeds. Ordinary
+uploads use sequential journal/write transactions. If application code composes uploads inside an
+existing transaction, allow spare connections for the independent journal commit; exhausting the
+pool rejects the upload before object writes. Flyway bootstrap has its own connection requirements.
