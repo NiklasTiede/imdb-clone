@@ -1,5 +1,20 @@
 # Synthetic voice compatibility fixture
 
+Application replay additionally uses two synthetic Samantha recordings in the same PCM format:
+
+- `forrest-gump-open-en.wav`: “Please find Forrest Gump and open its movie page.”
+- `open-it-en.wav`: “Open it, please.”
+
+`replay_session.py` checks either the direct open command or the original runtime question followed
+by “Open it” through the real application WebSocket and Java catalog. Run it only with `--live`
+and `IMDB_AGENT_LIVE_EVALS_ENABLED=true`; see the agent README for limits and artifact retention.
+Reports include `first_audio_after_speech_end_seconds` keyed by turn. This starts at the
+provider's speech-end event and ends at the first received PCM packet; microphone/VAD delay and
+the browser's playback buffer are excluded. Compare first and subsequent turns separately.
+Runtime logs expose `voice_first_audio` with `first_turn`/`later_turn` and
+`voice_tool_completed` with the tool name, outcome and duration in milliseconds. They contain
+no transcripts, arguments, movie/account IDs or credentials.
+
 `forrest-gump-en.wav` is synthetic English speech generated locally on macOS with the stock Samantha
 voice. It contains no user recording or production data. PCM16, mono, 24 kHz; the probe rejects
 other formats, truncated files, and recordings outside 0.1–15 seconds before connecting.
