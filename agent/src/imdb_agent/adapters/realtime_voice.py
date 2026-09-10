@@ -32,6 +32,7 @@ from imdb_agent.concierge.events import OpenLoginAction, OpenWatchlistAction
 from imdb_agent.concierge.navigation import page_action
 from imdb_agent.concierge.personal import PersonalTurn, receipt_action, requests_watchlist
 from imdb_agent.concierge.policy import SYSTEM_POLICY, select_movies_for_display
+from imdb_agent.concierge.streaming import StreamingRegion
 from imdb_agent.concierge.tools import PERSONAL_TOOLS, ToolName
 from imdb_agent.concierge.voice import VoiceEvent, VoiceGrounding, VoiceSessionLimitError
 
@@ -78,7 +79,8 @@ class RealtimeVoiceRunner:
         # Never share mutable tool/session state between browsers.
         personal = PersonalTurn()
         toolset = base_toolset(self._settings)
-        toolset.process_tool_call = PersonalToolGate(delegation, personal).call
+        streaming_region = StreamingRegion()
+        toolset.process_tool_call = PersonalToolGate(delegation, personal, streaming_region).call
         allowed = {name.value for name in ToolName}
         if delegation is None:
             allowed -= PERSONAL_TOOLS
@@ -89,7 +91,12 @@ class RealtimeVoiceRunner:
         )
         agent.instrument = False
         await relay_voice(
-            agent, self._model, transport, personal=personal, authenticated=delegation is not None
+            agent,
+            self._model,
+            transport,
+            personal=personal,
+            authenticated=delegation is not None,
+            streaming_region=streaming_region,
         )
 
 
@@ -100,9 +107,17 @@ async def relay_voice(
     *,
     personal: PersonalTurn | None = None,
     authenticated: bool = False,
+    streaming_region: StreamingRegion | None = None,
 ) -> None:
     try:
-        await _relay_voice(agent, model, transport, personal=personal, authenticated=authenticated)
+        await _relay_voice(
+            agent,
+            model,
+            transport,
+            personal=personal,
+            authenticated=authenticated,
+            streaming_region=streaming_region,
+        )
     except UsageLimitExceeded:
         raise VoiceSessionLimitError from None
 
@@ -114,8 +129,10 @@ async def _relay_voice(
     *,
     personal: PersonalTurn | None = None,
     authenticated: bool = False,
+    streaming_region: StreamingRegion | None = None,
 ) -> None:
     personal = personal or PersonalTurn()
+    streaming_region = streaming_region or StreamingRegion()
     model = CorrelatedVoiceModel(model)
     grounding = VoiceGrounding()
     application = ApplicationTools(personal, authenticated=authenticated, search=grounding.search)
@@ -149,6 +166,7 @@ async def _relay_voice(
                         await session.send_audio(command)
                 elif command.type == "context" and command.context is not None:
                     application.page_context = command.context
+                    streaming_region.country = command.context.streaming_country
                 elif command.type == "end":
                     return
                 elif command.type == "interrupt":
@@ -214,7 +232,11 @@ async def _relay_voice(
                     if event.part.tool_name not in APPLICATION_TOOLS:
                         name = ToolName(event.part.tool_name)
                         movies = parse_grounded_movies(name, event.part.content)
-                        personal.remember_movies(movies)
+                        if name not in {
+                            ToolName.GET_MOVIE_ENRICHMENT,
+                            ToolName.GET_MOVIE_WATCH_PROVIDERS,
+                        }:
+                            personal.remember_movies(movies)
                         grounding.search.succeeded(event.tool_call_id, name, arguments)
                         for movie in select_movies_for_display(name, movies, arguments):
                             grounding.movies[movie.movie_id] = movie

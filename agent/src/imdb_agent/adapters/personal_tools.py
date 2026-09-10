@@ -9,8 +9,13 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from pydantic_ai.exceptions import ToolFailed
 from pydantic_ai.mcp import CallToolFunc, MCPToolset, ToolResult
 
-from imdb_agent.adapters.catalog_contract import parse_grounded_movies
+from imdb_agent.adapters.catalog_contract import (
+    EnrichmentResult,
+    WatchProvidersResult,
+    parse_grounded_movies,
+)
 from imdb_agent.concierge.personal import DelegationRejectedError, PersonalTurn
+from imdb_agent.concierge.streaming import StreamingRegion
 from imdb_agent.concierge.tools import PERSONAL_TOOLS, WRITE_TOOLS, ToolName
 
 if TYPE_CHECKING:
@@ -87,7 +92,13 @@ def base_toolset(settings: Settings) -> MCPToolset[None]:
 
 
 class PersonalToolGate:
-    def __init__(self, token: SecretStr | None, turn: PersonalTurn) -> None:
+    def __init__(
+        self,
+        token: SecretStr | None,
+        turn: PersonalTurn,
+        streaming_region: StreamingRegion | None = None,
+    ) -> None:
+        self._streaming_region = streaming_region or StreamingRegion()
         self._token = token
         self._turn = turn
 
@@ -97,6 +108,25 @@ class PersonalToolGate:
         turn = self._turn
         epoch = turn.epoch
         metadata: dict[str, Any] = {}
+        if name in {ToolName.GET_MOVIE_ENRICHMENT, ToolName.GET_MOVIE_WATCH_PROVIDERS} and not any(
+            movie.movie_id == args.get("movieId") for movie in turn.movies
+        ):
+            raise ToolFailed(
+                "Resolve this movie from the catalog before requesting external facts."
+            )
+        if name == ToolName.GET_MOVIE_WATCH_PROVIDERS:
+            # Resolve the preference at call time: UI changes during voice sessions take effect.
+            country = args.get("country")
+            if country is None:
+                country = self._streaming_region.country
+            if (
+                not isinstance(country, str)
+                or len(country) != 2
+                or not country.isascii()
+                or not country.isalpha()
+            ):
+                raise ToolFailed("Use a two-letter country code, such as CH or DE.")
+            args = {**args, "country": country.upper()}
         personal = name in PERSONAL_TOOLS
         if personal:
             if self._token is None:
@@ -165,6 +195,16 @@ class PersonalToolGate:
             ):
                 raise ToolFailed("No matching committed receipt. Do not claim success.")
             turn.receipt = change.model_dump()
+        elif name == ToolName.GET_MOVIE_WATCH_PROVIDERS:
+            providers = WatchProvidersResult.model_validate(result)
+            if providers.movie_id != args.get("movieId") or providers.country != args.get(
+                "country"
+            ):
+                raise ToolFailed("Watch offers do not match the requested movie and country.")
+        elif name == ToolName.GET_MOVIE_ENRICHMENT:
+            enrichment = EnrichmentResult.model_validate(result)
+            if enrichment.movie_id != args.get("movieId"):
+                raise ToolFailed("External facts do not match the requested catalog movie.")
         else:
             movies = parse_grounded_movies(ToolName(name), result)
             turn.remember_movies(movies)

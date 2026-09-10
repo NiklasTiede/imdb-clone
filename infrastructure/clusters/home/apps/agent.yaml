@@ -87,7 +87,7 @@ spec:
             - name: IMDB_AGENT_MAX_TOOL_CALLS
               value: "6"
             - name: IMDB_AGENT_MAX_INPUT_TOKENS
-              value: "12000"
+              value: "24000"
             - name: IMDB_AGENT_MAX_OUTPUT_TOKENS
               value: "1500"
             - name: IMDB_AGENT_PROJECT_COST_LIMIT_USD

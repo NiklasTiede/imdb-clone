@@ -26,6 +26,7 @@ class PageContext(EventModel):
     movie_id: int | None = Field(default=None, gt=0, le=9007199254740991)
     search_query: str | None = Field(default=None, max_length=200)
     section: Literal["overview", "trailer"] = "overview"
+    streaming_country: str = Field(default="CH", pattern=r"^[A-Z]{2}$")
 
     @model_validator(mode="after")
     def consistent(self) -> PageContext:

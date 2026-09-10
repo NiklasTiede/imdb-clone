@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     max_request_body_bytes: int = Field(default=4_096, ge=1_024, le=65_536)
     max_model_requests: int = Field(default=4, ge=1, le=8)
     max_tool_calls: int = Field(default=6, ge=1, le=12)
-    max_input_tokens: int = Field(default=12_000, ge=1_000, le=50_000)
+    max_input_tokens: int = Field(default=24_000, ge=1_000, le=50_000)
     max_output_tokens: int = Field(default=1_500, ge=100, le=4_000)
     project_cost_limit_usd: Decimal = Field(default=Decimal("20.00"), gt=0, le=20)
     run_cost_limit_usd: Decimal = Field(default=Decimal("0.25"), gt=0, le=1)

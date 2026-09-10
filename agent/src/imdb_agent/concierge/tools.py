@@ -6,6 +6,8 @@ class ToolName(StrEnum):
 
     SEARCH_MOVIES = "search_movies"
     GET_MOVIE_DETAILS = "get_movie_details"
+    GET_MOVIE_ENRICHMENT = "get_movie_enrichment"
+    GET_MOVIE_WATCH_PROVIDERS = "get_movie_watch_providers"
     GET_SIMILAR_MOVIES = "get_similar_movies"
     GET_TONIGHT_PICKS = "get_tonight_picks"
 

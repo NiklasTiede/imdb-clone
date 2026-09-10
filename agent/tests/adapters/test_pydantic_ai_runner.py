@@ -344,3 +344,122 @@ async def test_model_interpreted_navigation_is_emitted_without_command_regex(
     if movie_page:
         action_index = next(i for i, event in enumerate(events) if isinstance(event, UiActionEvent))
         assert isinstance(events[action_index - 1], MovieCardEvent)
+
+
+@pytest.mark.asyncio
+async def test_external_facts_complete_text_turn_without_replacing_catalog_identity() -> None:
+    from imdb_agent.concierge.events import GroundedMovie
+    from imdb_agent.concierge.ports import ConversationMessage
+
+    requests = 0
+
+    async def stream_function(
+        messages: list[ModelMessage], info: AgentInfo
+    ) -> AsyncIterator[str | dict[int, DeltaToolCall]]:
+        nonlocal requests
+        requests += 1
+        if requests == 1:
+            yield {
+                0: DeltaToolCall(
+                    name="get_movie_enrichment", json_args='{"movieId":6}', tool_call_id="extra"
+                )
+            }
+        else:
+            yield "Extra TMDB information is unavailable; I can still show catalog details."
+
+    agent = Agent(model=FunctionModel(stream_function=stream_function), instructions=SYSTEM_POLICY)
+
+    def get_movie_enrichment(movieId: int) -> dict[str, object]:
+        assert movieId == 6
+        return {
+            "contractVersion": "1.0",
+            "movieId": 6,
+            "outcome": "UNAVAILABLE",
+            "source": "TMDB",
+            "sourceUrl": None,
+            "fetchedAt": None,
+            "facts": None,
+        }
+
+    agent.tool_plain(get_movie_enrichment)
+    runner = PydanticAIConciergeRunner.from_agent(agent=agent)
+    movie = GroundedMovie(movie_id=6, primary_title="Forrest Gump", movie_type="MOVIE")
+    events = [
+        event
+        async for event in runner.stream(
+            RunRequest(
+                conversation_id="extra-facts",
+                message="Who directed this movie?",
+                history=(
+                    ConversationMessage(role="assistant", content="Forrest Gump", movies=(movie,)),
+                ),
+            )
+        )
+    ]
+    assert any(
+        isinstance(event, ToolCallEvent) and event.tool is ToolName.GET_MOVIE_ENRICHMENT
+        for event in events
+    )
+    assert not any(isinstance(event, MovieCardEvent | UiActionEvent) for event in events)
+    assert any(isinstance(event, TextEvent) and "unavailable" in event.delta for event in events)
+
+
+@pytest.mark.asyncio
+async def test_watch_providers_complete_text_turn_without_replacing_catalog_identity() -> None:
+    from imdb_agent.concierge.events import GroundedMovie
+    from imdb_agent.concierge.ports import ConversationMessage
+
+    requests = 0
+
+    async def stream_function(
+        messages: list[ModelMessage], info: AgentInfo
+    ) -> AsyncIterator[str | dict[int, DeltaToolCall]]:
+        nonlocal requests
+        requests += 1
+        if requests == 1:
+            yield {
+                0: DeltaToolCall(
+                    name="get_movie_watch_providers",
+                    json_args='{"movieId":6}',
+                    tool_call_id="extra",
+                )
+            }
+        else:
+            yield "Extra TMDB information is unavailable; I can still show catalog details."
+
+    agent = Agent(model=FunctionModel(stream_function=stream_function), instructions=SYSTEM_POLICY)
+
+    def get_movie_watch_providers(movieId: int) -> dict[str, object]:
+        assert movieId == 6
+        return {
+            "contractVersion": "1.0",
+            "movieId": 6,
+            "outcome": "UNAVAILABLE",
+            "source": "JUSTWATCH_VIA_TMDB",
+            "country": "CH",
+            "sourceUrl": None,
+            "fetchedAt": None,
+            "offers": None,
+        }
+
+    agent.tool_plain(get_movie_watch_providers)
+    runner = PydanticAIConciergeRunner.from_agent(agent=agent)
+    movie = GroundedMovie(movie_id=6, primary_title="Forrest Gump", movie_type="MOVIE")
+    events = [
+        event
+        async for event in runner.stream(
+            RunRequest(
+                conversation_id="extra-facts",
+                message="Where can I stream this movie?",
+                history=(
+                    ConversationMessage(role="assistant", content="Forrest Gump", movies=(movie,)),
+                ),
+            )
+        )
+    ]
+    assert any(
+        isinstance(event, ToolCallEvent) and event.tool is ToolName.GET_MOVIE_WATCH_PROVIDERS
+        for event in events
+    )
+    assert not any(isinstance(event, MovieCardEvent | UiActionEvent) for event in events)
+    assert any(isinstance(event, TextEvent) and "unavailable" in event.delta for event in events)

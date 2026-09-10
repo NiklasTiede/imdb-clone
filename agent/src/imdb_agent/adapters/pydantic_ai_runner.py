@@ -55,6 +55,7 @@ from imdb_agent.concierge.policy import (
     select_movies_for_display,
 )
 from imdb_agent.concierge.service import ConciergeRunError
+from imdb_agent.concierge.streaming import StreamingRegion
 from imdb_agent.concierge.tools import PERSONAL_TOOLS, ToolName
 
 _LUNA_INPUT_PRICE_PER_MILLION = Decimal("0.20")
@@ -148,7 +149,13 @@ class PydanticAIConciergeRunner:
         active_agent = self._agent
         if self._settings is not None:
             toolset = base_toolset(self._settings)
-            toolset.process_tool_call = PersonalToolGate(request.delegation, personal).call
+            toolset.process_tool_call = PersonalToolGate(
+                request.delegation,
+                personal,
+                StreamingRegion(
+                    request.page_context.streaming_country if request.page_context else "CH"
+                ),
+            ).call
             allowed = {name.value for name in ToolName}
             if request.delegation is None:
                 allowed -= PERSONAL_TOOLS
@@ -210,7 +217,11 @@ class PydanticAIConciergeRunner:
                                 action_sent = True
                                 yield UiActionEvent(action=OpenWatchlistAction())
                             movies = parse_grounded_movies(tool_name, event.part.content)
-                            personal.remember_movies(movies)
+                            if tool_name not in {
+                                ToolName.GET_MOVIE_ENRICHMENT,
+                                ToolName.GET_MOVIE_WATCH_PROVIDERS,
+                            }:
+                                personal.remember_movies(movies)
                             search_navigation.succeeded(
                                 event.tool_call_id,
                                 tool_name,

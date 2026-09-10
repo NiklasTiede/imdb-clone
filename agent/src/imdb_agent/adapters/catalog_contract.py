@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic_ai.exceptions import UnexpectedModelBehavior
 
 from imdb_agent.concierge.events import GroundedMovie
@@ -117,12 +117,117 @@ class _PersonalRecommendationsResult(_ToolModel):
     movies: list[_ToolMovie]
 
 
+class _CastMember(_ToolModel):
+    name: str = Field(min_length=1, max_length=200)
+    character: str | None = Field(max_length=200)
+
+
+class _EnrichmentFacts(_ToolModel):
+    tagline: str | None = Field(max_length=200)
+    release_date: str | None = Field(alias="releaseDate", max_length=200)
+    cast: list[_CastMember] = Field(max_length=8)
+    directors: list[str] = Field(max_length=4)
+    writers: list[str] = Field(max_length=6)
+    production_countries: list[str] = Field(alias="productionCountries", max_length=6)
+    production_companies: list[str] = Field(alias="productionCompanies", max_length=6)
+    spoken_languages: list[str] = Field(alias="spokenLanguages", max_length=6)
+    budget_usd: int | None = Field(alias="budgetUsd", gt=0)
+    revenue_usd: int | None = Field(alias="revenueUsd", gt=0)
+
+
+class EnrichmentResult(_ToolModel):
+    contract_version: Literal["1.0"] = Field(alias="contractVersion")
+    movie_id: int = Field(alias="movieId", gt=0)
+    outcome: Literal[
+        "AVAILABLE",
+        "STALE",
+        "DISABLED",
+        "MOVIE_NOT_FOUND",
+        "UNMAPPED",
+        "UNSUPPORTED_TYPE",
+        "NOT_FOUND",
+        "IDENTITY_MISMATCH",
+        "RATE_LIMITED",
+        "UNAVAILABLE",
+    ]
+    source: Literal["TMDB"]
+    source_url: str | None = Field(
+        alias="sourceUrl", pattern=r"^https://www\.themoviedb\.org/movie/[1-9][0-9]*$"
+    )
+    fetched_at: str | None = Field(alias="fetchedAt")
+    facts: _EnrichmentFacts | None
+
+    @model_validator(mode="after")
+    def consistent(self) -> EnrichmentResult:
+        available = self.outcome in {"AVAILABLE", "STALE"}
+        if available != (self.facts is not None):
+            raise ValueError("External facts require an available outcome")
+        if available != (self.source_url is not None and self.fetched_at is not None):
+            raise ValueError("External facts require a dated source")
+        return self
+
+
+class _WatchOffers(_ToolModel):
+    subscription: list[str] = Field(max_length=12)
+    free: list[str] = Field(max_length=12)
+    ads: list[str] = Field(max_length=12)
+    rent: list[str] = Field(max_length=12)
+    buy: list[str] = Field(max_length=12)
+
+
+class WatchProvidersResult(_ToolModel):
+    contract_version: Literal["1.0"] = Field(alias="contractVersion")
+    movie_id: int = Field(alias="movieId", gt=0)
+    country: str = Field(pattern=r"^[A-Z]{2}$")
+    outcome: Literal[
+        "AVAILABLE",
+        "NO_OFFERS",
+        "DISABLED",
+        "MOVIE_NOT_FOUND",
+        "UNMAPPED",
+        "UNSUPPORTED_TYPE",
+        "NOT_FOUND",
+        "IDENTITY_MISMATCH",
+        "RATE_LIMITED",
+        "UNAVAILABLE",
+    ]
+    source: Literal["JUSTWATCH_VIA_TMDB"]
+    source_url: str | None = Field(
+        alias="sourceUrl",
+        pattern=r"^https://www\.themoviedb\.org/movie/[1-9][0-9]*/watch\?locale=[A-Z]{2}$",
+    )
+    fetched_at: str | None = Field(alias="fetchedAt")
+    offers: _WatchOffers | None
+
+    @model_validator(mode="after")
+    def consistent(self) -> WatchProvidersResult:
+        available = self.outcome in {"AVAILABLE", "NO_OFFERS"}
+        if available:
+            if self.offers is None or self.source_url is None or self.fetched_at is None:
+                raise ValueError("Watch offers require a dated source")
+            if not self.source_url.endswith("locale=" + self.country):
+                raise ValueError("Watch source must match country")
+            any_offers = any(self.offers.model_dump().values())
+            if any_offers != (self.outcome == "AVAILABLE"):
+                raise ValueError("Watch outcome must match offers")
+        elif any(value is not None for value in (self.offers, self.source_url, self.fetched_at)):
+            raise ValueError("Unavailable results cannot contain offers")
+        return self
+
+
 def parse_grounded_movies(tool_name: ToolName, content: Any) -> tuple[GroundedMovie, ...]:
     if tool_name in WRITE_TOOLS:
         return ()
     if not isinstance(content, dict):
         raise UnexpectedModelBehavior("MCP tool returned non-object content")
 
+    if tool_name is ToolName.GET_MOVIE_WATCH_PROVIDERS:
+        WatchProvidersResult.model_validate(content)
+        return ()
+    if tool_name is ToolName.GET_MOVIE_ENRICHMENT:
+        EnrichmentResult.model_validate(content)
+        # External names and provider identifiers never add catalog-grounded movies.
+        return ()
     if tool_name is ToolName.GET_MY_RATINGS:
         ratings = _RatingsResult.model_validate(content)
         return tuple(entry.movie.to_grounded() for entry in ratings.ratings)

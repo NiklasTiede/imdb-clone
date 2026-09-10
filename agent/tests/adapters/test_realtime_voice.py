@@ -694,18 +694,130 @@ async def test_voice_context_tool_reads_the_latest_browser_snapshot_without_navi
                 await self.events.put(ResponseDone())
 
     browser = Browser(end_on_completion=True)
+    from imdb_agent.concierge.streaming import StreamingRegion
+
+    region = StreamingRegion()
     for movie_id in (6, 7):
         browser.input.put_nowait(
-            VoiceCommand(type="context", context=PageContext(page="movie", movie_id=movie_id))
+            VoiceCommand(
+                type="context",
+                context=PageContext(page="movie", movie_id=movie_id, streaming_country="DE"),
+            )
         )
     model = CatalogModel()
     connection = ContextConnection()
     model.connection = connection
     agent: Agent[None, str] = Agent()
     async with asyncio.timeout(3):
-        await relay_voice(agent, model, browser)
+        await relay_voice(agent, model, browser, streaming_region=region)
+    assert region.country == "DE"
     assert connection.output is not None
     assert json.loads(connection.output)["context"]["movieId"] == 7
     assert not any(
         isinstance(event, VoiceEvent) and event.type == "ui-action" for event in browser.events
     )
+
+
+@pytest.mark.asyncio
+async def test_voice_external_facts_keep_movie_context_and_do_not_navigate() -> None:
+    from imdb_agent.concierge.events import GroundedMovie
+    from imdb_agent.concierge.personal import PersonalTurn
+
+    class EnrichmentConnection(CatalogConnection):
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, BinaryAudio):
+                await self.events.put(RealtimeInputSpeechStartEvent(item_id="extra"))
+                await self.events.put(
+                    InputTranscript("Who directed this movie?", is_final=True, item_id="extra")
+                )
+                await self.events.put(
+                    ToolCall("extra", tool_name="get_movie_enrichment", args='{"movieId":6}')
+                )
+                await self.events.put(ResponseDone())
+            elif isinstance(content, ToolResult):
+                await self.events.put(OutputTranscript("Extra TMDB information is unavailable."))
+                await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                await self.events.put(ResponseDone())
+
+    browser = Browser(end_on_completion=True)
+    model = CatalogModel()
+    model.connection = EnrichmentConnection()
+    agent: Agent[None, str] = Agent()
+
+    def get_movie_enrichment(movieId: int) -> dict[str, object]:
+        assert movieId == 6
+        return {
+            "contractVersion": "1.0",
+            "movieId": 6,
+            "outcome": "UNAVAILABLE",
+            "source": "TMDB",
+            "sourceUrl": None,
+            "fetchedAt": None,
+            "facts": None,
+        }
+
+    agent.tool_plain(get_movie_enrichment)
+    movie = GroundedMovie(movie_id=6, primary_title="Forrest Gump", movie_type="MOVIE")
+    personal = PersonalTurn(movies=(movie,))
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser, personal=personal)
+    assert personal.movies == (movie,)
+    assert not any(
+        isinstance(event, VoiceEvent) and event.type in {"movie-card", "ui-action"}
+        for event in browser.events
+    )
+    assert any(isinstance(event, bytes) for event in browser.events)
+
+
+@pytest.mark.asyncio
+async def test_voice_watch_providers_keep_movie_context_and_do_not_navigate() -> None:
+    from imdb_agent.concierge.events import GroundedMovie
+    from imdb_agent.concierge.personal import PersonalTurn
+
+    class EnrichmentConnection(CatalogConnection):
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, BinaryAudio):
+                await self.events.put(RealtimeInputSpeechStartEvent(item_id="extra"))
+                await self.events.put(
+                    InputTranscript(
+                        "Where can I stream this movie?", is_final=True, item_id="extra"
+                    )
+                )
+                await self.events.put(
+                    ToolCall("extra", tool_name="get_movie_watch_providers", args='{"movieId":6}')
+                )
+                await self.events.put(ResponseDone())
+            elif isinstance(content, ToolResult):
+                await self.events.put(OutputTranscript("Extra TMDB information is unavailable."))
+                await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                await self.events.put(ResponseDone())
+
+    browser = Browser(end_on_completion=True)
+    model = CatalogModel()
+    model.connection = EnrichmentConnection()
+    agent: Agent[None, str] = Agent()
+
+    def get_movie_watch_providers(movieId: int) -> dict[str, object]:
+        assert movieId == 6
+        return {
+            "contractVersion": "1.0",
+            "movieId": 6,
+            "outcome": "UNAVAILABLE",
+            "source": "JUSTWATCH_VIA_TMDB",
+            "country": "CH",
+            "sourceUrl": None,
+            "fetchedAt": None,
+            "offers": None,
+        }
+
+    agent.tool_plain(get_movie_watch_providers)
+    movie = GroundedMovie(movie_id=6, primary_title="Forrest Gump", movie_type="MOVIE")
+    personal = PersonalTurn(movies=(movie,))
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser, personal=personal)
+    assert personal.movies == (movie,)
+    assert not any(
+        isinstance(event, VoiceEvent) and event.type in {"movie-card", "ui-action"}
+        for event in browser.events
+    )
+    assert any(isinstance(event, bytes) for event in browser.events)

@@ -290,10 +290,14 @@ also enforces:
 - a 4 KiB request-body limit before FastAPI parses the body;
 - 600 characters per message and strict typed request models;
 - two active agent runs, rejected immediately rather than queued when saturated;
-- four model requests, six tool calls, 12,000 input tokens, 1,500 output tokens, 30 seconds, and
+- four model requests, six tool calls, 24,000 input tokens, 1,500 output tokens, 30 seconds, and
   $0.25 per run;
 - a $20 process budget as a final local guard, with the provider project cap remaining authoritative
   across restarts.
+
+The input-token limit is cumulative across model requests, including repeated tool schemas and
+cached input. A live catalog lookup followed by TMDB enrichment used about 17,000 input tokens
+across three model requests; the 24,000-token allowance supports that normal tool chain.
 
 Prometheus collects bounded HTTP, run, outcome, first-event latency, tool, UI-action decision,
 token, provider-estimated cost, process-budget, saturation, and disconnect metrics. The

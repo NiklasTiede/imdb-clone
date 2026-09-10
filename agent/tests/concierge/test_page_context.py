@@ -21,6 +21,8 @@ from imdb_agent.web.concierge import MessageRequest
         {"page": "movie", "url": "https://example.invalid"},
         {"page": "search", "searchQuery": "x" * 201},
         {"page": "home", "section": "trailer"},
+        {"page": "home", "streamingCountry": "Switzerland"},
+        {"page": "home", "streamingCountry": "../CH"},
     ],
 )
 def test_untrusted_context_rejects_forged_fields_and_inconsistent_pages(
@@ -42,7 +44,12 @@ async def test_latest_page_is_read_only_and_cannot_create_grounded_movie_evidenc
     assert "get_my_ratings" in str(first["pageGuide"])
     tools.page_context = PageContext(page="movie", movie_id=6, section="trailer")
     second = await tools.get_page_context()
-    assert second["context"] == {"page": "movie", "movieId": 6, "section": "trailer"}
+    assert second["context"] == {
+        "page": "movie",
+        "movieId": 6,
+        "section": "trailer",
+        "streamingCountry": "CH",
+    }
     assert tools.action is None and tools.movie is None and not turn.movies
     with pytest.raises(ToolFailed, match="catalog"):
         await tools.open_movie_page(6)
