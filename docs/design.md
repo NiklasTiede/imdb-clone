@@ -5,6 +5,9 @@ components, layout, spacing, colors, typography, or interaction states.
 
 ## Source Of Truth
 
+The proposed voice interaction is documented in [Movie Concierge voice UI](movie-concierge-voice-design.md),
+with a development-only interactive preview using the existing theme and feature components.
+
 - Theme tokens live in `frontend/src/theme.ts`.
 - Theme expectations live in `frontend/src/theme.test.ts`.
 - Shared layout primitives live in `frontend/src/shared/layout`.

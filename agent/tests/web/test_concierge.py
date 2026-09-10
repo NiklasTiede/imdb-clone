@@ -13,6 +13,8 @@ from imdb_agent.settings import DeploymentEnvironment, ModelBackend, Settings
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from pydantic import SecretStr
+
 
 @fixture
 def client() -> Iterator[TestClient]:
@@ -150,3 +152,32 @@ def test_rejects_untrusted_host(client: TestClient) -> None:
 
     assert response.status_code == 400
     assert response.text == "Invalid host header"
+
+
+def test_delegated_conversations_are_bound_to_verified_session(
+    client: TestClient, monkeypatch: object
+) -> None:
+    from pytest import MonkeyPatch
+
+    from imdb_agent.adapters.personal_tools import McpDelegationVerifier
+    from imdb_agent.concierge.personal import DelegationRejectedError
+
+    assert isinstance(monkeypatch, MonkeyPatch)
+
+    async def verify(_self: McpDelegationVerifier, token: SecretStr) -> str:
+        if token.get_secret_value() == "expired":
+            raise DelegationRejectedError
+        return "verified-binding-" + token.get_secret_value()
+
+    monkeypatch.setattr(McpDelegationVerifier, "verify", verify)
+    headers = {"X-Concierge-Client-ID": "same-browser-client", "X-Concierge-Delegation": "one"}
+    conversation = client.post("/v1/conversations", headers=headers).json()["conversationId"]
+    path = f"/v1/conversations/{conversation}/messages"
+    foreign = {**headers, "X-Concierge-Delegation": "two"}
+    events = parse_sse(client.post(path, headers=foreign, json={"message": "Find Arrival"}).text)
+    assert any(event.get("code") == "conversation_not_found" for event in events)
+    expired = {**headers, "X-Concierge-Delegation": "expired"}
+    assert client.post(path, headers=expired, json={"message": "Find Arrival"}).status_code == 401
+    assert client.post("/v1/conversations", headers=expired).status_code == 401
+    events = parse_sse(client.post(path, headers=headers, json={"message": "Find Arrival"}).text)
+    assert events[-1]["outcome"] == "success"

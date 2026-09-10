@@ -1,7 +1,7 @@
 # IMDb Clone Movie Concierge
 
 Production read-only pilot for conversational discovery in the IMDb Clone. It uses Pydantic AI
-2.31.0 with `gpt-5.6-luna`, calls the Java domain through protected MCP tools, and streams an
+2.42.0 with `gpt-5.6-luna`, calls the Java domain through protected MCP tools, and streams an
 application-owned event contract to React.
 
 The accepted product and trust boundaries live in
@@ -344,6 +344,117 @@ Do not apply these manifests directly. The version-gated release workflow builds
 images, pins their Docker digests, and updates the existing GitOps tree after an intentional
 `VERSION` release.
 
+## Local application voice
+
+Start the Java backend and frontend as usual, then run `make run-agent-voice` from the
+repository root instead of `make run-agent`. The separate
+`.secrets/movie-concierge-voice.local.env` must contain `XAI_API_KEY`; the existing text
+configuration and MCP workload token are still used. Do not start two agents on port 8090.
+
+Open `http://localhost:3000`, open Movie Concierge and select **Start voice**. Grant microphone
+permission, speak English, and try “Find Forrest Gump and open its movie page”, or ask about it
+first and then say “Open it”. The provider uses server VAD; no send button is required. The
+microphone waveform and assistant waveform use actual captured/playback levels. Film navigation
+minimizes the panel into a persistent dock. Mute affects input only; Interrupt stops reply playback
+and requests provider cancellation; End stops capture, playback and the WebSocket. Identity
+changes dispose the complete voice owner. The local slice now supports delegated watchlist reads
+and explicit additions/removals plus personal rating set/update/removal for signed-in users; see ADR 0004.
+
+On macOS, allow the browser under **System Settings → Privacy & Security → Microphone** as well
+as in the browser's site permissions. Use localhost or HTTPS. If access is denied, the UI offers
+retry and retains the existing text conversation. No audio is acquired merely by opening the panel.
+
+This initial rollout is explicitly **local only**, off unless `IMDB_AGENT_VOICE_ENABLED=true`.
+Production rejects that setting until public voice admission and rollout validation are complete. WebSocket origins default to localhost/127.0.0.1 port 3000. Limits are two concurrent
+connections, 180 seconds per session, 45 seconds without speech, 20 attempted sessions per process,
+32 model requests, 24 tools, bounded PCM/control frames and input/output queues. The session and
+process limits are configurable within bounded settings. No automatic reconnect is attempted.
+These are resource limits, not a guaranteed USD budget; voice billing is provider-owned.
+The browser buffers up to 60 seconds of queued reply audio, including each incoming chunk,
+because generated speech can arrive faster than playback. Interrupt and End discard that queue.
+Browser regression tests deliver a 22.5-second audio burst to cover this case.
+Playback starts with 300 ms of lead to absorb delivery jitter, then joins chunks without adding
+per-chunk delays. A `reply-complete` event marks the end of generation; controls remain available
+until that event and the queued audio have both finished, including across temporary underruns.
+Interrupt clears both the playback queue and pending-reply state immediately.
+
+The browser sends 24 kHz mono PCM16 binary frames and a strict interrupt/mute/resume/end control
+vocabulary to `/v1/voice`. Python owns the xAI session and allowlisted Java MCP tools. Signed-in sessions additionally
+expose watchlist read/add/remove and personal rating set/remove; the application-only identity tool is never exposed to the model.
+Only final speech plus validated, session-owned catalog evidence may trigger an `open_movie`
+action; React constructs the route and checks same-turn evidence and duplicate suppression again.
+Unconditional commands such as “Open Forrest Gump” and “Open it” navigate as soon as the final
+transcript and one matching grounded movie are available, without waiting for the spoken reply.
+Current-turn tool calls must have returned first. Conditional/compound requests use the existing
+completed-turn path; ambiguous results and cancelled turns cannot take the fast path.
+Audio and transcripts are ephemeral and excluded from application telemetry. The xAI session uses
+`transcript_only` retention; no microphone recordings or transcripts are written to disk.
+
+Opt-in synthetic application replay (one billable session per invocation, at most 55 seconds):
+
+```bash
+cd agent
+IMDB_AGENT_LIVE_EVALS_ENABLED=true uv run python evals/voice/replay_session.py --live
+IMDB_AGENT_LIVE_EVALS_ENABLED=true uv run python evals/voice/replay_session.py --live --scenario context
+```
+
+This checks real Java-backed Forrest Gump results, audio and grounded navigation. Unlike the
+compatibility probe, it requires the local application stack and a catalog containing the movie.
+It overwrites only `application-open` and `application-context` JSON/WAV pairs in the ignored
+`.artifacts/voice-probe` directory. Output is synthetic fixture replay only, with no raw transcript
+in reports. Reports measure navigation independently from reply completion, including time since
+the server's detected speech end and since grounded evidence arrived. These are diagnostic samples,
+not latency guarantees. Browser tests separately exercise real AudioWorklet capture and playback against a
+deterministic WebSocket; neither automated layer proves physical microphone quality.
+
+## Local Grok voice compatibility probe
+
+The first voice slice is a local development CLI, not a microphone feature in the deployed app.
+It uses Pydantic AI 2.42.0 with the `xai-realtime` extra and pins
+`grok-voice-think-fast-2.0`. The text runner and its OpenAI configuration remain independent.
+
+Store `XAI_API_KEY` in the repository-root `.secrets/movie-concierge-voice.local.env`.
+This file is ignored by Git and read only by the explicit voice probe. Its loader accepts only
+that field, does not interpolate environment variables, and redacts validation failures.
+Do not add it to the existing OpenAI secret file or frontend environment.
+
+From the repository root:
+
+```bash
+make agent-sync
+IMDB_AGENT_LIVE_EVALS_ENABLED=true make probe-agent-voice-live
+IMDB_AGENT_LIVE_EVALS_ENABLED=true make probe-agent-voice-interrupt-live
+```
+
+Each command permits **one billable provider session**, with no automatic retry/reconnect:
+45 seconds including connection setup, at most 15 seconds of input, 20 seconds of collected
+output, three model requests and two successful tool calls. Model settings cap each response
+at 512 tokens; cumulative token limits are checked when usage arrives. The session deadline
+and audio bounds apply independently of provider cost reporting. This is not a guaranteed USD
+spending cap: `estimated_cost_usd: null` means no estimate is available, not zero cost.
+
+The fixed [synthetic fixture](evals/voice/README.md) tests a simulated Forrest Gump lookup and a spoken
+English answer. Voice development initially uses English commands, responses and catalog titles;
+German dialogue is deferred, and movie titles must not be translated before catalog lookup.
+The CLI exits nonzero for failed assertions, provider failures or limits. It emits
+only a content-free JSON report; SDK logs and agent instrumentation are disabled. No key, raw
+transcript, provider frame or tool argument is printed.
+
+Successful execution writes reports and playable WAV files under the Git-ignored
+`agent/.artifacts/voice-probe/`: `completed.json/.wav` and `interrupted.json/.wav`. Each scenario
+overwrites its previous result, bounding retention to the latest two runs; these local synthetic
+artifacts persist until overwritten or manually removed. Failed execution may leave the previous
+run's files in place: use the command exit status, not an old artifact, to judge the current run.
+No production transcripts or microphone recordings belong in this directory.
+
+On macOS, listen with:
+
+```bash
+afplay agent/.artifacts/voice-probe/completed.wav
+```
+
+See [ADR 0003](../docs/adr/0003-movie-concierge-voice-probe.md) for the channel boundary and limits.
+
 ## Package map
 
 ```text
@@ -358,3 +469,28 @@ src/imdb_agent/
 See [`AGENTS.md`](AGENTS.md) for Python-specific architecture rules,
 [`docs/movie-concierge.md`](../docs/movie-concierge.md) for product boundaries, and the
 [`long-term roadmap`](../docs/movie-concierge-roadmap.md) for ordered capability work.
+
+
+## Local delegated watchlist (text and voice)
+
+Sign in normally, then ask `Show my watchlist` or `Add Forrest Gump to my watchlist and show it`.
+The existing watchlist page opens after a confirmed result and refreshes its cached data. A receipt
+notification offers Undo for a newly added movie; already-listed films are reported as such.
+An ambiguous title needs its year; `add it` requires one unambiguous catalog candidate.
+
+The browser obtains a five-minute capability from `POST /api/v1/auth/concierge-delegation` using
+normal session cookies and CSRF protection. It is held only for the request/session, never in URLs
+or browser storage. Text forwards it in `X-Concierge-Delegation`; voice sends a first frame
+`{"type":"start","delegation":null}` for anonymous sessions, or supplies the transient capability
+in that field when signed in. Audio starts after `ready`. Old clients must reload for this handshake.
+
+Java independently verifies the login session, expiry, audience and scope for every personal tool.
+Python never selects the account. The agent can remove a named watchlist entry and set/update/remove a personal rating.
+For example: `Remove Forrest Gump from my watchlist`, `Rate Forrest Gump 8.5 out of 10`,
+`Change my rating for Forrest Gump to 9`, or `Remove my rating for Forrest Gump`.
+Ratings open `/your-ratings`; both pages refresh after confirmed success. Undo restores the
+previous membership or score. Missing scores, ambiguous titles and unsupported scales require
+a clearer command. Rating/taste reads are not yet available. Read
+[ADR 0004](../docs/adr/0004-concierge-session-delegation-and-watchlist.md) for authorization,
+conversation isolation, idempotency, retention and threat analysis. This is local implementation,
+not evidence of a public voice rollout.

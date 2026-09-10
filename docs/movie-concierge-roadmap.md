@@ -2,9 +2,20 @@
 
 **Status:** Living delivery roadmap
 
-**Last updated:** 2026-08-25
+**Last updated:** 2026-09-09
 
-**Current focus:** Application actions, delegated user capabilities, and richer grounded tools
+**Current focus:** Validate local voice, delegated watchlist and rating journeys; external enrichment remains deferred
+
+The [2026-09-09 voice and watchlist slice proposal](superpowers/plans/2026-09-09-movie-concierge-voice-slice.md)
+records the original baseline and a shorter R1/R2/R3/R7 path toward microphone-driven discovery,
+navigation and personal watchlist actions. Local voice and grounded film navigation are implemented;
+local session delegation, watchlist read/add/remove and rating set/update/remove with library navigation
+are implemented.
+Public voice rollout remains planned work.
+
+The first voice release uses English commands, responses and movie titles, matching the current
+catalog. German dialogue is deferred; even in later German conversations, searches should use
+English catalog titles until localized title lookup is explicitly implemented.
 
 This roadmap turns the accepted [Movie Concierge product vision](movie-concierge.md) into ordered,
 independently releasable outcomes. It is not a release commitment. Each milestone must become a
@@ -59,7 +70,7 @@ Intentional limitations remain:
   behavior;
 - conversation and budget state are process local, one replica is used, and restarts clear history;
 - external movie data and unrestricted web research are not part of the grounded knowledge path;
-- voice is not an interaction channel yet;
+- voice and personal watchlist tools are implemented locally but have not been rolled out publicly;
 - current evals provide a deterministic baseline but not yet a full production promotion gate with
   traffic-derived quality and latency thresholds.
 
@@ -120,6 +131,16 @@ independently deployable and reversible.
 
 ### R1 — Application actions and contextual capability discovery
 
+**2026-09-09 implementation:** Local slice: `open_movie`, `open_watchlist`, `open_ratings`, `open_login`, authenticated capability help and
+personal-library cache refresh are implemented. Fixed `open_page` destinations (home, account settings,
+watchlist, ratings) and `show_search_results` now share the text/voice action contract. Discovery
+searches surface the successful MCP query and supported filters in the normal paginated search page,
+including multiple genres and title type. Pure text page commands bypass the model. Guest personal
+pages route to login. Internal lookups for movie opening or personal mutations do not open search.
+The broader contextual capability registry and trailer playback remain open.
+The [pre-commit review](reviews/2026-09-10-concierge-navigation-review.md) records corrected
+search selection/routing defects, ownership checks, regression tests and verification limits.
+
 **User outcome:** A user can ask what the Concierge can do and can navigate the application through
 natural-language requests without relying on model-generated routes.
 
@@ -144,6 +165,9 @@ Exit evidence:
 - the capability answer agrees with the executable capability registry.
 
 ### R2 — Delegated identity and personal read capabilities
+
+**2026-09-09 implementation:** Local slice: five-minute login-session delegation, Java validation, verified conversation ownership
+and `get_my_watchlist` are implemented. Rating/taste reads remain open. See ADR 0004.
 
 **User outcome:** An authenticated user can ask what is on their watchlist or what they have rated;
 an anonymous user gets a useful sign-in path rather than invented account state.
@@ -170,6 +194,14 @@ Exit evidence:
 - the operator can distinguish authentication, authorization, and dependency failures.
 
 ### R3 — Safe and reversible personal actions
+
+**2026-09-09 implementation:** Local slice: explicit grounded watchlist addition/removal and personal rating set/update/removal,
+transactionally stored receipts, concurrent retry safety, unchanged-state handling and UI Undo
+are implemented. Natural affirmative requests (for example “I'd give this one an eight”) and an
+immediate score-only answer after an incomplete rating request are supported. Opening a movie
+establishes its context for the following turn. Ratings navigate to `/your-ratings`; scores are
+user-specified, 0–10. Broader actions and
+durable multi-step approvals remain open.
 
 **User outcome:** An authenticated user can add a grounded movie to their watchlist and later manage
 other low-risk account state through transparent, dependable actions.

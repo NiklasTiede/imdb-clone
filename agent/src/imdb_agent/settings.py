@@ -15,6 +15,9 @@ from imdb_agent import __version__
 LOCAL_OPENAI_SECRETS_FILE = (
     Path(__file__).resolve().parents[3] / ".secrets" / "movie-concierge.local.env"
 )
+LOCAL_VOICE_SECRETS_FILE = (
+    Path(__file__).resolve().parents[3] / ".secrets" / "movie-concierge-voice.local.env"
+)
 OPENAI_API_KEY_SECRET_NAME = "openai-api-key"  # noqa: S105 - mounted filename, not a key
 MCP_BEARER_TOKEN_SECRET_NAME = "mcp-bearer-token"  # noqa: S105 - mounted filename
 PRODUCTION_PYROSCOPE_SERVER_ADDRESS = "http://pyroscope.observability.svc.cluster.local:4040"
@@ -79,6 +82,12 @@ class Settings(BaseSettings):
     project_cost_limit_usd: Decimal = Field(default=Decimal("20.00"), gt=0, le=20)
     run_cost_limit_usd: Decimal = Field(default=Decimal("0.25"), gt=0, le=1)
     live_evals_enabled: bool = False
+    voice_enabled: bool = False
+    voice_session_seconds: float = Field(default=180.0, ge=15, le=300)
+    voice_max_sessions: int = Field(default=20, ge=1, le=100)
+    voice_allowed_origins: list[str] = Field(
+        default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"]
+    )
     otel_tracing_enabled: bool = False
     otel_exporter_otlp_traces_endpoint: str | None = None
     otel_export_timeout_seconds: float = Field(default=5.0, gt=0, le=30)
@@ -116,6 +125,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_boundaries(self) -> Settings:
+        if self.voice_enabled and self.environment is not DeploymentEnvironment.LOCAL:
+            raise ValueError("voice is currently available only in local development")
         self._validate_otel_endpoint()
         self._validate_profiling_endpoint()
         if self.environment is not DeploymentEnvironment.PRODUCTION:
@@ -192,6 +203,25 @@ class _LocalOpenAISecrets(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
     openai_api_key: SecretStr = Field(alias="OPENAI_API_KEY", min_length=12)
+
+
+class LocalVoiceSecrets(BaseModel):
+    """Opt-in development voice credentials, separate from the text service."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+    xai_api_key: SecretStr = Field(alias="XAI_API_KEY", min_length=12)
+
+
+def load_local_voice_secrets(path: Path = LOCAL_VOICE_SECRETS_FILE) -> LocalVoiceSecrets:
+    try:
+        # Credentials are literal values, never expanded from the process environment.
+        values = dict(dotenv_values(path, interpolate=False))
+        return LocalVoiceSecrets.model_validate(values)
+    except OSError, UnicodeError, ValidationError:
+        raise ConfigurationError(
+            "xAI credentials are unavailable in .secrets/movie-concierge-voice.local.env"
+        ) from None
 
 
 def load_runtime_secrets(settings: Settings) -> RuntimeSecrets:

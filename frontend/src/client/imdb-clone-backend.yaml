@@ -695,6 +695,18 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/MessageResponse"
+  /api/v1/auth/concierge-delegation:
+    post:
+      tags:
+      - concierge-delegation-controller
+      operationId: createConciergeDelegation
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ConciergeDelegationResponse"
   /api/v1/accounts:
     post:
       tags:
@@ -2082,6 +2094,14 @@ components:
           minLength: 0
       required:
       - token
+    ConciergeDelegationResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
     CreateAccountRequest:
       type: object
       properties:

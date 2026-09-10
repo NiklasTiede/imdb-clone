@@ -39,23 +39,24 @@ function AppBarTop() {
   const queryParams = new URLSearchParams(location.search);
   const initialQuery = queryParams.get("query") || queryParams.get("q") || "";
   const [query, setQuery] = useState(initialQuery);
-  const pendingSearchQueriesRef = useRef(new Set<string>());
+  const pendingSearchLocationRef = useRef<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const locationQuery = params.get("query") || params.get("q") || "";
 
-    if (pendingSearchQueriesRef.current.delete(locationQuery.trim())) {
+    const pendingLocation = pendingSearchLocationRef.current;
+    pendingSearchLocationRef.current = null;
+    if (pendingLocation === `${location.pathname}${location.search}`) {
       return;
     }
 
     setQuery(locationQuery);
-  }, [location.search]);
+  }, [location.pathname, location.search]);
 
   const navigateToSearch = useCallback(
     (searchQuery: string, options?: { replace?: boolean }) => {
       const nextQuery = searchQuery.trim();
-      pendingSearchQueriesRef.current.add(nextQuery);
       const params =
         location.pathname === "/movie-search"
           ? new URLSearchParams(location.search)
@@ -70,6 +71,12 @@ function AppBarTop() {
       }
 
       const search = params.toString().replaceAll("+", "%20");
+      const nextLocation = `/movie-search${search ? `?${search}` : ""}`;
+      // A no-op submission never produces a URL effect to consume pending state.
+      pendingSearchLocationRef.current =
+        nextLocation === `${location.pathname}${location.search}`
+          ? null
+          : nextLocation;
       void navigateTo(
         {
           pathname: "/movie-search",

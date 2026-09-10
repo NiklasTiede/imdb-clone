@@ -13,6 +13,7 @@ SAFE_LOG_FIELDS: Final = frozenset(
         "duration_ms",
         "environment",
         "error_code",
+        "error_type",
         "estimated_cost_usd",
         "event",
         "input_tokens",

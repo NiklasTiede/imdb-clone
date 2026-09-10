@@ -7,7 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router";
+import { Link, MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, vi } from "vitest";
 import { accountQueries } from "../../api/accountProfileQueries";
 import { authSession } from "../../auth";
@@ -21,7 +21,13 @@ let unmountAppBar: (() => void) | undefined;
 
 const LocationProbe = () => {
   const location = useLocation();
-  return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
+  return (
+    <>
+      <div data-testid="location">{`${location.pathname}${location.search}`}</div>
+      <Link to="/movie-search?query=Forrest+Gump">Search Forrest Gump</Link>
+      <Link to="/movie-search?query=Arrival">Search Arrival</Link>
+    </>
+  );
 };
 
 const renderAppBar = (
@@ -121,6 +127,23 @@ describe("AppBarTop", () => {
 
     expect(screen.getByTestId("location").textContent).toBe(
       "/movie-search?genre=HORROR&query=alien",
+    );
+  });
+
+  it("accepts external searches after submitting an unchanged query", () => {
+    vi.useFakeTimers();
+    renderAppBar("/movie-search?query=Arrival");
+    const searchInput = screen.getByRole("textbox", { name: "search movies" });
+    fireEvent.keyDown(searchInput, { key: "Enter" });
+    fireEvent.click(screen.getByRole("link", { name: "Search Forrest Gump" }));
+    expect((searchInput as HTMLInputElement).value).toBe("Forrest Gump");
+    fireEvent.click(screen.getByRole("link", { name: "Search Arrival" }));
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+    expect((searchInput as HTMLInputElement).value).toBe("Arrival");
+    expect(screen.getByTestId("location").textContent).toBe(
+      "/movie-search?query=Arrival",
     );
   });
 

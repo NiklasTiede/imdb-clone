@@ -1,3 +1,4 @@
+import { getConciergeDelegation } from "../api/delegation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPerformanceEventContext } from "../../../shared/observability/config";
 import { reportPerformanceEvent } from "../../../shared/observability/performanceReporter";
@@ -9,7 +10,7 @@ import {
 import type {
   ChatTurn,
   ConciergeEvent,
-  OpenMovieAction,
+  ApplicationAction,
   UsageSummary,
 } from "../model/concierge";
 import { statusLabels } from "../model/concierge";
@@ -18,7 +19,7 @@ const createTurnId = (): string => window.crypto.randomUUID();
 
 export const useConciergeChat = (
   clientId: string,
-  onUiAction: (action: OpenMovieAction) => void,
+  onUiAction: (action: ApplicationAction) => void,
 ) => {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [status, setStatus] = useState<string | null>(null);
@@ -66,12 +67,19 @@ export const useConciergeChat = (
       let actionHandled = false;
       abortRef.current = abortController;
       try {
+        const delegation = await getConciergeDelegation();
+        if (abortController.signal.aborted) return;
         const conversationId =
           conversationIdRef.current ??
-          (await createConversation(clientId, abortController.signal));
+          (await createConversation(
+            clientId,
+            abortController.signal,
+            delegation,
+          ));
         conversationIdRef.current = conversationId;
 
         await streamMessage({
+          delegation,
           clientId,
           conversationId,
           message,
@@ -81,17 +89,20 @@ export const useConciergeChat = (
               groundedMovieIds.add(event.movie.movieId);
             } else if (event.type === "ui-action") {
               const allowed =
-                !actionHandled && groundedMovieIds.has(event.action.movieId);
+                !abortController.signal.aborted &&
+                !actionHandled &&
+                (event.action.type !== "open_movie" ||
+                  groundedMovieIds.has(event.action.movieId));
               actionHandled = true;
               if (!allowed) {
-                reportUiAction("rejected");
+                reportUiAction(event.action, "rejected");
                 return;
               }
               try {
                 onUiAction(event.action);
-                reportUiAction("executed");
+                reportUiAction(event.action, "executed");
               } catch {
-                reportUiAction("rejected");
+                reportUiAction(event.action, "rejected");
               }
               return;
             }
@@ -131,7 +142,12 @@ export const useConciergeChat = (
   return { isStreaming, reset, send, status, turns, usage };
 };
 
-const reportUiAction = (outcome: "executed" | "rejected"): void => {
+const reportUiAction = (
+  action: ApplicationAction,
+  outcome: "executed" | "rejected",
+): void => {
+  // The Java browser-telemetry contract currently supports movie opens only.
+  if (action.type !== "open_movie") return;
   reportPerformanceEvent({
     context: createPerformanceEventContext(window.location.pathname),
     name: "open_movie",

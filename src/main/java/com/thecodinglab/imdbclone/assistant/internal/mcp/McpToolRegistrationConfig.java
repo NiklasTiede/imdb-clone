@@ -32,8 +32,15 @@ class McpToolRegistrationConfig {
   List<McpStatelessServerFeatures.SyncToolSpecification> movieConciergeToolSpecifications(
       MovieSearchMcpTool movieSearchMcpTool,
       MovieDetailsMcpTool movieDetailsMcpTool,
-      MovieRecommendationMcpTools movieRecommendationMcpTools) {
+      MovieRecommendationMcpTools movieRecommendationMcpTools,
+      WatchlistMcpTools watchlistMcpTools,
+      RatingMcpTools ratingMcpTools) {
     return SyncMcpAnnotationProviders.statelessToolSpecifications(
-        List.of(movieSearchMcpTool, movieDetailsMcpTool, movieRecommendationMcpTools));
+        List.of(
+            movieSearchMcpTool,
+            movieDetailsMcpTool,
+            movieRecommendationMcpTools,
+            watchlistMcpTools,
+            ratingMcpTools));
   }
 }

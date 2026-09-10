@@ -16,6 +16,7 @@ from imdb_agent.concierge.events import (
     ToolCallEvent,
     UiActionEvent,
 )
+from imdb_agent.concierge.navigation import page_action
 from imdb_agent.concierge.policy import (
     TOOL_STATUSES,
     UiActionDecisionOutcome,
@@ -37,6 +38,8 @@ from imdb_agent.concierge.ports import (
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
+
+    from pydantic import SecretStr
 
 
 class ConciergeRunError(RuntimeError):
@@ -89,7 +92,12 @@ class ConciergeService:
         return await self._conversations.create(client_id)
 
     async def stream_turn(
-        self, *, client_id: str, conversation_id: str, message: str
+        self,
+        *,
+        client_id: str,
+        conversation_id: str,
+        message: str,
+        delegation: SecretStr | None = None,
     ) -> AsyncIterator[ConciergeEvent]:
         started_at = perf_counter()
         sequence = 0
@@ -101,10 +109,28 @@ class ConciergeService:
         capacity_acquired = False
         first_event_observed = False
         ui_action_observed = False
+        runner_action_sent = False
+        opened_movie_id: int | None = None
         text_parts: list[str] = []
         movies_by_id: dict[int, GroundedMovie] = {}
         self._observer.started()
         local_response = capability_response(message)
+        local_action = page_action(message, authenticated=delegation is not None)
+        if local_action is not None:
+            local_response = (
+                "Please sign in to open your personal pages."
+                if local_action.type == "open_login"
+                else f"Opening {local_action.destination}."
+            )
+        if local_response is not None and delegation is not None:
+            local_response = local_response.replace(
+                "these read-only movie tasks", "these movie tasks"
+            ).replace(
+                "I cannot change watchlists or ratings or search the web.",
+                "I can read your watchlist, add or remove movies, and set or remove your rating "
+                "after your explicit command. Tell me your rating from 0 to 10. "
+                "Web search is unavailable.",
+            )
 
         def next_event(event: ConciergeEvent) -> ConciergeEvent:
             nonlocal sequence
@@ -124,6 +150,11 @@ class ConciergeService:
                 first_event_observed = True
                 text_parts.append(local_response)
                 yield next_event(TextEvent(delta=local_response))
+                if local_action is not None:
+                    runner_action_sent = True
+                    ui_action_observed = True
+                    self._observer.ui_action(action=local_action.type, outcome="emitted")
+                    yield next_event(UiActionEvent(action=local_action))
             else:
                 reservation = await self._cost_ledger.reserve()
                 yield next_event(StatusEvent(status=RunStatus.THINKING))
@@ -131,6 +162,7 @@ class ConciergeService:
                     conversation_id=conversation_id,
                     message=message,
                     history=history,
+                    delegation=delegation,
                 )
                 async for event in self._runner.stream(request):
                     if not first_event_observed:
@@ -139,6 +171,14 @@ class ConciergeService:
                     if isinstance(event, ToolCallEvent):
                         self._observer.tool_called(event.tool)
                         yield next_event(StatusEvent(status=TOOL_STATUSES[event.tool]))
+                        continue
+                    if isinstance(event, UiActionEvent):
+                        if event.action.type == "open_movie":
+                            opened_movie_id = event.action.movie_id
+                        runner_action_sent = True
+                        self._observer.ui_action(action=event.action.type, outcome="emitted")
+                        ui_action_observed = True
+                        yield next_event(event)
                         continue
                     if isinstance(event, TextEvent):
                         text_parts.append(event.delta)
@@ -157,7 +197,9 @@ class ConciergeService:
                 ConversationMessage(
                     role="assistant",
                     content=response_text,
-                    movies=tuple(movies_by_id.values()),
+                    movies=(movies_by_id[opened_movie_id],)
+                    if opened_movie_id in movies_by_id
+                    else tuple(movies_by_id.values()),
                 ),
             )
             turn_started = False
@@ -176,13 +218,16 @@ class ConciergeService:
                 message,
                 tuple(movies_by_id.values()),
             )
-            if action_decision.outcome is not UiActionDecisionOutcome.NOT_REQUESTED:
+            if (
+                not runner_action_sent
+                and action_decision.outcome is not UiActionDecisionOutcome.NOT_REQUESTED
+            ):
                 self._observer.ui_action(
                     action="open_movie",
                     outcome=action_decision.outcome,
                 )
                 ui_action_observed = True
-            if action_decision.action is not None:
+            if action_decision.action is not None and not runner_action_sent:
                 yield next_event(UiActionEvent(action=action_decision.action))
         except ConversationNotFoundError:
             metric_outcome = "conversation_not_found"

@@ -18,7 +18,7 @@ dependencies = [
     "opentelemetry-sdk>=1.39,<2",
     "prometheus-client>=0.23,<1",
     "pydantic>=2.12,<3",
-    "pydantic-ai[openai-realtime]==2.31.0",
+    "pydantic-ai[openai-realtime,xai-realtime]==2.42.0",
     "pydantic-settings>=2.12,<3",
     "pyroscope-io==1.2.1",
     "pyroscope-otel==1.1.0",
@@ -28,6 +28,7 @@ dependencies = [
 
 [project.scripts]
 imdb-agent-eval = "imdb_agent.eval_cli:main"
+imdb-agent-voice-probe = "imdb_agent.voice_probe_cli:main"
 
 [dependency-groups]
 dev = [

@@ -1,9 +1,32 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
-import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generator-output";
+import {
+  MovieSearchRequestMovieGenreEnum,
+  MovieSearchRequestMovieTypeEnum,
+} from "../../../client/movies/generator-output";
 import SearchFilterBar from "./SearchFilterBar";
 
 describe("SearchFilterBar", () => {
+  test("counts and clears a title-type-only search", () => {
+    const onChange = vi.fn();
+    const onClear = vi.fn();
+    render(
+      <SearchFilterBar
+        filters={{ movieType: MovieSearchRequestMovieTypeEnum.Movie }}
+        onChange={onChange}
+        onClear={onClear}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Filters, 1 active" }),
+    ).toBeTruthy();
+    const typeChip = screen.getByRole("button", { name: "Title type: Movie" });
+    fireEvent.keyDown(typeChip, { key: "Delete" });
+    fireEvent.keyUp(typeChip, { key: "Delete" });
+    expect(onChange).toHaveBeenCalledWith({ movieType: null });
+    fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
+    expect(onClear).toHaveBeenCalledOnce();
+  });
   test("replaces the full year range when choosing an era", () => {
     const onChange = vi.fn();
 
@@ -72,5 +95,31 @@ describe("SearchFilterBar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
 
     expect(onClear).toHaveBeenCalledTimes(1);
+  });
+});
+
+test("keeps all agent-provided genres when only mobile year filters change", () => {
+  const onChange = vi.fn();
+  render(
+    <SearchFilterBar
+      filters={{
+        movieGenre: new Set([
+          MovieSearchRequestMovieGenreEnum.Drama,
+          MovieSearchRequestMovieGenreEnum.Romance,
+        ]),
+      }}
+      onChange={onChange}
+      onClear={vi.fn()}
+    />,
+  );
+  expect(screen.getAllByText("Drama, Romance")).toHaveLength(2);
+  fireEvent.click(screen.getByRole("button", { name: "Filters, 1 active" }));
+  fireEvent.click(screen.getByRole("button", { name: "2000s" }));
+  fireEvent.click(screen.getByRole("button", { name: "Show results" }));
+  expect(onChange).toHaveBeenCalledWith({
+    maxYear: 2009,
+    minYear: 2000,
+    maxRuntime: null,
+    minRuntime: null,
   });
 });

@@ -11,11 +11,19 @@ from imdb_agent.adapters.http_observability import (
 )
 from imdb_agent.adapters.logging import configure_logging
 from imdb_agent.adapters.memory import InMemoryConversationStore, InMemoryCostLedger
+from imdb_agent.adapters.personal_tools import McpDelegationVerifier
 from imdb_agent.adapters.profiling import configure_profiling
 from imdb_agent.adapters.pydantic_ai_runner import PydanticAIConciergeRunner
+from imdb_agent.adapters.realtime_voice import RealtimeVoiceRunner
 from imdb_agent.adapters.telemetry import configure_telemetry
 from imdb_agent.concierge.service import ConciergeService
-from imdb_agent.settings import ModelBackend, Settings, load_runtime_secrets, load_settings
+from imdb_agent.settings import (
+    ModelBackend,
+    Settings,
+    load_local_voice_secrets,
+    load_runtime_secrets,
+    load_settings,
+)
 from imdb_agent.web.app import create_web_app
 
 if TYPE_CHECKING:
@@ -53,8 +61,25 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
         service_name=resolved_settings.service_name,
         version=resolved_settings.version,
         concierge_service=concierge_service,
+        delegation_verifier=McpDelegationVerifier(
+            resolved_settings.model_copy(
+                update={
+                    "mcp_bearer_token": load_runtime_secrets(resolved_settings).mcp_bearer_token
+                }
+            )
+            if resolved_settings.model_backend is ModelBackend.OPENAI
+            else resolved_settings
+        ),
         allowed_hosts=tuple(resolved_settings.allowed_hosts),
         max_request_body_bytes=resolved_settings.max_request_body_bytes,
+        voice_runner=RealtimeVoiceRunner(
+            settings=resolved_settings, secrets=load_local_voice_secrets()
+        )
+        if resolved_settings.voice_enabled
+        else None,
+        voice_allowed_origins=tuple(resolved_settings.voice_allowed_origins),
+        voice_session_seconds=resolved_settings.voice_session_seconds,
+        voice_max_sessions=resolved_settings.voice_max_sessions,
     )
     install_http_observability(app, resolved_settings, http_metrics)
     telemetry.instrument_app(app)

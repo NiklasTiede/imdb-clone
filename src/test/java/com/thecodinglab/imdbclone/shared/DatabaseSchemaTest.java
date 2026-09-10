@@ -33,7 +33,9 @@ class DatabaseSchemaTest extends BaseContainers {
             "13:reconcile historical rating aggregates",
             "14:retain retired media tokens",
             "15:index retention candidates",
-            "16:drop unused oauth authorization tables");
+            "16:drop unused oauth authorization tables",
+            "17:watchlist action receipts",
+            "18:personal action receipts");
   }
 
   @Test

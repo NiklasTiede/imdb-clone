@@ -22,6 +22,8 @@ def test_json_logging_keeps_allowlisted_context_and_discards_payload(
         "safe_event",
         request_id="request-123",
         prompt="do not log this prompt",
+        error_type="UsageLimitExceeded",
+        error_message="synthetic sensitive exception message",
     )
 
     event: dict[str, object] = json.loads(capsys.readouterr().out)
@@ -29,6 +31,8 @@ def test_json_logging_keeps_allowlisted_context_and_discards_payload(
     assert event["level"] == "info"
     assert event["request_id"] == "request-123"
     assert "prompt" not in event
+    assert event["error_type"] == "UsageLimitExceeded"
+    assert "error_message" not in event
 
 
 def test_json_logging_adds_active_trace_context_without_payload(

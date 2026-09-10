@@ -8,5 +8,6 @@ export {
 export {
   toggleWatchlistMutationOptions,
   watchlistQueries,
+  watchlistQueryKeys,
   WatchlistPage,
 } from "./watchlist";

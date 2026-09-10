@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import pytest
+from pydantic import SecretStr
 
 from imdb_agent.adapters.fakes import FakeConciergeRunner, fake_arrival
 from imdb_agent.adapters.memory import InMemoryConversationStore, InMemoryCostLedger
@@ -28,6 +29,27 @@ if TYPE_CHECKING:
     from imdb_agent.concierge.events import ConciergeEvent, RunnerEvent
 
 pytestmark = pytest.mark.asyncio
+
+
+@pytest.mark.parametrize("authenticated", [False, True])
+@pytest.mark.parametrize("message", ["Open my ratings", "please open my ratings list"])
+async def test_page_navigation_bypasses_model_budget(authenticated: bool, message: str) -> None:
+    service, _store, _ledger, observer = service_fixture()
+    conversation = await service.create_conversation("navigation-test")
+    events = [
+        event
+        async for event in service.stream_turn(
+            client_id="navigation-test",
+            conversation_id=conversation,
+            message=message,
+            delegation=SecretStr("synthetic-delegation") if authenticated else None,
+        )
+    ]
+    actions = [event.action for event in events if isinstance(event, UiActionEvent)]
+    assert len(actions) == 1
+    assert actions[0].type == ("open_page" if authenticated else "open_login")
+    assert not any(isinstance(event, UsageEvent) for event in events)
+    assert observer.tools == [] and observer.committed_budget == []
 
 
 class RecordingObserver:
@@ -210,6 +232,7 @@ async def test_explicit_open_request_emits_grounded_action_after_current_run_car
     )
     action_event = events[action_index]
     assert isinstance(action_event, UiActionEvent)
+    assert action_event.action.type == "open_movie"
     assert action_event.action.movie_id == 42
     assert card_index < action_index < len(events) - 1
     assert observer.ui_actions == [("open_movie", "emitted")]
@@ -426,3 +449,33 @@ async def test_conversation_store_evicts_oldest_inactive_session_at_bound() -> N
         await store.snapshot("browser-client-0001", first)
     assert await store.snapshot("browser-client-0002", second) == ()
     assert await store.snapshot("browser-client-0003", third) == ()
+
+
+async def test_opened_movie_is_the_next_turn_context_even_after_multiple_cards() -> None:
+    from imdb_agent.concierge.events import OpenMovieAction
+
+    class SelectedMovieRunner:
+        async def stream(self, request: RunRequest) -> AsyncIterator[RunnerEvent]:
+            yield MovieCardEvent(movie=fake_arrival())
+            yield MovieCardEvent(movie=fake_arrival().model_copy(update={"movie_id": 43}))
+            yield UiActionEvent(action=OpenMovieAction(movie_id=fake_arrival().movie_id))
+            yield TextEvent(delta="Here you go.")
+
+    store = InMemoryConversationStore()
+    service = ConciergeService(
+        runner=SelectedMovieRunner(),
+        conversations=store,
+        cost_ledger=InMemoryCostLedger(
+            project_limit_usd=Decimal("20"), per_run_limit_usd=Decimal("0.25")
+        ),
+        observer=RecordingObserver(),
+    )
+    conversation = await service.create_conversation("context-test")
+    await collect_events(
+        service,
+        client_id="context-test",
+        conversation_id=conversation,
+        message="Let's have a look at the first one",
+    )
+    history = await store.snapshot("context-test", conversation)
+    assert history[-1].movies == (fake_arrival(),)

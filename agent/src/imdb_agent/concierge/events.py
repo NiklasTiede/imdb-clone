@@ -91,10 +91,57 @@ class OpenMovieAction(EventModel):
     movie_id: int = Field(gt=0)
 
 
+class OpenWatchlistAction(EventModel):
+    type: Literal["open_watchlist"] = "open_watchlist"
+    operation_id: str | None = None
+    movie_id: int | None = Field(default=None, gt=0)
+    created: bool | None = None
+    removed: bool | None = None
+
+
+class OpenRatingsAction(EventModel):
+    type: Literal["open_ratings"] = "open_ratings"
+    operation_id: str
+    movie_id: int = Field(gt=0)
+    changed: bool
+    score: float | None = Field(ge=0, le=10)
+    previous_score: float | None = Field(ge=0, le=10)
+
+
+class OpenLoginAction(EventModel):
+    type: Literal["open_login"] = "open_login"
+
+
+class OpenPageAction(EventModel):
+    type: Literal["open_page"] = "open_page"
+    destination: Literal["home", "settings", "watchlist", "ratings"]
+
+
+class ShowSearchResultsAction(EventModel):
+    type: Literal["show_search_results"] = "show_search_results"
+    query: str = Field(max_length=200)
+    genres: list[str] = Field(default_factory=list, max_length=30)
+    movie_type: str | None = Field(default=None, max_length=30)
+    min_start_year: int | None = Field(default=None, ge=1850, le=2030)
+    max_start_year: int | None = Field(default=None, ge=1850, le=2030)
+    min_runtime_minutes: int | None = Field(default=None, ge=0, le=5000)
+    max_runtime_minutes: int | None = Field(default=None, ge=0, le=5000)
+
+
+ApplicationAction = (
+    OpenMovieAction
+    | OpenWatchlistAction
+    | OpenRatingsAction
+    | OpenLoginAction
+    | OpenPageAction
+    | ShowSearchResultsAction
+)
+
+
 class UiActionEvent(EventModel):
     type: Literal["ui-action"] = "ui-action"
     sequence: int = Field(default=0, ge=0)
-    action: OpenMovieAction
+    action: ApplicationAction
 
 
 class ErrorEvent(EventModel):
@@ -140,4 +187,4 @@ ConciergeEvent = Annotated[
 concierge_event_adapter: TypeAdapter[ConciergeEvent] = TypeAdapter(ConciergeEvent)
 
 
-RunnerEvent = ToolCallEvent | TextEvent | MovieCardEvent | UsageEvent
+RunnerEvent = ToolCallEvent | TextEvent | MovieCardEvent | UsageEvent | UiActionEvent

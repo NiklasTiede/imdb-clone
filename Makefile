@@ -267,6 +267,18 @@ container-smoke-frontend: ## smoke-test frontend SPA and non-root read-only runt
 AGENT_EVAL_CASE ?=
 AGENT_EVAL_CASE_FLAG = $(if $(AGENT_EVAL_CASE),--case $(AGENT_EVAL_CASE),)
 
+.PHONY: probe-agent-voice-live probe-agent-voice-interrupt-live
+
+.PHONY: run-agent-voice
+run-agent-voice: ## run local Movie Concierge with bounded English microphone sessions
+	IMDB_AGENT_VOICE_ENABLED=true $(MAKE) run-agent
+
+probe-agent-voice-live: ## replay synthetic English audio; requires IMDB_AGENT_LIVE_EVALS_ENABLED=true
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --locked imdb-agent-voice-probe --live
+
+probe-agent-voice-interrupt-live: ## verify cancellation after fixture lookup and 200 ms of audio
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --locked imdb-agent-voice-probe --live --interrupt-after-audio-ms 200
+
 agent-sync: ## sync the locked Python agent development environment
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv sync --locked --all-groups
 

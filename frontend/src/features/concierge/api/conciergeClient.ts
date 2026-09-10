@@ -23,10 +23,11 @@ export class ConciergeClientError extends Error {
 export const createConversation = async (
   clientId: string,
   signal: AbortSignal,
+  delegation: string | null = null,
 ): Promise<string> => {
   const response = await safeFetch(`${getBaseAddress()}/v1/conversations`, {
     method: "POST",
-    headers: clientHeaders(clientId),
+    headers: clientHeaders(clientId, delegation),
     signal,
   });
   if (!response.ok) {
@@ -45,19 +46,21 @@ export const streamMessage = async ({
   message,
   onEvent,
   signal,
+  delegation = null,
 }: {
   clientId: string;
   conversationId: string;
   message: string;
   onEvent: (event: ConciergeEvent) => void;
   signal: AbortSignal;
+  delegation?: string | null;
 }): Promise<void> => {
   const response = await safeFetch(
     `${getBaseAddress()}/v1/conversations/${conversationId}/messages`,
     {
       method: "POST",
       headers: {
-        ...clientHeaders(clientId),
+        ...clientHeaders(clientId, delegation),
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ message }),
@@ -147,7 +150,11 @@ export const consumeEventStream = async (
   }
 };
 
-const clientHeaders = (clientId: string): Record<string, string> => ({
+const clientHeaders = (
+  clientId: string,
+  delegation: string | null,
+): Record<string, string> => ({
+  ...(delegation ? { "X-Concierge-Delegation": delegation } : {}),
   Accept: "text/event-stream, application/json",
   "X-Concierge-Client-ID": clientId,
 });

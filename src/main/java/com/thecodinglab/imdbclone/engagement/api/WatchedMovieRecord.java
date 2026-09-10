@@ -4,6 +4,6 @@ import com.thecodinglab.imdbclone.catalog.api.MovieRecord;
 import java.time.Instant;
 import org.springframework.modulith.NamedInterface;
 
-@NamedInterface("profile")
+@NamedInterface({"profile", "assistant"})
 public record WatchedMovieRecord(
     Long accountId, Long movieId, Instant addedAt, MovieRecord movie) {}
