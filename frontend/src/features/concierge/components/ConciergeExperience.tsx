@@ -1,6 +1,6 @@
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import { alpha } from "@mui/material/styles";
-import { Button, Fab, Snackbar, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, Fab, Snackbar, useMediaQuery, useTheme } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   rateMovieMutationOptions,
@@ -10,7 +10,7 @@ import {
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuthSessionSnapshot } from "../../../shared/auth";
-import { movieDetailPath } from "../../../shared/navigation/appRoutes";
+import { applicationDestination } from "../model/applicationNavigation";
 import { movieColors } from "../../../theme";
 import { getConciergeClientId } from "../model/browserIdentity";
 import ConciergeDrawer from "./ConciergeDrawer";
@@ -115,14 +115,7 @@ const IdentityScopedConcierge = ({
           });
         }
       }
-      const destination =
-        action.type === "open_movie"
-          ? movieDetailPath(action.movieId)
-          : action.type === "open_watchlist"
-            ? "/your-watchlist"
-            : action.type === "open_ratings"
-              ? "/your-ratings"
-              : "/login";
+      const destination = applicationDestination(action, accountId !== null);
       setOpen(false);
       void navigate(destination);
     },
@@ -133,6 +126,12 @@ const IdentityScopedConcierge = ({
 
   return (
     <>
+      {voice.active && (
+        <Box
+          aria-hidden="true"
+          sx={{ height: "calc(104px + env(safe-area-inset-bottom))" }}
+        />
+      )}
       <Snackbar
         open={receipt !== null}
         sx={

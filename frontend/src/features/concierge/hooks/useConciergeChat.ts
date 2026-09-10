@@ -95,14 +95,14 @@ export const useConciergeChat = (
                   groundedMovieIds.has(event.action.movieId));
               actionHandled = true;
               if (!allowed) {
-                reportUiAction("rejected");
+                reportUiAction(event.action, "rejected");
                 return;
               }
               try {
                 onUiAction(event.action);
-                reportUiAction("executed");
+                reportUiAction(event.action, "executed");
               } catch {
-                reportUiAction("rejected");
+                reportUiAction(event.action, "rejected");
               }
               return;
             }
@@ -142,7 +142,12 @@ export const useConciergeChat = (
   return { isStreaming, reset, send, status, turns, usage };
 };
 
-const reportUiAction = (outcome: "executed" | "rejected"): void => {
+const reportUiAction = (
+  action: ApplicationAction,
+  outcome: "executed" | "rejected",
+): void => {
+  // The Java browser-telemetry contract currently supports movie opens only.
+  if (action.type !== "open_movie") return;
   reportPerformanceEvent({
     context: createPerformanceEventContext(window.location.pathname),
     name: "open_movie",

@@ -6,6 +6,10 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, beforeEach, vi } from "vitest";
 import { authSession } from "../../../shared/auth";
+import {
+  configurePerformanceReporter,
+  resetPerformanceReporterForTests,
+} from "../../../shared/observability/performanceReporter";
 import { installLocalStorageMock } from "../../../test/installLocalStorageMock";
 import { appTheme } from "../../../theme";
 import ConciergeExperience from "./ConciergeExperience";
@@ -89,6 +93,7 @@ describe("ConciergeExperience", () => {
     unmountExperience?.();
     authSession.resetForTests();
     vi.unstubAllGlobals();
+    resetPerformanceReporterForTests();
   });
 
   it("is public and automatically renders grounded cards from the stream", async () => {
@@ -188,6 +193,8 @@ describe("ConciergeExperience", () => {
   });
 
   it("closes the overlay and opens the app-owned route for a grounded action", async () => {
+    const report = vi.fn();
+    configurePerformanceReporter({ report });
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(
@@ -226,7 +233,64 @@ describe("ConciergeExperience", () => {
         screen.queryByRole("dialog", { name: "Movie Concierge" }),
       ).not.toBeInTheDocument(),
     );
+    expect(report).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "concierge_ui_action",
+        name: "open_movie",
+        outcome: "executed",
+      }),
+    );
   });
+
+  it.each([
+    [{ type: "open_page", destination: "home" }, "/"],
+    [{ type: "open_page", destination: "settings" }, "/login"],
+    [
+      { type: "show_search_results", query: "Forrest Gump" },
+      "/movie-search?query=Forrest+Gump",
+    ],
+  ] as const)(
+    "handles a text navigation action without counting a movie open: %j",
+    async (action, route) => {
+      const report = vi.fn();
+      configurePerformanceReporter({ report });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn<typeof fetch>()
+          .mockResolvedValueOnce(
+            new Response(JSON.stringify({ conversationId }), { status: 201 }),
+          )
+          .mockResolvedValueOnce(
+            new Response(
+              event("ui-action", 1, { action }) +
+                event("completion", 2, { conversationId, outcome: "success" }),
+              { headers: { "Content-Type": "text/event-stream" } },
+            ),
+          ),
+      );
+      const user = userEvent.setup();
+      renderExperience();
+      await user.click(
+        screen.getByRole("button", { name: "Ask the Movie Concierge" }),
+      );
+      await user.type(
+        screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
+        "Show me the requested page",
+      );
+      await user.click(
+        screen.getByRole("button", { name: "Send concierge message" }),
+      );
+      await waitFor(() =>
+        expect(
+          screen.queryByRole("dialog", { name: "Movie Concierge" }),
+        ).not.toBeInTheDocument(),
+      );
+      expect(screen.getByLabelText("Current route")).toHaveTextContent(route);
+      expect(report).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: "concierge_ui_action" }),
+      );
+    },
+  );
 
   it("does not navigate when an action arrives before its grounded card", async () => {
     const unsafeStream = new Response(
