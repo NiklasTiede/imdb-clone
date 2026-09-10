@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from imdb_agent.concierge.events import OpenLoginAction, OpenPageAction, ShowSearchResultsAction
+from imdb_agent.concierge.page_context import PAGE_CONTEXT_POLICY
 from imdb_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
@@ -142,7 +143,9 @@ class SearchNavigation:
         return self._candidate
 
 
-NAVIGATION_POLICY = """
+NAVIGATION_POLICY = (
+    PAGE_CONTEXT_POLICY
+    + """
 Application navigation: Users can open home, their account settings, watchlist or ratings page.
 Use navigate_app for a page request, interpreting natural language and conversation context.
 'Let me see what I rated', 'my saved movies, please' and 'back to the homepage' need no special
@@ -168,3 +171,4 @@ When a discovery request ends with search_movies, show the same query and filter
 search page. Internal lookups for mutations, details, opening a movie or finding similar movies
 do not open search results. Do not claim navigation or search succeeded after a tool failure.
 """
+)

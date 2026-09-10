@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, model_validator
 
 from imdb_agent.concierge.events import (
     ApplicationAction,
@@ -15,6 +15,7 @@ from imdb_agent.concierge.events import (
     OpenMovieAction,
 )
 from imdb_agent.concierge.navigation import SearchNavigation
+from imdb_agent.concierge.page_context import PageContext  # noqa: TC001 - Pydantic runtime type
 from imdb_agent.concierge.policy import decide_open_movie_action
 
 SAMPLE_RATE = 24_000
@@ -22,7 +23,14 @@ PCM_BYTES_PER_SECOND = SAMPLE_RATE * 2
 
 
 class VoiceCommand(EventModel):
-    type: Literal["interrupt", "mute", "resume", "end"]
+    type: Literal["interrupt", "mute", "resume", "end", "context"]
+    context: PageContext | None = None
+
+    @model_validator(mode="after")
+    def context_command(self) -> VoiceCommand:
+        if (self.type == "context") != (self.context is not None):
+            raise ValueError("context is required only for a context command")
+        return self
 
 
 class VoiceEvent(EventModel):

@@ -140,7 +140,9 @@ pages route to login. Internal lookups for movie opening or personal mutations d
 **2026-09-10 trailer navigation:** `open_movie_trailer` now opens a grounded movie and centers its
 trailer section in text and voice, including repeat requests on the same page. Missing trailers
 show an availability notice. Playback uses the existing Play button; reliable autoplay with sound
-and voice-audio coordination remain open. The broader contextual capability registry remains open.
+and voice-audio coordination remain open. The bounded current-page snapshot and `get_page_context`
+now support page-help questions in text and voice, including manual route changes during a session.
+This is a page-type guide with a movie lookup hint/search query, not DOM or loaded-results access.
 The [pre-commit review](reviews/2026-09-10-concierge-navigation-review.md) records corrected
 search selection/routing defects, ownership checks, regression tests and verification limits.
 

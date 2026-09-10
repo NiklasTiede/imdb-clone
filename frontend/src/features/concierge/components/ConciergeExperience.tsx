@@ -1,14 +1,22 @@
+import { pageContextFromLocation } from "../model/pageContext";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import { alpha } from "@mui/material/styles";
-import { Box, Button, Fab, Snackbar, useMediaQuery, useTheme } from "@mui/material";
+import {
+  Box,
+  Button,
+  Fab,
+  Snackbar,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   rateMovieMutationOptions,
   toggleWatchlistMutationOptions,
   watchlistQueryKeys,
 } from "../../engagement";
-import { useCallback, useState } from "react";
-import { useNavigate } from "react-router";
+import { useMemo, useCallback, useState } from "react";
+import { useNavigate, useLocation } from "react-router";
 import { useAuthSessionSnapshot } from "../../../shared/auth";
 import { applicationDestination } from "../model/applicationNavigation";
 import { movieColors } from "../../../theme";
@@ -60,6 +68,11 @@ const IdentityScopedConcierge = ({
   const resetWatchlistUndo = undoWatchlist.reset;
   const resetRatingUndo = undoRating.reset;
   const navigate = useNavigate();
+  const { pathname, search, hash } = useLocation();
+  const pageContext = useMemo(
+    () => pageContextFromLocation({ pathname, search, hash }),
+    [pathname, search, hash],
+  );
   const theme = useTheme();
   const mobile = useMediaQuery(theme.breakpoints.down("sm"));
   const clientId = getConciergeClientId(accountId);
@@ -122,7 +135,7 @@ const IdentityScopedConcierge = ({
     [navigate, accountId, queryClient, resetWatchlistUndo, resetRatingUndo],
   );
 
-  const voice = useConciergeVoice(handleApplicationAction);
+  const voice = useConciergeVoice(handleApplicationAction, pageContext);
 
   return (
     <>
@@ -236,6 +249,7 @@ const IdentityScopedConcierge = ({
         </Button>
       )}
       <ConciergeDrawer
+        pageContext={pageContext}
         voice={voice}
         clientId={clientId}
         onClose={() => setOpen(false)}

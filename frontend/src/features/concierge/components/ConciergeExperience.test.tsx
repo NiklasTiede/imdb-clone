@@ -189,6 +189,7 @@ describe("ConciergeExperience", () => {
     }
     expect(JSON.parse(requestBody)).toEqual({
       message: "What can you do for me?",
+      pageContext: { page: "home" },
     });
   });
 

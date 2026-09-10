@@ -664,3 +664,48 @@ async def test_semantic_navigation_tools_reach_browser(
         )
         previous = browser.events[index - 1]
         assert isinstance(previous, VoiceEvent) and previous.type == "movie-card"
+
+
+@pytest.mark.asyncio
+async def test_voice_context_tool_reads_the_latest_browser_snapshot_without_navigation() -> None:
+    from imdb_agent.concierge.page_context import PageContext
+
+    class ContextConnection(CatalogConnection):
+        output: str | None = None
+
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, BinaryAudio):
+                await self.events.put(RealtimeInputSpeechStartEvent(item_id="page-question"))
+                await self.events.put(
+                    InputTranscript(
+                        "What can I do on this page?", is_final=True, item_id="page-question"
+                    )
+                )
+                await self.events.put(
+                    ToolCall("page-context", tool_name="get_page_context", args="{}")
+                )
+                await self.events.put(ResponseDone())
+            elif isinstance(content, ToolResult):
+                self.output = content.output
+                await self.events.put(
+                    OutputTranscript("You can read the synopsis and play a trailer.")
+                )
+                await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                await self.events.put(ResponseDone())
+
+    browser = Browser(end_on_completion=True)
+    for movie_id in (6, 7):
+        browser.input.put_nowait(
+            VoiceCommand(type="context", context=PageContext(page="movie", movie_id=movie_id))
+        )
+    model = CatalogModel()
+    connection = ContextConnection()
+    model.connection = connection
+    agent: Agent[None, str] = Agent()
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser)
+    assert connection.output is not None
+    assert json.loads(connection.output)["context"]["movieId"] == 7
+    assert not any(
+        isinstance(event, VoiceEvent) and event.type == "ui-action" for event in browser.events
+    )

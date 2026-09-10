@@ -1,3 +1,4 @@
+import type { PageContext } from "../model/pageContext";
 import { getConciergeDelegation } from "../api/delegation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPerformanceEventContext } from "../../../shared/observability/config";
@@ -20,6 +21,7 @@ const createTurnId = (): string => window.crypto.randomUUID();
 export const useConciergeChat = (
   clientId: string,
   onUiAction: (action: ApplicationAction) => void,
+  pageContext?: PageContext,
 ) => {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [status, setStatus] = useState<string | null>(null);
@@ -79,6 +81,7 @@ export const useConciergeChat = (
         conversationIdRef.current = conversationId;
 
         await streamMessage({
+          ...(pageContext ? { pageContext } : {}),
           delegation,
           clientId,
           conversationId,
@@ -137,7 +140,7 @@ export const useConciergeChat = (
         }
       }
     },
-    [clientId, onUiAction],
+    [clientId, onUiAction, pageContext],
   );
 
   return { isStreaming, reset, send, status, turns, usage };

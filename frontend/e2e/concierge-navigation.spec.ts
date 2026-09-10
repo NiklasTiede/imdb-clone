@@ -27,6 +27,9 @@ for (const signedIn of [false, true]) {
         route.fulfill(signedIn ? { json: user } : { status: 401, body: "" }),
       );
     }
+    await page.route("**/api/v1/accounts/me/passkeys", (route) =>
+      route.fulfill({ json: [] }),
+    );
     await page.route("**/api/v1/auth/concierge-delegation", (route) =>
       route.fulfill({
         json: {
@@ -93,6 +96,7 @@ for (const signedIn of [false, true]) {
       });
     });
     let emit: ((action: object) => void) | undefined;
+    const pageContexts: object[] = [];
     let connections = 0;
     let ended = false;
     await page.routeWebSocket("**/v1/voice", (socket) => {
@@ -100,7 +104,9 @@ for (const signedIn of [false, true]) {
       let turn = 0;
       socket.onMessage((message) => {
         if (typeof message !== "string") return;
-        const frame = JSON.parse(message) as { type: string };
+        const frame = JSON.parse(message) as { type: string; context?: object };
+        if (frame.type === "context" && frame.context)
+          pageContexts.push(frame.context);
         if (frame.type === "start")
           socket.send(JSON.stringify({ type: "ready" }));
         if (frame.type === "end") ended = true;
@@ -128,6 +134,11 @@ for (const signedIn of [false, true]) {
       await expect(
         page.getByRole("button", { name: "End voice session" }).last(),
       ).toBeVisible();
+      await expect
+        .poll(() => pageContexts.at(-1))
+        .toEqual({
+          page: signedIn || destination === "home" ? destination : "login",
+        });
     }
     emit?.({
       type: "show_search_results",
@@ -186,6 +197,11 @@ for (const signedIn of [false, true]) {
     expect(new URL(page.url()).searchParams.get("query")).toBe("Arrival");
     expect(mutations).toEqual([]);
     expect(connections).toBe(1);
+    await expect
+      .poll(() => pageContexts.at(-1))
+      .toEqual({ page: "search", searchQuery: "Arrival" });
+    expect(pageContexts).toContainEqual({ page: "home" });
+    if (signedIn) expect(pageContexts).toContainEqual({ page: "ratings" });
     expect(ended).toBe(false);
     await expect(
       page.getByRole("button", { name: "Undo", exact: true }),

@@ -69,7 +69,7 @@ class BrowserVoiceTransport:
             return data
         text = message.get("text") or ""
         self._commands += 1
-        if len(text) > 128 or self._commands > 300:
+        if len(text) > 1500 or self._commands > 300:
             raise ValueError("invalid_control")
         return VoiceCommand.model_validate_json(text)
 

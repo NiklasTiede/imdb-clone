@@ -152,6 +152,8 @@ def requests_open_movie(message: str) -> bool:
 def capability_response(message: str) -> str | None:
     """Return the stable product-owned help text for an explicit capability question."""
 
+    if re.search(r"\b(?:here|this page|this screen)\b", message, re.IGNORECASE):
+        return None
     if _CAPABILITY_DISCOVERY_INTENT.search(message) is None:
         return None
     return CAPABILITY_RESPONSE

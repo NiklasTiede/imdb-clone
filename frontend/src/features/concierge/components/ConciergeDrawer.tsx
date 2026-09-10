@@ -1,3 +1,4 @@
+import type { PageContext } from "../model/pageContext";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -26,6 +27,7 @@ import type { ConciergeVoice } from "../hooks/useConciergeVoice";
 import { ConciergeVoicePanel } from "./ConciergeVoicePanel";
 
 type ConciergeDrawerProps = {
+  pageContext?: PageContext;
   voice: ConciergeVoice;
   clientId: string;
   onClose: () => void;
@@ -35,6 +37,7 @@ type ConciergeDrawerProps = {
 
 const ConciergeDrawer = ({
   clientId,
+  pageContext,
   voice,
   onClose,
   onUiAction,
@@ -44,6 +47,7 @@ const ConciergeDrawer = ({
   const { isStreaming, reset, send, status, turns, usage } = useConciergeChat(
     clientId,
     onUiAction,
+    pageContext,
   );
   const scrollRef = useRef<HTMLDivElement | null>(null);
 

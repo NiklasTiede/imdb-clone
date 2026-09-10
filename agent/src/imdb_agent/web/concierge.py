@@ -9,6 +9,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from pydantic.alias_generators import to_camel
 
+from imdb_agent.concierge.page_context import PageContext  # noqa: TC001 - Pydantic runtime type
 from imdb_agent.concierge.personal import DelegationRejectedError, DelegationVerifier
 
 if TYPE_CHECKING:
@@ -37,6 +38,7 @@ class CreateConversationResponse(WebModel):
 
 class MessageRequest(WebModel):
     message: str = Field(min_length=1, max_length=600)
+    page_context: PageContext | None = None
 
 
 def create_concierge_router(
@@ -83,6 +85,7 @@ def create_concierge_router(
             client_id=validated_client_id,
             conversation_id=conversation_id,
             message=request.message.strip(),
+            page_context=request.page_context,
             delegation=SecretStr(delegation) if delegation else None,
         ):
             yield ServerSentEvent(

@@ -20,12 +20,17 @@ if TYPE_CHECKING:
 class EchoVoice:
     closed = False
 
+    def __init__(self) -> None:
+        self.contexts: list[VoiceCommand] = []
+
     async def run(self, transport: VoiceTransport, delegation: SecretStr | None = None) -> None:
         try:
             await transport.send(VoiceEvent(type="ready"))
             while True:
                 data = await transport.receive()
                 if isinstance(data, VoiceCommand):
+                    if data.type == "context":
+                        self.contexts.append(data)
                     if data.type == "end":
                         return
                 else:
@@ -183,3 +188,22 @@ def test_personal_voice_cannot_start_without_verified_delegation() -> None:
         assert event["type"] == "error"
         assert "Sign in again" in event["text"]
     assert not runner.closed
+
+
+def test_context_updates_are_validated_and_delivered_in_order_without_ending_voice() -> None:
+    runner = EchoVoice()
+    with (
+        client_for(runner) as client,
+        client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
+    ):
+        ws.send_json({"type": "start"})
+        assert ws.receive_json()["type"] == "ready"
+        for movie_id in (6, 7):
+            ws.send_json({"type": "context", "context": {"page": "movie", "movieId": movie_id}})
+        ws.send_bytes(b"\x00\x01" * 2400)
+        assert ws.receive_bytes() == b"\x00\x01" * 2400
+        assert [command.context.movie_id for command in runner.contexts if command.context] == [
+            6,
+            7,
+        ]
+        ws.send_json({"type": "end"})

@@ -147,6 +147,8 @@ async def _relay_voice(
                 if isinstance(command, bytes):
                     if not muted:
                         await session.send_audio(command)
+                elif command.type == "context" and command.context is not None:
+                    application.page_context = command.context
                 elif command.type == "end":
                     return
                 elif command.type == "interrupt":

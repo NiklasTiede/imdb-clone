@@ -46,6 +46,7 @@ async def test_function_model_executes_tool_loop_and_emits_grounded_cards(messag
                 "open_movie_page",
                 "open_movie_trailer",
                 "show_movie_search",
+                "get_page_context",
             }
             yield {
                 0: DeltaToolCall(

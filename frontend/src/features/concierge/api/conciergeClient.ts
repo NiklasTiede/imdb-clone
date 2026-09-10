@@ -1,3 +1,4 @@
+import type { PageContext } from "../model/pageContext";
 import * as zod from "zod";
 import { createPerformanceEventContext } from "../../../shared/observability/config";
 import { reportPerformanceEvent } from "../../../shared/observability/performanceReporter";
@@ -47,6 +48,7 @@ export const streamMessage = async ({
   onEvent,
   signal,
   delegation = null,
+  pageContext,
 }: {
   clientId: string;
   conversationId: string;
@@ -54,6 +56,7 @@ export const streamMessage = async ({
   onEvent: (event: ConciergeEvent) => void;
   signal: AbortSignal;
   delegation?: string | null;
+  pageContext?: PageContext;
 }): Promise<void> => {
   const response = await safeFetch(
     `${getBaseAddress()}/v1/conversations/${conversationId}/messages`,
@@ -63,7 +66,10 @@ export const streamMessage = async ({
         ...clientHeaders(clientId, delegation),
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({
+        message,
+        ...(pageContext ? { pageContext } : {}),
+      }),
       signal,
     },
   );

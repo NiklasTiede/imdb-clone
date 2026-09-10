@@ -41,6 +41,8 @@ if TYPE_CHECKING:
 
     from pydantic import SecretStr
 
+    from imdb_agent.concierge.page_context import PageContext
+
 
 class ConciergeRunError(RuntimeError):
     def __init__(self, code: str, safe_message: str, *, retryable: bool) -> None:
@@ -98,6 +100,7 @@ class ConciergeService:
         conversation_id: str,
         message: str,
         delegation: SecretStr | None = None,
+        page_context: PageContext | None = None,
     ) -> AsyncIterator[ConciergeEvent]:
         started_at = perf_counter()
         sequence = 0
@@ -164,6 +167,7 @@ class ConciergeService:
                     message=message,
                     history=history,
                     delegation=delegation,
+                    page_context=page_context,
                 )
                 async for event in self._runner.stream(request):
                     if not first_event_observed:

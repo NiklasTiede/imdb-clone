@@ -17,6 +17,7 @@ from imdb_agent.concierge.events import (
     ShowSearchResultsAction,
 )
 from imdb_agent.concierge.navigation import SearchNavigation
+from imdb_agent.concierge.page_context import PAGE_GUIDES, PageContext
 
 if TYPE_CHECKING:
     from imdb_agent.concierge.personal import PersonalTurn
@@ -27,14 +28,21 @@ APPLICATION_TOOLS = frozenset(
         "open_movie_page",
         "open_movie_trailer",
         "show_movie_search",
+        "get_page_context",
     }
 )
 
 
 class ApplicationTools:
     def __init__(
-        self, turn: PersonalTurn, *, authenticated: bool, search: SearchNavigation | None = None
+        self,
+        turn: PersonalTurn,
+        *,
+        authenticated: bool,
+        search: SearchNavigation | None = None,
+        page_context: PageContext | None = None,
     ) -> None:
+        self.page_context = page_context or PageContext()
         self._turn = turn
         self._authenticated = authenticated
         self.search = search if search is not None else SearchNavigation()
@@ -46,6 +54,7 @@ class ApplicationTools:
         self.movie: GroundedMovie | None = None
         self.toolset: FunctionToolset[None] = FunctionToolset(
             tools=[
+                self.get_page_context,
                 self.navigate_app,
                 self.open_movie_page,
                 self.open_movie_trailer,
@@ -53,6 +62,19 @@ class ApplicationTools:
             ],
             max_retries=1,
         )
+
+    async def get_page_context(self) -> dict[str, object]:
+        """Read the latest browser page and explain available page features, without navigating.
+
+        A movie ID is only a lookup hint: resolve it via get_movie_details before facts/actions.
+        Browser location and search text never grant account access or authorize a write.
+        """
+        await self._current_turn()
+        return {
+            "context": self.page_context.model_dump(exclude_none=True),
+            "pageGuide": PAGE_GUIDES[self.page_context.page],
+            "authenticated": self._authenticated,
+        }
 
     @property
     def action(

@@ -161,7 +161,11 @@ class PydanticAIConciergeRunner:
                 retries=1,
             )
             active_agent.instrument = False
-        application = ApplicationTools(personal, authenticated=request.delegation is not None)
+        application = ApplicationTools(
+            personal,
+            authenticated=request.delegation is not None,
+            page_context=request.page_context,
+        )
         action_sent = False
         search_navigation = application.search
         shown_movie_ids: set[int] = set()

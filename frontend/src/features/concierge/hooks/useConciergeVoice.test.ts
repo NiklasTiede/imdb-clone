@@ -24,6 +24,7 @@ class Socket {
   static instances: Socket[] = [];
   readyState = 1;
   bufferedAmount = 0;
+  onopen?: () => void;
   onmessage?: (event: { data: unknown }) => void;
   onerror?: () => void;
   onclose?: () => void;
@@ -312,4 +313,31 @@ it("ending during parallel startup cannot restart listening after audio resolves
   });
   expect(result.current.status).toBe("idle");
   expect(socket.close).toHaveBeenCalled();
+});
+
+it("sends the current page after start and updates it without reconnecting", async () => {
+  const action = vi.fn();
+  const { result, rerender } = renderHook(
+    ({ id }) => useConciergeVoice(action, { page: "movie", movieId: id }),
+    { initialProps: { id: 6 } },
+  );
+  await act(() => result.current.start());
+  const socket = Socket.instances[0];
+  if (!socket) throw new Error("Expected socket");
+  rerender({ id: 7 });
+  expect(socket.send).not.toHaveBeenCalled();
+  act(() => socket.onopen?.());
+  expect(
+    socket.send.mock.calls.map(
+      ([message]) => JSON.parse(message as string) as object,
+    ),
+  ).toEqual([
+    { type: "start", delegation: null },
+    { type: "context", context: { page: "movie", movieId: 7 } },
+  ]);
+  rerender({ id: 8 });
+  expect(socket.send).toHaveBeenLastCalledWith(
+    JSON.stringify({ type: "context", context: { page: "movie", movieId: 8 } }),
+  );
+  expect(Socket.instances).toHaveLength(1);
 });

@@ -1,3 +1,4 @@
+import type { PageContext } from "../model/pageContext";
 import { getConciergeDelegation } from "../api/delegation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserAudio } from "../audio/browserAudio";
@@ -6,6 +7,7 @@ import { voiceEventSchema, type VoiceStatus } from "../model/voice";
 
 export const useConciergeVoice = (
   onAction: (action: ApplicationAction) => void,
+  pageContext?: PageContext,
 ) => {
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +23,19 @@ export const useConciergeVoice = (
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mutedRef = useRef(false);
   const blockedAudio = useRef(false);
+  const pageContextRef = useRef(pageContext);
+  const contextSocketRef = useRef<WebSocket | null>(null);
+  useEffect(() => {
+    pageContextRef.current = pageContext;
+    const socket = socketRef.current;
+    if (
+      pageContext &&
+      socket === contextSocketRef.current &&
+      socket?.readyState === WebSocket.OPEN
+    ) {
+      socket.send(JSON.stringify({ type: "context", context: pageContext }));
+    }
+  }, [pageContext]);
 
   const dispose = useCallback(() => {
     generation.current++;
@@ -28,6 +43,7 @@ export const useConciergeVoice = (
     cancelAnimationFrame(frameRef.current);
     const socket = socketRef.current;
     socketRef.current = null;
+    contextSocketRef.current = null;
     if (socket?.readyState === WebSocket.OPEN)
       socket.send(JSON.stringify({ type: "end" }));
     socket?.close();
@@ -139,8 +155,16 @@ export const useConciergeVoice = (
       if (!isCurrent()) return;
       const socket = new WebSocket(url);
       socket.onopen = () => {
-        if (isCurrent())
-          socket.send(JSON.stringify({ type: "start", delegation }));
+        if (!isCurrent()) return;
+        socket.send(JSON.stringify({ type: "start", delegation }));
+        contextSocketRef.current = socket;
+        if (pageContextRef.current)
+          socket.send(
+            JSON.stringify({
+              type: "context",
+              context: pageContextRef.current,
+            }),
+          );
       };
       socket.binaryType = "arraybuffer";
       socketRef.current = socket;

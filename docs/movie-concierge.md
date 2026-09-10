@@ -169,6 +169,24 @@ a claim to know unseen films. No positive history or no new candidates produces 
 the agent must not disguise generic picks as personal recommendations. Rating changes are reflected
 on the next read; no separate preference datastore is created.
 
+### Current browser page
+
+Text requests include a bounded `pageContext`; voice sends a `context` control after the start
+message and updates it on route changes without reconnecting. `get_page_context` reads the latest
+snapshot and returns product-owned descriptions of the supported page's features. It distinguishes
+home, movie (including trailer section), search, watchlist, ratings, reviews, settings and basic
+account/admin page types. Unsupported routes become unknown. A movie ID is only a lookup hint:
+`get_movie_details` must ground it before the agent states movie facts or takes an action. Search
+text is capped at 200 characters and is untrusted data, never an instruction.
+
+Only the allowlisted page type, movie ID, trailer/overview section and search query cross this
+boundary. No DOM, passwords, profile contents, full URLs, arbitrary query parameters or account IDs
+are sent. The snapshot does not expose loaded results, current form values or search filters, and
+it is never authentication or write authorization. Actual personal state still requires delegated
+Java tools. Examples: “What can I do on this page?”, “Tell me about this movie”, “What did I rate
+highest?” and “Recommend something based on my ratings”. Model interpretation remains subject to
+live voice validation; deterministic checks verify contracts and authorization independently.
+
 ## Read-Only MVP
 
 ### In scope

@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
     from pydantic import SecretStr
 
+    from imdb_agent.concierge.ports import RunRequest
+
 
 @fixture
 def client() -> Iterator[TestClient]:
@@ -181,3 +183,38 @@ def test_delegated_conversations_are_bound_to_verified_session(
     assert client.post("/v1/conversations", headers=expired).status_code == 401
     events = parse_sse(client.post(path, headers=headers, json={"message": "Find Arrival"}).text)
     assert events[-1]["outcome"] == "success"
+
+
+def test_latest_browser_context_reaches_the_text_runner_without_becoming_user_history() -> None:
+    from imdb_agent.concierge.events import TextEvent
+
+    class CapturingRunner:
+        def __init__(self) -> None:
+            self.requests: list[RunRequest] = []
+
+        async def stream(self, request: RunRequest):
+            self.requests.append(request)
+            yield TextEvent(delta="You can inspect this movie and play its trailer.")
+
+    runner = CapturingRunner()
+    app = create_app(
+        Settings(environment=DeploymentEnvironment.TEST, model_backend=ModelBackend.FAKE),
+        runner=runner,
+    )
+    headers = {"X-Concierge-Client-ID": "browser-client-0001"}
+    with TestClient(app) as client:
+        conversation = client.post("/v1/conversations", headers=headers).json()["conversationId"]
+        for movie_id in (6, 7):
+            response = client.post(
+                f"/v1/conversations/{conversation}/messages",
+                headers=headers,
+                json={
+                    "message": "What can you do here?",
+                    "pageContext": {"page": "movie", "movieId": movie_id},
+                },
+            )
+            assert response.status_code == 200
+        assert [
+            request.page_context.movie_id for request in runner.requests if request.page_context
+        ] == [6, 7]
+        assert runner.requests[-1].history[0].content == "What can you do here?"
