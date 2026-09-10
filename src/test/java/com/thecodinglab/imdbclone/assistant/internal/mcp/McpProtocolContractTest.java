@@ -85,6 +85,12 @@ class McpProtocolContractTest {
   private com.thecodinglab.imdbclone.recommendation.api.PersonalRecommendationService
       personalRecommendations;
 
+  @org.springframework.test.context.bean.override.mockito.MockitoBean
+  private com.thecodinglab.imdbclone.catalog.api.MovieEnrichment enrichment;
+
+  @org.springframework.test.context.bean.override.mockito.MockitoBean
+  private com.thecodinglab.imdbclone.catalog.api.MovieWatchProviders watchProviders;
+
   @BeforeEach
   void resetMovieSearch() {
     movieSearch.reset();
@@ -126,13 +132,15 @@ class McpProtocolContractTest {
     mockMvc
         .perform(authenticatedMcpRequest(toolsListRequest()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.result.tools.length()").value(12))
+        .andExpect(jsonPath("$.result.tools.length()").value(14))
         .andExpect(
             jsonPath("$.result.tools[*].name")
                 .value(
                     org.hamcrest.Matchers.containsInAnyOrder(
                         "search_movies",
                         "get_movie_details",
+                        "get_movie_enrichment",
+                        "get_movie_watch_providers",
                         "get_similar_movies",
                         "get_tonight_picks",
                         "get_my_context",
@@ -152,8 +160,13 @@ class McpProtocolContractTest {
                     "$.result.tools[?(@.name =~ /get_.*/ || @.name == 'search_movies' || @.name == 'add_movie_to_my_watchlist')].annotations.destructiveHint")
                 .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(false))))
         .andExpect(
-            jsonPath("$.result.tools[*].annotations.openWorldHint")
+            jsonPath(
+                    "$.result.tools[?(@.name != 'get_movie_enrichment' && @.name != 'get_movie_watch_providers')].annotations.openWorldHint")
                 .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(false))))
+        .andExpect(
+            jsonPath(
+                    "$.result.tools[?(@.name == 'get_movie_enrichment' || @.name == 'get_movie_watch_providers')].annotations.openWorldHint")
+                .value(org.hamcrest.Matchers.contains(true, true)))
         .andExpect(jsonPath("$.result.tools[*].outputSchema.properties.movies").exists());
   }
 

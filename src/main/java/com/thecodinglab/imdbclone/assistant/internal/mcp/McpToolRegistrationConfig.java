@@ -35,7 +35,9 @@ class McpToolRegistrationConfig {
       MovieRecommendationMcpTools movieRecommendationMcpTools,
       WatchlistMcpTools watchlistMcpTools,
       RatingMcpTools ratingMcpTools,
-      PersonalDiscoveryMcpTools personalDiscoveryMcpTools) {
+      PersonalDiscoveryMcpTools personalDiscoveryMcpTools,
+      MovieEnrichmentMcpTool movieEnrichmentMcpTool,
+      MovieWatchProvidersMcpTool movieWatchProvidersMcpTool) {
     return SyncMcpAnnotationProviders.statelessToolSpecifications(
         List.of(
             movieSearchMcpTool,
@@ -43,6 +45,8 @@ class McpToolRegistrationConfig {
             movieRecommendationMcpTools,
             watchlistMcpTools,
             ratingMcpTools,
-            personalDiscoveryMcpTools));
+            personalDiscoveryMcpTools,
+            movieEnrichmentMcpTool,
+            movieWatchProvidersMcpTool));
   }
 }
