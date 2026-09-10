@@ -202,3 +202,50 @@ async def test_committed_changes_emit_the_correct_page_and_previous_state(
     action = receipt_action(state.receipt)
     assert action.type == ("open_watchlist" if kind == "watchlist_remove" else "open_ratings")
     assert action.movie_id == 6
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ["get_my_ratings", "get_my_recommendations"])
+async def test_personal_reads_use_delegation_without_creating_write_receipts(name: str) -> None:
+    state = turn()
+    state.finalize("Which movies did I rate highest?")
+    calls: list[dict[str, Any]] = []
+
+    async def backend(
+        name: str, args: dict[str, Any], *, metadata: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        assert metadata is not None
+        calls.append(metadata)
+        movie = {"movieId": 6, "primaryTitle": "Forrest Gump", "type": "MOVIE", "imdbRating": 8.8}
+        if name == "get_my_ratings":
+            return {
+                "contractVersion": "1.0",
+                "ratings": [{"movie": movie, "userScore": 10.0, "ratedAt": "2026-09-10T00:00:00Z"}],
+                "page": 0,
+                "totalElements": 21,
+                "last": False,
+                "averageUserScore": 8.0,
+                "favoriteGenres": [],
+                "favoriteDecades": [],
+            }
+        return {
+            "contractVersion": "1.0",
+            "strategy": "personal-ratings-v1",
+            "outcome": "MATCHED",
+            "totalRatings": 21,
+            "basedOn": [{"movieId": 7, "title": "Arrival", "userScore": 9.0}],
+            "movies": [movie],
+        }
+
+    ctx = cast("RunContext[Any]", None)
+    with pytest.raises(ToolFailed, match="Sign in"):
+        await PersonalToolGate(None, state).call(ctx, backend, name, {})
+    assert not calls
+    result = await PersonalToolGate(SecretStr("synthetic-session"), state).call(
+        ctx, backend, name, {}
+    )
+    assert isinstance(result, dict)
+    assert result["contractVersion"] == "1.0"
+    assert calls == [{"delegation": "synthetic-session"}]
+    assert state.receipt is None
+    assert state.movies[0].movie_id == 6 and state.movies[0].imdb_rating == 8.8

@@ -79,13 +79,56 @@ class _WatchlistResult(_ToolModel):
     last: bool
 
 
+class _RatedMovie(_ToolModel):
+    movie: _ToolMovie
+    user_score: float = Field(alias="userScore", ge=0, le=10)
+    rated_at: str = Field(alias="ratedAt")
+
+
+class _TasteFacet(_ToolModel):
+    label: str
+    movie_count: int = Field(alias="movieCount", ge=0)
+    average_user_score: float | None = Field(alias="averageUserScore", ge=0, le=10)
+
+
+class _RatingsResult(_ToolModel):
+    contract_version: Literal["1.0"] = Field(alias="contractVersion")
+    ratings: list[_RatedMovie]
+    page: int = Field(ge=0, le=100)
+    total_elements: int = Field(alias="totalElements", ge=0)
+    last: bool
+    average_user_score: float | None = Field(alias="averageUserScore", ge=0, le=10)
+    favorite_genres: list[_TasteFacet] = Field(alias="favoriteGenres")
+    favorite_decades: list[_TasteFacet] = Field(alias="favoriteDecades")
+
+
+class _RecommendationBasis(_ToolModel):
+    movie_id: int = Field(alias="movieId", gt=0)
+    title: str
+    user_score: float = Field(alias="userScore", ge=7, le=10)
+
+
+class _PersonalRecommendationsResult(_ToolModel):
+    contract_version: Literal["1.0"] = Field(alias="contractVersion")
+    strategy: str
+    outcome: Literal["MATCHED", "NO_POSITIVE_RATINGS", "NO_CANDIDATES"]
+    total_ratings: int = Field(alias="totalRatings", ge=0)
+    based_on: list[_RecommendationBasis] = Field(alias="basedOn", max_length=3)
+    movies: list[_ToolMovie]
+
+
 def parse_grounded_movies(tool_name: ToolName, content: Any) -> tuple[GroundedMovie, ...]:
     if tool_name in WRITE_TOOLS:
         return ()
     if not isinstance(content, dict):
         raise UnexpectedModelBehavior("MCP tool returned non-object content")
 
-    if tool_name is ToolName.GET_MY_WATCHLIST:
+    if tool_name is ToolName.GET_MY_RATINGS:
+        ratings = _RatingsResult.model_validate(content)
+        return tuple(entry.movie.to_grounded() for entry in ratings.ratings)
+    if tool_name is ToolName.GET_MY_RECOMMENDATIONS:
+        result = _PersonalRecommendationsResult.model_validate(content)
+    elif tool_name is ToolName.GET_MY_WATCHLIST:
         result = _WatchlistResult.model_validate(content)
     elif tool_name is ToolName.SEARCH_MOVIES:
         result = _SearchResult.model_validate(content)

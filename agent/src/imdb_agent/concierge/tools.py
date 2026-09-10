@@ -9,6 +9,8 @@ class ToolName(StrEnum):
     GET_SIMILAR_MOVIES = "get_similar_movies"
     GET_TONIGHT_PICKS = "get_tonight_picks"
 
+    GET_MY_RATINGS = "get_my_ratings"
+    GET_MY_RECOMMENDATIONS = "get_my_recommendations"
     GET_MY_WATCHLIST = "get_my_watchlist"
     ADD_MOVIE_TO_MY_WATCHLIST = "add_movie_to_my_watchlist"
     REMOVE_MOVIE_FROM_MY_WATCHLIST = "remove_movie_from_my_watchlist"
@@ -24,4 +26,8 @@ WRITE_TOOLS = frozenset(
         ToolName.REMOVE_MY_MOVIE_RATING,
     }
 )
-PERSONAL_TOOLS = WRITE_TOOLS | {ToolName.GET_MY_WATCHLIST}
+PERSONAL_TOOLS = WRITE_TOOLS | {
+    ToolName.GET_MY_WATCHLIST,
+    ToolName.GET_MY_RATINGS,
+    ToolName.GET_MY_RECOMMENDATIONS,
+}

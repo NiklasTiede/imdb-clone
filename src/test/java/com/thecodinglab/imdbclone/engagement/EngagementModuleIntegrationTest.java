@@ -38,6 +38,71 @@ class EngagementModuleIntegrationTest extends ModulePostgresSupport {
   @MockitoBean private MovieReferenceService movies;
   @MockitoBean private MovieRatingAggregateService aggregates;
 
+  @Autowired
+  private com.thecodinglab.imdbclone.engagement.api.AssistantRatingLibrary assistantRatingLibrary;
+
+  @Autowired
+  private com.thecodinglab.imdbclone.engagement.api.RatingPreferenceProvider ratingPreferences;
+
+  @Test
+  void personalReadModelsUseOwnScoresAndExcludeAllSavedOrRatedMovies() {
+    var first = org.mockito.Mockito.mock(com.thecodinglab.imdbclone.catalog.api.MovieRecord.class);
+    var second = org.mockito.Mockito.mock(com.thecodinglab.imdbclone.catalog.api.MovieRecord.class);
+    org.mockito.Mockito.when(first.id()).thenReturn(1L);
+    org.mockito.Mockito.when(first.primaryTitle()).thenReturn("Forrest Gump");
+    org.mockito.Mockito.when(second.id()).thenReturn(2L);
+    org.mockito.Mockito.when(second.primaryTitle()).thenReturn("Arrival");
+    org.mockito.Mockito.when(
+            movies.findMoviesByIds(org.mockito.ArgumentMatchers.<Long>anyCollection()))
+        .thenAnswer(
+            invocation -> {
+              java.util.Collection<Long> ids = invocation.getArgument(0);
+              return java.util.stream.Stream.of(first, second)
+                  .filter(m -> ids.contains(m.id()))
+                  .toList();
+            });
+    assistantRatings.rate(2L, 1L, new BigDecimal("9.0"), java.util.UUID.randomUUID());
+    assistantRatings.rate(2L, 2L, new BigDecimal("6.0"), java.util.UUID.randomUUID());
+    assistantRatings.rate(1L, 2L, new BigDecimal("10.0"), java.util.UUID.randomUUID());
+    assistantWatchlist.add(2L, 2L, java.util.UUID.randomUUID());
+    var highest =
+        assistantRatingLibrary.read(
+            2L, 0, com.thecodinglab.imdbclone.engagement.api.AssistantRatingLibrary.Order.HIGHEST);
+    assertThat(highest.items().getContent())
+        .extracting(r -> r.movie().id())
+        .containsExactly(1L, 2L);
+    assertThat(highest.items().getContent())
+        .extracting(r -> r.userScore())
+        .containsExactly(new BigDecimal("9.0"), new BigDecimal("6.0"));
+    assertThat(highest.averageUserScore()).isEqualByComparingTo("7.5");
+    assertThat(
+            assistantRatingLibrary
+                .read(
+                    2L,
+                    0,
+                    com.thecodinglab.imdbclone.engagement.api.AssistantRatingLibrary.Order.LOWEST)
+                .items()
+                .getContent())
+        .extracting(r -> r.movie().id())
+        .containsExactly(2L, 1L);
+    assertThat(
+            assistantRatingLibrary
+                .read(
+                    2L,
+                    1,
+                    com.thecodinglab.imdbclone.engagement.api.AssistantRatingLibrary.Order.HIGHEST)
+                .items()
+                .getContent())
+        .isEmpty();
+    var taste = ratingPreferences.forAccount(2L);
+    assertThat(taste.totalRatings()).isEqualTo(2);
+    assertThat(taste.favorites()).extracting(f -> f.movieId()).containsExactly(1L);
+    assertThat(taste.excludedMovieIds()).containsExactlyInAnyOrder(1L, 2L);
+    assistantRatings.remove(2L, 2L, java.util.UUID.randomUUID());
+    assertThat(ratingPreferences.forAccount(2L).excludedMovieIds()).contains(2L);
+    assertThat(ratingPreferences.forAccount(2L).totalRatings()).isEqualTo(1);
+  }
+
   @Test
   void ownsRatingPersistenceWhileCallingOnlyTheCatalogAggregateContract() {
     assertThat(context.getBeanNamesForType(org.springframework.data.repository.Repository.class))

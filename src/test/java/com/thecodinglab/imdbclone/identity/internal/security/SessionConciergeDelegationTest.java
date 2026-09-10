@@ -29,7 +29,8 @@ class SessionConciergeDelegationTest {
     var fixture = fixture(7L);
     var actor = service.verify(fixture.token(), "watchlist:add");
     assertThat(actor.accountId()).isEqualTo(7L);
-    for (String scope : List.of("watchlist:remove", "ratings:set", "ratings:remove"))
+    for (String scope :
+        List.of("watchlist:remove", "ratings:read", "ratings:set", "ratings:remove"))
       assertThat(service.verify(fixture.token(), scope)).isEqualTo(actor);
     assertThat(actor.sessionBinding())
         .isNotEqualTo(service.verify(fixture(8L).token(), "watchlist:read").sessionBinding());
@@ -106,7 +107,7 @@ class SessionConciergeDelegationTest {
         "session|7|9999999999|movie-concierge",
         "session|7|9999999999|different-audience|watchlist:read,watchlist:add,watchlist:remove,ratings:set,ratings:remove",
         "session|7|9999999999|movie-concierge|account:delete",
-        "session|7|not-a-timestamp|movie-concierge|watchlist:read,watchlist:add,watchlist:remove,ratings:set,ratings:remove"
+        "session|7|not-a-timestamp|movie-concierge|watchlist:read,watchlist:add,watchlist:remove,ratings:read,ratings:set,ratings:remove"
       })
   void invalidClaimsAreRejectedBeforeReadingASession(String claims) {
     var repository = org.mockito.Mockito.mock(StoredSessions.class);

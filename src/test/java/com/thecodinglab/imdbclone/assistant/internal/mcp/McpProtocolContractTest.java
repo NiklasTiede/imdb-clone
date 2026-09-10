@@ -78,6 +78,13 @@ class McpProtocolContractTest {
   @org.springframework.test.context.bean.override.mockito.MockitoBean
   private com.thecodinglab.imdbclone.engagement.api.AssistantRatings personalRatings;
 
+  @org.springframework.test.context.bean.override.mockito.MockitoBean
+  private com.thecodinglab.imdbclone.engagement.api.AssistantRatingLibrary ratingLibrary;
+
+  @org.springframework.test.context.bean.override.mockito.MockitoBean
+  private com.thecodinglab.imdbclone.recommendation.api.PersonalRecommendationService
+      personalRecommendations;
+
   @BeforeEach
   void resetMovieSearch() {
     movieSearch.reset();
@@ -119,7 +126,7 @@ class McpProtocolContractTest {
     mockMvc
         .perform(authenticatedMcpRequest(toolsListRequest()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.result.tools.length()").value(10))
+        .andExpect(jsonPath("$.result.tools.length()").value(12))
         .andExpect(
             jsonPath("$.result.tools[*].name")
                 .value(
@@ -130,6 +137,8 @@ class McpProtocolContractTest {
                         "get_tonight_picks",
                         "get_my_context",
                         "get_my_watchlist",
+                        "get_my_ratings",
+                        "get_my_recommendations",
                         "add_movie_to_my_watchlist",
                         "remove_movie_from_my_watchlist",
                         "set_my_movie_rating",

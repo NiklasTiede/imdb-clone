@@ -16,5 +16,9 @@ public interface RatingRepository extends JpaRepository<Rating, RatingId> {
 
   Optional<Rating> findByIdAccountIdAndIdMovieId(Long accountId, Long movieId);
 
+  @org.springframework.data.jpa.repository.Query(
+      "select r.id.movieId from Rating r where r.id.accountId = :accountId")
+  java.util.Set<Long> findMovieIdsByAccountId(Long accountId);
+
   Long countByIdAccountId(Long accountId);
 }

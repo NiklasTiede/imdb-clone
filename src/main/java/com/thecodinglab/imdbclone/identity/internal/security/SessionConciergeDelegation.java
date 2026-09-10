@@ -26,7 +26,7 @@ public class SessionConciergeDelegation implements ConciergeDelegation {
   private static final String KEY = "CONCIERGE_DELEGATION_KEY";
   private static final String AUDIENCE = "movie-concierge";
   private static final String SCOPES =
-      "watchlist:read,watchlist:add,watchlist:remove,ratings:set,ratings:remove";
+      "watchlist:read,watchlist:add,watchlist:remove,ratings:read,ratings:set,ratings:remove";
   private final SessionRepository<? extends Session> sessions;
   private final Clock clock;
 

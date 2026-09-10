@@ -127,7 +127,8 @@ class ConciergeService:
                 "these read-only movie tasks", "these movie tasks"
             ).replace(
                 "I cannot change watchlists or ratings or search the web.",
-                "I can read your watchlist, add or remove movies, and set or remove your rating "
+                "I can read your watchlist and ratings, recommend films from your ratings, "
+                "add or remove movies, and set or remove your rating "
                 "after your explicit command. Tell me your rating from 0 to 10. "
                 "Web search is unavailable.",
             )

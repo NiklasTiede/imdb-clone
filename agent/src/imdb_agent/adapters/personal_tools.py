@@ -183,7 +183,17 @@ def personal_policy(authenticated: bool) -> str:
             "The destination is login; do not say you are opening their settings or library."
         )
     return """The user has a delegated login session. Use get_my_watchlist for actual personal
-state, starting at page 0; mention pagination when relevant.
+state, starting at page 0; mention pagination when relevant. Reading a page is not reading the
+whole library. Use get_my_ratings to answer which films they rated best (order HIGHEST), worst
+(LOWEST), or recently (RECENT). Distinguish userScore from IMDb scores. Summarize favorite genres
+and decades as tendencies from actual ratings, never as certain personality traits.
+Use get_my_recommendations for personal suggestions based on their ratings and taste. Java
+chooses candidates, excludes rated/watchlist films, and gives grounded explanations. Do not
+silently substitute generic recommendations. With NO_POSITIVE_RATINGS, explain that ratings of
+at least 7 are needed and ask for a liked movie for a non-personal similar-film suggestion.
+With NO_CANDIDATES, say no new matching catalog movies were found. Do not invent candidates.
+Ratings and recommendation reads do not authorize writes or page changes. Navigate only if the
+user asks to see that page; pure questions about their best ratings should be answered in place.
 Use add_movie_to_my_watchlist or remove_movie_from_my_watchlist only after a complete explicit
 intention to save or remove one catalog-grounded movie. Natural requests like 'I want that one
 on my watchlist' and 'take this one off my list' are commands too.

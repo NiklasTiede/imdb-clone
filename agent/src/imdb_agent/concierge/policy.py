@@ -50,6 +50,8 @@ Behavior:
 )
 
 TOOL_STATUSES: dict[ToolName, RunStatus] = {
+    ToolName.GET_MY_RATINGS: RunStatus.SEARCHING,
+    ToolName.GET_MY_RECOMMENDATIONS: RunStatus.FINDING_SIMILAR,
     ToolName.GET_MY_WATCHLIST: RunStatus.SEARCHING,
     ToolName.ADD_MOVIE_TO_MY_WATCHLIST: RunStatus.SEARCHING,
     ToolName.REMOVE_MOVIE_FROM_MY_WATCHLIST: RunStatus.SEARCHING,

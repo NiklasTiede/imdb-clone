@@ -15,5 +15,9 @@ public interface WatchedMovieRepository extends JpaRepository<WatchedMovie, Watc
 
   List<WatchedMovie> findAllByIdAccountId(Long accountId);
 
+  @org.springframework.data.jpa.repository.Query(
+      "select r.id.movieId from WatchedMovie r where r.id.accountId = :accountId")
+  java.util.Set<Long> findMovieIdsByAccountId(Long accountId);
+
   Long countByIdAccountId(Long accountId);
 }

@@ -167,7 +167,9 @@ Exit evidence:
 ### R2 — Delegated identity and personal read capabilities
 
 **2026-09-09 implementation:** Local slice: five-minute login-session delegation, Java validation, verified conversation ownership
-and `get_my_watchlist` are implemented. Rating/taste reads remain open. See ADR 0004.
+and `get_my_watchlist` are implemented. **2026-09-10:** `get_my_ratings` adds highest/lowest/recent
+rating reads and the Java-owned taste summary. `get_my_recommendations` uses up to three positive
+rated seeds, excludes the entire rated/watchlist set and discloses insufficient history. See ADR 0004.
 
 **User outcome:** An authenticated user can ask what is on their watchlist or what they have rated;
 an anonymous user gets a useful sign-in path rather than invented account state.

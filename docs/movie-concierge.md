@@ -136,6 +136,24 @@ is model-dependent; clarify genuinely ambiguous intent rather than requiring exa
 The voice dock stays connected across these route changes. Existing turn correlation, cancellation,
 and single-action guards apply to both new action types. Trailer playback is a separate follow-up.
 
+### Personal ratings, taste and recommendations
+
+The delegated MCP tools now include `get_my_ratings(page, order)` and
+`get_my_recommendations(limit)`. Java derives the account exclusively from the verified session;
+model arguments never select an account. The session includes `ratings:read`. Ratings expose
+20 entries per page, their actual `userScore` and date, pagination, average score, and the existing
+Java-owned genre/decade taste summary. Orders are HIGHEST, LOWEST and RECENT. IMDb ratings remain
+separate. Questions such as “Which movies did I rate highest?” can be answered without navigating.
+
+Personal recommendations use `personal-ratings-v1`: up to three of the user's highest-rated films
+with a score of at least 7/10 seed the existing similar-movie ranker. Candidate contributions are
+weighted by `(userScore - 5) / (rank + 1)` and combined, with deterministic movie-ID ties. All rated
+and watchlisted movies are excluded. The result states the basis and preserves catalog-grounded
+explanations. It is a bounded first version of personal discovery, not long-term model memory or
+a claim to know unseen films. No positive history or no new candidates produces an explicit outcome;
+the agent must not disguise generic picks as personal recommendations. Rating changes are reflected
+on the next read; no separate preference datastore is created.
+
 ## Read-Only MVP
 
 ### In scope
