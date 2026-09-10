@@ -1,6 +1,7 @@
 import type { Location } from "react-router";
 
 export type PageContext = {
+  streamingCountry?: string;
   page:
     | "unknown"
     | "home"

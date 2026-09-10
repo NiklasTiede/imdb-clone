@@ -719,3 +719,41 @@ worker after commit. Former object URLs may remain usable until that cleanup suc
 uploads use sequential journal/write transactions. If application code composes uploads inside an
 existing transaction, allow spare connections for the independent journal commit; exhausting the
 pool rejects the upload before object writes. Flyway bootstrap has its own connection requirements.
+
+### TMDB movie enrichment
+
+Create an application API credential in [TMDB account settings](https://www.themoviedb.org/settings/api)
+and use its **API Read Access Token** (Bearer token), not a user login/session credential.
+See [application authentication](https://developer.themoviedb.org/docs/authentication-application).
+
+Append this entry to the repository-root `.env.local`, which is already ignored by Git:
+
+```properties
+TMDB_READ_ACCESS_TOKEN=your-read-access-token
+```
+
+The default `dev,local-secrets` Spring profiles import the file. If using explicit profiles, include
+`local-secrets` or supply `TMDB_READ_ACCESS_TOKEN` in the backend process environment. Restart Spring
+Boot after changing it. Do not place the token in frontend VITE variables, Python agent env files,
+URLs, shell command history, logs or committed configuration. Empty/missing tokens disable outbound
+TMDB requests. Existing catalog and personal tools remain available.
+
+With backend and agent running, open a fresh voice session and try:
+
+- “Who directed Forrest Gump, and who plays the lead?”
+- “What was its budget and how much did it earn?”
+- “Which production companies made it?”
+
+The movie needs an existing correct `tmdbId` and matching `imdbId` when present. No provider title
+search or mapping changes occur. Check the answer's TMDB attribution; missing budgets are unknown,
+not zero. The Data sources & credits section identifies the provider. Review TMDB's
+[usage and attribution requirements](https://developer.themoviedb.org/docs/faq) before production use.
+CI uses fake responses and requires no TMDB account or key.
+
+The same token enables regional streaming offers. The Concierge defaults to **Streaming in:
+Switzerland**. Change that selector for a different browser-saved region, or ask “Where can I
+stream Forrest Gump in Germany?” for a one-off override. Try “Where can I stream Forrest Gump?”
+and then “Can I rent it instead?” in text or a fresh voice session. Answers should distinguish
+subscription/rent/buy and credit JustWatch via TMDB. No recorded offers are not proof of worldwide
+unavailability; source links lead to the regional TMDB watch page. The country selection is stored
+per account/guest in this browser, with no automatic geolocation or cross-device synchronization.

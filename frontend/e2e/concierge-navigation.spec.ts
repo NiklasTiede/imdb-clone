@@ -119,8 +119,43 @@ for (const signedIn of [false, true]) {
     });
     await page.goto("/movie-search");
     await page.getByRole("button", { name: "Ask the Movie Concierge" }).click();
+    await page.getByText("Data sources & credits", { exact: true }).click();
+    await expect(
+      page.getByText(
+        "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+      ),
+    ).toBeVisible();
+    const logo = page.getByRole("img", { name: "The Movie Database (TMDB)" });
+    await expect(logo).toBeVisible();
+    await expect
+      .poll(() =>
+        logo.evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBeGreaterThan(0);
+    if (!signedIn)
+      await page.screenshot({
+        path: `/tmp/tmdb-credits-${test.info().project.name}.png`,
+      });
+    await page.getByText("Data sources & credits", { exact: true }).click();
+    const country = page.getByRole("combobox", { name: "Streaming in" });
+    await expect(country).toHaveValue("CH");
     await page.getByRole("button", { name: "Start voice" }).click();
     await expect(page.getByRole("status")).toHaveText("Listening to you");
+    await expect
+      .poll(() => pageContexts.at(-1))
+      .toEqual({
+        page: "search",
+        searchQuery: "",
+        streamingCountry: "CH",
+      });
+    await country.selectOption("DE");
+    await expect
+      .poll(() => pageContexts.at(-1))
+      .toEqual({
+        page: "search",
+        searchQuery: "",
+        streamingCountry: "DE",
+      });
     for (const [destination, route] of [
       ["settings", "/account-settings"],
       ["ratings", "/your-ratings"],
@@ -138,6 +173,7 @@ for (const signedIn of [false, true]) {
         .poll(() => pageContexts.at(-1))
         .toEqual({
           page: signedIn || destination === "home" ? destination : "login",
+          streamingCountry: "DE",
         });
     }
     emit?.({
@@ -199,9 +235,20 @@ for (const signedIn of [false, true]) {
     expect(connections).toBe(1);
     await expect
       .poll(() => pageContexts.at(-1))
-      .toEqual({ page: "search", searchQuery: "Arrival" });
-    expect(pageContexts).toContainEqual({ page: "home" });
-    if (signedIn) expect(pageContexts).toContainEqual({ page: "ratings" });
+      .toEqual({
+        page: "search",
+        searchQuery: "Arrival",
+        streamingCountry: "DE",
+      });
+    expect(pageContexts).toContainEqual({
+      page: "home",
+      streamingCountry: "DE",
+    });
+    if (signedIn)
+      expect(pageContexts).toContainEqual({
+        page: "ratings",
+        streamingCountry: "DE",
+      });
     expect(ended).toBe(false);
     await expect(
       page.getByRole("button", { name: "Undo", exact: true }),
@@ -211,5 +258,10 @@ for (const signedIn of [false, true]) {
       .last()
       .click();
     await expect.poll(() => ended).toBe(true);
+    await page.reload();
+    await page.getByRole("button", { name: "Ask the Movie Concierge" }).click();
+    await expect(
+      page.getByRole("combobox", { name: "Streaming in" }),
+    ).toHaveValue("DE");
   });
 }

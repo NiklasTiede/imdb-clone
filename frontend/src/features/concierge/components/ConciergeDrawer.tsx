@@ -1,3 +1,5 @@
+import { StreamingCountrySelector } from "./StreamingCountrySelector";
+import { ConciergeSourceLink } from "./ConciergeSourceLink";
 import type { PageContext } from "../model/pageContext";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
@@ -20,6 +22,7 @@ import Markdown from "react-markdown";
 import { movieColors } from "../../../theme";
 import { useConciergeChat } from "../hooks/useConciergeChat";
 import type { ChatTurn, ApplicationAction } from "../model/concierge";
+import { ConciergeCredits } from "./ConciergeCredits";
 import ConciergeEmptyState from "./ConciergeEmptyState";
 import ConciergeMovieCard from "./ConciergeMovieCard";
 
@@ -27,6 +30,8 @@ import type { ConciergeVoice } from "../hooks/useConciergeVoice";
 import { ConciergeVoicePanel } from "./ConciergeVoicePanel";
 
 type ConciergeDrawerProps = {
+  streamingCountry: string;
+  onStreamingCountryChange: (country: string) => void;
   pageContext?: PageContext;
   voice: ConciergeVoice;
   clientId: string;
@@ -36,6 +41,8 @@ type ConciergeDrawerProps = {
 };
 
 const ConciergeDrawer = ({
+  streamingCountry,
+  onStreamingCountryChange,
   clientId,
   pageContext,
   voice,
@@ -159,6 +166,10 @@ const ConciergeDrawer = ({
           </IconButton>
         </Stack>
 
+        <StreamingCountrySelector
+          country={streamingCountry}
+          onChange={onStreamingCountryChange}
+        />
         <ConciergeVoicePanel voice={voice} disabled={isStreaming} />
         <Box
           ref={scrollRef}
@@ -288,7 +299,7 @@ const ConciergeDrawer = ({
             }}
           >
             <Typography sx={{ color: "text.secondary", fontSize: 9.5 }}>
-              Read-only preview · Verify details before deciding
+              Verify details before deciding
             </Typography>
             {usage && (
               <Typography sx={{ color: "text.secondary", fontSize: 9 }}>
@@ -296,6 +307,7 @@ const ConciergeDrawer = ({
               </Typography>
             )}
           </Stack>
+          <ConciergeCredits />
         </Box>
       </Box>
     </Drawer>
@@ -344,7 +356,8 @@ const MessageText = ({ isUser, text }: { isUser: boolean; text: string }) => {
     return (
       <Box sx={{ ...messageTextSx, px: 0.4 }}>
         <Markdown
-          allowedElements={["p", "strong", "em", "ul", "ol", "li", "br"]}
+          allowedElements={["p", "strong", "em", "ul", "ol", "li", "br", "a"]}
+          components={{ a: ConciergeSourceLink }}
           skipHtml
           unwrapDisallowed
         >

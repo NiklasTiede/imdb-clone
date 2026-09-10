@@ -235,6 +235,17 @@ Exit evidence:
 
 ### R4 — Richer Java capabilities and TMDb enrichment
 
+**2026-09-10 first slice:** `get_movie_enrichment` provides cast, crew and production facts for
+mapped catalog movies via a Java TMDB Adapter. Includes bounded requests, cache/failure cooldown,
+explicit stale/unavailable outcomes, source metadata, UI credits, and deterministic cross-service
+contract tests. Live Java-to-TMDB and agent text verification passed with Forrest Gump using a
+local token, including a grounded follow-up about its cast.
+**Regional availability slice:** `get_movie_watch_providers` adds subscription, free/ads,
+rental and purchase offers, with CH as the default, browser-persisted per-identity country selection,
+live voice-context updates, per-request country overrides and JustWatch attribution. Short caches
+separate no recorded offers from failed lookups. Person filmographies, missing-ID resolution,
+localized title ingestion and streaming-aware recommendation ranking remain open.
+
 **User outcome:** The Concierge answers richer movie questions and can recommend against details
 such as people, trailers, region, and current watch-provider availability.
 

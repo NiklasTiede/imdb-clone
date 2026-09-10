@@ -1,3 +1,7 @@
+import {
+  readStreamingCountry,
+  saveStreamingCountry,
+} from "../model/streamingCountry";
 import { pageContextFromLocation } from "../model/pageContext";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import { alpha } from "@mui/material/styles";
@@ -60,6 +64,16 @@ const IdentityScopedConcierge = ({
 }) => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [streamingCountry, setStreamingCountry] = useState(() =>
+    readStreamingCountry(accountId),
+  );
+  const changeStreamingCountry = useCallback(
+    (country: string) => {
+      setStreamingCountry(country);
+      saveStreamingCountry(accountId, country);
+    },
+    [accountId],
+  );
   const [receipt, setReceipt] = useState<PersonalReceipt | null>(null);
   const undoWatchlist = useMutation(
     toggleWatchlistMutationOptions(queryClient),
@@ -70,8 +84,11 @@ const IdentityScopedConcierge = ({
   const navigate = useNavigate();
   const { pathname, search, hash } = useLocation();
   const pageContext = useMemo(
-    () => pageContextFromLocation({ pathname, search, hash }),
-    [pathname, search, hash],
+    () => ({
+      ...pageContextFromLocation({ pathname, search, hash }),
+      streamingCountry,
+    }),
+    [pathname, search, hash, streamingCountry],
   );
   const theme = useTheme();
   const mobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -249,6 +266,8 @@ const IdentityScopedConcierge = ({
         </Button>
       )}
       <ConciergeDrawer
+        streamingCountry={streamingCountry}
+        onStreamingCountryChange={changeStreamingCountry}
         pageContext={pageContext}
         voice={voice}
         clientId={clientId}

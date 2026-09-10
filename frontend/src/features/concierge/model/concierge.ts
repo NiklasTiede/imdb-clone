@@ -174,7 +174,7 @@ export const statusLabels: Record<
 > = {
   thinking: "Thinking",
   searching_catalog: "Searching the catalog",
-  fetching_details: "Opening movie details",
+  fetching_details: "Loading movie details",
   finding_similar: "Finding similar movies",
   choosing_tonight: "Choosing tonight's lineup",
 };

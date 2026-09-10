@@ -169,6 +169,72 @@ a claim to know unseen films. No positive history or no new candidates produces 
 the agent must not disguise generic picks as personal recommendations. Rating changes are reflected
 on the next read; no separate preference datastore is created.
 
+### Optional TMDB movie facts
+
+`get_movie_enrichment(movieId)` adds English TMDB cast/characters (top eight), directors (four),
+writers (six), production countries/companies, spoken languages, tagline, release date, budget
+and revenue in USD. Null amounts mean unknown; revenue is not profit. These lists are partial.
+Production countries do not imply filming locations. This first slice supports catalog entries
+of type MOVIE with an existing positive `tmdbId`; it does not infer mappings from titles or import
+alternative titles. Series and unmapped entries return explicit unavailable outcomes.
+
+Java owns the fixed-origin outbound Adapter in `catalog.internal.enrichment` and exposes a named
+`catalog::assistant` Interface through MCP. The Python tool gate requires an already grounded local
+movie ID and never sends personal delegation to this tool. The provider ID must match the stored
+TMDB ID and, when present, the stored IMDb ID must match too. External metadata cannot create movie
+cards, replace local identity, change ranking or authorize personal actions. Normal navigation and
+trailer requests do not need this tool. No external requests happen while the token is absent.
+
+The client has a 2-second connect timeout, 3-second read deadline, no redirects, a 512 KiB response
+limit and at most four concurrent requests. There are no automatic retries within a voice turn;
+429 responses apply a shared 1–300 second cooldown from numeric Retry-After (30 seconds otherwise).
+Successful results are cached for six hours, failures for 30 seconds, up to 1,000 entries. On a
+transient failure only, a successful snapshot may be used for at most 24 hours, explicitly marked
+STALE with its original fetchedAt time. Missing/mismatched provider identities invalidate old facts.
+Cache keys include local, TMDB and IMDb IDs. No schema migration or persistent external-data store
+is introduced. MCP metrics use bounded tool/outcome labels and never log provider bodies or tokens.
+
+The model must credit TMDB, disclose stale data, and explain missing facts without guessing or
+retrying repeatedly. The Concierge includes a Data sources & credits section with the official
+logo and required notice. Source URL and fetchedAt are included in the tool response. All returned
+text remains untrusted data. This facts tool does not add filmographies, external
+search, German title lookup or automatic catalog updates.
+
+Local activation: add `TMDB_READ_ACCESS_TOKEN=...` to the ignored root `.env.local` and restart the
+Spring backend. The default `dev,local-secrets` profiles load it. The Python agent and browser never
+receive this token. Production can supply the same environment variable or the Spring property
+`imdb-clone.catalog.tmdb.read-access-token` through existing secret management; no deployment or
+production secret is created by this feature. See [development setup](development.md#tmdb-movie-enrichment).
+
+### Regional streaming availability
+
+`get_movie_watch_providers(movieId, country?)` reads TMDB's JustWatch-powered movie watch providers.
+Java resolves the existing local mapping and verifies the provider movie ID. The result separates
+subscription (`flatrate`), free, ads, rent and buy, with up to 12 provider names per category. It
+never treats rental as inclusion in a subscription and provides no prices or playback URLs.
+The source link is an app-constructed TMDB watch page for that movie and country. Provider names
+are untrusted data. Neither this lookup nor its results authorize navigation or personal writes.
+
+The default streaming country is Switzerland (`CH`), independent of language, browser locale or IP.
+The Concierge's **Streaming in** selection is stored in this browser, separately for guests and
+each signed-in account; it does not synchronize across devices. Storage failures leave the current
+selection usable in memory. Text sends it with page context; voice context updates apply to subsequent
+lookups in the running session. The Python gate fills omitted/null country arguments from that
+preference. An explicitly requested country overrides one lookup, without changing the selection.
+The model must omit the argument otherwise. Java validates ISO alpha-2 country codes.
+
+Offers and empty results are cached for 30 minutes, failures for 30 seconds, up to 1,000 entries,
+keyed by local/provider identity and country. The shared TMDB client applies the same deadlines,
+response bound, concurrency limit and rate-limit cooldown as movie enrichment. Expired offers are
+not served as current availability after a failed refresh. `NO_OFFERS` means no recorded offers for
+this country; `UNAVAILABLE`, `UNMAPPED` etc. are lookup failures or missing mappings, not proof a
+movie cannot be watched. `fetchedAt` is our retrieval time, not JustWatch's last update time.
+
+Answers must name the returned country and credit **JustWatch via TMDB**. Text answers may link the
+source; the renderer makes only fixed-format TMDB watch links clickable. The country selector and
+credits expose JustWatch attribution in the UI, including voice mode. See the
+[TMDB watch-provider attribution contract](https://developer.themoviedb.org/reference/movie-watch-providers).
+
 ### Current browser page
 
 Text requests include a bounded `pageContext`; voice sends a `context` control after the start
