@@ -1,6 +1,7 @@
 import {
   MovieSearchRequest,
   MovieSearchRequestMovieGenreEnum,
+  MovieSearchRequestMovieTypeEnum,
 } from "../../../client/movies/generator-output";
 
 export type SearchUrlState = {
@@ -11,6 +12,7 @@ export type SearchUrlState = {
 
 export type SearchUrlPatch = {
   genre?: MovieSearchRequestMovieGenreEnum | null;
+  movieType?: MovieSearchRequestMovieTypeEnum | null;
   maxRuntime?: number | null;
   maxYear?: number | null;
   minRuntime?: number | null;
@@ -22,13 +24,20 @@ export const parseSearchUrlState = (search: string): SearchUrlState => {
   const params = new URLSearchParams(search);
   const query = params.get("q") ?? params.get("query");
   const pageParam = Number.parseInt(params.get("page") ?? "1", 10);
-  const genre = parseGenre(params.get("genre"));
+  const genres = params
+    .getAll("genre")
+    .map(parseGenre)
+    .filter((genre) => genre !== null);
+  const movieType = Object.values(MovieSearchRequestMovieTypeEnum).find(
+    (type) => type === params.get("movieType"),
+  );
   const minYear = parseMinYear(params.get("minYear"));
   const maxYear = parseNumberParam(params.get("maxYear"));
   const minRuntime = parseNumberParam(params.get("minRuntime"));
   const maxRuntime = parseNumberParam(params.get("maxRuntime"));
   const filters: MovieSearchRequest = {
-    ...(genre ? { movieGenre: new Set([genre]) } : {}),
+    ...(genres.length ? { movieGenre: new Set(genres) } : {}),
+    ...(movieType ? { movieType } : {}),
     ...(minYear !== null ? { minStartYear: minYear } : {}),
     ...(maxYear !== null ? { maxStartYear: maxYear } : {}),
     ...(minRuntime !== null ? { minRuntimeMinutes: minRuntime } : {}),
@@ -50,6 +59,7 @@ export const createSearchUrl = (
   const updatesPagination = patch.page !== undefined;
 
   setEnumParam(params, "genre", patch.genre);
+  setEnumParam(params, "movieType", patch.movieType);
   setNumberParam(params, "minYear", patch.minYear);
   setNumberParam(params, "maxYear", patch.maxYear);
   setNumberParam(params, "minRuntime", patch.minRuntime);
@@ -73,6 +83,7 @@ export const createSearchUrl = (
 };
 
 const hasFilterOrSortPatch = (patch: SearchUrlPatch): boolean =>
+  patch.movieType !== undefined ||
   patch.genre !== undefined ||
   patch.minYear !== undefined ||
   patch.maxYear !== undefined ||

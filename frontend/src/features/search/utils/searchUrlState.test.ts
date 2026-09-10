@@ -3,6 +3,18 @@ import { MovieSearchRequestMovieGenreEnum } from "../../../client/movies/generat
 import { createSearchUrl, parseSearchUrlState } from "./searchUrlState";
 
 describe("parseSearchUrlState", () => {
+  test("preserves all agent filters while paginating and clears them explicitly", () => {
+    const search =
+      "?query=space&genre=DRAMA&genre=SCI_FI&movieType=MOVIE&page=3";
+    expect(parseSearchUrlState(createSearchUrl(search, { page: 2 }))).toEqual({
+      query: "space",
+      page: 1,
+      filters: { movieGenre: new Set(["DRAMA", "SCI_FI"]), movieType: "MOVIE" },
+    });
+    expect(createSearchUrl(search, { genre: null, movieType: null })).toBe(
+      "?query=space",
+    );
+  });
   test("reads the current query parameter used by the app", () => {
     expect(parseSearchUrlState("?query=Nightcrawler")).toEqual({
       filters: {},

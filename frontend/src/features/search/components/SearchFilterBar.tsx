@@ -15,7 +15,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { SvgIconComponent } from "@mui/icons-material";
 import { useState, type MouseEvent } from "react";
-import type { MovieSearchGenre } from "../../catalog";
+import type { MovieSearchGenre, MovieType } from "../../catalog";
 import { movieColors } from "../../../theme";
 import type { SearchUrlPatch } from "../utils/searchUrlState";
 import {
@@ -39,12 +39,14 @@ type SearchFilters = {
   minRuntimeMinutes?: number;
   minStartYear?: number;
   movieGenre?: Set<MovieSearchGenre>;
+  movieType?: MovieType;
 };
 
 type MenuKey = "genre" | "runtime" | "year";
 
 type MobileFilterDraft = {
   genre: MovieSearchGenre | null;
+  genreChanged: boolean;
   maxRuntime: number | null;
   maxYear: number | null;
   minRuntime: number | null;
@@ -95,13 +97,15 @@ const hasRange = (min: number | undefined, max: number | undefined) =>
 
 const hasActiveFilters = (filters: SearchFilters): boolean =>
   Boolean(
-    firstGenre(filters) ||
+    filters.movieType ||
+      firstGenre(filters) ||
       hasRange(filters.minStartYear, filters.maxStartYear) ||
       hasRange(filters.minRuntimeMinutes, filters.maxRuntimeMinutes),
   );
 
 const countActiveFilters = (filters: SearchFilters): number =>
   [
+    Boolean(filters.movieType),
     Boolean(firstGenre(filters)),
     hasRange(filters.minStartYear, filters.maxStartYear),
     hasRange(filters.minRuntimeMinutes, filters.maxRuntimeMinutes),
@@ -216,6 +220,7 @@ const DrawerChoiceSection = ({
 
 const toMobileDraft = (filters: SearchFilters): MobileFilterDraft => ({
   genre: firstGenre(filters) ?? null,
+  genreChanged: false,
   maxRuntime: filters.maxRuntimeMinutes ?? null,
   maxYear: filters.maxStartYear ?? null,
   minRuntime: filters.minRuntimeMinutes ?? null,
@@ -251,6 +256,9 @@ const SearchFilterBar = ({
     toMobileDraft(filters),
   );
   const selectedGenre = firstGenre(filters);
+  const selectedGenreLabel = Array.from(filters.movieGenre ?? [])
+    .map(humanizeSearchValue)
+    .join(", ");
   const hasFilters = hasActiveFilters(filters);
   const activeFilterCount = countActiveFilters(filters);
 
@@ -282,7 +290,7 @@ const SearchFilterBar = ({
 
   const applyMobileFilters = () => {
     onChange({
-      genre: mobileDraft.genre,
+      ...(mobileDraft.genreChanged ? { genre: mobileDraft.genre } : {}),
       maxRuntime: mobileDraft.maxRuntime,
       maxYear: mobileDraft.maxYear,
       minRuntime: mobileDraft.minRuntime,
@@ -317,7 +325,7 @@ const SearchFilterBar = ({
           icon={CategoryIcon}
           onClick={openMenu("genre")}
         >
-          {selectedGenre ? humanizeSearchValue(selectedGenre) : "All genres"}
+          {selectedGenre ? selectedGenreLabel : "All genres"}
         </FilterButton>
 
         <FilterButton
@@ -363,9 +371,17 @@ const SearchFilterBar = ({
 
       {hasFilters && (
         <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: "wrap" }}>
+          {filters.movieType && (
+            <Chip
+              label={`Title type: ${humanizeSearchValue(filters.movieType)}`}
+              onDelete={() => onChange({ movieType: null })}
+              size="small"
+              sx={{ backgroundColor: "rgba(122,184,255,0.12)", color: "text.primary" }}
+            />
+          )}
           {selectedGenre && (
             <Chip
-              label={humanizeSearchValue(selectedGenre)}
+              label={selectedGenreLabel}
               onDelete={() => onChange({ genre: null })}
               size="small"
               sx={{ backgroundColor: "rgba(122,184,255,0.12)", color: "text.primary" }}
@@ -462,6 +478,7 @@ const SearchFilterBar = ({
               setMobileDraft((draft) => ({
                 ...draft,
                 genre: value as MovieSearchGenre | null,
+                genreChanged: true,
               }))
             }
             options={genreOptions}

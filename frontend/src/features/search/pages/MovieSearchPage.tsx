@@ -57,6 +57,7 @@ const MovieSearchPage = () => {
   const clearFilters = () => {
     updateSearchUrl({
       genre: null,
+      movieType: null,
       maxRuntime: null,
       maxYear: null,
       minRuntime: null,
