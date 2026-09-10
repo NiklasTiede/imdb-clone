@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from pydantic_ai import Agent
+from pydantic_ai.exceptions import ToolFailed
 from pydantic_ai.messages import (
     BinaryAudio,
     ModelMessage,
@@ -153,6 +154,87 @@ class Browser:
             and any(isinstance(item, bytes) for item in self.events)
         ):
             await self.input.put(VoiceCommand(type="end"))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("late_transcript", [False, True])
+@pytest.mark.parametrize(
+    ("message", "expected"),
+    [
+        ("Find Forrest Gump", "show_search_results"),
+        ("Open my settings", "open_page"),
+        ("please open my ratings list", "open_page"),
+        ("Show me my rated movies", "open_page"),
+        ("Don't open my settings", None),
+    ],
+)
+async def test_navigation_uses_final_current_speech(
+    message: str,
+    expected: str | None,
+    late_transcript: bool,
+) -> None:
+    class NavigationConnection(CatalogConnection):
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, BinaryAudio) and expected == "open_page":
+                await self.events.put(RealtimeInputSpeechStartEvent(item_id="user-1"))
+                if not self.late_transcript:
+                    await self.transcript()
+                await self.events.put(OutputTranscript("Opening your page."))
+                await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                await self.events.put(ResponseDone())
+                if self.late_transcript:
+                    await self.transcript()
+            else:
+                await super().send(content)
+
+        async def transcript(self) -> None:
+            await self.events.put(InputTranscript(message, is_final=True, item_id="user-1"))
+
+    model = CatalogModel()
+    model.connection = NavigationConnection(late_transcript=late_transcript)
+
+    # A late transcript comes after the provider completes its reply; end only once processed.
+    class NavigationBrowser(Browser):
+        async def send(self, event: VoiceEvent | bytes) -> None:
+            self.events.append(event)
+            if isinstance(event, VoiceEvent) and event.type == "ready":
+                await self.input.put(b"\x00" * 4800)
+            if (
+                isinstance(event, VoiceEvent)
+                and event.type == "transcript"
+                and event.speaker == "user"
+                and late_transcript
+            ):
+                await self.input.put(VoiceCommand(type="end"))
+            if (
+                isinstance(event, VoiceEvent)
+                and event.type == "reply-complete"
+                and not late_transcript
+            ):
+                await self.input.put(VoiceCommand(type="end"))
+
+    browser = NavigationBrowser()
+    agent: Agent[None, str] = Agent()
+
+    def search_movies(query: str) -> dict[str, object]:
+        return {"schemaVersion": "1.0", "movies": [], "totalMatches": 0, "moreAvailable": False}
+
+    agent.tool_plain(search_movies)
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser, authenticated=True)
+    actions = [
+        event.action
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.type == "ui-action"
+    ]
+    assert [action.type for action in actions if action] == ([expected] if expected else [])
+    if expected == "open_page":
+        assert not model.connection.tool_called
+        assert actions[0] is not None and actions[0].type == "open_page"
+        assert actions[0].destination == ("settings" if "settings" in message else "ratings")
+    if expected == "show_search_results":
+        assert actions[0] is not None and actions[0].type == "show_search_results"
+        assert actions[0].query == "Forrest Gump"
 
 
 @pytest.mark.asyncio
@@ -408,3 +490,162 @@ async def test_rejected_personal_command_is_a_failed_result_not_a_disconnected_s
         isinstance(item, VoiceEvent) and item.type == "ui-action" for item in browser.events
     )
     assert state.receipt is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("late_transcript", [False, True])
+@pytest.mark.parametrize("followup", ["search_movies", "get_similar_movies", "failed"])
+async def test_voice_search_waits_for_final_discovery_result(
+    followup: str, late_transcript: bool
+) -> None:
+    class DiscoveryConnection(CatalogConnection):
+        step = 0
+
+        async def transcript(self) -> None:
+            await self.events.put(
+                InputTranscript(
+                    "Find movies similar to Forrest Gump"
+                    if followup == "get_similar_movies"
+                    else "Find Forrest Gump",
+                    is_final=True,
+                    item_id="user-1",
+                )
+            )
+
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, ToolResult):
+                self.step += 1
+                if self.step == 1:
+                    assert not any(
+                        isinstance(e, VoiceEvent) and e.type == "ui-action" for e in browser.events
+                    )
+                    name = (
+                        "get_similar_movies"
+                        if followup == "get_similar_movies"
+                        else "search_movies"
+                    )
+                    await self.events.put(
+                        ToolCall(
+                            "refinement",
+                            tool_name=name,
+                            args=json.dumps(
+                                {"movieId": 42}
+                                if name == "get_similar_movies"
+                                else {"query": "Forrest Gump 1994"}
+                            ),
+                        )
+                    )
+                    await self.events.put(ResponseDone())
+                    return
+            await super().send(content)
+
+    model = CatalogModel()
+    model.connection = DiscoveryConnection(late_transcript=late_transcript)
+    agent: Agent[None, str] = Agent()
+
+    def search_movies(query: str) -> dict[str, object]:
+        if query.endswith("1994") and followup == "failed":
+            raise ToolFailed("Catalog unavailable")
+        return {"schemaVersion": "1.0", "movies": [], "totalMatches": 0, "moreAvailable": False}
+
+    def get_similar_movies(movieId: int) -> dict[str, object]:
+        return {"schemaVersion": "1.0", "movies": [], "strategy": "SIMILAR"}
+
+    agent.tool_plain(search_movies)
+    agent.tool_plain(get_similar_movies)
+
+    # When a late final transcript produces no action, end after that final transcript.
+    class DiscoveryBrowser(Browser):
+        async def send(self, event: VoiceEvent | bytes) -> None:
+            await super().send(event)
+            if (
+                isinstance(event, VoiceEvent)
+                and event.type == "transcript"
+                and event.speaker == "user"
+                and late_transcript
+            ):
+                await self.input.put(VoiceCommand(type="end"))
+
+    browser = DiscoveryBrowser(end_on_completion=not late_transcript)
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser)
+    actions = [
+        event.action
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.type == "ui-action"
+    ]
+    if followup == "search_movies":
+        assert (
+            len(actions) == 1
+            and actions[0] is not None
+            and actions[0].type == "show_search_results"
+        )
+        assert actions[0].query == "Forrest Gump 1994"
+    else:
+        assert not actions
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("late_transcript", [False, True])
+@pytest.mark.parametrize("movie_page", [False, True])
+async def test_semantic_navigation_tools_reach_browser(
+    late_transcript: bool, movie_page: bool
+) -> None:
+    from imdb_agent.concierge.events import GroundedMovie
+    from imdb_agent.concierge.personal import PersonalTurn
+
+    class SemanticConnection(CatalogConnection):
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, BinaryAudio):
+                await self.events.put(RealtimeInputSpeechStartEvent(item_id="user-1"))
+                if not late_transcript:
+                    await self.transcript()
+                await self.events.put(
+                    ToolCall(
+                        "navigate",
+                        tool_name="open_movie_page" if movie_page else "navigate_app",
+                        args='{"movie_id":6}' if movie_page else '{"destination":"ratings"}',
+                    )
+                )
+                await self.events.put(ResponseDone())
+                if late_transcript:
+                    await self.transcript()
+            elif isinstance(content, ToolResult):
+                await self.events.put(OutputTranscript("Here you go."))
+                await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                await self.events.put(ResponseDone())
+
+        async def transcript(self) -> None:
+            await self.events.put(
+                InputTranscript(
+                    "Let's have a look at that one" if movie_page else "My rated movies, please",
+                    is_final=True,
+                    item_id="user-1",
+                )
+            )
+
+    personal = PersonalTurn(
+        movies=(GroundedMovie(movie_id=6, primary_title="Forrest Gump", movie_type="MOVIE"),)
+    )
+    model = CatalogModel()
+    model.connection = SemanticConnection()
+    browser = Browser()
+    agent: Agent[None, str] = Agent()
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser, personal=personal, authenticated=True)
+    actions = [
+        event.action
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.type == "ui-action"
+    ]
+    assert len(actions) == 1
+    assert actions[0] is not None
+    assert actions[0].type == ("open_movie" if movie_page else "open_page")
+    if movie_page:
+        index = next(
+            i
+            for i, event in enumerate(browser.events)
+            if isinstance(event, VoiceEvent) and event.type == "ui-action"
+        )
+        previous = browser.events[index - 1]
+        assert isinstance(previous, VoiceEvent) and previous.type == "movie-card"

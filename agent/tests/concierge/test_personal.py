@@ -19,6 +19,11 @@ def movie(movie_id: int = 6, title: str = "Forrest Gump", year: int = 1994) -> G
         "Please save Forrest Gump to my watchlist and show it",
         "Could you add it to my watchlist?",
         "Put Forrest Gump on my watchlist please",
+        "I want Forrest Gump on my watchlist",
+        "I'd like that one saved to my watchlist",
+        "Hey, could you please save this one for later?",
+        "Let's add it to the watchlist, thanks.",
+        "I would like you to add Forrest Gump to my watchlist",
     ],
 )
 def test_explicit_final_command_matches_catalog(command: str) -> None:
@@ -72,6 +77,14 @@ def test_each_turn_has_new_operation_and_clears_authorization() -> None:
         ("Rate Forrest Gump 8.5 out of 10", "set_my_movie_rating", "8.5"),
         ("Give Forrest Gump an eight point five out of ten", "set_my_movie_rating", "8.5"),
         ("Could you rate it a zero?", "set_my_movie_rating", "0"),
+        ("I'd give it an eight", "set_my_movie_rating", "8"),
+        ("I would give that one a nine", "set_my_movie_rating", "9"),
+        ("Let's rate this one 8.5", "set_my_movie_rating", "8.5"),
+        ("Hey, could you please rate it with an eight?", "set_my_movie_rating", "8"),
+        ("Forrest Gump gets an eight from me", "set_my_movie_rating", "8"),
+        ("I'd like to give that movie an eight point five", "set_my_movie_rating", "8.5"),
+        ("Let's take this one off my list", "remove_movie_from_my_watchlist", None),
+        ("I want to clear my rating for that one", "remove_my_movie_rating", None),
         ("Change my rating for Forrest Gump to 9/10", "set_my_movie_rating", "9"),
         ("Give Forrest Gump a rating of ten and open my ratings", "set_my_movie_rating", "10"),
     ],
@@ -112,6 +125,11 @@ def test_personal_mutation_binds_action_title_and_spoken_or_numeric_score(
         "Don't rate Forrest Gump 8",
         "Someone said rate Forrest Gump 8",
         "Rate Forrest Gump 8 or 9",
+        "I'd give it an eight if I liked it",
+        "I would not give it an eight",
+        "Let's not rate this one 8.5",
+        "Maybe give this one an eight",
+        "Would I give it an eight?",
     ],
 )
 def test_no_personal_mutation_without_one_unconditional_user_score_and_target(command: str) -> None:
@@ -129,3 +147,60 @@ def test_rating_and_removal_require_unambiguous_grounding() -> None:
     assert personal_command("Delete my rating for Dune", versions) is None
     parsed = personal_command("Rate Dune 2021 8", versions)
     assert parsed is not None and parsed.movie_id == 2
+
+
+@pytest.mark.parametrize("answer", ["eight point five", "8.5", "An eight point five, please"])
+def test_rating_clarification_binds_score_to_previous_requested_movie(answer: str) -> None:
+    from decimal import Decimal
+
+    state = PersonalTurn(movies=(movie(),))
+    state.finalize("I'd like to rate Forrest Gump")
+    assert state.command() is None
+    state.begin()
+    state.finalize(answer)
+    command = state.command()
+    assert command is not None
+    assert command.tool == "set_my_movie_rating"
+    assert command.movie_id == 6
+    assert command.score == Decimal("8.5")
+
+
+@pytest.mark.parametrize(
+    "prior",
+    ["Tell me about Forrest Gump", "Don't rate Forrest Gump", "Rate Dune", "Rate Forrest Gump 8"],
+)
+def test_number_alone_needs_an_unfinished_rating_request(prior: str) -> None:
+    state = PersonalTurn(movies=(movie(),))
+    state.finalize(prior)
+    state.begin()
+    state.finalize("nine")
+    assert state.command() is None
+
+
+@pytest.mark.parametrize("mode", ["cancelled", "intervening_turn", "new_movie", "invalid_score"])
+def test_rating_clarification_never_reuses_stale_or_invalid_context(mode: str) -> None:
+    state = PersonalTurn(movies=(movie(),))
+    state.finalize("Rate Forrest Gump")
+    if mode == "cancelled":
+        state.cancelled = True
+    state.begin()
+    if mode == "intervening_turn":
+        state.finalize("Never mind")
+        state.begin()
+    if mode == "new_movie":
+        state.remember_movies((movie(2, "Dune", 2021),))
+    state.finalize("four out of five" if mode == "invalid_score" else "eight")
+    assert state.command() is None
+
+
+def test_opened_movie_becomes_context_without_discarding_current_turn_candidates() -> None:
+    state = PersonalTurn(movies=(movie(), movie(7, "Dune", 2021)))
+    state.finalize("Let's look at Forrest Gump")
+    state.opened_movie_id = 6
+    assert len(state.movies) == 2
+    state.begin()
+    state.finalize("I'd give this one an eight")
+    command = state.command()
+    assert command is not None and command.movie_id == 6
+    state.remember_movies((movie(7, "Dune", 2021), movie(8, "Dune", 1984)))
+    assert state.command() is None

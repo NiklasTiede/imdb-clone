@@ -29,6 +29,7 @@ from pydantic_ai.exceptions import (
 from pydantic_ai.models.openai import OpenAIResponsesModel, OpenAIResponsesModelSettings
 from pydantic_ai.providers.openai import OpenAIProvider
 
+from imdb_agent.adapters.application_tools import APPLICATION_TOOLS, ApplicationTools
 from imdb_agent.adapters.catalog_contract import parse_grounded_movies
 from imdb_agent.adapters.personal_tools import PersonalToolGate, base_toolset, personal_policy
 from imdb_agent.concierge.events import (
@@ -42,7 +43,12 @@ from imdb_agent.concierge.events import (
     UsageEvent,
     UsageSummary,
 )
-from imdb_agent.concierge.personal import PersonalTurn, receipt_action, requests_watchlist
+from imdb_agent.concierge.personal import (
+    PersonalTurn,
+    pending_rating_target,
+    receipt_action,
+    requests_watchlist,
+)
 from imdb_agent.concierge.policy import (
     SYSTEM_POLICY,
     build_user_prompt,
@@ -134,6 +140,10 @@ class PydanticAIConciergeRunner:
         personal = PersonalTurn(
             movies=next((m.movies for m in reversed(request.history) if m.movies), ())
         )
+        personal.pending_rating_id = pending_rating_target(
+            next((m.content for m in reversed(request.history) if m.role == "user"), ""),
+            personal.movies,
+        )
         personal.finalize(request.message)
         active_agent = self._agent
         if self._settings is not None:
@@ -151,7 +161,9 @@ class PydanticAIConciergeRunner:
                 retries=1,
             )
             active_agent.instrument = False
+        application = ApplicationTools(personal, authenticated=request.delegation is not None)
         action_sent = False
+        search_navigation = application.search
         shown_movie_ids: set[int] = set()
         tool_arguments: dict[str, dict[str, object]] = {}
         try:
@@ -161,10 +173,14 @@ class PydanticAIConciergeRunner:
                     build_user_prompt(request.message, request.history),
                     conversation_id=request.conversation_id,
                     usage_limits=self._usage_limits,
+                    toolsets=[application.toolset],
                 ) as events,
             ):
                 async for event in events:
                     if isinstance(event, FunctionToolCallEvent):
+                        if event.part.tool_name in APPLICATION_TOOLS:
+                            continue
+                        search_navigation.started(event.tool_call_id)
                         if event.args_valid is not True:
                             continue
                         tool_name = _tool_name(event.part.tool_name)
@@ -176,6 +192,8 @@ class PydanticAIConciergeRunner:
                             isinstance(event.part, ToolReturnPart)
                             and event.part.outcome != "failed"
                         ):
+                            if event.part.tool_name in APPLICATION_TOOLS:
+                                continue
                             tool_name = _tool_name(event.part.tool_name)
                             if personal.receipt is not None and not action_sent:
                                 action_sent = True
@@ -188,6 +206,12 @@ class PydanticAIConciergeRunner:
                                 action_sent = True
                                 yield UiActionEvent(action=OpenWatchlistAction())
                             movies = parse_grounded_movies(tool_name, event.part.content)
+                            personal.remember_movies(movies)
+                            search_navigation.succeeded(
+                                event.tool_call_id,
+                                tool_name,
+                                tool_arguments.get(event.tool_call_id, {}),
+                            )
                             for movie in select_movies_for_display(
                                 tool_name,
                                 movies,
@@ -205,6 +229,15 @@ class PydanticAIConciergeRunner:
                         if event.delta.content_delta:
                             yield TextEvent(delta=event.delta.content_delta)
                     elif isinstance(event, AgentRunResultEvent):
+                        if application.action is not None and not action_sent:
+                            if application.movie is not None:
+                                yield MovieCardEvent(movie=application.movie)
+                            action_sent = True
+                            yield UiActionEvent(action=application.action)
+                        search_action = search_navigation.action(request.message, completed=True)
+                        if search_action is not None and not action_sent:
+                            action_sent = True
+                            yield UiActionEvent(action=search_action)
                         if request.delegation is None and requests_watchlist(request.message):
                             yield UiActionEvent(action=OpenLoginAction())
                         run_usage = event.result.usage

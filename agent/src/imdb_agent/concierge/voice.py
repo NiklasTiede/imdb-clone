@@ -14,6 +14,7 @@ from imdb_agent.concierge.events import (
     GroundedMovie,
     OpenMovieAction,
 )
+from imdb_agent.concierge.navigation import SearchNavigation
 from imdb_agent.concierge.policy import decide_open_movie_action
 
 SAMPLE_RATE = 24_000
@@ -74,6 +75,7 @@ class VoiceGrounding:
     completed: bool = False
     cancelled: bool = False
     action_sent: bool = False
+    search: SearchNavigation = field(default_factory=SearchNavigation)
 
     def begin(self) -> None:
         if self.movies and not self.cancelled:
@@ -85,6 +87,7 @@ class VoiceGrounding:
         self.completed = False
         self.cancelled = False
         self.action_sent = False
+        self.search.reset()
 
     def action(self) -> OpenMovieAction | None:
         if not self.message or self.cancelled or self.action_sent:

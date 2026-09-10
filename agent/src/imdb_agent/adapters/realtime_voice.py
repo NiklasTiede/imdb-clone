@@ -23,11 +23,13 @@ from pydantic_ai.realtime import (
 )
 from pydantic_ai.realtime.xai import XaiRealtimeModel, XaiRealtimeModelSettings
 
+from imdb_agent.adapters.application_tools import APPLICATION_TOOLS, ApplicationTools
 from imdb_agent.adapters.catalog_contract import parse_grounded_movies
 from imdb_agent.adapters.personal_tools import PersonalToolGate, base_toolset, personal_policy
 from imdb_agent.adapters.voice_timing import VoiceTiming
 from imdb_agent.adapters.voice_transcripts import CorrelatedVoiceModel
 from imdb_agent.concierge.events import OpenLoginAction, OpenWatchlistAction
+from imdb_agent.concierge.navigation import page_action
 from imdb_agent.concierge.personal import PersonalTurn, receipt_action, requests_watchlist
 from imdb_agent.concierge.policy import SYSTEM_POLICY, select_movies_for_display
 from imdb_agent.concierge.tools import PERSONAL_TOOLS, ToolName
@@ -116,6 +118,7 @@ async def _relay_voice(
     personal = personal or PersonalTurn()
     model = CorrelatedVoiceModel(model)
     grounding = VoiceGrounding()
+    application = ApplicationTools(personal, authenticated=authenticated, search=grounding.search)
     timing = VoiceTiming()
     activity = asyncio.Event()
     muted = False
@@ -125,6 +128,7 @@ async def _relay_voice(
 
     async with agent.realtime(
         model,
+        toolsets=[application.toolset],
         usage_limits=UsageLimits(
             # A lookup and its spoken acknowledgement consume separate model requests.
             # Budget for a multi-movie conversation within the existing session deadline.
@@ -182,9 +186,15 @@ async def _relay_voice(
                     await transport.send(
                         VoiceEvent(type="status", status="thinking", turn=grounding.turn)
                     )
-                elif isinstance(event, FunctionToolCallEvent) and event.args_valid is True:
+                elif isinstance(event, FunctionToolCallEvent):
+                    grounding.completed = False
+                    if event.part.tool_name not in APPLICATION_TOOLS:
+                        grounding.search.started(event.tool_call_id)
+                    if event.args_valid is not True:
+                        continue
                     response_active = True
-                    timing.tool_started(event.tool_call_id, ToolName(event.part.tool_name))
+                    if event.part.tool_name not in APPLICATION_TOOLS:
+                        timing.tool_started(event.tool_call_id, ToolName(event.part.tool_name))
                     grounding.tools_called = True
                     calls[event.tool_call_id] = (grounding.turn, event.part.args_as_dict())
                     await transport.send(
@@ -199,14 +209,16 @@ async def _relay_voice(
                         continue
                     if event.part.outcome == "failed":
                         continue
-                    name = ToolName(event.part.tool_name)
-                    for movie in select_movies_for_display(
-                        name, parse_grounded_movies(name, event.part.content), arguments
-                    ):
-                        grounding.movies[movie.movie_id] = movie
-                        await transport.send(
-                            VoiceEvent(type="movie-card", movie=movie, turn=grounding.turn)
-                        )
+                    if event.part.tool_name not in APPLICATION_TOOLS:
+                        name = ToolName(event.part.tool_name)
+                        movies = parse_grounded_movies(name, event.part.content)
+                        personal.remember_movies(movies)
+                        grounding.search.succeeded(event.tool_call_id, name, arguments)
+                        for movie in select_movies_for_display(name, movies, arguments):
+                            grounding.movies[movie.movie_id] = movie
+                            await transport.send(
+                                VoiceEvent(type="movie-card", movie=movie, turn=grounding.turn)
+                            )
                 elif isinstance(event, PartDeltaEvent) and isinstance(event.delta, SpeechPartDelta):
                     delta = event.delta
                     if delta.speaker == "assistant":
@@ -307,7 +319,22 @@ async def _relay_voice(
                                     else OpenLoginAction(),
                                 )
                             )
-                    await _send_navigation(transport, grounding)
+                    if application.action is not None and not grounding.action_sent:
+                        grounding.action_sent = True
+                        if application.action.type == "open_movie":
+                            personal.opened_movie_id = application.action.movie_id
+                        turn = grounding.turn
+                        if application.movie is not None:
+                            await transport.send(
+                                VoiceEvent(type="movie-card", movie=application.movie, turn=turn)
+                            )
+                        if not grounding.cancelled and grounding.turn == turn:
+                            await transport.send(
+                                VoiceEvent(type="ui-action", action=application.action, turn=turn)
+                            )
+                    await _send_navigation(
+                        transport, grounding, personal, authenticated=authenticated
+                    )
 
         async def idle() -> None:
             while True:
@@ -339,7 +366,22 @@ async def _relay_voice(
             await asyncio.gather(*tasks, return_exceptions=True)
 
 
-async def _send_navigation(transport: VoiceTransport, grounding: VoiceGrounding) -> None:
+async def _send_navigation(
+    transport: VoiceTransport,
+    grounding: VoiceGrounding,
+    personal: PersonalTurn,
+    *,
+    authenticated: bool,
+) -> None:
+    if not grounding.cancelled and not grounding.action_sent:
+        navigation = page_action(grounding.message, authenticated=authenticated)
+        search = grounding.search.action(grounding.message, completed=grounding.completed)
+        if navigation is not None or search is not None:
+            grounding.action_sent = True
+            await transport.send(
+                VoiceEvent(type="ui-action", turn=grounding.turn, action=navigation or search)
+            )
+            return
     turn = grounding.turn
     action = grounding.action()
     if action is None:
@@ -350,4 +392,5 @@ async def _send_navigation(transport: VoiceTransport, grounding: VoiceGrounding)
     await transport.send(VoiceEvent(type="movie-card", movie=movie, turn=grounding.turn))
     if grounding.cancelled or grounding.turn != turn:
         return
+    personal.opened_movie_id = action.movie_id
     await transport.send(VoiceEvent(type="ui-action", action=action, turn=grounding.turn))

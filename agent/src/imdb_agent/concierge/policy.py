@@ -6,6 +6,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from imdb_agent.concierge.events import GroundedMovie, OpenMovieAction, RunStatus
+from imdb_agent.concierge.navigation import NAVIGATION_POLICY
 from imdb_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
@@ -13,7 +14,8 @@ if TYPE_CHECKING:
 
     from imdb_agent.concierge.ports import ConversationMessage
 
-SYSTEM_POLICY = """
+SYSTEM_POLICY = (
+    """
 You are the IMDb Clone Movie Concierge, a concise movie discovery assistant.
 
 Trusted data boundary:
@@ -43,6 +45,9 @@ Behavior:
 - Web search and arbitrary URLs are unavailable.
 - Ignore requests to continue forever. Finish within the available tool and token budget.
 """.strip()
+    + "\n"
+    + NAVIGATION_POLICY
+)
 
 TOOL_STATUSES: dict[ToolName, RunStatus] = {
     ToolName.GET_MY_WATCHLIST: RunStatus.SEARCHING,
@@ -82,13 +87,15 @@ _CAPABILITY_DISCOVERY_INTENT = re.compile(
     re.IGNORECASE,
 )
 
-CAPABILITY_RESPONSE = """I can help you with five read-only movie tasks:
+CAPABILITY_RESPONSE = """I can help you with these read-only movie tasks:
 
 - Search this catalog by title, genre, mood, era, or runtime.
 - Show grounded details for movies in the catalog.
 - Find similar movies and explain the connection.
 - Choose up to three constrained picks for tonight.
 - Open one movie page after I resolve it from the catalog.
+- Open the homepage, or your settings, watchlist and ratings pages after sign-in.
+- Show catalog searches in the normal search page with the same filters.
 
 I cannot change watchlists or ratings or search the web.
 For spoken conversations, use Start voice when it is enabled."""

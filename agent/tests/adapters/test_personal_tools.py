@@ -146,6 +146,8 @@ async def test_model_cannot_change_the_requested_operation_movie_or_score(
     ("message", "name", "kind", "score"),
     [
         ("Rate Forrest Gump eight point five", "set_my_movie_rating", "rating_set", 8.5),
+        ("I'd give that one an eight point five", "set_my_movie_rating", "rating_set", 8.5),
+        ("eight point five", "set_my_movie_rating", "rating_set", 8.5),
         ("Remove my rating for Forrest Gump", "remove_my_movie_rating", "rating_remove", None),
         (
             "Remove Forrest Gump from my watchlist",
@@ -164,6 +166,9 @@ async def test_committed_changes_emit_the_correct_page_and_previous_state(
     from imdb_agent.concierge.personal import receipt_action
 
     state = turn()
+    if message == "eight point five":
+        state.finalize("I'd like to rate Forrest Gump")
+        state.begin()
     state.finalize(message)
     calls: list[dict[str, Any]] = []
 
