@@ -132,7 +132,14 @@ independently deployable and reversible.
 ### R1 — Application actions and contextual capability discovery
 
 **2026-09-09 implementation:** Local slice: `open_movie`, `open_watchlist`, `open_ratings`, `open_login`, authenticated capability help and
-personal-library cache refresh are implemented. The broader destination/context registry remains open.
+personal-library cache refresh are implemented. Fixed `open_page` destinations (home, account settings,
+watchlist, ratings) and `show_search_results` now share the text/voice action contract. Discovery
+searches surface the successful MCP query and supported filters in the normal paginated search page,
+including multiple genres and title type. Pure text page commands bypass the model. Guest personal
+pages route to login. Internal lookups for movie opening or personal mutations do not open search.
+The broader contextual capability registry and trailer playback remain open.
+The [pre-commit review](reviews/2026-09-10-concierge-navigation-review.md) records corrected
+search selection/routing defects, ownership checks, regression tests and verification limits.
 
 **User outcome:** A user can ask what the Concierge can do and can navigate the application through
 natural-language requests without relying on model-generated routes.
@@ -190,7 +197,10 @@ Exit evidence:
 
 **2026-09-09 implementation:** Local slice: explicit grounded watchlist addition/removal and personal rating set/update/removal,
 transactionally stored receipts, concurrent retry safety, unchanged-state handling and UI Undo
-are implemented. Ratings navigate to `/your-ratings`; scores are user-specified, 0–10. Broader actions and
+are implemented. Natural affirmative requests (for example “I'd give this one an eight”) and an
+immediate score-only answer after an incomplete rating request are supported. Opening a movie
+establishes its context for the following turn. Ratings navigate to `/your-ratings`; scores are
+user-specified, 0–10. Broader actions and
 durable multi-step approvals remain open.
 
 **User outcome:** An authenticated user can add a grounded movie to their watchlist and later manage

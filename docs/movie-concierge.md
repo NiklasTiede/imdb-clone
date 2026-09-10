@@ -90,21 +90,51 @@ A representative journey is:
 4. It presents a small grounded set with meaningful differences and existing explanations.
 5. The user refines a constraint or opens a movie detail page.
 
-The agent may emit a typed navigation suggestion when the user explicitly asks to open a movie. The
-React application performs the navigation; navigation is not an LLM tool with arbitrary URLs.
+The agent emits a typed navigation suggestion when the user wants to open a movie, including
+natural paraphrases and contextual references. React performs navigation using fixed app routes;
+the model cannot supply arbitrary URLs.
 
 ### Grounded UI-action contract
 
-`open_movie` is an application action, not a provider tool and not a model-generated route. The
-provider-independent Concierge core emits it only after an explicit open request resolves to one
-unique Java-MCP-grounded movie in the current run. Ambiguous, missing, stale, failed, or forged
-grounding emits no action. The event carries only a positive catalog movie ID; React validates the
+`open_movie` is an application action, not a model-generated route. Common direct commands have
+a deterministic fast path. For conversational requests, the local `open_movie_page` tool lets the
+model resolve meaning and context; it accepts only IDs grounded in the session's Java catalog
+results. The model must clarify ambiguous references. Missing or forged IDs and cancelled/stale
+turns are rejected by the tool. The event carries only a positive catalog movie ID; React validates the
 strict event, requires the same card to have appeared earlier in that stream, builds the known
 movie-detail route itself, and closes the Concierge overlay.
 
-The same typed action can later be consumed by a realtime voice adapter. Voice may therefore say
-less or nothing while the existing React application executes the already-tested action contract;
-it does not need a second navigation mechanism or permission model.
+Both text and realtime voice consume this same typed action. Voice can acknowledge briefly while
+React executes navigation. Movie evidence is emitted immediately before a movie action.
+
+### Local page navigation and visible search
+
+Text and English voice support direct commands such as “Open my settings”, “Go to my ratings
+page”, “Show me my watchlist” and “Go home”. `open_page` carries one fixed destination; React maps
+it to a known route and sends guests to login for personal pages. Opening a page does not imply a
+library mutation or generate an Undo receipt. Pure text page requests use a local response without
+a model request; voice waits for the current final user transcript. Other phrasing uses local
+`navigate_app` and `open_movie_page` tools, shared by text and voice. For example “Let me see what
+I've rated” and “Let's have a look at that one” need no “open” or “page” keyword. These tools only
+navigate; personal mutations still require a matching authorized command and committed Java receipt.
+
+A discovery request (for example “Find Forrest Gump” or “Show me science fiction movies from the
+nineties”) emits `show_search_results` after the tool loop completes with a successful final
+`search_movies` result. Intermediate title lookups, failed refinements and out-of-order older
+results cannot choose the search page. Text and voice share this decision in `SearchNavigation`. It carries
+the validated query, genres, title type, year and runtime bounds; never an arbitrary URL or the
+agent's small result limit. The normal search page displays these criteria and loads its own full,
+paginated result set. A new search resets pagination and replaces old filters. Search lookups for
+opening a film, finding similar movies, changing a watchlist or assigning a rating do not cause
+a search-page detour. Explicit movie opens retain their early navigation path; search navigation
+waits for tool-loop completion, which can add model generation time. Audio continues streaming.
+The local `show_movie_search` tool also supports model-interpreted discovery requests such as
+“I feel like a short comedy”. It can expose only the latest successful search parameters; a failed
+refinement or subsequent recommendation lookup invalidates the candidate. Semantic interpretation
+is model-dependent; clarify genuinely ambiguous intent rather than requiring exact command wording.
+
+The voice dock stays connected across these route changes. Existing turn correlation, cancellation,
+and single-action guards apply to both new action types. Trailer playback is a separate follow-up.
 
 ## Read-Only MVP
 

@@ -27,13 +27,21 @@ domain state. Anonymous model toolsets exclude personal tools and the applicatio
 
 ## Write semantics
 
-Only a complete explicit English command for one catalog-grounded film permits watchlist
-addition/removal or personal rating set/removal. Setting includes updating an existing rating.
+Only a complete affirmative English intention for one catalog-grounded film permits watchlist
+addition/removal or personal rating set/removal. There is no prescribed command template:
+“I want that one on my watchlist”, “Let's take this one off my list” and “I'd give it an eight”
+are supported, including polite conversational prefixes. Setting includes updating an existing rating.
 The final transcript must also contain the requested score (0–10, at most one decimal); numeric
-and spoken English scores are supported. The tool gate binds action, target and score together.
+and spoken English scores are supported. After a rating request whose only missing detail is the
+score, the immediately following turn may supply just that score. This pending target is grounded,
+cannot survive cancellation or an intervening turn, and cannot switch to another movie via tool
+arguments. Text reconstructs it from the preceding user turn; voice retains it in session state.
+The tool gate binds action, target and score together.
 The model may not invent a personal score from IMDb data or a recommendation. Negation, conditions,
 multiple targets, suggestions, missing/invalid scores and incomplete speech fail closed. Title
-collisions require the year. A contextual `it` requires exactly one candidate. Catalog strings
+collisions require the year. A contextual `it`, `this one` or `that one` requires exactly one candidate.
+An emitted movie-open action establishes that movie as the following turn's context; current-turn
+catalog candidates are preserved until then, and new searches may introduce ambiguity again. Catalog strings
 never grant permission. An interruption clears pending authority; a committed transaction remains
 committed and is visible in the user's library.
 
