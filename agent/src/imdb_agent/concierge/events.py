@@ -91,6 +91,11 @@ class OpenMovieAction(EventModel):
     movie_id: int = Field(gt=0)
 
 
+class OpenMovieTrailerAction(EventModel):
+    type: Literal["open_movie_trailer"] = "open_movie_trailer"
+    movie_id: int = Field(gt=0)
+
+
 class OpenWatchlistAction(EventModel):
     type: Literal["open_watchlist"] = "open_watchlist"
     operation_id: str | None = None
@@ -130,6 +135,7 @@ class ShowSearchResultsAction(EventModel):
 
 ApplicationAction = (
     OpenMovieAction
+    | OpenMovieTrailerAction
     | OpenWatchlistAction
     | OpenRatingsAction
     | OpenLoginAction

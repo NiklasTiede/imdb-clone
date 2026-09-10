@@ -321,7 +321,10 @@ async def _relay_voice(
                             )
                     if application.action is not None and not grounding.action_sent:
                         grounding.action_sent = True
-                        if application.action.type == "open_movie":
+                        if (
+                            application.action.type == "open_movie"
+                            or application.action.type == "open_movie_trailer"
+                        ):
                             personal.opened_movie_id = application.action.movie_id
                         turn = grounding.turn
                         if application.movie is not None:

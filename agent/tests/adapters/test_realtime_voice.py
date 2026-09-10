@@ -587,12 +587,21 @@ async def test_voice_search_waits_for_final_discovery_result(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("late_transcript", [False, True])
-@pytest.mark.parametrize("movie_page", [False, True])
+@pytest.mark.parametrize(
+    "tool, action_type",
+    [
+        ("navigate_app", "open_page"),
+        ("open_movie_page", "open_movie"),
+        ("open_movie_trailer", "open_movie_trailer"),
+    ],
+)
 async def test_semantic_navigation_tools_reach_browser(
-    late_transcript: bool, movie_page: bool
+    late_transcript: bool, tool: str, action_type: str
 ) -> None:
     from imdb_agent.concierge.events import GroundedMovie
     from imdb_agent.concierge.personal import PersonalTurn
+
+    movie_page = tool != "navigate_app"
 
     class SemanticConnection(CatalogConnection):
         async def send(self, content: RealtimeInput) -> None:
@@ -603,7 +612,7 @@ async def test_semantic_navigation_tools_reach_browser(
                 await self.events.put(
                     ToolCall(
                         "navigate",
-                        tool_name="open_movie_page" if movie_page else "navigate_app",
+                        tool_name=tool,
                         args='{"movie_id":6}' if movie_page else '{"destination":"ratings"}',
                     )
                 )
@@ -618,7 +627,13 @@ async def test_semantic_navigation_tools_reach_browser(
         async def transcript(self) -> None:
             await self.events.put(
                 InputTranscript(
-                    "Let's have a look at that one" if movie_page else "My rated movies, please",
+                    (
+                        "Let me watch its trailer"
+                        if tool == "open_movie_trailer"
+                        else "Let's have a look at that one"
+                    )
+                    if movie_page
+                    else "My rated movies, please",
                     is_final=True,
                     item_id="user-1",
                 )
@@ -640,7 +655,7 @@ async def test_semantic_navigation_tools_reach_browser(
     ]
     assert len(actions) == 1
     assert actions[0] is not None
-    assert actions[0].type == ("open_movie" if movie_page else "open_page")
+    assert actions[0].type == action_type
     if movie_page:
         index = next(
             i

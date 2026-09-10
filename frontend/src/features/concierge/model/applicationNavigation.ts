@@ -20,6 +20,8 @@ export const applicationDestination = (
       return action.destination !== "home" && !signedIn
         ? "/login"
         : pages[action.destination];
+    case "open_movie_trailer":
+      return `${movieDetailPath(action.movieId)}#trailer`;
     case "open_movie":
       return movieDetailPath(action.movieId);
     case "open_watchlist":

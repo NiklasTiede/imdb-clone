@@ -137,7 +137,10 @@ watchlist, ratings) and `show_search_results` now share the text/voice action co
 searches surface the successful MCP query and supported filters in the normal paginated search page,
 including multiple genres and title type. Pure text page commands bypass the model. Guest personal
 pages route to login. Internal lookups for movie opening or personal mutations do not open search.
-The broader contextual capability registry and trailer playback remain open.
+**2026-09-10 trailer navigation:** `open_movie_trailer` now opens a grounded movie and centers its
+trailer section in text and voice, including repeat requests on the same page. Missing trailers
+show an availability notice. Playback uses the existing Play button; reliable autoplay with sound
+and voice-audio coordination remain open. The broader contextual capability registry remains open.
 The [pre-commit review](reviews/2026-09-10-concierge-navigation-review.md) records corrected
 search selection/routing defects, ownership checks, regression tests and verification limits.
 

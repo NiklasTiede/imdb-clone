@@ -174,7 +174,10 @@ class ConciergeService:
                         yield next_event(StatusEvent(status=TOOL_STATUSES[event.tool]))
                         continue
                     if isinstance(event, UiActionEvent):
-                        if event.action.type == "open_movie":
+                        if (
+                            event.action.type == "open_movie"
+                            or event.action.type == "open_movie_trailer"
+                        ):
                             opened_movie_id = event.action.movie_id
                         runner_action_sent = True
                         self._observer.ui_action(action=event.action.type, outcome="emitted")

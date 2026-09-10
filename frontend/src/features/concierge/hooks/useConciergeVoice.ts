@@ -212,7 +212,8 @@ export const useConciergeVoice = (
             !blockedAudio.current &&
             event.action &&
             !actions.has(event.turn) &&
-            (event.action.type !== "open_movie" ||
+            ((event.action.type !== "open_movie" &&
+              event.action.type !== "open_movie_trailer") ||
               grounded.get(event.turn)?.has(event.action.movieId))
           ) {
             actions.add(event.turn);

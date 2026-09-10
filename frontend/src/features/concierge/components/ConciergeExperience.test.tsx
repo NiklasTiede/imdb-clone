@@ -66,7 +66,7 @@ let unmountExperience: (() => void) | undefined;
 const LocationProbe = () => {
   const location = useLocation();
   return (
-    <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>
+    <output aria-label="Current route">{`${location.pathname}${location.search}${location.hash}`}</output>
   );
 };
 
@@ -192,55 +192,59 @@ describe("ConciergeExperience", () => {
     });
   });
 
-  it("closes the overlay and opens the app-owned route for a grounded action", async () => {
-    const report = vi.fn();
-    configurePerformanceReporter({ report });
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ conversationId }), { status: 201 }),
-      )
-      .mockResolvedValueOnce(
-        streamResponse(
-          event("ui-action", 5, {
-            action: { type: "open_movie", movieId: 42 },
-          }),
-          6,
+  it.each(["open_movie", "open_movie_trailer"])(
+    "closes the overlay and opens the app-owned route for %s",
+    async (type) => {
+      const report = vi.fn();
+      configurePerformanceReporter({ report });
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ conversationId }), { status: 201 }),
+        )
+        .mockResolvedValueOnce(
+          streamResponse(
+            event("ui-action", 5, {
+              action: { type, movieId: 42 },
+            }),
+            6,
+          ),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+      const user = userEvent.setup();
+      renderExperience();
+
+      await user.click(
+        screen.getByRole("button", { name: "Ask the Movie Concierge" }),
+      );
+      await user.type(
+        screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
+        "Open Arrival",
+      );
+      await user.click(
+        screen.getByRole("button", { name: "Send concierge message" }),
+      );
+
+      await waitFor(() =>
+        expect(screen.getByLabelText("Current route")).toHaveTextContent(
+          `/movie?id=42${type === "open_movie_trailer" ? "#trailer" : ""}`,
         ),
       );
-    vi.stubGlobal("fetch", fetchMock);
-    const user = userEvent.setup();
-    renderExperience();
-
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
-    await user.type(
-      screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
-      "Open Arrival",
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Send concierge message" }),
-    );
-
-    await waitFor(() =>
-      expect(screen.getByLabelText("Current route")).toHaveTextContent(
-        "/movie?id=42",
-      ),
-    );
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("dialog", { name: "Movie Concierge" }),
-      ).not.toBeInTheDocument(),
-    );
-    expect(report).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "concierge_ui_action",
-        name: "open_movie",
-        outcome: "executed",
-      }),
-    );
-  });
+      await waitFor(() =>
+        expect(
+          screen.queryByRole("dialog", { name: "Movie Concierge" }),
+        ).not.toBeInTheDocument(),
+      );
+      if (type === "open_movie")
+        expect(report).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: "concierge_ui_action",
+            name: "open_movie",
+            outcome: "executed",
+          }),
+        );
+    },
+  );
 
   it.each([
     [{ type: "open_page", destination: "home" }, "/"],
@@ -256,7 +260,8 @@ describe("ConciergeExperience", () => {
       configurePerformanceReporter({ report });
       vi.stubGlobal(
         "fetch",
-        vi.fn<typeof fetch>()
+        vi
+          .fn<typeof fetch>()
           .mockResolvedValueOnce(
             new Response(JSON.stringify({ conversationId }), { status: 201 }),
           )
@@ -292,40 +297,43 @@ describe("ConciergeExperience", () => {
     },
   );
 
-  it("does not navigate when an action arrives before its grounded card", async () => {
-    const unsafeStream = new Response(
-      event("ui-action", 1, {
-        action: { type: "open_movie", movieId: 42 },
-      }) + event("completion", 2, { conversationId, outcome: "success" }),
-      { headers: { "Content-Type": "text/event-stream" } },
-    );
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ conversationId }), { status: 201 }),
-      )
-      .mockResolvedValueOnce(unsafeStream);
-    vi.stubGlobal("fetch", fetchMock);
-    const user = userEvent.setup();
-    renderExperience();
+  it.each(["open_movie", "open_movie_trailer"])(
+    "does not navigate when %s arrives before its grounded card",
+    async (type) => {
+      const unsafeStream = new Response(
+        event("ui-action", 1, {
+          action: { type, movieId: 42 },
+        }) + event("completion", 2, { conversationId, outcome: "success" }),
+        { headers: { "Content-Type": "text/event-stream" } },
+      );
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ conversationId }), { status: 201 }),
+        )
+        .mockResolvedValueOnce(unsafeStream);
+      vi.stubGlobal("fetch", fetchMock);
+      const user = userEvent.setup();
+      renderExperience();
 
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
-    await user.type(
-      screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
-      "Open Arrival",
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Send concierge message" }),
-    );
+      await user.click(
+        screen.getByRole("button", { name: "Ask the Movie Concierge" }),
+      );
+      await user.type(
+        screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
+        "Open Arrival",
+      );
+      await user.click(
+        screen.getByRole("button", { name: "Send concierge message" }),
+      );
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    expect(screen.getByLabelText("Current route")).toHaveTextContent("/");
-    expect(
-      screen.getByRole("dialog", { name: "Movie Concierge" }),
-    ).toBeVisible();
-  });
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+      expect(screen.getByLabelText("Current route")).toHaveTextContent("/");
+      expect(
+        screen.getByRole("dialog", { name: "Movie Concierge" }),
+      ).toBeVisible();
+    },
+  );
 
   it("rejects an action that carries a model-supplied URL", async () => {
     const maliciousStream = streamResponse(

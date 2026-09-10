@@ -175,45 +175,48 @@ describe("voice session lifecycle", () => {
     expect(audio.close).toHaveBeenCalled();
   });
 
-  it("drops audio and navigation arriving after a local interruption", async () => {
-    const action = vi.fn();
-    const { result } = renderHook(() => useConciergeVoice(action));
-    await act(() => result.current.start());
-    const socket = Socket.instances[0];
-    if (!socket) throw new Error("Expected voice socket");
-    const movie = {
-      movieId: 42,
-      primaryTitle: "Forrest Gump",
-      movieType: "MOVIE",
-      genres: [],
-    };
-    act(() => {
-      socket.emit({ type: "ready" });
-      socket.emit({ type: "interrupt", turn: 1 });
-      socket.emit({ type: "movie-card", turn: 1, movie });
-    });
-    act(() => result.current.interrupt());
-    act(() => {
-      socket.onmessage?.({ data: new ArrayBuffer(4800) });
-      socket.emit({
-        type: "ui-action",
-        turn: 1,
-        action: { type: "open_movie", movieId: 42 },
+  it.each(["open_movie", "open_movie_trailer"])(
+    "drops audio and %s arriving after a local interruption",
+    async (type) => {
+      const action = vi.fn();
+      const { result } = renderHook(() => useConciergeVoice(action));
+      await act(() => result.current.start());
+      const socket = Socket.instances[0];
+      if (!socket) throw new Error("Expected voice socket");
+      const movie = {
+        movieId: 42,
+        primaryTitle: "Forrest Gump",
+        movieType: "MOVIE",
+        genres: [],
+      };
+      act(() => {
+        socket.emit({ type: "ready" });
+        socket.emit({ type: "interrupt", turn: 1 });
+        socket.emit({ type: "movie-card", turn: 1, movie });
       });
-    });
-    expect(audio.play).not.toHaveBeenCalled();
-    expect(action).not.toHaveBeenCalled();
-    act(() => {
-      socket.emit({ type: "interrupt", turn: 2 });
-      socket.emit({ type: "movie-card", turn: 2, movie });
-      socket.emit({
-        type: "ui-action",
-        turn: 2,
-        action: { type: "open_movie", movieId: 42 },
+      act(() => result.current.interrupt());
+      act(() => {
+        socket.onmessage?.({ data: new ArrayBuffer(4800) });
+        socket.emit({
+          type: "ui-action",
+          turn: 1,
+          action: { type, movieId: 42 },
+        });
       });
-    });
-    expect(action).toHaveBeenCalledTimes(1);
-  });
+      expect(audio.play).not.toHaveBeenCalled();
+      expect(action).not.toHaveBeenCalled();
+      act(() => {
+        socket.emit({ type: "interrupt", turn: 2 });
+        socket.emit({ type: "movie-card", turn: 2, movie });
+        socket.emit({
+          type: "ui-action",
+          turn: 2,
+          action: { type, movieId: 42 },
+        });
+      });
+      expect(action).toHaveBeenCalledTimes(1);
+    },
+  );
 });
 
 it("connects after microphone permission while audio initializes, but waits for both before listening", async () => {

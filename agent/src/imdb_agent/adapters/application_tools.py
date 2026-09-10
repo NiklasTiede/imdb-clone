@@ -12,6 +12,7 @@ from imdb_agent.concierge.events import (
     GroundedMovie,
     OpenLoginAction,
     OpenMovieAction,
+    OpenMovieTrailerAction,
     OpenPageAction,
     ShowSearchResultsAction,
 )
@@ -20,7 +21,14 @@ from imdb_agent.concierge.navigation import SearchNavigation
 if TYPE_CHECKING:
     from imdb_agent.concierge.personal import PersonalTurn
 
-APPLICATION_TOOLS = frozenset({"navigate_app", "open_movie_page", "show_movie_search"})
+APPLICATION_TOOLS = frozenset(
+    {
+        "navigate_app",
+        "open_movie_page",
+        "open_movie_trailer",
+        "show_movie_search",
+    }
+)
 
 
 class ApplicationTools:
@@ -32,16 +40,31 @@ class ApplicationTools:
         self.search = search if search is not None else SearchNavigation()
         self._show_search = False
         self._epoch = -1
-        self._action: OpenPageAction | OpenLoginAction | OpenMovieAction | None = None
+        self._action: (
+            OpenPageAction | OpenLoginAction | OpenMovieAction | OpenMovieTrailerAction | None
+        ) = None
         self.movie: GroundedMovie | None = None
         self.toolset: FunctionToolset[None] = FunctionToolset(
-            tools=[self.navigate_app, self.open_movie_page, self.show_movie_search], max_retries=1
+            tools=[
+                self.navigate_app,
+                self.open_movie_page,
+                self.open_movie_trailer,
+                self.show_movie_search,
+            ],
+            max_retries=1,
         )
 
     @property
     def action(
         self,
-    ) -> OpenPageAction | OpenLoginAction | OpenMovieAction | ShowSearchResultsAction | None:
+    ) -> (
+        OpenPageAction
+        | OpenLoginAction
+        | OpenMovieAction
+        | OpenMovieTrailerAction
+        | ShowSearchResultsAction
+        | None
+    ):
         if self._turn.cancelled or self._epoch != self._turn.epoch:
             return None
         return self.search.validated_result if self._show_search else self._action
@@ -80,6 +103,24 @@ class ApplicationTools:
         Use only an ID returned by the catalog. Resolve ambiguous titles/references first.
         Do not call for informational questions, negations or hypotheticals.
         """
+        await self._open_catalog_movie(movie_id, trailer=False)
+        return "Movie navigation requested. Briefly acknowledge the title."
+
+    async def open_movie_trailer(self, movie_id: int) -> str:
+        """Show the trailer section of a catalog movie the user wants to watch.
+
+        Understand natural requests and clear references to previous results. Resolve ambiguous
+        titles first. Use a grounded catalog ID, never a URL or YouTube ID. Do not call for
+        informational questions, negations or hypotheticals. This focuses the trailer section;
+        the user presses Play. It does not guarantee trailer availability or start playback.
+        """
+        await self._open_catalog_movie(movie_id, trailer=True)
+        return (
+            "Trailer section requested. Briefly say the user can press Play if a trailer is "
+            "available. Do not claim playback started or that a trailer is available."
+        )
+
+    async def _open_catalog_movie(self, movie_id: int, *, trailer: bool) -> None:
         epoch = await self._current_turn()
         movie = next((m for m in self._turn.movies if m.movie_id == movie_id), None)
         if movie is None:
@@ -87,8 +128,11 @@ class ApplicationTools:
         self._epoch = epoch
         self.movie = movie
         self._show_search = False
-        self._action = OpenMovieAction(movie_id=movie_id)
-        return "Movie navigation requested. Briefly acknowledge the title."
+        self._action = (
+            OpenMovieTrailerAction(movie_id=movie_id)
+            if trailer
+            else OpenMovieAction(movie_id=movie_id)
+        )
 
     async def show_movie_search(self) -> str:
         """Show the latest successful catalog discovery search in the normal app search page.

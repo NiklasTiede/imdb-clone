@@ -134,7 +134,22 @@ refinement or subsequent recommendation lookup invalidates the candidate. Semant
 is model-dependent; clarify genuinely ambiguous intent rather than requiring exact command wording.
 
 The voice dock stays connected across these route changes. Existing turn correlation, cancellation,
-and single-action guards apply to both new action types. Trailer playback is a separate follow-up.
+and single-action guards apply to these action types.
+
+### Trailer navigation
+
+Text and voice support requests such as “Let me watch the trailer for Forrest Gump” or a clear
+follow-up “Show me its trailer”. The local `open_movie_trailer` tool resolves only a catalog-grounded
+movie ID and emits the strict `open_movie_trailer` action, preceded by its movie card. React opens
+`/movie?id=<catalog-id>#trailer`, closes the overlay, and centers/focuses the trailer section after
+movie data loads. Repeated requests on the same page center it again; the voice session stays connected.
+Missing or invalid trailer keys produce an explicit catalog-availability notice. This does not
+check whether YouTube permits playback of the video in the user's region.
+
+Playback still requires the existing Play button. Navigation neither contacts YouTube nor claims
+that playback started. Browser autoplay restrictions can block asynchronous playback with sound;
+a player integration with blocked-playback feedback and coordination with voice audio remains a
+separate decision. No arbitrary URLs, model-supplied video keys, or full-screen requests are accepted.
 
 ### Personal ratings, taste and recommendations
 

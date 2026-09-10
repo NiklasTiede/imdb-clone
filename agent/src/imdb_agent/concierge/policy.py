@@ -96,6 +96,7 @@ CAPABILITY_RESPONSE = """I can help you with these read-only movie tasks:
 - Find similar movies and explain the connection.
 - Choose up to three constrained picks for tonight.
 - Open one movie page after I resolve it from the catalog.
+- Show its trailer section so you can press Play if a trailer is available.
 - Open the homepage, or your settings, watchlist and ratings pages after sign-in.
 - Show catalog searches in the normal search page with the same filters.
 
@@ -142,7 +143,8 @@ def decide_open_movie_action(
 
 def requests_open_movie(message: str) -> bool:
     return (
-        _OPEN_MOVIE_INTENT.search(message) is not None
+        re.search(r"\btrailers?\b", message, re.IGNORECASE) is None
+        and _OPEN_MOVIE_INTENT.search(message) is not None
         and _NEGATED_OPEN_MOVIE_INTENT.search(message) is None
     )
 

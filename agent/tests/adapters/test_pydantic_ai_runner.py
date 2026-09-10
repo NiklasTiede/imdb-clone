@@ -44,6 +44,7 @@ async def test_function_model_executes_tool_loop_and_emits_grounded_cards(messag
                 "search_movies",
                 "navigate_app",
                 "open_movie_page",
+                "open_movie_trailer",
                 "show_movie_search",
             }
             yield {
@@ -276,14 +277,24 @@ async def test_search_navigation_uses_final_successful_discovery(followup: str) 
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("movie_page", [False, True])
+@pytest.mark.parametrize(
+    "tool, action_type",
+    [
+        ("navigate_app", "open_page"),
+        ("open_movie_page", "open_movie"),
+        ("open_movie_trailer", "open_movie_trailer"),
+    ],
+)
 async def test_model_interpreted_navigation_is_emitted_without_command_regex(
-    movie_page: bool,
+    tool: str,
+    action_type: str,
 ) -> None:
     from pydantic import SecretStr
 
     from imdb_agent.concierge.events import GroundedMovie
     from imdb_agent.concierge.ports import ConversationMessage
+
+    movie_page = tool != "navigate_app"
 
     requests = 0
 
@@ -295,7 +306,7 @@ async def test_model_interpreted_navigation_is_emitted_without_command_regex(
         if requests == 1:
             yield {
                 0: DeltaToolCall(
-                    name="open_movie_page" if movie_page else "navigate_app",
+                    name=tool,
                     json_args='{"movie_id":6}' if movie_page else '{"destination":"ratings"}',
                     tool_call_id="app-navigation",
                 )
@@ -311,7 +322,11 @@ async def test_model_interpreted_navigation_is_emitted_without_command_regex(
         async for event in runner.stream(
             RunRequest(
                 conversation_id="semantic-navigation",
-                message="Let's have a look at that one"
+                message=(
+                    "Let me watch its trailer"
+                    if tool == "open_movie_trailer"
+                    else "Let's have a look at that one"
+                )
                 if movie_page
                 else "My rated movies, please",
                 history=(
@@ -323,7 +338,7 @@ async def test_model_interpreted_navigation_is_emitted_without_command_regex(
     ]
     actions = [event.action for event in events if isinstance(event, UiActionEvent)]
     assert len(actions) == 1
-    assert actions[0].type == ("open_movie" if movie_page else "open_page")
+    assert actions[0].type == action_type
     assert not any(isinstance(event, ToolCallEvent) for event in events)
     if movie_page:
         action_index = next(i for i, event in enumerate(events) if isinstance(event, UiActionEvent))

@@ -77,6 +77,12 @@ export const applicationActionSchema = zod.discriminatedUnion("type", [
   openMovieActionSchema,
   zod
     .object({
+      type: zod.literal("open_movie_trailer"),
+      movieId: zod.number().int().positive(),
+    })
+    .strict(),
+  zod
+    .object({
       type: zod.literal("open_watchlist"),
       operationId: zod.string().uuid().nullable().optional(),
       movieId: zod.number().int().positive().nullable().optional(),

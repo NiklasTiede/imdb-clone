@@ -91,7 +91,8 @@ export const useConciergeChat = (
               const allowed =
                 !abortController.signal.aborted &&
                 !actionHandled &&
-                (event.action.type !== "open_movie" ||
+                ((event.action.type !== "open_movie" &&
+                  event.action.type !== "open_movie_trailer") ||
                   groundedMovieIds.has(event.action.movieId));
               actionHandled = true;
               if (!allowed) {

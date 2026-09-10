@@ -6,7 +6,7 @@ import Skeleton from "@mui/material/Skeleton";
 import Snackbar from "@mui/material/Snackbar";
 import Typography from "@mui/material/Typography";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router";
 import { authSession, useAuthSession } from "../../../shared/auth";
 import PageContent from "../../../shared/layout/PageContent";
@@ -48,6 +48,29 @@ const MovieDetailPage = () => {
 
   const movieQuery = useQuery(movieQueries.detail(movieId));
   const movie = movieQuery.data;
+  const trailerTarget = useRef<HTMLDivElement>(null);
+  const trailerRequested = location.hash === "#trailer";
+
+  useEffect(() => {
+    // Movie routes share this component and otherwise retain the previous scroll.
+    // Reset on navigation, including reopening the same movie, not on data refresh.
+    if (!trailerRequested) {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+  }, [location.key, movieId, trailerRequested]);
+
+  useEffect(() => {
+    if (!trailerRequested || !movieQuery.isSuccess) return;
+    // A new router key also handles repeated requests on the same movie page.
+    const frame = requestAnimationFrame(() => {
+      trailerTarget.current?.focus({ preventScroll: true });
+      trailerTarget.current?.scrollIntoView({
+        block: "center",
+        behavior: "instant",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [location.key, trailerRequested, movieId, movieQuery.isSuccess]);
 
   const { data: watchedMovieIds } = useQuery(
     watchlistQueries.movieIds({ username }),
@@ -257,7 +280,7 @@ const MovieDetailPage = () => {
 
       <Synopsis text={movie.description} />
 
-      {trailerVideoKey && (
+      {(trailerVideoKey || trailerRequested) && (
         <Box
           component="section"
           aria-labelledby="movie-trailer-title"
@@ -267,7 +290,13 @@ const MovieDetailPage = () => {
             py: { xs: 3, md: 4 },
           }}
         >
-          <Box sx={{ maxWidth: 720, mx: "auto" }}>
+          <Box
+            ref={trailerTarget}
+            tabIndex={-1}
+            role="region"
+            aria-label="Movie trailer section"
+            sx={{ maxWidth: 720, mx: "auto" }}
+          >
             <Typography
               component="h2"
               id="movie-trailer-title"
@@ -275,11 +304,18 @@ const MovieDetailPage = () => {
             >
               Trailer
             </Typography>
-            <MovieTrailer
-              backdropImageToken={movie.backdropImageToken}
-              movieTitle={movieTitle}
-              youtubeVideoKey={trailerVideoKey}
-            />
+            {trailerVideoKey ? (
+              <MovieTrailer
+                key={`${movieId}:${trailerVideoKey}`}
+                backdropImageToken={movie.backdropImageToken}
+                movieTitle={movieTitle}
+                youtubeVideoKey={trailerVideoKey}
+              />
+            ) : (
+              <Alert severity="info">
+                No trailer is available for {movieTitle} in our catalog.
+              </Alert>
+            )}
           </Box>
         </Box>
       )}
