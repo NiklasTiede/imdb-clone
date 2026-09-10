@@ -71,6 +71,138 @@ class SessionConciergeDelegationTest {
         .isInstanceOf(AccessDeniedException.class);
   }
 
+  @Test
+  void onlyActiveUsersWithAnExistingSessionCanReceiveDelegation() {
+    assertThatThrownBy(() -> service.issue(null, user(7L)))
+        .isInstanceOf(AccessDeniedException.class);
+    assertThatThrownBy(() -> service.issue(new MockHttpSession(), null))
+        .isInstanceOf(AccessDeniedException.class);
+    for (var principal :
+        List.of(principal(true, true, "ROLE_USER"), principal(false, false, "ROLE_USER"))) {
+      assertThatThrownBy(() -> service.issue(new MockHttpSession(), principal))
+          .isInstanceOf(AccessDeniedException.class);
+    }
+  }
+
+  @Test
+  void renewingDelegationReusesTheSessionKeyAndExpiresAtTheExactDeadline() {
+    var http = new MockHttpSession();
+    var initial = service.issue(http, user(7L));
+    var key = http.getAttribute("CONCIERGE_DELEGATION_KEY");
+    var renewed = service.issue(http, user(7L));
+    assertThat(http.getAttribute("CONCIERGE_DELEGATION_KEY")).isEqualTo(key);
+    assertThat(renewed).isEqualTo(initial);
+    assertThat(initial.expiresAt()).isEqualTo(clock.instant().plusSeconds(300));
+    var fixture = fixture(7L);
+    var deadline =
+        new SessionConciergeDelegation(sessions, Clock.offset(clock, Duration.ofMinutes(5)));
+    assertThatThrownBy(() -> deadline.verify(fixture.token(), "watchlist:read"))
+        .isInstanceOf(AccessDeniedException.class);
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(
+      strings = {
+        "session|7|9999999999|movie-concierge",
+        "session|7|9999999999|different-audience|watchlist:read,watchlist:add,watchlist:remove,ratings:set,ratings:remove",
+        "session|7|9999999999|movie-concierge|account:delete",
+        "session|7|not-a-timestamp|movie-concierge|watchlist:read,watchlist:add,watchlist:remove,ratings:set,ratings:remove"
+      })
+  void invalidClaimsAreRejectedBeforeReadingASession(String claims) {
+    var repository = org.mockito.Mockito.mock(StoredSessions.class);
+    var verifier = new SessionConciergeDelegation(repository, clock);
+    var token =
+        java.util.Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(claims.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+            + ".invalid";
+    assertThatThrownBy(() -> verifier.verify(token, "watchlist:read"))
+        .isInstanceOf(AccessDeniedException.class);
+    org.mockito.Mockito.verifyNoInteractions(repository);
+  }
+
+  @Test
+  void oversizedCredentialsAreRejected() {
+    assertThatThrownBy(() -> service.verify("x".repeat(1025), "watchlist:read"))
+        .isInstanceOf(AccessDeniedException.class);
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(
+      strings = {
+        "missing-key", "missing-context", "missing-authentication", "unauthenticated",
+        "wrong-principal", "disabled", "locked", "wrong-role"
+      })
+  void revokedOrUnusableSessionStateRejectsAnOtherwiseSignedToken(String condition) {
+    var fixture = fixture(7L);
+    var session = sessions.findById(fixture.session().getId());
+    var context = context(7L);
+    switch (condition) {
+      case "missing-key" -> session.removeAttribute("CONCIERGE_DELEGATION_KEY");
+      case "missing-context" -> context = null;
+      case "missing-authentication" -> context.setAuthentication(null);
+      case "unauthenticated" ->
+          context.setAuthentication(
+              UsernamePasswordAuthenticationToken.unauthenticated(user(7L), null));
+      case "wrong-principal" ->
+          context.setAuthentication(
+              UsernamePasswordAuthenticationToken.authenticated("anonymous", null, List.of()));
+      default -> {
+        var principal =
+            principal(
+                condition.equals("locked"),
+                !condition.equals("disabled"),
+                condition.equals("wrong-role") ? "ROLE_GUEST" : "ROLE_USER");
+        context.setAuthentication(
+            UsernamePasswordAuthenticationToken.authenticated(
+                principal, null, principal.getAuthorities()));
+      }
+    }
+    session.setAttribute("SPRING_SECURITY_CONTEXT", context);
+    sessions.save(session);
+    assertThatThrownBy(() -> service.verify(fixture.token(), "watchlist:read"))
+        .isInstanceOf(AccessDeniedException.class);
+  }
+
+  @Test
+  void anExpiredSessionIsRejectedEvenIfTheRepositoryReturnsIt() {
+    var fixture = fixture(7L);
+    var session = fixture.session();
+    session.setLastAccessedTime(Instant.EPOCH);
+    var repository = org.mockito.Mockito.mock(StoredSessions.class);
+    org.mockito.Mockito.when(repository.findById(session.getId())).thenReturn(session);
+    var verifier = new SessionConciergeDelegation(repository, clock);
+    assertThatThrownBy(() -> verifier.verify(fixture.token(), "watchlist:read"))
+        .isInstanceOf(AccessDeniedException.class);
+  }
+
+  @Test
+  void administratorSessionsMayUsePersonalTools() {
+    var fixture = fixture(7L);
+    var session = sessions.findById(fixture.session().getId());
+    var principal = principal(false, true, "ROLE_ADMIN");
+    var context = context(7L);
+    context.setAuthentication(
+        UsernamePasswordAuthenticationToken.authenticated(
+            principal, null, principal.getAuthorities()));
+    session.setAttribute("SPRING_SECURITY_CONTEXT", context);
+    sessions.save(session);
+    assertThat(service.verify(fixture.token(), "ratings:set").accountId()).isEqualTo(7L);
+  }
+
+  private UserPrincipal principal(boolean locked, boolean enabled, String role) {
+    return new UserPrincipal(
+        7L,
+        null,
+        null,
+        "fixture",
+        null,
+        null,
+        locked,
+        enabled,
+        List.of(new SimpleGrantedAuthority(role)));
+  }
+
   private Fixture fixture(Long id) {
     var http = new MockHttpSession();
     var token = service.issue(http, user(id)).token();
@@ -101,6 +233,9 @@ class SessionConciergeDelegationTest {
         true,
         List.of(new SimpleGrantedAuthority("ROLE_USER")));
   }
+
+  private interface StoredSessions
+      extends org.springframework.session.SessionRepository<MapSession> {}
 
   private record Fixture(MapSession session, String token) {}
 }

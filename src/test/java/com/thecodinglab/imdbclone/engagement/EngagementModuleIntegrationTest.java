@@ -237,6 +237,68 @@ class EngagementModuleIntegrationTest extends ModulePostgresSupport {
         .isZero();
   }
 
+  @Autowired
+  private com.thecodinglab.imdbclone.engagement.internal.AssistantActionReceipts receipts;
+
+  @Autowired private org.springframework.transaction.PlatformTransactionManager transactions;
+
+  @Test
+  void assistantReadsOnlyTheRequestedAccountsWatchlistWithFixedPageSize() {
+    jdbc.update("delete from watched_movie where account_id = 2");
+    assistantWatchlist.add(2L, 1L, java.util.UUID.randomUUID());
+    var movie = org.mockito.Mockito.mock(com.thecodinglab.imdbclone.catalog.api.MovieRecord.class);
+    org.mockito.Mockito.when(movie.id()).thenReturn(1L);
+    org.mockito.Mockito.when(movies.findMoviesByIds(List.of(1L))).thenReturn(List.of(movie));
+    var page = assistantWatchlist.read(2L, 0);
+    assertThat(page.getSize()).isEqualTo(20);
+    assertThat(page.getPage()).isZero();
+    assertThat(page.getTotalElements()).isEqualTo(1);
+    assertThat(page.isLast()).isTrue();
+    assertThat(page.getContent())
+        .singleElement()
+        .satisfies(
+            entry -> {
+              assertThat(entry.accountId()).isEqualTo(2L);
+              assertThat(entry.movieId()).isEqualTo(1L);
+              assertThat(entry.movie().id()).isEqualTo(1L);
+            });
+    assertThat(assistantWatchlist.read(2L, 1).getContent()).isEmpty();
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"watchlist_remove", "rating_set"})
+  void receiptReplayRejectsAddingOrDroppingTheOriginalScore(String kind) {
+    var operation = java.util.UUID.randomUUID();
+    boolean rating = kind.equals("rating_set");
+    var original =
+        rating
+            ? assistantRatings.rate(2L, 1L, new BigDecimal("8.5"), operation)
+            : assistantWatchlist.remove(2L, 1L, operation);
+    BigDecimal alteredScore = rating ? null : new BigDecimal("8.5");
+    var transaction = new org.springframework.transaction.support.TransactionTemplate(transactions);
+    assertThatThrownBy(
+            () ->
+                transaction.executeWithoutResult(
+                    status ->
+                        receipts.execute(
+                            2L,
+                            1L,
+                            operation,
+                            kind,
+                            alteredScore,
+                            () -> {
+                              throw new AssertionError(
+                                  "Conflicting replay must not execute a mutation");
+                            })))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Operation already used for another command");
+    var replay =
+        rating
+            ? assistantRatings.rate(2L, 1L, new BigDecimal("8.50"), operation)
+            : assistantWatchlist.remove(2L, 1L, operation);
+    assertThat(replay).isEqualTo(original);
+  }
+
   private UserPrincipal user() {
     return new UserPrincipal(
         2L,

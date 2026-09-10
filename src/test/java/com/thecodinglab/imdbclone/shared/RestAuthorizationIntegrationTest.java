@@ -81,6 +81,38 @@ class RestAuthorizationIntegrationTest extends BaseControllerIntegrationTest {
 
   @ParameterizedTest
   @EnumSource(Actor.class)
+  void conciergeDelegationRequiresLoginAndReturnsNonCacheableCredentials(Actor actor)
+      throws Exception {
+    var result =
+        mvc.perform(
+            post("/api/v1/auth/concierge-delegation")
+                .session(new org.springframework.mock.web.MockHttpSession())
+                .with(actor(actor))
+                .with(csrf()));
+    if (actor == Actor.ANONYMOUS) {
+      result.andExpect(status().isUnauthorized());
+    } else {
+      result
+          .andExpect(status().isOk())
+          .andExpect(header().string("Cache-Control", "no-store"))
+          .andExpect(jsonPath("$.token").isNotEmpty())
+          .andExpect(jsonPath("$.expiresAt").isNotEmpty());
+    }
+  }
+
+  @Test
+  void conciergeDelegationRejectsMissingCsrfAndUnsupportedRoles() throws Exception {
+    mvc.perform(post("/api/v1/auth/concierge-delegation").with(testUser()))
+        .andExpect(status().isForbidden());
+    mvc.perform(
+            post("/api/v1/auth/concierge-delegation")
+                .with(user("guest").roles("GUEST"))
+                .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @ParameterizedTest
+  @EnumSource(Actor.class)
   void commentUpdatesRequireOwnershipOrAdmin(Actor actor) throws Exception {
     Comment comment = comments.saveAndFlush(new Comment("Original", 2L, 1L));
     mvc.perform(
