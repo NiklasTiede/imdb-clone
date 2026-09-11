@@ -202,6 +202,39 @@ curl -fsS http://localhost:8090/readyz
 curl -fsS http://localhost:8090/metrics
 ```
 
+### Diagnose a voice session ending
+
+Local voice currently has a hard 300-second (five-minute) lifetime, including connection setup.
+This deadline does not reset when the user speaks or types. `IMDB_AGENT_VOICE_SESSION_SECONDS`
+configures it (15-300 seconds). The UI names the five-minute time limit when reached. A separate
+45-second inactivity deadline and model/tool usage limits can also end a session. Inactivity sends
+`standby`: the browser releases the microphone and closes the lens without opening history. Click
+it to start again. Automatic local speech wake-up is not enabled.
+
+The normal app has only the bottom-center lens. Open `http://localhost:3000/?conciergeDebug=1`
+to inspect the current session's transcript, tool activity, and preferences. Debug access survives
+route navigation until reload; reload a URL without this parameter to return to voice-only UI.
+
+The agent run console emits `voice_session_started`, `voice_session_ready`, and exactly one
+`voice_session_ended` for each admitted connection. A random `request_id` correlates these events
+with tool/audio timing logs from that session. End events include `duration_ms`,
+`session_limit_seconds`, `phase`, received audio/control counts, output audio bytes, and turn count.
+They contain no audio, transcripts, account identifiers, credentials, or provider exception messages.
+
+Read `outcome` to identify the cause:
+
+- `time_limit`: the configured total lifetime elapsed; the UI names that limit explicitly.
+- `idle_timeout`: no user input for 45 seconds.
+- `start_timeout` / `delegation_timeout`: browser startup or sign-in verification timed out.
+- `connection_timeout`: a provider or transport operation timed out before the total deadline.
+- `usage_limit`: the model or tool budget was exhausted.
+- `user_end` / `client_disconnect`: the user stopped voice or the browser connection closed.
+- `invalid_message` / `provider_error` / `server_shutdown`: invalid input, a runtime failure, or
+  application shutdown. Runtime failures include only the exception class in `error_type`.
+
+Restart the Python agent after changing this code to activate the diagnostics. Earlier session
+reasons cannot be reconstructed from logs that were never emitted.
+
 Production uses a separate file boundary. It never reuses a shell key: the SOPS-encrypted
 `movie-concierge-runtime` Secret is mounted read-only at `/run/secrets/movie-concierge`, while local
 development continues to read only `.secrets/movie-concierge.local.env`.
