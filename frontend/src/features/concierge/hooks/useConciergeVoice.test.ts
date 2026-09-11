@@ -41,6 +41,7 @@ class Socket {
 beforeEach(() => {
   vi.clearAllMocks();
   audio.start.mockResolvedValue(undefined);
+  audio.levels.mockReturnValue({ input: 0, output: 0, playing: false });
   Socket.instances = [];
   vi.stubGlobal("WebSocket", Socket);
   vi.stubGlobal("AudioContext", class {});
@@ -54,6 +55,67 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("voice session lifecycle", () => {
+  it("releases the microphone and permits restart when the final socket write fails", async () => {
+    const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+    await act(() => result.current.start());
+    const socket = Socket.instances[0]!;
+    act(() => socket.emit({ type: "ready" }));
+    socket.send.mockImplementationOnce(() => {
+      throw new Error("Connection closed during shutdown");
+    });
+    act(() => result.current.end());
+    expect(audio.close).toHaveBeenCalledTimes(1);
+    expect(socket.close).toHaveBeenCalledTimes(1);
+    expect(result.current.active).toBe(false);
+    expect(result.current.error).toBeNull();
+    await act(() => result.current.start());
+    act(() => Socket.instances[1]!.emit({ type: "ready" }));
+    expect(result.current.active).toBe(true);
+    expect(audio.start).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends text on the ready voice socket and resumes audio after server acknowledgement", async () => {
+    const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+    expect(result.current.sendText("Hello")).toBe(false);
+    await act(() => result.current.start());
+    expect(result.current.sendText("Hello")).toBe(false);
+    const socket = Socket.instances[0]!;
+    act(() => socket.emit({ type: "ready" }));
+    act(() => {
+      expect(result.current.sendText("   ")).toBe(false);
+      expect(result.current.sendText("x".repeat(601))).toBe(false);
+      expect(result.current.sendText("  Open it  ")).toBe(true);
+      expect(result.current.sendText("Open it")).toBe(false);
+    });
+    expect(socket.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: "text", text: "Open it" }),
+    );
+    expect(result.current.canSendText).toBe(false);
+    act(() => socket.onmessage?.({ data: new ArrayBuffer(4800) }));
+    expect(audio.play).not.toHaveBeenCalled();
+    act(() => {
+      socket.emit({ type: "interrupt", turn: 1 });
+      socket.emit({
+        type: "transcript",
+        turn: 1,
+        speaker: "user",
+        text: "Open it",
+        final: true,
+      });
+      socket.onmessage?.({ data: new ArrayBuffer(4800) });
+    });
+    expect(
+      result.current.turns
+        .filter((turn) => turn.role === "user")
+        .map((turn) => turn.text),
+    ).toEqual(["Open it"]);
+    expect(audio.play).toHaveBeenCalledTimes(1);
+    expect(result.current.canSendText).toBe(true);
+    expect(Socket.instances).toHaveLength(1);
+    act(() => result.current.end());
+    expect(result.current.sendText("Hello")).toBe(false);
+  });
+
   it("finishes playback only for an explicit current reply completion", async () => {
     const { result } = renderHook(() => useConciergeVoice(vi.fn()));
     await act(() => result.current.start());
@@ -340,4 +402,238 @@ it("sends the current page after start and updates it without reconnecting", asy
     JSON.stringify({ type: "context", context: { page: "movie", movieId: 8 } }),
   );
   expect(Socket.instances).toHaveLength(1);
+});
+
+it("retains and updates the conversation across turns, end and reconnect", async () => {
+  const { result } = renderHook(() =>
+    useConciergeVoice(vi.fn(), {
+      page: "movie",
+      movieId: 42,
+      streamingCountry: "CH",
+    }),
+  );
+  await act(() => result.current.start());
+  const socket = Socket.instances[0]!;
+  act(() => {
+    socket.emit({ type: "ready" });
+    socket.emit({ type: "interrupt", turn: 1 });
+    socket.emit({
+      type: "transcript",
+      turn: 1,
+      speaker: "user",
+      text: "Find Forrest",
+    });
+    socket.emit({
+      type: "transcript",
+      turn: 1,
+      speaker: "user",
+      text: "Find Forrest Gump",
+      final: true,
+    });
+    socket.emit({
+      type: "transcript",
+      turn: 1,
+      speaker: "assistant",
+      text: "Here it is",
+      final: true,
+    });
+    socket.emit({ type: "reply-complete", turn: 1 });
+    socket.emit({ type: "interrupt", turn: 2 });
+    socket.emit({
+      type: "transcript",
+      turn: 2,
+      speaker: "user",
+      text: "What is it about?",
+      final: true,
+    });
+  });
+  expect(result.current.turns.map((turn) => turn.text)).toEqual([
+    "Find Forrest Gump",
+    "Here it is",
+    "What is it about?",
+  ]);
+  expect(result.current.turns[1]?.context).toEqual({
+    page: "movie",
+    streamingCountry: "CH",
+  });
+  act(() => result.current.end());
+  await act(() => result.current.start());
+  expect(result.current.turns).toHaveLength(3);
+  act(() => result.current.clearHistory());
+  expect(result.current.turns).toEqual([]);
+});
+
+it("marks an interrupted reply and ignores stale interruption events", async () => {
+  const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+  await act(() => result.current.start());
+  const socket = Socket.instances[0]!;
+  act(() => {
+    socket.emit({ type: "ready" });
+    socket.emit({ type: "interrupt", turn: 2 });
+    socket.emit({
+      type: "transcript",
+      turn: 2,
+      speaker: "assistant",
+      text: "Forrest Gump is…",
+    });
+  });
+  audio.levels.mockReturnValue({ input: 0, output: 0.4, playing: true });
+  audio.interrupt.mockClear();
+  act(() => socket.emit({ type: "interrupt", turn: 1 }));
+  expect(audio.interrupt).not.toHaveBeenCalled();
+  act(() => result.current.interrupt());
+  expect(result.current.turns[0]?.interrupted).toBe(true);
+  act(() =>
+    socket.emit({
+      type: "transcript",
+      turn: 2,
+      speaker: "assistant",
+      text: "Late words",
+    }),
+  );
+  expect(result.current.turns[0]?.text).toBe("Forrest Gump is…");
+  audio.levels.mockReturnValue({ input: 0, output: 0, playing: false });
+});
+
+it("records an action handler failure without killing voice", async () => {
+  const { result } = renderHook(() =>
+    useConciergeVoice(() => {
+      throw new Error("Navigation failed");
+    }),
+  );
+  await act(() => result.current.start());
+  act(() => {
+    Socket.instances[0]!.emit({ type: "ready" });
+    Socket.instances[0]!.emit({
+      type: "ui-action",
+      turn: 1,
+      action: { type: "open_page", destination: "home" },
+    });
+  });
+  expect(result.current.turns[0]?.actions?.[0]?.outcome).toBe("rejected");
+  expect(result.current.active).toBe(true);
+  expect(result.current.error).toBeNull();
+});
+
+it("reads live amplitude without rendering the session on every audio frame", async () => {
+  let renders = 0;
+  const { result } = renderHook(() => {
+    renders++;
+    return useConciergeVoice(vi.fn());
+  });
+  await act(() => result.current.start());
+  const baseline = { count: renders };
+  audio.levels.mockReturnValue({ input: 0.7, output: 0, playing: false });
+  const callback = vi.mocked(requestAnimationFrame).mock.calls.at(-1)?.[0];
+  act(() => callback?.(100));
+  expect(result.current.readLevels().input).toBe(0.7);
+  expect(renders).toBe(baseline.count);
+  audio.levels.mockReturnValue({ input: 0, output: 0, playing: false });
+});
+
+it("keeps listening after a rejected-write notice and clears it on the next user turn", async () => {
+  const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+  await act(() => result.current.start());
+  const socket = Socket.instances[0];
+  if (!socket) throw new Error("Expected voice socket");
+  act(() => {
+    socket.emit({ type: "ready" });
+    socket.emit({ type: "interrupt", turn: 1 });
+    socket.emit({
+      type: "status",
+      status: "listening",
+      turn: 1,
+      text: "That change wasn't confirmed.",
+    });
+  });
+  expect(result.current.active).toBe(true);
+  expect(result.current.status).toBe("listening");
+  expect(result.current.notice).toBe("That change wasn't confirmed.");
+  expect(result.current.turns[0]?.error?.message).toBe(
+    "That change wasn't confirmed.",
+  );
+  expect(socket.close).not.toHaveBeenCalled();
+  act(() => socket.emit({ type: "interrupt", turn: 2 }));
+  expect(result.current.notice).toBeNull();
+  expect(result.current.active).toBe(true);
+});
+
+it("retains tool outcomes, personal scores and all seven retrieved movies", async () => {
+  const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+  await act(() => result.current.start());
+  const socket = Socket.instances[0]!;
+  act(() => {
+    socket.emit({ type: "ready" });
+    socket.emit({ type: "interrupt", turn: 1 });
+    socket.emit({
+      type: "tool-activity",
+      turn: 1,
+      activity: { callId: "read", tool: "get_my_ratings", status: "started" },
+    });
+    for (let id = 1; id <= 7; id++)
+      socket.emit({
+        type: "movie-card",
+        turn: 1,
+        movie: {
+          movieId: id,
+          primaryTitle: `Movie ${id}`,
+          movieType: "MOVIE",
+          genres: [],
+          userScore: 11 - id,
+          imdbRating: 7,
+        },
+      });
+    socket.emit({
+      type: "tool-activity",
+      turn: 1,
+      activity: { callId: "read", tool: "get_my_ratings", status: "completed" },
+    });
+    socket.emit({
+      type: "transcript",
+      turn: 1,
+      speaker: "assistant",
+      text: "Movie 1 is your highest-rated movie.",
+      final: true,
+    });
+  });
+  expect(result.current.turns[0]?.tools).toEqual([
+    { callId: "read", tool: "get_my_ratings", status: "completed" },
+  ]);
+  expect(result.current.turns[0]?.movies).toHaveLength(7);
+  expect(result.current.turns[0]?.movies[0]).toMatchObject({
+    movieId: 1,
+    userScore: 10,
+    imdbRating: 7,
+  });
+  expect(result.current.error).toBeNull();
+});
+
+it("handles inactivity as a closed standby state without an error and permits a fresh start", async () => {
+  const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+  await act(() => result.current.start());
+  const socket = Socket.instances[0]!;
+  act(() => {
+    socket.emit({ type: "ready" });
+    socket.emit({
+      type: "transcript",
+      speaker: "user",
+      turn: 1,
+      text: "Play the trailer",
+      final: true,
+    });
+    socket.emit({ type: "standby" });
+    socket.onclose?.();
+  });
+  expect(result.current.status).toBe("standby");
+  expect(result.current.active).toBe(false);
+  expect(result.current.canSendText).toBe(false);
+  expect(result.current.error).toBeNull();
+  expect(result.current.notice).toBeNull();
+  expect(result.current.turns).toHaveLength(1);
+  expect(audio.close).toHaveBeenCalledOnce();
+  expect(socket.close).toHaveBeenCalledOnce();
+  await act(() => result.current.start());
+  act(() => Socket.instances[1]!.emit({ type: "ready" }));
+  expect(result.current.active).toBe(true);
+  expect(result.current.status).toBe("listening");
 });

@@ -1,4 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
+import path from "node:path";
+
+test.use({
+  launchOptions: {
+    args: [
+      "--use-fake-ui-for-media-stream",
+      "--use-fake-device-for-media-stream",
+      `--use-file-for-fake-audio-capture=${path.resolve("../agent/evals/voice/forrest-gump-en.wav")}`,
+    ],
+  },
+  permissions: ["microphone"],
+});
 
 const conversationId = "1234567890abcdef1234567890abcdef";
 
@@ -22,6 +34,15 @@ const mockAnonymousShell = async (page: Page) => {
       }),
     });
   });
+  await page.routeWebSocket("**/v1/voice", (socket) => {
+    socket.send(JSON.stringify({ type: "ready" }));
+  });
+};
+
+const openTextConversation = async (page: Page) => {
+  await expect(
+    page.getByRole("complementary", { name: "Movie Concierge" }),
+  ).toBeVisible();
 };
 
 test("public concierge streams a grounded movie into its responsive drawer", async ({
@@ -43,6 +64,11 @@ test("public concierge streams a grounded movie into its responsive drawer", asy
       clientIds.push(route.request().headers()["x-concierge-client-id"] ?? "");
       expect(route.request().postDataJSON()).toEqual({
         message: "Find a thoughtful science-fiction movie",
+        pageContext: {
+          page: "search",
+          searchQuery: "",
+          streamingCountry: "CH",
+        },
       });
       await route.fulfill({
         status: 200,
@@ -80,15 +106,29 @@ test("public concierge streams a grounded movie into its responsive drawer", asy
               costAvailable: true,
             },
           }) +
-          sse("completion", 5, { conversationId, outcome: "success" }),
+          sse("tool-activity", 5, {
+            activity: {
+              callId: "search-1",
+              tool: "search_movies",
+              status: "started",
+            },
+          }) +
+          sse("tool-activity", 6, {
+            activity: {
+              callId: "search-1",
+              tool: "search_movies",
+              status: "completed",
+            },
+          }) +
+          sse("completion", 7, { conversationId, outcome: "success" }),
       });
     },
   );
 
-  await page.goto("/movie-search");
-  await page.getByRole("button", { name: "Ask the Movie Concierge" }).click();
+  await page.goto("/movie-search?conciergeDebug=1");
+  await openTextConversation(page);
 
-  const drawer = page.getByRole("dialog", { name: "Movie Concierge" });
+  const drawer = page.getByRole("complementary", { name: "Movie Concierge" });
   await expect(drawer).toBeVisible();
   const bounds = await drawer.boundingBox();
   const viewport = page.viewportSize();
@@ -116,6 +156,11 @@ test("public concierge streams a grounded movie into its responsive drawer", asy
   await expect(
     page.getByText("Arrival is a grounded match from this catalog."),
   ).toBeVisible();
+  await expect(page.getByTestId("concierge-movie-card")).toBeHidden();
+  await page.getByText("Tools & results", { exact: true }).click();
+  await expect(
+    page.getByText("Search movies · Completed", { exact: true }),
+  ).toHaveCount(1);
   await expect(page.getByTestId("concierge-movie-card")).toBeVisible();
   const movieCard = page.getByTestId("concierge-movie-card");
   await expect(movieCard.getByText("2016")).toHaveCSS(
@@ -126,7 +171,7 @@ test("public concierge streams a grounded movie into its responsive drawer", asy
     "color",
     "rgba(255, 255, 255, 0.78)",
   );
-  await expect(movieCard.getByText("7.9")).toHaveCSS(
+  await expect(movieCard.getByText("IMDb 7.9")).toHaveCSS(
     "color",
     "rgba(255, 255, 255, 0.92)",
   );
@@ -182,9 +227,9 @@ test("grounded concierge action opens the movie page without leaving an overlay"
     },
   );
 
-  await page.goto("/movie-search");
-  await page.getByRole("button", { name: "Ask the Movie Concierge" }).click();
-  const drawer = page.getByRole("dialog", { name: "Movie Concierge" });
+  await page.goto("/movie-search?conciergeDebug=1");
+  await openTextConversation(page);
+  const drawer = page.getByRole("complementary", { name: "Movie Concierge" });
   await page
     .getByRole("textbox", { name: "Ask the Movie Concierge" })
     .fill("Open Arrival");

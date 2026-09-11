@@ -1,15 +1,15 @@
-import { StreamingCountrySelector } from "./StreamingCountrySelector";
-import { ConciergeSourceLink } from "./ConciergeSourceLink";
-import type { PageContext } from "../model/pageContext";
-import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
-import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
-import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { alpha } from "@mui/material/styles";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import {
   Alert,
   Box,
+  Button,
+  Collapse,
   Drawer,
   IconButton,
   Stack,
@@ -17,329 +17,525 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { alpha } from "@mui/material/styles";
+import CloseRounded from "@mui/icons-material/CloseRounded";
+import RefreshRounded from "@mui/icons-material/RefreshRounded";
+import TuneRounded from "@mui/icons-material/TuneRounded";
+import ArrowUpwardRounded from "@mui/icons-material/ArrowUpwardRounded";
 import Markdown from "react-markdown";
 import { movieColors } from "../../../theme";
-import { useConciergeChat } from "../hooks/useConciergeChat";
-import type { ChatTurn, ApplicationAction } from "../model/concierge";
-import { ConciergeCredits } from "./ConciergeCredits";
-import ConciergeEmptyState from "./ConciergeEmptyState";
-import ConciergeMovieCard from "./ConciergeMovieCard";
-
+import type { useConciergeChat } from "../hooks/useConciergeChat";
 import type { ConciergeVoice } from "../hooks/useConciergeVoice";
+import type { ChatTurn, ApplicationAction } from "../model/concierge";
+import { chronologicalHistory } from "../model/conversationHistory";
+import { ConciergeSourceLink } from "./ConciergeSourceLink";
+import { StreamingCountrySelector } from "./StreamingCountrySelector";
+import { ConciergeCredits } from "./ConciergeCredits";
 import { ConciergeVoicePanel } from "./ConciergeVoicePanel";
+import ConciergeEmptyState from "./ConciergeEmptyState";
+import { ConciergeEvidence } from "./ConciergeEvidence";
 
-type ConciergeDrawerProps = {
+type Props = {
   streamingCountry: string;
   onStreamingCountryChange: (country: string) => void;
-  pageContext?: PageContext;
   voice: ConciergeVoice;
-  clientId: string;
+  chat: ReturnType<typeof useConciergeChat>;
+  signedIn: boolean;
   onClose: () => void;
-  onUiAction: (action: ApplicationAction) => void;
   open: boolean;
 };
 
 const ConciergeDrawer = ({
   streamingCountry,
   onStreamingCountryChange,
-  clientId,
-  pageContext,
   voice,
+  chat,
+  signedIn,
   onClose,
-  onUiAction,
   open,
-}: ConciergeDrawerProps) => {
+}: Props) => {
   const [draft, setDraft] = useState("");
-  const { isStreaming, reset, send, status, turns, usage } = useConciergeChat(
-    clientId,
-    onUiAction,
-    pageContext,
+  const [preferences, setPreferences] = useState(false);
+  const [capabilities, setCapabilities] = useState(false);
+  const [following, setFollowing] = useState(true);
+  const followingRef = useRef(true);
+  const lastVoiceError = useRef<string | null>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const turns = useMemo(
+    () => chronologicalHistory(chat.turns, voice.turns),
+    [chat.turns, voice.turns],
   );
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-
+  const { isStreaming, status } = chat;
   useEffect(() => {
-    const node = scrollRef.current;
-    if (node) {
-      node.scrollTop = node.scrollHeight;
+    if (!open) return;
+    const previousFocus = document.activeElement;
+    closeButton.current?.focus();
+    return () => {
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected)
+        previousFocus.focus();
+    };
+  }, [open]);
+  useEffect(() => {
+    if (voice.error && voice.error !== lastVoiceError.current)
+      followingRef.current = true;
+    lastVoiceError.current = voice.error;
+    if (followingRef.current && scrollRef.current)
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [turns, status, open, voice.error]);
+  const send = (message: string) => {
+    const text = message.trim();
+    if (!text || text.length > 600 || isStreaming) return;
+    if (voice.active) {
+      if (!voice.sendText(text)) return;
+    } else {
+      void chat.send(text);
     }
-  }, [isStreaming, status, turns]);
-
-  const submit = (message: string) => {
-    const normalized = message.trim();
-    if (!normalized || isStreaming) {
-      return;
-    }
+    followingRef.current = true;
+    setFollowing(true);
+    setCapabilities(false);
     setDraft("");
-    void send(normalized);
+  };
+  const submit = () => send(draft);
+  const reset = () => {
+    voice.end();
+    voice.clearHistory();
+    chat.reset();
+    setDraft("");
+    setCapabilities(false);
+    followingRef.current = true;
+    setFollowing(true);
   };
 
   return (
     <Drawer
       anchor="right"
+      variant="persistent"
       open={open}
       onClose={onClose}
       slotProps={{
         paper: {
+          id: "concierge-conversation",
+          role: "complementary",
           "aria-label": "Movie Concierge",
+          onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+            if (event.key === "Escape" && !event.defaultPrevented) {
+              event.stopPropagation();
+              onClose();
+            }
+          },
           sx: {
-            background: `radial-gradient(circle at 85% 0%, ${alpha(movieColors.brand, 0.09)}, transparent 28%), ${movieColors.surfaceInset}`,
-            borderLeft: `1px solid ${alpha("#ffffff", 0.1)}`,
-            boxShadow: "-28px 0 70px rgba(0,0,0,0.42)",
-            color: "text.primary",
+            width: { xs: "100vw", md: 440 },
+            height: {
+              xs: voice.active
+                ? "calc(100dvh - 184px - env(safe-area-inset-bottom, 0px))"
+                : "100dvh",
+              md: "100dvh",
+            },
             maxWidth: "100vw",
-            width: { xs: "100vw", sm: 440 },
+            bgcolor: movieColors.surface,
+            backgroundImage: "none",
+            borderLeft: "1px solid",
+            borderColor: "divider",
+            boxShadow: "-24px 0 70px #0007",
           },
         },
-        root: { keepMounted: true },
       }}
     >
-      <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          minHeight: 0,
+          "& button": { textTransform: "none" },
+        }}
+      >
         <Stack
           direction="row"
           sx={{
             alignItems: "center",
-            borderBottom: `1px solid ${alpha("#ffffff", 0.08)}`,
-            minHeight: 72,
-            px: 2,
+            px: 1.5,
+            py: 0.5,
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            flexShrink: 0,
           }}
         >
-          <Box
-            sx={{
-              alignItems: "center",
-              bgcolor: movieColors.brand,
-              borderRadius: 1.5,
-              color: movieColors.brandInk,
-              display: "flex",
-              height: 36,
-              justifyContent: "center",
-              mr: 1.25,
-              width: 36,
-            }}
-          >
-            <AutoAwesomeRoundedIcon sx={{ fontSize: 19 }} />
-          </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              sx={{ color: "text.primary", fontSize: 14, fontWeight: 750 }}
-            >
+            <Typography sx={{ fontWeight: 750, fontSize: 14 }}>
               Movie Concierge
             </Typography>
-            <Stack direction="row" spacing={0.7} sx={{ alignItems: "center" }}>
-              <Box
-                sx={{
-                  bgcolor: "#55d98a",
-                  borderRadius: "50%",
-                  boxShadow: "0 0 9px rgba(85,217,138,0.55)",
-                  height: 6,
-                  width: 6,
-                }}
-              />
-              <Typography sx={{ color: "text.secondary", fontSize: 10.5 }}>
-                Grounded in this catalog
-              </Typography>
-            </Stack>
+            <Typography
+              sx={{
+                fontSize: 10,
+                color: voice.active ? movieColors.info : "text.secondary",
+                mt: 0.3,
+              }}
+            >
+              {voice.active
+                ? "Conversation and actions"
+                : "Your movies. Just ask."}
+            </Typography>
           </Box>
+          <Tooltip title="Preferences">
+            <IconButton
+              aria-label="Concierge preferences"
+              aria-expanded={preferences}
+              onClick={() => setPreferences(!preferences)}
+              sx={{ width: 40, height: 44 }}
+            >
+              <TuneRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Start a new conversation">
             <span>
               <IconButton
                 aria-label="Start a new concierge conversation"
                 disabled={isStreaming}
-                onClick={() => {
-                  voice.end();
-                  reset();
-                }}
-                size="small"
-                sx={{ color: "text.secondary" }}
+                onClick={reset}
+                sx={{ width: 36, height: 44 }}
               >
-                <RefreshRoundedIcon fontSize="small" />
+                <RefreshRounded fontSize="small" />
               </IconButton>
             </span>
           </Tooltip>
           <IconButton
             aria-label="Close Movie Concierge"
+            ref={closeButton}
             onClick={onClose}
-            size="small"
-            sx={{ color: "text.secondary", ml: 0.5 }}
+            sx={{ width: 36, height: 44 }}
           >
-            <CloseRoundedIcon fontSize="small" />
+            <CloseRounded fontSize="small" />
           </IconButton>
         </Stack>
-
-        <StreamingCountrySelector
-          country={streamingCountry}
-          onChange={onStreamingCountryChange}
-        />
-        <ConciergeVoicePanel voice={voice} disabled={isStreaming} />
+        <Collapse in={preferences} sx={{ flexShrink: 0 }}>
+          <StreamingCountrySelector
+            country={streamingCountry}
+            onChange={onStreamingCountryChange}
+          />
+          <Typography
+            sx={{ px: 2, pb: 1.5, fontSize: 10, color: "text.secondary" }}
+          >
+            The latest 200 messages stay in this tab until reload, sign-out or a
+            new conversation. While voice is on, speaking, typing and
+            suggestions share its conversation. Earlier text-only chats are not
+            transferred when starting voice.
+          </Typography>
+          <Box sx={{ px: 2, pb: 1.5 }}>
+            <ConciergeCredits />
+          </Box>
+        </Collapse>
         <Box
           ref={scrollRef}
           role="log"
           aria-live="polite"
           aria-label="Movie Concierge conversation"
+          onScroll={() => {
+            const node = scrollRef.current;
+            if (!node) return;
+            const next =
+              node.scrollHeight - node.scrollTop - node.clientHeight < 64;
+            followingRef.current = next;
+            setFollowing(next);
+          }}
           sx={{
             flex: 1,
+            minHeight: 0,
             overflowY: "auto",
             overscrollBehavior: "contain",
-            display: voice.active ? "none" : "block",
           }}
         >
-          {turns.length === 0 ? (
-            <ConciergeEmptyState onPrompt={submit} />
-          ) : (
-            <Stack spacing={2.25} sx={{ px: 2, py: 2.5 }}>
-              {turns.map((turn) => (
+          {turns.length > 0 && (
+            <Button
+              fullWidth
+              aria-expanded={capabilities}
+              onClick={() => setCapabilities(!capabilities)}
+              sx={{
+                px: 2.5,
+                py: 1.5,
+                justifyContent: "flex-start",
+                color: "text.secondary",
+                fontSize: 11,
+              }}
+            >
+              {capabilities ? "Hide capabilities" : "Explore what I can do"}
+            </Button>
+          )}
+          <Collapse in={turns.length === 0 || capabilities}>
+            <ConciergeEmptyState
+              onPrompt={send}
+              disabled={isStreaming || (voice.active && !voice.canSendText)}
+              signedIn={signedIn}
+              country={streamingCountry}
+            />
+          </Collapse>
+          <Stack spacing={2.5} sx={{ px: 2.5, py: turns.length ? 2 : 0 }}>
+            {turns
+              .filter(
+                (turn) =>
+                  turn.text ||
+                  turn.movies.length ||
+                  turn.actions?.length ||
+                  turn.tools?.length ||
+                  turn.error,
+              )
+              .map((turn) => (
                 <ChatMessage key={turn.id} turn={turn} />
               ))}
-              {isStreaming && status && (
-                <Stack
-                  direction="row"
-                  spacing={0.8}
-                  sx={{
-                    alignItems: "center",
-                    color: "text.secondary",
-                    pl: 0.5,
-                  }}
-                >
-                  <MoreHorizRoundedIcon
-                    sx={{ color: movieColors.brand, fontSize: 18 }}
-                  />
-                  <Typography sx={{ color: "text.secondary", fontSize: 10.5 }}>
-                    {status}
-                  </Typography>
-                </Stack>
-              )}
-            </Stack>
-          )}
+            {isStreaming && status && (
+              <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
+                {status}…
+              </Typography>
+            )}
+          </Stack>
         </Box>
-
+        {!following && turns.length > 0 && (
+          <Button
+            onClick={() => {
+              if (scrollRef.current)
+                scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+              followingRef.current = true;
+              setFollowing(true);
+            }}
+          >
+            Latest messages ↓
+          </Button>
+        )}
         <Box
           component="form"
           onSubmit={(event) => {
             event.preventDefault();
-            submit(draft);
+            submit();
           }}
           sx={{
-            display: voice.active ? "none" : "block",
-            bgcolor: alpha(movieColors.surface, 0.94),
-            borderTop: `1px solid ${alpha("#ffffff", 0.08)}`,
             p: 1.5,
+            pb: "max(12px, env(safe-area-inset-bottom))",
+            bgcolor: movieColors.surfaceInset,
+            borderTop: "1px solid",
+            borderColor: "divider",
+            flexShrink: 0,
           }}
         >
-          <Box sx={{ position: "relative" }}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: "flex-end" }}>
             <TextField
               fullWidth
               multiline
-              disabled={isStreaming}
-              maxRows={4}
-              minRows={2}
+              maxRows={3}
+              minRows={1}
+              value={draft}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
+                if (
+                  event.key === "Enter" &&
+                  !event.shiftKey &&
+                  !event.nativeEvent.isComposing
+                ) {
                   event.preventDefault();
-                  submit(draft);
+                  submit();
                 }
               }}
-              placeholder="Describe what you want to watch…"
+              placeholder="Ask about movies…"
               slotProps={{
                 htmlInput: {
                   "aria-label": "Ask the Movie Concierge",
                   maxLength: 600,
                 },
               }}
-              value={draft}
+              size="small"
               sx={{
                 "& .MuiInputBase-root": {
-                  bgcolor: alpha("#ffffff", 0.045),
-                  borderRadius: 2,
-                  color: "rgba(255,255,255,0.92)",
                   fontSize: 12,
-                  pb: 1,
-                  pr: 6,
-                  pt: 1,
+                  color: "rgba(255,255,255,0.92)",
                 },
                 "& .MuiInputBase-input::placeholder": {
                   color: "rgba(255,255,255,0.62)",
                   opacity: 1,
                 },
-                "& fieldset": { borderColor: alpha("#ffffff", 0.12) },
-                "& .Mui-focused fieldset": {
-                  borderColor: `${alpha(movieColors.brand, 0.6)} !important`,
-                },
               }}
             />
             <IconButton
               aria-label="Send concierge message"
-              disabled={isStreaming || !draft.trim()}
               type="submit"
+              disabled={
+                !draft.trim() ||
+                isStreaming ||
+                (voice.active && !voice.canSendText)
+              }
               sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 1,
                 bgcolor: movieColors.brand,
-                bottom: 10,
                 color: movieColors.brandInk,
-                height: 34,
-                position: "absolute",
-                right: 9,
-                width: 34,
-                "&:hover": { bgcolor: "#ffe053" },
-                "&.Mui-disabled": {
-                  bgcolor: alpha("#ffffff", 0.08),
-                  color: alpha("#ffffff", 0.3),
-                },
+                "&:hover": { bgcolor: movieColors.gold },
               }}
             >
-              <ArrowUpwardRoundedIcon sx={{ fontSize: 18 }} />
+              <ArrowUpwardRounded fontSize="small" />
             </IconButton>
-          </Box>
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-              mt: 0.8,
-              px: 0.3,
-            }}
-          >
-            <Typography sx={{ color: "text.secondary", fontSize: 9.5 }}>
-              Verify details before deciding
-            </Typography>
-            {usage && (
-              <Typography sx={{ color: "text.secondary", fontSize: 9 }}>
-                {usage.totalTokens.toLocaleString()} tokens
-              </Typography>
-            )}
           </Stack>
-          <ConciergeCredits />
+          {voice.active && (
+            <Typography
+              sx={{ fontSize: 10, color: "text.secondary", mt: 0.75 }}
+            >
+              Type or choose a suggestion. Replies are spoken while voice is on.
+            </Typography>
+          )}
+          <ConciergeVoicePanel voice={voice} disabled={isStreaming} />
+          {chat.usage && (
+            <Typography sx={{ fontSize: 9, color: "text.secondary" }}>
+              {chat.usage.totalTokens.toLocaleString()} tokens
+            </Typography>
+          )}
         </Box>
       </Box>
     </Drawer>
   );
 };
 
-const ChatMessage = ({ turn }: { turn: ChatTurn }) => {
-  const isUser = turn.role === "user";
-  return (
-    <Box
-      sx={{
-        alignSelf: isUser ? "flex-end" : "stretch",
-        maxWidth: isUser ? "86%" : "100%",
-      }}
-    >
-      {turn.text && <MessageText isUser={isUser} text={turn.text} />}
-      {turn.movies.length > 0 && (
-        <Stack spacing={1} sx={{ mt: turn.text ? 1.25 : 0 }}>
-          {turn.movies.map((movie) => (
-            <ConciergeMovieCard key={movie.movieId} movie={movie} />
-          ))}
-        </Stack>
+function actionLabel(action: ApplicationAction): string {
+  switch (action.type) {
+    case "open_movie":
+      return "Movie page";
+    case "open_movie_trailer":
+      return "Movie trailer section";
+    case "open_page":
+      return `${action.destination.charAt(0).toUpperCase()}${action.destination.slice(1)} page`;
+    case "show_search_results":
+      return "Search results";
+    case "open_watchlist":
+      return "Watchlist page";
+    case "open_ratings":
+      return "Ratings page";
+    case "open_login":
+      return "Sign-in page";
+  }
+}
+function mutationLabel(action: ApplicationAction): string | null {
+  if (action.type === "open_ratings")
+    return action.score === null
+      ? action.changed
+        ? "Rating removed"
+        : "No rating to remove"
+      : action.changed
+        ? `Rating saved: ${action.score}/10`
+        : `Rating already ${action.score}/10`;
+  if (action.type === "open_watchlist" && action.operationId) {
+    if (action.removed != null)
+      return action.removed ? "Removed from watchlist" : "Not on watchlist";
+    if (action.created != null)
+      return action.created ? "Added to watchlist" : "Already on watchlist";
+  }
+  return null;
+}
+const ChatMessage = ({ turn }: { turn: ChatTurn }) => (
+  <Box>
+    <Stack direction="row" spacing={1} sx={{ mb: 0.8, alignItems: "center" }}>
+      <Typography
+        sx={{
+          fontSize: 10,
+          color: turn.role === "user" ? movieColors.info : movieColors.brand,
+          letterSpacing: 0.8,
+        }}
+      >
+        {turn.role === "user" ? "YOU" : "CONCIERGE"} ·{" "}
+        {(turn.channel ?? "text").toUpperCase()}
+      </Typography>
+      {turn.timestamp && (
+        <Typography
+          component="time"
+          dateTime={new Date(turn.timestamp).toISOString()}
+          sx={{ fontSize: 10, color: "text.secondary" }}
+        >
+          {new Date(turn.timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Typography>
       )}
-      {turn.error && (
-        <Alert severity="warning" sx={{ fontSize: 11.5, mt: 1 }}>
-          {turn.error.message}
-        </Alert>
-      )}
-    </Box>
-  );
-};
-
+    </Stack>
+    {turn.text && (
+      <MessageText isUser={turn.role === "user"} text={turn.text} />
+    )}
+    {turn.interrupted && (
+      <Typography sx={{ fontSize: 10, color: "text.secondary", mt: 1 }}>
+        Reply interrupted · some of this text may not have been spoken.
+      </Typography>
+    )}
+    <ConciergeEvidence turn={turn} />
+    {turn.actions?.map((entry, index) => (
+      <Box
+        key={index}
+        sx={{
+          pl: 1.5,
+          mt: 1.5,
+          borderLeft: "2px solid",
+          borderColor:
+            entry.outcome === "rejected" ? "warning.main" : movieColors.info,
+        }}
+      >
+        {mutationLabel(entry.action) && (
+          <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
+            ✓ {mutationLabel(entry.action)}
+          </Typography>
+        )}
+        <Typography sx={{ fontSize: 12 }}>
+          {entry.outcome === "opened"
+            ? "✓"
+            : entry.outcome === "rejected"
+              ? "!"
+              : "→"}{" "}
+          {actionLabel(entry.action)} ·{" "}
+          {entry.outcome === "opened"
+            ? "open"
+            : entry.outcome === "rejected"
+              ? "action could not be applied"
+              : "navigation requested"}
+        </Typography>
+        {entry.action.type === "open_movie_trailer" && (
+          <Typography sx={{ fontSize: 10, mt: 0.5, color: "text.secondary" }}>
+            Playback is controlled by the trailer player.
+          </Typography>
+        )}
+        <Box
+          component="details"
+          sx={{
+            color: "text.secondary",
+            fontSize: 10,
+            "& summary": { cursor: "pointer", py: 1 },
+          }}
+        >
+          <Box component="summary">Action details</Box>
+          <Typography
+            component="pre"
+            sx={{
+              fontSize: 10,
+              whiteSpace: "pre-wrap",
+              overflowWrap: "anywhere",
+              fontFamily: "monospace",
+            }}
+          >
+            {JSON.stringify(
+              {
+                result: entry.outcome,
+                action: entry.action,
+                context: turn.context,
+                requestedAt: new Date(entry.timestamp).toISOString(),
+              },
+              null,
+              2,
+            )}
+          </Typography>
+        </Box>
+      </Box>
+    ))}
+    {turn.error && (
+      <Alert severity="warning" sx={{ mt: 1.5, fontSize: 12 }}>
+        {turn.error.message}
+      </Alert>
+    )}
+  </Box>
+);
 const messageTextSx = {
   color: "rgba(255,255,255,0.84)",
   fontSize: 12.5,

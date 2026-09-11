@@ -1,9 +1,9 @@
 import MicRoundedIcon from "@mui/icons-material/MicRounded";
 import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
+import CloseFullscreenRoundedIcon from "@mui/icons-material/CloseFullscreenRounded";
 import OpenInFullRoundedIcon from "@mui/icons-material/OpenInFullRounded";
 import {
-  Alert,
   Box,
   Button,
   IconButton,
@@ -12,66 +12,51 @@ import {
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import { visuallyHidden } from "@mui/utils";
+import { useCallback } from "react";
 import { movieColors } from "../../../theme";
 import type { ConciergeVoice } from "../hooks/useConciergeVoice";
 import { voiceLabels } from "../model/voice";
-import ConciergeMovieCard from "./ConciergeMovieCard";
+import { VoiceLens, type OrbState } from "./VoiceLens";
 
-const label = (voice: ConciergeVoice) =>
+export const voiceLabel = (voice: ConciergeVoice) =>
   voice.levels.playing
     ? "Concierge is speaking"
     : voice.muted
       ? "Microphone is off"
       : voiceLabels[voice.status];
 
-const VoiceSignal = ({
+export function VoiceSignal({
   voice,
-  compact = false,
+  size = 66,
 }: {
   voice: ConciergeVoice;
-  compact?: boolean;
-}) => {
-  const speaking = voice.levels.playing;
-  const level = speaking ? voice.levels.output : voice.levels.input;
-  const color = speaking ? movieColors.brand : movieColors.info;
+  size?: number;
+}) {
+  const { readLevels } = voice;
+  const input = useCallback(() => readLevels().input, [readLevels]);
+  const state: OrbState = voice.muted
+    ? "muted"
+    : voice.status === "listening"
+      ? "listening"
+      : voice.active
+        ? "thinking"
+        : "ready";
   return (
-    <Box
-      aria-hidden="true"
-      sx={{
-        width: compact ? 42 : { xs: 92, sm: 116 },
-        height: compact ? 42 : { xs: 92, sm: 116 },
-        borderRadius: "50%",
-        border: `1px solid ${alpha(color, 0.5)}`,
-        background: `radial-gradient(circle, ${alpha(color, 0.13)}, transparent 70%)`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: compact ? "2px" : "4px",
-        flexShrink: 0,
-      }}
-    >
-      {[0.45, 0.7, 0.9, 1, 0.8, 0.6, 0.4].map((weight, i) => (
-        <Box
-          key={i}
-          sx={{
-            width: compact ? 2 : 4,
-            borderRadius: 3,
-            bgcolor: color,
-            height: Math.max(3, level * weight * (compact ? 25 : 58)),
-            transition: "height 70ms linear",
-            "@media (prefers-reduced-motion: reduce)": {
-              height: compact ? 8 : 18,
-              transition: "none",
-            },
-          }}
-        />
-      ))}
+    <Box sx={{ width: size, flexShrink: 0 }}>
+      <VoiceLens
+        state={state}
+        closed={!voice.active || (voice.muted && !voice.levels.playing)}
+        live
+        readLevel={input}
+        readAudio={voice.readLevels}
+      />
     </Box>
   );
-};
+}
 
-const VoiceControls = ({ voice }: { voice: ConciergeVoice }) => (
-  <Stack direction="row" spacing={1}>
+export const VoiceControls = ({ voice }: { voice: ConciergeVoice }) => (
+  <Stack direction="row" spacing={0.5}>
     <Tooltip title={voice.muted ? "Resume microphone" : "Mute microphone"}>
       <IconButton
         aria-label={voice.muted ? "Resume microphone" : "Mute microphone"}
@@ -103,136 +88,177 @@ export const ConciergeVoicePanel = ({
 }: {
   voice: ConciergeVoice;
   disabled?: boolean;
-}) => {
-  if (!voice.active)
-    return (
-      <Stack
-        spacing={1}
-        sx={{
-          px: 2,
-          py: 1.5,
-          borderBottom: `1px solid ${alpha(movieColors.brand, 0.12)}`,
-        }}
-      >
-        {voice.error && <Alert severity="warning">{voice.error}</Alert>}
-        <Button
-          startIcon={<MicRoundedIcon />}
-          disabled={disabled}
-          onClick={() => void voice.start()}
-          sx={{
-            justifyContent: "flex-start",
-            minHeight: 44,
-            color: movieColors.brand,
-          }}
-        >
-          {voice.status === "error" ? "Reconnect voice" : "Start voice"}
-        </Button>
-        <Typography variant="caption" color="text.secondary">
-          Speak English. Try “Find Forrest Gump and open it.”
-        </Typography>
-      </Stack>
-    );
-
-  return (
-    <Stack
-      spacing={2.5}
-      sx={{ px: 2, py: 3, overflowY: "auto", flex: 1, minHeight: 0 }}
+}) =>
+  voice.active ? null : (
+    <Button
+      startIcon={<MicRoundedIcon />}
+      disabled={disabled}
+      onClick={() => void voice.start()}
+      sx={{ minHeight: 44, color: movieColors.brand }}
     >
-      <Stack spacing={1.5} sx={{ alignItems: "center", textAlign: "center" }}>
-        <VoiceSignal voice={voice} />
-        <Typography role="status" sx={{ fontSize: 18, fontWeight: 750 }}>
-          {label(voice)}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {voice.status === "connecting"
-            ? "Allow microphone access when your browser asks."
-            : "English · Live movie catalog"}
-        </Typography>
-        <VoiceControls voice={voice} />
-        {voice.levels.playing && (
-          <Button onClick={voice.interrupt} sx={{ minHeight: 44 }}>
-            Interrupt reply
-          </Button>
-        )}
-      </Stack>
-      {voice.userText && (
-        <Box
-          sx={{
-            alignSelf: "flex-end",
-            maxWidth: "88%",
-            p: 1.5,
-            bgcolor: alpha(movieColors.info, 0.12),
-            borderRadius: 1,
-          }}
-        >
-          <Typography variant="caption" color="text.secondary">
-            You
-          </Typography>
-          <Typography sx={{ fontSize: 13 }}>{voice.userText}</Typography>
-        </Box>
-      )}
-      {voice.assistantText && (
-        <Typography sx={{ fontSize: 14, lineHeight: 1.7 }}>
-          {voice.assistantText}
-        </Typography>
-      )}
-      {voice.movies.map((movie) => (
-        <ConciergeMovieCard key={movie.movieId} movie={movie} />
-      ))}
-      <Button
-        onClick={voice.end}
-        sx={{ alignSelf: "center", color: "text.secondary", minHeight: 44 }}
-      >
-        Prefer typing? End voice
-      </Button>
-    </Stack>
+      {voice.status === "error" ? "Reconnect voice" : "Start voice"}
+    </Button>
   );
-};
 
 export const ConciergeVoiceDock = ({
   voice,
-  expand,
+  conversationOpen,
+  toggleConversation,
+  debug = false,
+  disabled = false,
 }: {
   voice: ConciergeVoice;
-  expand: () => void;
-}) => (
-  <Stack
-    direction="row"
-    spacing={1}
-    sx={{
-      position: "fixed",
-      bottom: { xs: "max(12px, env(safe-area-inset-bottom))", sm: 24 },
-      right: { xs: 12, sm: 24 },
-      left: { xs: 12, sm: "auto" },
-      bgcolor: movieColors.surfaceElevated,
-      border: `1px solid ${alpha(movieColors.brand, 0.3)}`,
-      borderRadius: 1,
-      p: 1,
-      alignItems: "center",
-      boxShadow: "0 12px 38px rgba(0,0,0,0.4)",
-      zIndex: (theme) => theme.zIndex.fab,
-    }}
-  >
-    <Box
-      onClick={voice.levels.playing ? voice.interrupt : expand}
-      component="button"
-      aria-label={
-        voice.levels.playing ? "Interrupt reply" : "Expand voice conversation"
-      }
-      sx={{ border: 0, p: 0, background: "transparent", cursor: "pointer" }}
+  conversationOpen: boolean;
+  toggleConversation: () => void;
+  debug?: boolean;
+  disabled?: boolean;
+}) => {
+  const label =
+    voice.status === "connecting"
+      ? "Cancel voice connection"
+      : voice.active
+        ? "End voice session"
+        : voice.status === "standby"
+          ? "Resume voice"
+          : voice.status === "error"
+            ? "Reconnect voice"
+            : "Start voice";
+  const actionLabel =
+    debug && voice.active
+      ? voice.levels.playing
+        ? "Interrupt reply"
+        : conversationOpen
+          ? "Close conversation"
+          : "Open conversation"
+      : debug
+        ? `${label} using lens`
+        : label;
+  return (
+    <Stack
+      component="section"
+      aria-label="Voice overlay"
+      sx={{
+        position: "fixed",
+        bottom: { xs: "max(12px, env(safe-area-inset-bottom))", sm: 24 },
+        left: {
+          xs: "50%",
+          md: conversationOpen ? "calc((100% - 440px) / 2)" : "50%",
+        },
+        transform: "translateX(-50%)",
+        width: "max-content",
+        maxWidth: "calc(100vw - 24px)",
+        alignItems: "center",
+        pointerEvents: "none",
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+      }}
     >
-      <VoiceSignal voice={voice} compact />
-    </Box>
-    <Typography sx={{ fontSize: 12, flex: 1, minWidth: 0 }}>
-      {label(voice)}
-    </Typography>
-    <VoiceControls voice={voice} />
-    <IconButton
-      aria-label="Expand voice conversation"
-      onClick={expand}
-      sx={{ minHeight: 44, minWidth: 44 }}
-    >
-      <OpenInFullRoundedIcon fontSize="small" />
-    </IconButton>
-  </Stack>
-);
+      <Tooltip
+        title={actionLabel}
+        describeChild
+        placement="top"
+        disableInteractive
+      >
+        <Box
+          component="button"
+          type="button"
+          disabled={disabled}
+          data-testid="voice-lens-toggle"
+          data-state={voice.active ? voice.status : "closed"}
+          aria-pressed={voice.active}
+          onClick={
+            debug && voice.active
+              ? voice.levels.playing
+                ? voice.interrupt
+                : toggleConversation
+              : voice.active
+                ? voice.end
+                : () => void voice.start()
+          }
+          aria-label={actionLabel}
+          sx={{
+            border: 0,
+            p: 0,
+            background: "transparent",
+            pointerEvents: "auto",
+            cursor: "pointer",
+            borderRadius: "50%",
+            opacity: 0.93,
+            mb: debug ? -1 : 0,
+            "&:disabled": { cursor: "wait", opacity: 0.5 },
+            filter: "drop-shadow(0 8px 28px rgba(0,0,0,.6))",
+            "&:focus-visible": {
+              outline: `2px solid ${movieColors.brand}`,
+              outlineOffset: 4,
+            },
+          }}
+        >
+          <VoiceSignal voice={voice} size={115} />
+        </Box>
+      </Tooltip>
+      {!debug && (
+        <Box role="status" sx={visuallyHidden}>
+          {voice.active
+            ? voiceLabel(voice)
+            : voice.status === "standby"
+              ? voiceLabels.standby
+              : "Voice is off. Click the lens to start."}
+        </Box>
+      )}
+      {debug && voice.active && (
+        <Stack
+          direction="row"
+          sx={{
+            alignItems: "center",
+            px: 0.75,
+            borderRadius: 8,
+            bgcolor: movieColors.surface,
+            opacity: 0.85,
+            backdropFilter: "blur(16px)",
+            border: `1px solid ${alpha(movieColors.brand, 0.22)}`,
+            boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+            pointerEvents: "auto",
+            "& .MuiIconButton-root": {
+              minWidth: { xs: 40, sm: 36 },
+              minHeight: { xs: 40, sm: 36 },
+              p: 0.75,
+            },
+            "& .MuiSvgIcon-root": { fontSize: 19 },
+          }}
+        >
+          <Typography
+            sx={{ fontSize: 10.5, minWidth: 0, px: 0.5 }}
+            role="status"
+          >
+            {voiceLabel(voice)}
+          </Typography>
+          <VoiceControls voice={voice} />
+          <Tooltip
+            title={
+              conversationOpen
+                ? "Close conversation"
+                : "Conversation and preferences"
+            }
+          >
+            <IconButton
+              aria-label={
+                conversationOpen
+                  ? "Collapse voice conversation"
+                  : "Expand voice conversation"
+              }
+              aria-expanded={conversationOpen}
+              aria-controls="concierge-conversation"
+              onClick={toggleConversation}
+              sx={{ minHeight: 44, minWidth: 44 }}
+            >
+              {conversationOpen ? (
+                <CloseFullscreenRoundedIcon fontSize="small" />
+              ) : (
+                <OpenInFullRoundedIcon fontSize="small" />
+              )}
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      )}
+    </Stack>
+  );
+};

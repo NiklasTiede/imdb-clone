@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
+import ts from "typescript";
 
 const srcRoot = path.dirname(fileURLToPath(import.meta.url));
 const featuresRoot = path.join(srcRoot, "features");
@@ -34,6 +35,55 @@ describe("frontend feature architecture", () => {
 
   test("cross-feature imports use public feature interfaces", () => {
     expect(crossFeatureInternalImports()).toEqual([]);
+  });
+
+  test("keeps Concierge preview code out of the application and model dependencies inward", () => {
+    const conciergeRoot = path.join(featuresRoot, "concierge");
+    const violations = sourceFiles(conciergeRoot).flatMap((sourceFile) =>
+      importSpecifiers(sourceFile).flatMap((specifier) => {
+        const target = resolveSourceImport(sourceFile, specifier);
+        if (!target) return [];
+        const sourceArea = path
+          .relative(conciergeRoot, sourceFile)
+          .split(path.sep)[0];
+        const targetArea = path
+          .relative(conciergeRoot, target)
+          .split(path.sep)[0];
+        const importsPreview =
+          sourceArea !== "preview" && targetArea === "preview";
+        const modelImportsImplementation =
+          sourceArea === "model" &&
+          ["api", "audio", "components", "hooks", "preview"].includes(
+            targetArea ?? "",
+          );
+        return importsPreview || modelImportsImplementation
+          ? [`${path.relative(srcRoot, sourceFile)} imports ${specifier}`]
+          : [];
+      }),
+    );
+    expect(violations).toEqual([]);
+  });
+
+  test("detects lazy imports and re-exports without treating comments or strings as dependencies", () => {
+    expect(
+      moduleSpecifiers(`
+      import type { Movie } from "./model";
+      import "./setup";
+      export { Card } from "./components/Card";
+      export * from "./public";
+      const Page = lazy(() => import("./pages/Page"));
+      type Result = import("./api").Result;
+      // import Decoy from "./comment";
+      const example = 'import Decoy from "./string"';
+    `),
+    ).toEqual([
+      "./model",
+      "./setup",
+      "./components/Card",
+      "./public",
+      "./pages/Page",
+      "./api",
+    ]);
   });
 
   test("keeps domain code out of legacy top-level folders", () => {
@@ -196,14 +246,35 @@ const sourceFiles = (directory: string): string[] =>
     return [absolutePath];
   });
 
-const importSpecifiers = (sourceFile: string): string[] => {
-  const source = readFileSync(sourceFile, "utf8");
-  return Array.from(
-    source.matchAll(/import(?:\s+type)?[\s\S]*?from\s+["']([^"']+)["']/g),
-  ).flatMap((match) => {
-    const specifier = match[1];
-    return specifier === undefined ? [] : [specifier];
-  });
+const importSpecifiers = (sourceFile: string): string[] =>
+  moduleSpecifiers(readFileSync(sourceFile, "utf8"), sourceFile);
+
+const moduleSpecifiers = (
+  source: string,
+  fileName = "fixture.ts",
+): string[] => {
+  const specifiers: string[] = [];
+  const visit = (node: ts.Node): void => {
+    let specifier: ts.Node | undefined;
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      specifier = node.moduleSpecifier;
+    } else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword
+    ) {
+      specifier = node.arguments[0];
+    } else if (
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument)
+    ) {
+      specifier = node.argument.literal;
+    }
+    if (specifier && ts.isStringLiteralLike(specifier))
+      specifiers.push(specifier.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest));
+  return specifiers;
 };
 
 type ResolvedImport = {

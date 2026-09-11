@@ -54,8 +54,8 @@ const UserActions = ({
           color: movieColors.brand,
           fontSize: 13,
           fontWeight: 800,
-          height: 34,
-          width: 34,
+          height: 38,
+          width: 38,
         }}
       />
     </IconButton>

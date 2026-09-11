@@ -146,27 +146,34 @@ function AppBarTop() {
         <Toolbar
           sx={{
             display: "grid",
-            gap: { xs: 1.25, md: 2 },
+            columnGap: { xs: 1, md: 2 },
+            rowGap: 1,
             gridTemplateColumns: {
-              xs: "1fr auto",
-              md: "minmax(176px, auto) minmax(280px, 1fr) auto",
+              xs: "minmax(0, 1fr) auto",
+              md: "minmax(176px, auto) minmax(280px, 620px) minmax(max-content, 1fr)",
             },
             gridTemplateRows: { xs: "auto auto", md: "auto" },
             minHeight: { xs: 70, md: 68 },
             px: { xs: 1.5, sm: 2.5, md: 3 },
-            py: { xs: 1.25, md: 0 },
+            py: { xs: 0.75, md: 0 },
           }}
         >
           <BrandLogo
             sx={{
-              gridColumn: { xs: "1", md: "auto" },
+              gridColumn: 1,
+              gridRow: 1,
               minWidth: 0,
+              "& > img": {
+                width: { xs: 32, md: 42 },
+                height: { xs: 32, md: 42 },
+              },
+              "& span": { overflow: "hidden", textOverflow: "ellipsis" },
             }}
           />
           <Box
             sx={{
-              gridColumn: { xs: "1 / -1", md: "auto" },
-              gridRow: { xs: 2, md: "auto" },
+              gridColumn: { xs: "1 / -1", md: "2" },
+              gridRow: { xs: 2, md: 1 },
               minWidth: 0,
             }}
           >
@@ -182,6 +189,11 @@ function AppBarTop() {
               alignItems: "center",
               display: "inline-flex",
               gap: 0.75,
+              gridColumn: {
+                xs: 2,
+                md: 3,
+              },
+              gridRow: 1,
               justifySelf: "end",
             }}
           >

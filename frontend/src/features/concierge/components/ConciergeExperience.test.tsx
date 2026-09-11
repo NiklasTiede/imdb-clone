@@ -70,17 +70,19 @@ const LocationProbe = () => {
   );
 };
 
-const renderExperience = () =>
-  (unmountExperience = render(
+const renderExperience = async () => {
+  unmountExperience = render(
     <QueryClientProvider client={new QueryClient()}>
       <ThemeProvider theme={appTheme}>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={["/?conciergeDebug=1"]}>
           <ConciergeExperience />
           <LocationProbe />
         </MemoryRouter>
       </ThemeProvider>
     </QueryClientProvider>,
-  ).unmount);
+  ).unmount;
+  await screen.findByRole("textbox", { name: "Ask the Movie Concierge" });
+};
 
 describe("ConciergeExperience", () => {
   beforeEach(() => {
@@ -108,13 +110,9 @@ describe("ConciergeExperience", () => {
       .mockResolvedValueOnce(streamResponse());
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    renderExperience();
-
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
+    await renderExperience();
     expect(
-      screen.getByRole("heading", { name: "What fits tonight?" }),
+      screen.getByRole("heading", { name: "What can I help you with?" }),
     ).toBeVisible();
 
     await user.type(
@@ -129,6 +127,8 @@ describe("ConciergeExperience", () => {
       await screen.findByText("Arrival", { selector: "em" }),
     ).toBeVisible();
     expect(screen.queryByText(/\*\*_/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("concierge-movie-card")).not.toBeVisible();
+    await user.click(screen.getByText("Tools & results", { exact: true }));
     expect(screen.getByTestId("concierge-movie-card")).toBeVisible();
     expect(screen.getByRole("link", { name: "Arrival" })).toHaveAttribute(
       "href",
@@ -153,7 +153,7 @@ describe("ConciergeExperience", () => {
     );
   });
 
-  it("offers capability discovery as the featured first action", async () => {
+  it("sends a selected capability directly through text chat when voice is off", async () => {
     const capabilityResponse = new Response(
       event("status", 1, { status: "thinking" }) +
         event("text", 2, {
@@ -171,14 +171,8 @@ describe("ConciergeExperience", () => {
       .mockResolvedValueOnce(capabilityResponse);
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    renderExperience();
-
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: "See what the Concierge can do" }),
-    );
+    await renderExperience();
+    await user.click(screen.getByRole("button", { name: /Movies & trailers/ }));
 
     expect(await screen.findByText(/I can search the catalog/)).toBeVisible();
     const messageRequest = fetchMock.mock.calls[1];
@@ -188,7 +182,7 @@ describe("ConciergeExperience", () => {
       throw new TypeError("Expected a serialized concierge request body");
     }
     expect(JSON.parse(requestBody)).toEqual({
-      message: "What can you do for me?",
+      message: "Show me the trailer for Forrest Gump.",
       pageContext: { page: "home", streamingCountry: "CH" },
     });
   });
@@ -213,11 +207,7 @@ describe("ConciergeExperience", () => {
         );
       vi.stubGlobal("fetch", fetchMock);
       const user = userEvent.setup();
-      renderExperience();
-
-      await user.click(
-        screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-      );
+      await renderExperience();
       await user.type(
         screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
         "Open Arrival",
@@ -233,7 +223,7 @@ describe("ConciergeExperience", () => {
       );
       await waitFor(() =>
         expect(
-          screen.queryByRole("dialog", { name: "Movie Concierge" }),
+          screen.queryByRole("complementary", { name: "Movie Concierge" }),
         ).not.toBeInTheDocument(),
       );
       if (type === "open_movie")
@@ -275,10 +265,7 @@ describe("ConciergeExperience", () => {
           ),
       );
       const user = userEvent.setup();
-      renderExperience();
-      await user.click(
-        screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-      );
+      await renderExperience();
       await user.type(
         screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
         "Show me the requested page",
@@ -288,7 +275,7 @@ describe("ConciergeExperience", () => {
       );
       await waitFor(() =>
         expect(
-          screen.queryByRole("dialog", { name: "Movie Concierge" }),
+          screen.queryByRole("complementary", { name: "Movie Concierge" }),
         ).not.toBeInTheDocument(),
       );
       expect(screen.getByLabelText("Current route")).toHaveTextContent(route);
@@ -315,11 +302,7 @@ describe("ConciergeExperience", () => {
         .mockResolvedValueOnce(unsafeStream);
       vi.stubGlobal("fetch", fetchMock);
       const user = userEvent.setup();
-      renderExperience();
-
-      await user.click(
-        screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-      );
+      await renderExperience();
       await user.type(
         screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
         "Open Arrival",
@@ -331,7 +314,7 @@ describe("ConciergeExperience", () => {
       await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
       expect(screen.getByLabelText("Current route")).toHaveTextContent("/");
       expect(
-        screen.getByRole("dialog", { name: "Movie Concierge" }),
+        screen.getByRole("complementary", { name: "Movie Concierge" }),
       ).toBeVisible();
     },
   );
@@ -355,11 +338,7 @@ describe("ConciergeExperience", () => {
       .mockResolvedValueOnce(maliciousStream);
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    renderExperience();
-
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
+    await renderExperience();
     await user.type(
       screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
       "Open Arrival at a supplied URL",
@@ -375,7 +354,7 @@ describe("ConciergeExperience", () => {
     ).toBeVisible();
     expect(screen.getByLabelText("Current route")).toHaveTextContent("/");
     expect(
-      screen.getByRole("dialog", { name: "Movie Concierge" }),
+      screen.getByRole("complementary", { name: "Movie Concierge" }),
     ).toBeVisible();
   });
 });

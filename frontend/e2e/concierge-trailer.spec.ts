@@ -106,9 +106,9 @@ test("voice centers trailers across routes and repeated requests without startin
       );
     };
   });
-  await page.goto("/movie-search");
-  await page.getByRole("button", { name: "Ask the Movie Concierge" }).click();
-  await page.getByRole("button", { name: "Start voice" }).click();
+  await page.goto("/movie-search?conciergeDebug=1");
+  await page.getByRole("button", { name: "Close Movie Concierge" }).click();
+  await page.getByTestId("voice-lens-toggle").click();
   await expect(page.getByRole("status")).toHaveText("Listening to you");
   for (const movieId of [6, 6, 7, 8]) {
     await page.evaluate(() => window.scrollTo(0, 0));

@@ -117,8 +117,19 @@ for (const signedIn of [false, true]) {
         socket.send(JSON.stringify({ type: "ui-action", turn, action }));
       };
     });
-    await page.goto("/movie-search");
-    await page.getByRole("button", { name: "Ask the Movie Concierge" }).click();
+    await page.goto("/movie-search?conciergeDebug=1");
+    await page.getByRole("button", { name: "Close Movie Concierge" }).click();
+    await page.getByTestId("voice-lens-toggle").click();
+    await expect(page.getByRole("status")).toHaveText("Listening to you");
+    await page
+      .getByRole("button", { name: "Expand voice conversation" })
+      .click();
+    await expect(
+      page.getByText("Data sources & credits", { exact: true }),
+    ).not.toBeVisible();
+    await page
+      .getByRole("button", { name: "Concierge preferences", exact: true })
+      .click();
     await page.getByText("Data sources & credits", { exact: true }).click();
     await expect(
       page.getByText(
@@ -139,8 +150,6 @@ for (const signedIn of [false, true]) {
     await page.getByText("Data sources & credits", { exact: true }).click();
     const country = page.getByRole("combobox", { name: "Streaming in" });
     await expect(country).toHaveValue("CH");
-    await page.getByRole("button", { name: "Start voice" }).click();
-    await expect(page.getByRole("status")).toHaveText("Listening to you");
     await expect
       .poll(() => pageContexts.at(-1))
       .toEqual({
@@ -206,7 +215,7 @@ for (const signedIn of [false, true]) {
       });
     await page
       .getByRole("button", { name: "Go to page 2", exact: true })
-      .click();
+      .press("Enter");
     await expect.poll(() => searches.at(-1)?.page).toBe("1");
     expect(new URL(page.url()).searchParams.getAll("genre")).toEqual([
       "DRAMA",
@@ -258,8 +267,18 @@ for (const signedIn of [false, true]) {
       .last()
       .click();
     await expect.poll(() => ended).toBe(true);
-    await page.reload();
-    await page.getByRole("button", { name: "Ask the Movie Concierge" }).click();
+    const debugUrl = new URL(page.url());
+    debugUrl.searchParams.set("conciergeDebug", "1");
+    await page.goto(debugUrl.toString());
+    await page.getByRole("button", { name: "Close Movie Concierge" }).click();
+    await page.getByTestId("voice-lens-toggle").click();
+    await expect(page.getByRole("status")).toHaveText("Listening to you");
+    await page
+      .getByRole("button", { name: "Expand voice conversation" })
+      .click();
+    await page
+      .getByRole("button", { name: "Concierge preferences", exact: true })
+      .click();
     await expect(
       page.getByRole("combobox", { name: "Streaming in" }),
     ).toHaveValue("DE");

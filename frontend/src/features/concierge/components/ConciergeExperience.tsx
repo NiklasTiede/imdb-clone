@@ -3,32 +3,29 @@ import {
   saveStreamingCountry,
 } from "../model/streamingCountry";
 import { pageContextFromLocation } from "../model/pageContext";
-import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import { alpha } from "@mui/material/styles";
-import {
-  Box,
-  Button,
-  Fab,
-  Snackbar,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
+import { Box, Button, Snackbar } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   rateMovieMutationOptions,
   toggleWatchlistMutationOptions,
   watchlistQueryKeys,
 } from "../../engagement";
-import { useMemo, useCallback, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+} from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useAuthSessionSnapshot } from "../../../shared/auth";
 import { applicationDestination } from "../model/applicationNavigation";
-import { movieColors } from "../../../theme";
-import { getConciergeClientId } from "../model/browserIdentity";
-import ConciergeDrawer from "./ConciergeDrawer";
 import { useConciergeVoice } from "../hooks/useConciergeVoice";
 import { ConciergeVoiceDock } from "./ConciergeVoicePanel";
 import type { ApplicationAction } from "../model/concierge";
+
+const ConciergeDebug = lazy(() => import("./ConciergeDebug"));
 
 type PersonalReceipt = {
   operationId: string;
@@ -44,6 +41,11 @@ type PersonalReceipt = {
 );
 
 const ConciergeExperience = () => {
+  const { search } = useLocation();
+  // Opt in through the initial URL; retain debug access across agent navigation.
+  const [debug] = useState(
+    () => new URLSearchParams(search).get("conciergeDebug") === "1",
+  );
   const { bootstrapped, session } = useAuthSessionSnapshot();
   if (!bootstrapped) {
     return null;
@@ -53,17 +55,21 @@ const ConciergeExperience = () => {
     <IdentityScopedConcierge
       key={identity ?? "anonymous"}
       accountId={identity}
+      debug={debug}
     />
   );
 };
 
 const IdentityScopedConcierge = ({
   accountId,
+  debug,
 }: {
   accountId: number | null;
+  debug: boolean;
 }) => {
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(debug);
+  const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
   const [streamingCountry, setStreamingCountry] = useState(() =>
     readStreamingCountry(accountId),
   );
@@ -90,13 +96,10 @@ const IdentityScopedConcierge = ({
     }),
     [pathname, search, hash, streamingCountry],
   );
-  const theme = useTheme();
-  const mobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const clientId = getConciergeClientId(accountId);
   const handleApplicationAction = useCallback(
     (action: ApplicationAction) => {
       if (action.type === "open_watchlist" || action.type === "open_ratings") {
-        if (accountId === null) return;
+        if (accountId === null) throw new Error("Sign in required");
         void queryClient.invalidateQueries({
           queryKey:
             action.type === "open_watchlist"
@@ -148,20 +151,32 @@ const IdentityScopedConcierge = ({
       const destination = applicationDestination(action, accountId !== null);
       setOpen(false);
       void navigate(destination);
+      return destination;
     },
     [navigate, accountId, queryClient, resetWatchlistUndo, resetRatingUndo],
   );
 
   const voice = useConciergeVoice(handleApplicationAction, pageContext);
+  const { confirmNavigation: confirmVoiceNavigation, turns: voiceTurns } =
+    voice;
+  useEffect(() => {
+    const currentPath = `${pathname}${search}${hash}`;
+    confirmVoiceNavigation(currentPath);
+  }, [pathname, search, hash, voiceTurns, confirmVoiceNavigation]);
+  useEffect(() => {
+    if (debug && (voice.status === "error" || voice.notice)) setOpen(true);
+  }, [debug, voice.status, voice.notice]);
+  const voiceNotice = voice.error ?? voice.notice;
+  useEffect(() => {
+    if (!voiceNotice) setDismissedNotice(null);
+  }, [voiceNotice]);
 
   return (
     <>
-      {voice.active && (
-        <Box
-          aria-hidden="true"
-          sx={{ height: "calc(104px + env(safe-area-inset-bottom))" }}
-        />
-      )}
+      <Box
+        aria-hidden="true"
+        sx={{ height: "calc(104px + env(safe-area-inset-bottom))" }}
+      />
       <Snackbar
         open={receipt !== null}
         sx={
@@ -212,69 +227,38 @@ const IdentityScopedConcierge = ({
           ) : undefined
         }
       />
-      {voice.active ? (
-        !open && (
-          <ConciergeVoiceDock voice={voice} expand={() => setOpen(true)} />
-        )
-      ) : mobile ? (
-        <Fab
-          aria-label="Ask the Movie Concierge"
-          onClick={() => setOpen(true)}
-          size="medium"
-          sx={{
-            bgcolor: movieColors.brand,
-            bottom: 18,
-            boxShadow: "0 12px 32px rgba(0,0,0,0.42)",
-            color: movieColors.brandInk,
-            position: "fixed",
-            right: 18,
-            zIndex: theme.zIndex.fab,
-            "&:hover": { bgcolor: "#ffe053" },
+      {!debug && (
+        <Snackbar
+          open={!!voiceNotice && dismissedNotice !== voiceNotice}
+          message={voiceNotice}
+          autoHideDuration={10000}
+          onClose={(_, reason) => {
+            if (reason !== "clickaway") setDismissedNotice(voiceNotice);
           }}
-        >
-          <AutoAwesomeRoundedIcon />
-        </Fab>
-      ) : (
-        <Button
-          aria-label="Ask the Movie Concierge"
-          onClick={() => setOpen(true)}
-          startIcon={<AutoAwesomeRoundedIcon sx={{ fontSize: 17 }} />}
-          sx={{
-            backdropFilter: "blur(12px)",
-            bgcolor: alpha(movieColors.surfaceElevated, 0.94),
-            border: `1px solid ${alpha(movieColors.brand, 0.35)}`,
-            borderRadius: 10,
-            bottom: 24,
-            boxShadow: "0 14px 38px rgba(0,0,0,0.38)",
-            color: "rgba(255,255,255,0.9)",
-            fontSize: 11.5,
-            fontWeight: 700,
-            px: 2,
-            py: 1.1,
-            position: "fixed",
-            right: 24,
-            textTransform: "none",
-            zIndex: theme.zIndex.fab,
-            "& .MuiButton-startIcon": { color: movieColors.brand },
-            "&:hover": {
-              bgcolor: movieColors.surfaceElevated,
-              borderColor: alpha(movieColors.brand, 0.68),
-            },
-          }}
-        >
-          Ask Concierge
-        </Button>
+          sx={{ bottom: { xs: 140, sm: 140 } }}
+        />
       )}
-      <ConciergeDrawer
-        streamingCountry={streamingCountry}
-        onStreamingCountryChange={changeStreamingCountry}
-        pageContext={pageContext}
-        voice={voice}
-        clientId={clientId}
-        onClose={() => setOpen(false)}
-        onUiAction={handleApplicationAction}
-        open={open}
-      />
+      {debug ? (
+        <Suspense fallback={null}>
+          <ConciergeDebug
+            accountId={accountId}
+            voice={voice}
+            pageContext={pageContext}
+            onAction={handleApplicationAction}
+            open={open}
+            onClose={() => setOpen(false)}
+            onToggle={() => setOpen((current) => !current)}
+            streamingCountry={streamingCountry}
+            onStreamingCountryChange={changeStreamingCountry}
+          />
+        </Suspense>
+      ) : (
+        <ConciergeVoiceDock
+          voice={voice}
+          conversationOpen={false}
+          toggleConversation={() => undefined}
+        />
+      )}
     </>
   );
 };

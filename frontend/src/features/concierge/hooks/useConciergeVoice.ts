@@ -2,24 +2,34 @@ import type { PageContext } from "../model/pageContext";
 import { getConciergeDelegation } from "../api/delegation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserAudio } from "../audio/browserAudio";
-import type { GroundedMovie, ApplicationAction } from "../model/concierge";
+import {
+  updateHistory,
+  confirmHistoryNavigation,
+  updateRetrievedMovies,
+  updateToolActivity,
+} from "../model/conversationHistory";
+import type { ChatTurn, ApplicationAction } from "../model/concierge";
 import { voiceEventSchema, type VoiceStatus } from "../model/voice";
 
 export const useConciergeVoice = (
-  onAction: (action: ApplicationAction) => void,
+  onAction: (action: ApplicationAction) => string | void,
   pageContext?: PageContext,
 ) => {
+  const [turns, setTurns] = useState<ChatTurn[]>([]);
+  const assistantId = useRef<string | null>(null);
   const [status, setStatus] = useState<VoiceStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
+  const [textPending, setTextPending] = useState(false);
+  const textPendingRef = useRef(false);
+  const readyRef = useRef(false);
   const [levels, setLevels] = useState({ input: 0, output: 0, playing: false });
-  const [userText, setUserText] = useState("");
-  const [assistantText, setAssistantText] = useState("");
-  const [movies, setMovies] = useState<GroundedMovie[]>([]);
   const generation = useRef(0);
   const audioRef = useRef<BrowserAudio | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const frameRef = useRef(0);
+  const playingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mutedRef = useRef(false);
   const blockedAudio = useRef(false);
@@ -38,37 +48,127 @@ export const useConciergeVoice = (
   }, [pageContext]);
 
   const dispose = useCallback(() => {
+    readyRef.current = false;
+    textPendingRef.current = false;
     generation.current++;
     clearTimeout(timerRef.current);
     cancelAnimationFrame(frameRef.current);
     const socket = socketRef.current;
     socketRef.current = null;
     contextSocketRef.current = null;
-    if (socket?.readyState === WebSocket.OPEN)
-      socket.send(JSON.stringify({ type: "end" }));
+    try {
+      if (socket?.readyState === WebSocket.OPEN)
+        socket.send(JSON.stringify({ type: "end" }));
+    } catch {
+      // The peer may disconnect during shutdown; still release the microphone.
+    }
     socket?.close();
     audioRef.current?.close();
     audioRef.current = null;
+    playingRef.current = false;
   }, []);
 
   useEffect(() => dispose, [dispose]);
 
+  const readLevels = useCallback(
+    () => audioRef.current?.levels() ?? { input: 0, output: 0, playing: false },
+    [],
+  );
+  const markInterrupted = useCallback(() => {
+    if (!audioRef.current?.levels().playing) return;
+    const id = assistantId.current;
+    setTurns((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, interrupted: true } : item,
+      ),
+    );
+  }, []);
+  const confirmNavigation = useCallback(
+    (path: string) =>
+      setTurns((items) => confirmHistoryNavigation(items, path)),
+    [],
+  );
+  const clearHistory = useCallback(() => {
+    setTurns([]);
+    assistantId.current = null;
+  }, []);
+
   const end = useCallback(() => {
+    markInterrupted();
     dispose();
     setStatus("idle");
+    setError(null);
+    setNotice(null);
     setLevels({ input: 0, output: 0, playing: false });
     setMuted(false);
     mutedRef.current = false;
     blockedAudio.current = false;
-  }, [dispose]);
+  }, [dispose, markInterrupted]);
 
   const start = useCallback(async () => {
     if (audioRef.current) return;
     const current = ++generation.current;
     const isCurrent = () => generation.current === current;
+    const turnMetadata = new Map<
+      number,
+      { timestamp: number; context: PageContext | undefined }
+    >();
+    const record = (
+      turn: number,
+      role: "user" | "assistant",
+      update: (entry: ChatTurn) => ChatTurn,
+    ) => {
+      const id = `voice-${current}-${turn}-${role}`;
+      if (role === "assistant") assistantId.current = id;
+      const metadata = turnMetadata.get(turn) ?? {
+        timestamp: Date.now(),
+        context: pageContextRef.current,
+      };
+      turnMetadata.set(turn, metadata);
+      const timestamp = metadata.timestamp + (role === "assistant" ? 0.01 : 0);
+      const context = metadata.context;
+      setTurns((items) =>
+        updateHistory(
+          items,
+          update(
+            items.find((item) => item.id === id) ?? {
+              id,
+              role,
+              text: "",
+              movies: [],
+              channel: "voice",
+              timestamp,
+              ...(context
+                ? {
+                    context: {
+                      page: context.page,
+                      ...(context.streamingCountry
+                        ? { streamingCountry: context.streamingCountry }
+                        : {}),
+                    },
+                  }
+                : {}),
+            },
+          ),
+        ),
+      );
+    };
     const fail = (message: string) => {
       if (!isCurrent()) return;
+      markInterrupted();
       dispose();
+      const timestamp = Date.now();
+      setTurns((items) =>
+        updateHistory(items, {
+          id: `voice-${current}-error`,
+          role: "assistant",
+          channel: "voice",
+          timestamp,
+          text: "",
+          movies: [],
+          error: { message, retryable: true },
+        }),
+      );
       setError(message);
       setStatus("error");
       setLevels({ input: 0, output: 0, playing: false });
@@ -87,10 +187,9 @@ export const useConciergeVoice = (
       );
     };
     setError(null);
+    setNotice(null);
     setStatus("connecting");
-    setUserText("");
-    setAssistantText("");
-    setMovies([]);
+    setTextPending(false);
     setMuted(false);
     mutedRef.current = false;
     blockedAudio.current = false;
@@ -100,6 +199,7 @@ export const useConciergeVoice = (
     const becomeReady = () => {
       if (!isCurrent() || !providerReady || !captureReady) return;
       ready = true;
+      readyRef.current = true;
       clearTimeout(timerRef.current);
       setStatus("listening");
       if (mutedRef.current)
@@ -196,41 +296,78 @@ export const useConciergeVoice = (
             providerReady = true;
             becomeReady();
           } else if (event.type === "error") {
-            fail(event.text ?? "Voice is unavailable. Please use text.");
+            fail(event.text ?? "Voice is unavailable. Please reconnect.");
+          } else if (event.type === "standby") {
+            markInterrupted();
+            dispose();
+            setError(null);
+            setNotice(null);
+            setStatus("standby");
+            setLevels({ input: 0, output: 0, playing: false });
           } else if (!ready) {
             return;
           } else if (event.type === "interrupt") {
+            if (event.turn < turn) return;
+            markInterrupted();
             audio.interrupt();
             if (event.turn > turn) {
+              setNotice(null);
               blockedAudio.current = false;
               turn = event.turn;
-              setUserText("");
-              setAssistantText("");
             }
           } else if (event.turn < turn) {
             return;
           } else if (event.type === "reply-complete") {
             audio.finishReply();
+            record(event.turn, "assistant", (entry) => ({
+              ...entry,
+              final: true,
+            }));
           } else if (
             event.type === "status" &&
             event.status &&
             event.status !== "muted"
           ) {
             setStatus(event.status);
+            if (event.text) {
+              const message = event.text;
+              setNotice(message);
+              record(event.turn, "assistant", (entry) => ({
+                ...entry,
+                final: true,
+                error: { message, retryable: false },
+              }));
+            }
           } else if (event.type === "transcript") {
-            if (event.speaker === "user") setUserText(event.text ?? "");
-            else setAssistantText(event.text ?? "");
+            if (event.speaker === "user" && event.final) {
+              textPendingRef.current = false;
+              setTextPending(false);
+            }
+            if (
+              event.speaker &&
+              !(event.speaker === "assistant" && blockedAudio.current)
+            )
+              record(event.turn, event.speaker, (entry) => ({
+                ...entry,
+                text: event.text ?? "",
+                final: event.final,
+              }));
           } else if (event.type === "movie-card" && event.movie) {
             const movie = event.movie;
+            record(event.turn, "assistant", (entry) => ({
+              ...entry,
+              movies: updateRetrievedMovies(entry.movies, movie),
+            }));
             const ids = grounded.get(event.turn) ?? new Set<number>();
             ids.add(movie.movieId);
             grounded.set(event.turn, ids);
-            setMovies((items) =>
-              [
-                movie,
-                ...items.filter((item) => item.movieId !== movie.movieId),
-              ].slice(0, 5),
-            );
+          } else if (event.type === "tool-activity" && event.activity) {
+            const activity = event.activity;
+            record(event.turn, "assistant", (entry) => ({
+              ...entry,
+              tools: updateToolActivity(entry.tools, activity),
+              ...(activity.status === "started" ? { final: false } : {}),
+            }));
           } else if (
             event.type === "ui-action" &&
             !blockedAudio.current &&
@@ -241,7 +378,39 @@ export const useConciergeVoice = (
               grounded.get(event.turn)?.has(event.action.movieId))
           ) {
             actions.add(event.turn);
-            onAction(event.action);
+            let outcome: "requested" | "rejected" = "requested";
+            let destination: string | void;
+            try {
+              destination = onAction(event.action);
+            } catch {
+              outcome = "rejected";
+            }
+            const action = event.action;
+            record(event.turn, "assistant", (entry) => ({
+              ...entry,
+              actions: [
+                ...(entry.actions ?? []),
+                {
+                  action,
+                  outcome,
+                  timestamp: Date.now(),
+                  ...(destination ? { destination } : {}),
+                },
+              ],
+            }));
+          } else if (
+            event.type === "ui-action" &&
+            event.action &&
+            !actions.has(event.turn)
+          ) {
+            const action = event.action;
+            record(event.turn, "assistant", (entry) => ({
+              ...entry,
+              actions: [
+                ...(entry.actions ?? []),
+                { action, outcome: "rejected" as const, timestamp: Date.now() },
+              ].slice(-10),
+            }));
           }
         } catch {
           fail("Voice sent an invalid response. Please reconnect.");
@@ -255,7 +424,11 @@ export const useConciergeVoice = (
         fail("Voice connection closed. Reconnect to continue.");
       const updateLevels = () => {
         if (!isCurrent()) return;
-        setLevels(audio.levels());
+        const next = audio.levels();
+        if (playingRef.current !== next.playing) {
+          playingRef.current = next.playing;
+          setLevels(next);
+        }
         frameRef.current = requestAnimationFrame(updateLevels);
       };
       updateLevels();
@@ -263,7 +436,7 @@ export const useConciergeVoice = (
     } catch (cause) {
       failAudio(cause);
     }
-  }, [dispose, onAction]);
+  }, [dispose, onAction, markInterrupted]);
 
   const toggleMute = useCallback(() => {
     const value = !mutedRef.current;
@@ -276,26 +449,61 @@ export const useConciergeVoice = (
   }, []);
 
   const interrupt = useCallback(() => {
+    markInterrupted();
     blockedAudio.current = true;
     audioRef.current?.interrupt();
     const socket = socketRef.current;
     if (socket?.readyState === WebSocket.OPEN)
       socket.send(JSON.stringify({ type: "interrupt" }));
-  }, []);
+  }, [markInterrupted]);
+
+  const sendText = useCallback(
+    (message: string) => {
+      const text = message.trim();
+      const socket = socketRef.current;
+      if (
+        !text ||
+        text.length > 600 ||
+        !readyRef.current ||
+        textPendingRef.current ||
+        socket?.readyState !== WebSocket.OPEN
+      )
+        return false;
+      markInterrupted();
+      blockedAudio.current = true;
+      audioRef.current?.interrupt();
+      socket.send(JSON.stringify({ type: "text", text }));
+      textPendingRef.current = true;
+      setTextPending(true);
+      setNotice(null);
+      setStatus("thinking");
+      return true;
+    },
+    [markInterrupted],
+  );
 
   return {
+    turns,
+    clearHistory,
+    readLevels,
+    confirmNavigation,
     status,
     error,
+    notice,
     muted,
     levels,
-    userText,
-    assistantText,
-    movies,
     start,
     end,
     toggleMute,
     interrupt,
-    active: status !== "idle" && status !== "error",
+    sendText,
+    canSendText:
+      status !== "idle" &&
+      status !== "standby" &&
+      status !== "error" &&
+      status !== "connecting" &&
+      !textPending,
+    active: status !== "idle" && status !== "error" && status !== "standby",
   };
 };
 

@@ -1,10 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 import { act, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, vi } from "vitest";
 import { authSession } from "../shared/auth";
 import { installLocalStorageMock } from "../test/installLocalStorageMock";
-import { appTheme } from "../theme";
 import AppProviders from "./AppProviders";
 
 vi.mock("../shared/auth/bootstrapSession", () => ({
@@ -31,23 +29,25 @@ describe("AppProviders", () => {
     expect(screen.getByText("provider child")).toBeTruthy();
   });
 
-  it("applies the dark movie theme to the global concierge", async () => {
-    const user = userEvent.setup();
+  it("provides one closed lens without a header launcher or conversation drawer", () => {
     render(
       <AppProviders>
         <div>provider child</div>
       </AppProviders>,
     );
 
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
-
     expect(
-      screen.getByRole("heading", { name: "What fits tonight?" }),
-    ).toHaveStyle({ color: appTheme.palette.text.primary });
-    expect(screen.getByText("Grounded in this catalog")).toHaveStyle({
-      color: appTheme.palette.text.secondary,
-    });
+      screen.queryByRole("button", { name: "Ask the Movie Concierge" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start voice" })).toHaveAttribute(
+      "data-state",
+      "closed",
+    );
+    expect(
+      screen.queryByRole("complementary", { name: "Movie Concierge" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Start voice from header" }),
+    ).not.toBeInTheDocument();
   });
 });

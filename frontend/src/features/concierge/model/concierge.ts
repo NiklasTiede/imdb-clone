@@ -15,6 +15,7 @@ export const groundedMovieSchema = zod.object({
   runtimeMinutes: zod.number().int().nonnegative().nullable().optional(),
   genres: zod.array(zod.string()),
   imdbRating: zod.number().min(0).max(10).nullable().optional(),
+  userScore: zod.number().min(0).max(10).nullable().optional(),
   imdbRatingCount: zod.number().int().nonnegative().nullable().optional(),
   description: optionalNullableString,
   posterImageToken: optionalNullableString,
@@ -44,6 +45,43 @@ const movieCardEventSchema = zod.object({
   sequence: zod.number().int().nonnegative(),
   movie: groundedMovieSchema,
 });
+
+export const toolLabels = {
+  search_movies: "Search movies",
+  get_movie_details: "Read movie details",
+  get_movie_enrichment: "Look up additional movie facts",
+  get_movie_watch_providers: "Check streaming availability",
+  get_similar_movies: "Find similar movies",
+  get_tonight_picks: "Find tonight's picks",
+  get_my_ratings: "Read your ratings",
+  get_my_recommendations: "Find personal recommendations",
+  get_my_watchlist: "Read your watchlist",
+  add_movie_to_my_watchlist: "Add to your watchlist",
+  remove_movie_from_my_watchlist: "Remove from your watchlist",
+  set_my_movie_rating: "Save your rating",
+  remove_my_movie_rating: "Remove your rating",
+} as const;
+
+export const toolActivitySchema = zod
+  .object({
+    callId: zod.string().min(1).max(200),
+    tool: zod.enum(
+      Object.keys(toolLabels) as [
+        keyof typeof toolLabels,
+        ...Array<keyof typeof toolLabels>,
+      ],
+    ),
+    status: zod.enum(["started", "completed", "failed"]),
+  })
+  .strict();
+
+const toolActivityEventSchema = zod.object({
+  type: zod.literal("tool-activity"),
+  sequence: zod.number().int().nonnegative(),
+  activity: toolActivitySchema,
+});
+
+export type ToolActivity = zod.infer<typeof toolActivitySchema>;
 
 const openMovieActionSchema = zod
   .object({
@@ -149,6 +187,7 @@ export const conciergeEventSchema = zod.discriminatedUnion("type", [
   statusEventSchema,
   textEventSchema,
   movieCardEventSchema,
+  toolActivityEventSchema,
   uiActionEventSchema,
   errorEventSchema,
   usageEventSchema,
@@ -165,7 +204,19 @@ export type ChatTurn = {
   role: "user" | "assistant";
   text: string;
   movies: GroundedMovie[];
+  tools?: ToolActivity[];
   error?: { message: string; retryable: boolean };
+  channel?: "voice" | "text";
+  timestamp?: number;
+  final?: boolean;
+  interrupted?: boolean;
+  context?: { page: string; streamingCountry?: string };
+  actions?: {
+    action: ApplicationAction;
+    outcome: "requested" | "rejected" | "opened";
+    timestamp: number;
+    destination?: string;
+  }[];
 };
 
 export const statusLabels: Record<

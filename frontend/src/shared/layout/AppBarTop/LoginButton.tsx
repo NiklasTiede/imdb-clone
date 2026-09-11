@@ -12,9 +12,11 @@ const LoginButton = () => (
       component={RouterLink}
       sx={{
         borderColor: alpha(movieColors.brand, 0.5),
+        borderRadius: 8,
         color: movieColors.brand,
         display: { xs: "none", sm: "inline-flex" },
         fontWeight: 800,
+        minHeight: 40,
         whiteSpace: "nowrap",
       }}
       to="/login"
