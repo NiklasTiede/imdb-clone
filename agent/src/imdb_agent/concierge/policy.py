@@ -111,9 +111,7 @@ _CAPABILITY_DISCOVERY_INTENT = re.compile(
     re.IGNORECASE,
 )
 
-CAPABILITY_RESPONSE = """I can help you with these read-only movie tasks:
-
-- Search this catalog by title, genre, mood, era, or runtime.
+_MOVIE_CAPABILITIES = """- Search this catalog by title, genre, mood, era, or runtime.
 - Show grounded details for movies in the catalog.
 - Look up extra TMDB cast, crew and production facts when available.
 - Check streaming, rental and purchase offers for your country using JustWatch via TMDB.
@@ -122,10 +120,7 @@ CAPABILITY_RESPONSE = """I can help you with these read-only movie tasks:
 - Open one movie page after I resolve it from the catalog.
 - Show its trailer section so you can press Play if a trailer is available.
 - Open the homepage, or your settings, watchlist and ratings pages after sign-in.
-- Show catalog searches in the normal search page with the same filters.
-
-I cannot change watchlists or ratings or search the web.
-For spoken conversations, use Start voice when it is enabled."""
+- Show catalog searches in the normal search page with the same filters."""
 
 
 class UiActionDecisionOutcome(StrEnum):
@@ -173,14 +168,30 @@ def requests_open_movie(message: str) -> bool:
     )
 
 
-def capability_response(message: str) -> str | None:
+def capability_response(message: str, *, authenticated: bool = False) -> str | None:
     """Return the stable product-owned help text for an explicit capability question."""
 
     if re.search(r"\b(?:here|this page|this screen)\b", message, re.IGNORECASE):
         return None
     if _CAPABILITY_DISCOVERY_INTENT.search(message) is None:
         return None
-    return CAPABILITY_RESPONSE
+    if authenticated:
+        introduction = "I can help you with these movie tasks:"
+        personal = (
+            "I can read your watchlist and ratings, recommend films from your ratings, "
+            "add or remove movies, and set or remove your rating after your request. "
+            "Tell me your rating from 0 to 10. Web search is unavailable."
+        )
+    else:
+        introduction = "I can help you with these read-only movie tasks:"
+        personal = (
+            "Sign in to read or change your watchlists and ratings and get personal suggestions. "
+            "Web search is unavailable."
+        )
+    return (
+        f"{introduction}\n\n{_MOVIE_CAPABILITIES}\n\n{personal}\n"
+        "For spoken conversations, click the Voice Lens at the bottom of the screen."
+    )
 
 
 def _message_references_movie(message: str, movie: GroundedMovie) -> bool:

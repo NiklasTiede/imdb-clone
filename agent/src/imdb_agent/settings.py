@@ -83,7 +83,7 @@ class Settings(BaseSettings):
     run_cost_limit_usd: Decimal = Field(default=Decimal("0.25"), gt=0, le=1)
     live_evals_enabled: bool = False
     voice_enabled: bool = False
-    voice_session_seconds: float = Field(default=180.0, ge=15, le=300)
+    voice_session_seconds: float = Field(default=300.0, ge=15, le=300)
     voice_max_sessions: int = Field(default=20, ge=1, le=100)
     voice_allowed_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"]

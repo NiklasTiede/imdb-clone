@@ -88,7 +88,7 @@ async def test_read_requires_grounding_without_credentials_or_write_authority() 
     await gate.call(ctx, backend, "get_movie_enrichment", {"movieId": 6})
     assert calls == [None]
     assert turn.movies == (movie,)
-    assert turn.command() is None
+    assert turn.mutation is None
     assert turn.receipt is None
 
 

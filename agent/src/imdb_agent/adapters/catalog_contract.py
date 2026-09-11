@@ -230,7 +230,10 @@ def parse_grounded_movies(tool_name: ToolName, content: Any) -> tuple[GroundedMo
         return ()
     if tool_name is ToolName.GET_MY_RATINGS:
         ratings = _RatingsResult.model_validate(content)
-        return tuple(entry.movie.to_grounded() for entry in ratings.ratings)
+        return tuple(
+            entry.movie.to_grounded().model_copy(update={"user_score": entry.user_score})
+            for entry in ratings.ratings
+        )
     if tool_name is ToolName.GET_MY_RECOMMENDATIONS:
         result = _PersonalRecommendationsResult.model_validate(content)
     elif tool_name is ToolName.GET_MY_WATCHLIST:

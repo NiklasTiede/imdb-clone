@@ -38,6 +38,8 @@ from imdb_agent.concierge.events import (
     OpenWatchlistAction,
     RunnerEvent,
     TextEvent,
+    ToolActivity,
+    ToolActivityEvent,
     ToolCallEvent,
     UiActionEvent,
     UsageEvent,
@@ -45,7 +47,6 @@ from imdb_agent.concierge.events import (
 )
 from imdb_agent.concierge.personal import (
     PersonalTurn,
-    pending_rating_target,
     receipt_action,
     requests_watchlist,
 )
@@ -141,10 +142,6 @@ class PydanticAIConciergeRunner:
         personal = PersonalTurn(
             movies=next((m.movies for m in reversed(request.history) if m.movies), ())
         )
-        personal.pending_rating_id = pending_rating_target(
-            next((m.content for m in reversed(request.history) if m.role == "user"), ""),
-            personal.movies,
-        )
         personal.finalize(request.message)
         active_agent = self._agent
         if self._settings is not None:
@@ -198,7 +195,26 @@ class PydanticAIConciergeRunner:
                         arguments: dict[str, object] = event.part.args_as_dict()
                         tool_arguments[event.tool_call_id] = arguments
                         yield ToolCallEvent(tool=tool_name, arguments=arguments)
+                        yield ToolActivityEvent(
+                            activity=ToolActivity(
+                                call_id=event.tool_call_id, tool=tool_name, status="started"
+                            )
+                        )
                     elif isinstance(event, FunctionToolResultEvent):
+                        if (
+                            isinstance(event.part, ToolReturnPart)
+                            and event.part.tool_name not in APPLICATION_TOOLS
+                            and event.tool_call_id in tool_arguments
+                        ):
+                            yield ToolActivityEvent(
+                                activity=ToolActivity(
+                                    call_id=event.tool_call_id,
+                                    tool=_tool_name(event.part.tool_name),
+                                    status="failed"
+                                    if event.part.outcome == "failed"
+                                    else "completed",
+                                )
+                            )
                         if (
                             isinstance(event.part, ToolReturnPart)
                             and event.part.outcome != "failed"
@@ -216,6 +232,8 @@ class PydanticAIConciergeRunner:
                             ):
                                 action_sent = True
                                 yield UiActionEvent(action=OpenWatchlistAction())
+                            # Project the browser contract independently of MCP interception.
+                            # Injected Agents also reach here without a PersonalToolGate.
                             movies = parse_grounded_movies(tool_name, event.part.content)
                             if tool_name not in {
                                 ToolName.GET_MOVIE_ENRICHMENT,

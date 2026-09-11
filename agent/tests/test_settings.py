@@ -216,3 +216,13 @@ def test_production_profiling_can_be_disabled_explicitly() -> None:
 
     assert settings.profiling_active is False
     assert settings.effective_profiling_server_address is None
+
+
+def test_voice_preview_defaults_to_five_minutes_and_rejects_longer_sessions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("IMDB_AGENT_VOICE_SESSION_SECONDS", raising=False)
+    assert load_settings().voice_session_seconds == 300
+    monkeypatch.setenv("IMDB_AGENT_VOICE_SESSION_SECONDS", "301")
+    with pytest.raises(ConfigurationError):
+        load_settings()

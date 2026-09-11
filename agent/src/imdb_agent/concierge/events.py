@@ -3,13 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal  # noqa: TC003 - Pydantic resolves this annotation at runtime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 from pydantic.alias_generators import to_camel
 
-if TYPE_CHECKING:
-    from imdb_agent.concierge.tools import ToolName
+from imdb_agent.concierge.tools import ToolName  # noqa: TC001 - Pydantic runtime type
 
 
 class EventModel(BaseModel):
@@ -48,6 +47,7 @@ class GroundedMovie(EventModel):
     runtime_minutes: int | None = Field(default=None, ge=0)
     genres: tuple[str, ...] = ()
     imdb_rating: float | None = Field(default=None, ge=0, le=10)
+    user_score: float | None = Field(default=None, ge=0, le=10)
     imdb_rating_count: int | None = Field(default=None, ge=0)
     description: str | None = Field(default=None, max_length=600)
     poster_image_token: str | None = Field(default=None, max_length=300)
@@ -84,6 +84,20 @@ class MovieCardEvent(EventModel):
     type: Literal["movie-card"] = "movie-card"
     sequence: int = Field(default=0, ge=0)
     movie: GroundedMovie
+
+
+class ToolActivity(EventModel):
+    """Bounded execution evidence, never raw tool arguments or return values."""
+
+    call_id: str = Field(min_length=1, max_length=200)
+    tool: ToolName
+    status: Literal["started", "completed", "failed"]
+
+
+class ToolActivityEvent(EventModel):
+    type: Literal["tool-activity"] = "tool-activity"
+    sequence: int = Field(default=0, ge=0)
+    activity: ToolActivity
 
 
 class OpenMovieAction(EventModel):
@@ -183,6 +197,7 @@ ConciergeEvent = Annotated[
     StatusEvent
     | TextEvent
     | MovieCardEvent
+    | ToolActivityEvent
     | UiActionEvent
     | ErrorEvent
     | UsageEvent
@@ -193,4 +208,6 @@ ConciergeEvent = Annotated[
 concierge_event_adapter: TypeAdapter[ConciergeEvent] = TypeAdapter(ConciergeEvent)
 
 
-RunnerEvent = ToolCallEvent | TextEvent | MovieCardEvent | UsageEvent | UiActionEvent
+RunnerEvent = (
+    ToolCallEvent | ToolActivityEvent | TextEvent | MovieCardEvent | UsageEvent | UiActionEvent
+)

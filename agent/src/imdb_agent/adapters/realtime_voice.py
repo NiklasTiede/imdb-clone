@@ -21,20 +21,27 @@ from pydantic_ai.realtime import (
     RealtimeInputSpeechStartEvent,
     RealtimeTurnCompleteEvent,
 )
-from pydantic_ai.realtime.xai import XaiRealtimeModel, XaiRealtimeModelSettings
+from pydantic_ai.realtime.xai import XaiRealtimeModelSettings
 
 from imdb_agent.adapters.application_tools import APPLICATION_TOOLS, ApplicationTools
 from imdb_agent.adapters.catalog_contract import parse_grounded_movies
 from imdb_agent.adapters.personal_tools import PersonalToolGate, base_toolset, personal_policy
 from imdb_agent.adapters.voice_timing import VoiceTiming
 from imdb_agent.adapters.voice_transcripts import CorrelatedVoiceModel
-from imdb_agent.concierge.events import OpenLoginAction, OpenWatchlistAction
+from imdb_agent.adapters.xai_voice_model import ConciergeXaiVoiceModel
+from imdb_agent.concierge.events import OpenLoginAction, OpenWatchlistAction, ToolActivity
 from imdb_agent.concierge.navigation import page_action
 from imdb_agent.concierge.personal import PersonalTurn, receipt_action, requests_watchlist
 from imdb_agent.concierge.policy import SYSTEM_POLICY, select_movies_for_display
 from imdb_agent.concierge.streaming import StreamingRegion
-from imdb_agent.concierge.tools import PERSONAL_TOOLS, ToolName
-from imdb_agent.concierge.voice import VoiceEvent, VoiceGrounding, VoiceSessionLimitError
+from imdb_agent.concierge.tools import PERSONAL_TOOLS, WRITE_TOOLS, ToolName
+from imdb_agent.concierge.voice import (
+    VoiceEvent,
+    VoiceGrounding,
+    VoiceIdleTimeoutError,
+    VoiceSessionLimitError,
+    VoiceTranscript,
+)
 
 if TYPE_CHECKING:
     from pydantic import SecretStr
@@ -47,6 +54,8 @@ VOICE_POLICY = (
     SYSTEM_POLICY
     + """
 Channel: You are speaking English over a live microphone connection. Voice is available here.
+The user may also type or select a suggested request in this same conversation.
+Treat these as user turns with the same context and capabilities, and answer aloud.
 Preserve English catalog titles. Reply conversationally in at most two short sentences.
 No Markdown, URLs, catalog IDs or long lists in speech. Ask a short clarification for ambiguity.
 For 'open it', use the last unambiguous movie discussed; look up its details again when needed.
@@ -63,7 +72,7 @@ Personal capabilities depend on the session policy below.
 class RealtimeVoiceRunner:
     def __init__(self, *, settings: Settings, secrets: LocalVoiceSecrets) -> None:
         self._settings = settings
-        self._model: RealtimeModel = XaiRealtimeModel(
+        self._model: RealtimeModel = ConciergeXaiVoiceModel(
             "grok-voice-think-fast-2.0",
             provider=XaiProvider(api_key=secrets.xai_api_key.get_secret_value()),
             settings=XaiRealtimeModelSettings(
@@ -135,11 +144,13 @@ async def _relay_voice(
     streaming_region = streaming_region or StreamingRegion()
     model = CorrelatedVoiceModel(model)
     grounding = VoiceGrounding()
+    transcript = VoiceTranscript()
     application = ApplicationTools(personal, authenticated=authenticated, search=grounding.search)
     timing = VoiceTiming()
     activity = asyncio.Event()
     muted = False
     response_active = False
+    rejected_writes = 0
     user_item: str | None = None
     calls: dict[str, tuple[int, dict[str, object]]] = {}
 
@@ -158,7 +169,7 @@ async def _relay_voice(
         await transport.send(VoiceEvent(type="ready"))
 
         async def receive() -> None:
-            nonlocal muted, response_active
+            nonlocal muted, response_active, user_item, rejected_writes
             while True:
                 command = await transport.receive()
                 if isinstance(command, bytes):
@@ -169,6 +180,41 @@ async def _relay_voice(
                     streaming_region.country = command.context.streaming_country
                 elif command.type == "end":
                     return
+                elif command.type == "text" and command.text is not None:
+                    activity.set()
+                    was_cancelled = grounding.cancelled
+                    personal_was_cancelled = personal.cancelled
+                    grounding.cancelled = True
+                    personal.cancelled = True
+                    if response_active:
+                        await session.interrupt()
+                    await session.clear_audio()
+                    grounding.cancelled = was_cancelled
+                    personal.cancelled = personal_was_cancelled
+                    grounding.begin()
+                    timing.begin()
+                    timing.speech_ended()
+                    personal.begin()
+                    rejected_writes = 0
+                    # A delayed ASR result must not replace this complete typed request.
+                    user_item = None
+                    grounding.message = command.text
+                    personal.finalize(command.text)
+                    await transport.send(VoiceEvent(type="interrupt", turn=grounding.turn))
+                    await transport.send(
+                        VoiceEvent(
+                            type="transcript",
+                            speaker="user",
+                            text=command.text,
+                            final=True,
+                            turn=grounding.turn,
+                        )
+                    )
+                    await transport.send(
+                        VoiceEvent(type="status", status="thinking", turn=grounding.turn)
+                    )
+                    response_active = True
+                    await session.send(command.text)
                 elif command.type == "interrupt":
                     grounding.cancelled = True
                     personal.cancelled = True
@@ -185,13 +231,14 @@ async def _relay_voice(
                     await transport.send(VoiceEvent(type="status", status="listening"))
 
         async def events() -> None:
-            nonlocal user_item, response_active
+            nonlocal user_item, response_active, rejected_writes
             async for event in session:
                 if isinstance(event, RealtimeInputSpeechStartEvent):
                     activity.set()
                     grounding.begin()
                     timing.begin()
                     personal.begin()
+                    rejected_writes = 0
                     user_item = event.item_id
                     # xAI cancellation does not support playback-offset truncation.
                     if response_active:
@@ -217,6 +264,18 @@ async def _relay_voice(
                         timing.tool_started(event.tool_call_id, ToolName(event.part.tool_name))
                     grounding.tools_called = True
                     calls[event.tool_call_id] = (grounding.turn, event.part.args_as_dict())
+                    if event.part.tool_name not in APPLICATION_TOOLS:
+                        await transport.send(
+                            VoiceEvent(
+                                type="tool-activity",
+                                turn=grounding.turn,
+                                activity=ToolActivity(
+                                    call_id=event.tool_call_id,
+                                    tool=ToolName(event.part.tool_name),
+                                    status="started",
+                                ),
+                            )
+                        )
                     await transport.send(
                         VoiceEvent(type="status", status="searching", turn=grounding.turn)
                     )
@@ -227,10 +286,48 @@ async def _relay_voice(
                     call_turn, arguments = calls.pop(event.tool_call_id, (-1, {}))
                     if call_turn != grounding.turn or grounding.cancelled:
                         continue
+                    if event.part.tool_name not in APPLICATION_TOOLS:
+                        await transport.send(
+                            VoiceEvent(
+                                type="tool-activity",
+                                turn=grounding.turn,
+                                activity=ToolActivity(
+                                    call_id=event.tool_call_id,
+                                    tool=ToolName(event.part.tool_name),
+                                    status="failed"
+                                    if event.part.outcome == "failed"
+                                    else "completed",
+                                ),
+                            )
+                        )
                     if event.part.outcome == "failed":
+                        if event.part.tool_name in WRITE_TOOLS:
+                            rejected_writes += 1
+                            if rejected_writes >= 2:
+                                # Stop a rejected-write loop, keeping the microphone session alive.
+                                grounding.cancelled = True
+                                personal.cancelled = True
+                                await session.interrupt()
+                                response_active = False
+                                await transport.send(
+                                    VoiceEvent(type="interrupt", turn=grounding.turn)
+                                )
+                                await transport.send(
+                                    VoiceEvent(
+                                        type="status",
+                                        status="listening",
+                                        turn=grounding.turn,
+                                        text=(
+                                            "That change wasn't confirmed. Please name the movie "
+                                            "and the change you want, then try again."
+                                        ),
+                                    )
+                                )
                         continue
                     if event.part.tool_name not in APPLICATION_TOOLS:
                         name = ToolName(event.part.tool_name)
+                        # The relay also accepts injected Agents without MCP interception;
+                        # result projection therefore validates and grounds their movies here.
                         movies = parse_grounded_movies(name, event.part.content)
                         if name not in {
                             ToolName.GET_MOVIE_ENRICHMENT,
@@ -256,7 +353,9 @@ async def _relay_voice(
                                 VoiceEvent(
                                     type="transcript",
                                     speaker="assistant",
-                                    text=delta.transcript[:6_000],
+                                    text=transcript.update(
+                                        grounding.turn, event.index, delta.transcript
+                                    ),
                                     turn=grounding.turn,
                                 )
                             )
@@ -274,14 +373,14 @@ async def _relay_voice(
                     ):
                         if grounding.turn == 0:
                             grounding.begin()
-                        transcript = part.transcript or ""
-                        grounding.message = transcript if len(transcript) <= 600 else ""
+                        user_transcript = part.transcript or ""
+                        grounding.message = user_transcript if len(user_transcript) <= 600 else ""
                         personal.finalize(grounding.message)
                         await transport.send(
                             VoiceEvent(
                                 type="transcript",
                                 speaker="user",
-                                text=transcript[:6_000],
+                                text=user_transcript[:6_000],
                                 final=True,
                                 turn=grounding.turn,
                             )
@@ -291,7 +390,9 @@ async def _relay_voice(
                             VoiceEvent(
                                 type="transcript",
                                 speaker="assistant",
-                                text=(part.transcript or "")[:6_000],
+                                text=transcript.update(
+                                    grounding.turn, event.index, part.transcript or ""
+                                ),
                                 final=True,
                                 turn=grounding.turn,
                             )
@@ -320,47 +421,8 @@ async def _relay_voice(
                         )
                     )
                 if not any(call_turn == grounding.turn for call_turn, _args in calls.values()):
-                    if not grounding.cancelled and not grounding.action_sent:
-                        if personal.receipt is not None:
-                            grounding.action_sent = True
-                            await transport.send(
-                                VoiceEvent(
-                                    type="ui-action",
-                                    turn=grounding.turn,
-                                    action=receipt_action(personal.receipt),
-                                )
-                            )
-                        elif requests_watchlist(grounding.message) and (
-                            personal.watchlist_read or not authenticated
-                        ):
-                            grounding.action_sent = True
-                            await transport.send(
-                                VoiceEvent(
-                                    type="ui-action",
-                                    turn=grounding.turn,
-                                    action=OpenWatchlistAction()
-                                    if authenticated
-                                    else OpenLoginAction(),
-                                )
-                            )
-                    if application.action is not None and not grounding.action_sent:
-                        grounding.action_sent = True
-                        if (
-                            application.action.type == "open_movie"
-                            or application.action.type == "open_movie_trailer"
-                        ):
-                            personal.opened_movie_id = application.action.movie_id
-                        turn = grounding.turn
-                        if application.movie is not None:
-                            await transport.send(
-                                VoiceEvent(type="movie-card", movie=application.movie, turn=turn)
-                            )
-                        if not grounding.cancelled and grounding.turn == turn:
-                            await transport.send(
-                                VoiceEvent(type="ui-action", action=application.action, turn=turn)
-                            )
                     await _send_navigation(
-                        transport, grounding, personal, authenticated=authenticated
+                        transport, grounding, personal, application, authenticated=authenticated
                     )
 
         async def idle() -> None:
@@ -370,13 +432,7 @@ async def _relay_voice(
                     async with asyncio.timeout(45):
                         await activity.wait()
                 except TimeoutError:
-                    await transport.send(
-                        VoiceEvent(
-                            type="error",
-                            text="No speech detected. Start a new session when ready.",
-                        )
-                    )
-                    return
+                    raise VoiceIdleTimeoutError from None
 
         tasks = [
             asyncio.create_task(receive()),
@@ -397,27 +453,45 @@ async def _send_navigation(
     transport: VoiceTransport,
     grounding: VoiceGrounding,
     personal: PersonalTurn,
+    application: ApplicationTools,
     *,
     authenticated: bool,
 ) -> None:
-    if not grounding.cancelled and not grounding.action_sent:
-        navigation = page_action(grounding.message, authenticated=authenticated)
-        search = grounding.search.action(grounding.message, completed=grounding.completed)
-        if navigation is not None or search is not None:
-            grounding.action_sent = True
-            await transport.send(
-                VoiceEvent(type="ui-action", turn=grounding.turn, action=navigation or search)
-            )
-            return
-    turn = grounding.turn
-    action = grounding.action()
+    """Emit at most one navigation per turn, with one priority and cancellation check.
+
+    Committed personal changes take precedence over model navigation; deterministic
+    fallbacks retain the fast path for direct commands without an extra model call.
+    """
+    if grounding.cancelled or grounding.action_sent:
+        return
+    if personal.receipt is not None:
+        action = receipt_action(personal.receipt)
+    elif requests_watchlist(grounding.message) and (personal.watchlist_read or not authenticated):
+        action = OpenWatchlistAction() if authenticated else OpenLoginAction()
+    else:
+        action = (
+            application.action
+            or page_action(grounding.message, authenticated=authenticated)
+            or grounding.search.action(grounding.message, completed=grounding.completed)
+            or grounding.action()
+        )
     if action is None:
         return
-    # Emit the evidence immediately before the action, including for a contextual 'open it'.
-    candidates = tuple(grounding.movies.values()) if grounding.tools_called else grounding.previous
-    movie = next(movie for movie in candidates if movie.movie_id == action.movie_id)
-    await transport.send(VoiceEvent(type="movie-card", movie=movie, turn=grounding.turn))
+    turn = grounding.turn
+    grounding.action_sent = True
+    if action.type == "open_movie" or action.type == "open_movie_trailer":
+        candidates = (
+            (application.movie,)
+            if application.movie is not None and application.movie.movie_id == action.movie_id
+            else tuple(grounding.movies.values())
+            if grounding.tools_called
+            else grounding.previous
+        )
+        movie = next(movie for movie in candidates if movie.movie_id == action.movie_id)
+        await transport.send(VoiceEvent(type="movie-card", movie=movie, turn=turn))
+    # Sending evidence yields control: a new user turn may have started meanwhile.
     if grounding.cancelled or grounding.turn != turn:
         return
-    personal.opened_movie_id = action.movie_id
-    await transport.send(VoiceEvent(type="ui-action", action=action, turn=grounding.turn))
+    if action.type == "open_movie" or action.type == "open_movie_trailer":
+        personal.opened_movie_id = action.movie_id
+    await transport.send(VoiceEvent(type="ui-action", action=action, turn=turn))

@@ -96,3 +96,42 @@ def test_multiple_previous_movies_require_clarification() -> None:
         completed=True,
     )
     assert state.action() is None
+
+
+@pytest.mark.parametrize("text", ["", "   ", "x" * 601])
+def test_voice_text_requires_a_bounded_complete_message(text: str) -> None:
+    from pydantic import ValidationError
+
+    from imdb_agent.concierge.voice import VoiceCommand
+
+    with pytest.raises(ValidationError):
+        VoiceCommand(type="text", text=text)
+
+
+def test_voice_text_is_only_allowed_on_a_text_command() -> None:
+    from pydantic import ValidationError
+
+    from imdb_agent.concierge.voice import VoiceCommand
+
+    assert VoiceCommand(type="text", text="  Open it  ").text == "Open it"
+    with pytest.raises(ValidationError):
+        VoiceCommand(type="text")
+    with pytest.raises(ValidationError):
+        VoiceCommand(type="mute", text="Open it")
+
+
+def test_transcript_keeps_all_speech_parts_and_applies_revisions_without_duplicates() -> None:
+    from imdb_agent.concierge.voice import VoiceTranscript
+
+    transcript = VoiceTranscript()
+    assert transcript.update(1, 2, "I'll check your ratings.") == "I'll check your ratings."
+    assert transcript.update(1, 5, "Arrival has nine.") == (
+        "I'll check your ratings.\n\nArrival has nine."
+    )
+    assert transcript.update(1, 5, "Arrival has ten out of ten.") == (
+        "I'll check your ratings.\n\nArrival has ten out of ten."
+    )
+    assert transcript.update(1, 5, "Arrival has ten out of ten.") == (
+        "I'll check your ratings.\n\nArrival has ten out of ten."
+    )
+    assert transcript.update(2, 8, "Your next reply.") == "Your next reply."

@@ -13,6 +13,7 @@ from imdb_agent.concierge.events import (
     RunStatus,
     StatusEvent,
     TextEvent,
+    ToolActivityEvent,
     ToolCallEvent,
     UiActionEvent,
 )
@@ -117,23 +118,13 @@ class ConciergeService:
         text_parts: list[str] = []
         movies_by_id: dict[int, GroundedMovie] = {}
         self._observer.started()
-        local_response = capability_response(message)
+        local_response = capability_response(message, authenticated=delegation is not None)
         local_action = page_action(message, authenticated=delegation is not None)
         if local_action is not None:
             local_response = (
                 "Please sign in to open your personal pages."
                 if local_action.type == "open_login"
                 else f"Opening {local_action.destination}."
-            )
-        if local_response is not None and delegation is not None:
-            local_response = local_response.replace(
-                "these read-only movie tasks", "these movie tasks"
-            ).replace(
-                "I cannot change watchlists or ratings or search the web.",
-                "I can read your watchlist and ratings, recommend films from your ratings, "
-                "add or remove movies, and set or remove your rating "
-                "after your explicit command. Tell me your rating from 0 to 10. "
-                "Web search is unavailable.",
             )
 
         def next_event(event: ConciergeEvent) -> ConciergeEvent:
@@ -192,7 +183,7 @@ class ConciergeService:
                         text_parts.append(event.delta)
                     elif event.type == "movie-card":
                         movies_by_id[event.movie.movie_id] = event.movie
-                    else:
+                    elif not isinstance(event, ToolActivityEvent):
                         usage = event.usage
                     yield next_event(event)
 

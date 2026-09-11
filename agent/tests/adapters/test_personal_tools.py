@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
@@ -58,14 +57,12 @@ async def test_injected_credential_and_operation_are_stable_on_retry() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("mode", ["anonymous", "cancelled", "wrong_movie", "negated"])
+@pytest.mark.parametrize("mode", ["anonymous", "cancelled", "wrong_movie"])
 async def test_rejected_write_never_reaches_java(mode: str) -> None:
     state = turn()
     backend = Backend()
     if mode == "cancelled":
         state.cancelled = True
-    if mode == "negated":
-        state.finalize("Don't add Forrest Gump to my watchlist")
     gate = PersonalToolGate(None if mode == "anonymous" else SecretStr("synthetic"), state)
     with pytest.raises(ToolFailed):
         await gate.call(
@@ -79,26 +76,6 @@ async def test_rejected_write_never_reaches_java(mode: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_pending_final_transcript_cannot_authorize_a_different_turn() -> None:
-    state = turn()
-    state.finalized.clear()
-    backend = Backend()
-    gate = PersonalToolGate(SecretStr("synthetic"), state)
-    pending = asyncio.create_task(
-        gate.call(
-            cast("RunContext[Any]", None), backend, "add_movie_to_my_watchlist", {"movieId": 6}
-        )
-    )
-    await asyncio.sleep(0)
-    assert not backend.calls
-    state.begin()
-    state.finalize("Add Forrest Gump to my watchlist")
-    with pytest.raises(ToolFailed):
-        await pending
-    assert not backend.calls
-
-
-@pytest.mark.asyncio
 async def test_failed_tool_does_not_emit_receipt_or_expose_backend_details() -> None:
     state = turn()
     backend = Backend()
@@ -109,36 +86,6 @@ async def test_failed_tool_does_not_emit_receipt_or_expose_backend_details() -> 
         )
     assert "private-backend-detail" not in str(error.value)
     assert state.receipt is None
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("message", "name", "args"),
-    [
-        ("Rate Forrest Gump 8.5", "set_my_movie_rating", {"movieId": 6, "score": 9}),
-        ("Rate Forrest Gump 8.5", "set_my_movie_rating", {"movieId": 7, "score": 8.5}),
-        ("Rate Forrest Gump 8.5", "remove_my_movie_rating", {"movieId": 6}),
-        ("Remove Forrest Gump from my watchlist", "add_movie_to_my_watchlist", {"movieId": 6}),
-        ("Don't delete my rating for Forrest Gump", "remove_my_movie_rating", {"movieId": 6}),
-        ("Give Forrest Gump a rating", "set_my_movie_rating", {"movieId": 6, "score": 8.5}),
-    ],
-)
-async def test_model_cannot_change_the_requested_operation_movie_or_score(
-    message: str,
-    name: str,
-    args: dict[str, Any],
-) -> None:
-    state = turn()
-    state.finalize(message)
-    backend = Backend()
-    with pytest.raises(ToolFailed):
-        await PersonalToolGate(SecretStr("synthetic"), state).call(
-            cast("RunContext[Any]", None),
-            backend,
-            name,
-            args,
-        )
-    assert not backend.calls
 
 
 @pytest.mark.asyncio
@@ -166,9 +113,6 @@ async def test_committed_changes_emit_the_correct_page_and_previous_state(
     from imdb_agent.concierge.personal import receipt_action
 
     state = turn()
-    if message == "eight point five":
-        state.finalize("I'd like to rate Forrest Gump")
-        state.begin()
     state.finalize(message)
     calls: list[dict[str, Any]] = []
 
@@ -249,3 +193,31 @@ async def test_personal_reads_use_delegation_without_creating_write_receipts(nam
     assert calls == [{"delegation": "synthetic-session"}]
     assert state.receipt is None
     assert state.movies[0].movie_id == 6 and state.movies[0].imdb_rating == 8.8
+    assert state.movies[0].user_score == (10.0 if name == "get_my_ratings" else None)
+
+
+@pytest.mark.asyncio
+async def test_write_rejection_reason_survives_real_logging_filter_without_private_data(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import json
+
+    from imdb_agent.adapters.logging import configure_logging
+
+    configure_logging(json_output=True)
+    state = turn()
+    state.finalize("Remove it from my watchlist")
+    state.cancelled = True
+    with pytest.raises(ToolFailed):
+        await PersonalToolGate(SecretStr("synthetic-private-token"), state).call(
+            cast("RunContext[Any]", None),
+            Backend(),
+            "remove_movie_from_my_watchlist",
+            {"movieId": 6},
+        )
+    output = capsys.readouterr().out
+    logged: dict[str, object] = json.loads(output)
+    assert logged["event"] == "personal_write_rejected"
+    assert logged["error_code"] == "inactive_turn"
+    assert "Forrest Gump" not in output
+    assert "synthetic-private-token" not in output

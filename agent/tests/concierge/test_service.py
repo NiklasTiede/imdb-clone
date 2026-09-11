@@ -161,7 +161,10 @@ class NeverCalledRunner:
         yield TextEvent(delta="unreachable")  # pragma: no cover
 
 
-async def test_capability_help_is_local_persisted_and_free_of_model_usage() -> None:
+@pytest.mark.parametrize("authenticated", [False, True])
+async def test_capability_help_is_local_persisted_and_free_of_model_usage(
+    authenticated: bool,
+) -> None:
     store = InMemoryConversationStore()
     ledger = InMemoryCostLedger(
         project_limit_usd=Decimal(0),
@@ -177,15 +180,21 @@ async def test_capability_help_is_local_persisted_and_free_of_model_usage() -> N
     )
     conversation_id = await service.create_conversation("browser-client-0001")
 
-    events = await collect_events(
-        service,
-        client_id="browser-client-0001",
-        conversation_id=conversation_id,
-        message="What kind of actions can I do with you?",
-    )
+    events = [
+        event
+        async for event in service.stream_turn(
+            client_id="browser-client-0001",
+            conversation_id=conversation_id,
+            message="What kind of actions can I do with you?",
+            delegation=SecretStr("synthetic-delegation") if authenticated else None,
+        )
+    ]
 
     response = next(event.delta for event in events if isinstance(event, TextEvent))
     assert "Open one movie page" in response
+    assert "Voice Lens" in response and "Start voice" not in response
+    assert ("I can read your watchlist and ratings" in response) is authenticated
+    assert ("Sign in to read or change" in response) is not authenticated
     assert not any(isinstance(event, UsageEvent) for event in events)
     assert events[-1].type == "completion"
     assert events[-1].outcome == "success"

@@ -11,6 +11,13 @@ if TYPE_CHECKING:
 SAFE_LOG_FIELDS: Final = frozenset(
     {
         "duration_ms",
+        "session_limit_seconds",
+        "phase",
+        "audio_input_bytes",
+        "audio_output_bytes",
+        "control_messages",
+        "typed_messages",
+        "turns",
         "environment",
         "error_code",
         "error_type",

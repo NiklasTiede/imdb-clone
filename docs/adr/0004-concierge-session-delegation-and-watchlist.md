@@ -2,11 +2,18 @@
 
 Status: Accepted for the local text/voice slice, 2026-09-09. Production rollout is separate.
 
+Updated 2026-09-11: The decision below supersedes the original transcript-grammar write gate,
+three-minute voice limit, and exclusion of personal rating/recommendation reads. Casual requests,
+title aliases and score-only follow-ups now rely on model-interpreted intent. Deterministic checks
+still govern identity, grounded movie IDs, numeric scores, turn lifecycle and committed receipts.
+This deliberately trades the old grammar restriction for conversational usability; it does not
+claim deterministic protection against every misunderstood or injected natural-language intent.
+
 ## Decision
 
 Java Identity issues a five-minute HMAC-authenticated capability through a CSRF-protected,
 authenticated POST. Its claims bind the JDBC login session, account, expiry, fixed audience
-`movie-concierge`, and `watchlist:read,watchlist:add,watchlist:remove,ratings:set,ratings:remove` scopes. A random signing key lives in that
+`movie-concierge`, and `watchlist:read,watchlist:add,watchlist:remove,ratings:read,ratings:set,ratings:remove` scopes. A random signing key lives in that
 session. Java verifies the persisted session and principal on each personal MCP invocation.
 There is no second account database in Python and no new globally shared signing secret.
 
@@ -16,8 +23,11 @@ in a dedicated header. Python verifies it with the workload-authenticated applic
 `get_my_context` tool before accepting personal conversation access. Conversation ownership combines
 the existing browser identity with a Java-verified session binding, so a caller-chosen client ID
 cannot retrieve another login session's conversation. Logout/account switches unmount the frontend
-conversation and invalidate Java delegation. Text obtains a fresh capability per turn; voice ends
-within three minutes, below its five-minute lifetime.
+conversation and invalidate Java delegation. Text obtains a fresh capability per turn; voice has a five-minute wall-clock cap. Its delegated
+capability also lasts five minutes, beginning before the voice connection is established, so Java
+can reject a personal call shortly before the voice deadline. This does not extend or refresh the
+credential. After 45 seconds without input, the session closes into browser standby; clicking the
+closed Voice Lens starts a fresh session.
 
 Python creates a separate MCP client/tool gate for each turn or voice session. Credentials and
 operation IDs travel as application-injected MCP metadata, excluded from model argument schemas,
@@ -27,23 +37,23 @@ domain state. Anonymous model toolsets exclude personal tools and the applicatio
 
 ## Write semantics
 
-Only a complete affirmative English intention for one catalog-grounded film permits watchlist
-addition/removal or personal rating set/removal. There is no prescribed command template:
-“I want that one on my watchlist”, “Let's take this one off my list” and “I'd give it an eight”
-are supported, including polite conversational prefixes. Setting includes updating an existing rating.
-The final transcript must also contain the requested score (0–10, at most one decimal); numeric
-and spoken English scores are supported. After a rating request whose only missing detail is the
-score, the immediately following turn may supply just that score. This pending target is grounded,
-cannot survive cancellation or an intervening turn, and cannot switch to another movie via tool
-arguments. Text reconstructs it from the preceding user turn; voice retains it in session state.
-The tool gate binds action, target and score together.
-The model may not invent a personal score from IMDb data or a recommendation. Negation, conditions,
-multiple targets, suggestions, missing/invalid scores and incomplete speech fail closed. Title
-collisions require the year. A contextual `it`, `this one` or `that one` requires exactly one candidate.
-An emitted movie-open action establishes that movie as the following turn's context; current-turn
-catalog candidates are preserved until then, and new searches may introduce ambiguity again. Catalog strings
-never grant permission. An interruption clears pending authority; a committed transaction remains
-committed and is visible in the user's library.
+The model interprets the user's requested action, movie reference and personal score from the
+conversation. Natural phrasing, title aliases (Amelie / Amélie) and score-only follow-ups do not
+require a prescribed sentence template. Instructions require the model to ask about unclear movies
+or scores, distinguish negation, hypotheticals and tool-result instructions from user commands, and
+never invent a personal score from IMDb/community data. These are model behavior requirements,
+not deterministic grammar guarantees. The previous final-transcript parser and pending-score
+authorization state are superseded; final ASR text is retained for history rather than required as
+an additional write permission.
+
+Before execution, the tool gate checks an active uncancelled user turn, a delegated session, a
+catalog-grounded movie ID, and one idempotent mutation per turn. Ratings must be finite numeric
+values from 0 to 10 with at most one decimal; non-rating operations must not supply a score. A
+repeated identical request can reuse the operation ID, while a different action, movie or score in
+the same turn is rejected. All retrieved catalog candidates remain grounded; narrowing the visible
+cards is not authority to discard candidates. An emitted movie-open action establishes that movie
+as subsequent context. Interruption cancels the active turn and stale tool results cannot update
+its state, but a Java transaction already committed remains committed.
 
 Python injects one random operation ID per user turn. Engagement first serializes all assistant
 mutations with a transaction-scoped account receipt lock, then takes the relevant existing domain
@@ -65,7 +75,11 @@ rating). Definitive refusals use a failed tool result, allowing the model to ask
 exhausting retry limits and disconnecting. A model's spoken success claim alone never triggers navigation. Notifications sit above
 the mobile voice controls so microphone and end-session buttons remain usable.
 
-General personal rating/taste reads and broader account changes remain outside this slice.
+Personal rating and taste reads are included: `get_my_ratings` returns paginated actual user scores
+and the Java-owned taste summary, and `get_my_recommendations` derives suggestions from those
+ratings using existing Java recommendation behavior. `ratings:read` authorizes these reads. Reading
+ratings or recommendations does not itself request navigation or a mutation. Broader account
+changes remain outside this slice.
 Undo is an explicit new user action, not a compare-and-swap operation against edits in another tab.
 
 ## Focused threat analysis
@@ -74,7 +88,9 @@ Undo is an explicit new user action, not a compare-and-swap operation against ed
 - Stolen workload key alone: it cannot access personal tools without a valid session delegation.
 - Replayed expired/logout/account-switch credential: Java checks expiry and the current stored session.
 - Cross-user Python state: no shared mutable credential client; conversation owners include verified binding.
-- Prompt injection/partial transcripts: a pre-execution command/grounding gate bounds write authority.
+- Natural-language intent: the model interprets requests under explicit instructions; the gate
+  validates grounded arguments and lifecycle, not transcript grammar. Misinterpretation remains a
+  model risk covered by deterministic scenarios and evals, with receipts and Undo for actual changes.
 - Ambiguous titles/model-selected IDs: retain all current-turn catalog candidates for write validation.
 - Duplicate/time-out-after-commit requests: durable atomic receipts and database transaction locks.
 - Browser CSRF/cross-origin socket: normal CSRF protection issues grants; voice validates allowed Origin.
@@ -88,7 +104,7 @@ resume; those remain voice reliability work.
 
 ## Verification plan
 
-Unit tests cover forged/expired/revoked/switched sessions and command/grounding gates. MCP protocol
+Unit tests cover forged/expired/revoked/switched sessions and grounding/score/lifecycle gates. MCP protocol
 tests prove metadata is not a model argument and workload-only requests cannot mutate. PostgreSQL
 module tests cover concurrent duplicates, atomic failure, already-listed films and replay after
 removal. Browser tests cover authenticated navigation/cache refresh, anonymous login navigation and

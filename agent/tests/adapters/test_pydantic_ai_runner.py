@@ -15,6 +15,7 @@ from imdb_agent.adapters.pydantic_ai_runner import (
 from imdb_agent.concierge.events import (
     MovieCardEvent,
     TextEvent,
+    ToolActivityEvent,
     ToolCallEvent,
     UiActionEvent,
     UsageEvent,
@@ -124,6 +125,12 @@ async def test_function_model_executes_tool_loop_and_emits_grounded_cards(messag
     tool_call = next(event for event in events if isinstance(event, ToolCallEvent))
     assert tool_call.tool is ToolName.SEARCH_MOVIES
     assert tool_call.arguments == {"query": "Arrival"}
+    activities = [event.activity for event in events if isinstance(event, ToolActivityEvent)]
+    assert [activity.status for activity in activities] == ["started", "completed"]
+    assert activities[0].call_id == activities[1].call_id
+    assert all(
+        set(activity.model_dump()) == {"callId", "tool", "status"} for activity in activities
+    )
     cards = [event.movie for event in events if isinstance(event, MovieCardEvent)]
     assert [movie.movie_id for movie in cards] == [42]
     assert "".join(event.delta for event in events if isinstance(event, TextEvent)) == (

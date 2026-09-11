@@ -99,6 +99,7 @@ class CatalogModel(RealtimeModel):
     def profile(self) -> RealtimeModelProfile:
         return RealtimeModelProfile(
             supports_interruption=True,
+            supports_manual_turn_control=True,
             audio_input_sample_rate=24000,
             audio_output_sample_rate=24000,
         )
@@ -422,7 +423,12 @@ async def test_multi_movie_session_and_explicit_usage_limit(turns: int) -> None:
 
 
 @pytest.mark.asyncio
-async def test_rejected_personal_command_is_a_failed_result_not_a_disconnected_session() -> None:
+@pytest.mark.parametrize("late_transcript", [False, True, None])
+@pytest.mark.parametrize("authorized", [False, True])
+async def test_model_interpreted_rating_uses_grounded_id_and_committed_receipt(
+    late_transcript: bool | None,
+    authorized: bool,
+) -> None:
     from typing import Any, cast
 
     from pydantic import SecretStr
@@ -436,19 +442,29 @@ async def test_rejected_personal_command_is_a_failed_result_not_a_disconnected_s
         async def send(self, content: RealtimeInput) -> None:
             if isinstance(content, BinaryAudio):
                 await self.events.put(RealtimeInputSpeechStartEvent(item_id="user-1"))
-                await self.events.put(
-                    InputTranscript("I like Forrest Gump", is_final=True, item_id="user-1")
-                )
+                if late_transcript is False:
+                    await self.transcript()
                 await self.events.put(
                     ToolCall(
                         "write",
                         tool_name="set_my_movie_rating",
-                        args=json.dumps({"movieId": 6, "score": 8.5}),
+                        args=json.dumps({"movieId": 6 if authorized else 999, "score": 7.0}),
                     )
                 )
                 await self.events.put(ResponseDone())
+                if late_transcript:
+                    await self.transcript()
             else:
                 await super().send(content)
+
+        async def transcript(self) -> None:
+            await self.events.put(
+                InputTranscript(
+                    "For me, Amelie deserves a seven.",
+                    is_final=True,
+                    item_id="user-1",
+                )
+            )
 
     model = CatalogModel()
     model.connection = RejectedConnection()
@@ -456,7 +472,7 @@ async def test_rejected_personal_command_is_a_failed_result_not_a_disconnected_s
         movies=(
             GroundedMovie(
                 movie_id=6,
-                primary_title="Forrest Gump",
+                primary_title="Amélie",
                 movie_type="MOVIE",
             ),
         )
@@ -471,7 +487,17 @@ async def test_rejected_personal_command_is_a_failed_result_not_a_disconnected_s
         *,
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        pytest.fail("Rejected command must never reach Java")
+        assert authorized, "Rejected command must never reach Java"
+        assert metadata is not None
+        return {
+            "contractVersion": "1.0",
+            "operationId": metadata["operationId"],
+            "movieId": args["movieId"],
+            "score": args["score"],
+            "previousScore": None,
+            "kind": "rating_set",
+            "changed": True,
+        }
 
     async def set_my_movie_rating(movieId: int, score: float) -> object:
         return await gate.call(
@@ -486,10 +512,19 @@ async def test_rejected_personal_command_is_a_failed_result_not_a_disconnected_s
         await relay_voice(agent, model, browser, personal=state, authenticated=True)
     assert model.connection.tool_called
     assert any(isinstance(item, bytes) for item in browser.events)
-    assert not any(
-        isinstance(item, VoiceEvent) and item.type == "ui-action" for item in browser.events
-    )
-    assert state.receipt is None
+    actions = [
+        item.action
+        for item in browser.events
+        if isinstance(item, VoiceEvent) and item.type == "ui-action"
+    ]
+    if authorized:
+        assert state.receipt is not None
+        assert len(actions) == 1
+        assert actions[0] is not None and actions[0].type == "open_ratings"
+        assert actions[0].score == 7.0
+    else:
+        assert not actions
+        assert state.receipt is None
 
 
 @pytest.mark.asyncio
@@ -821,3 +856,339 @@ async def test_voice_watch_providers_keep_movie_context_and_do_not_navigate() ->
         for event in browser.events
     )
     assert any(isinstance(event, bytes) for event in browser.events)
+
+
+@pytest.mark.asyncio
+async def test_rejected_write_loop_stops_and_next_spoken_removal_still_works() -> None:
+    from typing import Any, cast
+
+    from pydantic import SecretStr
+    from pydantic_ai import RunContext
+    from pydantic_ai.realtime.codec import CancelResponse
+
+    from imdb_agent.adapters.personal_tools import PersonalToolGate
+    from imdb_agent.concierge.events import GroundedMovie
+    from imdb_agent.concierge.personal import PersonalTurn
+
+    class LoopConnection(CatalogConnection):
+        turn = 0
+        attempts = 0
+        stopped = False
+
+        async def request_removal(self) -> None:
+            self.attempts += 1
+            await self.events.put(
+                ToolCall(
+                    f"remove-{self.attempts}",
+                    tool_name="remove_movie_from_my_watchlist",
+                    args=json.dumps({"movieId": 999 if self.turn == 1 else 9}),
+                )
+            )
+            await self.events.put(ResponseDone())
+
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, BinaryAudio):
+                self.turn += 1
+                self.stopped = False
+                await self.events.put(RealtimeInputSpeechStartEvent(item_id=f"user-{self.turn}"))
+                await self.events.put(
+                    InputTranscript(
+                        "Remove that movie from my watchlist"
+                        if self.turn == 1
+                        else "And now remove the movie Good Will Hunting from my watchlist.",
+                        is_final=True,
+                        item_id=f"user-{self.turn}",
+                    )
+                )
+                await self.request_removal()
+            elif isinstance(content, CancelResponse):
+                self.stopped = True
+                await self.events.put(ResponseDone(interrupted=True))
+            elif isinstance(content, ToolResult):
+                if self.turn == 1 and not self.stopped:
+                    await self.request_removal()
+                elif self.turn == 2:
+                    await self.events.put(OutputTranscript("Removed from your watchlist."))
+                    await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                    await self.events.put(ResponseDone())
+
+    class RecoveryBrowser(Browser):
+        async def send(self, event: VoiceEvent | bytes) -> None:
+            await super().send(event)
+            if isinstance(event, VoiceEvent) and event.type == "status" and event.text:
+                await self.input.put(b"\x00" * 4800)
+
+    state = PersonalTurn(
+        movies=(
+            GroundedMovie(
+                movie_id=9,
+                primary_title="Good Will Hunting",
+                movie_type="MOVIE",
+            ),
+        )
+    )
+    gate = PersonalToolGate(SecretStr("synthetic-session"), state)
+    writes: list[int] = []
+
+    async def backend(
+        name: str, args: dict[str, Any], *, metadata: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        assert metadata is not None
+        writes.append(args["movieId"])
+        return {
+            "contractVersion": "1.0",
+            "operationId": metadata["operationId"],
+            "movieId": 9,
+            "kind": "watchlist_remove",
+            "changed": True,
+        }
+
+    agent: Agent[None, str] = Agent(retries=0)
+
+    async def remove_movie_from_my_watchlist(movieId: int) -> object:
+        return await gate.call(
+            cast("RunContext[Any]", None),
+            backend,
+            "remove_movie_from_my_watchlist",
+            {"movieId": movieId},
+        )
+
+    model = CatalogModel()
+    agent.tool_plain(remove_movie_from_my_watchlist)
+    connection = LoopConnection()
+    model.connection = connection
+    browser = RecoveryBrowser()
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser, personal=state, authenticated=True)
+    assert writes == [9]
+    assert connection.attempts <= 4
+    notices = [
+        e for e in browser.events if isinstance(e, VoiceEvent) and e.type == "status" and e.text
+    ]
+    assert len(notices) == 1
+    assert not any(isinstance(e, VoiceEvent) and e.type == "error" for e in browser.events)
+    actions = [
+        e.action for e in browser.events if isinstance(e, VoiceEvent) and e.type == "ui-action"
+    ]
+    assert len(actions) == 1
+    assert actions[0] is not None and actions[0].type == "open_watchlist"
+    assert actions[0].removed is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("spoken_first", [True, False])
+async def test_typed_followup_keeps_voice_grounding_and_answers_aloud(spoken_first: bool) -> None:
+    class TextConnection(CatalogConnection):
+        def __init__(self) -> None:
+            super().__init__()
+            self.texts: list[str] = []
+
+        async def transcript(self) -> None:
+            await self.events.put(
+                InputTranscript("Tell me about Forrest Gump", is_final=True, item_id="user-1")
+            )
+
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, str):
+                self.texts.append(content)
+                if content == "Tell me about Forrest Gump":
+                    await self.events.put(
+                        ToolCall(
+                            "lookup", tool_name="search_movies", args='{"query":"Forrest Gump"}'
+                        )
+                    )
+                else:
+                    # A delayed microphone transcript may not replace the typed follow-up.
+                    await self.events.put(
+                        InputTranscript("Do not open anything", is_final=True, item_id="old-audio")
+                    )
+                    await self.events.put(OutputTranscript("Here's Forrest Gump."))
+                    await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                await self.events.put(ResponseDone())
+            else:
+                await super().send(content)
+
+    class TextBrowser(Browser):
+        async def send(self, event: VoiceEvent | bytes) -> None:
+            self.events.append(event)
+            if isinstance(event, VoiceEvent):
+                if event.type == "ready":
+                    await self.input.put(
+                        b"\x00" * 4800
+                        if spoken_first
+                        else VoiceCommand(type="text", text="Tell me about Forrest Gump")
+                    )
+                if event.type == "reply-complete":
+                    await self.input.put(
+                        VoiceCommand(type="text", text="Open it")
+                        if event.turn == 1
+                        else VoiceCommand(type="end")
+                    )
+
+    model = CatalogModel()
+    connection = TextConnection()
+    model.connection = connection
+    browser = TextBrowser()
+    agent: Agent[None, str] = Agent()
+
+    def search_movies(query: str) -> dict[str, object]:
+        return {
+            "schemaVersion": "1.0",
+            "movies": [{"movieId": 42, "primaryTitle": "Forrest Gump", "type": "MOVIE"}],
+            "totalMatches": 1,
+            "moreAvailable": False,
+        }
+
+    agent.tool_plain(search_movies)
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser)
+    assert connection.texts == (
+        ["Open it"] if spoken_first else ["Tell me about Forrest Gump", "Open it"]
+    )
+    transcripts = [
+        (event.turn, event.text)
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.type == "transcript" and event.speaker == "user"
+    ]
+    assert transcripts == [(1, "Tell me about Forrest Gump"), (2, "Open it")]
+    actions = [
+        event
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.type == "ui-action"
+    ]
+    assert len(actions) == 1 and actions[0].turn == 2
+    assert actions[0].action is not None and actions[0].action.type == "open_movie"
+    assert actions[0].action.movie_id == 42
+    assert sum(isinstance(event, bytes) for event in browser.events) == 2
+    assert connection.closed
+
+
+@pytest.mark.asyncio
+async def test_typed_input_interrupts_a_spoken_reply_without_unmuting() -> None:
+    from pydantic_ai.realtime.codec import CancelResponse, ClearAudio
+
+    class InterruptConnection(CatalogConnection):
+        def __init__(self) -> None:
+            super().__init__()
+            self.cancelled = 0
+            self.cleared = 0
+            self.requests: list[str] = []
+
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, CancelResponse):
+                self.cancelled += 1
+                await self.events.put(ResponseDone(interrupted=True))
+            elif isinstance(content, ClearAudio):
+                self.cleared += 1
+            elif isinstance(content, str):
+                self.requests.append(content)
+                await self.events.put(OutputTranscript("Here is an answer."))
+                await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                if len(self.requests) == 2:
+                    await self.events.put(ResponseDone())
+
+    class InterruptBrowser(Browser):
+        second_sent = False
+
+        async def send(self, event: VoiceEvent | bytes) -> None:
+            self.events.append(event)
+            if isinstance(event, VoiceEvent) and event.type == "ready":
+                await self.input.put(VoiceCommand(type="mute"))
+                await self.input.put(VoiceCommand(type="text", text="Tell me about Forrest Gump"))
+            elif isinstance(event, bytes) and not self.second_sent:
+                self.second_sent = True
+                await self.input.put(VoiceCommand(type="text", text="What about its director?"))
+            elif isinstance(event, VoiceEvent) and event.type == "reply-complete":
+                await self.input.put(VoiceCommand(type="end"))
+
+    model = CatalogModel()
+    connection = InterruptConnection()
+    model.connection = connection
+    browser = InterruptBrowser()
+    agent: Agent[None, str] = Agent()
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser)
+    assert connection.requests == ["Tell me about Forrest Gump", "What about its director?"]
+    assert connection.cancelled == 1
+    assert connection.cleared == 3
+    completed = [
+        event.turn
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.type == "reply-complete"
+    ]
+    assert completed == [2]
+    statuses = [
+        event.status
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.type == "status"
+    ]
+    assert statuses[-1] == "muted"
+
+
+@pytest.mark.asyncio
+async def test_idle_deadline_raises_a_distinct_session_reason(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from imdb_agent.concierge.voice import VoiceIdleTimeoutError
+
+    real_timeout = asyncio.timeout
+
+    def short_idle_timeout(delay: float | None) -> asyncio.Timeout:
+        return real_timeout(0.01 if delay == 45 else delay)
+
+    monkeypatch.setattr(asyncio, "timeout", short_idle_timeout)
+
+    class SilentBrowser(Browser):
+        async def send(self, event: VoiceEvent | bytes) -> None:
+            self.events.append(event)
+
+    model = CatalogModel()
+    browser = SilentBrowser()
+    agent: Agent[None, str] = Agent()
+    async with real_timeout(3):
+        with pytest.raises(VoiceIdleTimeoutError):
+            await relay_voice(agent, model, browser)
+    assert model.connection.closed
+
+
+@pytest.mark.asyncio
+async def test_spoken_preamble_survives_tool_call_and_final_answer() -> None:
+    class PreambleConnection(CatalogConnection):
+        async def transcript(self) -> None:
+            await super().transcript()
+            await self.events.put(OutputTranscript("Let me check the movie."))
+
+    model = CatalogModel()
+    model.connection = PreambleConnection()
+    browser = Browser(end_on_completion=True)
+    agent: Agent[None, str] = Agent()
+
+    def search_movies(query: str) -> dict[str, object]:
+        return {
+            "schemaVersion": "1.0",
+            "movies": [{"movieId": 42, "primaryTitle": "Forrest Gump", "type": "MOVIE"}],
+            "totalMatches": 1,
+            "moreAvailable": False,
+        }
+
+    agent.tool_plain(search_movies)
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser)
+    transcripts = [
+        event.text
+        for event in browser.events
+        if isinstance(event, VoiceEvent)
+        and event.type == "transcript"
+        and event.speaker == "assistant"
+        and event.final
+    ]
+    assert transcripts[-1] == ("Let me check the movie.\n\nForrest Gump runs for 142 minutes.")
+    activities = [
+        event.activity.model_dump(mode="json")
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.activity is not None
+    ]
+    assert activities == [
+        {"callId": "lookup", "tool": "search_movies", "status": "started"},
+        {"callId": "lookup", "tool": "search_movies", "status": "completed"},
+    ]
