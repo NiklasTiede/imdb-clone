@@ -1,12 +1,151 @@
 # Movie Concierge voice UI
 
-Status: Design proposal with an interactive, development-only preview. No browser voice transport
-or authenticated watchlist action is implemented by this design study.
+## Integrated application
+
+The normal app is voice-only. `/voice-orb.html` remains a separate development-only study.
+
+- A single 115 px Voice Lens at 93% opacity stays at the bottom center on desktop and mobile.
+  Its iris is closed before starting. There is no header voice entry, transcript launcher, or
+  visible status/control bar in the normal app. The canvas halo fades to transparent at its edges.
+  Once the closed iris and audio history have settled, painting stops until a resize, visibility,
+  motion-preference or state change wakes it. Active voice keeps the live animation.
+- Clicking the lens requests microphone access and starts the identity-scoped voice session.
+  The iris opens during connection and responds to microphone and actual playback levels.
+  Clicking again ends the session or cancels a pending connection. Keyboard activation, focus
+  indication, a tooltip, and screen-reader status announcements expose the same control.
+- After 45 seconds without input the server sends `standby`, closes the session, and the browser
+  releases the microphone and closes the iris. No conversation panel or error appears. Clicking
+  the closed lens starts again; automatic wake-up from local speech detection is not implemented.
+- Connection errors, permission failures, recoverable notices, and the five-minute limit use a
+  temporary message. Confirmed personal changes keep their existing receipts and Undo action.
+- Open `/?conciergeDebug=1` to enable the conversation companion. This initial-URL setting survives
+  route navigation until reload. Reload a URL without the parameter to leave it. This is a UI
+  switch for the current user's session, not an authorization boundary or access to other users' logs.
+- The debug Module is loaded only for the URL opt-in. Its text controller stays mounted when the
+  drawer closes so history survives navigation; normal voice does not initialize text chat.
+- Debug mode retains the combined text/voice timeline, capability examples, country preferences,
+  source credits, and compact microphone/end/conversation controls. The lens remains visible when
+  its drawer is open and centers beside the drawer on desktop. Navigation minimizes the drawer.
+- Transcripts update in place per session/turn/speaker. Interrupted replies are labelled because
+  their transcript may contain unplayed words. Tool activity and all retrieved cards are collapsed
+  under their turn, separate from the spoken answer. Personal ratings are labelled separately from IMDb.
+- The combined view retains the latest 200 entries in memory. Nothing is persisted to browser
+  storage or a new backend transcript store. Reload, identity changes, and explicit conversation
+  reset clear history. This UI does not record audio.
+- Debug text input and capability clicks join an active voice session and receive spoken replies.
+  They use the same grounding, delegation, budgets, and navigation rules. With voice off they use
+  text chat; starting voice does not import that earlier chat's model memory.
+- Speech uses xAI `audio.output.speed=1.15`. The persistent dock owns the only live lens renderer;
+  amplitude samples update its frame loop without causing a React update per audio sample.
+
+## Conversation companion study
+
+The `/voice-orb.html` study now opens the conversation companion by default. The lens stays
+unchanged and appears compactly in its header; the large voice panel is hidden while the companion
+is open. Closing the companion brings back the larger voice presentation.
+
+- Six capability cards introduce discovery, trailers, watchlists, ratings, streaming, and navigation.
+  Choosing one fills and focuses the draft without submitting it. Personal examples carry a
+  sign-in label in guest preview mode.
+- The explicit **View example conversation** control loads an illustrative voice/text timeline:
+  a film answer with a TMDB source, a confirmed watchlist update, and a movie navigation followed
+  by a failed trailer load. Expand **Action details** for sample outcomes, timings, and context.
+- Capabilities collapse behind **Explore what I can do** once there is a conversation.
+- **Preferences** contains the country and guest/signed-in design switch. Existing example actions
+  keep their original country context when the current preference changes.
+- The draft and timeline survive closing/reopening the companion, but not reloading the page.
+  Submitting a draft only shows it locally with a preview explanation; no agent request is made.
+- The input and microphone controls stay at the bottom while the conversation scrolls. This is a
+  visual study, not the delivered production conversation store or action acknowledgement contract.
+
+## Aperture study (September 2026)
+
+Open `http://localhost:3000/voice-orb.html` with the frontend development server running.
+This standalone study replaces the earlier luminous sphere with a **camera aperture**: six iris
+blades over a lit gate, inside a barrel whose ring is engraved with the standard stop scale. It is
+drawn on the same 2D canvas, in the existing theme colours, with no new packages. The composition
+is exploratory; the production Concierge launcher, drawer, and voice transport are unchanged. The
+app's existing personal watchlist/rating and TMDB tools are not connected here.
+
+Why an aperture. The signal has to prove, at a glance, that speech is arriving. The blades give a
+large, unmistakable change — the opening moves through roughly a 6:1 range rather than the few
+percent a pulsing sphere could carry — and the mechanism belongs to the subject: a movie app
+answers in the language of lenses.
+
+The blades are the real linkage, not a decorative polygon. Each is a rigid leaf hinged just outside
+the housing, with a fixed arm from that hinge to the centre of its circular leading edge. Setting an
+opening solves for where that arm has to point, which swings the edge arc around the hinge, so the
+leaves sweep tangentially across one another and the assembly appears to swirl as it opens and
+closes. Each leaf is drawn clipped to its neighbour's edge circle, because on a real iris the leaves
+overlap cyclically — every one lies under exactly one other — which a plain draw order cannot
+reproduce and which is what keeps all six showing the same amount of face.
+
+| Part | What it encodes |
+| --- | --- |
+| Iris opening | Live level on top of a resting opening per state; blades swing, never scale |
+| Gate luminance | Near constant. Opening the iris passes more light, it does not brighten the source |
+| Engraved ring | The last four seconds of level, newest at twelve o'clock, older trailing clockwise |
+| Ring colour | `info` blue for the user's audio, `brand` gold for the reply, on the same ring |
+| Gate light | Who is speaking, as colour temperature: ~5600 K daylight for the user, ~3200 K tungsten for the reply |
+| Index mark + ƒ number | The stop the iris is currently at, snapped to real lens stops |
+| Anamorphic streak | Level peaks only; cool even over a warm source, as on real glass |
+
+The blades are neutral graphite, not blue steel, which is both what a real iris looks like and what
+makes the gate legible. Gold used to carry the speaking state on its own because gold is
+complementary to a blue body; blue sat in the same family as the blades and disappeared into them.
+Against neutral metal both temperatures read.
+
+Colour temperature is what separates the two voices at the gate, the way a cinematographer separates
+two lamps. The user's voice is daylight arriving at the lens: a white core through saturated sky
+blue to a deep rim. The reply is tungsten leaving it: a warm-white core through `brand` gold to
+amber. Identity is unchanged and still carried by hue — `info` blue and `brand` gold label the halo,
+the housing ring and the engraved marks, so the app's existing "blue is the user" convention holds.
+Only the gate, which is a light source rather than a label, is graded by temperature. The contrast
+lives inside the opening, between core and rim, so it costs no extra lit area.
+
+Brightness is deliberately not tied to the opening. If a wide gate were also a bright one, loud
+speech would light a large area twice over and the overlay would glare on a dark page. The gate
+holds a near-constant luminance and falls off across its own width, the iris stops at `f/1.4` with a
+third of the housing still blades, and loudness is carried instead by the halo, the engraved ring
+and the anamorphic flare — none of which fill the centre.
+
+The ƒ number is derived, not decorative: `f = 0.868 / opening`, clamped to `f/1.4 … f/22` and
+snapped to the standard scale. That makes the state list a stop scale — ready `ƒ/4`, listening
+`ƒ/2.8` opening to `ƒ/1.4`, thinking racking around `ƒ/4`, speaking `ƒ/2.8`, mic off `ƒ/22`.
+
+- State buttons simulate ready, listening, thinking, speaking, and muted appearances.
+- **Test my microphone** / **Start voice** explicitly request local microphone access. Only a
+  browser analyser consumes the audio: no recording, audible loopback, upload, or provider session.
+- In the speaking preview, a live microphone still prints blue marks on the ring next to the gold
+  ones. Gold speech motion and the transcript are simulated; there is no speech recognition here.
+- Mute disables audio tracks; stop, end, leaving the page, and component cleanup release resources.
+  Late permission responses after cancellation also stop their newly returned tracks.
+- The lens carries two levels of detail. Under about 96 px the engraving and the blade edges stop
+  resolving, so it gives the ring less room, thins the edges, drops the flare's vertical companion
+  and draws every third mark. **At real size** on the study page shows it live at dock, compact and
+  drawer footprints; the panel above draws it at 340 px, the largest it should ever appear.
+- The canvas owns its animation loop without per-frame React updates, and writes the live ƒ value
+  to the index mark as a CSS variable and `data-stop` attribute rather than through React state.
+  It caps device pixel ratio at 2 and pauses when hidden.
+- Reduced motion holds the iris at its state's resting stop and freezes the racking, breathing and
+  blade drift. The engraved ring keeps printing level, so the feedback survives without movement.
+- Streaming country changes stay in preview state and do not modify the app's saved preference.
+
+Implementation: `frontend/src/features/concierge/preview/orb/`. No new packages or production entry
+imports. Review the aperture with real MacBook microphone input before deciding how to integrate
+the header entry, existing drawer, transcript, and compact session controls. The dock question is
+settled: at 42 px the mechanism is mush, which is why the compact level of detail exists and why the
+dock row is drawn at 56 px — treat that as the floor. What is left to judge is whether the
+four-second ring earns its space once a live transcript sits beside it.
+
+## Original drawer study
+
+The following documents the original design proposal and its development-only simulation.
 
 The normal application now implements local voice using this design: real capture/playback levels,
 Start voice, mute/interrupt/end, and a persistent navigation dock. Activate with `make run-agent-voice`.
 This document's `/voice-design.html` entry remains a simulation; test the real feature in the normal
-app at `http://localhost:3000`. Authenticated watchlist writes remain a separate delivery step.
+app at `http://localhost:3000`. See `movie-concierge.md` for the current delivered capabilities.
 
 ## Fit with the current application
 

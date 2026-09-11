@@ -204,8 +204,9 @@ Exit evidence:
 
 **2026-09-09 implementation:** Local slice: explicit grounded watchlist addition/removal and personal rating set/update/removal,
 transactionally stored receipts, concurrent retry safety, unchanged-state handling and UI Undo
-are implemented. Natural affirmative requests (for example “I'd give this one an eight”) and an
-immediate score-only answer after an incomplete rating request are supported. Opening a movie
+are implemented. The model interprets natural affirmative requests and score-only follow-ups
+from conversation context. Fixed sentence grammars and final-ASR waits no longer gate these
+low-impact writes; code validates identity, grounded IDs, rating range and one mutation per turn. Opening a movie
 establishes its context for the following turn. Ratings navigate to `/your-ratings`; scores are
 user-specified, 0–10. Broader actions and
 durable multi-step approvals remain open.

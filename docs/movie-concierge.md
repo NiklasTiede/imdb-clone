@@ -52,17 +52,27 @@ to those clients.
    authorization, and mutations stay in the Spring Boot modules that own them.
 3. **Use conversation where it reduces effort.** Normal browsing remains first class; the
    Concierge should not replace effective search, detail, or discovery screens.
-4. **Make actions visible and reversible.** Read-only capabilities come first. Later account
-   mutations require a visible proposal, explicit approval, reauthorization, and idempotency.
+4. **Make actions visible and reversible.** Ratings and watchlist edits execute from natural
+   user intent with delegated authorization, idempotency, committed receipts and Undo. Higher-risk
+   account changes require a separate explicit approval flow.
 5. **Treat quality and cost as product behavior.** Every release is evaluated for tool use,
    groundedness, usefulness, latency, reliability, and cost—not only whether it produces fluent
    text.
 6. **Keep the interaction channel replaceable.** Text, voice, and future external agents should use
    the same tools, policies, events, and eval contract.
 
-## First User Experience
+## Current User Experience
 
-The first interface is text based. A public `Ask Concierge` action opens a
+The public interface is voice-only: one closed Voice Lens at the bottom center starts microphone
+permission and voice on click. Another click ends it. Inactivity closes the iris without opening
+history; reconnecting currently requires a click. Errors and the five-minute cap show a brief message.
+The header has no separate voice entry. `/?conciergeDebug=1` enables the current user's text/voice
+history and preferences for debugging; access persists through route changes until reload.
+See [voice UI](movie-concierge-voice-design.md) for the delivered interaction contract.
+
+## Original Text MVP
+
+The original interface was text based. A public `Ask Concierge` action opens a
 right-side drawer on desktop and a full-screen panel on small screens. It contains a short
 capability introduction and suggested prompts such as:
 
@@ -116,7 +126,7 @@ library mutation or generate an Undo receipt. Pure text page requests use a loca
 a model request; voice waits for the current final user transcript. Other phrasing uses local
 `navigate_app` and `open_movie_page` tools, shared by text and voice. For example “Let me see what
 I've rated” and “Let's have a look at that one” need no “open” or “page” keyword. These tools only
-navigate; personal mutations still require a matching authorized command and committed Java receipt.
+navigate; personal mutations require delegated authorization, validated arguments and a committed Java receipt.
 
 A discovery request (for example “Find Forrest Gump” or “Show me science fiction movies from the
 nineties”) emits `show_search_results` after the tool loop completes with a successful final
@@ -152,6 +162,16 @@ a player integration with blocked-playback feedback and coordination with voice 
 separate decision. No arbitrary URLs, model-supplied video keys, or full-screen requests are accepted.
 
 ### Personal ratings, taste and recommendations
+
+Ratings and watchlist changes use model-interpreted intent and conversation context. The code does
+not re-parse user sentences or require a final ASR transcript before executing a model tool call.
+This supports casual phrasing, title aliases (Amelie / Amélie), and score-only follow-ups. The model
+must distinguish user requests from negation, hypotheticals and instructions embedded in tool data;
+this is a model behavior requirement, not a deterministic grammar guarantee. Execution still checks
+an active, uncancelled user turn, delegated identity, a catalog-grounded movie ID, numeric scores
+from 0 to 10 with at most one decimal, and a single idempotent mutation per turn. Conflicting repeated
+calls cannot change the selected movie or score. Only Java's committed receipt triggers UI navigation
+and Undo. Transcript delivery remains independent and is used for the visible conversation history.
 
 The delegated MCP tools now include `get_my_ratings(page, order)` and
 `get_my_recommendations(limit)`. Java derives the account exclusively from the verified session;
@@ -252,6 +272,27 @@ it is never authentication or write authorization. Actual personal state still r
 Java tools. Examples: “What can I do on this page?”, “Tell me about this movie”, “What did I rate
 highest?” and “Recommend something based on my ratings”. Model interpretation remains subject to
 live voice validation; deterministic checks verify contracts and authorization independently.
+
+### Typed input during voice
+
+In the debug companion, an active voice session accepts microphone speech, typed messages, and clicked capability requests
+in the same realtime conversation. The browser sends a bounded `text` command (1-600 characters) on
+the existing `/v1/voice` WebSocket. Python starts a finalized user turn, acknowledges it in the
+timeline, and requests an audio reply through the existing model session. Delegation, grounding,
+navigation, and usage budgets remain session-owned. New text interrupts the current reply without
+unmuting the microphone; delayed transcripts from earlier audio cannot replace the typed request.
+
+With voice off, typing and capability clicks use normal text chat. Starting voice does not transfer
+the earlier text-only model context; the UI still combines both histories for reference.
+
+The visible timeline prioritizes user and assistant text. Multiple speech parts around tool calls
+remain together in the same reply; provider transcript revisions replace only their own part.
+Supporting film cards are collapsed under “Tools & results”, because retrieved candidates are not
+necessarily discussed or recommended. Up to 50 movies per reply retain retrieval order, and personal
+`userScore` values are labeled separately from IMDb scores. Both SSE and voice expose bounded
+`tool-activity` events (call ID, allowlisted tool name, started/completed/failed status), never raw
+arguments or return payloads. Navigation still validates against received catalog grounding even
+when the supporting cards are collapsed. This history is session UI state, not a persistent audit log.
 
 ## Read-Only MVP
 
