@@ -231,6 +231,9 @@ function VoiceDesignPreview() {
           <Typography sx={{ fontWeight: 800, fontSize: 13 }}>
             VOICE DESIGN STUDY
           </Typography>
+          <Button href="/voice-orb.html" size="small" sx={{ ml: "auto" }}>
+            Explore the new voice orb
+          </Button>
           <Typography sx={{ color: "text.secondary", fontSize: 11 }}>
             Simulation · no microphone access
           </Typography>
