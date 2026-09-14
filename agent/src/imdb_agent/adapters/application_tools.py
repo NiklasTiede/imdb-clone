@@ -63,6 +63,9 @@ class ApplicationTools:
             max_retries=1,
         )
 
+    def mark_authenticated(self) -> None:
+        self._authenticated = True
+
     async def get_page_context(self) -> dict[str, object]:
         """Read the latest browser page and explain available page features, without navigating.
 

@@ -321,6 +321,39 @@ def test_context_updates_are_validated_and_delivered_in_order_without_ending_voi
         ws.send_json({"type": "end"})
 
 
+def test_login_credential_reaches_runner_without_logging_or_replacing_socket(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    configure_logging(json_output=True)
+
+    class LoginVoice(EchoVoice):
+        async def run(self, transport: VoiceTransport, delegation: SecretStr | None = None) -> None:
+            assert delegation is None
+            await transport.send(VoiceEvent(type="ready"))
+            command = await transport.receive()
+            assert isinstance(command, VoiceCommand) and command.type == "authenticate"
+            assert command.delegation is not None
+            assert command.delegation.get_secret_value() == "synthetic-private-login"
+            await transport.send(VoiceEvent(type="authenticated"))
+            audio = await transport.receive()
+            assert isinstance(audio, bytes)
+            await transport.send(audio)
+            await asyncio.Event().wait()
+
+    with (
+        client_for(LoginVoice()) as client,
+        client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
+    ):
+        ws.send_json({"type": "start"})
+        assert ws.receive_json()["type"] == "ready"
+        ws.send_json({"type": "authenticate", "delegation": "synthetic-private-login"})
+        assert ws.receive_json()["type"] == "authenticated"
+        ws.send_bytes(b"\x00" * 960)
+        assert ws.receive_bytes() == b"\x00" * 960
+        ws.send_json({"type": "end"})
+    assert "synthetic-private-login" not in capsys.readouterr().out
+
+
 @pytest.mark.parametrize("ready", [False, True])
 def test_provider_timeout_is_not_reported_as_session_expiry(
     ready: bool, capsys: pytest.CaptureFixture[str]

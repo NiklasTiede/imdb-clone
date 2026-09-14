@@ -217,6 +217,13 @@ has been implemented and verified.
 
 ### Diagnose a voice session ending
 
+A passkey or password login during an anonymous voice session keeps its microphone, WebSocket,
+conversation, and original time/usage limits. The browser sends a fresh delegation on that socket;
+the agent verifies it through Java while audio keeps flowing, then enables personal tools. These
+tools are registered from session start but reject access without verified delegation. Unfinished
+anonymous changes are not replayed automatically. Logout or an account switch closes and clears
+the session. Social login still navigates away from the app and does not preserve a live socket.
+
 Local voice currently has a hard 300-second (five-minute) lifetime, including connection setup.
 This deadline does not reset when the user speaks or types. `IMDB_AGENT_VOICE_SESSION_SECONDS`
 configures it (15-300 seconds). The UI names the five-minute time limit when reached. A separate

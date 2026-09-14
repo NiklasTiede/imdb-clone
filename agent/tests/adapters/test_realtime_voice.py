@@ -1064,6 +1064,93 @@ async def test_typed_followup_keeps_voice_grounding_and_answers_aloud(spoken_fir
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("verified", [False, True])
+async def test_login_promotes_live_session_without_blocking_audio(verified: bool) -> None:
+    from pydantic import SecretStr
+    from pydantic_ai.realtime.codec import TextContext
+
+    from imdb_agent.concierge.personal import DelegationRejectedError
+
+    audio_during_verification = asyncio.Event()
+    contexts: list[str] = []
+
+    class LoginConnection(CatalogConnection):
+        inputs = 0
+
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, BinaryAudio):
+                self.inputs += 1
+                if self.inputs == 2:
+                    audio_during_verification.set()
+                    return
+                await self.events.put(RealtimeInputSpeechStartEvent(item_id="user-1"))
+                await self.events.put(InputTranscript("Hello", is_final=True, item_id="user-1"))
+                await self.events.put(OutputTranscript("Hello there"))
+                await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                await self.events.put(ResponseDone())
+            elif isinstance(content, TextContext):
+                contexts.append(content.text)
+            elif isinstance(content, str):
+                await self.events.put(
+                    ToolCall(
+                        "navigate",
+                        tool_name="navigate_app",
+                        args=json.dumps({"destination": "watchlist"}),
+                    )
+                )
+                await self.events.put(ResponseDone())
+            elif isinstance(content, ToolResult):
+                await self.events.put(OutputTranscript("Here you go"))
+                await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                await self.events.put(ResponseDone())
+
+    class LoginBrowser(Browser):
+        requested_login = False
+
+        async def send(self, event: VoiceEvent | bytes) -> None:
+            self.events.append(event)
+            if not isinstance(event, VoiceEvent):
+                return
+            if event.type == "ready":
+                await self.input.put(b"\x00" * 960)
+            elif event.type == "reply-complete" and not self.requested_login:
+                self.requested_login = True
+                await self.input.put(
+                    VoiceCommand(type="authenticate", delegation=SecretStr("test-login"))
+                )
+            elif event.type in {"authenticated", "authentication-failed"}:
+                await self.input.put(VoiceCommand(type="text", text="Open my watchlist"))
+            elif event.type == "ui-action":
+                await self.input.put(VoiceCommand(type="end"))
+
+    browser = LoginBrowser()
+    model = CatalogModel()
+    model.connection = LoginConnection()
+
+    async def authenticate(token: SecretStr) -> None:
+        assert token.get_secret_value() == "test-login"
+        await browser.input.put(b"\x00" * 960)
+        await audio_during_verification.wait()
+        if not verified:
+            raise DelegationRejectedError
+
+    agent: Agent[None, str] = Agent()
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser, authenticate=authenticate)
+    assert model.connection.inputs == 2
+    assert sum(isinstance(e, VoiceEvent) and e.type == "ready" for e in browser.events) == 1
+    actions = [e.action for e in browser.events if isinstance(e, VoiceEvent) and e.action]
+    assert len(actions) == 1
+    assert actions[0].type == ("open_page" if verified else "open_login")
+    if verified:
+        assert len(contexts) == 1 and "sign-in has been verified" in contexts[0]
+    else:
+        assert contexts == []
+    assert all("test-login" not in text for text in contexts)
+    assert model.connection.closed
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("server_cancels", [False, True])
 async def test_repeated_barge_in_cancels_only_when_provider_needs_it(server_cancels: bool) -> None:
     from pydantic_ai.realtime.codec import CancelResponse

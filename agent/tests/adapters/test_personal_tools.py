@@ -44,6 +44,24 @@ class Backend:
 
 
 @pytest.mark.asyncio
+async def test_verified_login_unlocks_gate_once_and_cannot_switch_account() -> None:
+    from imdb_agent.concierge.personal import DelegationRejectedError
+
+    state = turn()
+    gate = PersonalToolGate(None, state)
+    backend = Backend()
+    ctx = cast("RunContext[Any]", None)
+    with pytest.raises(ToolFailed, match="Sign in"):
+        await gate.call(ctx, backend, "add_movie_to_my_watchlist", {"movieId": 6})
+    assert backend.calls == []
+    gate.attach_verified_delegation(SecretStr("verified-login"))
+    await gate.call(ctx, backend, "add_movie_to_my_watchlist", {"movieId": 6})
+    assert backend.calls[0]["delegation"] == "verified-login"
+    with pytest.raises(DelegationRejectedError):
+        gate.attach_verified_delegation(SecretStr("different-account"))
+
+
+@pytest.mark.asyncio
 async def test_injected_credential_and_operation_are_stable_on_retry() -> None:
     state = turn()
     backend = Backend()

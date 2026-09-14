@@ -30,8 +30,10 @@ The normal app is voice-only. `/voice-orb.html` remains a separate development-o
   their transcript may contain unplayed words. Tool activity and all retrieved cards are collapsed
   under their turn, separate from the spoken answer. Personal ratings are labelled separately from IMDb.
 - The combined view retains the latest 200 entries in memory. Nothing is persisted to browser
-  storage or a new backend transcript store. Reload, identity changes, and explicit conversation
-  reset clear history. This UI does not record audio.
+  storage or a new backend transcript store. Reload, logout, account switches, and explicit
+  conversation reset clear history. A first passkey/password login preserves anonymous voice
+  history and the active connection; Java-verified delegation unlocks personal tools in place.
+  Debug text chat still starts a fresh account-scoped conversation. This UI does not record audio.
 - Debug text input and capability clicks join an active voice session and receive spoken replies.
   They use the same grounding, delegation, budgets, and navigation rules. With voice off they use
   text chat; starting voice does not import that earlier chat's model memory.

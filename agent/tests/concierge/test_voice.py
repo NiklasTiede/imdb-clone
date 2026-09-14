@@ -6,6 +6,23 @@ from imdb_agent.concierge.voice import VoiceGrounding
 MOVIE = GroundedMovie(movie_id=42, primary_title="Forrest Gump", movie_type="MOVIE")
 
 
+def test_login_command_requires_a_bounded_redacted_credential() -> None:
+    from pydantic import ValidationError
+
+    from imdb_agent.concierge.voice import VoiceCommand
+
+    command = VoiceCommand.model_validate({"type": "authenticate", "delegation": "test-credential"})
+    assert "test-credential" not in repr(command)
+    for payload in (
+        {"type": "authenticate"},
+        {"type": "authenticate", "delegation": ""},
+        {"type": "authenticate", "delegation": "x" * 1201},
+        {"type": "context", "context": {"page": "home"}, "delegation": "test"},
+    ):
+        with pytest.raises(ValidationError):
+            VoiceCommand.model_validate(payload)
+
+
 def test_direct_navigation_requires_final_command_and_grounding_but_not_spoken_reply() -> None:
     state = VoiceGrounding()
     state.begin()

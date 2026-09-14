@@ -47,13 +47,22 @@ const ConciergeExperience = () => {
     () => new URLSearchParams(search).get("conciergeDebug") === "1",
   );
   const { bootstrapped, session } = useAuthSessionSnapshot();
+  const identity = session?.id ?? null;
+  const [scope, setScope] = useState({ accountId: identity, epoch: 0 });
+  if (bootstrapped && scope.accountId !== identity) {
+    // Keep the anonymous conversation through its first login. Logout/account switches
+    // start a fresh scope so one account's conversation never reaches another account.
+    setScope({
+      accountId: identity,
+      epoch: scope.epoch + (scope.accountId === null ? 0 : 1),
+    });
+  }
   if (!bootstrapped) {
     return null;
   }
-  const identity = session?.id ?? null;
   return (
     <IdentityScopedConcierge
-      key={identity ?? "anonymous"}
+      key={scope.epoch}
       accountId={identity}
       debug={debug}
     />
@@ -70,12 +79,20 @@ const IdentityScopedConcierge = ({
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(debug);
   const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
-  const [streamingCountry, setStreamingCountry] = useState(() =>
-    readStreamingCountry(accountId),
-  );
+  const [countrySelection, setCountrySelection] = useState(() => ({
+    accountId,
+    country: readStreamingCountry(accountId),
+  }));
+  if (countrySelection.accountId !== accountId) {
+    setCountrySelection({
+      accountId,
+      country: readStreamingCountry(accountId),
+    });
+  }
+  const streamingCountry = countrySelection.country;
   const changeStreamingCountry = useCallback(
     (country: string) => {
-      setStreamingCountry(country);
+      setCountrySelection({ accountId, country });
       saveStreamingCountry(accountId, country);
     },
     [accountId],
@@ -156,7 +173,11 @@ const IdentityScopedConcierge = ({
     [navigate, accountId, queryClient, resetWatchlistUndo, resetRatingUndo],
   );
 
-  const voice = useConciergeVoice(handleApplicationAction, pageContext);
+  const voice = useConciergeVoice(
+    handleApplicationAction,
+    pageContext,
+    accountId,
+  );
   const { confirmNavigation: confirmVoiceNavigation, turns: voiceTurns } =
     voice;
   useEffect(() => {
@@ -241,6 +262,7 @@ const IdentityScopedConcierge = ({
       {debug ? (
         <Suspense fallback={null}>
           <ConciergeDebug
+            key={accountId ?? "anonymous"}
             accountId={accountId}
             voice={voice}
             pageContext={pageContext}

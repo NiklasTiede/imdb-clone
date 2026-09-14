@@ -1,5 +1,5 @@
 import type { PageContext } from "../model/pageContext";
-import { getConciergeDelegation } from "../api/delegation";
+import { getConciergeIdentity } from "../api/delegation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserAudio } from "../audio/browserAudio";
 import {
@@ -14,6 +14,7 @@ import { voiceEventSchema, type VoiceStatus } from "../model/voice";
 export const useConciergeVoice = (
   onAction: (action: ApplicationAction) => string | void,
   pageContext?: PageContext,
+  accountId: number | null = null,
 ) => {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const assistantId = useRef<string | null>(null);
@@ -35,6 +36,51 @@ export const useConciergeVoice = (
   const blockedAudio = useRef(false);
   const pageContextRef = useRef(pageContext);
   const contextSocketRef = useRef<WebSocket | null>(null);
+  const actionRef = useRef(onAction);
+  const accountIdRef = useRef(accountId);
+  const socketAccountRef = useRef<number | null>(null);
+  const authenticationPending = useRef(false);
+  useEffect(() => {
+    actionRef.current = onAction;
+  }, [onAction]);
+
+  const synchronizeLogin = useCallback(async () => {
+    const socket = socketRef.current;
+    const current = generation.current;
+    if (
+      !readyRef.current ||
+      accountIdRef.current === null ||
+      socketAccountRef.current !== null ||
+      authenticationPending.current ||
+      socket?.readyState !== WebSocket.OPEN
+    )
+      return;
+    authenticationPending.current = true;
+    try {
+      const identity = await getConciergeIdentity();
+      if (generation.current !== current || socketRef.current !== socket)
+        return;
+      if (!identity.delegation || identity.accountId !== accountIdRef.current)
+        throw new Error("Login changed");
+      socket.send(
+        JSON.stringify({
+          type: "authenticate",
+          delegation: identity.delegation,
+        }),
+      );
+    } catch {
+      if (generation.current === current) {
+        authenticationPending.current = false;
+        setNotice(
+          "Your sign-in could not be verified for voice. Restart voice to try again.",
+        );
+      }
+    }
+  }, []);
+  useEffect(() => {
+    accountIdRef.current = accountId;
+    void synchronizeLogin();
+  }, [accountId, synchronizeLogin]);
   useEffect(() => {
     pageContextRef.current = pageContext;
     const socket = socketRef.current;
@@ -56,6 +102,8 @@ export const useConciergeVoice = (
     const socket = socketRef.current;
     socketRef.current = null;
     contextSocketRef.current = null;
+    socketAccountRef.current = null;
+    authenticationPending.current = false;
     try {
       if (socket?.readyState === WebSocket.OPEN)
         socket.send(JSON.stringify({ type: "end" }));
@@ -202,6 +250,7 @@ export const useConciergeVoice = (
       readyRef.current = true;
       clearTimeout(timerRef.current);
       setStatus("listening");
+      void synchronizeLogin();
       if (mutedRef.current)
         socketRef.current?.send(JSON.stringify({ type: "mute" }));
     };
@@ -251,12 +300,15 @@ export const useConciergeVoice = (
         import.meta.env.VITE_IMDB_CLONE_CONCIERGE_ADDRESS ?? "/concierge-api";
       const url = new URL(`${base}/v1/voice`, window.location.href);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-      const delegation = await getConciergeDelegation();
+      const identity = await getConciergeIdentity();
       if (!isCurrent()) return;
+      socketAccountRef.current = identity.accountId;
       const socket = new WebSocket(url);
       socket.onopen = () => {
         if (!isCurrent()) return;
-        socket.send(JSON.stringify({ type: "start", delegation }));
+        socket.send(
+          JSON.stringify({ type: "start", delegation: identity.delegation }),
+        );
         contextSocketRef.current = socket;
         if (pageContextRef.current)
           socket.send(
@@ -295,6 +347,12 @@ export const useConciergeVoice = (
           if (event.type === "ready") {
             providerReady = true;
             becomeReady();
+          } else if (event.type === "authenticated") {
+            socketAccountRef.current = accountIdRef.current;
+            authenticationPending.current = false;
+          } else if (event.type === "authentication-failed") {
+            authenticationPending.current = false;
+            setNotice(event.text ?? "Voice could not verify your sign-in.");
           } else if (event.type === "error") {
             fail(event.text ?? "Voice is unavailable. Please reconnect.");
           } else if (event.type === "standby") {
@@ -381,7 +439,7 @@ export const useConciergeVoice = (
             let outcome: "requested" | "rejected" = "requested";
             let destination: string | void;
             try {
-              destination = onAction(event.action);
+              destination = actionRef.current(event.action);
             } catch {
               outcome = "rejected";
             }
@@ -436,7 +494,7 @@ export const useConciergeVoice = (
     } catch (cause) {
       failAudio(cause);
     }
-  }, [dispose, onAction, markInterrupted]);
+  }, [dispose, markInterrupted, synchronizeLogin]);
 
   const toggleMute = useCallback(() => {
     const value = !mutedRef.current;

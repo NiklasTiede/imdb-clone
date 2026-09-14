@@ -1,6 +1,9 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useConciergeVoice } from "./useConciergeVoice";
+import { getConciergeIdentity } from "../api/delegation";
+
+vi.mock("../api/delegation", () => ({ getConciergeIdentity: vi.fn() }));
 
 const audio = vi.hoisted(() => ({
   start: vi.fn(),
@@ -40,6 +43,10 @@ class Socket {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(getConciergeIdentity).mockResolvedValue({
+    accountId: null,
+    delegation: null,
+  });
   audio.start.mockResolvedValue(undefined);
   audio.levels.mockReturnValue({ input: 0, output: 0, playing: false });
   Socket.instances = [];
@@ -55,6 +62,132 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("voice session lifecycle", () => {
+  it("keeps audio, history and the socket through login and uses the latest navigation handler", async () => {
+    const beforeLogin = vi.fn();
+    const afterLogin = vi.fn();
+    const { result, rerender } = renderHook(
+      ({
+        accountId,
+        onAction,
+      }: {
+        accountId: number | null;
+        onAction: typeof beforeLogin;
+      }) => useConciergeVoice(onAction, undefined, accountId),
+      {
+        initialProps: {
+          accountId: null as number | null,
+          onAction: beforeLogin,
+        },
+      },
+    );
+    await act(() => result.current.start());
+    const socket = Socket.instances[0]!;
+    act(() => {
+      socket.onopen?.();
+      socket.emit({ type: "ready" });
+      socket.emit({
+        type: "transcript",
+        speaker: "user",
+        text: "Find Forrest Gump",
+        final: true,
+        turn: 1,
+      });
+    });
+    vi.mocked(getConciergeIdentity).mockResolvedValue({
+      accountId: 17,
+      delegation: "verified-login",
+    });
+    rerender({ accountId: 17, onAction: afterLogin });
+    await waitFor(() =>
+      expect(socket.send).toHaveBeenCalledWith(
+        JSON.stringify({ type: "authenticate", delegation: "verified-login" }),
+      ),
+    );
+    act(() => {
+      socket.emit({ type: "authenticated" });
+      socket.emit({
+        type: "ui-action",
+        turn: 2,
+        action: { type: "open_page", destination: "watchlist" },
+      });
+    });
+    expect(Socket.instances).toHaveLength(1);
+    expect(audio.start).toHaveBeenCalledTimes(1);
+    expect(audio.close).not.toHaveBeenCalled();
+    expect(socket.close).not.toHaveBeenCalled();
+    expect(
+      result.current.turns.some((turn) => turn.text === "Find Forrest Gump"),
+    ).toBe(true);
+    expect(afterLogin).toHaveBeenCalledWith({
+      type: "open_page",
+      destination: "watchlist",
+    });
+    expect(beforeLogin).not.toHaveBeenCalled();
+  });
+
+  it("synchronizes a login that happens while the provider is still connecting", async () => {
+    const { result, rerender } = renderHook(
+      ({ accountId }: { accountId: number | null }) =>
+        useConciergeVoice(vi.fn(), undefined, accountId),
+      { initialProps: { accountId: null as number | null } },
+    );
+    await act(() => result.current.start());
+    const socket = Socket.instances[0]!;
+    act(() => socket.onopen?.());
+    vi.mocked(getConciergeIdentity).mockResolvedValue({
+      accountId: 17,
+      delegation: "verified-login",
+    });
+    rerender({ accountId: 17 });
+    expect(getConciergeIdentity).toHaveBeenCalledTimes(1);
+    await act(async () => socket.emit({ type: "ready" }));
+    expect(socket.send).toHaveBeenLastCalledWith(
+      JSON.stringify({ type: "authenticate", delegation: "verified-login" }),
+    );
+    act(() =>
+      socket.emit({
+        type: "authentication-failed",
+        text: "Please restart voice to verify sign-in.",
+      }),
+    );
+    expect(result.current.active).toBe(true);
+    expect(result.current.notice).toContain("verify sign-in");
+    expect(socket.close).not.toHaveBeenCalled();
+  });
+
+  it("discards a login credential that arrives after voice was stopped", async () => {
+    const { result, rerender } = renderHook(
+      ({ accountId }: { accountId: number | null }) =>
+        useConciergeVoice(vi.fn(), undefined, accountId),
+      { initialProps: { accountId: null as number | null } },
+    );
+    await act(() => result.current.start());
+    const socket = Socket.instances[0]!;
+    act(() => {
+      socket.onopen?.();
+      socket.emit({ type: "ready" });
+    });
+    let resolveLogin!: (identity: {
+      accountId: number;
+      delegation: string;
+    }) => void;
+    vi.mocked(getConciergeIdentity).mockReturnValue(
+      new Promise((resolve) => {
+        resolveLogin = resolve;
+      }),
+    );
+    rerender({ accountId: 17 });
+    act(() => result.current.end());
+    await act(async () =>
+      resolveLogin({ accountId: 17, delegation: "late-login" }),
+    );
+    expect(
+      socket.send.mock.calls.some(([value]) =>
+        String(value).includes("late-login"),
+      ),
+    ).toBe(false);
+  });
+
   it("releases the microphone and permits restart when the final socket write fails", async () => {
     const { result } = renderHook(() => useConciergeVoice(vi.fn()));
     await act(() => result.current.start());

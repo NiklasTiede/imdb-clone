@@ -110,6 +110,12 @@ class PersonalToolGate:
         self._token = token
         self._turn = turn
 
+    def attach_verified_delegation(self, token: SecretStr) -> None:
+        """Promote an anonymous session once; the caller must verify through Java first."""
+        if self._token is not None:
+            raise DelegationRejectedError
+        self._token = token
+
     async def call(
         self, _ctx: RunContext[Any], call_tool: CallToolFunc, name: str, args: dict[str, Any]
     ) -> ToolResult:

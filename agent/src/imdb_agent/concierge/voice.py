@@ -24,9 +24,10 @@ PCM_BYTES_PER_SECOND = SAMPLE_RATE * 2
 
 
 class VoiceCommand(EventModel):
-    type: Literal["interrupt", "mute", "resume", "end", "context", "text"]
+    type: Literal["interrupt", "mute", "resume", "end", "context", "text", "authenticate"]
     context: PageContext | None = None
     text: str | None = Field(default=None, min_length=1, max_length=600)
+    delegation: SecretStr | None = Field(default=None, min_length=1, max_length=1200)
 
     @field_validator("text")
     @classmethod
@@ -43,6 +44,8 @@ class VoiceCommand(EventModel):
             raise ValueError("context is required only for a context command")
         if (self.type == "text") != (self.text is not None):
             raise ValueError("text is required only for a text command")
+        if (self.type == "authenticate") != (self.delegation is not None):
+            raise ValueError("delegation is required only for an authenticate command")
         return self
 
 
@@ -58,6 +61,8 @@ class VoiceEvent(EventModel):
         "reply-complete",
         "error",
         "standby",
+        "authenticated",
+        "authentication-failed",
     ]
     status: Literal["listening", "thinking", "searching", "muted"] | None = None
     speaker: Literal["user", "assistant"] | None = None

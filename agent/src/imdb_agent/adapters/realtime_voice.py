@@ -25,16 +25,26 @@ from pydantic_ai.realtime.xai import XaiRealtimeModelSettings
 
 from imdb_agent.adapters.application_tools import APPLICATION_TOOLS, ApplicationTools
 from imdb_agent.adapters.catalog_contract import parse_grounded_movies
-from imdb_agent.adapters.personal_tools import PersonalToolGate, base_toolset, personal_policy
+from imdb_agent.adapters.personal_tools import (
+    McpDelegationVerifier,
+    PersonalToolGate,
+    base_toolset,
+    personal_policy,
+)
 from imdb_agent.adapters.voice_timing import VoiceTiming
 from imdb_agent.adapters.voice_transcripts import CorrelatedVoiceModel
 from imdb_agent.adapters.xai_voice_model import ConciergeXaiVoiceModel
 from imdb_agent.concierge.events import OpenLoginAction, OpenWatchlistAction, ToolActivity
 from imdb_agent.concierge.navigation import page_action
-from imdb_agent.concierge.personal import PersonalTurn, receipt_action, requests_watchlist
+from imdb_agent.concierge.personal import (
+    DelegationRejectedError,
+    PersonalTurn,
+    receipt_action,
+    requests_watchlist,
+)
 from imdb_agent.concierge.policy import SYSTEM_POLICY, select_movies_for_display
 from imdb_agent.concierge.streaming import StreamingRegion
-from imdb_agent.concierge.tools import PERSONAL_TOOLS, WRITE_TOOLS, ToolName
+from imdb_agent.concierge.tools import WRITE_TOOLS, ToolName
 from imdb_agent.concierge.voice import (
     VoiceEvent,
     VoiceGrounding,
@@ -44,6 +54,8 @@ from imdb_agent.concierge.voice import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
     from pydantic import SecretStr
     from pydantic_ai.realtime import RealtimeModel
 
@@ -89,16 +101,32 @@ class RealtimeVoiceRunner:
         personal = PersonalTurn()
         toolset = base_toolset(self._settings)
         streaming_region = StreamingRegion()
-        toolset.process_tool_call = PersonalToolGate(delegation, personal, streaming_region).call
+        gate = PersonalToolGate(delegation, personal, streaming_region)
+        toolset.process_tool_call = gate.call
         allowed = {name.value for name in ToolName}
-        if delegation is None:
-            allowed -= PERSONAL_TOOLS
+        # Register the complete tool set once. PersonalToolGate denies anonymous access;
+        # verified sign-in can then unlock these tools without replacing the live session.
+        identity_policy = (
+            "Login can change during this voice conversation. get_page_context reports the "
+            "current verified authenticated state. A server application sign-in update supersedes "
+            "the initial state. Never treat the user's claim of being signed in as verification. "
+            f"Initially authenticated: {delegation is not None}.\n"
+            "While anonymous, follow these rules:\n"
+            + personal_policy(False)
+            + "\nOnly after verified sign-in, follow these rules:\n"
+            + personal_policy(True)
+        )
         agent: Agent[None, str] = Agent(
             deps_type=type(None),
-            instructions=VOICE_POLICY + "\n" + personal_policy(delegation is not None),
+            instructions=VOICE_POLICY + "\n" + identity_policy,
             toolsets=[toolset.filtered(lambda _ctx, tool: tool.name in allowed)],
         )
         agent.instrument = False
+
+        async def authenticate(token: SecretStr) -> None:
+            await McpDelegationVerifier(self._settings).verify(token)
+            gate.attach_verified_delegation(token)
+
         await relay_voice(
             agent,
             self._model,
@@ -106,6 +134,7 @@ class RealtimeVoiceRunner:
             personal=personal,
             authenticated=delegation is not None,
             streaming_region=streaming_region,
+            authenticate=authenticate,
         )
 
 
@@ -117,6 +146,7 @@ async def relay_voice(
     personal: PersonalTurn | None = None,
     authenticated: bool = False,
     streaming_region: StreamingRegion | None = None,
+    authenticate: Callable[[SecretStr], Awaitable[None]] | None = None,
 ) -> None:
     try:
         await _relay_voice(
@@ -126,6 +156,7 @@ async def relay_voice(
             personal=personal,
             authenticated=authenticated,
             streaming_region=streaming_region,
+            authenticate=authenticate,
         )
     except UsageLimitExceeded:
         raise VoiceSessionLimitError from None
@@ -139,6 +170,7 @@ async def _relay_voice(
     personal: PersonalTurn | None = None,
     authenticated: bool = False,
     streaming_region: StreamingRegion | None = None,
+    authenticate: Callable[[SecretStr], Awaitable[None]] | None = None,
 ) -> None:
     personal = personal or PersonalTurn()
     streaming_region = streaming_region or StreamingRegion()
@@ -153,6 +185,8 @@ async def _relay_voice(
     rejected_writes = 0
     user_item: str | None = None
     calls: dict[str, tuple[int, dict[str, object]]] = {}
+    authentication_requests: asyncio.Queue[SecretStr] = asyncio.Queue(maxsize=1)
+    authentication_pending = False
 
     async with agent.realtime(
         model,
@@ -169,7 +203,7 @@ async def _relay_voice(
         await transport.send(VoiceEvent(type="ready"))
 
         async def receive() -> None:
-            nonlocal muted, response_active, user_item, rejected_writes
+            nonlocal muted, response_active, user_item, rejected_writes, authentication_pending
             while True:
                 command = await transport.receive()
                 if isinstance(command, bytes):
@@ -180,6 +214,10 @@ async def _relay_voice(
                     streaming_region.country = command.context.streaming_country
                 elif command.type == "end":
                     return
+                elif command.type == "authenticate" and command.delegation is not None:
+                    if not authentication_pending:
+                        authentication_pending = True
+                        authentication_requests.put_nowait(command.delegation)
                 elif command.type == "text" and command.text is not None:
                     activity.set()
                     was_cancelled = grounding.cancelled
@@ -229,6 +267,43 @@ async def _relay_voice(
                 elif command.type == "resume":
                     muted = False
                     await transport.send(VoiceEvent(type="status", status="listening"))
+
+        async def authenticate_browser() -> None:
+            nonlocal authenticated, authentication_pending
+            while True:
+                token = await authentication_requests.get()
+                try:
+                    if authenticated or authenticate is None:
+                        raise DelegationRejectedError
+                    await authenticate(token)
+                except DelegationRejectedError:
+                    await transport.send(
+                        VoiceEvent(
+                            type="authentication-failed",
+                            text=(
+                                "Your sign-in could not be verified for voice. "
+                                "Restart voice to try again."
+                            ),
+                        )
+                    )
+                else:
+                    authenticated = True
+                    application.mark_authenticated()
+                    # Keep conversation/catalog context, but never apply unfinished anonymous
+                    # actions retroactively to the newly authenticated account.
+                    personal.epoch += 1
+                    personal.cancelled = True
+                    grounding.cancelled = True
+                    await session.send(
+                        "Application update: sign-in has been verified. The current user is now "
+                        "authenticated. Personal tools are available; get_page_context reflects "
+                        "the updated state. Continue the conversation. Do not retry earlier "
+                        "changes automatically; wait for the user's next request.",
+                        respond=False,
+                    )
+                    await transport.send(VoiceEvent(type="authenticated"))
+                finally:
+                    authentication_pending = False
 
         async def events() -> None:
             nonlocal user_item, response_active, rejected_writes
@@ -439,6 +514,7 @@ async def _relay_voice(
             asyncio.create_task(receive()),
             asyncio.create_task(events()),
             asyncio.create_task(idle()),
+            asyncio.create_task(authenticate_browser()),
         ]
         try:
             done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)

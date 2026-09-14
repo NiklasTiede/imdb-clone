@@ -18,6 +18,8 @@ export const voiceEventSchema = z
       "reply-complete",
       "error",
       "standby",
+      "authenticated",
+      "authentication-failed",
     ]),
     status: z.enum(["listening", "thinking", "searching", "muted"]).optional(),
     speaker: z.enum(["user", "assistant"]).optional(),
