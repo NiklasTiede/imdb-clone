@@ -182,7 +182,7 @@ export const ConciergeVoiceDock = ({
             pointerEvents: "auto",
             cursor: "pointer",
             borderRadius: "50%",
-            opacity: 0.93,
+            opacity: 1,
             mb: debug ? -1 : 0,
             "&:disabled": { cursor: "wait", opacity: 0.5 },
             filter: "drop-shadow(0 8px 28px rgba(0,0,0,.6))",
