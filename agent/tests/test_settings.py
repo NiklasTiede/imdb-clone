@@ -41,6 +41,16 @@ def test_invalid_environment_value_is_rejected(monkeypatch: pytest.MonkeyPatch) 
         load_settings()
 
 
+def test_voice_profile_is_configurable_and_rejects_url_parameters(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("IMDB_AGENT_VOICE_AGENT_ID", "agent_example")
+    assert load_settings().voice_agent_id == "agent_example"
+    monkeypatch.setenv("IMDB_AGENT_VOICE_AGENT_ID", "agent_example&model=other")
+    with pytest.raises(ConfigurationError):
+        load_settings()
+
+
 def test_unknown_dotenv_field_is_rejected(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text("IMDB_AGENT_UNKNOWN=value\n", encoding="utf-8")

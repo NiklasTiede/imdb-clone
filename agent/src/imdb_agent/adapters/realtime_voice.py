@@ -75,8 +75,8 @@ class RealtimeVoiceRunner:
         self._model: RealtimeModel = ConciergeXaiVoiceModel(
             "grok-voice-think-fast-2.0",
             provider=XaiProvider(api_key=secrets.xai_api_key.get_secret_value()),
+            agent_id=settings.voice_agent_id,
             settings=XaiRealtimeModelSettings(
-                xai_voice="eve",
                 handshake_timeout=10.0,
                 max_tokens=512,
                 parallel_tool_calls=False,

@@ -2,6 +2,8 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pydantic_ai.exceptions import UserError
+from pydantic_ai.messages import ModelRequest
 from pydantic_ai.models import ModelRequestParameters
 from pydantic_ai.providers.xai import XaiProvider
 from pydantic_ai.realtime.xai import XaiRealtimeModelSettings
@@ -11,38 +13,55 @@ from imdb_agent.adapters.xai_voice_model import ConciergeXaiVoiceModel
 
 
 @pytest.mark.asyncio
-async def test_handshake_sends_speed_without_losing_audio_or_tool_configuration() -> None:
+@pytest.mark.parametrize("agent_id", [None, "agent_test-profile"])
+async def test_handshake_preserves_profile_audio_and_application_tools(
+    agent_id: str | None,
+) -> None:
     socket = AsyncMock()
     socket.recv.side_effect = [
         json.dumps(
             {
                 "type": "session.created",
                 "event_id": "created-1",
-                "session": {"model": "grok-voice-think-fast-2.0"},
+                "session": {"model": "grok-voice-think-fast-2.0", "voice": "custom-profile-voice"},
             }
         ),
+        *([json.dumps({"type": "session.updated", "session": {"tools": []}})] if agent_id else []),
         json.dumps({"type": "session.updated"}),
     ]
+
+    async def receive_before_update(_payload: str) -> None:
+        assert socket.recv.await_count == (2 if agent_id else 1)
+
+    socket.send.side_effect = receive_before_update
     connection = MagicMock()
     connection.__aenter__ = AsyncMock(return_value=socket)
     connection.__aexit__ = AsyncMock(return_value=False)
     model = ConciergeXaiVoiceModel(
         "grok-voice-think-fast-2.0",
         provider=XaiProvider(api_key="test-only"),
+        agent_id=agent_id,
         settings=XaiRealtimeModelSettings(
             xai_voice="eve",
             xai_turn_detection={"type": "server_vad"},
             parallel_tool_calls=False,
         ),
     )
-    with patch("websockets.connect", return_value=connection):
+    with patch("websockets.connect", return_value=connection) as connect:
         async with model.connect(
-            messages=[],
+            messages=[ModelRequest(parts=[], instructions="Movie Concierge application policy")],
             model_settings=None,
             model_request_parameters=ModelRequestParameters(
                 function_tools=[ToolDefinition(name="search_movies", parameters_json_schema={})],
             ),
-        ):
+        ) as live:
+            expected_query = (
+                "agent_id=agent_test-profile" if agent_id else "model=grok-voice-think-fast-2.0"
+            )
+            assert connect.call_args.args[0] == f"wss://api.x.ai/v1/realtime?{expected_query}"
+            assert live.model_name == "grok-voice-think-fast-2.0"
+            assert live.interrupts_response_on_speech is True
+            assert live.input_transcription_enabled is True
             update = json.loads(socket.send.call_args_list[0].args[0])
             assert update["type"] == "session.update"
             session = update["session"]
@@ -51,8 +70,34 @@ async def test_handshake_sends_speed_without_losing_audio_or_tool_configuration(
                 "speed": 1.15,
             }
             assert session["audio"]["input"]["format"] == {"type": "audio/pcm", "rate": 24000}
-            assert session["voice"] == "eve"
+            assert session["instructions"] == "Movie Concierge application policy"
+            if agent_id:
+                assert "voice" not in session
+                assert "model" not in session
+                assert "reasoning" not in session
+            else:
+                assert session["voice"] == "eve"
             assert session["turn_detection"]["type"] == "server_vad"
             assert "silence_duration_ms" not in session["turn_detection"]
             assert session["parallel_tool_calls"] is False
             assert session["tools"][0]["name"] == "search_movies"
+    connection.__aexit__.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_hosted_profile_does_not_silently_restart_conversation_on_reconnect() -> None:
+    model = ConciergeXaiVoiceModel(
+        "grok-voice-think-fast-2.0",
+        provider=XaiProvider(api_key="test-only"),
+        agent_id="agent_test",
+        settings=XaiRealtimeModelSettings(reconnect={"max_attempts": 1}),
+    )
+    with patch("websockets.connect") as connect:
+        with pytest.raises(UserError, match="new session"):
+            async with model.connect(
+                messages=[],
+                model_settings=None,
+                model_request_parameters=ModelRequestParameters(),
+            ):
+                pass
+        connect.assert_not_called()

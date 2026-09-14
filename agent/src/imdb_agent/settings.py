@@ -83,6 +83,9 @@ class Settings(BaseSettings):
     run_cost_limit_usd: Decimal = Field(default=Decimal("0.25"), gt=0, le=1)
     live_evals_enabled: bool = False
     voice_enabled: bool = False
+    voice_agent_id: str = Field(
+        default="agent_ur8m5egTlRE3E8zu", pattern=r"^agent_[A-Za-z0-9_-]+$", max_length=100
+    )
     voice_session_seconds: float = Field(default=300.0, ge=15, le=300)
     voice_max_sessions: int = Field(default=20, ge=1, le=100)
     voice_allowed_origins: list[str] = Field(

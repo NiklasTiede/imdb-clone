@@ -202,6 +202,19 @@ curl -fsS http://localhost:8090/readyz
 curl -fsS http://localhost:8090/metrics
 ```
 
+### Voice agent profile
+
+The Movie Concierge connects to the hosted xAI profile `agent_ur8m5egTlRE3E8zu`.
+Override it with `IMDB_AGENT_VOICE_AGENT_ID` and restart the Python agent. The existing
+`.secrets/movie-concierge-voice.local.env` still supplies `XAI_API_KEY`.
+
+The profile selects the voice and model. The app supplies its own Movie Concierge instructions,
+authorized tools, PCM 24kHz audio, server VAD, and 1.15 output speed. Console instructions/tools
+are therefore not the source of the application's behavior. Frontend capture/playback settings
+are unchanged. Hosted profiles currently use fresh sessions after a disconnect; automatic
+resumption is not configured. The adapter rejects enabling it until hosted-profile resumption
+has been implemented and verified.
+
 ### Diagnose a voice session ending
 
 Local voice currently has a hard 300-second (five-minute) lifetime, including connection setup.
