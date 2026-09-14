@@ -4,7 +4,7 @@ import captureUrl from "./capture.worklet.js?no-inline&url";
 // Speech can arrive much faster than real time. Keep room for a complete reply
 // while bounding queued PCM to about 5.8 MB after decoding to Float32.
 const MAX_QUEUED_SECONDS = 60;
-const PLAYBACK_LEAD_SECONDS = 0.3;
+const PLAYBACK_LEAD_SECONDS = 0.12;
 
 export class BrowserAudio {
   private readonly context = new AudioContext();

@@ -192,6 +192,79 @@ def test_end_cancels_pending_provider_handshake() -> None:
     assert runner.closed
 
 
+@pytest.mark.parametrize("packets", [20, 21])
+def test_microphone_backlog_has_400ms_headroom_and_reports_overflow(
+    packets: int,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    configure_logging(json_output=True)
+
+    class BlockedVoice(EchoVoice):
+        async def run(self, transport: VoiceTransport, delegation: SecretStr | None = None) -> None:
+            try:
+                await transport.send(VoiceEvent(type="ready"))
+                await asyncio.Event().wait()
+            finally:
+                self.closed = True
+
+    runner = BlockedVoice()
+    with (
+        client_for(runner) as client,
+        client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
+    ):
+        ws.send_json({"type": "start"})
+        assert ws.receive_json()["type"] == "ready"
+        for _ in range(packets):
+            ws.send_bytes(b"\x00" * 960)  # 20ms of mono PCM16 at 24kHz.
+        if packets == 20:
+            ws.send_json({"type": "end"})
+        else:
+            error = ws.receive_json()
+            assert error["type"] == "error"
+            assert "could not keep up" in error["text"]
+        with pytest.raises(WebSocketDisconnect):
+            ws.receive_json()
+    assert runner.closed
+    events = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    ended = next(event for event in events if event["event"] == "voice_session_ended")
+    assert ended["outcome"] == ("user_end" if packets == 20 else "input_backpressure")
+    assert ended["audio_input_bytes"] == packets * 960
+
+
+@pytest.mark.parametrize("output_limit", [False, True])
+def test_provider_value_errors_and_output_limits_are_not_invalid_browser_messages(
+    output_limit: bool,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    configure_logging(json_output=True)
+
+    class FailingVoice(EchoVoice):
+        async def run(self, transport: VoiceTransport, delegation: SecretStr | None = None) -> None:
+            await transport.send(VoiceEvent(type="ready"))
+            if output_limit:
+                await transport.send(b"\x00" * 480_002)
+            else:
+                raise ValueError("synthetic-private-provider-payload")
+
+    with (
+        client_for(FailingVoice()) as client,
+        client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
+    ):
+        ws.send_json({"type": "start"})
+        assert ws.receive_json()["type"] == "ready"
+        error = ws.receive_json()
+        assert error["type"] == "error"
+        assert ("audio limit" if output_limit else "connection failed") in error["text"]
+    logs = capsys.readouterr().out
+    assert "synthetic-private" not in logs
+    assert "synthetic-private" not in error["text"]
+    events = [json.loads(line) for line in logs.splitlines()]
+    ended = next(event for event in events if event["event"] == "voice_session_ended")
+    assert ended["error_code"] == (
+        "voice_output_audio_limit" if output_limit else "voice_provider_error"
+    )
+
+
 def test_usage_limit_is_explained_without_exposing_provider_errors() -> None:
     from imdb_agent.concierge.voice import VoiceSessionLimitError
 

@@ -31,7 +31,7 @@ async def test_handshake_sends_speed_without_losing_audio_or_tool_configuration(
         provider=XaiProvider(api_key="test-only"),
         settings=XaiRealtimeModelSettings(
             xai_voice="eve",
-            xai_turn_detection={"type": "server_vad", "silence_duration_ms": 650},
+            xai_turn_detection={"type": "server_vad"},
             parallel_tool_calls=False,
         ),
     )
@@ -52,6 +52,7 @@ async def test_handshake_sends_speed_without_losing_audio_or_tool_configuration(
             }
             assert session["audio"]["input"]["format"] == {"type": "audio/pcm", "rate": 24000}
             assert session["voice"] == "eve"
-            assert session["turn_detection"]["silence_duration_ms"] == 650
+            assert session["turn_detection"]["type"] == "server_vad"
+            assert "silence_duration_ms" not in session["turn_detection"]
             assert session["parallel_tool_calls"] is False
             assert session["tools"][0]["name"] == "search_movies"

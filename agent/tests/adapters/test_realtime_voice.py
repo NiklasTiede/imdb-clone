@@ -1064,10 +1064,76 @@ async def test_typed_followup_keeps_voice_grounding_and_answers_aloud(spoken_fir
 
 
 @pytest.mark.asyncio
-async def test_typed_input_interrupts_a_spoken_reply_without_unmuting() -> None:
+@pytest.mark.parametrize("server_cancels", [False, True])
+async def test_repeated_barge_in_cancels_only_when_provider_needs_it(server_cancels: bool) -> None:
+    from pydantic_ai.realtime.codec import CancelResponse
+
+    class BargeInConnection(CatalogConnection):
+        requests = 0
+        cancelled = 0
+
+        @property
+        def interrupts_response_on_speech(self) -> bool:
+            return server_cancels
+
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, CancelResponse):
+                self.cancelled += 1
+            elif isinstance(content, BinaryAudio):
+                self.requests += 1
+                item = f"user-{self.requests}"
+                await self.events.put(RealtimeInputSpeechStartEvent(item_id=item))
+                if self.requests > 1:
+                    await self.events.put(ResponseDone(interrupted=True))
+                await self.events.put(InputTranscript("Tell me more", is_final=True, item_id=item))
+                await self.events.put(RealtimeInputSpeechEndEvent(item_id=item))
+                # A fast provider can queue the next answer before our relay handles speech start.
+                await self.events.put(OutputTranscript(f"Answer {self.requests}"))
+                await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                if self.requests == 4:
+                    await self.events.put(ResponseDone())
+
+    class BargeInBrowser(Browser):
+        answers = 0
+
+        async def send(self, event: VoiceEvent | bytes) -> None:
+            self.events.append(event)
+            if isinstance(event, VoiceEvent) and event.type == "ready":
+                await self.input.put(b"\x00" * 960)
+            elif isinstance(event, bytes):
+                self.answers += 1
+                if self.answers < 4:
+                    await self.input.put(b"\x00" * 960)
+            elif event.type == "reply-complete" and event.turn == 4:
+                await self.input.put(VoiceCommand(type="end"))
+
+    model = CatalogModel()
+    connection = BargeInConnection()
+    model.connection = connection
+    browser = BargeInBrowser()
+    agent: Agent[None, str] = Agent()
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser)
+    assert connection.cancelled == (0 if server_cancels else 3)
+    assert browser.answers == 4
+    assert [
+        event.turn
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.type == "interrupt"
+    ] == [1, 2, 3, 4]
+    assert connection.closed
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("server_cancels", [False, True])
+async def test_typed_input_interrupts_a_spoken_reply_without_unmuting(server_cancels: bool) -> None:
     from pydantic_ai.realtime.codec import CancelResponse, ClearAudio
 
     class InterruptConnection(CatalogConnection):
+        @property
+        def interrupts_response_on_speech(self) -> bool:
+            return server_cancels
+
         def __init__(self) -> None:
             super().__init__()
             self.cancelled = 0

@@ -33,6 +33,23 @@ class VoiceStart(BaseModel):
     delegation: SecretStr | None = None
 
 
+class VoiceTransportError(Exception):
+    """Bounded transport failure codes, safe to log without client/provider payloads."""
+
+    def __init__(
+        self,
+        code: Literal[
+            "invalid_start",
+            "invalid_audio",
+            "invalid_control",
+            "input_backpressure",
+            "output_audio_limit",
+        ],
+    ) -> None:
+        self.code = code
+        super().__init__(code)
+
+
 class BrowserVoiceTransport:
     def __init__(self, socket: WebSocket, *, seconds: float) -> None:
         self._socket = socket
@@ -45,7 +62,9 @@ class BrowserVoiceTransport:
         self._started_at = monotonic()
         self.ready = False
         self.end_requested = False
-        self._messages: asyncio.Queue[bytes | VoiceCommand] = asyncio.Queue(maxsize=8)
+        # Preserve 400ms of input headroom with the browser's 20ms capture packets.
+        # This is a maximum backlog, not an added playback or input delay.
+        self._messages: asyncio.Queue[bytes | VoiceCommand] = asyncio.Queue(maxsize=20)
 
     async def receive(self) -> bytes | VoiceCommand:
         return await self._messages.get()
@@ -69,7 +88,7 @@ class BrowserVoiceTransport:
             try:
                 self._messages.put_nowait(message)
             except asyncio.QueueFull:
-                raise ValueError("voice_input_backpressure") from None
+                raise VoiceTransportError("input_backpressure") from None
 
     async def _read_message(self) -> bytes | VoiceCommand:
         message = await self._socket.receive()
@@ -84,13 +103,16 @@ class BrowserVoiceTransport:
                 or len(data) > 9_600
                 or self._input_bytes > self._max_bytes
             ):
-                raise ValueError("invalid_audio")
+                raise VoiceTransportError("invalid_audio")
             return data
         text = message.get("text") or ""
         self._commands += 1
         if len(text) > 1500 or self._commands > 300:
-            raise ValueError("invalid_control")
-        command = VoiceCommand.model_validate_json(text)
+            raise VoiceTransportError("invalid_control")
+        try:
+            command = VoiceCommand.model_validate_json(text)
+        except ValidationError:
+            raise VoiceTransportError("invalid_control") from None
         if command.type == "text":
             self._typed_messages += 1
         return command
@@ -100,7 +122,7 @@ class BrowserVoiceTransport:
             if isinstance(event, bytes):
                 self._output_bytes += len(event)
                 if self._output_bytes > self._max_bytes:
-                    raise ValueError("output_audio_limit")
+                    raise VoiceTransportError("output_audio_limit")
                 await self._socket.send_bytes(event)
             else:
                 await self._socket.send_text(event.model_dump_json(exclude_none=True))
@@ -179,8 +201,11 @@ def create_voice_router(
                 async with asyncio.timeout(5):
                     initial = await socket.receive_text()
                     if len(initial) > 1200:
-                        raise ValueError("invalid_start")
-                    start = VoiceStart.model_validate_json(initial)
+                        raise VoiceTransportError("invalid_start")
+                    try:
+                        start = VoiceStart.model_validate_json(initial)
+                    except ValidationError:
+                        raise VoiceTransportError("invalid_start") from None
                     if start.delegation is not None:
                         phase = "delegation"
                         if verifier is None:
@@ -238,10 +263,18 @@ def create_voice_router(
                 outcome = "connection_timeout"
                 message = "Voice connection timed out. Please reconnect."
             await transport.send_error(message)
-        except (ValidationError, ValueError) as error:
-            outcome = "invalid_message"
+        except VoiceTransportError as error:
+            outcome = error.code
             error_type = type(error).__name__
-            await transport.send_error("Invalid voice message. Please reconnect.")
+            if outcome == "input_backpressure":
+                message = (
+                    "Voice connection could not keep up with microphone audio. Please reconnect."
+                )
+            elif outcome == "output_audio_limit":
+                message = "Voice session reached its audio limit. Start a new session to continue."
+            else:
+                message = "Invalid voice message. Please reconnect."
+            await transport.send_error(message)
         except asyncio.CancelledError:
             outcome = "server_shutdown"
             raise

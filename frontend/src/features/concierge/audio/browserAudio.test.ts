@@ -44,8 +44,8 @@ it("queues a normal answer delivered faster than playback without disconnecting"
   for (let i = 0; i < 45; i++) audio.play(pcm(0.5));
   const sources = Context.latest.sources;
   expect(sources).toHaveLength(45);
-  expect(sources[0]?.start).toHaveBeenCalledWith(1.3);
-  expect(sources[44]?.start).toHaveBeenCalledWith(23.3);
+  expect(sources[0]?.start).toHaveBeenCalledWith(1.12);
+  expect(sources[44]?.start).toHaveBeenCalledWith(23.12);
   audio.close();
   expect(sources.every((source) => source.stop.mock.calls.length === 1)).toBe(
     true,
@@ -73,7 +73,7 @@ it("reclaims queue capacity as audio plays and when interrupted", () => {
     true,
   );
   audio.play(pcm(40));
-  expect(Context.latest.sources[2]?.start).toHaveBeenCalledWith(31.3);
+  expect(Context.latest.sources[2]?.start).toHaveBeenCalledWith(31.12);
   audio.close();
 });
 
@@ -108,7 +108,7 @@ it("keeps the reply interruptible during underruns and re-buffers arriving audio
   Context.latest.sources[0]?.onended?.();
   expect(audio.levels().playing).toBe(true);
   audio.play(pcm(0.1));
-  expect(Context.latest.sources[1]?.start).toHaveBeenCalledWith(2.3);
+  expect(Context.latest.sources[1]?.start).toHaveBeenCalledWith(2.12);
   audio.finishReply();
   expect(audio.levels().playing).toBe(true);
   Context.latest.sources[1]?.onended?.();

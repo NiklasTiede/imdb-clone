@@ -80,7 +80,7 @@ class RealtimeVoiceRunner:
                 handshake_timeout=10.0,
                 max_tokens=512,
                 parallel_tool_calls=False,
-                xai_turn_detection={"type": "server_vad", "silence_duration_ms": 650},
+                xai_turn_detection={"type": "server_vad"},
             ),
         )
 
@@ -240,8 +240,9 @@ async def _relay_voice(
                     personal.begin()
                     rejected_writes = 0
                     user_item = event.item_id
-                    # xAI cancellation does not support playback-offset truncation.
-                    if response_active:
+                    # Server VAD already cancels. A delayed duplicate can cancel the next
+                    # answer, even if the SDK has already consumed its first audio frame.
+                    if response_active and not model.interrupts_response_on_speech:
                         await session.interrupt()
                     response_active = False
                     await transport.send(VoiceEvent(type="interrupt", turn=grounding.turn))
