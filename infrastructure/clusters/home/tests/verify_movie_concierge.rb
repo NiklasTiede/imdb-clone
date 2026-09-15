@@ -142,15 +142,65 @@ assert_contract(
 
 secret = resource(documents, "Secret", "movie-concierge-runtime", "imdb-clone")
 encrypted_values = secret.fetch("stringData").values
-assert_contract(encrypted_values.length == 2, "runtime secret must contain exactly two fields")
+assert_contract(
+  secret.fetch("stringData").keys.sort == %w[
+    mcp-bearer-token openai-api-key openai-live-api-key tmdb-read-access-token xai-api-key
+  ],
+  "runtime secret fields drifted"
+)
 assert_contract(
   encrypted_values.all? { |value| value.start_with?("ENC[AES256_GCM,") },
   "runtime secret contains plaintext"
 )
 
+agent_secrets = pod_spec.fetch("volumes").find { |volume| volume["name"] == "runtime-secrets" }
+assert_contract(
+  agent_secrets.dig("secret", "items").map { |item| item["key"] }.sort ==
+    %w[mcp-bearer-token openai-api-key openai-live-api-key xai-api-key],
+  "agent must receive only its own provider and MCP credentials"
+)
+quota = resource(documents, "PersistentVolumeClaim", "imdb-clone-voice-quota", "imdb-clone")
+assert_contract(quota.dig("spec", "accessModes") == ["ReadWriteOnce"], "quota must be single-writer")
+assert_contract(
+  pod_spec.fetch("volumes").any? do |volume|
+    volume.dig("persistentVolumeClaim", "claimName") == "imdb-clone-voice-quota" &&
+      container.fetch("volumeMounts").any? do |mount|
+        mount["name"] == volume["name"] && mount["mountPath"] == "/var/lib/movie-concierge"
+      end
+  end,
+  "voice quota must survive pod replacement"
+)
+
+voice_enabled = %w[IMDB_AGENT_VOICE_ENABLED IMDB_AGENT_VOICE_LIVE_ENABLED].any? do |name|
+  environment[name] == "true"
+end
+if voice_enabled
+  assert_contract((image_versions["agent"].split(".").map(&:to_i) <=> [1, 5, 0]) >= 0,
+                  "release the production-capable image before enabling voice")
+  %w[IMDB_AGENT_VOICE_ENABLED IMDB_AGENT_VOICE_LIVE_ENABLED].each do |name|
+    assert_contract(environment[name] == "true", "both voice providers must remain selectable")
+  end
+  assert_contract(environment["IMDB_AGENT_VOICE_SESSION_SECONDS"] == "600", "voice time cap drifted")
+  assert_contract(environment["IMDB_AGENT_VOICE_MAX_SESSIONS"] == "8", "daily voice cap drifted")
+  assert_contract(environment["IMDB_AGENT_VOICE_QUOTA_DATABASE"] ==
+                  "/var/lib/movie-concierge/voice-quota.db", "persistent voice quota required")
+  assert_contract(JSON.parse(environment.fetch("IMDB_AGENT_VOICE_ALLOWED_ORIGINS")) ==
+                  ["https://imdb-clone.the-coding-lab.com"], "voice origin drifted")
+end
+
 backend_environment = backend_container.fetch("env").to_h do |entry|
   [entry.fetch("name"), entry["value"]]
 end
+backend_secrets = backend.dig("spec", "template", "spec", "volumes").find do |volume|
+  volume["name"] == "movie-concierge-runtime"
+end
+assert_contract(
+  backend_secrets.dig("secret", "items").sort_by { |item| item["key"] } == [
+    {"key" => "mcp-bearer-token", "path" => "movie_concierge_mcp_bearer_token"},
+    {"key" => "tmdb-read-access-token", "path" => "TMDB_READ_ACCESS_TOKEN"}
+  ],
+  "backend must mount only the MCP token and TMDB credential"
+)
 assert_contract(
   backend_environment["movie_concierge_mcp_enabled"] == "true",
   "Java production MCP must be enabled"
@@ -170,6 +220,17 @@ assert_contract(
 ingress = resource(documents, "Ingress", "imdb-clone-concierge-public", "imdb-clone")
 paths = ingress.fetch("spec").fetch("rules").flat_map { |rule| rule.dig("http", "paths") }
 assert_contract(paths.map { |path| path["path"] } == ["/concierge-api/v1"], "public agent path drifted")
+headers = resource(documents, "Middleware", "imdb-clone-security-headers", "imdb-clone")
+assert_contract(
+  headers.dig("spec", "headers", "permissionsPolicy").include?("microphone=(self)"),
+  "same-origin microphone permission must be available"
+)
+assert_contract(
+  headers.dig("spec", "headers", "contentSecurityPolicy").include?(
+    "wss://imdb-clone.the-coding-lab.com"
+  ),
+  "browser CSP must allow the same-origin voice WebSocket"
+)
 
 network_policy = resource(
   documents,

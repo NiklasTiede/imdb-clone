@@ -150,6 +150,8 @@ spec:
             items:
               - key: mcp-bearer-token
                 path: movie_concierge_mcp_bearer_token
+              - key: tmdb-read-access-token
+                path: TMDB_READ_ACCESS_TOKEN
         - name: tmp
           emptyDir:
             medium: Memory

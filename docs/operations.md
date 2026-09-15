@@ -202,3 +202,56 @@ ssh robotnik@um560 'kubectl get applications -n argocd'
 Alert rules are evaluated by Prometheus. Alertmanager notification delivery is still intentionally
 disabled; choosing and securing an email, Slack, or another notification destination is a separate
 operator decision.
+
+## Public voice rollout
+
+The public pilot shares **eight starts in any rolling 24 hours** across all users and both models,
+with **two simultaneous sessions** and a **ten-minute lifetime** including connection setup.
+Grok and GPT-Live remain selectable through the existing model menu. Inactivity and provider/tool
+budgets can end a conversation earlier. This is an admission limit, not an exact dollar cap.
+
+Production credentials are projected from the SOPS-encrypted `movie-concierge-runtime` Secret:
+`xai-api-key` and `openai-live-api-key` go only to the agent; `tmdb-read-access-token` goes only to
+Java as `TMDB_READ_ACCESS_TOKEN`. The existing text key and MCP workload token are preserved.
+Never put provider credentials into frontend builds, plain manifests or logs.
+
+Release in this order to avoid enabling unsupported settings on the v1.4.0 image:
+
+1. Merge the production support, encrypted secret projections and quota PVC with voice disabled.
+2. Release v1.5.0 through the `VERSION` workflow and merge its generated image-digest PR.
+3. Once all three deployments run the new images, add these environment values to `agent.yaml`
+   in an infrastructure PR and let Argo CD reconcile it:
+
+   ```yaml
+   - name: IMDB_AGENT_VOICE_ENABLED
+     value: "true"
+   - name: IMDB_AGENT_VOICE_LIVE_ENABLED
+     value: "true"
+   - name: IMDB_AGENT_VOICE_SESSION_SECONDS
+     value: "600"
+   - name: IMDB_AGENT_VOICE_MAX_SESSIONS
+     value: "8"
+   - name: IMDB_AGENT_VOICE_QUOTA_DATABASE
+     value: /var/lib/movie-concierge/voice-quota.db
+   - name: IMDB_AGENT_VOICE_ALLOWED_ORIGINS
+     value: '["https://imdb-clone.the-coding-lab.com"]'
+   ```
+
+4. Verify `/concierge-api/v1/voice/models` returns both models. On the public HTTPS site, test
+   microphone permission, playback, movie/trailer navigation and one signed-in personal action
+   with each model. These are paid starts and consume the same eight-start allowance.
+5. Check `voice_session_started`, `voice_session_ready` and `voice_session_ended` events for
+   correlation and outcomes, without recording prompts or audio. Confirm every deployment is
+   healthy and Argo reports `Synced`/`Healthy`.
+
+`/var/lib/movie-concierge/voice-quota.db` stores only admission timestamps on the
+`imdb-clone-voice-quota` PVC. Expired rows are removed at the next admission; no conversation or
+account identifiers are persisted. A provider connection failure after admission also consumes a
+start. Invalid start messages, unavailable models and rejected delegations do not. Database failures
+fail closed. The rejection message tells users how many minutes remain until a slot returns.
+Do not delete/reset the ledger to bypass the agreed budget. Keep one replica with `Recreate`;
+concurrency accounting remains process-local, and the SQLite volume has one writer.
+
+For rollback, disable both voice flags first. Preserve the PVC and remove the new voice settings
+before rolling back to an image predating production voice support. Existing conversations end
+when the pod is replaced; there is no automatic cross-pod session recovery.

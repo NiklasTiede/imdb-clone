@@ -7,6 +7,21 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 automountServiceAccountToken: false
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: imdb-clone-voice-quota
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 100Mi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -148,12 +163,17 @@ spec:
               cpu: 500m
               memory: 512Mi
           volumeMounts:
+            - name: voice-quota
+              mountPath: /var/lib/movie-concierge
             - name: runtime-secrets
               mountPath: /run/secrets/movie-concierge
               readOnly: true
             - name: tmp
               mountPath: /tmp
       volumes:
+        - name: voice-quota
+          persistentVolumeClaim:
+            claimName: imdb-clone-voice-quota
         - name: runtime-secrets
           secret:
             secretName: movie-concierge-runtime
@@ -163,6 +183,10 @@ spec:
                 path: openai-api-key
               - key: mcp-bearer-token
                 path: mcp-bearer-token
+              - key: xai-api-key
+                path: xai-api-key
+              - key: openai-live-api-key
+                path: openai-live-api-key
         - name: tmp
           emptyDir:
             medium: Memory
