@@ -62,6 +62,16 @@ it("bounds queued audio including the incoming chunk before allocating playback 
   audio.close();
 });
 
+it("does not mark continuous silent PCM as an endless spoken reply", () => {
+  const audio = new BrowserAudio(true);
+  audio.play(pcm(0.1));
+  expect(audio.levels().playing).toBe(false);
+  Context.latest.currentTime += 0.1;
+  audio.play(pcm(0.1));
+  expect(audio.levels().playing).toBe(false);
+  audio.close();
+});
+
 it("reclaims queue capacity as audio plays and when interrupted", () => {
   const audio = new BrowserAudio();
   audio.play(pcm(40));

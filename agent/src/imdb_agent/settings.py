@@ -83,6 +83,7 @@ class Settings(BaseSettings):
     run_cost_limit_usd: Decimal = Field(default=Decimal("0.25"), gt=0, le=1)
     live_evals_enabled: bool = False
     voice_enabled: bool = False
+    voice_live_enabled: bool = False
     voice_agent_id: str = Field(
         default="agent_ur8m5egTlRE3E8zu", pattern=r"^agent_[A-Za-z0-9_-]+$", max_length=100
     )
@@ -128,7 +129,9 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_boundaries(self) -> Settings:
-        if self.voice_enabled and self.environment is not DeploymentEnvironment.LOCAL:
+        if (
+            self.voice_enabled or self.voice_live_enabled
+        ) and self.environment is not DeploymentEnvironment.LOCAL:
             raise ValueError("voice is currently available only in local development")
         self._validate_otel_endpoint()
         self._validate_profiling_endpoint()
@@ -262,6 +265,17 @@ def load_local_openai_secrets(
     except OSError, ValidationError:
         raise ConfigurationError(
             "OpenAI credentials are unavailable in .secrets/movie-concierge.local.env"
+        ) from None
+
+
+def load_local_live_key() -> SecretStr:
+    """The existing opt-in Live comparison key; never depends on benchmark modules."""
+    path = LOCAL_OPENAI_SECRETS_FILE.with_name("movie-concierge-realtime.local.env")
+    try:
+        return load_local_openai_secrets(path).openai_api_key
+    except ConfigurationError:
+        raise ConfigurationError(
+            "OpenAI Live credentials are unavailable in .secrets/movie-concierge-realtime.local.env"
         ) from None
 
 

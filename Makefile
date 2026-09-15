@@ -273,6 +273,10 @@ AGENT_EVAL_CASE_FLAG = $(if $(AGENT_EVAL_CASE),--case $(AGENT_EVAL_CASE),)
 run-agent-voice: ## run local Movie Concierge with bounded English microphone sessions
 	IMDB_AGENT_VOICE_ENABLED=true $(MAKE) run-agent
 
+.PHONY: run-agent-voice-compare
+run-agent-voice-compare: ## enable Grok and GPT-Live 1 for local microphone comparison
+	IMDB_AGENT_VOICE_LIVE_ENABLED=true $(MAKE) run-agent-voice
+
 probe-agent-voice-live: ## replay synthetic English audio; requires IMDB_AGENT_LIVE_EVALS_ENABLED=true
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --locked imdb-agent-voice-probe --live
 

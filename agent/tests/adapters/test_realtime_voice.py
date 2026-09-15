@@ -38,6 +38,63 @@ if TYPE_CHECKING:
     from pydantic_ai.models import ModelRequestParameters
 
 
+@pytest.mark.asyncio
+async def test_rapid_movie_navigation_can_supersede_a_target_in_one_speech_turn() -> None:
+    from imdb_agent.concierge.events import GroundedMovie, OpenMovieAction
+    from imdb_agent.concierge.personal import PersonalTurn
+
+    class RapidConnection(CatalogConnection):
+        completed = 0
+
+        async def send(self, content: RealtimeInput) -> None:
+            if isinstance(content, BinaryAudio):
+                await self.events.put(RealtimeInputSpeechStartEvent(item_id="rapid"))
+                await self.events.put(
+                    InputTranscript(
+                        "Open Forrest Gump. Actually, open Arrival.",
+                        is_final=True,
+                        item_id="rapid",
+                    )
+                )
+                await self.navigate(6)
+            elif isinstance(content, ToolResult):
+                self.completed += 1
+                if self.completed < 3:
+                    await self.navigate(7)
+                else:
+                    await self.events.put(AudioDelta(b"\x00\x01" * 2400))
+                    await self.events.put(ResponseDone())
+
+        async def navigate(self, movie_id: int) -> None:
+            await self.events.put(
+                ToolCall(
+                    f"navigate-{self.completed}",
+                    tool_name="open_movie_page",
+                    args=json.dumps({"movie_id": movie_id}),
+                )
+            )
+            await self.events.put(ResponseDone())
+
+    personal = PersonalTurn(
+        movies=(
+            GroundedMovie(movie_id=6, primary_title="Forrest Gump", movie_type="MOVIE"),
+            GroundedMovie(movie_id=7, primary_title="Arrival", movie_type="MOVIE"),
+        )
+    )
+    model = CatalogModel()
+    model.connection = RapidConnection()
+    browser = Browser()
+    agent: Agent[None, str] = Agent(deps_type=type(None))
+    async with asyncio.timeout(3):
+        await relay_voice(agent, model, browser, personal=personal)
+    actions = [
+        event.action
+        for event in browser.events
+        if isinstance(event, VoiceEvent) and event.type == "ui-action"
+    ]
+    assert actions == [OpenMovieAction(movie_id=6), OpenMovieAction(movie_id=7)]
+
+
 class CatalogConnection(RealtimeConnection):
     def __init__(self, *, late_transcript: bool = False, old_command: bool = False) -> None:
         self.events: asyncio.Queue[RealtimeCodecEvent] = asyncio.Queue()

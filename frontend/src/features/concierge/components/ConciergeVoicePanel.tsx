@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { visuallyHidden } from "@mui/utils";
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { movieColors } from "../../../theme";
 import type { ConciergeVoice } from "../hooks/useConciergeVoice";
 import { voiceLabels } from "../model/voice";
@@ -106,12 +106,14 @@ export const ConciergeVoiceDock = ({
   toggleConversation,
   debug = false,
   disabled = false,
+  modelPicker,
 }: {
   voice: ConciergeVoice;
   conversationOpen: boolean;
   toggleConversation: () => void;
   debug?: boolean;
   disabled?: boolean;
+  modelPicker?: ReactNode;
 }) => {
   const label =
     voice.status === "connecting"
@@ -195,6 +197,7 @@ export const ConciergeVoiceDock = ({
           <VoiceSignal voice={voice} size={115} />
         </Box>
       </Tooltip>
+      {modelPicker}
       {!debug && (
         <Box role="status" sx={visuallyHidden}>
           {voice.active

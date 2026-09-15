@@ -21,6 +21,7 @@ from imdb_agent.concierge.policy import decide_open_movie_action
 
 SAMPLE_RATE = 24_000
 PCM_BYTES_PER_SECOND = SAMPLE_RATE * 2
+VoiceModel = Literal["grok", "gpt-live-1"]
 
 
 class VoiceCommand(EventModel):
@@ -123,6 +124,7 @@ class VoiceGrounding:
     completed: bool = False
     cancelled: bool = False
     action_sent: bool = False
+    sent_action: ApplicationAction | None = None
     search: SearchNavigation = field(default_factory=SearchNavigation)
 
     def begin(self) -> None:
@@ -135,6 +137,7 @@ class VoiceGrounding:
         self.completed = False
         self.cancelled = False
         self.action_sent = False
+        self.sent_action = None
         self.search.reset()
 
     def action(self) -> OpenMovieAction | None:

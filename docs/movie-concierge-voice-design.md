@@ -4,7 +4,7 @@
 
 The normal app is voice-only. `/voice-orb.html` remains a separate development-only study.
 
-- A single 115 px Voice Lens at 93% opacity stays at the bottom center on desktop and mobile.
+- A single 115 px Voice Lens at 100% opacity stays at the bottom center on desktop and mobile.
   Its iris is closed before starting. There is no header voice entry, transcript launcher, or
   visible status/control bar in the normal app. The canvas halo fades to transparent at its edges.
   Once the closed iris and audio history have settled, painting stops until a resize, visibility,
@@ -252,3 +252,12 @@ the signal and dock into focused components backed by the real voice-session sta
 
 Checked in the browser at 1440, 390 and 320 px: controls, simulated navigation/undo, text fallback,
 no horizontal overflow and reduced-motion behaviour. These are preview checks, not voice/MCP E2E.
+## Local model comparison
+
+When both voice providers are enabled, a compact menu below the existing lens selects Grok
+or GPT-Live 1. It is disabled during a conversation. Ending the conversation permits switching;
+changing models clears the displayed conversation and the next start creates a new session.
+There is no second lens or header launcher. The debug view exposes the same selector.
+
+GPT-Live captions can overlap between speakers. Backend results and tool actions are separate
+from actual spoken captions; continuous silent audio does not keep the speaking indicator active.

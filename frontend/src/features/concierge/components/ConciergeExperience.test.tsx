@@ -71,8 +71,11 @@ const LocationProbe = () => {
 };
 
 const renderExperience = async () => {
+  const queryClient = new QueryClient();
+  // These scenarios mock the text-conversation requests; model discovery has its own tests.
+  queryClient.setQueryData(["concierge", "voice-models"], ["grok"]);
   unmountExperience = render(
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={appTheme}>
         <MemoryRouter initialEntries={["/?conciergeDebug=1"]}>
           <ConciergeExperience />

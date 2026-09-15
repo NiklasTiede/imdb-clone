@@ -73,6 +73,51 @@ def test_audio_end_and_disconnect_cleanup() -> None:
     assert runner.closed
 
 
+def test_model_selection_routes_only_enabled_models_and_shares_session_budget() -> None:
+    grok, live = EchoVoice(), EchoVoice()
+    app = FastAPI()
+    app.include_router(
+        create_voice_router(
+            grok,
+            live_runner=live,
+            allowed_origins=("http://localhost:3000",),
+            session_seconds=10,
+            max_sessions=2,
+        )
+    )
+    with TestClient(app) as client:
+        assert client.get("/v1/voice/models").json() == {"models": ["grok", "gpt-live-1"]}
+        for model, runner in [("grok", grok), ("gpt-live-1", live)]:
+            with client.websocket_connect(
+                "/v1/voice", headers={"origin": "http://localhost:3000"}
+            ) as ws:
+                ws.send_json({"type": "start", "model": model})
+                assert ws.receive_json()["type"] == "ready"
+                ws.send_json({"type": "text", "text": model})
+                ws.send_bytes(b"\x00" * 960)
+                assert ws.receive_bytes() == b"\x00" * 960
+                ws.send_json({"type": "end"})
+                with pytest.raises(WebSocketDisconnect):
+                    ws.receive_json()
+            assert runner.texts == [model]
+        with client.websocket_connect(
+            "/v1/voice", headers={"origin": "http://localhost:3000"}
+        ) as ws:
+            assert "session limit" in ws.receive_json()["text"]
+
+
+def test_unavailable_live_model_does_not_silently_fall_back_to_grok() -> None:
+    grok = EchoVoice()
+    with client_for(grok) as client:
+        assert client.get("/v1/voice/models").json() == {"models": ["grok"]}
+        with client.websocket_connect(
+            "/v1/voice", headers={"origin": "http://localhost:3000"}
+        ) as ws:
+            ws.send_json({"type": "start", "model": "gpt-live-1"})
+            assert "not enabled" in ws.receive_json()["text"]
+    assert not grok.closed
+
+
 @pytest.mark.parametrize("origin", ["http://evil.example", "null", ""])
 def test_origin_rejected_before_provider_connection(origin: str) -> None:
     runner = EchoVoice()
@@ -469,3 +514,35 @@ def test_session_logs_correlate_and_count_activity_without_payload(
         assert ended["control_messages"] == 2
         assert ended["audio_input_bytes"] == ended["audio_output_bytes"] == 4800
         assert ended["turns"] == 0
+
+
+@pytest.mark.asyncio
+async def test_buffered_socket_burst_yields_to_consumer_without_losing_audio() -> None:
+    from typing import cast
+
+    from fastapi import WebSocket
+
+    from imdb_agent.web.voice import BrowserVoiceTransport
+
+    packets = [bytes([index, 0]) * 480 for index in range(40)]
+
+    class BurstSocket:
+        def __init__(self) -> None:
+            self.messages: list[dict[str, object]] = [
+                {"type": "websocket.receive", "bytes": data} for data in packets
+            ]
+            self.messages.append({"type": "websocket.receive", "text": '{"type":"end"}'})
+
+        async def receive(self) -> dict[str, object]:
+            return self.messages.pop(0)  # Buffered socket reads need not yield to other tasks.
+
+    transport = BrowserVoiceTransport(cast("WebSocket", BurstSocket()), seconds=10)
+    received: list[bytes | VoiceCommand] = []
+
+    async def consume() -> None:
+        received.extend([await transport.receive() for _ in packets])
+
+    async with asyncio.timeout(1):
+        await asyncio.gather(transport.read_browser(), consume())
+    assert received == packets
+    assert transport.end_requested

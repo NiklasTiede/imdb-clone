@@ -14,12 +14,14 @@ from pydantic import BaseModel, ConfigDict, SecretStr, ValidationError
 from starlette.websockets import WebSocketState
 
 from imdb_agent.concierge.personal import DelegationRejectedError, DelegationVerifier
+from imdb_agent.concierge.service import ConciergeRunError
 from imdb_agent.concierge.voice import (
     PCM_BYTES_PER_SECOND,
     VoiceCommand,
     VoiceDisconnectedError,
     VoiceEvent,
     VoiceIdleTimeoutError,
+    VoiceModel,
     VoiceSessionLimitError,
 )
 
@@ -31,6 +33,7 @@ class VoiceStart(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     type: Literal["start"]
     delegation: SecretStr | None = None
+    model: VoiceModel = "grok"
 
 
 class VoiceTransportError(Exception):
@@ -86,8 +89,11 @@ class BrowserVoiceTransport:
                 self.end_requested = True
                 return
             try:
-                self._messages.put_nowait(message)
-            except asyncio.QueueFull:
+                # A WebSocket burst can fill the queue before the consumer gets CPU time.
+                # Yield under bounded backpressure rather than treating that burst as failure.
+                async with asyncio.timeout(0.4):
+                    await self._messages.put(message)
+            except TimeoutError:
                 raise VoiceTransportError("input_backpressure") from None
 
     async def _read_message(self) -> bytes | VoiceCommand:
@@ -147,6 +153,7 @@ def create_voice_router(
     allowed_origins: tuple[str, ...],
     session_seconds: float,
     max_sessions: int,
+    live_runner: VoiceRunner | None = None,
 ) -> APIRouter:
     router = APIRouter()
     active = 0
@@ -154,9 +161,18 @@ def create_voice_router(
     logger = structlog.get_logger()
     logger.info(
         "voice_availability",
-        outcome="enabled" if runner is not None else "disabled",
+        outcome="enabled" if runner is not None or live_runner is not None else "disabled",
         session_limit_seconds=session_seconds,
     )
+
+    async def models() -> dict[str, list[str]]:
+        return {
+            "models": [
+                name
+                for name, item in {"grok": runner, "gpt-live-1": live_runner}.items()
+                if item is not None
+            ]
+        }
 
     async def voice(socket: WebSocket) -> None:
         nonlocal active, started
@@ -165,8 +181,8 @@ def create_voice_router(
             await socket.close(code=1008)
             return
         await socket.accept()
-        if runner is None or active >= 2 or started >= max_sessions:
-            if runner is None:
+        if (runner is None and live_runner is None) or active >= 2 or started >= max_sessions:
+            if runner is None and live_runner is None:
                 error_code = "voice_disabled"
                 message = (
                     "Voice is disabled on the server. "
@@ -206,6 +222,14 @@ def create_voice_router(
                         start = VoiceStart.model_validate_json(initial)
                     except ValidationError:
                         raise VoiceTransportError("invalid_start") from None
+                    selected = runner if start.model == "grok" else live_runner
+                    structlog.contextvars.bind_contextvars(voice_model=start.model)
+                    if selected is None:
+                        outcome = "model_unavailable"
+                        await transport.send_error(
+                            "This voice model is not enabled. Select another model."
+                        )
+                        return
                     if start.delegation is not None:
                         phase = "delegation"
                         if verifier is None:
@@ -214,7 +238,7 @@ def create_voice_router(
                 phase = "provider_connect"
                 tasks = [
                     asyncio.create_task(transport.read_browser()),
-                    asyncio.create_task(runner.run(transport, start.delegation)),
+                    asyncio.create_task(selected.run(transport, start.delegation)),
                 ]
                 try:
                     done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -231,6 +255,11 @@ def create_voice_router(
         except DelegationRejectedError:
             outcome = "delegation_rejected"
             await transport.send_error("Sign in again to use your watchlist, then restart voice.")
+        except ConciergeRunError:
+            outcome = "catalog_unavailable"
+            await transport.send_error(
+                "The movie catalog connection was interrupted. Please reconnect."
+            )
         except VoiceSessionLimitError:
             outcome = "usage_limit"
             await transport.send_error(
@@ -298,10 +327,12 @@ def create_voice_router(
                 **transport.statistics(),
             )
             structlog.contextvars.reset_contextvars(**tokens)
+            structlog.contextvars.unbind_contextvars("voice_model")
             if socket.client_state is WebSocketState.CONNECTED:
                 with suppress(Exception):
                     async with asyncio.timeout(5):
                         await socket.close()
 
     router.add_api_websocket_route("/v1/voice", voice)
+    router.add_api_route("/v1/voice/models", models, methods=["GET"])
     return router

@@ -62,6 +62,122 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("voice session lifecycle", () => {
+  it("accepts a grounded movie correction in one turn without replaying duplicates or receipts", async () => {
+    const action = vi.fn();
+    const { result } = renderHook(() => useConciergeVoice(action));
+    await act(() => result.current.start());
+    const socket = Socket.instances[0]!;
+    const open = (movieId: number, turn = 1) =>
+      socket.emit({
+        type: "ui-action",
+        turn,
+        action: { type: "open_movie", movieId },
+      });
+    const ground = (movieId: number, turn = 1) =>
+      socket.emit({
+        type: "movie-card",
+        turn,
+        movie: {
+          movieId,
+          primaryTitle: "Fixture",
+          movieType: "MOVIE",
+          genres: [],
+        },
+      });
+    act(() => {
+      socket.emit({ type: "ready" });
+      ground(6);
+      open(6);
+      open(6);
+      open(7); // Missing same-turn evidence still rejects a correction.
+    });
+    expect(action).toHaveBeenCalledTimes(1);
+    act(() => {
+      ground(7);
+      open(7);
+      open(7);
+      open(6); // A delayed duplicate must not restore the old destination.
+      for (let i = 0; i < 2; i++)
+        socket.emit({
+          type: "ui-action",
+          turn: 2,
+          action: { type: "open_watchlist" },
+        });
+      ground(6, 2);
+      open(6, 2); // Personal receipt navigation stays terminal for its turn.
+    });
+    expect(action.mock.calls).toEqual([
+      [{ type: "open_movie", movieId: 6 }],
+      [{ type: "open_movie", movieId: 7 }],
+      [{ type: "open_watchlist" }],
+    ]);
+    act(() => result.current.end());
+  });
+
+  it("opens a movie and its trailer for separate Live tasks within one caption row", async () => {
+    const action = vi.fn();
+    const { result } = renderHook(() =>
+      useConciergeVoice(action, undefined, null, "gpt-live-1"),
+    );
+    await act(() => result.current.start());
+    const socket = Socket.instances[0]!;
+    const movie = {
+      movieId: 42,
+      primaryTitle: "Forrest Gump",
+      movieType: "MOVIE",
+      genres: [],
+    };
+    act(() => socket.emit({ type: "ready" }));
+    for (const [index, type] of [
+      "open_movie",
+      "open_movie_trailer",
+    ].entries()) {
+      const turn = index + 2;
+      act(() => {
+        socket.emit({
+          type: "transcript",
+          turn: 1,
+          speaker: "user",
+          text:
+            index === 0
+              ? "Open Forrest Gump."
+              : "Open Forrest Gump. Now play its trailer.",
+        });
+        socket.emit({ type: "movie-card", turn, movie });
+        socket.emit({ type: "ui-action", turn, action: { type, movieId: 42 } });
+        socket.emit({ type: "ui-action", turn, action: { type, movieId: 42 } });
+      });
+    }
+    expect(action.mock.calls).toEqual([
+      [{ type: "open_movie", movieId: 42 }],
+      [{ type: "open_movie_trailer", movieId: 42 }],
+    ]);
+    act(() => result.current.end());
+  });
+
+  it("selects GPT-Live explicitly and accepts audio after repeated manual interruptions", async () => {
+    const { result } = renderHook(() =>
+      useConciergeVoice(vi.fn(), undefined, null, "gpt-live-1"),
+    );
+    await act(() => result.current.start());
+    const socket = Socket.instances[0]!;
+    act(() => {
+      socket.onopen?.();
+      socket.emit({ type: "ready" });
+    });
+    expect(socket.send).toHaveBeenCalledWith(
+      expect.stringContaining('"model":"gpt-live-1"'),
+    );
+    for (let i = 0; i < 3; i++) {
+      act(() => {
+        result.current.interrupt();
+        socket.onmessage?.({ data: new ArrayBuffer(960) });
+      });
+    }
+    expect(audio.play).toHaveBeenCalledTimes(3);
+    expect(result.current.active).toBe(true);
+    act(() => result.current.end());
+  });
   it("keeps audio, history and the socket through login and uses the latest navigation handler", async () => {
     const beforeLogin = vi.fn();
     const afterLogin = vi.fn();
@@ -440,6 +556,19 @@ it("connects after microphone permission while audio initializes, but waits for 
   if (!socket) throw new Error("Expected voice socket");
   act(() => socket.emit({ type: "ready" }));
   act(() => socket.emit({ type: "status", status: "listening" }));
+  const greeting = [new ArrayBuffer(960), new ArrayBuffer(1920)];
+  act(() => {
+    greeting.forEach((data) => socket.onmessage?.({ data }));
+    socket.emit({
+      type: "transcript",
+      speaker: "assistant",
+      text: "Welcome!",
+      turn: 0,
+    });
+    socket.emit({ type: "reply-complete", turn: 0 });
+  });
+  expect(audio.play).not.toHaveBeenCalled();
+  expect(audio.finishReply).not.toHaveBeenCalled();
   expect(result.current.status).toBe("connecting");
   sendAudio?.(new ArrayBuffer(4800));
   expect(socket.send).not.toHaveBeenCalled();
@@ -448,6 +577,11 @@ it("connects after microphone permission while audio initializes, but waits for 
     await starting;
   });
   expect(result.current.status).toBe("listening");
+  expect(audio.play.mock.calls).toEqual(greeting.map((chunk) => [chunk]));
+  expect(audio.finishReply).toHaveBeenCalledOnce();
+  expect(result.current.turns.some((turn) => turn.text === "Welcome!")).toBe(
+    true,
+  );
   const chunk = new ArrayBuffer(4800);
   sendAudio?.(chunk);
   expect(socket.send).toHaveBeenCalledWith(chunk);
@@ -471,15 +605,58 @@ it("closes an overlapping connection on audio failure and ignores a late ready e
   });
   const socket = Socket.instances[0];
   if (!socket) throw new Error("Expected voice socket");
+  act(() => {
+    socket.emit({ type: "ready" });
+    socket.onmessage?.({ data: new ArrayBuffer(960) });
+  });
   await act(async () => {
     failStartup?.(new Error("Audio device unavailable"));
     await starting;
   });
   expect(socket.close).toHaveBeenCalled();
   expect(audio.close).toHaveBeenCalled();
+  expect(audio.play).not.toHaveBeenCalled();
   act(() => socket.emit({ type: "ready" }));
   expect(result.current.status).toBe("error");
 });
+
+it.each(["end", "provider-error", "overflow"])(
+  "does not replay a startup greeting after %s",
+  async (termination) => {
+    let finishAudio: (() => void) | undefined;
+    audio.start.mockImplementationOnce(
+      (_send: unknown, _ended: unknown, granted: () => void) => {
+        granted();
+        return new Promise<void>((resolve) => {
+          finishAudio = resolve;
+        });
+      },
+    );
+    const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+    let starting: Promise<void> | undefined;
+    await act(async () => {
+      starting = result.current.start();
+    });
+    const socket = Socket.instances[0]!;
+    act(() => {
+      socket.emit({ type: "ready" });
+      socket.onmessage?.({ data: new ArrayBuffer(960) });
+      if (termination === "end") result.current.end();
+      else if (termination === "provider-error")
+        socket.emit({ type: "error", text: "Provider unavailable" });
+      else socket.onmessage?.({ data: new ArrayBuffer(512_000) });
+    });
+    await act(async () => {
+      finishAudio?.();
+      await starting;
+    });
+    expect(audio.play).not.toHaveBeenCalled();
+    expect(socket.close).toHaveBeenCalled();
+    expect(result.current.status).toBe(
+      termination === "end" ? "idle" : "error",
+    );
+  },
+);
 
 it("ending during parallel startup cannot restart listening after audio resolves", async () => {
   let finishAudio: (() => void) | undefined;
@@ -527,7 +704,7 @@ it("sends the current page after start and updates it without reconnecting", asy
       ([message]) => JSON.parse(message as string) as object,
     ),
   ).toEqual([
-    { type: "start", delegation: null },
+    { type: "start", delegation: null, model: "grok" },
     { type: "context", context: { page: "movie", movieId: 7 } },
   ]);
   rerender({ id: 8 });

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
+import structlog
 from pydantic_ai import Agent, FunctionToolCallEvent, FunctionToolResultEvent, UsageLimits
 from pydantic_ai.exceptions import UsageLimitExceeded
 from pydantic_ai.messages import (
@@ -25,6 +26,7 @@ from pydantic_ai.realtime.xai import XaiRealtimeModelSettings
 
 from imdb_agent.adapters.application_tools import APPLICATION_TOOLS, ApplicationTools
 from imdb_agent.adapters.catalog_contract import parse_grounded_movies
+from imdb_agent.adapters.logging import usage_limit_budget
 from imdb_agent.adapters.personal_tools import (
     McpDelegationVerifier,
     PersonalToolGate,
@@ -158,7 +160,8 @@ async def relay_voice(
             streaming_region=streaming_region,
             authenticate=authenticate,
         )
-    except UsageLimitExceeded:
+    except UsageLimitExceeded as error:
+        structlog.get_logger().info("voice_usage_limit", budget=usage_limit_budget(error))
         raise VoiceSessionLimitError from None
 
 
@@ -358,6 +361,12 @@ async def _relay_voice(
                 elif isinstance(event, FunctionToolResultEvent) and isinstance(
                     event.part, ToolReturnPart
                 ):
+                    if event.part.tool_name in APPLICATION_TOOLS:
+                        structlog.get_logger().info(
+                            "voice_application_tool_completed",
+                            tool=event.part.tool_name,
+                            outcome="failed" if event.part.outcome == "failed" else "success",
+                        )
                     timing.tool_finished(event.tool_call_id, failed=event.part.outcome == "failed")
                     call_turn, arguments = calls.pop(event.tool_call_id, (-1, {}))
                     if call_turn != grounding.turn or grounding.cancelled:
@@ -534,14 +543,28 @@ async def _send_navigation(
     *,
     authenticated: bool,
 ) -> None:
-    """Emit at most one navigation per turn, with one priority and cancellation check.
+    """Emit grounded navigation, allowing a later movie target in the same speech turn.
 
     Committed personal changes take precedence over model navigation; deterministic
     fallbacks retain the fast path for direct commands without an extra model call.
     """
-    if grounding.cancelled or grounding.action_sent:
+    if grounding.cancelled:
         return
-    if personal.receipt is not None:
+    if grounding.action_sent:
+        # Server VAD can group rapid commands into one turn. Only a new, grounded
+        # movie-navigation tool may supersede an earlier movie destination.
+        action = application.action
+        previous = grounding.sent_action
+        if (
+            personal.receipt is not None
+            or previous is None
+            or previous.type not in {"open_movie", "open_movie_trailer"}
+            or action is None
+            or action.type not in {"open_movie", "open_movie_trailer"}
+            or action == previous
+        ):
+            return
+    elif personal.receipt is not None:
         action = receipt_action(personal.receipt)
     elif requests_watchlist(grounding.message) and (personal.watchlist_read or not authenticated):
         action = OpenWatchlistAction() if authenticated else OpenLoginAction()
@@ -556,6 +579,7 @@ async def _send_navigation(
         return
     turn = grounding.turn
     grounding.action_sent = True
+    grounding.sent_action = action
     if action.type == "open_movie" or action.type == "open_movie_trailer":
         candidates = (
             (application.movie,)

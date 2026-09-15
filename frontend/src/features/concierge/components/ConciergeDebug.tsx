@@ -20,6 +20,7 @@ export default function ConciergeDebug({
   onToggle,
   streamingCountry,
   onStreamingCountryChange,
+  modelPicker,
 }: {
   accountId: number | null;
   voice: ConciergeVoice;
@@ -30,6 +31,7 @@ export default function ConciergeDebug({
   onToggle: () => void;
   streamingCountry: string;
   onStreamingCountryChange: (country: string) => void;
+  modelPicker?: import("react").ReactNode;
 }) {
   const chat = useConciergeChat(
     getConciergeClientId(accountId),
@@ -58,6 +60,7 @@ export default function ConciergeDebug({
         </Button>
       )}
       <ConciergeVoiceDock
+        modelPicker={modelPicker}
         voice={voice}
         conversationOpen={open}
         toggleConversation={onToggle}

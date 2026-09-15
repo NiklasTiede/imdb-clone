@@ -236,3 +236,13 @@ def test_voice_preview_defaults_to_five_minutes_and_rejects_longer_sessions(
     monkeypatch.setenv("IMDB_AGENT_VOICE_SESSION_SECONDS", "301")
     with pytest.raises(ConfigurationError):
         load_settings()
+
+
+def test_live_voice_requires_explicit_local_opt_in(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("IMDB_AGENT_VOICE_LIVE_ENABLED", raising=False)
+    assert not load_settings().voice_live_enabled
+    monkeypatch.setenv("IMDB_AGENT_VOICE_LIVE_ENABLED", "true")
+    assert load_settings().voice_live_enabled
+    monkeypatch.setenv("IMDB_AGENT_ENVIRONMENT", "production")
+    with pytest.raises(ConfigurationError):
+        load_settings()

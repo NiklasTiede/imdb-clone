@@ -204,6 +204,71 @@ curl -fsS http://localhost:8090/metrics
 
 ### Voice agent profile
 
+#### Compare Grok and GPT-Live 1 locally
+
+Run `make run-agent-voice-compare`, or the IntelliJ **Movie Concierge (voice comparison)**
+configuration, instead of the normal voice launcher. Both use port 8090; stop the previous
+agent process first. Reload the frontend, then select **Grok** or **GPT-Live 1** under the lens.
+The selection is fixed while connected. End voice before switching; switching clears the local
+conversation display and starts a fresh provider conversation on the next click.
+
+The comparison launcher enables `IMDB_AGENT_VOICE_LIVE_ENABLED=true` in addition to ordinary
+voice. GPT-Live reads `OPENAI_API_KEY` from `.secrets/movie-concierge-realtime.local.env`.
+That key needs Live access to **gpt-live-1** and Responses access to the configured text backend
+(`IMDB_AGENT_MODEL_NAME`, currently `gpt-5.6-luna`). Grok still uses its separate key and hosted
+profile below. Ordinary `make run-agent-voice` remains Grok-only. The browser gets the enabled
+choices from `/v1/voice/models`; it never receives API keys or arbitrary provider URLs.
+
+GPT-Live uses `/v1/live/sessions`, not the Realtime API. Its continuous conversation delegates
+tasks to the existing `PydanticAIConciergeRunner`, which retains the normal application/MCP
+tools, delegated permissions, per-request budgets and committed action receipts. Greetings
+need no backend request. Login promotes the current voice session after Java verification;
+queued anonymous requests retain their original credentials. Logout closes the session.
+
+Both options currently use the same browser PCM/WebSocket relay, 24kHz audio and 120ms initial
+playback buffer. Live does not use the Grok turn/VAD protocol: both speakers can have overlapping
+caption rows, output may contain silence continuously, and there is no audio-done event. The lens
+therefore derives speaking feedback from audible output rather than treating queued silence as
+speech. Spoken captions come only from Live; backend text is sent back as commentary, not displayed
+as if it had already been spoken. UI actions and tool activity remain separately inspectable.
+Each delegated backend request gets a separate result group for cards, tool activity and UI actions;
+caption grouping must not deduplicate separate navigation requests.
+
+Client delegation metadata has no task text. The adapter retains timestamped transcript fragments
+and briefly collects late fragments (200ms quiet, at most one second) before requesting backend
+work. Display grouping is only a heuristic and never triggers tools or cancels work. Backend work
+is serialized and bounded to 12 delegations per session; spoken interruption asks Live to listen,
+but does not imply that an already executing mutation was canceled. This behavior needs continued
+human testing with corrections and overlapping requests before public rollout.
+
+Safe logs include `voice_model`, `live_delegation_finished` duration and `live_voice_usage` with
+cumulative provider seconds, final-usage confirmation and backend request/token counts. Backend
+inference is billed separately. No dollar total is inferred from audio bytes or missing usage.
+Delegations have a session-local `delegation_sequence` and log `started`, `skipped` (missing
+transcript or cached result), or `finished` with an outcome/error code. `live_tool_activity`
+records tool names and status only. The finished event counts tool starts and emitted `ui_actions`.
+`text_only` means backend text without domain tool calls or navigation, not confirmed task success.
+`live_delegation_context` records transcript/history character counts, transcript age and whether
+the queued caption row changed, without recording content. On a token-budget failure,
+`agent_run_failed` includes cumulative input/output tokens, requests and the configured input limit.
+The text backend omits verbose MCP output schemas from model prompts; typed result and permission
+checks still run. The input-token budget is cumulative across model requests within each run.
+Emission does not prove that the browser completed navigation. Conversation text, movie IDs,
+credentials and tool arguments stay out of these logs.
+The existing five-minute, concurrency and process-session limits apply across both choices.
+
+This is a local comparison feature. Production voice is still explicitly disabled by settings.
+Before enabling it, implement mounted voice secrets, production origins, per-user/shared quotas,
+ingress/lifecycle checks, and production microphone/tool-action evals. OpenAI recommends WebRTC
+for browser media; a direct WebRTC connection plus server-side controls should be evaluated for
+the home-server rollout separately from this comparison's shared relay.
+
+References: [GPT-Live](https://developers.openai.com/api/docs/guides/live),
+[client delegation](https://developers.openai.com/api/docs/guides/live-delegation),
+[session lifecycle](https://developers.openai.com/api/docs/guides/live-conversations).
+
+#### Hosted Grok profile
+
 The Movie Concierge connects to the hosted xAI profile `agent_ur8m5egTlRE3E8zu`.
 Override it with `IMDB_AGENT_VOICE_AGENT_ID` and restart the Python agent. The existing
 `.secrets/movie-concierge-voice.local.env` still supplies `XAI_API_KEY`.

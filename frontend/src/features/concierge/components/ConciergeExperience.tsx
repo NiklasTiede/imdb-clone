@@ -23,6 +23,8 @@ import { useAuthSessionSnapshot } from "../../../shared/auth";
 import { applicationDestination } from "../model/applicationNavigation";
 import { useConciergeVoice } from "../hooks/useConciergeVoice";
 import { ConciergeVoiceDock } from "./ConciergeVoicePanel";
+import { VoiceModelPicker } from "./VoiceModelPicker";
+import type { VoiceModel } from "../api/voiceModels";
 import type { ApplicationAction } from "../model/concierge";
 
 const ConciergeDebug = lazy(() => import("./ConciergeDebug"));
@@ -77,6 +79,7 @@ const IdentityScopedConcierge = ({
   debug: boolean;
 }) => {
   const queryClient = useQueryClient();
+  const [voiceModel, setVoiceModel] = useState<VoiceModel>("grok");
   const [open, setOpen] = useState(debug);
   const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
   const [countrySelection, setCountrySelection] = useState(() => ({
@@ -177,9 +180,15 @@ const IdentityScopedConcierge = ({
     handleApplicationAction,
     pageContext,
     accountId,
+    voiceModel,
   );
   const { confirmNavigation: confirmVoiceNavigation, turns: voiceTurns } =
     voice;
+  const changeVoiceModel = (model: VoiceModel) => {
+    if (model === voiceModel || voice.active) return;
+    voice.clearHistory();
+    setVoiceModel(model);
+  };
   useEffect(() => {
     const currentPath = `${pathname}${search}${hash}`;
     confirmVoiceNavigation(currentPath);
@@ -262,6 +271,13 @@ const IdentityScopedConcierge = ({
       {debug ? (
         <Suspense fallback={null}>
           <ConciergeDebug
+            modelPicker={
+              <VoiceModelPicker
+                model={voiceModel}
+                onChange={changeVoiceModel}
+                active={voice.active}
+              />
+            }
             key={accountId ?? "anonymous"}
             accountId={accountId}
             voice={voice}
@@ -276,6 +292,13 @@ const IdentityScopedConcierge = ({
         </Suspense>
       ) : (
         <ConciergeVoiceDock
+          modelPicker={
+            <VoiceModelPicker
+              model={voiceModel}
+              onChange={changeVoiceModel}
+              active={voice.active}
+            />
+          }
           voice={voice}
           conversationOpen={false}
           toggleConversation={() => undefined}

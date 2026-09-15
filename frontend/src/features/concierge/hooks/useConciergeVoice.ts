@@ -1,5 +1,6 @@
 import type { PageContext } from "../model/pageContext";
 import { getConciergeIdentity } from "../api/delegation";
+import type { VoiceModel } from "../api/voiceModels";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserAudio } from "../audio/browserAudio";
 import {
@@ -15,6 +16,7 @@ export const useConciergeVoice = (
   onAction: (action: ApplicationAction) => string | void,
   pageContext?: PageContext,
   accountId: number | null = null,
+  model: VoiceModel = "grok",
 ) => {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const assistantId = useRef<string | null>(null);
@@ -244,8 +246,23 @@ export const useConciergeVoice = (
     let ready = false;
     let providerReady = false;
     let captureReady = false;
+    const startupMessages: (string | ArrayBuffer)[] = [];
+    let startupBytes = 0;
+    let processMessage: ((data: unknown) => void) | undefined;
+    const bufferStartup = (data: string | ArrayBuffer) => {
+      // A hosted agent may greet us while macOS is still opening the audio device.
+      // Preserve PCM and control-event order, with a bounded startup backlog.
+      startupBytes +=
+        typeof data === "string" ? data.length * 2 : data.byteLength;
+      if (startupBytes > 512_000 || startupMessages.length >= 1024) {
+        startupMessages.length = 0;
+        fail("Voice audio couldn't start in time. Please reconnect.");
+        return;
+      }
+      startupMessages.push(data);
+    };
     const becomeReady = () => {
-      if (!isCurrent() || !providerReady || !captureReady) return;
+      if (!isCurrent() || ready || !providerReady || !captureReady) return;
       ready = true;
       readyRef.current = true;
       clearTimeout(timerRef.current);
@@ -253,6 +270,12 @@ export const useConciergeVoice = (
       void synchronizeLogin();
       if (mutedRef.current)
         socketRef.current?.send(JSON.stringify({ type: "mute" }));
+      const pending = startupMessages.splice(0);
+      startupBytes = 0;
+      for (const data of pending) {
+        if (!isCurrent()) break;
+        processMessage?.(data);
+      }
     };
     try {
       if (!navigator.mediaDevices?.getUserMedia || !window.AudioContext) {
@@ -260,7 +283,7 @@ export const useConciergeVoice = (
           "Microphone audio requires a supported browser on localhost or HTTPS.",
         );
       }
-      const audio = new BrowserAudio();
+      const audio = new BrowserAudio(model === "gpt-live-1");
       audioRef.current = audio;
       let microphoneGranted: () => void = () => {};
       const permission = new Promise<void>((resolve) => {
@@ -307,7 +330,11 @@ export const useConciergeVoice = (
       socket.onopen = () => {
         if (!isCurrent()) return;
         socket.send(
-          JSON.stringify({ type: "start", delegation: identity.delegation }),
+          JSON.stringify({
+            type: "start",
+            delegation: identity.delegation,
+            model,
+          }),
         );
         contextSocketRef.current = socket;
         if (pageContextRef.current)
@@ -328,22 +355,36 @@ export const useConciergeVoice = (
         20_000,
       );
       const actions = new Set<number>();
+      const movieActions = new Map<number, Set<string>>();
+      const acceptsAction = (turn: number, action: ApplicationAction) => {
+        if (!actions.has(turn)) return true;
+        return (
+          (action.type === "open_movie" ||
+            action.type === "open_movie_trailer") &&
+          movieActions.get(turn)?.has(`${action.type}:${action.movieId}`) ===
+            false
+        );
+      };
       const grounded = new Map<number, Set<number>>();
       let turn = 0;
-      socket.onmessage = (message: MessageEvent<unknown>) => {
+      processMessage = (data: unknown) => {
         if (!isCurrent()) return;
-        if (message.data instanceof ArrayBuffer) {
+        if (data instanceof ArrayBuffer) {
+          if (!ready) {
+            bufferStartup(data);
+            return;
+          }
           try {
-            if (ready && !blockedAudio.current) audio.play(message.data);
+            if (!blockedAudio.current) audio.play(data);
           } catch {
             fail("Voice audio couldn't play. Please reconnect.");
           }
           return;
         }
         try {
-          if (typeof message.data !== "string" || message.data.length > 32_000)
+          if (typeof data !== "string" || data.length > 32_000)
             throw new Error("Invalid event");
-          const event = voiceEventSchema.parse(JSON.parse(message.data));
+          const event = voiceEventSchema.parse(JSON.parse(data));
           if (event.type === "ready") {
             providerReady = true;
             becomeReady();
@@ -363,6 +404,7 @@ export const useConciergeVoice = (
             setStatus("standby");
             setLevels({ input: 0, output: 0, playing: false });
           } else if (!ready) {
+            bufferStartup(data);
             return;
           } else if (event.type === "interrupt") {
             if (event.turn < turn) return;
@@ -430,12 +472,20 @@ export const useConciergeVoice = (
             event.type === "ui-action" &&
             !blockedAudio.current &&
             event.action &&
-            !actions.has(event.turn) &&
+            acceptsAction(event.turn, event.action) &&
             ((event.action.type !== "open_movie" &&
               event.action.type !== "open_movie_trailer") ||
               grounded.get(event.turn)?.has(event.action.movieId))
           ) {
             actions.add(event.turn);
+            if (
+              event.action.type === "open_movie" ||
+              event.action.type === "open_movie_trailer"
+            ) {
+              const keys = movieActions.get(event.turn) ?? new Set<string>();
+              keys.add(`${event.action.type}:${event.action.movieId}`);
+              movieActions.set(event.turn, keys);
+            }
             let outcome: "requested" | "rejected" = "requested";
             let destination: string | void;
             try {
@@ -459,7 +509,7 @@ export const useConciergeVoice = (
           } else if (
             event.type === "ui-action" &&
             event.action &&
-            !actions.has(event.turn)
+            acceptsAction(event.turn, event.action)
           ) {
             const action = event.action;
             record(event.turn, "assistant", (entry) => ({
@@ -474,6 +524,8 @@ export const useConciergeVoice = (
           fail("Voice sent an invalid response. Please reconnect.");
         }
       };
+      socket.onmessage = (message: MessageEvent<unknown>) =>
+        processMessage?.(message.data);
       socket.onerror = () =>
         fail(
           "Voice connection failed. Check that the voice service is running.",
@@ -494,7 +546,7 @@ export const useConciergeVoice = (
     } catch (cause) {
       failAudio(cause);
     }
-  }, [dispose, markInterrupted, synchronizeLogin]);
+  }, [dispose, markInterrupted, synchronizeLogin, model]);
 
   const toggleMute = useCallback(() => {
     const value = !mutedRef.current;
@@ -508,12 +560,12 @@ export const useConciergeVoice = (
 
   const interrupt = useCallback(() => {
     markInterrupted();
-    blockedAudio.current = true;
+    blockedAudio.current = model !== "gpt-live-1";
     audioRef.current?.interrupt();
     const socket = socketRef.current;
     if (socket?.readyState === WebSocket.OPEN)
       socket.send(JSON.stringify({ type: "interrupt" }));
-  }, [markInterrupted]);
+  }, [markInterrupted, model]);
 
   const sendText = useCallback(
     (message: string) => {
@@ -528,7 +580,7 @@ export const useConciergeVoice = (
       )
         return false;
       markInterrupted();
-      blockedAudio.current = true;
+      blockedAudio.current = model !== "gpt-live-1";
       audioRef.current?.interrupt();
       socket.send(JSON.stringify({ type: "text", text }));
       textPendingRef.current = true;
@@ -537,7 +589,7 @@ export const useConciergeVoice = (
       setStatus("thinking");
       return true;
     },
-    [markInterrupted],
+    [markInterrupted, model],
   );
 
   return {
