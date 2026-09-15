@@ -5,6 +5,15 @@ frontend, and Python Movie Concierge. Production infrastructure is reconciled fr
 
 ## Continuous integration
 
+The `branch-name` job checks pull-request source branches: use `feature/<kebab-case-name>` for
+features and planned improvements, or `bugfix/<kebab-case-name>` for fixes. The CD workflow's
+`release/v<major>.<minor>.<patch>-deployment` branches are the only exception. Merge queue and manual
+runs skip this check because they do not have a pull-request source branch.
+
+Add `branch-name` as a required status check in the protection rule or ruleset for `master` to
+block merges with invalid branch names. CI reports violations but does not prevent local branch
+creation; `AGENTS.md` instructs coding agents to choose the correct prefix before creating branches.
+
 Every pull request targeting `master`, every merged `master` commit, and a deliberate manual run
 starts separate jobs for:
 

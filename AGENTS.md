@@ -25,6 +25,19 @@ Run commands from the repository root unless a command says otherwise.
 Before modifying `agent/`, read `agent/AGENTS.md`. For work spanning multiple deployables, read
 every applicable nested guide before planning changes.
 
+## Branch Naming
+
+Before creating a branch, classify the work and choose the repository prefix:
+
+- `feature/<short-kebab-case-description>` for features and other planned improvements.
+- `bugfix/<short-kebab-case-description>` for bug fixes.
+- Never use agent-specific prefixes such as `codex/`.
+- `release/v<major>.<minor>.<patch>-deployment` is reserved for the automated CD workflow.
+
+Apply this rule to CLI, API, and worktree branch creation. Check the chosen name before creating
+the branch. Do not rename historical branches unless requested. Pull-request CI checks this
+convention with the `branch-name` job.
+
 ## Terminology
 
 - Movie: primary catalog title.

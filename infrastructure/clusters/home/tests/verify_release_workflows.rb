@@ -25,7 +25,7 @@ assert_contract(
     ci.include?("cancel-in-progress: true"),
   "CI must cancel superseded pull-request runs"
 )
-%w[backend-build-test frontend-build-test agent-build-test infrastructure-validate].each do |job|
+%w[branch-name backend-build-test frontend-build-test agent-build-test infrastructure-validate].each do |job|
   assert_contract(ci.match?(/^  #{Regexp.escape(job)}:$/), "CI is missing required job #{job}")
 end
 %w[

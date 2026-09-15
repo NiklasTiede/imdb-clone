@@ -17,6 +17,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  branch-name:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check source branch convention
+        shell: bash
+        env:
+          PR_BRANCH: ${{ github.head_ref }}
+        run: |
+          if [[ "$PR_BRANCH" =~ ^(feature|bugfix)/[a-z0-9]+(-[a-z0-9]+)*$ ]] ||
+             [[ "$PR_BRANCH" =~ ^release/v[0-9]+\.[0-9]+\.[0-9]+-deployment$ ]]; then
+            exit 0
+          fi
+          echo '::error::Use feature/<kebab-case-name> or bugfix/<kebab-case-name>. Only automated deployment branches may use release/v<major>.<minor>.<patch>-deployment.'
+          exit 1
+
   backend-build-test:
     runs-on: ubuntu-latest
 
