@@ -222,13 +222,15 @@ paths = ingress.fetch("spec").fetch("rules").flat_map { |rule| rule.dig("http", 
 assert_contract(paths.map { |path| path["path"] } == ["/concierge-api/v1"], "public agent path drifted")
 headers = resource(documents, "Middleware", "imdb-clone-security-headers", "imdb-clone")
 assert_contract(
-  headers.dig("spec", "headers", "permissionsPolicy").include?("microphone=(self)"),
+  headers.dig("spec", "headers", "permissionsPolicy").split(",").map(&:strip).include?(
+    "microphone=(self)"
+  ),
   "same-origin microphone permission must be available"
 )
+connect_sources = headers.dig("spec", "headers", "contentSecurityPolicy")
+  .split(";").map(&:split).find { |directive| directive.first == "connect-src" }
 assert_contract(
-  headers.dig("spec", "headers", "contentSecurityPolicy").include?(
-    "wss://imdb-clone.the-coding-lab.com"
-  ),
+  connect_sources && connect_sources.drop(1).include?("wss://imdb-clone.the-coding-lab.com"),
   "browser CSP must allow the same-origin voice WebSocket"
 )
 
