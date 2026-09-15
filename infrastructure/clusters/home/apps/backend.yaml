@@ -54,6 +54,11 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
+            - name: NOTIFICATION_OUTBOX_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-runtime
+                  key: NOTIFICATION_OUTBOX_KEY
             - name: movie_concierge_mcp_enabled
               value: "true"
             - name: SPRING_DATASOURCE_URL

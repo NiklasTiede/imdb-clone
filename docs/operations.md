@@ -205,6 +205,13 @@ operator decision.
 
 ## Public voice rollout
 
+The v1.5.0 backend also requires `NOTIFICATION_OUTBOX_KEY` in the SOPS-encrypted
+`backend-runtime` Secret. It is a stable, base64-encoded 32-byte key for the email outbox,
+explicitly required by the backend Deployment. Preserve it across releases and restarts;
+replacing it without retaining the old named key makes pending deliveries unreadable.
+See the notification outbox key-rotation notes in the [development guide](development.md)
+before rotating it.
+
 The public pilot shares **eight starts in any rolling 24 hours** across all users and both models,
 with **two simultaneous sessions** and a **ten-minute lifetime** including connection setup.
 Grok and GPT-Live remain selectable through the existing model menu. Inactivity and provider/tool

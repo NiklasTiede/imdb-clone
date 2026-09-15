@@ -110,6 +110,18 @@ backend = assert_hardened_deployment(
   "backend",
   10_001
 )
+outbox_key = backend.fetch("env").find { |entry| entry["name"] == "NOTIFICATION_OUTBOX_KEY" }
+assert_contract(
+  outbox_key && !outbox_key.key?("value") && outbox_key["valueFrom"] == {
+    "secretKeyRef" => {"name" => "backend-runtime", "key" => "NOTIFICATION_OUTBOX_KEY"}
+  },
+  "backend must explicitly require the private notification outbox key"
+)
+backend_secret = resource(documents, "Secret", "backend-runtime", "imdb-clone")
+assert_contract(
+  backend_secret.dig("stringData", "NOTIFICATION_OUTBOX_KEY")&.start_with?("ENC[AES256_GCM,"),
+  "notification outbox key must be provisioned through SOPS"
+)
 assert_contract(
   backend.fetch("ports").to_h { |port| [port["name"], port["containerPort"]] } ==
     { "http" => 8080, "management" => 8081 },
