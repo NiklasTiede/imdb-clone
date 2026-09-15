@@ -385,3 +385,16 @@ docker-clean: ## remove imdb-clone docker images and containers
 
 help: ## show this command index
 	@awk 'BEGIN {FS = ":.*?## "; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^##@ / {printf "\n\033[1m%s\033[0m\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*?## / {printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+##@ Voice reliability
+.PHONY: test-voice-stress test-voice-stress-live summarize-voice-stress
+VOICE_STRESS_PROFILE ?= stress
+
+test-voice-stress: ## deterministic browser audio chaos; no provider API calls
+	cd frontend && yarn playwright test -c playwright.voice-stress.config.ts chaos.spec.ts
+
+test-voice-stress-live: ## paid, bounded real-browser Grok/GPT-Live comparison; local Java required
+	cd frontend && VOICE_STRESS_LIVE=1 VOICE_STRESS_PROFILE=$(VOICE_STRESS_PROFILE) yarn playwright test -c playwright.voice-stress.config.ts live.spec.ts
+
+summarize-voice-stress: ## summarize retained live runs, including failures and incomplete sessions
+	python3 scripts/summarize-voice-stress.py
