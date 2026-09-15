@@ -82,6 +82,18 @@ spec:
               value: http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp
             - name: IMDB_AGENT_SECRETS_DIRECTORY
               value: /run/secrets/movie-concierge
+            - name: IMDB_AGENT_VOICE_ENABLED
+              value: "true"
+            - name: IMDB_AGENT_VOICE_LIVE_ENABLED
+              value: "true"
+            - name: IMDB_AGENT_VOICE_SESSION_SECONDS
+              value: "600"
+            - name: IMDB_AGENT_VOICE_MAX_SESSIONS
+              value: "8"
+            - name: IMDB_AGENT_VOICE_QUOTA_DATABASE
+              value: /var/lib/movie-concierge/voice-quota.db
+            - name: IMDB_AGENT_VOICE_ALLOWED_ORIGINS
+              value: '["https://imdb-clone.the-coding-lab.com"]'
             - name: IMDB_AGENT_ALLOWED_HOSTS
               value: '["imdb-clone.the-coding-lab.com","imdb-clone-agent","imdb-clone-agent.imdb-clone","imdb-clone-agent.imdb-clone.svc","imdb-clone-agent.imdb-clone.svc.cluster.local"]'
             - name: IMDB_AGENT_MCP_INIT_TIMEOUT_SECONDS
