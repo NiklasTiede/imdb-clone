@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { Link, MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   MovieRecordMovieGenreEnum,
@@ -91,9 +91,11 @@ const makeQueryClient = () =>
 const renderPage = ({
   initialEntry = "/movie?id=1",
   queryClient = makeQueryClient(),
+  navigation = null,
 }: {
   initialEntry?: string;
   queryClient?: QueryClient;
+  navigation?: ReactNode;
 } = {}) => {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -101,6 +103,7 @@ const renderPage = ({
 
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
+      {navigation}
       <Routes>
         <Route path="/movie" element={<MovieDetailPage />} />
         <Route path="/login" element={<div>Login destination</div>} />
@@ -185,6 +188,25 @@ describe("MovieDetailPage", () => {
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
   });
+
+  test.each([true, false])(
+    "reopening a failed movie retries once, recovery=%s",
+    async (recovers) => {
+      mocks.moviesApi.getMovieById.mockRejectedValue(new Error("Unavailable"));
+      renderPage({
+        navigation: <Link to="/movie?id=1">Reopen movie</Link>,
+      });
+      await screen.findByRole("heading", { name: "Movie unavailable" });
+      expect(mocks.moviesApi.getMovieById).toHaveBeenCalledTimes(1);
+      if (recovers)
+        mocks.moviesApi.getMovieById.mockResolvedValue({ data: movie });
+      await userEvent.click(screen.getByRole("link", { name: "Reopen movie" }));
+      await screen.findByRole("heading", {
+        name: recovers ? "The Shawshank Redemption" : "Movie unavailable",
+      });
+      expect(mocks.moviesApi.getMovieById).toHaveBeenCalledTimes(2);
+    },
+  );
 
   test("renders the wide movie content from cached detail data", () => {
     const queryClient = makeQueryClient();

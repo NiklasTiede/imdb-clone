@@ -875,3 +875,12 @@ and then “Can I rent it instead?” in text or a fresh voice session. Answers 
 subscription/rent/buy and credit JustWatch via TMDB. No recorded offers are not proof of worldwide
 unavailability; source links lead to the regional TMDB watch page. The country selection is stored
 per account/guest in this browser, with no automatic geolocation or cross-device synchronization.
+
+### Avoiding backend reloads during voice tests
+
+The development profile excludes generated `META-INF/spring-configuration-metadata.json` from
+Spring DevTools restart triggers. IntelliJ may regenerate that IDE metadata during unrelated
+frontend/Python work; restarting Spring interrupts catalog HTTP requests and active MCP calls.
+Java class and runtime configuration changes still trigger normal restarts. After changing the
+exclusion, rebuild resources or restart the backend once. Voice stress tests record local catalog
+availability and stop further tasks if a reload makes it unavailable.

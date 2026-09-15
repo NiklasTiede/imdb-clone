@@ -47,6 +47,21 @@ const MovieDetailPage = () => {
   const [ratingError, setRatingError] = useState<string | null>(null);
 
   const movieQuery = useQuery(movieQueries.detail(movieId));
+  const { refetch } = movieQuery;
+  const previousNavigation = useRef({ key: location.key, movieId });
+  useEffect(() => {
+    const previous = previousNavigation.current;
+    previousNavigation.current = { key: location.key, movieId };
+    if (previous.key === location.key || previous.movieId !== movieId) return;
+    // Reopening this route keeps the same query observer. Treat an explicit retry
+    // via navigation like Try again, without looping on an unavailable backend.
+    const state = queryClient.getQueryState(
+      movieQueries.detail(movieId).queryKey,
+    );
+    if (state?.status === "error" && state.fetchStatus === "idle") {
+      void refetch();
+    }
+  }, [location.key, movieId, queryClient, refetch]);
   const movie = movieQuery.data;
   const trailerTarget = useRef<HTMLDivElement>(null);
   const trailerRequested = location.hash === "#trailer";
