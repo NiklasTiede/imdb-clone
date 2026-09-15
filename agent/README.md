@@ -370,14 +370,23 @@ retry and retains the existing text conversation. No audio is acquired merely by
 
 Voice is off unless `IMDB_AGENT_VOICE_ENABLED=true` (Grok) or
 `IMDB_AGENT_VOICE_LIVE_ENABLED=true` (GPT-Live). Local defaults allow two concurrent connections,
-300 seconds per session, and 20 starts in a rolling 24-hour window shared across both providers.
+300 seconds per session, 1200 connected seconds per browser and 6000 connected seconds shared
+across both providers in a rolling 24-hour window. Production uses a 600-second session lifetime
+and the same time budgets. The limits are `IMDB_AGENT_VOICE_BROWSER_SECONDS` and
+`IMDB_AGENT_VOICE_SHARED_SECONDS`; restarts do not consume a separate start allowance.
 Production requires mounted provider credentials, explicit trusted HTTPS origins, and an absolute
-`IMDB_AGENT_VOICE_QUOTA_DATABASE` path on persistent storage. The public pilot is configured for
-600 seconds, two concurrent connections and eight starts per rolling 24 hours across all users.
+`IMDB_AGENT_VOICE_QUOTA_DATABASE` path on persistent storage.
 See the [rollout runbook](../docs/operations.md#public-voice-rollout).
-The SQLite ledger stores start timestamps only, atomically reserves admission and survives restarts.
-Missing/corrupt quota storage rejects admission. Invalid starts, unavailable models and rejected
-delegations do not consume quota; admitted provider connection attempts do, including failed attempts.
+The SQLite ledger stores browser IDs, reservation IDs, timestamps and seconds, never conversation
+content or IP addresses. Five-second atomic reservations prevent simultaneous tabs/providers from
+overspending. Metering begins at provider `ready`; connection failures before ready are refunded.
+Normal disconnect/end/standby settles the last slice to actual connected time, including silence
+and mute while connected. A hard crash can conservatively charge at most five unused seconds per
+connection. Usage expires in five-second slices after 24 hours, and survives server restarts.
+Missing/corrupt storage rejects admission. The old `voice_starts` table is retained for rollback
+but is not used for time accounting: historical starts cannot be converted into actual durations.
+The browser ID is reused across login/logout and model changes; clearing site data or using another
+browser gives a new guest identity. This is a guest allowance, not verified account identity.
 Local mode uses memory unless a database path is configured. A 45-second inactivity deadline,
 model/tool budgets and bounded PCM/control queues still apply. No automatic reconnect is attempted.
 These are resource limits, not a guaranteed USD budget; voice billing is provider-owned.
@@ -492,8 +501,10 @@ An ambiguous title needs its year; `add it` requires one unambiguous catalog can
 The browser obtains a five-minute capability from `POST /api/v1/auth/concierge-delegation` using
 normal session cookies and CSRF protection. It is held only for the request/session, never in URLs
 or browser storage. Text forwards it in `X-Concierge-Delegation`; voice sends a first frame
-`{"type":"start","delegation":null}` for anonymous sessions, or supplies the transient capability
-in that field when signed in. Audio starts after `ready`. Old clients must reload for this handshake.
+`{"type":"start","browser_id":"browser-00000000-0000-4000-8000-000000000000","delegation":null}`
+for anonymous sessions (using the actual UUID stored in localStorage), or supplies the transient
+capability in `delegation` when signed in. Audio starts after `ready`. Old clients must reload
+for this handshake.
 
 Java independently verifies the login session, expiry, audience and scope for every personal tool.
 Python never selects the account. The agent can remove a named watchlist entry and set/update/remove a personal rating.

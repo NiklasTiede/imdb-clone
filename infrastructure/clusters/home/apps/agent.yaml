@@ -88,8 +88,13 @@ spec:
               value: "true"
             - name: IMDB_AGENT_VOICE_SESSION_SECONDS
               value: "600"
+            # Keep the old cap until the v1.5.0 image has been replaced; new images ignore it.
             - name: IMDB_AGENT_VOICE_MAX_SESSIONS
               value: "8"
+            - name: IMDB_AGENT_VOICE_BROWSER_SECONDS
+              value: "1200"
+            - name: IMDB_AGENT_VOICE_SHARED_SECONDS
+              value: "6000"
             - name: IMDB_AGENT_VOICE_QUOTA_DATABASE
               value: /var/lib/movie-concierge/voice-quota.db
             - name: IMDB_AGENT_VOICE_ALLOWED_ORIGINS

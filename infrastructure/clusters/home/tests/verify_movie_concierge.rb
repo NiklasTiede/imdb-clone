@@ -186,7 +186,9 @@ if voice_enabled
     assert_contract(environment[name] == "true", "both voice providers must remain selectable")
   end
   assert_contract(environment["IMDB_AGENT_VOICE_SESSION_SECONDS"] == "600", "voice time cap drifted")
-  assert_contract(environment["IMDB_AGENT_VOICE_MAX_SESSIONS"] == "8", "daily voice cap drifted")
+  assert_contract(environment["IMDB_AGENT_VOICE_MAX_SESSIONS"] == "8", "legacy rollout cap drifted")
+  assert_contract(environment["IMDB_AGENT_VOICE_BROWSER_SECONDS"] == "1200", "browser voice time cap drifted")
+  assert_contract(environment["IMDB_AGENT_VOICE_SHARED_SECONDS"] == "6000", "shared voice time cap drifted")
   assert_contract(environment["IMDB_AGENT_VOICE_QUOTA_DATABASE"] ==
                   "/var/lib/movie-concierge/voice-quota.db", "persistent voice quota required")
   assert_contract(JSON.parse(environment.fetch("IMDB_AGENT_VOICE_ALLOWED_ORIGINS")) ==

@@ -212,10 +212,12 @@ replacing it without retaining the old named key makes pending deliveries unread
 See the notification outbox key-rotation notes in the [development guide](development.md)
 before rotating it.
 
-The public pilot shares **eight starts in any rolling 24 hours** across all users and both models,
-with **two simultaneous sessions** and a **ten-minute lifetime** including connection setup.
+The public pilot allows **20 connected minutes per browser ID in any rolling 24 hours**, with
+**100 minutes shared across all browsers and both models**, **two simultaneous sessions** and a
+**ten-minute session lifetime** including connection setup. Restarts consume only actual connected
+time, not a separate start allowance. The per-browser quota is independent of login and IP address.
 Grok and GPT-Live remain selectable through the existing model menu. Inactivity and provider/tool
-budgets can end a conversation earlier. This is an admission limit, not an exact dollar cap.
+budgets can end a conversation earlier. This is a time budget, not an exact dollar cap.
 
 Production credentials are projected from the SOPS-encrypted `movie-concierge-runtime` Secret:
 `xai-api-key` and `openai-live-api-key` go only to the agent; `tmdb-read-access-token` goes only to
@@ -236,8 +238,10 @@ Release in this order to avoid enabling unsupported settings on the v1.4.0 image
      value: "true"
    - name: IMDB_AGENT_VOICE_SESSION_SECONDS
      value: "600"
-   - name: IMDB_AGENT_VOICE_MAX_SESSIONS
-     value: "8"
+   - name: IMDB_AGENT_VOICE_BROWSER_SECONDS
+     value: "1200"
+   - name: IMDB_AGENT_VOICE_SHARED_SECONDS
+     value: "6000"
    - name: IMDB_AGENT_VOICE_QUOTA_DATABASE
      value: /var/lib/movie-concierge/voice-quota.db
    - name: IMDB_AGENT_VOICE_ALLOWED_ORIGINS
@@ -246,7 +250,7 @@ Release in this order to avoid enabling unsupported settings on the v1.4.0 image
 
 4. Verify `/concierge-api/v1/voice/models` returns both models. On the public HTTPS site, test
    microphone permission, playback, movie/trailer navigation and one signed-in personal action
-   with each model. These are paid starts and consume the same eight-start allowance.
+   with each model. These consume connected time from the browser and shared allowances.
 5. Check `voice_session_started`, `voice_session_ready` and `voice_session_ended` events for
    correlation and outcomes, without recording prompts or audio. Confirm every deployment is
    healthy and Argo reports `Synced`/`Healthy`.
@@ -262,3 +266,11 @@ concurrency accounting remains process-local, and the SQLite volume has one writ
 For rollback, disable both voice flags first. Preserve the PVC and remove the new voice settings
 before rolling back to an image predating production voice support. Existing conversations end
 when the pod is replaced; there is no automatic cross-pod session recovery.
+
+
+Voice time quota rollout: publish and deploy new agent and frontend images together. Cached old
+frontends must reload to send the required `browser_id`. The current GitOps manifest temporarily
+keeps `IMDB_AGENT_VOICE_MAX_SESSIONS=8` for the pinned v1.5.0 image until that release is replaced;
+the new agent ignores this legacy variable. Remove it after rollout. No quota database reset is
+needed: `voice_usage` is created alongside the retained legacy `voice_starts` table. Time accounting
+starts fresh because historical starts contain no durations. Never delete the PVC to reset limits.

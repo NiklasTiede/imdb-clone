@@ -1,3 +1,4 @@
+import { getConciergeBrowserId } from "../model/browserIdentity";
 import type { PageContext } from "../model/pageContext";
 import { getConciergeIdentity } from "../api/delegation";
 import type { VoiceModel } from "../api/voiceModels";
@@ -326,6 +327,7 @@ export const useConciergeVoice = (
         import.meta.env.VITE_IMDB_CLONE_CONCIERGE_ADDRESS ?? "/concierge-api";
       const url = new URL(`${base}/v1/voice`, window.location.href);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+      const browserId = getConciergeBrowserId();
       const identity = await getConciergeIdentity();
       if (!isCurrent()) return;
       socketAccountRef.current = identity.accountId;
@@ -335,6 +337,7 @@ export const useConciergeVoice = (
         socket.send(
           JSON.stringify({
             type: "start",
+            browser_id: browserId,
             delegation: identity.delegation,
             model,
           }),
@@ -399,6 +402,10 @@ export const useConciergeVoice = (
             setNotice(event.text ?? "Voice could not verify your sign-in.");
           } else if (event.type === "error") {
             fail(event.text ?? "Voice is unavailable. Please reconnect.");
+          } else if (event.type === "quota-warning") {
+            setNotice(
+              event.text ?? "Your voice time allowance is almost used up.",
+            );
           } else if (event.type === "standby") {
             markInterrupted();
             dispose();

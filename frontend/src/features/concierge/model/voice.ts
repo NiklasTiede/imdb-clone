@@ -9,6 +9,7 @@ export const voiceEventSchema = z
   .object({
     type: z.enum([
       "ready",
+      "quota-warning",
       "status",
       "transcript",
       "movie-card",

@@ -1,46 +1,85 @@
-"""A tiny durable admission ledger for the single-pod voice pilot."""
+"""Durable five-second reservations; no audio, transcripts or IP addresses are retained."""
 
 from __future__ import annotations
 
 import sqlite3
 from contextlib import closing
-from math import ceil
 from time import time
 from typing import TYPE_CHECKING
+
+from imdb_agent.concierge.voice_quota import (
+    WINDOW_SECONDS,
+    VoiceGrant,
+    VoiceQuotaUnavailable,
+    VoiceUsage,
+    grant_time,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-from imdb_agent.concierge.voice_quota import VoiceQuotaUnavailable
-
 
 class SqliteVoiceQuota:
-    def __init__(self, path: Path, maximum: int, *, clock: Callable[[], float] = time) -> None:
-        self.path, self.maximum, self.clock = path, maximum, clock
+    def __init__(
+        self,
+        path: Path,
+        browser_seconds: float = 1200,
+        shared_seconds: float = 6000,
+        *,
+        clock: Callable[[], float] = time,
+    ) -> None:
+        self.path, self.clock = path, clock
+        self.browser_seconds, self.shared_seconds = browser_seconds, shared_seconds
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             with closing(sqlite3.connect(path, timeout=1)) as connection, connection:
+                # Keep the old voice_starts ledger for rollback; starts cannot be converted to time.
                 connection.execute(
-                    "CREATE TABLE IF NOT EXISTS voice_starts (started_at REAL NOT NULL)"
+                    "CREATE TABLE IF NOT EXISTS voice_usage "
+                    "(id TEXT PRIMARY KEY, browser_id TEXT NOT NULL, "
+                    "started_at REAL NOT NULL, seconds REAL NOT NULL CHECK(seconds >= 0))"
                 )
             path.chmod(0o600)
         except OSError, sqlite3.Error:
             raise VoiceQuotaUnavailable from None
 
-    def reserve(self) -> int:
+    def reserve(self, browser_id: str) -> VoiceGrant:
         try:
-            # The write lock makes check+insert atomic even across competing connections.
             with closing(sqlite3.connect(self.path, timeout=1)) as connection, connection:
                 connection.execute("BEGIN IMMEDIATE")
                 now = self.clock()
-                connection.execute("DELETE FROM voice_starts WHERE started_at <= ?", (now - 86400,))
-                count, oldest = connection.execute(
-                    "SELECT COUNT(*), MIN(started_at) FROM voice_starts"
-                ).fetchone()
-                if count >= self.maximum:
-                    return max(1, ceil(oldest + 86400 - now))
-                connection.execute("INSERT INTO voice_starts VALUES (?)", (now,))
-                return 0
+                connection.execute(
+                    "DELETE FROM voice_usage WHERE started_at <= ?", (now - WINDOW_SECONDS,)
+                )
+                rows = connection.execute(
+                    "SELECT id, browser_id, started_at, seconds FROM voice_usage"
+                ).fetchall()
+                usage = [
+                    VoiceUsage(str(row[0]), str(row[1]), float(row[2]), float(row[3]))
+                    for row in rows
+                ]
+                grant = grant_time(
+                    usage, browser_id, self.browser_seconds, self.shared_seconds, now
+                )
+                if grant.seconds > 0:
+                    connection.execute(
+                        "INSERT INTO voice_usage VALUES (?, ?, ?, ?)",
+                        (grant.id, browser_id, now, grant.seconds),
+                    )
+                return grant
+        except sqlite3.Error:
+            raise VoiceQuotaUnavailable from None
+
+    def settle(self, grant_id: str, used_seconds: float) -> None:
+        try:
+            with closing(sqlite3.connect(self.path, timeout=1)) as connection, connection:
+                connection.execute(
+                    "UPDATE voice_usage SET seconds = MIN(seconds, ?) WHERE id = ?",
+                    (max(0.0, used_seconds), grant_id),
+                )
+                connection.execute(
+                    "DELETE FROM voice_usage WHERE id = ? AND seconds = 0", (grant_id,)
+                )
         except sqlite3.Error:
             raise VoiceQuotaUnavailable from None

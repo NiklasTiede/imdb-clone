@@ -49,7 +49,9 @@ async def replay(port: int, scenario: str) -> dict[str, object]:
             max_size=1_048_576,
         ) as socket,
     ):
-        await socket.send('{"type":"start"}')
+        await socket.send(
+            '{"type":"start","browser_id":"browser-00000000-0000-4000-8000-000000000000"}'
+        )
 
         async def send_fixture(audio: bytes) -> None:
             # Real-time pacing exercises server VAD, including a trailing silence boundary.
