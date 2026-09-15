@@ -230,7 +230,9 @@ assert_contract(
 connect_sources = headers.dig("spec", "headers", "contentSecurityPolicy")
   .split(";").map(&:split).find { |directive| directive.first == "connect-src" }
 assert_contract(
-  connect_sources && connect_sources.drop(1).include?("wss://imdb-clone.the-coding-lab.com"),
+  connect_sources && connect_sources.drop(1).any? do |source|
+    source == "wss://imdb-clone.the-coding-lab.com"
+  end,
   "browser CSP must allow the same-origin voice WebSocket"
 )
 
