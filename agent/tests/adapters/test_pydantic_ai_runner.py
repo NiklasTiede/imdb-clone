@@ -470,3 +470,47 @@ async def test_watch_providers_complete_text_turn_without_replacing_catalog_iden
     )
     assert not any(isinstance(event, MovieCardEvent | UiActionEvent) for event in events)
     assert any(isinstance(event, TextEvent) and "unavailable" in event.delta for event in events)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("budget", ["request_limit", "input_tokens_limit"])
+async def test_usage_failure_logs_specific_budget_without_request_payload(
+    capsys: pytest.CaptureFixture[str],
+    budget: str,
+) -> None:
+    import json
+
+    from pydantic_ai import UsageLimits
+
+    from imdb_agent.adapters.logging import configure_logging
+    from imdb_agent.concierge.service import ConciergeRunError
+
+    async def respond(messages: list[ModelMessage], info: AgentInfo) -> AsyncIterator[str]:
+        yield "Not reached"
+
+    configure_logging(json_output=True)
+    runner = PydanticAIConciergeRunner.from_agent(
+        agent=Agent(FunctionModel(stream_function=respond)),
+        usage_limits=UsageLimits(request_limit=0)
+        if budget == "request_limit"
+        else UsageLimits(input_tokens_limit=1),
+    )
+    with pytest.raises(ConciergeRunError) as error:
+        _ = [
+            event
+            async for event in runner.stream(
+                RunRequest(
+                    conversation_id="private-id",
+                    message="private request",
+                    history=(),
+                )
+            )
+        ]
+    assert error.value.code == "usage_limit"
+    raw = capsys.readouterr().out
+    assert "private" not in raw
+    event = next(e for e in map(json.loads, raw.splitlines()) if e["event"] == "agent_run_failed")
+    assert event["budget"] == budget
+    assert event["requests"] == (0 if budget == "request_limit" else 1)
+    if budget == "input_tokens_limit":
+        assert event["input_tokens"] > event["input_token_limit"] == 1

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 from pydantic import SecretStr
 from pydantic_ai.exceptions import ToolFailed
 
+from imdb_agent.adapters.logging import configure_logging
 from imdb_agent.adapters.personal_tools import PersonalToolGate
 from imdb_agent.concierge.events import GroundedMovie
 from imdb_agent.concierge.personal import PersonalTurn
@@ -94,7 +96,10 @@ async def test_rejected_write_never_reaches_java(mode: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_failed_tool_does_not_emit_receipt_or_expose_backend_details() -> None:
+async def test_failed_tool_does_not_emit_receipt_or_expose_backend_details(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    configure_logging(json_output=True)
     state = turn()
     backend = Backend()
     backend.fail = True
@@ -104,6 +109,14 @@ async def test_failed_tool_does_not_emit_receipt_or_expose_backend_details() -> 
         )
     assert "private-backend-detail" not in str(error.value)
     assert state.receipt is None
+    output = capsys.readouterr().out
+    event = json.loads(output)
+    assert event["event"] == "mcp_tool_call_failed"
+    assert event["error_type"] == "RuntimeError"
+    assert event["error_location"].startswith("test_personal_tools.py:")
+    assert "private-backend-detail" not in output
+    assert "delegation" not in event
+    assert "arguments" not in event
 
 
 @pytest.mark.asyncio
@@ -239,3 +252,48 @@ async def test_write_rejection_reason_survives_real_logging_filter_without_priva
     assert logged["error_code"] == "inactive_turn"
     assert "Forrest Gump" not in output
     assert "synthetic-private-token" not in output
+
+
+@pytest.mark.asyncio
+async def test_lost_mcp_reply_is_not_retried_or_reported_as_success() -> None:
+    import httpx
+
+    from imdb_agent.concierge.service import ConciergeRunError
+
+    class Disconnected(Backend):
+        attempts = 0
+
+        async def __call__(
+            self,
+            name: str,
+            args: dict[str, Any],
+            *,
+            metadata: dict[str, Any] | None = None,
+        ) -> dict[str, Any]:
+            self.attempts += 1
+            raise httpx.ReadError("private connection details")
+
+    backend = Disconnected()
+    state = turn()
+    with pytest.raises(ConciergeRunError) as error:
+        await PersonalToolGate(SecretStr("synthetic"), state).call(
+            cast("RunContext[Any]", None),
+            backend,
+            "add_movie_to_my_watchlist",
+            {"movieId": 6},
+        )
+    assert error.value.code == "tool_unavailable"
+    assert "private" not in str(error.value)
+    assert state.receipt is None and backend.attempts == 1
+
+
+def test_transport_failure_detection_handles_wrapping_without_matching_business_errors() -> None:
+    import httpx
+
+    from imdb_agent.adapters.personal_tools import is_catalog_transport_failure
+
+    wrapped = RuntimeError("private outer details")
+    wrapped.__cause__ = httpx.ConnectError("private inner details")
+    assert is_catalog_transport_failure(wrapped)
+    assert not is_catalog_transport_failure(RuntimeError("business error"))
+    assert not is_catalog_transport_failure(ValueError("invalid rating"))

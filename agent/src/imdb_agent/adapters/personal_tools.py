@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from contextlib import suppress
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, cast
 
+import httpx
 import structlog
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 from pydantic_ai.exceptions import ToolFailed
@@ -16,7 +17,9 @@ from imdb_agent.adapters.catalog_contract import (
     WatchProvidersResult,
     parse_grounded_movies,
 )
+from imdb_agent.adapters.logging import error_chain, error_location
 from imdb_agent.concierge.personal import DelegationRejectedError, PersonalTurn, WriteRejection
+from imdb_agent.concierge.service import ConciergeRunError
 from imdb_agent.concierge.streaming import StreamingRegion
 from imdb_agent.concierge.tools import PERSONAL_TOOLS, WRITE_TOOLS, ToolName
 
@@ -24,6 +27,25 @@ if TYPE_CHECKING:
     from pydantic_ai import RunContext
 
     from imdb_agent.settings import Settings
+
+
+def is_catalog_transport_failure(error: BaseException) -> bool:
+    """FastMCP may wrap an HTTP transport error when its connection task fails."""
+    seen: set[int] = set()
+    pending = [error]
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, httpx.TransportError):
+            return True
+        if isinstance(current, BaseExceptionGroup):
+            pending.extend(cast("BaseExceptionGroup[BaseException]", current).exceptions)
+        cause = current.__cause__ or current.__context__
+        if cause is not None:
+            pending.append(cause)
+    return False
 
 
 class PersonalContext(BaseModel):
@@ -160,7 +182,24 @@ class PersonalToolGate:
             metadata["operationId"] = turn.operation_id
         try:
             result = await call_tool(name, args, metadata=metadata or None)
-        except Exception:
+        except Exception as error:
+            with suppress(Exception):
+                structlog.get_logger().warning(
+                    "mcp_tool_call_failed",
+                    tool=name,
+                    error_type=type(error).__name__,
+                    error_location=error_location(error),
+                    error_chain=error_chain(error),
+                )
+            if is_catalog_transport_failure(error):
+                # No blind retries: a write may have reached Java before the reply was lost.
+                # Let the run fail and reconnect on the next request/session, rather than
+                # letting the model repeatedly call a disconnected MCP client.
+                raise ConciergeRunError(
+                    "tool_unavailable",
+                    "The movie catalog connection was interrupted.",
+                    retryable=True,
+                ) from error
             raise ToolFailed(
                 "The tool did not confirm success. Do not claim a change. "
                 "For personal tools the login may have expired; ask the user to sign in again."

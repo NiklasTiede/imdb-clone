@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
+from traceback import walk_tb
 from typing import TYPE_CHECKING, Self
 
 import structlog
@@ -28,10 +29,17 @@ from pydantic_ai.exceptions import (
 )
 from pydantic_ai.models.openai import OpenAIResponsesModel, OpenAIResponsesModelSettings
 from pydantic_ai.providers.openai import OpenAIProvider
+from pydantic_ai.usage import RunUsage
 
 from imdb_agent.adapters.application_tools import APPLICATION_TOOLS, ApplicationTools
 from imdb_agent.adapters.catalog_contract import parse_grounded_movies
-from imdb_agent.adapters.personal_tools import PersonalToolGate, base_toolset, personal_policy
+from imdb_agent.adapters.logging import usage_limit_budget
+from imdb_agent.adapters.personal_tools import (
+    PersonalToolGate,
+    base_toolset,
+    is_catalog_transport_failure,
+    personal_policy,
+)
 from imdb_agent.concierge.events import (
     MovieCardEvent,
     OpenLoginAction,
@@ -146,6 +154,9 @@ class PydanticAIConciergeRunner:
         active_agent = self._agent
         if self._settings is not None:
             toolset = base_toolset(self._settings)
+            # These verbose output schemas are otherwise copied into every model request.
+            # MCP results still pass through the typed catalog/receipt boundary below.
+            toolset.include_return_schema = False
             toolset.process_tool_call = PersonalToolGate(
                 request.delegation,
                 personal,
@@ -174,6 +185,7 @@ class PydanticAIConciergeRunner:
         search_navigation = application.search
         shown_movie_ids: set[int] = set()
         tool_arguments: dict[str, dict[str, object]] = {}
+        run_usage = RunUsage()
         try:
             async with (
                 asyncio.timeout(self._run_timeout_seconds),
@@ -181,6 +193,7 @@ class PydanticAIConciergeRunner:
                     build_user_prompt(request.message, request.history),
                     conversation_id=request.conversation_id,
                     usage_limits=self._usage_limits,
+                    usage=run_usage,
                     toolsets=[application.toolset],
                 ) as events,
             ):
@@ -304,8 +317,18 @@ class PydanticAIConciergeRunner:
                 "The Movie Concierge took too long. Please try a narrower request.",
                 retryable=True,
             ) from None
-        except UsageLimitExceeded:
-            self._logger.error("agent_run_failed", error_code="usage_limit")
+        except UsageLimitExceeded as error:
+            budget = usage_limit_budget(error)
+            self._logger.error(
+                "agent_run_failed",
+                error_code="usage_limit",
+                budget=budget,
+                input_tokens=run_usage.input_tokens,
+                output_tokens=run_usage.output_tokens,
+                requests=run_usage.requests,
+                tool_calls=run_usage.tool_calls,
+                input_token_limit=self._usage_limits.input_tokens_limit,
+            )
             raise ConciergeRunError(
                 "usage_limit",
                 "The request reached its model or tool budget. Try a narrower request.",
@@ -334,6 +357,18 @@ class PydanticAIConciergeRunner:
             ) from None
         except RunCancelled:
             raise asyncio.CancelledError from None
+        except Exception as error:
+            from_mcp = any(
+                str(frame.f_globals.get("__name__", "")).startswith("fastmcp.")
+                for frame, _line in walk_tb(error.__traceback__)
+            )
+            if not from_mcp or not is_catalog_transport_failure(error):
+                raise
+            raise ConciergeRunError(
+                "tool_unavailable",
+                "The movie catalog connection was interrupted.",
+                retryable=True,
+            ) from error
 
 
 def _tool_name(value: str) -> ToolName:

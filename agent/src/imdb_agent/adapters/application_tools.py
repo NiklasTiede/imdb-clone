@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Literal
 
+import structlog
 from pydantic_ai.exceptions import ToolFailed
 from pydantic_ai.toolsets.function import FunctionToolset
 
@@ -100,8 +101,10 @@ class ApplicationTools:
             async with asyncio.timeout(3):
                 await self._turn.finalized.wait()
         except TimeoutError:
+            structlog.get_logger().info("voice_navigation_rejected", outcome="transcript_timeout")
             raise ToolFailed("Wait for the user's complete request before navigating.") from None
         if self._turn.cancelled or self._turn.epoch != epoch or not self._turn.message:
+            structlog.get_logger().info("voice_navigation_rejected", outcome="inactive_turn")
             raise ToolFailed("This request is no longer active. Do not navigate.")
         return epoch
 
@@ -149,6 +152,7 @@ class ApplicationTools:
         epoch = await self._current_turn()
         movie = next((m for m in self._turn.movies if m.movie_id == movie_id), None)
         if movie is None:
+            structlog.get_logger().info("voice_navigation_rejected", outcome="ungrounded_movie")
             raise ToolFailed("Look up this movie in the catalog first; never invent a movie ID.")
         self._epoch = epoch
         self.movie = movie
