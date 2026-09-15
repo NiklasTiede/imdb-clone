@@ -41,6 +41,16 @@ def test_invalid_environment_value_is_rejected(monkeypatch: pytest.MonkeyPatch) 
         load_settings()
 
 
+def test_voice_profile_is_configurable_and_rejects_url_parameters(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("IMDB_AGENT_VOICE_AGENT_ID", "agent_example")
+    assert load_settings().voice_agent_id == "agent_example"
+    monkeypatch.setenv("IMDB_AGENT_VOICE_AGENT_ID", "agent_example&model=other")
+    with pytest.raises(ConfigurationError):
+        load_settings()
+
+
 def test_unknown_dotenv_field_is_rejected(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text("IMDB_AGENT_UNKNOWN=value\n", encoding="utf-8")
@@ -216,3 +226,23 @@ def test_production_profiling_can_be_disabled_explicitly() -> None:
 
     assert settings.profiling_active is False
     assert settings.effective_profiling_server_address is None
+
+
+def test_voice_preview_defaults_to_five_minutes_and_rejects_longer_sessions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("IMDB_AGENT_VOICE_SESSION_SECONDS", raising=False)
+    assert load_settings().voice_session_seconds == 300
+    monkeypatch.setenv("IMDB_AGENT_VOICE_SESSION_SECONDS", "301")
+    with pytest.raises(ConfigurationError):
+        load_settings()
+
+
+def test_live_voice_requires_explicit_local_opt_in(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("IMDB_AGENT_VOICE_LIVE_ENABLED", raising=False)
+    assert not load_settings().voice_live_enabled
+    monkeypatch.setenv("IMDB_AGENT_VOICE_LIVE_ENABLED", "true")
+    assert load_settings().voice_live_enabled
+    monkeypatch.setenv("IMDB_AGENT_ENVIRONMENT", "production")
+    with pytest.raises(ConfigurationError):
+        load_settings()

@@ -1,9 +1,10 @@
+import "@testing-library/jest-dom/vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
-import { MemoryRouter, Route, Routes } from "react-router";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { Link, MemoryRouter, Route, Routes } from "react-router";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   MovieRecordMovieGenreEnum,
   MovieRecordMovieTypeEnum,
@@ -90,9 +91,11 @@ const makeQueryClient = () =>
 const renderPage = ({
   initialEntry = "/movie?id=1",
   queryClient = makeQueryClient(),
+  navigation = null,
 }: {
   initialEntry?: string;
   queryClient?: QueryClient;
+  navigation?: ReactNode;
 } = {}) => {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -100,6 +103,7 @@ const renderPage = ({
 
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
+      {navigation}
       <Routes>
         <Route path="/movie" element={<MovieDetailPage />} />
         <Route path="/login" element={<div>Login destination</div>} />
@@ -122,6 +126,14 @@ const seedAuthenticatedEngagement = (queryClient: QueryClient) => {
   queryClient.setQueryData(["rating", "current-user", "niklas", "movie", 1], 6);
 };
 
+beforeEach(() => {
+  vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("MovieDetailPage", () => {
   beforeEach(() => {
     mocks.authenticated = false;
@@ -135,7 +147,9 @@ describe("MovieDetailPage", () => {
     });
     mocks.ratingApi.rateMovie.mockResolvedValue({});
     mocks.ratingApi.deleteRating.mockResolvedValue({});
-    mocks.recommendationApi.similarMovies.mockResolvedValue({ data: { items: [] } });
+    mocks.recommendationApi.similarMovies.mockResolvedValue({
+      data: { items: [] },
+    });
     mocks.shareMovie.mockResolvedValue("copied");
   });
 
@@ -174,6 +188,25 @@ describe("MovieDetailPage", () => {
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
   });
+
+  test.each([true, false])(
+    "reopening a failed movie retries once, recovery=%s",
+    async (recovers) => {
+      mocks.moviesApi.getMovieById.mockRejectedValue(new Error("Unavailable"));
+      renderPage({
+        navigation: <Link to="/movie?id=1">Reopen movie</Link>,
+      });
+      await screen.findByRole("heading", { name: "Movie unavailable" });
+      expect(mocks.moviesApi.getMovieById).toHaveBeenCalledTimes(1);
+      if (recovers)
+        mocks.moviesApi.getMovieById.mockResolvedValue({ data: movie });
+      await userEvent.click(screen.getByRole("link", { name: "Reopen movie" }));
+      await screen.findByRole("heading", {
+        name: recovers ? "The Shawshank Redemption" : "Movie unavailable",
+      });
+      expect(mocks.moviesApi.getMovieById).toHaveBeenCalledTimes(2);
+    },
+  );
 
   test("renders the wide movie content from cached detail data", () => {
     const queryClient = makeQueryClient();
@@ -301,4 +334,76 @@ describe("MovieDetailPage", () => {
     });
     expect(await screen.findByText("Movie link copied.")).toBeTruthy();
   });
+});
+
+test.each([true, false])(
+  "focuses the requested trailer section after loading (available: %s)",
+  async (available) => {
+    const scroll = vi.fn();
+    const original = HTMLElement.prototype.scrollIntoView;
+    HTMLElement.prototype.scrollIntoView = scroll;
+    try {
+      mocks.moviesApi.getMovieById.mockResolvedValue({
+        data: { ...movie, trailerYoutubeKey: available ? "abcDEF123_-" : null },
+      });
+      renderPage({ initialEntry: "/movie?id=1#trailer" });
+      const target = await screen.findByRole("region", {
+        name: "Movie trailer section",
+      });
+      await waitFor(() =>
+        expect(scroll).toHaveBeenCalledWith({
+          block: "center",
+          behavior: "instant",
+        }),
+      );
+      expect(target).toHaveFocus();
+      if (available)
+        expect(
+          screen.getByRole("button", { name: "Play trailer" }),
+        ).toBeVisible();
+      else expect(screen.getByText(/No trailer is available/)).toBeVisible();
+      expect(screen.queryByTitle(`${movie.primaryTitle} trailer`)).toBeNull();
+    } finally {
+      HTMLElement.prototype.scrollIntoView = original;
+    }
+  },
+);
+
+test("does not steal focus again when movie data refreshes in the background", async () => {
+  const scroll = vi.fn();
+  const original = HTMLElement.prototype.scrollIntoView;
+  HTMLElement.prototype.scrollIntoView = scroll;
+  try {
+    const queryClient = makeQueryClient();
+    seedMovie(queryClient);
+    renderPage({ initialEntry: "/movie?id=1#trailer", queryClient });
+    await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
+    const play = screen.getByRole("button", { name: "Play trailer" });
+    play.focus();
+    await act(async () => {
+      queryClient.setQueryData(["catalog", "movie", 1], {
+        ...movie,
+        rating: 9,
+      });
+    });
+    expect(play).toHaveFocus();
+    expect(scroll).toHaveBeenCalledTimes(1);
+  } finally {
+    HTMLElement.prototype.scrollIntoView = original;
+  }
+});
+
+test("opens the movie at the top without resetting scroll on background updates", async () => {
+  const queryClient = makeQueryClient();
+  seedMovie(queryClient);
+  renderPage({ queryClient });
+  expect(window.scrollTo).toHaveBeenCalledExactlyOnceWith({
+    top: 0,
+    left: 0,
+    behavior: "instant",
+  });
+  await act(async () => {
+    queryClient.setQueryData(["catalog", "movie", 1], { ...movie, rating: 9 });
+  });
+  expect(window.scrollTo).toHaveBeenCalledTimes(1);
 });

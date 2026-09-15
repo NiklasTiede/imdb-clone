@@ -15,6 +15,7 @@ from imdb_agent.adapters.pydantic_ai_runner import (
 from imdb_agent.concierge.events import (
     MovieCardEvent,
     TextEvent,
+    ToolActivityEvent,
     ToolCallEvent,
     UiActionEvent,
     UsageEvent,
@@ -44,7 +45,9 @@ async def test_function_model_executes_tool_loop_and_emits_grounded_cards(messag
                 "search_movies",
                 "navigate_app",
                 "open_movie_page",
+                "open_movie_trailer",
                 "show_movie_search",
+                "get_page_context",
             }
             yield {
                 0: DeltaToolCall(
@@ -122,6 +125,12 @@ async def test_function_model_executes_tool_loop_and_emits_grounded_cards(messag
     tool_call = next(event for event in events if isinstance(event, ToolCallEvent))
     assert tool_call.tool is ToolName.SEARCH_MOVIES
     assert tool_call.arguments == {"query": "Arrival"}
+    activities = [event.activity for event in events if isinstance(event, ToolActivityEvent)]
+    assert [activity.status for activity in activities] == ["started", "completed"]
+    assert activities[0].call_id == activities[1].call_id
+    assert all(
+        set(activity.model_dump()) == {"callId", "tool", "status"} for activity in activities
+    )
     cards = [event.movie for event in events if isinstance(event, MovieCardEvent)]
     assert [movie.movie_id for movie in cards] == [42]
     assert "".join(event.delta for event in events if isinstance(event, TextEvent)) == (
@@ -276,14 +285,24 @@ async def test_search_navigation_uses_final_successful_discovery(followup: str) 
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("movie_page", [False, True])
+@pytest.mark.parametrize(
+    "tool, action_type",
+    [
+        ("navigate_app", "open_page"),
+        ("open_movie_page", "open_movie"),
+        ("open_movie_trailer", "open_movie_trailer"),
+    ],
+)
 async def test_model_interpreted_navigation_is_emitted_without_command_regex(
-    movie_page: bool,
+    tool: str,
+    action_type: str,
 ) -> None:
     from pydantic import SecretStr
 
     from imdb_agent.concierge.events import GroundedMovie
     from imdb_agent.concierge.ports import ConversationMessage
+
+    movie_page = tool != "navigate_app"
 
     requests = 0
 
@@ -295,7 +314,7 @@ async def test_model_interpreted_navigation_is_emitted_without_command_regex(
         if requests == 1:
             yield {
                 0: DeltaToolCall(
-                    name="open_movie_page" if movie_page else "navigate_app",
+                    name=tool,
                     json_args='{"movie_id":6}' if movie_page else '{"destination":"ratings"}',
                     tool_call_id="app-navigation",
                 )
@@ -311,7 +330,11 @@ async def test_model_interpreted_navigation_is_emitted_without_command_regex(
         async for event in runner.stream(
             RunRequest(
                 conversation_id="semantic-navigation",
-                message="Let's have a look at that one"
+                message=(
+                    "Let me watch its trailer"
+                    if tool == "open_movie_trailer"
+                    else "Let's have a look at that one"
+                )
                 if movie_page
                 else "My rated movies, please",
                 history=(
@@ -323,8 +346,171 @@ async def test_model_interpreted_navigation_is_emitted_without_command_regex(
     ]
     actions = [event.action for event in events if isinstance(event, UiActionEvent)]
     assert len(actions) == 1
-    assert actions[0].type == ("open_movie" if movie_page else "open_page")
+    assert actions[0].type == action_type
     assert not any(isinstance(event, ToolCallEvent) for event in events)
     if movie_page:
         action_index = next(i for i, event in enumerate(events) if isinstance(event, UiActionEvent))
         assert isinstance(events[action_index - 1], MovieCardEvent)
+
+
+@pytest.mark.asyncio
+async def test_external_facts_complete_text_turn_without_replacing_catalog_identity() -> None:
+    from imdb_agent.concierge.events import GroundedMovie
+    from imdb_agent.concierge.ports import ConversationMessage
+
+    requests = 0
+
+    async def stream_function(
+        messages: list[ModelMessage], info: AgentInfo
+    ) -> AsyncIterator[str | dict[int, DeltaToolCall]]:
+        nonlocal requests
+        requests += 1
+        if requests == 1:
+            yield {
+                0: DeltaToolCall(
+                    name="get_movie_enrichment", json_args='{"movieId":6}', tool_call_id="extra"
+                )
+            }
+        else:
+            yield "Extra TMDB information is unavailable; I can still show catalog details."
+
+    agent = Agent(model=FunctionModel(stream_function=stream_function), instructions=SYSTEM_POLICY)
+
+    def get_movie_enrichment(movieId: int) -> dict[str, object]:
+        assert movieId == 6
+        return {
+            "contractVersion": "1.0",
+            "movieId": 6,
+            "outcome": "UNAVAILABLE",
+            "source": "TMDB",
+            "sourceUrl": None,
+            "fetchedAt": None,
+            "facts": None,
+        }
+
+    agent.tool_plain(get_movie_enrichment)
+    runner = PydanticAIConciergeRunner.from_agent(agent=agent)
+    movie = GroundedMovie(movie_id=6, primary_title="Forrest Gump", movie_type="MOVIE")
+    events = [
+        event
+        async for event in runner.stream(
+            RunRequest(
+                conversation_id="extra-facts",
+                message="Who directed this movie?",
+                history=(
+                    ConversationMessage(role="assistant", content="Forrest Gump", movies=(movie,)),
+                ),
+            )
+        )
+    ]
+    assert any(
+        isinstance(event, ToolCallEvent) and event.tool is ToolName.GET_MOVIE_ENRICHMENT
+        for event in events
+    )
+    assert not any(isinstance(event, MovieCardEvent | UiActionEvent) for event in events)
+    assert any(isinstance(event, TextEvent) and "unavailable" in event.delta for event in events)
+
+
+@pytest.mark.asyncio
+async def test_watch_providers_complete_text_turn_without_replacing_catalog_identity() -> None:
+    from imdb_agent.concierge.events import GroundedMovie
+    from imdb_agent.concierge.ports import ConversationMessage
+
+    requests = 0
+
+    async def stream_function(
+        messages: list[ModelMessage], info: AgentInfo
+    ) -> AsyncIterator[str | dict[int, DeltaToolCall]]:
+        nonlocal requests
+        requests += 1
+        if requests == 1:
+            yield {
+                0: DeltaToolCall(
+                    name="get_movie_watch_providers",
+                    json_args='{"movieId":6}',
+                    tool_call_id="extra",
+                )
+            }
+        else:
+            yield "Extra TMDB information is unavailable; I can still show catalog details."
+
+    agent = Agent(model=FunctionModel(stream_function=stream_function), instructions=SYSTEM_POLICY)
+
+    def get_movie_watch_providers(movieId: int) -> dict[str, object]:
+        assert movieId == 6
+        return {
+            "contractVersion": "1.0",
+            "movieId": 6,
+            "outcome": "UNAVAILABLE",
+            "source": "JUSTWATCH_VIA_TMDB",
+            "country": "CH",
+            "sourceUrl": None,
+            "fetchedAt": None,
+            "offers": None,
+        }
+
+    agent.tool_plain(get_movie_watch_providers)
+    runner = PydanticAIConciergeRunner.from_agent(agent=agent)
+    movie = GroundedMovie(movie_id=6, primary_title="Forrest Gump", movie_type="MOVIE")
+    events = [
+        event
+        async for event in runner.stream(
+            RunRequest(
+                conversation_id="extra-facts",
+                message="Where can I stream this movie?",
+                history=(
+                    ConversationMessage(role="assistant", content="Forrest Gump", movies=(movie,)),
+                ),
+            )
+        )
+    ]
+    assert any(
+        isinstance(event, ToolCallEvent) and event.tool is ToolName.GET_MOVIE_WATCH_PROVIDERS
+        for event in events
+    )
+    assert not any(isinstance(event, MovieCardEvent | UiActionEvent) for event in events)
+    assert any(isinstance(event, TextEvent) and "unavailable" in event.delta for event in events)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("budget", ["request_limit", "input_tokens_limit"])
+async def test_usage_failure_logs_specific_budget_without_request_payload(
+    capsys: pytest.CaptureFixture[str],
+    budget: str,
+) -> None:
+    import json
+
+    from pydantic_ai import UsageLimits
+
+    from imdb_agent.adapters.logging import configure_logging
+    from imdb_agent.concierge.service import ConciergeRunError
+
+    async def respond(messages: list[ModelMessage], info: AgentInfo) -> AsyncIterator[str]:
+        yield "Not reached"
+
+    configure_logging(json_output=True)
+    runner = PydanticAIConciergeRunner.from_agent(
+        agent=Agent(FunctionModel(stream_function=respond)),
+        usage_limits=UsageLimits(request_limit=0)
+        if budget == "request_limit"
+        else UsageLimits(input_tokens_limit=1),
+    )
+    with pytest.raises(ConciergeRunError) as error:
+        _ = [
+            event
+            async for event in runner.stream(
+                RunRequest(
+                    conversation_id="private-id",
+                    message="private request",
+                    history=(),
+                )
+            )
+        ]
+    assert error.value.code == "usage_limit"
+    raw = capsys.readouterr().out
+    assert "private" not in raw
+    event = next(e for e in map(json.loads, raw.splitlines()) if e["event"] == "agent_run_failed")
+    assert event["budget"] == budget
+    assert event["requests"] == (0 if budget == "request_limit" else 1)
+    if budget == "input_tokens_limit":
+        assert event["input_tokens"] > event["input_token_limit"] == 1

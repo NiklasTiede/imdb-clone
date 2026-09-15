@@ -13,6 +13,7 @@ from imdb_agent.concierge.events import (
     RunStatus,
     StatusEvent,
     TextEvent,
+    ToolActivityEvent,
     ToolCallEvent,
     UiActionEvent,
 )
@@ -40,6 +41,8 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
     from pydantic import SecretStr
+
+    from imdb_agent.concierge.page_context import PageContext
 
 
 class ConciergeRunError(RuntimeError):
@@ -98,6 +101,7 @@ class ConciergeService:
         conversation_id: str,
         message: str,
         delegation: SecretStr | None = None,
+        page_context: PageContext | None = None,
     ) -> AsyncIterator[ConciergeEvent]:
         started_at = perf_counter()
         sequence = 0
@@ -114,22 +118,13 @@ class ConciergeService:
         text_parts: list[str] = []
         movies_by_id: dict[int, GroundedMovie] = {}
         self._observer.started()
-        local_response = capability_response(message)
+        local_response = capability_response(message, authenticated=delegation is not None)
         local_action = page_action(message, authenticated=delegation is not None)
         if local_action is not None:
             local_response = (
                 "Please sign in to open your personal pages."
                 if local_action.type == "open_login"
                 else f"Opening {local_action.destination}."
-            )
-        if local_response is not None and delegation is not None:
-            local_response = local_response.replace(
-                "these read-only movie tasks", "these movie tasks"
-            ).replace(
-                "I cannot change watchlists or ratings or search the web.",
-                "I can read your watchlist, add or remove movies, and set or remove your rating "
-                "after your explicit command. Tell me your rating from 0 to 10. "
-                "Web search is unavailable.",
             )
 
         def next_event(event: ConciergeEvent) -> ConciergeEvent:
@@ -163,6 +158,7 @@ class ConciergeService:
                     message=message,
                     history=history,
                     delegation=delegation,
+                    page_context=page_context,
                 )
                 async for event in self._runner.stream(request):
                     if not first_event_observed:
@@ -173,7 +169,10 @@ class ConciergeService:
                         yield next_event(StatusEvent(status=TOOL_STATUSES[event.tool]))
                         continue
                     if isinstance(event, UiActionEvent):
-                        if event.action.type == "open_movie":
+                        if (
+                            event.action.type == "open_movie"
+                            or event.action.type == "open_movie_trailer"
+                        ):
                             opened_movie_id = event.action.movie_id
                         runner_action_sent = True
                         self._observer.ui_action(action=event.action.type, outcome="emitted")
@@ -184,7 +183,7 @@ class ConciergeService:
                         text_parts.append(event.delta)
                     elif event.type == "movie-card":
                         movies_by_id[event.movie.movie_id] = event.movie
-                    else:
+                    elif not isinstance(event, ToolActivityEvent):
                         usage = event.usage
                     yield next_event(event)
 

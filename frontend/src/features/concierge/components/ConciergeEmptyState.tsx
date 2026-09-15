@@ -1,115 +1,141 @@
-import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import { alpha } from "@mui/material/styles";
 import { Box, Button, Stack, Typography } from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
+import PlayCircleOutlineRounded from "@mui/icons-material/PlayCircleOutlineRounded";
+import BookmarkBorderRounded from "@mui/icons-material/BookmarkBorderRounded";
+import StarOutlineRounded from "@mui/icons-material/StarOutlineRounded";
+import PublicRounded from "@mui/icons-material/PublicRounded";
+import ExploreOutlined from "@mui/icons-material/ExploreOutlined";
 import { movieColors } from "../../../theme";
-
-const prompts = [
-  {
-    label: "See what the Concierge can do",
-    message: "What can you do for me?",
-    featured: true,
-  },
-  {
-    label: "Something thoughtful under 2 hours",
-    message: "Something thoughtful under 2 hours",
-    featured: false,
-  },
-  {
-    label: "Three upbeat picks for tonight",
-    message: "Three upbeat picks for tonight",
-    featured: false,
-  },
-  {
-    label: "Find a tense science-fiction movie",
-    message: "Find a tense science-fiction movie",
-    featured: false,
-  },
-] as const;
+import { streamingCountries } from "../model/streamingCountry";
 
 const ConciergeEmptyState = ({
   onPrompt,
+  signedIn = false,
+  country = "CH",
+  disabled = false,
 }: {
   onPrompt: (prompt: string) => void;
-}) => (
-  <Box
-    sx={{
-      display: "flex",
-      flex: 1,
-      flexDirection: "column",
-      justifyContent: "center",
-      minHeight: 420,
-      px: 2.5,
-      py: 4,
-    }}
-  >
-    <Box
-      sx={{
-        alignItems: "center",
-        bgcolor: alpha(movieColors.brand, 0.12),
-        border: `1px solid ${alpha(movieColors.brand, 0.24)}`,
-        borderRadius: "50%",
-        display: "flex",
-        height: 52,
-        justifyContent: "center",
-        mb: 2.5,
-        width: 52,
-      }}
-    >
-      <AutoAwesomeRoundedIcon sx={{ color: movieColors.brand, fontSize: 25 }} />
+  signedIn?: boolean;
+  country?: string;
+  disabled?: boolean;
+}) => {
+  const region =
+    streamingCountries.find((item) => item.code === country)?.name ?? country;
+  const prompts = [
+    {
+      title: "Discover your next film",
+      text: signedIn
+        ? "Recommend something based on my ratings."
+        : "Recommend a movie for tonight.",
+      icon: AutoAwesomeRounded,
+      personal: signedIn,
+    },
+    {
+      title: "Movies & trailers",
+      text: "Show me the trailer for Forrest Gump.",
+      icon: PlayCircleOutlineRounded,
+      personal: false,
+    },
+    {
+      title: "Your watchlist",
+      text: "Show me my watchlist.",
+      icon: BookmarkBorderRounded,
+      personal: true,
+    },
+    {
+      title: "Your ratings",
+      text: "Which movies have I rated highest?",
+      icon: StarOutlineRounded,
+      personal: true,
+    },
+    {
+      title: "Where to watch",
+      text: `Where can I watch Forrest Gump in ${region}?`,
+      icon: PublicRounded,
+      personal: false,
+    },
+    {
+      title: "Find your way",
+      text: "Open my settings.",
+      icon: ExploreOutlined,
+      personal: true,
+    },
+  ];
+  return (
+    <Box sx={{ p: 2.5 }}>
+      <Typography
+        component="h2"
+        sx={{
+          color: "text.primary",
+          fontSize: 24,
+          fontWeight: 650,
+          letterSpacing: -0.7,
+          mb: 1,
+        }}
+      >
+        What can I help you with?
+      </Typography>
+      <Typography
+        sx={{ fontSize: 12, color: "text.secondary", lineHeight: 1.8, mb: 2 }}
+      >
+        Choose an example, or ask in your own words.
+      </Typography>
+      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+        {prompts.map((item) => (
+          <Button
+            key={item.title}
+            disabled={disabled}
+            onClick={() => onPrompt(item.text)}
+            sx={{
+              p: 1.25,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              justifyContent: "flex-start",
+              textAlign: "left",
+              textTransform: "none",
+              color: "text.primary",
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 1,
+              bgcolor: alpha(movieColors.info, 0.025),
+              "&:hover": { bgcolor: alpha(movieColors.info, 0.08) },
+            }}
+          >
+            <Stack
+              component="span"
+              direction="row"
+              spacing={0.7}
+              sx={{ alignItems: "center", mb: 0.8 }}
+            >
+              <item.icon sx={{ fontSize: 16, color: movieColors.info }} />
+              <Typography
+                component="span"
+                sx={{ fontSize: 12, fontWeight: 750, lineHeight: 1.4 }}
+              >
+                {item.title}
+              </Typography>
+            </Stack>
+            <Typography
+              component="span"
+              sx={{ fontSize: 11, color: "text.secondary", lineHeight: 1.7 }}
+            >
+              “{item.text}”
+            </Typography>
+            {!signedIn && item.personal && (
+              <Typography
+                component="span"
+                sx={{ fontSize: 9, color: movieColors.brand, mt: 1 }}
+              >
+                Sign in required
+              </Typography>
+            )}
+          </Button>
+        ))}
+      </Box>
     </Box>
-    <Typography
-      component="h2"
-      sx={{
-        color: "text.primary",
-        fontSize: 24,
-        fontWeight: 750,
-        letterSpacing: -0.7,
-        mb: 1,
-      }}
-    >
-      What fits tonight?
-    </Typography>
-    <Typography
-      sx={{ color: "text.secondary", fontSize: 13, lineHeight: 1.65, mb: 3 }}
-    >
-      Describe a mood, a time limit, or a movie you already love. Every
-      recommendation is grounded in this catalog.
-    </Typography>
-    <Stack spacing={1}>
-      {prompts.map((prompt) => (
-        <Button
-          key={prompt.label}
-          onClick={() => onPrompt(prompt.message)}
-          variant="outlined"
-          sx={{
-            bgcolor: prompt.featured
-              ? alpha(movieColors.brand, 0.08)
-              : "transparent",
-            borderColor: prompt.featured
-              ? alpha(movieColors.brand, 0.38)
-              : alpha("#ffffff", 0.11),
-            color: prompt.featured
-              ? movieColors.brand
-              : "rgba(255,255,255,0.84)",
-            fontSize: 11.5,
-            fontWeight: prompt.featured ? 700 : 500,
-            justifyContent: "flex-start",
-            lineHeight: 1.4,
-            px: 1.5,
-            py: 1.2,
-            textAlign: "left",
-            textTransform: "none",
-            "&:hover": {
-              bgcolor: alpha(movieColors.brand, 0.07),
-              borderColor: alpha(movieColors.brand, 0.38),
-            },
-          }}
-        >
-          {prompt.label}
-        </Button>
-      ))}
-    </Stack>
-  </Box>
-);
-
+  );
+};
 export default ConciergeEmptyState;

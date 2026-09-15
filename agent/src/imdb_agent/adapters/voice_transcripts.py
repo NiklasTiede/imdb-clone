@@ -28,6 +28,7 @@ class CorrelatedVoiceModel(RealtimeModel):
         self.delegate = delegate
         self.settings = delegate.settings
         self.final_items: deque[str | None] = deque()
+        self.interrupts_response_on_speech = False
 
     @property
     def model_name(self) -> str:
@@ -54,6 +55,7 @@ class CorrelatedVoiceModel(RealtimeModel):
             model_settings=model_settings,
             model_request_parameters=model_request_parameters,
         ) as connection:
+            self.interrupts_response_on_speech = connection.interrupts_response_on_speech
             yield CorrelatedConnection(connection, self.final_items)
 
 
@@ -85,6 +87,10 @@ class CorrelatedConnection(RealtimeConnection):
     @property
     def input_transcription_enabled(self) -> bool:
         return self.delegate.input_transcription_enabled
+
+    @property
+    def interrupts_response_on_speech(self) -> bool:
+        return self.delegate.interrupts_response_on_speech
 
     @property
     def reconnect_restores_in_flight_state(self) -> bool:

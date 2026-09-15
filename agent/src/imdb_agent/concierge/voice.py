@@ -6,23 +6,48 @@ import re
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator, model_validator
 
 from imdb_agent.concierge.events import (
     ApplicationAction,
     EventModel,
     GroundedMovie,
     OpenMovieAction,
+    ToolActivity,
 )
 from imdb_agent.concierge.navigation import SearchNavigation
+from imdb_agent.concierge.page_context import PageContext  # noqa: TC001 - Pydantic runtime type
 from imdb_agent.concierge.policy import decide_open_movie_action
 
 SAMPLE_RATE = 24_000
 PCM_BYTES_PER_SECOND = SAMPLE_RATE * 2
+VoiceModel = Literal["grok", "gpt-live-1"]
 
 
 class VoiceCommand(EventModel):
-    type: Literal["interrupt", "mute", "resume", "end"]
+    type: Literal["interrupt", "mute", "resume", "end", "context", "text", "authenticate"]
+    context: PageContext | None = None
+    text: str | None = Field(default=None, min_length=1, max_length=600)
+    delegation: SecretStr | None = Field(default=None, min_length=1, max_length=1200)
+
+    @field_validator("text")
+    @classmethod
+    def complete_text(cls, value: str | None) -> str | None:
+        if value is not None:
+            value = value.strip()
+            if not value:
+                raise ValueError("text must not be blank")
+        return value
+
+    @model_validator(mode="after")
+    def context_command(self) -> VoiceCommand:
+        if (self.type == "context") != (self.context is not None):
+            raise ValueError("context is required only for a context command")
+        if (self.type == "text") != (self.text is not None):
+            raise ValueError("text is required only for a text command")
+        if (self.type == "authenticate") != (self.delegation is not None):
+            raise ValueError("delegation is required only for an authenticate command")
+        return self
 
 
 class VoiceEvent(EventModel):
@@ -31,10 +56,14 @@ class VoiceEvent(EventModel):
         "status",
         "transcript",
         "movie-card",
+        "tool-activity",
         "ui-action",
         "interrupt",
         "reply-complete",
         "error",
+        "standby",
+        "authenticated",
+        "authentication-failed",
     ]
     status: Literal["listening", "thinking", "searching", "muted"] | None = None
     speaker: Literal["user", "assistant"] | None = None
@@ -43,6 +72,22 @@ class VoiceEvent(EventModel):
     turn: int = Field(default=0, ge=0)
     movie: GroundedMovie | None = None
     action: ApplicationAction | None = None
+    activity: ToolActivity | None = None
+
+
+@dataclass
+class VoiceTranscript:
+    """Keep revised speech snapshots for every assistant part of one user turn."""
+
+    turn: int = -1
+    parts: dict[int, str] = field(default_factory=lambda: dict[int, str]())
+
+    def update(self, turn: int, index: int, text: str) -> str:
+        if turn != self.turn:
+            self.parts.clear()
+            self.turn = turn
+        self.parts[index] = text[:6_000]
+        return "\n\n".join(part for part in self.parts.values() if part)[:6_000]
 
 
 class VoiceTransport(Protocol):
@@ -63,9 +108,13 @@ class VoiceSessionLimitError(Exception):
     """The bounded voice session exhausted its model or tool usage budget."""
 
 
+class VoiceIdleTimeoutError(Exception):
+    """No user input arrived before the voice inactivity deadline."""
+
+
 @dataclass
 class VoiceGrounding:
-    """Only final speech and Java-owned cards may authorize local navigation."""
+    """Complete user inputs and Java-owned cards ground local navigation."""
 
     turn: int = 0
     message: str = ""
@@ -75,6 +124,7 @@ class VoiceGrounding:
     completed: bool = False
     cancelled: bool = False
     action_sent: bool = False
+    sent_action: ApplicationAction | None = None
     search: SearchNavigation = field(default_factory=SearchNavigation)
 
     def begin(self) -> None:
@@ -87,6 +137,7 @@ class VoiceGrounding:
         self.completed = False
         self.cancelled = False
         self.action_sent = False
+        self.sent_action = None
         self.search.reset()
 
     def action(self) -> OpenMovieAction | None:

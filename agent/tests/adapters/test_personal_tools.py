@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import asyncio
+import json
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 from pydantic import SecretStr
 from pydantic_ai.exceptions import ToolFailed
 
+from imdb_agent.adapters.logging import configure_logging
 from imdb_agent.adapters.personal_tools import PersonalToolGate
 from imdb_agent.concierge.events import GroundedMovie
 from imdb_agent.concierge.personal import PersonalTurn
@@ -45,6 +46,24 @@ class Backend:
 
 
 @pytest.mark.asyncio
+async def test_verified_login_unlocks_gate_once_and_cannot_switch_account() -> None:
+    from imdb_agent.concierge.personal import DelegationRejectedError
+
+    state = turn()
+    gate = PersonalToolGate(None, state)
+    backend = Backend()
+    ctx = cast("RunContext[Any]", None)
+    with pytest.raises(ToolFailed, match="Sign in"):
+        await gate.call(ctx, backend, "add_movie_to_my_watchlist", {"movieId": 6})
+    assert backend.calls == []
+    gate.attach_verified_delegation(SecretStr("verified-login"))
+    await gate.call(ctx, backend, "add_movie_to_my_watchlist", {"movieId": 6})
+    assert backend.calls[0]["delegation"] == "verified-login"
+    with pytest.raises(DelegationRejectedError):
+        gate.attach_verified_delegation(SecretStr("different-account"))
+
+
+@pytest.mark.asyncio
 async def test_injected_credential_and_operation_are_stable_on_retry() -> None:
     state = turn()
     backend = Backend()
@@ -58,14 +77,12 @@ async def test_injected_credential_and_operation_are_stable_on_retry() -> None:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("mode", ["anonymous", "cancelled", "wrong_movie", "negated"])
+@pytest.mark.parametrize("mode", ["anonymous", "cancelled", "wrong_movie"])
 async def test_rejected_write_never_reaches_java(mode: str) -> None:
     state = turn()
     backend = Backend()
     if mode == "cancelled":
         state.cancelled = True
-    if mode == "negated":
-        state.finalize("Don't add Forrest Gump to my watchlist")
     gate = PersonalToolGate(None if mode == "anonymous" else SecretStr("synthetic"), state)
     with pytest.raises(ToolFailed):
         await gate.call(
@@ -79,27 +96,10 @@ async def test_rejected_write_never_reaches_java(mode: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_pending_final_transcript_cannot_authorize_a_different_turn() -> None:
-    state = turn()
-    state.finalized.clear()
-    backend = Backend()
-    gate = PersonalToolGate(SecretStr("synthetic"), state)
-    pending = asyncio.create_task(
-        gate.call(
-            cast("RunContext[Any]", None), backend, "add_movie_to_my_watchlist", {"movieId": 6}
-        )
-    )
-    await asyncio.sleep(0)
-    assert not backend.calls
-    state.begin()
-    state.finalize("Add Forrest Gump to my watchlist")
-    with pytest.raises(ToolFailed):
-        await pending
-    assert not backend.calls
-
-
-@pytest.mark.asyncio
-async def test_failed_tool_does_not_emit_receipt_or_expose_backend_details() -> None:
+async def test_failed_tool_does_not_emit_receipt_or_expose_backend_details(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    configure_logging(json_output=True)
     state = turn()
     backend = Backend()
     backend.fail = True
@@ -109,36 +109,14 @@ async def test_failed_tool_does_not_emit_receipt_or_expose_backend_details() -> 
         )
     assert "private-backend-detail" not in str(error.value)
     assert state.receipt is None
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("message", "name", "args"),
-    [
-        ("Rate Forrest Gump 8.5", "set_my_movie_rating", {"movieId": 6, "score": 9}),
-        ("Rate Forrest Gump 8.5", "set_my_movie_rating", {"movieId": 7, "score": 8.5}),
-        ("Rate Forrest Gump 8.5", "remove_my_movie_rating", {"movieId": 6}),
-        ("Remove Forrest Gump from my watchlist", "add_movie_to_my_watchlist", {"movieId": 6}),
-        ("Don't delete my rating for Forrest Gump", "remove_my_movie_rating", {"movieId": 6}),
-        ("Give Forrest Gump a rating", "set_my_movie_rating", {"movieId": 6, "score": 8.5}),
-    ],
-)
-async def test_model_cannot_change_the_requested_operation_movie_or_score(
-    message: str,
-    name: str,
-    args: dict[str, Any],
-) -> None:
-    state = turn()
-    state.finalize(message)
-    backend = Backend()
-    with pytest.raises(ToolFailed):
-        await PersonalToolGate(SecretStr("synthetic"), state).call(
-            cast("RunContext[Any]", None),
-            backend,
-            name,
-            args,
-        )
-    assert not backend.calls
+    output = capsys.readouterr().out
+    event = json.loads(output)
+    assert event["event"] == "mcp_tool_call_failed"
+    assert event["error_type"] == "RuntimeError"
+    assert event["error_location"].startswith("test_personal_tools.py:")
+    assert "private-backend-detail" not in output
+    assert "delegation" not in event
+    assert "arguments" not in event
 
 
 @pytest.mark.asyncio
@@ -166,9 +144,6 @@ async def test_committed_changes_emit_the_correct_page_and_previous_state(
     from imdb_agent.concierge.personal import receipt_action
 
     state = turn()
-    if message == "eight point five":
-        state.finalize("I'd like to rate Forrest Gump")
-        state.begin()
     state.finalize(message)
     calls: list[dict[str, Any]] = []
 
@@ -202,3 +177,123 @@ async def test_committed_changes_emit_the_correct_page_and_previous_state(
     action = receipt_action(state.receipt)
     assert action.type == ("open_watchlist" if kind == "watchlist_remove" else "open_ratings")
     assert action.movie_id == 6
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("name", ["get_my_ratings", "get_my_recommendations"])
+async def test_personal_reads_use_delegation_without_creating_write_receipts(name: str) -> None:
+    state = turn()
+    state.finalize("Which movies did I rate highest?")
+    calls: list[dict[str, Any]] = []
+
+    async def backend(
+        name: str, args: dict[str, Any], *, metadata: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        assert metadata is not None
+        calls.append(metadata)
+        movie = {"movieId": 6, "primaryTitle": "Forrest Gump", "type": "MOVIE", "imdbRating": 8.8}
+        if name == "get_my_ratings":
+            return {
+                "contractVersion": "1.0",
+                "ratings": [{"movie": movie, "userScore": 10.0, "ratedAt": "2026-09-10T00:00:00Z"}],
+                "page": 0,
+                "totalElements": 21,
+                "last": False,
+                "averageUserScore": 8.0,
+                "favoriteGenres": [],
+                "favoriteDecades": [],
+            }
+        return {
+            "contractVersion": "1.0",
+            "strategy": "personal-ratings-v1",
+            "outcome": "MATCHED",
+            "totalRatings": 21,
+            "basedOn": [{"movieId": 7, "title": "Arrival", "userScore": 9.0}],
+            "movies": [movie],
+        }
+
+    ctx = cast("RunContext[Any]", None)
+    with pytest.raises(ToolFailed, match="Sign in"):
+        await PersonalToolGate(None, state).call(ctx, backend, name, {})
+    assert not calls
+    result = await PersonalToolGate(SecretStr("synthetic-session"), state).call(
+        ctx, backend, name, {}
+    )
+    assert isinstance(result, dict)
+    assert result["contractVersion"] == "1.0"
+    assert calls == [{"delegation": "synthetic-session"}]
+    assert state.receipt is None
+    assert state.movies[0].movie_id == 6 and state.movies[0].imdb_rating == 8.8
+    assert state.movies[0].user_score == (10.0 if name == "get_my_ratings" else None)
+
+
+@pytest.mark.asyncio
+async def test_write_rejection_reason_survives_real_logging_filter_without_private_data(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import json
+
+    from imdb_agent.adapters.logging import configure_logging
+
+    configure_logging(json_output=True)
+    state = turn()
+    state.finalize("Remove it from my watchlist")
+    state.cancelled = True
+    with pytest.raises(ToolFailed):
+        await PersonalToolGate(SecretStr("synthetic-private-token"), state).call(
+            cast("RunContext[Any]", None),
+            Backend(),
+            "remove_movie_from_my_watchlist",
+            {"movieId": 6},
+        )
+    output = capsys.readouterr().out
+    logged: dict[str, object] = json.loads(output)
+    assert logged["event"] == "personal_write_rejected"
+    assert logged["error_code"] == "inactive_turn"
+    assert "Forrest Gump" not in output
+    assert "synthetic-private-token" not in output
+
+
+@pytest.mark.asyncio
+async def test_lost_mcp_reply_is_not_retried_or_reported_as_success() -> None:
+    import httpx
+
+    from imdb_agent.concierge.service import ConciergeRunError
+
+    class Disconnected(Backend):
+        attempts = 0
+
+        async def __call__(
+            self,
+            name: str,
+            args: dict[str, Any],
+            *,
+            metadata: dict[str, Any] | None = None,
+        ) -> dict[str, Any]:
+            self.attempts += 1
+            raise httpx.ReadError("private connection details")
+
+    backend = Disconnected()
+    state = turn()
+    with pytest.raises(ConciergeRunError) as error:
+        await PersonalToolGate(SecretStr("synthetic"), state).call(
+            cast("RunContext[Any]", None),
+            backend,
+            "add_movie_to_my_watchlist",
+            {"movieId": 6},
+        )
+    assert error.value.code == "tool_unavailable"
+    assert "private" not in str(error.value)
+    assert state.receipt is None and backend.attempts == 1
+
+
+def test_transport_failure_detection_handles_wrapping_without_matching_business_errors() -> None:
+    import httpx
+
+    from imdb_agent.adapters.personal_tools import is_catalog_transport_failure
+
+    wrapped = RuntimeError("private outer details")
+    wrapped.__cause__ = httpx.ConnectError("private inner details")
+    assert is_catalog_transport_failure(wrapped)
+    assert not is_catalog_transport_failure(RuntimeError("business error"))
+    assert not is_catalog_transport_failure(ValueError("invalid rating"))

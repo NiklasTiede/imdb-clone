@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 import structlog
 from opentelemetry.trace import get_current_span
@@ -11,12 +11,34 @@ if TYPE_CHECKING:
 SAFE_LOG_FIELDS: Final = frozenset(
     {
         "duration_ms",
+        "delegation_sequence",
+        "voice_model",
+        "voice_seconds",
+        "final_usage_confirmed",
+        "backend_requests",
+        "backend_tokens",
+        "ui_actions",
+        "session_limit_seconds",
+        "phase",
+        "audio_input_bytes",
+        "audio_output_bytes",
+        "control_messages",
+        "typed_messages",
+        "turns",
         "environment",
         "error_code",
         "error_type",
+        "error_location",
+        "error_chain",
+        "budget",
         "estimated_cost_usd",
         "event",
         "input_tokens",
+        "input_token_limit",
+        "transcript_chars",
+        "transcript_age_ms",
+        "transcript_row_changed",
+        "history_chars",
         "level",
         "log_level",
         "method",
@@ -36,6 +58,59 @@ SAFE_LOG_FIELDS: Final = frozenset(
         "version",
     }
 )
+
+
+def usage_limit_budget(error: BaseException) -> str:
+    """Classify SDK limits without copying unrestricted exception text into telemetry."""
+    return next(
+        (
+            name
+            for name in (
+                "request_limit",
+                "tool_calls_limit",
+                "input_tokens_limit",
+                "output_tokens_limit",
+                "total_tokens_limit",
+                "cost_limit",
+            )
+            if name in str(error)
+        ),
+        "unknown",
+    )
+
+
+def error_location(error: BaseException) -> str | None:
+    """Code location only; exception messages and frame locals may contain credentials."""
+    frame = error.__traceback__
+    if frame is None:
+        return None
+    while frame.tb_next is not None:
+        frame = frame.tb_next
+    filename = frame.tb_frame.f_code.co_filename.rsplit("/", 1)[-1]
+    return f"{filename}:{frame.tb_lineno}:{frame.tb_frame.f_code.co_name}"
+
+
+def error_chain(error: BaseException) -> list[str]:
+    """Bounded exception classes and code locations; never messages or frame locals."""
+    result: list[str] = []
+    seen: set[int] = set()
+    pending = [error]
+    while pending and len(result) < 8:
+        current = pending.pop(0)
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        location = f"{type(current).__name__}@{error_location(current)}"
+        if isinstance(current, OSError) and isinstance(current.errno, int):
+            location += f" errno={current.errno}"
+        result.append(location)
+        if isinstance(current, BaseExceptionGroup):
+            pending[0:0] = cast("BaseExceptionGroup[BaseException]", current).exceptions
+        else:
+            cause = current.__cause__ or current.__context__
+            if cause is not None:
+                pending.insert(0, cause)
+    return result
 
 
 def add_trace_context(

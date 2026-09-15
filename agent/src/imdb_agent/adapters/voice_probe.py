@@ -15,8 +15,10 @@ from pydantic_ai.exceptions import ModelHTTPError
 from pydantic_ai.messages import ModelResponse, PartDeltaEvent, SpeechPart, SpeechPartDelta
 from pydantic_ai.providers.xai import XaiProvider
 from pydantic_ai.realtime import RealtimeTurnCompleteEvent
-from pydantic_ai.realtime.xai import XaiRealtimeModel, XaiRealtimeModelSettings
+from pydantic_ai.realtime.xai import XaiRealtimeModelSettings
 from pydantic_ai.usage import UsageLimits
+
+from imdb_agent.adapters.xai_voice_model import ConciergeXaiVoiceModel
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -95,8 +97,8 @@ def load_probe_audio(path: Path) -> bytes:
         raise VoiceProbeError("invalid_input_wav") from None
 
 
-def build_voice_model(secrets: LocalVoiceSecrets) -> XaiRealtimeModel:
-    return XaiRealtimeModel(
+def build_voice_model(secrets: LocalVoiceSecrets) -> ConciergeXaiVoiceModel:
+    return ConciergeXaiVoiceModel(
         VOICE_MODEL,
         provider=XaiProvider(api_key=secrets.xai_api_key.get_secret_value()),
         settings=XaiRealtimeModelSettings(

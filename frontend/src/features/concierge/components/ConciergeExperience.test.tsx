@@ -66,21 +66,26 @@ let unmountExperience: (() => void) | undefined;
 const LocationProbe = () => {
   const location = useLocation();
   return (
-    <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>
+    <output aria-label="Current route">{`${location.pathname}${location.search}${location.hash}`}</output>
   );
 };
 
-const renderExperience = () =>
-  (unmountExperience = render(
-    <QueryClientProvider client={new QueryClient()}>
+const renderExperience = async () => {
+  const queryClient = new QueryClient();
+  // These scenarios mock the text-conversation requests; model discovery has its own tests.
+  queryClient.setQueryData(["concierge", "voice-models"], ["grok"]);
+  unmountExperience = render(
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={appTheme}>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={["/?conciergeDebug=1"]}>
           <ConciergeExperience />
           <LocationProbe />
         </MemoryRouter>
       </ThemeProvider>
     </QueryClientProvider>,
-  ).unmount);
+  ).unmount;
+  await screen.findByRole("textbox", { name: "Ask the Movie Concierge" });
+};
 
 describe("ConciergeExperience", () => {
   beforeEach(() => {
@@ -108,13 +113,9 @@ describe("ConciergeExperience", () => {
       .mockResolvedValueOnce(streamResponse());
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    renderExperience();
-
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
+    await renderExperience();
     expect(
-      screen.getByRole("heading", { name: "What fits tonight?" }),
+      screen.getByRole("heading", { name: "What can I help you with?" }),
     ).toBeVisible();
 
     await user.type(
@@ -129,6 +130,8 @@ describe("ConciergeExperience", () => {
       await screen.findByText("Arrival", { selector: "em" }),
     ).toBeVisible();
     expect(screen.queryByText(/\*\*_/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("concierge-movie-card")).not.toBeVisible();
+    await user.click(screen.getByText("Tools & results", { exact: true }));
     expect(screen.getByTestId("concierge-movie-card")).toBeVisible();
     expect(screen.getByRole("link", { name: "Arrival" })).toHaveAttribute(
       "href",
@@ -153,7 +156,7 @@ describe("ConciergeExperience", () => {
     );
   });
 
-  it("offers capability discovery as the featured first action", async () => {
+  it("sends a selected capability directly through text chat when voice is off", async () => {
     const capabilityResponse = new Response(
       event("status", 1, { status: "thinking" }) +
         event("text", 2, {
@@ -171,14 +174,8 @@ describe("ConciergeExperience", () => {
       .mockResolvedValueOnce(capabilityResponse);
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    renderExperience();
-
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: "See what the Concierge can do" }),
-    );
+    await renderExperience();
+    await user.click(screen.getByRole("button", { name: /Movies & trailers/ }));
 
     expect(await screen.findByText(/I can search the catalog/)).toBeVisible();
     const messageRequest = fetchMock.mock.calls[1];
@@ -188,59 +185,60 @@ describe("ConciergeExperience", () => {
       throw new TypeError("Expected a serialized concierge request body");
     }
     expect(JSON.parse(requestBody)).toEqual({
-      message: "What can you do for me?",
+      message: "Show me the trailer for Forrest Gump.",
+      pageContext: { page: "home", streamingCountry: "CH" },
     });
   });
 
-  it("closes the overlay and opens the app-owned route for a grounded action", async () => {
-    const report = vi.fn();
-    configurePerformanceReporter({ report });
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ conversationId }), { status: 201 }),
-      )
-      .mockResolvedValueOnce(
-        streamResponse(
-          event("ui-action", 5, {
-            action: { type: "open_movie", movieId: 42 },
-          }),
-          6,
+  it.each(["open_movie", "open_movie_trailer"])(
+    "closes the overlay and opens the app-owned route for %s",
+    async (type) => {
+      const report = vi.fn();
+      configurePerformanceReporter({ report });
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ conversationId }), { status: 201 }),
+        )
+        .mockResolvedValueOnce(
+          streamResponse(
+            event("ui-action", 5, {
+              action: { type, movieId: 42 },
+            }),
+            6,
+          ),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+      const user = userEvent.setup();
+      await renderExperience();
+      await user.type(
+        screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
+        "Open Arrival",
+      );
+      await user.click(
+        screen.getByRole("button", { name: "Send concierge message" }),
+      );
+
+      await waitFor(() =>
+        expect(screen.getByLabelText("Current route")).toHaveTextContent(
+          `/movie?id=42${type === "open_movie_trailer" ? "#trailer" : ""}`,
         ),
       );
-    vi.stubGlobal("fetch", fetchMock);
-    const user = userEvent.setup();
-    renderExperience();
-
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
-    await user.type(
-      screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
-      "Open Arrival",
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Send concierge message" }),
-    );
-
-    await waitFor(() =>
-      expect(screen.getByLabelText("Current route")).toHaveTextContent(
-        "/movie?id=42",
-      ),
-    );
-    await waitFor(() =>
-      expect(
-        screen.queryByRole("dialog", { name: "Movie Concierge" }),
-      ).not.toBeInTheDocument(),
-    );
-    expect(report).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "concierge_ui_action",
-        name: "open_movie",
-        outcome: "executed",
-      }),
-    );
-  });
+      await waitFor(() =>
+        expect(
+          screen.queryByRole("complementary", { name: "Movie Concierge" }),
+        ).not.toBeInTheDocument(),
+      );
+      if (type === "open_movie")
+        expect(report).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: "concierge_ui_action",
+            name: "open_movie",
+            outcome: "executed",
+          }),
+        );
+    },
+  );
 
   it.each([
     [{ type: "open_page", destination: "home" }, "/"],
@@ -256,7 +254,8 @@ describe("ConciergeExperience", () => {
       configurePerformanceReporter({ report });
       vi.stubGlobal(
         "fetch",
-        vi.fn<typeof fetch>()
+        vi
+          .fn<typeof fetch>()
           .mockResolvedValueOnce(
             new Response(JSON.stringify({ conversationId }), { status: 201 }),
           )
@@ -269,10 +268,7 @@ describe("ConciergeExperience", () => {
           ),
       );
       const user = userEvent.setup();
-      renderExperience();
-      await user.click(
-        screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-      );
+      await renderExperience();
       await user.type(
         screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
         "Show me the requested page",
@@ -282,7 +278,7 @@ describe("ConciergeExperience", () => {
       );
       await waitFor(() =>
         expect(
-          screen.queryByRole("dialog", { name: "Movie Concierge" }),
+          screen.queryByRole("complementary", { name: "Movie Concierge" }),
         ).not.toBeInTheDocument(),
       );
       expect(screen.getByLabelText("Current route")).toHaveTextContent(route);
@@ -292,40 +288,39 @@ describe("ConciergeExperience", () => {
     },
   );
 
-  it("does not navigate when an action arrives before its grounded card", async () => {
-    const unsafeStream = new Response(
-      event("ui-action", 1, {
-        action: { type: "open_movie", movieId: 42 },
-      }) + event("completion", 2, { conversationId, outcome: "success" }),
-      { headers: { "Content-Type": "text/event-stream" } },
-    );
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ conversationId }), { status: 201 }),
-      )
-      .mockResolvedValueOnce(unsafeStream);
-    vi.stubGlobal("fetch", fetchMock);
-    const user = userEvent.setup();
-    renderExperience();
+  it.each(["open_movie", "open_movie_trailer"])(
+    "does not navigate when %s arrives before its grounded card",
+    async (type) => {
+      const unsafeStream = new Response(
+        event("ui-action", 1, {
+          action: { type, movieId: 42 },
+        }) + event("completion", 2, { conversationId, outcome: "success" }),
+        { headers: { "Content-Type": "text/event-stream" } },
+      );
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ conversationId }), { status: 201 }),
+        )
+        .mockResolvedValueOnce(unsafeStream);
+      vi.stubGlobal("fetch", fetchMock);
+      const user = userEvent.setup();
+      await renderExperience();
+      await user.type(
+        screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
+        "Open Arrival",
+      );
+      await user.click(
+        screen.getByRole("button", { name: "Send concierge message" }),
+      );
 
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
-    await user.type(
-      screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
-      "Open Arrival",
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Send concierge message" }),
-    );
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    expect(screen.getByLabelText("Current route")).toHaveTextContent("/");
-    expect(
-      screen.getByRole("dialog", { name: "Movie Concierge" }),
-    ).toBeVisible();
-  });
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+      expect(screen.getByLabelText("Current route")).toHaveTextContent("/");
+      expect(
+        screen.getByRole("complementary", { name: "Movie Concierge" }),
+      ).toBeVisible();
+    },
+  );
 
   it("rejects an action that carries a model-supplied URL", async () => {
     const maliciousStream = streamResponse(
@@ -346,11 +341,7 @@ describe("ConciergeExperience", () => {
       .mockResolvedValueOnce(maliciousStream);
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    renderExperience();
-
-    await user.click(
-      screen.getByRole("button", { name: "Ask the Movie Concierge" }),
-    );
+    await renderExperience();
     await user.type(
       screen.getByRole("textbox", { name: "Ask the Movie Concierge" }),
       "Open Arrival at a supplied URL",
@@ -366,7 +357,7 @@ describe("ConciergeExperience", () => {
     ).toBeVisible();
     expect(screen.getByLabelText("Current route")).toHaveTextContent("/");
     expect(
-      screen.getByRole("dialog", { name: "Movie Concierge" }),
+      screen.getByRole("complementary", { name: "Movie Concierge" }),
     ).toBeVisible();
   });
 });

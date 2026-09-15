@@ -48,3 +48,7 @@ Executable assertions live in `run_voice_probe` and are covered by deterministic
 Listen to the generated response for pronunciation, intelligibility and natural English; keyword
 assertions do not prove these qualities. The initial corpus uses English commands and catalog titles.
 German dialogue is deferred; future German commands must still use the English catalog titles.
+
+For real-browser multi-request, spoken-interruption and audio-playback stress tests against both
+providers, see [Voice reliability tests](../../../docs/voice-stress-tests.md). That suite uses the
+actual Java catalog and application navigation, while this small probe remains isolated.

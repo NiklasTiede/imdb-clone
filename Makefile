@@ -273,6 +273,10 @@ AGENT_EVAL_CASE_FLAG = $(if $(AGENT_EVAL_CASE),--case $(AGENT_EVAL_CASE),)
 run-agent-voice: ## run local Movie Concierge with bounded English microphone sessions
 	IMDB_AGENT_VOICE_ENABLED=true $(MAKE) run-agent
 
+.PHONY: run-agent-voice-compare
+run-agent-voice-compare: ## enable Grok and GPT-Live 1 for local microphone comparison
+	IMDB_AGENT_VOICE_LIVE_ENABLED=true $(MAKE) run-agent-voice
+
 probe-agent-voice-live: ## replay synthetic English audio; requires IMDB_AGENT_LIVE_EVALS_ENABLED=true
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --locked imdb-agent-voice-probe --live
 
@@ -381,3 +385,16 @@ docker-clean: ## remove imdb-clone docker images and containers
 
 help: ## show this command index
 	@awk 'BEGIN {FS = ":.*?## "; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^##@ / {printf "\n\033[1m%s\033[0m\n", substr($$0, 5)} /^[a-zA-Z0-9_-]+:.*?## / {printf "  \033[36m%-28s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+##@ Voice reliability
+.PHONY: test-voice-stress test-voice-stress-live summarize-voice-stress
+VOICE_STRESS_PROFILE ?= stress
+
+test-voice-stress: ## deterministic browser audio chaos; no provider API calls
+	cd frontend && yarn playwright test -c playwright.voice-stress.config.ts chaos.spec.ts
+
+test-voice-stress-live: ## paid, bounded real-browser Grok/GPT-Live comparison; local Java required
+	cd frontend && VOICE_STRESS_LIVE=1 VOICE_STRESS_PROFILE=$(VOICE_STRESS_PROFILE) yarn playwright test -c playwright.voice-stress.config.ts live.spec.ts
+
+summarize-voice-stress: ## summarize retained live runs, including failures and incomplete sessions
+	python3 scripts/summarize-voice-stress.py

@@ -1,3 +1,9 @@
+import {
+  confirmHistoryNavigation,
+  updateRetrievedMovies,
+  updateToolActivity,
+} from "../model/conversationHistory";
+import type { PageContext } from "../model/pageContext";
 import { getConciergeDelegation } from "../api/delegation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPerformanceEventContext } from "../../../shared/observability/config";
@@ -19,7 +25,8 @@ const createTurnId = (): string => window.crypto.randomUUID();
 
 export const useConciergeChat = (
   clientId: string,
-  onUiAction: (action: ApplicationAction) => void,
+  onUiAction: (action: ApplicationAction) => string | void,
+  pageContext?: PageContext,
 ) => {
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [status, setStatus] = useState<string | null>(null);
@@ -32,6 +39,12 @@ export const useConciergeChat = (
     () => () => {
       abortRef.current?.abort();
     },
+    [],
+  );
+
+  const confirmNavigation = useCallback(
+    (path: string) =>
+      setTurns((items) => confirmHistoryNavigation(items, path)),
     [],
   );
 
@@ -53,11 +66,39 @@ export const useConciergeChat = (
       }
 
       const assistantTurnId = createTurnId();
-      setTurns((current) => [
-        ...current,
-        { id: createTurnId(), role: "user", text: message, movies: [] },
-        { id: assistantTurnId, role: "assistant", text: "", movies: [] },
-      ]);
+      setTurns(
+        (current) =>
+          [
+            ...current,
+            {
+              id: createTurnId(),
+              role: "user",
+              text: message,
+              movies: [],
+              channel: "text",
+              timestamp: Date.now(),
+              final: true,
+            },
+            {
+              id: assistantTurnId,
+              role: "assistant",
+              text: "",
+              movies: [],
+              channel: "text",
+              timestamp: Date.now(),
+              ...(pageContext
+                ? {
+                    context: {
+                      page: pageContext.page,
+                      ...(pageContext.streamingCountry
+                        ? { streamingCountry: pageContext.streamingCountry }
+                        : {}),
+                    },
+                  }
+                : {}),
+            },
+          ].slice(-200) as ChatTurn[],
+      );
       setStatus("Thinking");
       setUsage(null);
       setIsStreaming(true);
@@ -79,6 +120,7 @@ export const useConciergeChat = (
         conversationIdRef.current = conversationId;
 
         await streamMessage({
+          ...(pageContext ? { pageContext } : {}),
           delegation,
           clientId,
           conversationId,
@@ -91,19 +133,48 @@ export const useConciergeChat = (
               const allowed =
                 !abortController.signal.aborted &&
                 !actionHandled &&
-                (event.action.type !== "open_movie" ||
+                ((event.action.type !== "open_movie" &&
+                  event.action.type !== "open_movie_trailer") ||
                   groundedMovieIds.has(event.action.movieId));
               actionHandled = true;
               if (!allowed) {
                 reportUiAction(event.action, "rejected");
+                setTurns((items) =>
+                  updateAssistantTurn(items, assistantTurnId, (turn) => ({
+                    ...turn,
+                    actions: [
+                      {
+                        action: event.action,
+                        outcome: "rejected",
+                        timestamp: Date.now(),
+                      },
+                    ],
+                  })),
+                );
                 return;
               }
+              let outcome: "requested" | "rejected" = "requested";
+              let destination: string | void;
               try {
-                onUiAction(event.action);
+                destination = onUiAction(event.action);
                 reportUiAction(event.action, "executed");
               } catch {
+                outcome = "rejected";
                 reportUiAction(event.action, "rejected");
               }
+              setTurns((items) =>
+                updateAssistantTurn(items, assistantTurnId, (turn) => ({
+                  ...turn,
+                  actions: [
+                    {
+                      action: event.action,
+                      outcome,
+                      timestamp: Date.now(),
+                      ...(destination ? { destination } : {}),
+                    },
+                  ],
+                })),
+              );
               return;
             }
             applyEvent({
@@ -131,15 +202,21 @@ export const useConciergeChat = (
       } finally {
         if (abortRef.current === abortController) {
           abortRef.current = null;
+          setTurns((items) =>
+            updateAssistantTurn(items, assistantTurnId, (turn) => ({
+              ...turn,
+              final: true,
+            })),
+          );
           setIsStreaming(false);
           setStatus(null);
         }
       }
     },
-    [clientId, onUiAction],
+    [clientId, onUiAction, pageContext],
   );
 
-  return { isStreaming, reset, send, status, turns, usage };
+  return { isStreaming, reset, send, status, turns, usage, confirmNavigation };
 };
 
 const reportUiAction = (
@@ -185,11 +262,14 @@ const applyEvent = ({
     setTurns((current) =>
       updateAssistantTurn(current, assistantTurnId, (turn) => ({
         ...turn,
-        movies: turn.movies.some(
-          (movie) => movie.movieId === event.movie.movieId,
-        )
-          ? turn.movies
-          : [...turn.movies, event.movie],
+        movies: updateRetrievedMovies(turn.movies, event.movie),
+      })),
+    );
+  } else if (event.type === "tool-activity") {
+    setTurns((current) =>
+      updateAssistantTurn(current, assistantTurnId, (turn) => ({
+        ...turn,
+        tools: updateToolActivity(turn.tools, event.activity),
       })),
     );
   } else if (event.type === "error") {

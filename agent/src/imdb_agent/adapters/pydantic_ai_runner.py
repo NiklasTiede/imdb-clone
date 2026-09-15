@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
+from traceback import walk_tb
 from typing import TYPE_CHECKING, Self
 
 import structlog
@@ -28,16 +29,25 @@ from pydantic_ai.exceptions import (
 )
 from pydantic_ai.models.openai import OpenAIResponsesModel, OpenAIResponsesModelSettings
 from pydantic_ai.providers.openai import OpenAIProvider
+from pydantic_ai.usage import RunUsage
 
 from imdb_agent.adapters.application_tools import APPLICATION_TOOLS, ApplicationTools
 from imdb_agent.adapters.catalog_contract import parse_grounded_movies
-from imdb_agent.adapters.personal_tools import PersonalToolGate, base_toolset, personal_policy
+from imdb_agent.adapters.logging import usage_limit_budget
+from imdb_agent.adapters.personal_tools import (
+    PersonalToolGate,
+    base_toolset,
+    is_catalog_transport_failure,
+    personal_policy,
+)
 from imdb_agent.concierge.events import (
     MovieCardEvent,
     OpenLoginAction,
     OpenWatchlistAction,
     RunnerEvent,
     TextEvent,
+    ToolActivity,
+    ToolActivityEvent,
     ToolCallEvent,
     UiActionEvent,
     UsageEvent,
@@ -45,7 +55,6 @@ from imdb_agent.concierge.events import (
 )
 from imdb_agent.concierge.personal import (
     PersonalTurn,
-    pending_rating_target,
     receipt_action,
     requests_watchlist,
 )
@@ -55,6 +64,7 @@ from imdb_agent.concierge.policy import (
     select_movies_for_display,
 )
 from imdb_agent.concierge.service import ConciergeRunError
+from imdb_agent.concierge.streaming import StreamingRegion
 from imdb_agent.concierge.tools import PERSONAL_TOOLS, ToolName
 
 _LUNA_INPUT_PRICE_PER_MILLION = Decimal("0.20")
@@ -140,15 +150,20 @@ class PydanticAIConciergeRunner:
         personal = PersonalTurn(
             movies=next((m.movies for m in reversed(request.history) if m.movies), ())
         )
-        personal.pending_rating_id = pending_rating_target(
-            next((m.content for m in reversed(request.history) if m.role == "user"), ""),
-            personal.movies,
-        )
         personal.finalize(request.message)
         active_agent = self._agent
         if self._settings is not None:
             toolset = base_toolset(self._settings)
-            toolset.process_tool_call = PersonalToolGate(request.delegation, personal).call
+            # These verbose output schemas are otherwise copied into every model request.
+            # MCP results still pass through the typed catalog/receipt boundary below.
+            toolset.include_return_schema = False
+            toolset.process_tool_call = PersonalToolGate(
+                request.delegation,
+                personal,
+                StreamingRegion(
+                    request.page_context.streaming_country if request.page_context else "CH"
+                ),
+            ).call
             allowed = {name.value for name in ToolName}
             if request.delegation is None:
                 allowed -= PERSONAL_TOOLS
@@ -161,11 +176,16 @@ class PydanticAIConciergeRunner:
                 retries=1,
             )
             active_agent.instrument = False
-        application = ApplicationTools(personal, authenticated=request.delegation is not None)
+        application = ApplicationTools(
+            personal,
+            authenticated=request.delegation is not None,
+            page_context=request.page_context,
+        )
         action_sent = False
         search_navigation = application.search
         shown_movie_ids: set[int] = set()
         tool_arguments: dict[str, dict[str, object]] = {}
+        run_usage = RunUsage()
         try:
             async with (
                 asyncio.timeout(self._run_timeout_seconds),
@@ -173,6 +193,7 @@ class PydanticAIConciergeRunner:
                     build_user_prompt(request.message, request.history),
                     conversation_id=request.conversation_id,
                     usage_limits=self._usage_limits,
+                    usage=run_usage,
                     toolsets=[application.toolset],
                 ) as events,
             ):
@@ -187,7 +208,26 @@ class PydanticAIConciergeRunner:
                         arguments: dict[str, object] = event.part.args_as_dict()
                         tool_arguments[event.tool_call_id] = arguments
                         yield ToolCallEvent(tool=tool_name, arguments=arguments)
+                        yield ToolActivityEvent(
+                            activity=ToolActivity(
+                                call_id=event.tool_call_id, tool=tool_name, status="started"
+                            )
+                        )
                     elif isinstance(event, FunctionToolResultEvent):
+                        if (
+                            isinstance(event.part, ToolReturnPart)
+                            and event.part.tool_name not in APPLICATION_TOOLS
+                            and event.tool_call_id in tool_arguments
+                        ):
+                            yield ToolActivityEvent(
+                                activity=ToolActivity(
+                                    call_id=event.tool_call_id,
+                                    tool=_tool_name(event.part.tool_name),
+                                    status="failed"
+                                    if event.part.outcome == "failed"
+                                    else "completed",
+                                )
+                            )
                         if (
                             isinstance(event.part, ToolReturnPart)
                             and event.part.outcome != "failed"
@@ -205,8 +245,14 @@ class PydanticAIConciergeRunner:
                             ):
                                 action_sent = True
                                 yield UiActionEvent(action=OpenWatchlistAction())
+                            # Project the browser contract independently of MCP interception.
+                            # Injected Agents also reach here without a PersonalToolGate.
                             movies = parse_grounded_movies(tool_name, event.part.content)
-                            personal.remember_movies(movies)
+                            if tool_name not in {
+                                ToolName.GET_MOVIE_ENRICHMENT,
+                                ToolName.GET_MOVIE_WATCH_PROVIDERS,
+                            }:
+                                personal.remember_movies(movies)
                             search_navigation.succeeded(
                                 event.tool_call_id,
                                 tool_name,
@@ -271,8 +317,18 @@ class PydanticAIConciergeRunner:
                 "The Movie Concierge took too long. Please try a narrower request.",
                 retryable=True,
             ) from None
-        except UsageLimitExceeded:
-            self._logger.error("agent_run_failed", error_code="usage_limit")
+        except UsageLimitExceeded as error:
+            budget = usage_limit_budget(error)
+            self._logger.error(
+                "agent_run_failed",
+                error_code="usage_limit",
+                budget=budget,
+                input_tokens=run_usage.input_tokens,
+                output_tokens=run_usage.output_tokens,
+                requests=run_usage.requests,
+                tool_calls=run_usage.tool_calls,
+                input_token_limit=self._usage_limits.input_tokens_limit,
+            )
             raise ConciergeRunError(
                 "usage_limit",
                 "The request reached its model or tool budget. Try a narrower request.",
@@ -301,6 +357,18 @@ class PydanticAIConciergeRunner:
             ) from None
         except RunCancelled:
             raise asyncio.CancelledError from None
+        except Exception as error:
+            from_mcp = any(
+                str(frame.f_globals.get("__name__", "")).startswith("fastmcp.")
+                for frame, _line in walk_tb(error.__traceback__)
+            )
+            if not from_mcp or not is_catalog_transport_failure(error):
+                raise
+            raise ConciergeRunError(
+                "tool_unavailable",
+                "The movie catalog connection was interrupted.",
+                retryable=True,
+            ) from error
 
 
 def _tool_name(value: str) -> ToolName:

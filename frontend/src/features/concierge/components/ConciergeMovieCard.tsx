@@ -49,7 +49,7 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
         direction="row"
         spacing={1.1}
         useFlexGap
-        sx={{ alignItems: "center", mb: 1 }}
+        sx={{ alignItems: "center", flexWrap: "wrap", mb: 1 }}
       >
         {movie.startYear != null && (
           <Typography sx={{ color: "rgba(255,255,255,0.78)", fontSize: 11 }}>
@@ -72,11 +72,18 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
           <Stack direction="row" spacing={0.25} sx={{ alignItems: "center" }}>
             <StarRoundedIcon sx={{ color: movieColors.rating, fontSize: 15 }} />
             <Typography sx={{ color: "rgba(255,255,255,0.92)", fontSize: 11 }}>
-              {movie.imdbRating.toFixed(1)}
+              IMDb {movie.imdbRating.toFixed(1)}
             </Typography>
           </Stack>
         )}
       </Stack>
+      {movie.userScore != null && (
+        <Typography
+          sx={{ color: movieColors.info, fontSize: 12, fontWeight: 700, mb: 1 }}
+        >
+          Your rating: {movie.userScore}/10
+        </Typography>
+      )}
       {movie.explanation && (
         <Typography
           sx={{

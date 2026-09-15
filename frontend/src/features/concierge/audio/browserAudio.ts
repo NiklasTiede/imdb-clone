@@ -4,7 +4,7 @@ import captureUrl from "./capture.worklet.js?no-inline&url";
 // Speech can arrive much faster than real time. Keep room for a complete reply
 // while bounding queued PCM to about 5.8 MB after decoding to Float32.
 const MAX_QUEUED_SECONDS = 60;
-const PLAYBACK_LEAD_SECONDS = 0.3;
+const PLAYBACK_LEAD_SECONDS = 0.12;
 
 export class BrowserAudio {
   private readonly context = new AudioContext();
@@ -18,8 +18,9 @@ export class BrowserAudio {
   private replyPending = false;
   private readonly sources = new Set<AudioBufferSourceNode>();
   private readonly samples = new Float32Array(256);
+  private speakingUntil = 0;
 
-  constructor() {
+  constructor(private readonly continuous = false) {
     this.input.fftSize = this.output.fftSize = 256;
     this.output.connect(this.context.destination);
   }
@@ -62,7 +63,8 @@ export class BrowserAudio {
     const capture = new AudioWorkletNode(this.context, "concierge-capture");
     this.capture = capture;
     capture.port.onmessage = (event: MessageEvent<Float32Array>) => {
-      if (!this.closed && !this.muted) onAudio(encoder.encode(event.data));
+      if (!this.closed && (!this.muted || this.continuous))
+        onAudio(encoder.encode(event.data));
     };
     const source = this.context.createMediaStreamSource(this.stream);
     source.connect(this.input);
@@ -126,10 +128,15 @@ export class BrowserAudio {
         ) * 6,
       );
     };
+    const output = rms(this.output);
+    if (output > 0.015) this.speakingUntil = this.context.currentTime + 0.2;
     return {
       input: this.muted ? 0 : rms(this.input),
-      output: rms(this.output),
-      playing: this.replyPending || this.sources.size > 0,
+      output,
+      // Full-duplex providers also stream silence and have no reply-completed event.
+      playing: this.continuous
+        ? this.context.currentTime < this.speakingUntil
+        : this.replyPending || this.sources.size > 0,
     };
   }
 
@@ -141,6 +148,7 @@ export class BrowserAudio {
     this.sources.clear();
     this.nextPlayback = 0;
     this.replyPending = false;
+    this.speakingUntil = 0;
   }
 
   close(): void {

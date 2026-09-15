@@ -137,7 +137,12 @@ watchlist, ratings) and `show_search_results` now share the text/voice action co
 searches surface the successful MCP query and supported filters in the normal paginated search page,
 including multiple genres and title type. Pure text page commands bypass the model. Guest personal
 pages route to login. Internal lookups for movie opening or personal mutations do not open search.
-The broader contextual capability registry and trailer playback remain open.
+**2026-09-10 trailer navigation:** `open_movie_trailer` now opens a grounded movie and centers its
+trailer section in text and voice, including repeat requests on the same page. Missing trailers
+show an availability notice. Playback uses the existing Play button; reliable autoplay with sound
+and voice-audio coordination remain open. The bounded current-page snapshot and `get_page_context`
+now support page-help questions in text and voice, including manual route changes during a session.
+This is a page-type guide with a movie lookup hint/search query, not DOM or loaded-results access.
 The [pre-commit review](reviews/2026-09-10-concierge-navigation-review.md) records corrected
 search selection/routing defects, ownership checks, regression tests and verification limits.
 
@@ -167,7 +172,9 @@ Exit evidence:
 ### R2 — Delegated identity and personal read capabilities
 
 **2026-09-09 implementation:** Local slice: five-minute login-session delegation, Java validation, verified conversation ownership
-and `get_my_watchlist` are implemented. Rating/taste reads remain open. See ADR 0004.
+and `get_my_watchlist` are implemented. **2026-09-10:** `get_my_ratings` adds highest/lowest/recent
+rating reads and the Java-owned taste summary. `get_my_recommendations` uses up to three positive
+rated seeds, excludes the entire rated/watchlist set and discloses insufficient history. See ADR 0004.
 
 **User outcome:** An authenticated user can ask what is on their watchlist or what they have rated;
 an anonymous user gets a useful sign-in path rather than invented account state.
@@ -197,8 +204,9 @@ Exit evidence:
 
 **2026-09-09 implementation:** Local slice: explicit grounded watchlist addition/removal and personal rating set/update/removal,
 transactionally stored receipts, concurrent retry safety, unchanged-state handling and UI Undo
-are implemented. Natural affirmative requests (for example “I'd give this one an eight”) and an
-immediate score-only answer after an incomplete rating request are supported. Opening a movie
+are implemented. The model interprets natural affirmative requests and score-only follow-ups
+from conversation context. Fixed sentence grammars and final-ASR waits no longer gate these
+low-impact writes; code validates identity, grounded IDs, rating range and one mutation per turn. Opening a movie
 establishes its context for the following turn. Ratings navigate to `/your-ratings`; scores are
 user-specified, 0–10. Broader actions and
 durable multi-step approvals remain open.
@@ -227,6 +235,17 @@ Exit evidence:
   downstream failure.
 
 ### R4 — Richer Java capabilities and TMDb enrichment
+
+**2026-09-10 first slice:** `get_movie_enrichment` provides cast, crew and production facts for
+mapped catalog movies via a Java TMDB Adapter. Includes bounded requests, cache/failure cooldown,
+explicit stale/unavailable outcomes, source metadata, UI credits, and deterministic cross-service
+contract tests. Live Java-to-TMDB and agent text verification passed with Forrest Gump using a
+local token, including a grounded follow-up about its cast.
+**Regional availability slice:** `get_movie_watch_providers` adds subscription, free/ads,
+rental and purchase offers, with CH as the default, browser-persisted per-identity country selection,
+live voice-context updates, per-request country overrides and JustWatch attribution. Short caches
+separate no recorded offers from failed lookups. Person filmographies, missing-ID resolution,
+localized title ingestion and streaming-aware recommendation ranking remain open.
 
 **User outcome:** The Concierge answers richer movie questions and can recommend against details
 such as people, trailers, region, and current watch-provider availability.

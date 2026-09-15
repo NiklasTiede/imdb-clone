@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from imdb_agent.concierge.events import OpenLoginAction, OpenPageAction, ShowSearchResultsAction
+from imdb_agent.concierge.page_context import PAGE_CONTEXT_POLICY
 from imdb_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
@@ -142,13 +143,20 @@ class SearchNavigation:
         return self._candidate
 
 
-NAVIGATION_POLICY = """
+NAVIGATION_POLICY = (
+    PAGE_CONTEXT_POLICY
+    + """
 Application navigation: Users can open home, their account settings, watchlist or ratings page.
 Use navigate_app for a page request, interpreting natural language and conversation context.
 'Let me see what I rated', 'my saved movies, please' and 'back to the homepage' need no special
 command wording or the word 'page'. Do not use catalog or personal data tools just to navigate.
 Use open_movie_page for a request to see a movie, including 'let us look at that one' or a clear
 reference to a previous result. Use its catalog ID; clarify genuinely ambiguous references.
+Use open_movie_trailer when the user wants to watch a trailer, including "show me its trailer"
+or "let me watch the trailer for Forrest Gump". Resolve the movie from catalog or clear prior
+context first. This opens and centers the trailer section; the user presses Play. Do not claim
+playback started or trailer availability, which the movie page checks. Use this tool alone,
+without open_movie_page or show_movie_search for the same request.
 Use show_movie_search after a successful discovery search when the user wants matching movies,
 even for conversational requests like 'I feel like a short comedy'. It uses the actual search
 parameters. Do not use it for internal title lookups or similar-movie seed searches.
@@ -163,3 +171,4 @@ When a discovery request ends with search_movies, show the same query and filter
 search page. Internal lookups for mutations, details, opening a movie or finding similar movies
 do not open search results. Do not claim navigation or search succeeded after a tool failure.
 """
+)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Literal
 
+import structlog
 from pydantic_ai.exceptions import ToolFailed
 from pydantic_ai.toolsets.function import FunctionToolset
 
@@ -12,36 +13,84 @@ from imdb_agent.concierge.events import (
     GroundedMovie,
     OpenLoginAction,
     OpenMovieAction,
+    OpenMovieTrailerAction,
     OpenPageAction,
     ShowSearchResultsAction,
 )
 from imdb_agent.concierge.navigation import SearchNavigation
+from imdb_agent.concierge.page_context import PAGE_GUIDES, PageContext
 
 if TYPE_CHECKING:
     from imdb_agent.concierge.personal import PersonalTurn
 
-APPLICATION_TOOLS = frozenset({"navigate_app", "open_movie_page", "show_movie_search"})
+APPLICATION_TOOLS = frozenset(
+    {
+        "navigate_app",
+        "open_movie_page",
+        "open_movie_trailer",
+        "show_movie_search",
+        "get_page_context",
+    }
+)
 
 
 class ApplicationTools:
     def __init__(
-        self, turn: PersonalTurn, *, authenticated: bool, search: SearchNavigation | None = None
+        self,
+        turn: PersonalTurn,
+        *,
+        authenticated: bool,
+        search: SearchNavigation | None = None,
+        page_context: PageContext | None = None,
     ) -> None:
+        self.page_context = page_context or PageContext()
         self._turn = turn
         self._authenticated = authenticated
         self.search = search if search is not None else SearchNavigation()
         self._show_search = False
         self._epoch = -1
-        self._action: OpenPageAction | OpenLoginAction | OpenMovieAction | None = None
+        self._action: (
+            OpenPageAction | OpenLoginAction | OpenMovieAction | OpenMovieTrailerAction | None
+        ) = None
         self.movie: GroundedMovie | None = None
         self.toolset: FunctionToolset[None] = FunctionToolset(
-            tools=[self.navigate_app, self.open_movie_page, self.show_movie_search], max_retries=1
+            tools=[
+                self.get_page_context,
+                self.navigate_app,
+                self.open_movie_page,
+                self.open_movie_trailer,
+                self.show_movie_search,
+            ],
+            max_retries=1,
         )
+
+    def mark_authenticated(self) -> None:
+        self._authenticated = True
+
+    async def get_page_context(self) -> dict[str, object]:
+        """Read the latest browser page and explain available page features, without navigating.
+
+        A movie ID is only a lookup hint: resolve it via get_movie_details before facts/actions.
+        Browser location and search text never grant account access or authorize a write.
+        """
+        await self._current_turn()
+        return {
+            "context": self.page_context.model_dump(exclude_none=True),
+            "pageGuide": PAGE_GUIDES[self.page_context.page],
+            "authenticated": self._authenticated,
+        }
 
     @property
     def action(
         self,
-    ) -> OpenPageAction | OpenLoginAction | OpenMovieAction | ShowSearchResultsAction | None:
+    ) -> (
+        OpenPageAction
+        | OpenLoginAction
+        | OpenMovieAction
+        | OpenMovieTrailerAction
+        | ShowSearchResultsAction
+        | None
+    ):
         if self._turn.cancelled or self._epoch != self._turn.epoch:
             return None
         return self.search.validated_result if self._show_search else self._action
@@ -52,8 +101,10 @@ class ApplicationTools:
             async with asyncio.timeout(3):
                 await self._turn.finalized.wait()
         except TimeoutError:
+            structlog.get_logger().info("voice_navigation_rejected", outcome="transcript_timeout")
             raise ToolFailed("Wait for the user's complete request before navigating.") from None
         if self._turn.cancelled or self._turn.epoch != epoch or not self._turn.message:
+            structlog.get_logger().info("voice_navigation_rejected", outcome="inactive_turn")
             raise ToolFailed("This request is no longer active. Do not navigate.")
         return epoch
 
@@ -80,15 +131,37 @@ class ApplicationTools:
         Use only an ID returned by the catalog. Resolve ambiguous titles/references first.
         Do not call for informational questions, negations or hypotheticals.
         """
+        await self._open_catalog_movie(movie_id, trailer=False)
+        return "Movie navigation requested. Briefly acknowledge the title."
+
+    async def open_movie_trailer(self, movie_id: int) -> str:
+        """Show the trailer section of a catalog movie the user wants to watch.
+
+        Understand natural requests and clear references to previous results. Resolve ambiguous
+        titles first. Use a grounded catalog ID, never a URL or YouTube ID. Do not call for
+        informational questions, negations or hypotheticals. This focuses the trailer section;
+        the user presses Play. It does not guarantee trailer availability or start playback.
+        """
+        await self._open_catalog_movie(movie_id, trailer=True)
+        return (
+            "Trailer section requested. Briefly say the user can press Play if a trailer is "
+            "available. Do not claim playback started or that a trailer is available."
+        )
+
+    async def _open_catalog_movie(self, movie_id: int, *, trailer: bool) -> None:
         epoch = await self._current_turn()
         movie = next((m for m in self._turn.movies if m.movie_id == movie_id), None)
         if movie is None:
+            structlog.get_logger().info("voice_navigation_rejected", outcome="ungrounded_movie")
             raise ToolFailed("Look up this movie in the catalog first; never invent a movie ID.")
         self._epoch = epoch
         self.movie = movie
         self._show_search = False
-        self._action = OpenMovieAction(movie_id=movie_id)
-        return "Movie navigation requested. Briefly acknowledge the title."
+        self._action = (
+            OpenMovieTrailerAction(movie_id=movie_id)
+            if trailer
+            else OpenMovieAction(movie_id=movie_id)
+        )
 
     async def show_movie_search(self) -> str:
         """Show the latest successful catalog discovery search in the normal app search page.

@@ -34,13 +34,19 @@ class McpToolRegistrationConfig {
       MovieDetailsMcpTool movieDetailsMcpTool,
       MovieRecommendationMcpTools movieRecommendationMcpTools,
       WatchlistMcpTools watchlistMcpTools,
-      RatingMcpTools ratingMcpTools) {
+      RatingMcpTools ratingMcpTools,
+      PersonalDiscoveryMcpTools personalDiscoveryMcpTools,
+      MovieEnrichmentMcpTool movieEnrichmentMcpTool,
+      MovieWatchProvidersMcpTool movieWatchProvidersMcpTool) {
     return SyncMcpAnnotationProviders.statelessToolSpecifications(
         List.of(
             movieSearchMcpTool,
             movieDetailsMcpTool,
             movieRecommendationMcpTools,
             watchlistMcpTools,
-            ratingMcpTools));
+            ratingMcpTools,
+            personalDiscoveryMcpTools,
+            movieEnrichmentMcpTool,
+            movieWatchProvidersMcpTool));
   }
 }

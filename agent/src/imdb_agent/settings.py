@@ -77,13 +77,17 @@ class Settings(BaseSettings):
     max_request_body_bytes: int = Field(default=4_096, ge=1_024, le=65_536)
     max_model_requests: int = Field(default=4, ge=1, le=8)
     max_tool_calls: int = Field(default=6, ge=1, le=12)
-    max_input_tokens: int = Field(default=12_000, ge=1_000, le=50_000)
+    max_input_tokens: int = Field(default=24_000, ge=1_000, le=50_000)
     max_output_tokens: int = Field(default=1_500, ge=100, le=4_000)
     project_cost_limit_usd: Decimal = Field(default=Decimal("20.00"), gt=0, le=20)
     run_cost_limit_usd: Decimal = Field(default=Decimal("0.25"), gt=0, le=1)
     live_evals_enabled: bool = False
     voice_enabled: bool = False
-    voice_session_seconds: float = Field(default=180.0, ge=15, le=300)
+    voice_live_enabled: bool = False
+    voice_agent_id: str = Field(
+        default="agent_ur8m5egTlRE3E8zu", pattern=r"^agent_[A-Za-z0-9_-]+$", max_length=100
+    )
+    voice_session_seconds: float = Field(default=300.0, ge=15, le=300)
     voice_max_sessions: int = Field(default=20, ge=1, le=100)
     voice_allowed_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"]
@@ -125,7 +129,9 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_boundaries(self) -> Settings:
-        if self.voice_enabled and self.environment is not DeploymentEnvironment.LOCAL:
+        if (
+            self.voice_enabled or self.voice_live_enabled
+        ) and self.environment is not DeploymentEnvironment.LOCAL:
             raise ValueError("voice is currently available only in local development")
         self._validate_otel_endpoint()
         self._validate_profiling_endpoint()
@@ -259,6 +265,17 @@ def load_local_openai_secrets(
     except OSError, ValidationError:
         raise ConfigurationError(
             "OpenAI credentials are unavailable in .secrets/movie-concierge.local.env"
+        ) from None
+
+
+def load_local_live_key() -> SecretStr:
+    """The existing opt-in Live comparison key; never depends on benchmark modules."""
+    path = LOCAL_OPENAI_SECRETS_FILE.with_name("movie-concierge-realtime.local.env")
+    try:
+        return load_local_openai_secrets(path).openai_api_key
+    except ConfigurationError:
+        raise ConfigurationError(
+            "OpenAI Live credentials are unavailable in .secrets/movie-concierge-realtime.local.env"
         ) from None
 
 

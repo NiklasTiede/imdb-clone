@@ -63,33 +63,42 @@ describe("concierge event stream", () => {
     );
   });
 
-  it("parses the typed open_movie action", async () => {
-    const events: unknown[] = [];
+  it.each(["open_movie", "open_movie_trailer"])(
+    "parses the typed %s action",
+    async (type) => {
+      const events: unknown[] = [];
 
-    await consumeEventStream(
-      streamChunks(
-        event({
+      await consumeEventStream(
+        streamChunks(
+          event({
+            type: "ui-action",
+            sequence: 1,
+            action: { type, movieId: 42 },
+          }),
+        ),
+        (received) => events.push(received),
+      );
+
+      expect(events).toEqual([
+        {
           type: "ui-action",
           sequence: 1,
-          action: { type: "open_movie", movieId: 42 },
-        }),
-      ),
-      (received) => events.push(received),
-    );
-
-    expect(events).toEqual([
-      {
-        type: "ui-action",
-        sequence: 1,
-        action: { type: "open_movie", movieId: 42 },
-      },
-    ]);
-  });
+          action: { type, movieId: 42 },
+        },
+      ]);
+    },
+  );
 
   it.each([
     { type: "open_movie", movieId: 42, url: "https://attacker.example" },
     { type: "open_movie", movieId: 42, route: "/admin" },
     { type: "open_movie", movieId: 0 },
+    {
+      type: "open_movie_trailer",
+      movieId: 42,
+      url: "https://attacker.example",
+    },
+    { type: "open_movie_trailer", movieId: 0 },
   ])("rejects an unsafe UI action payload", async (action) => {
     await expect(
       consumeEventStream(

@@ -22,8 +22,9 @@ def create_web_app(
     max_request_body_bytes: int,
     delegation_verifier: DelegationVerifier | None = None,
     voice_runner: VoiceRunner | None = None,
+    live_voice_runner: VoiceRunner | None = None,
     voice_allowed_origins: tuple[str, ...] = (),
-    voice_session_seconds: float = 180,
+    voice_session_seconds: float = 300,
     voice_max_sessions: int = 20,
 ) -> FastAPI:
     """Create the inbound web Adapter without configuring outbound Adapters."""
@@ -50,6 +51,7 @@ def create_web_app(
     app.include_router(
         create_voice_router(
             voice_runner,
+            live_runner=live_voice_runner,
             verifier=delegation_verifier,
             allowed_origins=voice_allowed_origins,
             session_seconds=voice_session_seconds,

@@ -3,7 +3,7 @@
 class ConciergeCapture extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.buffer = new Float32Array(Math.round(sampleRate / 20));
+    this.buffer = new Float32Array(Math.round(sampleRate * 0.02));
     this.offset = 0;
   }
 
@@ -14,7 +14,7 @@ class ConciergeCapture extends AudioWorkletProcessor {
         this.buffer[this.offset++] = sample;
         if (this.offset === this.buffer.length) {
           this.port.postMessage(this.buffer, [this.buffer.buffer]);
-          this.buffer = new Float32Array(Math.round(sampleRate / 20));
+          this.buffer = new Float32Array(Math.round(sampleRate * 0.02));
           this.offset = 0;
         }
       }

@@ -9,6 +9,7 @@ from imdb_agent.adapters.http_observability import (
     create_http_metrics,
     install_http_observability,
 )
+from imdb_agent.adapters.live_voice import LiveVoiceRunner
 from imdb_agent.adapters.logging import configure_logging
 from imdb_agent.adapters.memory import InMemoryConversationStore, InMemoryCostLedger
 from imdb_agent.adapters.personal_tools import McpDelegationVerifier
@@ -19,7 +20,9 @@ from imdb_agent.adapters.telemetry import configure_telemetry
 from imdb_agent.concierge.service import ConciergeService
 from imdb_agent.settings import (
     ModelBackend,
+    RuntimeSecrets,
     Settings,
+    load_local_live_key,
     load_local_voice_secrets,
     load_runtime_secrets,
     load_settings,
@@ -57,6 +60,19 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
         observer=observer,
         max_concurrent_runs=resolved_settings.max_concurrent_runs,
     )
+    live_runner = None
+    if resolved_settings.voice_live_enabled:
+        key = load_local_live_key()
+        live_runner = LiveVoiceRunner(
+            key=key,
+            backend=PydanticAIConciergeRunner(
+                settings=resolved_settings,
+                secrets=RuntimeSecrets(
+                    openai_api_key=key, mcp_bearer_token=resolved_settings.mcp_bearer_token
+                ),
+            ),
+            verifier=McpDelegationVerifier(resolved_settings),
+        )
     app = create_web_app(
         service_name=resolved_settings.service_name,
         version=resolved_settings.version,
@@ -78,6 +94,7 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
         if resolved_settings.voice_enabled
         else None,
         voice_allowed_origins=tuple(resolved_settings.voice_allowed_origins),
+        live_voice_runner=live_runner,
         voice_session_seconds=resolved_settings.voice_session_seconds,
         voice_max_sessions=resolved_settings.voice_max_sessions,
     )

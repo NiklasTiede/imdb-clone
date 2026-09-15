@@ -27,6 +27,9 @@ for (const signedIn of [false, true]) {
         route.fulfill(signedIn ? { json: user } : { status: 401, body: "" }),
       );
     }
+    await page.route("**/api/v1/accounts/me/passkeys", (route) =>
+      route.fulfill({ json: [] }),
+    );
     await page.route("**/api/v1/auth/concierge-delegation", (route) =>
       route.fulfill({
         json: {
@@ -93,6 +96,7 @@ for (const signedIn of [false, true]) {
       });
     });
     let emit: ((action: object) => void) | undefined;
+    const pageContexts: object[] = [];
     let connections = 0;
     let ended = false;
     await page.routeWebSocket("**/v1/voice", (socket) => {
@@ -100,7 +104,9 @@ for (const signedIn of [false, true]) {
       let turn = 0;
       socket.onMessage((message) => {
         if (typeof message !== "string") return;
-        const frame = JSON.parse(message) as { type: string };
+        const frame = JSON.parse(message) as { type: string; context?: object };
+        if (frame.type === "context" && frame.context)
+          pageContexts.push(frame.context);
         if (frame.type === "start")
           socket.send(JSON.stringify({ type: "ready" }));
         if (frame.type === "end") ended = true;
@@ -111,10 +117,54 @@ for (const signedIn of [false, true]) {
         socket.send(JSON.stringify({ type: "ui-action", turn, action }));
       };
     });
-    await page.goto("/movie-search");
-    await page.getByRole("button", { name: "Ask the Movie Concierge" }).click();
-    await page.getByRole("button", { name: "Start voice" }).click();
+    await page.goto("/movie-search?conciergeDebug=1");
+    await page.getByRole("button", { name: "Close Movie Concierge" }).click();
+    await page.getByTestId("voice-lens-toggle").click();
     await expect(page.getByRole("status")).toHaveText("Listening to you");
+    await page
+      .getByRole("button", { name: "Expand voice conversation" })
+      .click();
+    await expect(
+      page.getByText("Data sources & credits", { exact: true }),
+    ).not.toBeVisible();
+    await page
+      .getByRole("button", { name: "Concierge preferences", exact: true })
+      .click();
+    await page.getByText("Data sources & credits", { exact: true }).click();
+    await expect(
+      page.getByText(
+        "This product uses the TMDB API but is not endorsed or certified by TMDB.",
+      ),
+    ).toBeVisible();
+    const logo = page.getByRole("img", { name: "The Movie Database (TMDB)" });
+    await expect(logo).toBeVisible();
+    await expect
+      .poll(() =>
+        logo.evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBeGreaterThan(0);
+    if (!signedIn)
+      await page.screenshot({
+        path: `/tmp/tmdb-credits-${test.info().project.name}.png`,
+      });
+    await page.getByText("Data sources & credits", { exact: true }).click();
+    const country = page.getByRole("combobox", { name: "Streaming in" });
+    await expect(country).toHaveValue("CH");
+    await expect
+      .poll(() => pageContexts.at(-1))
+      .toEqual({
+        page: "search",
+        searchQuery: "",
+        streamingCountry: "CH",
+      });
+    await country.selectOption("DE");
+    await expect
+      .poll(() => pageContexts.at(-1))
+      .toEqual({
+        page: "search",
+        searchQuery: "",
+        streamingCountry: "DE",
+      });
     for (const [destination, route] of [
       ["settings", "/account-settings"],
       ["ratings", "/your-ratings"],
@@ -128,6 +178,12 @@ for (const signedIn of [false, true]) {
       await expect(
         page.getByRole("button", { name: "End voice session" }).last(),
       ).toBeVisible();
+      await expect
+        .poll(() => pageContexts.at(-1))
+        .toEqual({
+          page: signedIn || destination === "home" ? destination : "login",
+          streamingCountry: "DE",
+        });
     }
     emit?.({
       type: "show_search_results",
@@ -159,7 +215,7 @@ for (const signedIn of [false, true]) {
       });
     await page
       .getByRole("button", { name: "Go to page 2", exact: true })
-      .click();
+      .press("Enter");
     await expect.poll(() => searches.at(-1)?.page).toBe("1");
     expect(new URL(page.url()).searchParams.getAll("genre")).toEqual([
       "DRAMA",
@@ -186,6 +242,22 @@ for (const signedIn of [false, true]) {
     expect(new URL(page.url()).searchParams.get("query")).toBe("Arrival");
     expect(mutations).toEqual([]);
     expect(connections).toBe(1);
+    await expect
+      .poll(() => pageContexts.at(-1))
+      .toEqual({
+        page: "search",
+        searchQuery: "Arrival",
+        streamingCountry: "DE",
+      });
+    expect(pageContexts).toContainEqual({
+      page: "home",
+      streamingCountry: "DE",
+    });
+    if (signedIn)
+      expect(pageContexts).toContainEqual({
+        page: "ratings",
+        streamingCountry: "DE",
+      });
     expect(ended).toBe(false);
     await expect(
       page.getByRole("button", { name: "Undo", exact: true }),
@@ -195,5 +267,20 @@ for (const signedIn of [false, true]) {
       .last()
       .click();
     await expect.poll(() => ended).toBe(true);
+    const debugUrl = new URL(page.url());
+    debugUrl.searchParams.set("conciergeDebug", "1");
+    await page.goto(debugUrl.toString());
+    await page.getByRole("button", { name: "Close Movie Concierge" }).click();
+    await page.getByTestId("voice-lens-toggle").click();
+    await expect(page.getByRole("status")).toHaveText("Listening to you");
+    await page
+      .getByRole("button", { name: "Expand voice conversation" })
+      .click();
+    await page
+      .getByRole("button", { name: "Concierge preferences", exact: true })
+      .click();
+    await expect(
+      page.getByRole("combobox", { name: "Streaming in" }),
+    ).toHaveValue("DE");
   });
 }

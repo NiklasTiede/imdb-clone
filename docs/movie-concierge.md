@@ -52,17 +52,27 @@ to those clients.
    authorization, and mutations stay in the Spring Boot modules that own them.
 3. **Use conversation where it reduces effort.** Normal browsing remains first class; the
    Concierge should not replace effective search, detail, or discovery screens.
-4. **Make actions visible and reversible.** Read-only capabilities come first. Later account
-   mutations require a visible proposal, explicit approval, reauthorization, and idempotency.
+4. **Make actions visible and reversible.** Ratings and watchlist edits execute from natural
+   user intent with delegated authorization, idempotency, committed receipts and Undo. Higher-risk
+   account changes require a separate explicit approval flow.
 5. **Treat quality and cost as product behavior.** Every release is evaluated for tool use,
    groundedness, usefulness, latency, reliability, and cost—not only whether it produces fluent
    text.
 6. **Keep the interaction channel replaceable.** Text, voice, and future external agents should use
    the same tools, policies, events, and eval contract.
 
-## First User Experience
+## Current User Experience
 
-The first interface is text based. A public `Ask Concierge` action opens a
+The public interface is voice-only: one closed Voice Lens at the bottom center starts microphone
+permission and voice on click. Another click ends it. Inactivity closes the iris without opening
+history; reconnecting currently requires a click. Errors and the five-minute cap show a brief message.
+The header has no separate voice entry. `/?conciergeDebug=1` enables the current user's text/voice
+history and preferences for debugging; access persists through route changes until reload.
+See [voice UI](movie-concierge-voice-design.md) for the delivered interaction contract.
+
+## Original Text MVP
+
+The original interface was text based. A public `Ask Concierge` action opens a
 right-side drawer on desktop and a full-screen panel on small screens. It contains a short
 capability introduction and suggested prompts such as:
 
@@ -116,7 +126,7 @@ library mutation or generate an Undo receipt. Pure text page requests use a loca
 a model request; voice waits for the current final user transcript. Other phrasing uses local
 `navigate_app` and `open_movie_page` tools, shared by text and voice. For example “Let me see what
 I've rated” and “Let's have a look at that one” need no “open” or “page” keyword. These tools only
-navigate; personal mutations still require a matching authorized command and committed Java receipt.
+navigate; personal mutations require delegated authorization, validated arguments and a committed Java receipt.
 
 A discovery request (for example “Find Forrest Gump” or “Show me science fiction movies from the
 nineties”) emits `show_search_results` after the tool loop completes with a successful final
@@ -134,7 +144,155 @@ refinement or subsequent recommendation lookup invalidates the candidate. Semant
 is model-dependent; clarify genuinely ambiguous intent rather than requiring exact command wording.
 
 The voice dock stays connected across these route changes. Existing turn correlation, cancellation,
-and single-action guards apply to both new action types. Trailer playback is a separate follow-up.
+and single-action guards apply to these action types.
+
+### Trailer navigation
+
+Text and voice support requests such as “Let me watch the trailer for Forrest Gump” or a clear
+follow-up “Show me its trailer”. The local `open_movie_trailer` tool resolves only a catalog-grounded
+movie ID and emits the strict `open_movie_trailer` action, preceded by its movie card. React opens
+`/movie?id=<catalog-id>#trailer`, closes the overlay, and centers/focuses the trailer section after
+movie data loads. Repeated requests on the same page center it again; the voice session stays connected.
+Missing or invalid trailer keys produce an explicit catalog-availability notice. This does not
+check whether YouTube permits playback of the video in the user's region.
+
+Playback still requires the existing Play button. Navigation neither contacts YouTube nor claims
+that playback started. Browser autoplay restrictions can block asynchronous playback with sound;
+a player integration with blocked-playback feedback and coordination with voice audio remains a
+separate decision. No arbitrary URLs, model-supplied video keys, or full-screen requests are accepted.
+
+### Personal ratings, taste and recommendations
+
+Ratings and watchlist changes use model-interpreted intent and conversation context. The code does
+not re-parse user sentences or require a final ASR transcript before executing a model tool call.
+This supports casual phrasing, title aliases (Amelie / Amélie), and score-only follow-ups. The model
+must distinguish user requests from negation, hypotheticals and instructions embedded in tool data;
+this is a model behavior requirement, not a deterministic grammar guarantee. Execution still checks
+an active, uncancelled user turn, delegated identity, a catalog-grounded movie ID, numeric scores
+from 0 to 10 with at most one decimal, and a single idempotent mutation per turn. Conflicting repeated
+calls cannot change the selected movie or score. Only Java's committed receipt triggers UI navigation
+and Undo. Transcript delivery remains independent and is used for the visible conversation history.
+
+The delegated MCP tools now include `get_my_ratings(page, order)` and
+`get_my_recommendations(limit)`. Java derives the account exclusively from the verified session;
+model arguments never select an account. The session includes `ratings:read`. Ratings expose
+20 entries per page, their actual `userScore` and date, pagination, average score, and the existing
+Java-owned genre/decade taste summary. Orders are HIGHEST, LOWEST and RECENT. IMDb ratings remain
+separate. Questions such as “Which movies did I rate highest?” can be answered without navigating.
+
+Personal recommendations use `personal-ratings-v1`: up to three of the user's highest-rated films
+with a score of at least 7/10 seed the existing similar-movie ranker. Candidate contributions are
+weighted by `(userScore - 5) / (rank + 1)` and combined, with deterministic movie-ID ties. All rated
+and watchlisted movies are excluded. The result states the basis and preserves catalog-grounded
+explanations. It is a bounded first version of personal discovery, not long-term model memory or
+a claim to know unseen films. No positive history or no new candidates produces an explicit outcome;
+the agent must not disguise generic picks as personal recommendations. Rating changes are reflected
+on the next read; no separate preference datastore is created.
+
+### Optional TMDB movie facts
+
+`get_movie_enrichment(movieId)` adds English TMDB cast/characters (top eight), directors (four),
+writers (six), production countries/companies, spoken languages, tagline, release date, budget
+and revenue in USD. Null amounts mean unknown; revenue is not profit. These lists are partial.
+Production countries do not imply filming locations. This first slice supports catalog entries
+of type MOVIE with an existing positive `tmdbId`; it does not infer mappings from titles or import
+alternative titles. Series and unmapped entries return explicit unavailable outcomes.
+
+Java owns the fixed-origin outbound Adapter in `catalog.internal.enrichment` and exposes a named
+`catalog::assistant` Interface through MCP. The Python tool gate requires an already grounded local
+movie ID and never sends personal delegation to this tool. The provider ID must match the stored
+TMDB ID and, when present, the stored IMDb ID must match too. External metadata cannot create movie
+cards, replace local identity, change ranking or authorize personal actions. Normal navigation and
+trailer requests do not need this tool. No external requests happen while the token is absent.
+
+The client has a 2-second connect timeout, 3-second read deadline, no redirects, a 512 KiB response
+limit and at most four concurrent requests. There are no automatic retries within a voice turn;
+429 responses apply a shared 1–300 second cooldown from numeric Retry-After (30 seconds otherwise).
+Successful results are cached for six hours, failures for 30 seconds, up to 1,000 entries. On a
+transient failure only, a successful snapshot may be used for at most 24 hours, explicitly marked
+STALE with its original fetchedAt time. Missing/mismatched provider identities invalidate old facts.
+Cache keys include local, TMDB and IMDb IDs. No schema migration or persistent external-data store
+is introduced. MCP metrics use bounded tool/outcome labels and never log provider bodies or tokens.
+
+The model must credit TMDB, disclose stale data, and explain missing facts without guessing or
+retrying repeatedly. The Concierge includes a Data sources & credits section with the official
+logo and required notice. Source URL and fetchedAt are included in the tool response. All returned
+text remains untrusted data. This facts tool does not add filmographies, external
+search, German title lookup or automatic catalog updates.
+
+Local activation: add `TMDB_READ_ACCESS_TOKEN=...` to the ignored root `.env.local` and restart the
+Spring backend. The default `dev,local-secrets` profiles load it. The Python agent and browser never
+receive this token. Production can supply the same environment variable or the Spring property
+`imdb-clone.catalog.tmdb.read-access-token` through existing secret management; no deployment or
+production secret is created by this feature. See [development setup](development.md#tmdb-movie-enrichment).
+
+### Regional streaming availability
+
+`get_movie_watch_providers(movieId, country?)` reads TMDB's JustWatch-powered movie watch providers.
+Java resolves the existing local mapping and verifies the provider movie ID. The result separates
+subscription (`flatrate`), free, ads, rent and buy, with up to 12 provider names per category. It
+never treats rental as inclusion in a subscription and provides no prices or playback URLs.
+The source link is an app-constructed TMDB watch page for that movie and country. Provider names
+are untrusted data. Neither this lookup nor its results authorize navigation or personal writes.
+
+The default streaming country is Switzerland (`CH`), independent of language, browser locale or IP.
+The Concierge's **Streaming in** selection is stored in this browser, separately for guests and
+each signed-in account; it does not synchronize across devices. Storage failures leave the current
+selection usable in memory. Text sends it with page context; voice context updates apply to subsequent
+lookups in the running session. The Python gate fills omitted/null country arguments from that
+preference. An explicitly requested country overrides one lookup, without changing the selection.
+The model must omit the argument otherwise. Java validates ISO alpha-2 country codes.
+
+Offers and empty results are cached for 30 minutes, failures for 30 seconds, up to 1,000 entries,
+keyed by local/provider identity and country. The shared TMDB client applies the same deadlines,
+response bound, concurrency limit and rate-limit cooldown as movie enrichment. Expired offers are
+not served as current availability after a failed refresh. `NO_OFFERS` means no recorded offers for
+this country; `UNAVAILABLE`, `UNMAPPED` etc. are lookup failures or missing mappings, not proof a
+movie cannot be watched. `fetchedAt` is our retrieval time, not JustWatch's last update time.
+
+Answers must name the returned country and credit **JustWatch via TMDB**. Text answers may link the
+source; the renderer makes only fixed-format TMDB watch links clickable. The country selector and
+credits expose JustWatch attribution in the UI, including voice mode. See the
+[TMDB watch-provider attribution contract](https://developer.themoviedb.org/reference/movie-watch-providers).
+
+### Current browser page
+
+Text requests include a bounded `pageContext`; voice sends a `context` control after the start
+message and updates it on route changes without reconnecting. `get_page_context` reads the latest
+snapshot and returns product-owned descriptions of the supported page's features. It distinguishes
+home, movie (including trailer section), search, watchlist, ratings, reviews, settings and basic
+account/admin page types. Unsupported routes become unknown. A movie ID is only a lookup hint:
+`get_movie_details` must ground it before the agent states movie facts or takes an action. Search
+text is capped at 200 characters and is untrusted data, never an instruction.
+
+Only the allowlisted page type, movie ID, trailer/overview section and search query cross this
+boundary. No DOM, passwords, profile contents, full URLs, arbitrary query parameters or account IDs
+are sent. The snapshot does not expose loaded results, current form values or search filters, and
+it is never authentication or write authorization. Actual personal state still requires delegated
+Java tools. Examples: “What can I do on this page?”, “Tell me about this movie”, “What did I rate
+highest?” and “Recommend something based on my ratings”. Model interpretation remains subject to
+live voice validation; deterministic checks verify contracts and authorization independently.
+
+### Typed input during voice
+
+In the debug companion, an active voice session accepts microphone speech, typed messages, and clicked capability requests
+in the same realtime conversation. The browser sends a bounded `text` command (1-600 characters) on
+the existing `/v1/voice` WebSocket. Python starts a finalized user turn, acknowledges it in the
+timeline, and requests an audio reply through the existing model session. Delegation, grounding,
+navigation, and usage budgets remain session-owned. New text interrupts the current reply without
+unmuting the microphone; delayed transcripts from earlier audio cannot replace the typed request.
+
+With voice off, typing and capability clicks use normal text chat. Starting voice does not transfer
+the earlier text-only model context; the UI still combines both histories for reference.
+
+The visible timeline prioritizes user and assistant text. Multiple speech parts around tool calls
+remain together in the same reply; provider transcript revisions replace only their own part.
+Supporting film cards are collapsed under “Tools & results”, because retrieved candidates are not
+necessarily discussed or recommended. Up to 50 movies per reply retain retrieval order, and personal
+`userScore` values are labeled separately from IMDb scores. Both SSE and voice expose bounded
+`tool-activity` events (call ID, allowlisted tool name, started/completed/failed status), never raw
+arguments or return payloads. Navigation still validates against received catalog grounding even
+when the supporting cards are collapsed. This history is session UI state, not a persistent audit log.
 
 ## Read-Only MVP
 

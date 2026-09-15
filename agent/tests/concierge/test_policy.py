@@ -133,3 +133,15 @@ def test_discovery_and_negated_open_requests_do_not_request_ui_actions() -> None
         decide_open_movie_action("Find Arrival.", (movie,)).outcome
         is UiActionDecisionOutcome.NOT_REQUESTED
     )
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Open the trailer for Forrest Gump",
+        "Show me the movie trailer for Forrest Gump",
+        "Let me watch its trailer",
+    ],
+)
+def test_trailer_requests_do_not_trigger_plain_movie_navigation(message: str) -> None:
+    assert not requests_open_movie(message)

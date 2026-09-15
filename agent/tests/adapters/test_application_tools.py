@@ -10,6 +10,7 @@ from imdb_agent.concierge.events import (
     GroundedMovie,
     OpenLoginAction,
     OpenMovieAction,
+    OpenMovieTrailerAction,
     OpenPageAction,
 )
 from imdb_agent.concierge.personal import PersonalTurn
@@ -32,16 +33,22 @@ async def test_semantic_page_destination_respects_login(authenticated: bool) -> 
 
 
 @pytest.mark.asyncio
-async def test_open_contextual_movie_requires_catalog_evidence_and_active_turn() -> None:
+@pytest.mark.parametrize("trailer", [False, True])
+async def test_open_contextual_movie_requires_catalog_evidence_and_active_turn(
+    trailer: bool,
+) -> None:
     movie = GroundedMovie(movie_id=6, primary_title="Forrest Gump", movie_type="MOVIE")
     turn = PersonalTurn(movies=(movie,))
     turn.finalize("Let's have a look at that one")
     application = ApplicationTools(turn, authenticated=False)
+    open_movie = application.open_movie_trailer if trailer else application.open_movie_page
     with pytest.raises(ToolFailed, match="catalog"):
-        await application.open_movie_page(999)
+        await open_movie(999)
     assert application.action is None
-    await application.open_movie_page(6)
-    assert application.action == OpenMovieAction(movie_id=6)
+    await open_movie(6)
+    assert application.action == (
+        OpenMovieTrailerAction(movie_id=6) if trailer else OpenMovieAction(movie_id=6)
+    )
     assert application.movie == movie
     turn.cancelled = True
     assert application.action is None

@@ -202,6 +202,124 @@ curl -fsS http://localhost:8090/readyz
 curl -fsS http://localhost:8090/metrics
 ```
 
+### Voice agent profile
+
+#### Compare Grok and GPT-Live 1 locally
+
+Run `make run-agent-voice-compare`, or the IntelliJ **Movie Concierge (voice comparison)**
+configuration, instead of the normal voice launcher. Both use port 8090; stop the previous
+agent process first. Reload the frontend, then select **Grok** or **GPT-Live 1** under the lens.
+The selection is fixed while connected. End voice before switching; switching clears the local
+conversation display and starts a fresh provider conversation on the next click.
+
+The comparison launcher enables `IMDB_AGENT_VOICE_LIVE_ENABLED=true` in addition to ordinary
+voice. GPT-Live reads `OPENAI_API_KEY` from `.secrets/movie-concierge-realtime.local.env`.
+That key needs Live access to **gpt-live-1** and Responses access to the configured text backend
+(`IMDB_AGENT_MODEL_NAME`, currently `gpt-5.6-luna`). Grok still uses its separate key and hosted
+profile below. Ordinary `make run-agent-voice` remains Grok-only. The browser gets the enabled
+choices from `/v1/voice/models`; it never receives API keys or arbitrary provider URLs.
+
+GPT-Live uses `/v1/live/sessions`, not the Realtime API. Its continuous conversation delegates
+tasks to the existing `PydanticAIConciergeRunner`, which retains the normal application/MCP
+tools, delegated permissions, per-request budgets and committed action receipts. Greetings
+need no backend request. Login promotes the current voice session after Java verification;
+queued anonymous requests retain their original credentials. Logout closes the session.
+
+Both options currently use the same browser PCM/WebSocket relay, 24kHz audio and 120ms initial
+playback buffer. Live does not use the Grok turn/VAD protocol: both speakers can have overlapping
+caption rows, output may contain silence continuously, and there is no audio-done event. The lens
+therefore derives speaking feedback from audible output rather than treating queued silence as
+speech. Spoken captions come only from Live; backend text is sent back as commentary, not displayed
+as if it had already been spoken. UI actions and tool activity remain separately inspectable.
+Each delegated backend request gets a separate result group for cards, tool activity and UI actions;
+caption grouping must not deduplicate separate navigation requests.
+
+Client delegation metadata has no task text. The adapter retains timestamped transcript fragments
+and briefly collects late fragments (200ms quiet, at most one second) before requesting backend
+work. Display grouping is only a heuristic and never triggers tools or cancels work. Backend work
+is serialized and bounded to 12 delegations per session; spoken interruption asks Live to listen,
+but does not imply that an already executing mutation was canceled. This behavior needs continued
+human testing with corrections and overlapping requests before public rollout.
+
+Safe logs include `voice_model`, `live_delegation_finished` duration and `live_voice_usage` with
+cumulative provider seconds, final-usage confirmation and backend request/token counts. Backend
+inference is billed separately. No dollar total is inferred from audio bytes or missing usage.
+Delegations have a session-local `delegation_sequence` and log `started`, `skipped` (missing
+transcript or cached result), or `finished` with an outcome/error code. `live_tool_activity`
+records tool names and status only. The finished event counts tool starts and emitted `ui_actions`.
+`text_only` means backend text without domain tool calls or navigation, not confirmed task success.
+`live_delegation_context` records transcript/history character counts, transcript age and whether
+the queued caption row changed, without recording content. On a token-budget failure,
+`agent_run_failed` includes cumulative input/output tokens, requests and the configured input limit.
+The text backend omits verbose MCP output schemas from model prompts; typed result and permission
+checks still run. The input-token budget is cumulative across model requests within each run.
+Emission does not prove that the browser completed navigation. Conversation text, movie IDs,
+credentials and tool arguments stay out of these logs.
+The existing five-minute, concurrency and process-session limits apply across both choices.
+
+This is a local comparison feature. Production voice is still explicitly disabled by settings.
+Before enabling it, implement mounted voice secrets, production origins, per-user/shared quotas,
+ingress/lifecycle checks, and production microphone/tool-action evals. OpenAI recommends WebRTC
+for browser media; a direct WebRTC connection plus server-side controls should be evaluated for
+the home-server rollout separately from this comparison's shared relay.
+
+References: [GPT-Live](https://developers.openai.com/api/docs/guides/live),
+[client delegation](https://developers.openai.com/api/docs/guides/live-delegation),
+[session lifecycle](https://developers.openai.com/api/docs/guides/live-conversations).
+
+#### Hosted Grok profile
+
+The Movie Concierge connects to the hosted xAI profile `agent_ur8m5egTlRE3E8zu`.
+Override it with `IMDB_AGENT_VOICE_AGENT_ID` and restart the Python agent. The existing
+`.secrets/movie-concierge-voice.local.env` still supplies `XAI_API_KEY`.
+
+The profile selects the voice and model. The app supplies its own Movie Concierge instructions,
+authorized tools, PCM 24kHz audio, server VAD, and 1.15 output speed. Console instructions/tools
+are therefore not the source of the application's behavior. Frontend capture/playback settings
+are unchanged. Hosted profiles currently use fresh sessions after a disconnect; automatic
+resumption is not configured. The adapter rejects enabling it until hosted-profile resumption
+has been implemented and verified.
+
+### Diagnose a voice session ending
+
+A passkey or password login during an anonymous voice session keeps its microphone, WebSocket,
+conversation, and original time/usage limits. The browser sends a fresh delegation on that socket;
+the agent verifies it through Java while audio keeps flowing, then enables personal tools. These
+tools are registered from session start but reject access without verified delegation. Unfinished
+anonymous changes are not replayed automatically. Logout or an account switch closes and clears
+the session. Social login still navigates away from the app and does not preserve a live socket.
+
+Local voice currently has a hard 300-second (five-minute) lifetime, including connection setup.
+This deadline does not reset when the user speaks or types. `IMDB_AGENT_VOICE_SESSION_SECONDS`
+configures it (15-300 seconds). The UI names the five-minute time limit when reached. A separate
+45-second inactivity deadline and model/tool usage limits can also end a session. Inactivity sends
+`standby`: the browser releases the microphone and closes the lens without opening history. Click
+it to start again. Automatic local speech wake-up is not enabled.
+
+The normal app has only the bottom-center lens. Open `http://localhost:3000/?conciergeDebug=1`
+to inspect the current session's transcript, tool activity, and preferences. Debug access survives
+route navigation until reload; reload a URL without this parameter to return to voice-only UI.
+
+The agent run console emits `voice_session_started`, `voice_session_ready`, and exactly one
+`voice_session_ended` for each admitted connection. A random `request_id` correlates these events
+with tool/audio timing logs from that session. End events include `duration_ms`,
+`session_limit_seconds`, `phase`, received audio/control counts, output audio bytes, and turn count.
+They contain no audio, transcripts, account identifiers, credentials, or provider exception messages.
+
+Read `outcome` to identify the cause:
+
+- `time_limit`: the configured total lifetime elapsed; the UI names that limit explicitly.
+- `idle_timeout`: no user input for 45 seconds.
+- `start_timeout` / `delegation_timeout`: browser startup or sign-in verification timed out.
+- `connection_timeout`: a provider or transport operation timed out before the total deadline.
+- `usage_limit`: the model or tool budget was exhausted.
+- `user_end` / `client_disconnect`: the user stopped voice or the browser connection closed.
+- `invalid_message` / `provider_error` / `server_shutdown`: invalid input, a runtime failure, or
+  application shutdown. Runtime failures include only the exception class in `error_type`.
+
+Restart the Python agent after changing this code to activate the diagnostics. Earlier session
+reasons cannot be reconstructed from logs that were never emitted.
+
 Production uses a separate file boundary. It never reuses a shell key: the SOPS-encrypted
 `movie-concierge-runtime` Secret is mounted read-only at `/run/secrets/movie-concierge`, while local
 development continues to read only `.secrets/movie-concierge.local.env`.
@@ -719,3 +837,50 @@ worker after commit. Former object URLs may remain usable until that cleanup suc
 uploads use sequential journal/write transactions. If application code composes uploads inside an
 existing transaction, allow spare connections for the independent journal commit; exhausting the
 pool rejects the upload before object writes. Flyway bootstrap has its own connection requirements.
+
+### TMDB movie enrichment
+
+Create an application API credential in [TMDB account settings](https://www.themoviedb.org/settings/api)
+and use its **API Read Access Token** (Bearer token), not a user login/session credential.
+See [application authentication](https://developer.themoviedb.org/docs/authentication-application).
+
+Append this entry to the repository-root `.env.local`, which is already ignored by Git:
+
+```properties
+TMDB_READ_ACCESS_TOKEN=your-read-access-token
+```
+
+The default `dev,local-secrets` Spring profiles import the file. If using explicit profiles, include
+`local-secrets` or supply `TMDB_READ_ACCESS_TOKEN` in the backend process environment. Restart Spring
+Boot after changing it. Do not place the token in frontend VITE variables, Python agent env files,
+URLs, shell command history, logs or committed configuration. Empty/missing tokens disable outbound
+TMDB requests. Existing catalog and personal tools remain available.
+
+With backend and agent running, open a fresh voice session and try:
+
+- “Who directed Forrest Gump, and who plays the lead?”
+- “What was its budget and how much did it earn?”
+- “Which production companies made it?”
+
+The movie needs an existing correct `tmdbId` and matching `imdbId` when present. No provider title
+search or mapping changes occur. Check the answer's TMDB attribution; missing budgets are unknown,
+not zero. The Data sources & credits section identifies the provider. Review TMDB's
+[usage and attribution requirements](https://developer.themoviedb.org/docs/faq) before production use.
+CI uses fake responses and requires no TMDB account or key.
+
+The same token enables regional streaming offers. The Concierge defaults to **Streaming in:
+Switzerland**. Change that selector for a different browser-saved region, or ask “Where can I
+stream Forrest Gump in Germany?” for a one-off override. Try “Where can I stream Forrest Gump?”
+and then “Can I rent it instead?” in text or a fresh voice session. Answers should distinguish
+subscription/rent/buy and credit JustWatch via TMDB. No recorded offers are not proof of worldwide
+unavailability; source links lead to the regional TMDB watch page. The country selection is stored
+per account/guest in this browser, with no automatic geolocation or cross-device synchronization.
+
+### Avoiding backend reloads during voice tests
+
+The development profile excludes generated `META-INF/spring-configuration-metadata.json` from
+Spring DevTools restart triggers. IntelliJ may regenerate that IDE metadata during unrelated
+frontend/Python work; restarting Spring interrupts catalog HTTP requests and active MCP calls.
+Java class and runtime configuration changes still trigger normal restarts. After changing the
+exclusion, rebuild resources or restart the backend once. Voice stress tests record local catalog
+availability and stop further tasks if a reload makes it unavailable.

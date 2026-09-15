@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from pydantic import SecretStr
 
     from imdb_agent.concierge.events import GroundedMovie, RunnerEvent, UsageSummary
+    from imdb_agent.concierge.page_context import PageContext
     from imdb_agent.concierge.tools import ToolName
 
 
@@ -26,6 +27,7 @@ class RunRequest:
     message: str
     history: tuple[ConversationMessage, ...]
     delegation: SecretStr | None = None
+    page_context: PageContext | None = None
 
 
 class ConciergeRunner(Protocol):
