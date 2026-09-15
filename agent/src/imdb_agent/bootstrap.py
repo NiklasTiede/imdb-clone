@@ -95,13 +95,18 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
         voice_allowed_origins=tuple(resolved_settings.voice_allowed_origins),
         live_voice_runner=live_runner,
         voice_session_seconds=resolved_settings.voice_session_seconds,
-        voice_max_sessions=resolved_settings.voice_max_sessions,
+        voice_browser_seconds=resolved_settings.voice_browser_seconds,
+        voice_shared_seconds=resolved_settings.voice_shared_seconds,
         voice_quota=SqliteVoiceQuota(
-            resolved_settings.voice_quota_database, resolved_settings.voice_max_sessions
+            resolved_settings.voice_quota_database,
+            resolved_settings.voice_browser_seconds,
+            resolved_settings.voice_shared_seconds,
         )
         if resolved_settings.voice_quota_database is not None
         and (resolved_settings.voice_enabled or resolved_settings.voice_live_enabled)
-        else MemoryVoiceQuota(resolved_settings.voice_max_sessions),
+        else MemoryVoiceQuota(
+            resolved_settings.voice_browser_seconds, resolved_settings.voice_shared_seconds
+        ),
     )
     install_http_observability(app, resolved_settings, http_metrics)
     telemetry.instrument_app(app)

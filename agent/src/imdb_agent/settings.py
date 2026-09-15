@@ -88,7 +88,8 @@ class Settings(BaseSettings):
         default="agent_ur8m5egTlRE3E8zu", pattern=r"^agent_[A-Za-z0-9_-]+$", max_length=100
     )
     voice_session_seconds: float = Field(default=300.0, ge=15, le=600)
-    voice_max_sessions: int = Field(default=20, ge=1, le=100)
+    voice_browser_seconds: int = Field(default=1200, ge=1, le=86400)
+    voice_shared_seconds: int = Field(default=6000, ge=1, le=86400)
     voice_quota_database: Path | None = None
     voice_allowed_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"]

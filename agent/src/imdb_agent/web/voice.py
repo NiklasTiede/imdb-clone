@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from math import ceil
 from time import monotonic
 from typing import TYPE_CHECKING, Literal
 from uuid import uuid4
 
 import structlog
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel, ConfigDict, SecretStr, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 from starlette.websockets import WebSocketState
 
 from imdb_agent.concierge.personal import DelegationRejectedError, DelegationVerifier
@@ -25,6 +24,7 @@ from imdb_agent.concierge.voice import (
     VoiceModel,
     VoiceSessionLimitError,
 )
+from imdb_agent.concierge.voice_budget import VoiceBudget, VoiceTimeLimitError
 from imdb_agent.concierge.voice_quota import MemoryVoiceQuota, VoiceQuota, VoiceQuotaUnavailable
 
 if TYPE_CHECKING:
@@ -34,6 +34,9 @@ if TYPE_CHECKING:
 class VoiceStart(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     type: Literal["start"]
+    browser_id: str = Field(
+        pattern=r"^browser-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+    )
     delegation: SecretStr | None = None
     model: VoiceModel = "grok"
 
@@ -65,6 +68,7 @@ class BrowserVoiceTransport:
         self._typed_messages = 0
         self._turns = 0
         self._started_at = monotonic()
+        self.budget: VoiceBudget | None = None
         self.ready = False
         self.end_requested = False
         # Preserve 400ms of input headroom with the browser's 20ms capture packets.
@@ -137,6 +141,8 @@ class BrowserVoiceTransport:
                 self._turns = max(self._turns, event.turn)
                 if event.type == "ready" and not self.ready:
                     self.ready = True
+                    if self.budget is not None:
+                        self.budget.start()
                     structlog.get_logger().info(
                         "voice_session_ready",
                         duration_ms=round((monotonic() - self._started_at) * 1000),
@@ -154,13 +160,14 @@ def create_voice_router(
     verifier: DelegationVerifier | None = None,
     allowed_origins: tuple[str, ...],
     session_seconds: float,
-    max_sessions: int,
+    browser_seconds: float = 1200,
+    shared_seconds: float = 6000,
     live_runner: VoiceRunner | None = None,
     quota: VoiceQuota | None = None,
 ) -> APIRouter:
     router = APIRouter()
     active = 0
-    quota = quota if quota is not None else MemoryVoiceQuota(max_sessions)
+    quota = quota if quota is not None else MemoryVoiceQuota(browser_seconds, shared_seconds)
     logger = structlog.get_logger()
     logger.info(
         "voice_availability",
@@ -217,7 +224,14 @@ def create_voice_router(
                         raise VoiceTransportError("invalid_start")
                     try:
                         start = VoiceStart.model_validate_json(initial)
-                    except ValidationError:
+                    except ValidationError as error:
+                        if any(item["loc"] == ("browser_id",) for item in error.errors()):
+                            outcome = "invalid_start"
+                            await transport.send_error(
+                                "Voice needs a valid browser identity. "
+                                "Reload this page and try again."
+                            )
+                            return
                         raise VoiceTransportError("invalid_start") from None
                     selected = runner if start.model == "grok" else live_runner
                     structlog.contextvars.bind_contextvars(voice_model=start.model)
@@ -233,18 +247,12 @@ def create_voice_router(
                             raise DelegationRejectedError
                         await verifier.verify(start.delegation)
                 phase = "admission"
-                retry_seconds = await asyncio.to_thread(quota.reserve)
-                if retry_seconds:
-                    outcome = "voice_daily_session_limit"
-                    logger.warning("voice_connection_rejected", error_code=outcome)
-                    await transport.send_error(
-                        "The shared voice session limit for the last 24 hours has been reached. "
-                        f"Try again in {ceil(retry_seconds / 60)} minutes."
-                    )
-                    return
+                transport.budget = VoiceBudget(quota, start.browser_id)
+                await transport.budget.reserve()
                 phase = "provider_connect"
                 tasks = [
                     asyncio.create_task(transport.read_browser()),
+                    asyncio.create_task(transport.budget.monitor(transport)),
                     asyncio.create_task(selected.run(transport, start.delegation)),
                 ]
                 try:
@@ -262,6 +270,9 @@ def create_voice_router(
         except DelegationRejectedError:
             outcome = "delegation_rejected"
             await transport.send_error("Sign in again to use your watchlist, then restart voice.")
+        except VoiceTimeLimitError as error:
+            outcome = "time_quota_exhausted"
+            await transport.send_error(str(error))
         except VoiceQuotaUnavailable:
             outcome = "voice_quota_unavailable"
             await transport.send_error(
@@ -325,6 +336,11 @@ def create_voice_router(
             error_type = type(error).__name__
             await transport.send_error("Voice connection failed. Please reconnect.")
         finally:
+            if transport.budget is not None:
+                try:
+                    await transport.budget.close()
+                except VoiceQuotaUnavailable:
+                    logger.warning("voice_quota_settlement_failed")
             active -= 1
             logger.info(
                 "voice_session_ended",

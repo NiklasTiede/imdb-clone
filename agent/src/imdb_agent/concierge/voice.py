@@ -53,6 +53,7 @@ class VoiceCommand(EventModel):
 class VoiceEvent(EventModel):
     type: Literal[
         "ready",
+        "quota-warning",
         "status",
         "transcript",
         "movie-card",

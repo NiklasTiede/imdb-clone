@@ -1,3 +1,4 @@
+import { installLocalStorageMock } from "../../../test/installLocalStorageMock";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useConciergeVoice } from "./useConciergeVoice";
@@ -42,6 +43,7 @@ class Socket {
 }
 
 beforeEach(() => {
+  installLocalStorageMock();
   vi.clearAllMocks();
   vi.mocked(getConciergeIdentity).mockResolvedValue({
     accountId: null,
@@ -466,9 +468,35 @@ describe("voice session lifecycle", () => {
     );
     const { result } = renderHook(() => useConciergeVoice(vi.fn()));
     await act(() => result.current.start());
-    expect(result.current.error).toContain("macOS");
+    expect(result.current.error).toContain("browser's site permissions");
+    expect(result.current.error).toContain("device settings");
+    expect(result.current.error).not.toContain("macOS");
     expect(result.current.active).toBe(false);
     expect(audio.close).toHaveBeenCalled();
+    expect(Socket.instances).toHaveLength(0);
+  });
+
+  it("distinguishes an unavailable microphone from denied permission", async () => {
+    audio.start.mockRejectedValueOnce(
+      new DOMException("device unavailable", "NotReadableError"),
+    );
+    const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+    await act(() => result.current.start());
+    expect(result.current.error).toContain("microphone couldn't be opened");
+    expect(result.current.active).toBe(false);
+    expect(audio.close).toHaveBeenCalled();
+    expect(Socket.instances).toHaveLength(0);
+  });
+
+  it("explains missing browser audio support without requesting a session", async () => {
+    vi.stubGlobal("navigator", {});
+    const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+    await act(() => result.current.start());
+    expect(result.current.error).toContain("HTTPS or localhost");
+    expect(result.current.error).toContain("inside another app");
+    expect(result.current.active).toBe(false);
+    expect(audio.start).not.toHaveBeenCalled();
+    expect(Socket.instances).toHaveLength(0);
   });
 
   it("mutes capture, interrupts playback and closes on connection loss", async () => {
@@ -704,7 +732,12 @@ it("sends the current page after start and updates it without reconnecting", asy
       ([message]) => JSON.parse(message as string) as object,
     ),
   ).toEqual([
-    { type: "start", delegation: null, model: "grok" },
+    expect.objectContaining({
+      type: "start",
+      delegation: null,
+      model: "grok",
+      browser_id: expect.stringMatching(/^browser-/),
+    }),
     { type: "context", context: { page: "movie", movieId: 7 } },
   ]);
   rerender({ id: 8 });
@@ -946,4 +979,33 @@ it("handles inactivity as a closed standby state without an error and permits a 
   act(() => Socket.instances[1]!.emit({ type: "ready" }));
   expect(result.current.active).toBe(true);
   expect(result.current.status).toBe("listening");
+});
+
+it("reuses browser quota identity across models and displays quota warnings without ending voice", async () => {
+  const { result, rerender } = renderHook(
+    ({ model }: { model: "grok" | "gpt-live-1" }) =>
+      useConciergeVoice(vi.fn(), undefined, null, model),
+    { initialProps: { model: "grok" as "grok" | "gpt-live-1" } },
+  );
+  await act(() => result.current.start());
+  const first = Socket.instances[0]!;
+  act(() => first.onopen?.());
+  const initial = JSON.parse(first.send.mock.calls[0]![0] as string) as {
+    browser_id: string;
+  };
+  act(() => first.emit({ type: "ready" }));
+  act(() =>
+    first.emit({ type: "quota-warning", text: "Less than a minute remains." }),
+  );
+  expect(result.current.notice).toBe("Less than a minute remains.");
+  expect(result.current.active).toBe(true);
+  act(() => result.current.end());
+  rerender({ model: "gpt-live-1" });
+  await act(() => result.current.start());
+  const second = Socket.instances[1]!;
+  act(() => second.onopen?.());
+  const next = JSON.parse(second.send.mock.calls[0]![0] as string) as {
+    browser_id: string;
+  };
+  expect(next.browser_id).toBe(initial.browser_id);
 });

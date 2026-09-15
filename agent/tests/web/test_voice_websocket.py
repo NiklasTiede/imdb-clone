@@ -11,7 +11,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from imdb_agent.adapters.logging import configure_logging
 from imdb_agent.concierge.voice import VoiceCommand, VoiceEvent
-from imdb_agent.concierge.voice_quota import MemoryVoiceQuota, VoiceQuotaUnavailable
+from imdb_agent.concierge.voice_quota import MemoryVoiceQuota, VoiceGrant, VoiceQuotaUnavailable
 from imdb_agent.web.voice import create_voice_router
 
 if TYPE_CHECKING:
@@ -45,14 +45,16 @@ class EchoVoice:
             self.closed = True
 
 
-def client_for(runner: EchoVoice | None, seconds: float = 10, max_sessions: int = 20) -> TestClient:
+def client_for(
+    runner: EchoVoice | None, seconds: float = 10, browser_seconds: float = 1200
+) -> TestClient:
     app = FastAPI()
     app.include_router(
         create_voice_router(
             runner,
             allowed_origins=("http://localhost:3000",),
             session_seconds=seconds,
-            max_sessions=max_sessions,
+            browser_seconds=browser_seconds,
         )
     )
     return TestClient(app)
@@ -64,7 +66,9 @@ def test_audio_end_and_disconnect_cleanup() -> None:
         client_for(runner) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         assert ws.receive_json()["type"] == "ready"
         ws.send_bytes(b"\x00\x01" * 2400)
         assert ws.receive_bytes() == b"\x00\x01" * 2400
@@ -83,7 +87,7 @@ def test_model_selection_routes_only_enabled_models_and_shares_session_budget() 
             live_runner=live,
             allowed_origins=("http://localhost:3000",),
             session_seconds=10,
-            max_sessions=2,
+            browser_seconds=1200,
         )
     )
     with TestClient(app) as client:
@@ -92,7 +96,13 @@ def test_model_selection_routes_only_enabled_models_and_shares_session_budget() 
             with client.websocket_connect(
                 "/v1/voice", headers={"origin": "http://localhost:3000"}
             ) as ws:
-                ws.send_json({"type": "start", "model": model})
+                ws.send_json(
+                    {
+                        "type": "start",
+                        "browser_id": "browser-00000000-0000-4000-8000-000000000000",
+                        "model": model,
+                    }
+                )
                 assert ws.receive_json()["type"] == "ready"
                 ws.send_json({"type": "text", "text": model})
                 ws.send_bytes(b"\x00" * 960)
@@ -104,8 +114,11 @@ def test_model_selection_routes_only_enabled_models_and_shares_session_budget() 
         with client.websocket_connect(
             "/v1/voice", headers={"origin": "http://localhost:3000"}
         ) as ws:
-            ws.send_json({"type": "start"})
-            assert "session limit" in ws.receive_json()["text"]
+            ws.send_json(
+                {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+            )
+            assert ws.receive_json()["type"] == "ready"
+            ws.send_json({"type": "end"})
 
 
 def test_unavailable_live_model_does_not_silently_fall_back_to_grok() -> None:
@@ -115,7 +128,13 @@ def test_unavailable_live_model_does_not_silently_fall_back_to_grok() -> None:
         with client.websocket_connect(
             "/v1/voice", headers={"origin": "http://localhost:3000"}
         ) as ws:
-            ws.send_json({"type": "start", "model": "gpt-live-1"})
+            ws.send_json(
+                {
+                    "type": "start",
+                    "browser_id": "browser-00000000-0000-4000-8000-000000000000",
+                    "model": "gpt-live-1",
+                }
+            )
             assert "not enabled" in ws.receive_json()["text"]
     assert not grok.closed
 
@@ -124,12 +143,20 @@ def test_unavailable_live_model_does_not_silently_fall_back_to_grok() -> None:
     "start",
     [
         {"type": "invalid"},
-        {"type": "start", "model": "gpt-live-1"},
-        {"type": "start", "delegation": "synthetic-invalid"},
+        {
+            "type": "start",
+            "browser_id": "browser-00000000-0000-4000-8000-000000000000",
+            "model": "gpt-live-1",
+        },
+        {
+            "type": "start",
+            "browser_id": "browser-00000000-0000-4000-8000-000000000000",
+            "delegation": "synthetic-invalid",
+        },
     ],
 )
 def test_rejected_start_does_not_consume_admission(start: dict[str, str]) -> None:
-    with client_for(EchoVoice(), max_sessions=1) as client:
+    with client_for(EchoVoice(), browser_seconds=1200) as client:
         with client.websocket_connect(
             "/v1/voice", headers={"origin": "http://localhost:3000"}
         ) as ws:
@@ -138,14 +165,19 @@ def test_rejected_start_does_not_consume_admission(start: dict[str, str]) -> Non
         with client.websocket_connect(
             "/v1/voice", headers={"origin": "http://localhost:3000"}
         ) as ws:
-            ws.send_json({"type": "start"})
+            ws.send_json(
+                {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+            )
             assert ws.receive_json()["type"] == "ready"
             ws.send_json({"type": "end"})
 
 
 def test_quota_failure_prevents_provider_connection_and_releases_concurrency() -> None:
     class UnavailableQuota:
-        def reserve(self) -> int:
+        def reserve(self, browser_id: str) -> VoiceGrant:
+            raise VoiceQuotaUnavailable
+
+        def settle(self, grant_id: str, used_seconds: float) -> None:
             raise VoiceQuotaUnavailable
 
     runner = EchoVoice()
@@ -156,7 +188,7 @@ def test_quota_failure_prevents_provider_connection_and_releases_concurrency() -
             allowed_origins=("http://localhost:3000",),
             quota=UnavailableQuota(),
             session_seconds=10,
-            max_sessions=8,
+            browser_seconds=1200,
         )
     )
     with TestClient(app) as client:
@@ -164,13 +196,15 @@ def test_quota_failure_prevents_provider_connection_and_releases_concurrency() -
             with client.websocket_connect(
                 "/v1/voice", headers={"origin": "http://localhost:3000"}
             ) as ws:
-                ws.send_json({"type": "start"})
+                ws.send_json(
+                    {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+                )
                 assert "admission is temporarily unavailable" in ws.receive_json()["text"]
     assert not runner.closed
 
 
 def test_active_limit_is_shared_and_does_not_spend_another_start() -> None:
-    quota = MemoryVoiceQuota(3)
+    quota = MemoryVoiceQuota(1200, 15)
     app = FastAPI()
     app.include_router(
         create_voice_router(
@@ -179,7 +213,7 @@ def test_active_limit_is_shared_and_does_not_spend_another_start() -> None:
             allowed_origins=("http://localhost:3000",),
             quota=quota,
             session_seconds=10,
-            max_sessions=3,
+            browser_seconds=1200,
         )
     )
     with (
@@ -187,15 +221,23 @@ def test_active_limit_is_shared_and_does_not_spend_another_start() -> None:
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as grok,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as live,
     ):
-        grok.send_json({"type": "start"})
-        live.send_json({"type": "start", "model": "gpt-live-1"})
+        grok.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
+        live.send_json(
+            {
+                "type": "start",
+                "browser_id": "browser-00000000-0000-4000-8000-000000000000",
+                "model": "gpt-live-1",
+            }
+        )
         assert grok.receive_json()["type"] == live.receive_json()["type"] == "ready"
         with client.websocket_connect(
             "/v1/voice", headers={"origin": "http://localhost:3000"}
         ) as extra:
             assert "busy" in extra.receive_json()["text"]
-        assert quota.reserve() == 0
-        assert quota.reserve() > 0
+        assert quota.reserve("another-browser").seconds == 5
+        assert quota.reserve("another-browser").seconds == 0
         grok.send_json({"type": "end"})
         live.send_json({"type": "end"})
 
@@ -221,7 +263,9 @@ def test_invalid_protocol_closes_session(payload: bytes | str) -> None:
         client_for(runner) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         ws.receive_json()
         if isinstance(payload, bytes):
             ws.send_bytes(payload)
@@ -239,30 +283,28 @@ def test_disabled_voice_and_daily_session_limit(capsys: pytest.CaptureFixture[st
         client_for(None) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         event = ws.receive_json()
         assert event["type"] == "error"
         assert "make run-agent-voice" in event["text"]
     logs = capsys.readouterr().out
     assert '"outcome": "disabled"' in logs
     assert '"error_code": "voice_disabled"' in logs
-    with client_for(EchoVoice(), max_sessions=1) as client:
-        for expected in ("ready", "error"):
+    # Many short restarts must not exhaust a time allowance.
+    with client_for(EchoVoice()) as client:
+        for _ in range(10):
             with client.websocket_connect(
                 "/v1/voice", headers={"origin": "http://localhost:3000"}
             ) as ws:
-                ws.send_json({"type": "start"})
-                event = ws.receive_json()
-                assert event["type"] == expected
-                if expected == "error":
-                    assert "session limit" in event["text"]
-                if expected == "ready":
-                    ws.send_json({"type": "end"})
-                    with pytest.raises(WebSocketDisconnect):
-                        ws.receive_json()
-    logs = capsys.readouterr().out
-    assert '"outcome": "enabled"' in logs
-    assert '"error_code": "voice_daily_session_limit"' in logs
+                ws.send_json(
+                    {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+                )
+                assert ws.receive_json()["type"] == "ready"
+                ws.send_json({"type": "end"})
+                with pytest.raises(WebSocketDisconnect):
+                    ws.receive_json()
 
 
 @pytest.mark.parametrize("seconds", [0.05, 300.0, 600.0])
@@ -281,7 +323,9 @@ def test_deadline_cancels_runner(
         client_for(runner, seconds=seconds) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         assert ws.receive_json()["type"] == "ready"
         event = ws.receive_json()
         assert event["type"] == "error"
@@ -310,7 +354,9 @@ def test_end_cancels_pending_provider_handshake() -> None:
         client_for(runner) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         ws.receive_json()
         ws.send_json({"type": "end"})
         with pytest.raises(WebSocketDisconnect):
@@ -338,7 +384,9 @@ def test_microphone_backlog_has_400ms_headroom_and_reports_overflow(
         client_for(runner) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         assert ws.receive_json()["type"] == "ready"
         for _ in range(packets):
             ws.send_bytes(b"\x00" * 960)  # 20ms of mono PCM16 at 24kHz.
@@ -376,7 +424,9 @@ def test_provider_value_errors_and_output_limits_are_not_invalid_browser_message
         client_for(FailingVoice()) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         assert ws.receive_json()["type"] == "ready"
         error = ws.receive_json()
         assert error["type"] == "error"
@@ -403,7 +453,9 @@ def test_usage_limit_is_explained_without_exposing_provider_errors() -> None:
         client_for(LimitedVoice()) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         assert ws.receive_json()["type"] == "ready"
         event = ws.receive_json()
         assert event["type"] == "error"
@@ -419,7 +471,13 @@ def test_personal_voice_cannot_start_without_verified_delegation() -> None:
         client_for(runner) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start", "delegation": "synthetic-invalid"})
+        ws.send_json(
+            {
+                "type": "start",
+                "browser_id": "browser-00000000-0000-4000-8000-000000000000",
+                "delegation": "synthetic-invalid",
+            }
+        )
         event = ws.receive_json()
         assert event["type"] == "error"
         assert "Sign in again" in event["text"]
@@ -432,7 +490,9 @@ def test_context_updates_are_validated_and_delivered_in_order_without_ending_voi
         client_for(runner) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         assert ws.receive_json()["type"] == "ready"
         for movie_id in (6, 7):
             ws.send_json({"type": "context", "context": {"page": "movie", "movieId": movie_id}})
@@ -470,7 +530,9 @@ def test_login_credential_reaches_runner_without_logging_or_replacing_socket(
         client_for(LoginVoice()) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         assert ws.receive_json()["type"] == "ready"
         ws.send_json({"type": "authenticate", "delegation": "synthetic-private-login"})
         assert ws.receive_json()["type"] == "authenticated"
@@ -496,7 +558,9 @@ def test_provider_timeout_is_not_reported_as_session_expiry(
         client_for(TimedOutVoice()) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         if ready:
             assert ws.receive_json()["type"] == "ready"
         event = ws.receive_json()
@@ -538,7 +602,9 @@ def test_idle_expiry_is_reported_and_logged_separately(
         client_for(IdleVoice()) as client,
         client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
     ):
-        ws.send_json({"type": "start"})
+        ws.send_json(
+            {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+        )
         assert ws.receive_json()["type"] == "ready"
         if delivery_error is None:
             assert ws.receive_json()["type"] == "standby"
@@ -567,7 +633,9 @@ def test_session_logs_correlate_and_count_activity_without_payload(
             with client.websocket_connect(
                 "/v1/voice", headers={"origin": "http://localhost:3000"}
             ) as ws:
-                ws.send_json({"type": "start"})
+                ws.send_json(
+                    {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+                )
                 assert ws.receive_json()["type"] == "ready"
                 ws.send_json({"type": "text", "text": "synthetic-private-user-message"})
                 ws.send_bytes(b"\x00\x01" * 2400)
@@ -627,3 +695,41 @@ async def test_buffered_socket_burst_yields_to_consumer_without_losing_audio() -
         await asyncio.gather(transport.read_browser(), consume())
     assert received == packets
     assert transport.end_requested
+
+
+def test_browser_time_exhaustion_closes_provider_and_next_start_is_rejected() -> None:
+    runner = EchoVoice()
+    with client_for(runner, browser_seconds=0.05) as client:
+        with client.websocket_connect(
+            "/v1/voice", headers={"origin": "http://localhost:3000"}
+        ) as ws:
+            ws.send_json(
+                {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+            )
+            assert ws.receive_json()["type"] == "ready"
+            assert ws.receive_json()["type"] == "quota-warning"
+            event = ws.receive_json()
+            assert event["type"] == "error"
+            assert "browser's voice time" in event["text"]
+            with pytest.raises(WebSocketDisconnect):
+                ws.receive_json()
+        assert runner.closed
+        with client.websocket_connect(
+            "/v1/voice", headers={"origin": "http://localhost:3000"}
+        ) as ws:
+            ws.send_json(
+                {"type": "start", "browser_id": "browser-00000000-0000-4000-8000-000000000000"}
+            )
+            assert "browser's voice time" in ws.receive_json()["text"]
+
+
+@pytest.mark.parametrize("browser_id", [None, "", "account-7", "browser-not-a-uuid", "x" * 500])
+def test_invalid_browser_identity_never_connects_provider(browser_id: str | None) -> None:
+    runner = EchoVoice()
+    with (
+        client_for(runner) as client,
+        client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as ws,
+    ):
+        ws.send_json({"type": "start", "browser_id": browser_id})
+        assert ws.receive_json()["type"] == "error"
+    assert not runner.closed

@@ -1,3 +1,4 @@
+import { getConciergeBrowserId } from "../model/browserIdentity";
 import type { PageContext } from "../model/pageContext";
 import { getConciergeIdentity } from "../api/delegation";
 import type { VoiceModel } from "../api/voiceModels";
@@ -230,10 +231,12 @@ export const useConciergeVoice = (
           : "";
       fail(
         name === "NotAllowedError"
-          ? "Microphone access was denied. Allow it in your browser and macOS System Settings → Privacy & Security → Microphone, then try again."
+          ? "Voice audio access was blocked. Allow microphone access for this site in your browser's site permissions and for your browser app in your device settings, then try again."
           : name === "NotFoundError"
             ? "No microphone found. Connect an input device and try again."
-            : "Microphone audio couldn't start. Check your browser permissions and input device.",
+            : name === "NotReadableError"
+              ? "Your microphone couldn't be opened. Check whether another app is using it and whether your input device is working, then try again."
+              : "Microphone audio couldn't start. Check your browser permissions and input device.",
       );
     };
     setError(null);
@@ -279,9 +282,10 @@ export const useConciergeVoice = (
     };
     try {
       if (!navigator.mediaDevices?.getUserMedia || !window.AudioContext) {
-        throw new Error(
-          "Microphone audio requires a supported browser on localhost or HTTPS.",
+        fail(
+          "Voice requires a browser with microphone support and a secure connection (HTTPS or localhost). If you opened this page inside another app, open it in your browser and try again.",
         );
+        return;
       }
       const audio = new BrowserAudio(model === "gpt-live-1");
       audioRef.current = audio;
@@ -323,6 +327,7 @@ export const useConciergeVoice = (
         import.meta.env.VITE_IMDB_CLONE_CONCIERGE_ADDRESS ?? "/concierge-api";
       const url = new URL(`${base}/v1/voice`, window.location.href);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+      const browserId = getConciergeBrowserId();
       const identity = await getConciergeIdentity();
       if (!isCurrent()) return;
       socketAccountRef.current = identity.accountId;
@@ -332,6 +337,7 @@ export const useConciergeVoice = (
         socket.send(
           JSON.stringify({
             type: "start",
+            browser_id: browserId,
             delegation: identity.delegation,
             model,
           }),
@@ -396,6 +402,10 @@ export const useConciergeVoice = (
             setNotice(event.text ?? "Voice could not verify your sign-in.");
           } else if (event.type === "error") {
             fail(event.text ?? "Voice is unavailable. Please reconnect.");
+          } else if (event.type === "quota-warning") {
+            setNotice(
+              event.text ?? "Your voice time allowance is almost used up.",
+            );
           } else if (event.type === "standby") {
             markInterrupted();
             dispose();

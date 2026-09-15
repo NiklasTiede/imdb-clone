@@ -9,21 +9,15 @@
 <p align="center">
   <strong>Discover, rate, remember.</strong><br />
   A production-style React + Spring Boot movie application with explainable discovery,
-  an AI Movie Concierge, OpenSearch, full-stack observability, and k3s GitOps.
+  a voice-controlled Movie Concierge, OpenSearch, full-stack observability, and k3s GitOps.
 </p>
 
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Live Demo</a>
   ·
-  <a href="https://backend.imdb-clone.the-coding-lab.com/api/v1/movies/1" target="_blank">Backend API</a>
-  ·
   <a href="./agent/README.md">Movie Concierge</a>
   ·
-  <a href="./docs/movie-concierge-roadmap.md">Agent Roadmap</a>
-  ·
   <a href="./docs/operations.md">Operations</a>
-  ·
-  <a href="./infrastructure/kubernetes/README.md">Kubernetes Setup</a>
 </p>
 
 <p align="center">
@@ -59,42 +53,59 @@
 
 ## Overview
 
-IMDb Clone is a full-stack movie catalog built as a production-style reference application. It goes beyond a CRUD demo:
-movies are stored in PostgreSQL, searched through OpenSearch, served with poster and backdrop media from
-S3-compatible object storage, and discovered conversationally through a Python AI agent that calls
-Java-owned movie capabilities over MCP. The complete system is deployed to a self-hosted Kubernetes
-cluster through GitOps.
+IMDb Clone is a learning project built and operated as a full-stack movie application on a self-hosted
+Kubernetes cluster. Browse the catalog yourself or explore it by speaking to the Movie Concierge:
+find something to watch, open movie pages, and manage your personal movie library.
 
-The project is intentionally kept close to a real web application architecture: generated API clients, explicit seed
-data, server-side session authentication, automated CI/CD, infrastructure manifests, and local developer workflows are
-all part of the repository.
+## Features
 
-## What This Project Demonstrates
+- **Discover movies:** browse a curated home feed, search by title or description, filter results,
+  and compare similar movies or three explained Tonight Mode picks.
+- **Explore by voice:** click the Voice Lens, allow microphone access, and speak in English.
+  Choose Grok or GPT-Live 1; the lens responds visually while you speak and listen.
+- **Navigate conversationally:** ask the Concierge to open a movie, show search results, or take you
+  to your watchlist, ratings, settings, or the homepage. Ask what you can do on the current page.
+- **Find trailers:** say “Show me the trailer for Forrest Gump” to open its movie page and center
+  the trailer. Press Play to start the video.
+- **Manage your library by voice:** when signed in, ask about your watchlist and highest-rated
+  movies, add or remove watchlist entries, and set, change, or remove ratings. Get recommendations
+  based on your previous ratings and taste.
+- **Learn more and find where to watch:** ask for extra cast, crew, and production facts from TMDB,
+  or streaming, rental, and purchase options from JustWatch via TMDB for your selected country
+  (Switzerland by default). Availability depends on the data returned for that country.
+- **Explore movie details:** view backdrops, metadata, ratings, trailers, similar titles, and
+  community comments; share a movie with others.
+- **Keep a personal profile:** sign in with a password, Google, GitHub, or a passkey; manage profile
+  images, account settings, passkeys, ratings, watchlists, and comments. Review your rating insights
+  and use the watchlist's three-choice decision helper.
 
-- Modular Spring Boot backend with PostgreSQL, Flyway, Spring Security, JDBC sessions, CSRF protection, OpenAPI, and
-  Testcontainers.
-- React frontend with TypeScript, Material UI, TanStack Query, generated Axios clients, and feature-oriented structure.
-- Python 3.14 Movie Concierge with FastAPI, Pydantic AI, typed streaming events, bounded tool use,
-  deterministic evals, cost limits, and Java-owned MCP tools.
-- Password, Google, GitHub, and WebAuthn passkey login methods attached to one account model.
-- Hybrid lexical and semantic OpenSearch retrieval plus reusable, explainable recommendation strategies.
-- S3-compatible media storage through RustFS for movie posters, backdrops, and profile images.
-- Repeatable local development with Docker Compose, lightweight seed data, and explicit search reindexing.
-- Self-hosted k3s deployment with Argo CD, Traefik ingress, cert-manager HTTPS, and encrypted GitOps secrets.
-- Production observability with anonymous browser Web Vitals, Prometheus metrics, Loki logs, Tempo
-  traces, continuous Java/Python profiles in Pyroscope, Grafana drilldowns, Kubernetes Events, and
-  privacy-safe trace propagation.
-- Left-shift build safeguards across Java, TypeScript, architecture, API contracts, tests, and dependency resolution.
-- Version-gated release workflow that builds Docker images and updates Kubernetes image digests from one `VERSION` file.
+The public Concierge experience is voice-first. Text history and developer controls are available
+through the optional debug view; they are not the normal way to interact with the agent.
+
+## Engineering Highlights
+
+- **Clear ownership across services:** a modular Spring Boot domain backend, a React frontend
+  organized by feature, and a separate Python agent. Java owns catalog data, recommendations, and
+  personal actions; the agent accesses those capabilities through protected MCP tools.
+- **Typed, bounded agent integration:** provider adapters, validated UI actions, delegated login,
+  cancellation handling, and usage limits around realtime voice and tool execution.
+- **Rebuildable data flows:** PostgreSQL as the source of truth, a derived OpenSearch index,
+  S3-compatible media, and explicit, repeatable seed and reindex workflows.
+- **Executable quality checks:** architecture rules, null/type checks, generated API contracts,
+  integration tests, browser tests, and deterministic agent evals.
+- **Observable delivery:** versioned container releases and reviewed GitOps updates to k3s, with
+  metrics, logs, traces, browser performance signals, and continuous profiles for diagnosis.
 
 ## Architecture
 
-Runtime containers:
+Application runtime:
 
 ```mermaid
 flowchart LR
   browser["Browser"]
-  model["OpenAI model"]
+  grok["xAI Grok Voice"]
+  openai["OpenAI GPT-Live 1<br/>+ reasoning model"]
+  tmdb["TMDB facts + watch providers"]
 
   subgraph app["IMDb Clone"]
     frontend["React Frontend"]
@@ -110,22 +121,25 @@ flowchart LR
 
   browser --> frontend
   frontend -- "REST" --> backend
-  frontend -- "chat + SSE" --> agent
+  frontend <-->|"voice audio + typed events / WebSocket"| agent
   frontend --> rustfs
-  agent -- "bounded model calls" --> model
+  agent <-->|"realtime voice"| grok
+  agent <-->|"realtime voice + reasoning"| openai
   agent -- "protected MCP tools" --> backend
   backend --> postgres
   backend --> opensearch
   backend --> rustfs
+  backend -- "movie enrichment" --> tmdb
   postgres -. "explicit reindex" .-> opensearch
 ```
 
 The backend owns the application domain and persists movie, identity, account, and engagement data in PostgreSQL.
 OpenSearch is used as a derived search index and can be rebuilt explicitly from PostgreSQL. RustFS provides
 S3-compatible object storage for public movie media and private account uploads. The React frontend talks to the backend
-through generated API clients and loads public media through the object-storage host. Its Movie Concierge surface streams
-typed events from the Python service; Python can discover movies only through protected MCP tools owned by Java and never
-queries PostgreSQL or OpenSearch directly.
+through generated API clients and loads public media through the object-storage host. Voice audio travels over a
+WebSocket through the Python service to the selected provider and back. Typed events let React navigate and refresh
+the UI after Java confirms personal library changes. Python accesses Java-owned movie and personal capabilities only through protected
+MCP tools; it never queries PostgreSQL or OpenSearch directly. Java also owns the TMDB integration.
 
 Observability pipeline:
 
@@ -204,17 +218,12 @@ flowchart LR
 
 ## Live Deployment
 
-The public deployment runs on a Minisforum UM560 home server as a single-node k3s cluster.
+[Try the application](https://imdb-clone.the-coding-lab.com/), hosted on a Minisforum UM560 home
+server running a single-node k3s cluster. The public app includes both voice models.
 
-- Frontend: [https://imdb-clone.the-coding-lab.com/](https://imdb-clone.the-coding-lab.com/)
-- Backend API: [https://backend.imdb-clone.the-coding-lab.com/](https://backend.imdb-clone.the-coding-lab.com/)
-- Movie media: [https://object-storage.imdb-clone.the-coding-lab.com/](https://object-storage.imdb-clone.the-coding-lab.com/)
-- Grafana: [https://grafana.imdb-clone.the-coding-lab.com/](https://grafana.imdb-clone.the-coding-lab.com/)
-
-Kubernetes manifests and home-cluster notes live in
-[infrastructure/kubernetes](./infrastructure/kubernetes/README.md) and
-[infrastructure/clusters/home](./infrastructure/clusters/home). Private database, search, storage,
-metrics, log, trace, and Argo CD access is documented in the [production operations runbook](./docs/operations.md).
+Deployment manifests live in [infrastructure/clusters/home](./infrastructure/clusters/home).
+Operator access and troubleshooting are documented in the
+[production operations runbook](./docs/operations.md).
 
 ## Tech Stack
 
@@ -222,7 +231,7 @@ metrics, log, trace, and Argo CD access is documented in the [production operati
 | --- | --- |
 | Backend | Java 25, Spring Boot 4, Spring Security, Spring Data JPA, Flyway |
 | Frontend | React 19, TypeScript 6, Material UI 9, TanStack Query, Vite |
-| Agent | Python 3.14, FastAPI, Pydantic AI 2.31, Pydantic Evals, uv, MCP, SSE |
+| Agent | Python 3.14, FastAPI, Pydantic AI 2.42, Pydantic Evals, uv, MCP, WebSocket voice |
 | Data | PostgreSQL 18, OpenSearch 3 |
 | Media | RustFS, S3-compatible object storage, WebP poster/backdrop variants |
 | API | OpenAPI spec, generated Axios client |
@@ -231,19 +240,6 @@ metrics, log, trace, and Argo CD access is documented in the [production operati
 | Build safety | Error Prone, NullAway/JSpecify, strict TypeScript, typed ESLint, API-contract drift checks |
 | Delivery | Docker, GitHub Actions, k3s, Argo CD, Traefik, cert-manager, SOPS/age |
 | Observability | OpenTelemetry, Grafana Alloy, Prometheus, Loki, Tempo, Pyroscope, Grafana |
-
-## Features
-
-- Explore a progressive, session-stable discovery feed with three featured movies and curated carousel sections.
-- Ask the Movie Concierge by text and receive grounded answers plus automatically rendered movie cards.
-- Ask Tonight Mode for three diverse, explained picks constrained by mood, runtime, genres, era, and watched history.
-- Search through hybrid title/metadata and semantic retrieval with catalog filters and measured ranking foundations.
-- View backdrop-led movie pages with metadata, ratings, trailers, similar movies, sharing, and community comments.
-- Register and sign in with a password, Google, GitHub, or a passkey through hardened server-side sessions.
-- Manage account settings, profile images, passkeys, ratings, watchlists, and authored comments.
-- Review server-backed rating insights and use the watchlist's explainable three-choice decision helper.
-- Rebuild the OpenSearch index from PostgreSQL through an explicit admin flow.
-- Seed local and production-like environments with versioned movie/media images.
 
 ## Run Locally
 
@@ -314,17 +310,20 @@ The frontend runs on [http://localhost:3000](http://localhost:3000).
 
 ### 5. Start The Movie Concierge
 
-For deterministic UI work without Java or a provider key:
+For local voice with both Grok and GPT-Live 1 enabled:
 
 ```bash
 make agent-sync
-make run-agent-fake
+make run-agent-voice-compare
 ```
 
-The real local agent reads its OpenAI key only from the ignored
-`.secrets/movie-concierge.local.env` file and starts with `make run-agent`. Follow the complete
-credential, budget, MCP, eval, and safety instructions in the
-[Movie Concierge README](./agent/README.md); never export or commit the key.
+Voice needs provider credentials and access to the running Java backend's MCP tools. Follow the
+[Movie Concierge setup guide](./agent/README.md) for the ignored local credential files, model
+configuration, and microphone permissions. `make run-agent-voice` enables Grok only. Never commit keys.
+
+For deterministic text/debug UI work without Java or provider credentials, use `make run-agent-fake`
+and open `http://localhost:3000/?conciergeDebug=1`. This fake backend does not simulate live speech;
+automated voice browser tests use synthetic audio and intercepted WebSocket responses.
 
 ## Development Workflow
 
@@ -375,9 +374,9 @@ environment-specific server URL, so contract drift fails before client generatio
 
 ## Release And Deployment
 
-Every pull request targeting `master` runs backend verification plus frontend client generation, linting, tests, type
-checking, and a production build. The same gates run again on merged `master` commits. Application releases are
-controlled by the root [`VERSION`](./VERSION) file. A version bump merged to `master` triggers the CD workflow, which:
+Pull requests targeting `master` and merge queue candidates run backend, frontend, agent, and infrastructure
+checks. CI also supports manual runs; it does not repeat the full suite on every merged `master` commit.
+Application releases are controlled by the root [`VERSION`](./VERSION) file. A version bump merged to `master` triggers the CD workflow, which:
 
 1. runs backend, frontend, and deterministic agent checks,
 2. builds Linux AMD64 backend, frontend, and agent Docker images,
