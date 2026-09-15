@@ -11,6 +11,7 @@ from starlette.websockets import WebSocketDisconnect
 
 from imdb_agent.adapters.logging import configure_logging
 from imdb_agent.concierge.voice import VoiceCommand, VoiceEvent
+from imdb_agent.concierge.voice_quota import MemoryVoiceQuota, VoiceQuotaUnavailable
 from imdb_agent.web.voice import create_voice_router
 
 if TYPE_CHECKING:
@@ -103,6 +104,7 @@ def test_model_selection_routes_only_enabled_models_and_shares_session_budget() 
         with client.websocket_connect(
             "/v1/voice", headers={"origin": "http://localhost:3000"}
         ) as ws:
+            ws.send_json({"type": "start"})
             assert "session limit" in ws.receive_json()["text"]
 
 
@@ -116,6 +118,86 @@ def test_unavailable_live_model_does_not_silently_fall_back_to_grok() -> None:
             ws.send_json({"type": "start", "model": "gpt-live-1"})
             assert "not enabled" in ws.receive_json()["text"]
     assert not grok.closed
+
+
+@pytest.mark.parametrize(
+    "start",
+    [
+        {"type": "invalid"},
+        {"type": "start", "model": "gpt-live-1"},
+        {"type": "start", "delegation": "synthetic-invalid"},
+    ],
+)
+def test_rejected_start_does_not_consume_admission(start: dict[str, str]) -> None:
+    with client_for(EchoVoice(), max_sessions=1) as client:
+        with client.websocket_connect(
+            "/v1/voice", headers={"origin": "http://localhost:3000"}
+        ) as ws:
+            ws.send_json(start)
+            assert ws.receive_json()["type"] == "error"
+        with client.websocket_connect(
+            "/v1/voice", headers={"origin": "http://localhost:3000"}
+        ) as ws:
+            ws.send_json({"type": "start"})
+            assert ws.receive_json()["type"] == "ready"
+            ws.send_json({"type": "end"})
+
+
+def test_quota_failure_prevents_provider_connection_and_releases_concurrency() -> None:
+    class UnavailableQuota:
+        def reserve(self) -> int:
+            raise VoiceQuotaUnavailable
+
+    runner = EchoVoice()
+    app = FastAPI()
+    app.include_router(
+        create_voice_router(
+            runner,
+            allowed_origins=("http://localhost:3000",),
+            quota=UnavailableQuota(),
+            session_seconds=10,
+            max_sessions=8,
+        )
+    )
+    with TestClient(app) as client:
+        for _ in range(3):
+            with client.websocket_connect(
+                "/v1/voice", headers={"origin": "http://localhost:3000"}
+            ) as ws:
+                ws.send_json({"type": "start"})
+                assert "admission is temporarily unavailable" in ws.receive_json()["text"]
+    assert not runner.closed
+
+
+def test_active_limit_is_shared_and_does_not_spend_another_start() -> None:
+    quota = MemoryVoiceQuota(3)
+    app = FastAPI()
+    app.include_router(
+        create_voice_router(
+            EchoVoice(),
+            live_runner=EchoVoice(),
+            allowed_origins=("http://localhost:3000",),
+            quota=quota,
+            session_seconds=10,
+            max_sessions=3,
+        )
+    )
+    with (
+        TestClient(app) as client,
+        client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as grok,
+        client.websocket_connect("/v1/voice", headers={"origin": "http://localhost:3000"}) as live,
+    ):
+        grok.send_json({"type": "start"})
+        live.send_json({"type": "start", "model": "gpt-live-1"})
+        assert grok.receive_json()["type"] == live.receive_json()["type"] == "ready"
+        with client.websocket_connect(
+            "/v1/voice", headers={"origin": "http://localhost:3000"}
+        ) as extra:
+            assert "busy" in extra.receive_json()["text"]
+        assert quota.reserve() == 0
+        assert quota.reserve() > 0
+        grok.send_json({"type": "end"})
+        live.send_json({"type": "end"})
 
 
 @pytest.mark.parametrize("origin", ["http://evil.example", "null", ""])
@@ -151,7 +233,7 @@ def test_invalid_protocol_closes_session(payload: bytes | str) -> None:
     assert runner.closed
 
 
-def test_disabled_voice_and_process_session_limit(capsys: pytest.CaptureFixture[str]) -> None:
+def test_disabled_voice_and_daily_session_limit(capsys: pytest.CaptureFixture[str]) -> None:
     configure_logging(json_output=True)
     with (
         client_for(None) as client,
@@ -180,10 +262,10 @@ def test_disabled_voice_and_process_session_limit(capsys: pytest.CaptureFixture[
                         ws.receive_json()
     logs = capsys.readouterr().out
     assert '"outcome": "enabled"' in logs
-    assert '"error_code": "voice_process_session_limit"' in logs
+    assert '"error_code": "voice_daily_session_limit"' in logs
 
 
-@pytest.mark.parametrize("seconds", [0.05, 300.0])
+@pytest.mark.parametrize("seconds", [0.05, 300.0, 600.0])
 def test_deadline_cancels_runner(
     seconds: float, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -191,7 +273,7 @@ def test_deadline_cancels_runner(
     real_timeout = asyncio.timeout
 
     def short_session_timeout(delay: float | None) -> asyncio.Timeout:
-        return real_timeout(0.05 if delay == 300 else delay)
+        return real_timeout(0.05 if delay in (300, 600) else delay)
 
     monkeypatch.setattr(asyncio, "timeout", short_session_timeout)
     runner = EchoVoice()
@@ -203,9 +285,8 @@ def test_deadline_cancels_runner(
         assert ws.receive_json()["type"] == "ready"
         event = ws.receive_json()
         assert event["type"] == "error"
-        assert ("5-minute time limit" if seconds == 300 else "0.05-second time limit") in event[
-            "text"
-        ]
+        expected = f"{int(seconds / 60)}-minute" if seconds >= 60 else "0.05-second"
+        assert f"{expected} time limit" in event["text"]
     assert runner.closed
     events = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
     ended = next(event for event in events if event["event"] == "voice_session_ended")

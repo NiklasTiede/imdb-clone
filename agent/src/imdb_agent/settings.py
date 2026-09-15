@@ -87,8 +87,9 @@ class Settings(BaseSettings):
     voice_agent_id: str = Field(
         default="agent_ur8m5egTlRE3E8zu", pattern=r"^agent_[A-Za-z0-9_-]+$", max_length=100
     )
-    voice_session_seconds: float = Field(default=300.0, ge=15, le=300)
+    voice_session_seconds: float = Field(default=300.0, ge=15, le=600)
     voice_max_sessions: int = Field(default=20, ge=1, le=100)
+    voice_quota_database: Path | None = None
     voice_allowed_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"]
     )
@@ -129,10 +130,6 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_boundaries(self) -> Settings:
-        if (
-            self.voice_enabled or self.voice_live_enabled
-        ) and self.environment is not DeploymentEnvironment.LOCAL:
-            raise ValueError("voice is currently available only in local development")
         self._validate_otel_endpoint()
         self._validate_profiling_endpoint()
         if self.environment is not DeploymentEnvironment.PRODUCTION:
@@ -145,6 +142,24 @@ class Settings(BaseSettings):
             raise ValueError("production requires an explicit trusted-host allowlist")
         if "localhost" in self.mcp_url or "127.0.0.1" in self.mcp_url:
             raise ValueError("production requires a cluster-local MCP URL")
+        if self.voice_enabled or self.voice_live_enabled:
+            if self.voice_quota_database is None or not self.voice_quota_database.is_absolute():
+                raise ValueError("production voice requires an absolute persistent quota database")
+            if not self.voice_allowed_origins:
+                raise ValueError("production voice requires explicit HTTPS origins")
+            for origin in self.voice_allowed_origins:
+                parsed = urlsplit(origin)
+                if (
+                    parsed.scheme != "https"
+                    or parsed.hostname not in self.allowed_hosts
+                    or parsed.username is not None
+                    or parsed.password is not None
+                    or parsed.path
+                    or parsed.query
+                    or parsed.fragment
+                    or "*" in origin
+                ):
+                    raise ValueError("production voice requires explicit HTTPS origins")
         return self
 
     def _validate_otel_endpoint(self) -> None:
@@ -277,6 +292,38 @@ def load_local_live_key() -> SecretStr:
         raise ConfigurationError(
             "OpenAI Live credentials are unavailable in .secrets/movie-concierge-realtime.local.env"
         ) from None
+
+
+def load_runtime_voice_secrets(settings: Settings) -> LocalVoiceSecrets:
+    """Resolve xAI credentials without a local-file fallback in production."""
+    if settings.environment is not DeploymentEnvironment.PRODUCTION:
+        return load_local_voice_secrets()
+    try:
+        return LocalVoiceSecrets.model_validate(
+            {"XAI_API_KEY": _mounted_voice_key(settings, "xai-api-key")}
+        )
+    except ValidationError:
+        raise ConfigurationError("production xAI credentials are unavailable") from None
+
+
+def load_runtime_live_key(settings: Settings) -> SecretStr:
+    if settings.environment is not DeploymentEnvironment.PRODUCTION:
+        return load_local_live_key()
+    try:
+        return _LocalOpenAISecrets.model_validate(
+            {"OPENAI_API_KEY": _mounted_voice_key(settings, "openai-live-api-key")}
+        ).openai_api_key
+    except ValidationError:
+        raise ConfigurationError("production OpenAI Live credentials are unavailable") from None
+
+
+def _mounted_voice_key(settings: Settings, name: str) -> str:
+    try:
+        if settings.secrets_directory is None:
+            raise OSError
+        return _read_mounted_secret(settings.secrets_directory / name)
+    except OSError, UnicodeError:
+        raise ConfigurationError("production voice credentials are unavailable") from None
 
 
 def _read_mounted_secret(path: Path) -> str:
