@@ -17,14 +17,16 @@ from imdb_agent.adapters.profiling import configure_profiling
 from imdb_agent.adapters.pydantic_ai_runner import PydanticAIConciergeRunner
 from imdb_agent.adapters.realtime_voice import RealtimeVoiceRunner
 from imdb_agent.adapters.telemetry import configure_telemetry
+from imdb_agent.adapters.voice_quota import SqliteVoiceQuota
 from imdb_agent.concierge.service import ConciergeService
+from imdb_agent.concierge.voice_quota import MemoryVoiceQuota
 from imdb_agent.settings import (
     ModelBackend,
     RuntimeSecrets,
     Settings,
-    load_local_live_key,
-    load_local_voice_secrets,
+    load_runtime_live_key,
     load_runtime_secrets,
+    load_runtime_voice_secrets,
     load_settings,
 )
 from imdb_agent.web.app import create_web_app
@@ -39,6 +41,11 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
     """Compose the process without import-time I/O or external dependencies."""
 
     resolved_settings = settings or load_settings()
+    if resolved_settings.model_backend is ModelBackend.OPENAI:
+        # Every text/voice MCP adapter must use the same mounted workload identity.
+        resolved_settings = resolved_settings.model_copy(
+            update={"mcp_bearer_token": load_runtime_secrets(resolved_settings).mcp_bearer_token}
+        )
     configure_logging(json_output=resolved_settings.json_logs)
     profiling = configure_profiling(resolved_settings)
     telemetry = configure_telemetry(
@@ -62,7 +69,7 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
     )
     live_runner = None
     if resolved_settings.voice_live_enabled:
-        key = load_local_live_key()
+        key = load_runtime_live_key(resolved_settings)
         live_runner = LiveVoiceRunner(
             key=key,
             backend=PydanticAIConciergeRunner(
@@ -77,19 +84,11 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
         service_name=resolved_settings.service_name,
         version=resolved_settings.version,
         concierge_service=concierge_service,
-        delegation_verifier=McpDelegationVerifier(
-            resolved_settings.model_copy(
-                update={
-                    "mcp_bearer_token": load_runtime_secrets(resolved_settings).mcp_bearer_token
-                }
-            )
-            if resolved_settings.model_backend is ModelBackend.OPENAI
-            else resolved_settings
-        ),
+        delegation_verifier=McpDelegationVerifier(resolved_settings),
         allowed_hosts=tuple(resolved_settings.allowed_hosts),
         max_request_body_bytes=resolved_settings.max_request_body_bytes,
         voice_runner=RealtimeVoiceRunner(
-            settings=resolved_settings, secrets=load_local_voice_secrets()
+            settings=resolved_settings, secrets=load_runtime_voice_secrets(resolved_settings)
         )
         if resolved_settings.voice_enabled
         else None,
@@ -97,6 +96,12 @@ def create_app(settings: Settings | None = None, runner: ConciergeRunner | None 
         live_voice_runner=live_runner,
         voice_session_seconds=resolved_settings.voice_session_seconds,
         voice_max_sessions=resolved_settings.voice_max_sessions,
+        voice_quota=SqliteVoiceQuota(
+            resolved_settings.voice_quota_database, resolved_settings.voice_max_sessions
+        )
+        if resolved_settings.voice_quota_database is not None
+        and (resolved_settings.voice_enabled or resolved_settings.voice_live_enabled)
+        else MemoryVoiceQuota(resolved_settings.voice_max_sessions),
     )
     install_http_observability(app, resolved_settings, http_metrics)
     telemetry.instrument_app(app)

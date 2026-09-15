@@ -368,11 +368,18 @@ On macOS, allow the browser under **System Settings → Privacy & Security → M
 as in the browser's site permissions. Use localhost or HTTPS. If access is denied, the UI offers
 retry and retains the existing text conversation. No audio is acquired merely by opening the panel.
 
-This initial rollout is explicitly **local only**, off unless `IMDB_AGENT_VOICE_ENABLED=true`.
-Production rejects that setting until public voice admission and rollout validation are complete. WebSocket origins default to localhost/127.0.0.1 port 3000. Limits are two concurrent
-connections, 180 seconds per session, 45 seconds without speech, 20 attempted sessions per process,
-32 model requests, 24 tools, bounded PCM/control frames and input/output queues. The session and
-process limits are configurable within bounded settings. No automatic reconnect is attempted.
+Voice is off unless `IMDB_AGENT_VOICE_ENABLED=true` (Grok) or
+`IMDB_AGENT_VOICE_LIVE_ENABLED=true` (GPT-Live). Local defaults allow two concurrent connections,
+300 seconds per session, and 20 starts in a rolling 24-hour window shared across both providers.
+Production requires mounted provider credentials, explicit trusted HTTPS origins, and an absolute
+`IMDB_AGENT_VOICE_QUOTA_DATABASE` path on persistent storage. The public pilot is configured for
+600 seconds, two concurrent connections and eight starts per rolling 24 hours across all users.
+See the [rollout runbook](../docs/operations.md#public-voice-rollout).
+The SQLite ledger stores start timestamps only, atomically reserves admission and survives restarts.
+Missing/corrupt quota storage rejects admission. Invalid starts, unavailable models and rejected
+delegations do not consume quota; admitted provider connection attempts do, including failed attempts.
+Local mode uses memory unless a database path is configured. A 45-second inactivity deadline,
+model/tool budgets and bounded PCM/control queues still apply. No automatic reconnect is attempted.
 These are resource limits, not a guaranteed USD budget; voice billing is provider-owned.
 The browser buffers up to 60 seconds of queued reply audio, including each incoming chunk,
 because generated speech can arrive faster than playback. Interrupt and End discard that queue.

@@ -255,11 +255,12 @@ The text backend omits verbose MCP output schemas from model prompts; typed resu
 checks still run. The input-token budget is cumulative across model requests within each run.
 Emission does not prove that the browser completed navigation. Conversation text, movie IDs,
 credentials and tool arguments stay out of these logs.
-The existing five-minute, concurrency and process-session limits apply across both choices.
+The existing five-minute and concurrency limits apply across both choices. Admission counts starts
+in a rolling 24-hour window shared by both models (20 locally by default).
 
-This is a local comparison feature. Production voice is still explicitly disabled by settings.
-Before enabling it, implement mounted voice secrets, production origins, per-user/shared quotas,
-ingress/lifecycle checks, and production microphone/tool-action evals. OpenAI recommends WebRTC
+Production activation requires mounted voice secrets, explicit HTTPS origins and a persistent
+quota database; see the [rollout runbook](operations.md#public-voice-rollout). Public microphone
+and tool-action smoke checks remain part of deployment verification. OpenAI recommends WebRTC
 for browser media; a direct WebRTC connection plus server-side controls should be evaluated for
 the home-server rollout separately from this comparison's shared relay.
 
@@ -291,7 +292,7 @@ the session. Social login still navigates away from the app and does not preserv
 
 Local voice currently has a hard 300-second (five-minute) lifetime, including connection setup.
 This deadline does not reset when the user speaks or types. `IMDB_AGENT_VOICE_SESSION_SECONDS`
-configures it (15-300 seconds). The UI names the five-minute time limit when reached. A separate
+configures it (15-600 seconds). The UI names the configured time limit when reached. A separate
 45-second inactivity deadline and model/tool usage limits can also end a session. Inactivity sends
 `standby`: the browser releases the microphone and closes the lens without opening history. Click
 it to start again. Automatic local speech wake-up is not enabled.

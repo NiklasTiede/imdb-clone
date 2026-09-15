@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from imdb_agent.concierge.personal import DelegationVerifier
     from imdb_agent.concierge.service import ConciergeService
     from imdb_agent.concierge.voice import VoiceRunner
+    from imdb_agent.concierge.voice_quota import VoiceQuota
 
 
 def create_web_app(
@@ -26,6 +27,7 @@ def create_web_app(
     voice_allowed_origins: tuple[str, ...] = (),
     voice_session_seconds: float = 300,
     voice_max_sessions: int = 20,
+    voice_quota: VoiceQuota | None = None,
 ) -> FastAPI:
     """Create the inbound web Adapter without configuring outbound Adapters."""
 
@@ -56,6 +58,7 @@ def create_web_app(
             allowed_origins=voice_allowed_origins,
             session_seconds=voice_session_seconds,
             max_sessions=voice_max_sessions,
+            quota=voice_quota,
         )
     )
     return app

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
+from math import ceil
 from time import monotonic
 from typing import TYPE_CHECKING, Literal
 from uuid import uuid4
@@ -24,6 +25,7 @@ from imdb_agent.concierge.voice import (
     VoiceModel,
     VoiceSessionLimitError,
 )
+from imdb_agent.concierge.voice_quota import MemoryVoiceQuota, VoiceQuota, VoiceQuotaUnavailable
 
 if TYPE_CHECKING:
     from imdb_agent.concierge.voice import VoiceRunner
@@ -154,10 +156,11 @@ def create_voice_router(
     session_seconds: float,
     max_sessions: int,
     live_runner: VoiceRunner | None = None,
+    quota: VoiceQuota | None = None,
 ) -> APIRouter:
     router = APIRouter()
     active = 0
-    started = 0
+    quota = quota if quota is not None else MemoryVoiceQuota(max_sessions)
     logger = structlog.get_logger()
     logger.info(
         "voice_availability",
@@ -175,27 +178,22 @@ def create_voice_router(
         }
 
     async def voice(socket: WebSocket) -> None:
-        nonlocal active, started
+        nonlocal active
         if socket.headers.get("origin") not in allowed_origins:
             logger.warning("voice_connection_rejected", error_code="voice_origin_rejected")
             await socket.close(code=1008)
             return
         await socket.accept()
-        if (runner is None and live_runner is None) or active >= 2 or started >= max_sessions:
+        if (runner is None and live_runner is None) or active >= 2:
             if runner is None and live_runner is None:
                 error_code = "voice_disabled"
                 message = (
                     "Voice is disabled on the server. "
                     "Start the local service with make run-agent-voice."
                 )
-            elif active >= 2:
+            else:
                 error_code = "voice_concurrency_limit"
                 message = "All voice sessions are busy. End another session, then try again."
-            else:
-                error_code = "voice_process_session_limit"
-                message = (
-                    "The local voice service reached its session limit. Restart it to continue."
-                )
             logger.warning("voice_connection_rejected", error_code=error_code)
             await socket.send_text(
                 VoiceEvent(type="error", text=message).model_dump_json(exclude_none=True)
@@ -203,7 +201,6 @@ def create_voice_router(
             await socket.close(code=1013)
             return
         active += 1
-        started += 1
         transport = BrowserVoiceTransport(socket, seconds=session_seconds)
         started_at = monotonic()
         deadline = asyncio.timeout(session_seconds)
@@ -235,6 +232,16 @@ def create_voice_router(
                         if verifier is None:
                             raise DelegationRejectedError
                         await verifier.verify(start.delegation)
+                phase = "admission"
+                retry_seconds = await asyncio.to_thread(quota.reserve)
+                if retry_seconds:
+                    outcome = "voice_daily_session_limit"
+                    logger.warning("voice_connection_rejected", error_code=outcome)
+                    await transport.send_error(
+                        "The shared voice session limit for the last 24 hours has been reached. "
+                        f"Try again in {ceil(retry_seconds / 60)} minutes."
+                    )
+                    return
                 phase = "provider_connect"
                 tasks = [
                     asyncio.create_task(transport.read_browser()),
@@ -255,6 +262,11 @@ def create_voice_router(
         except DelegationRejectedError:
             outcome = "delegation_rejected"
             await transport.send_error("Sign in again to use your watchlist, then restart voice.")
+        except VoiceQuotaUnavailable:
+            outcome = "voice_quota_unavailable"
+            await transport.send_error(
+                "Voice admission is temporarily unavailable. Please try later."
+            )
         except ConciergeRunError:
             outcome = "catalog_unavailable"
             await transport.send_error(
