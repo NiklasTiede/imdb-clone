@@ -466,9 +466,35 @@ describe("voice session lifecycle", () => {
     );
     const { result } = renderHook(() => useConciergeVoice(vi.fn()));
     await act(() => result.current.start());
-    expect(result.current.error).toContain("macOS");
+    expect(result.current.error).toContain("browser's site permissions");
+    expect(result.current.error).toContain("device settings");
+    expect(result.current.error).not.toContain("macOS");
     expect(result.current.active).toBe(false);
     expect(audio.close).toHaveBeenCalled();
+    expect(Socket.instances).toHaveLength(0);
+  });
+
+  it("distinguishes an unavailable microphone from denied permission", async () => {
+    audio.start.mockRejectedValueOnce(
+      new DOMException("device unavailable", "NotReadableError"),
+    );
+    const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+    await act(() => result.current.start());
+    expect(result.current.error).toContain("microphone couldn't be opened");
+    expect(result.current.active).toBe(false);
+    expect(audio.close).toHaveBeenCalled();
+    expect(Socket.instances).toHaveLength(0);
+  });
+
+  it("explains missing browser audio support without requesting a session", async () => {
+    vi.stubGlobal("navigator", {});
+    const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+    await act(() => result.current.start());
+    expect(result.current.error).toContain("HTTPS or localhost");
+    expect(result.current.error).toContain("inside another app");
+    expect(result.current.active).toBe(false);
+    expect(audio.start).not.toHaveBeenCalled();
+    expect(Socket.instances).toHaveLength(0);
   });
 
   it("mutes capture, interrupts playback and closes on connection loss", async () => {

@@ -114,7 +114,9 @@ test("microphone denial shows help and preserves text fallback", async ({
   await page.goto("/movie-search?conciergeDebug=1");
   await page.getByRole("button", { name: "Close Movie Concierge" }).click();
   await page.getByTestId("voice-lens-toggle").click();
-  await expect(page.getByRole("alert")).toContainText("macOS");
+  await expect(page.getByRole("alert")).toContainText("browser's site permissions");
+  await expect(page.getByRole("alert")).toContainText("device settings");
+  await expect(page.getByRole("alert")).not.toContainText("macOS");
   await expect(
     page.getByRole("textbox", { name: "Ask the Movie Concierge" }),
   ).toBeEnabled();

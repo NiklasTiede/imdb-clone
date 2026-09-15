@@ -230,10 +230,12 @@ export const useConciergeVoice = (
           : "";
       fail(
         name === "NotAllowedError"
-          ? "Microphone access was denied. Allow it in your browser and macOS System Settings → Privacy & Security → Microphone, then try again."
+          ? "Voice audio access was blocked. Allow microphone access for this site in your browser's site permissions and for your browser app in your device settings, then try again."
           : name === "NotFoundError"
             ? "No microphone found. Connect an input device and try again."
-            : "Microphone audio couldn't start. Check your browser permissions and input device.",
+            : name === "NotReadableError"
+              ? "Your microphone couldn't be opened. Check whether another app is using it and whether your input device is working, then try again."
+              : "Microphone audio couldn't start. Check your browser permissions and input device.",
       );
     };
     setError(null);
@@ -279,9 +281,10 @@ export const useConciergeVoice = (
     };
     try {
       if (!navigator.mediaDevices?.getUserMedia || !window.AudioContext) {
-        throw new Error(
-          "Microphone audio requires a supported browser on localhost or HTTPS.",
+        fail(
+          "Voice requires a browser with microphone support and a secure connection (HTTPS or localhost). If you opened this page inside another app, open it in your browser and try again.",
         );
+        return;
       }
       const audio = new BrowserAudio(model === "gpt-live-1");
       audioRef.current = audio;
