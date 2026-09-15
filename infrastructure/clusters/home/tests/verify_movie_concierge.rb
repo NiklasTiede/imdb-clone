@@ -162,6 +162,11 @@ assert_contract(
 quota = resource(documents, "PersistentVolumeClaim", "imdb-clone-voice-quota", "imdb-clone")
 assert_contract(quota.dig("spec", "accessModes") == ["ReadWriteOnce"], "quota must be single-writer")
 assert_contract(
+  quota.dig("metadata", "annotations", "argocd.argoproj.io/sync-wave") ==
+    agent.dig("metadata", "annotations", "argocd.argoproj.io/sync-wave"),
+  "WaitForFirstConsumer quota PVC must sync with its consuming Deployment"
+)
+assert_contract(
   pod_spec.fetch("volumes").any? do |volume|
     volume.dig("persistentVolumeClaim", "claimName") == "imdb-clone-voice-quota" &&
       container.fetch("volumeMounts").any? do |mount|

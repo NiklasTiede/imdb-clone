@@ -13,7 +13,8 @@ metadata:
   name: imdb-clone-voice-quota
   namespace: imdb-clone
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    # local-path binds only after its consuming Pod is scheduled.
+    argocd.argoproj.io/sync-wave: "4"
 spec:
   accessModes:
     - ReadWriteOnce
