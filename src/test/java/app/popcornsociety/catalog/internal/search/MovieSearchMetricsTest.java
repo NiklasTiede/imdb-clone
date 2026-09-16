@@ -17,12 +17,17 @@ class MovieSearchMetricsTest {
 
     assertThat(
             registry
-                .get("imdb.search.requests")
+                .get("popcorn_society.search.requests")
                 .tags("mode", "discovery", "result", "non_empty")
                 .counter()
                 .count())
         .isEqualTo(1);
-    assertThat(registry.get("imdb.search.duration").tag("mode", "discovery").timer().count())
+    assertThat(
+            registry
+                .get("popcorn_society.search.duration")
+                .tag("mode", "discovery")
+                .timer()
+                .count())
         .isEqualTo(1);
   }
 }

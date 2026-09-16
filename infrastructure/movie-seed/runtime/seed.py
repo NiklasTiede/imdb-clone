@@ -326,7 +326,7 @@ def ensure_bucket(client, bucket: str) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Seed imdb-clone data and media.")
+    parser = argparse.ArgumentParser(description="Seed Popcorn Society data and media.")
     parser.add_argument("command", choices=("all", "db", "media"))
     return parser.parse_args()
 

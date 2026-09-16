@@ -3,9 +3,28 @@
 require "json"
 require "yaml"
 
-rendered_path = ARGV.fetch(0, "/tmp/imdb-clone-home-apps.yaml")
+rendered_path = ARGV.fetch(0, "/tmp/popcorn-society-home-apps.yaml")
 repository_root = File.expand_path("../../../..", __dir__)
 documents = YAML.load_stream(File.read(rendered_path)).compact
+# Only the just-published compatible image release switches the active env names.
+documents.each do |document|
+  document.dig("spec", "template", "spec", "containers")&.each do |app|
+    entries = app.fetch("env", [])
+    if ENV["EXPECTED_APP_VERSION"] && !ENV["EXPECTED_APP_VERSION"].empty?
+      assert_no_legacy = entries.none? { |entry| entry["name"].match?(/\AIMDB_(AGENT|CLONE)_/) }
+      raise "new releases must use renamed runtime settings" unless assert_no_legacy
+    end
+    names = entries.map { |entry| entry["name"] }
+    # A staged domain overlay can coexist with the old base before image rollout.
+    # Match Settings: explicit new keys win independently of manifest array order.
+    app["env"] = entries.reject do |entry|
+      entry["name"].start_with?("IMDB_AGENT_") &&
+        names.include?(entry["name"].sub("IMDB_AGENT_", "POPCORN_SOCIETY_AGENT_"))
+    end.map do |entry|
+      entry.merge("name" => entry["name"].sub("POPCORN_SOCIETY_AGENT_", "IMDB_AGENT_"))
+    end
+  end
+end
 
 def resource(documents, kind, name, namespace = nil)
   match = documents.find do |document|
@@ -34,7 +53,7 @@ end
 
 def pinned_image_version(image, repository)
   match = image.match(
-    /\A#{Regexp.escape(repository)}:v(?<version>\d+\.\d+\.\d+)@sha256:[0-9a-f]{64}\z/
+    /\A#{Regexp.escape(repository).sub("imdb\\-clone", "(?:imdb-clone|popcorn-society)")}:v(?<version>\d+\.\d+\.\d+)@sha256:[0-9a-f]{64}\z/
   )
   raise "#{repository} image must use a semantic tag and immutable digest" if match.nil?
 
@@ -72,6 +91,12 @@ image_versions = {
 }
 
 expected_app_version = ENV["EXPECTED_APP_VERSION"]
+if expected_app_version && !expected_app_version.empty?
+  [container, backend_container, frontend_container].each do |app|
+    assert_contract(app.fetch("image").include?("/popcorn-society-"),
+      "new releases must use Popcorn Society repositories")
+  end
+end
 unless expected_app_version.nil? || expected_app_version.empty?
   assert_contract(
     expected_app_version.match?(/\A\d+\.\d+\.\d+\z/),

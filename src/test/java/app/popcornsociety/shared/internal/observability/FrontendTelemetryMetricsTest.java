@@ -64,40 +64,40 @@ class FrontendTelemetryMetricsTest {
 
     assertThat(
             registry
-                .get("imdb.frontend.web.vital.duration")
+                .get("popcorn_society.frontend.web.vital.duration")
                 .tags("metric", "lcp", "rating", "good")
                 .timer()
                 .totalTime(TimeUnit.MILLISECONDS))
         .isEqualTo(1_250.5d);
     assertThat(
             registry
-                .get("imdb.frontend.web.vital.cls")
+                .get("popcorn_society.frontend.web.vital.cls")
                 .tag("rating", "needs_improvement")
                 .summary()
                 .max())
         .isEqualTo(0.12d);
     assertThat(
             registry
-                .get("imdb.frontend.api.request.duration")
+                .get("popcorn_society.frontend.api.request.duration")
                 .tags("operation", "search", "outcome", "success")
                 .timer()
                 .count())
         .isEqualTo(1L);
     assertThat(
             registry
-                .get("imdb.frontend.browser.errors")
+                .get("popcorn_society.frontend.browser.errors")
                 .tag("kind", "unhandled_rejection")
                 .counter()
                 .count())
         .isEqualTo(1.0d);
     assertThat(
             registry
-                .get("imdb.frontend.ui.actions")
+                .get("popcorn_society.frontend.ui.actions")
                 .tags("action", "open_movie", "outcome", "executed")
                 .counter()
                 .count())
         .isEqualTo(1.0d);
-    assertThat(registry.get("imdb.frontend.events.accepted").counters())
+    assertThat(registry.get("popcorn_society.frontend.events.accepted").counters())
         .extracting(counter -> counter.getId().getTag("type"))
         .containsExactlyInAnyOrder("api_request", "browser_error", "ui_action", "web_vital");
   }

@@ -23,7 +23,7 @@ class MovieEnrichmentMcpToolTest {
     verify(enrichment).get(6);
     assertThat(
             registry
-                .get("imdb.assistant.mcp.tool.calls")
+                .get("popcorn_society.assistant.mcp.tool.calls")
                 .tag("tool", "get_movie_enrichment")
                 .tag("outcome", "disabled")
                 .counter()

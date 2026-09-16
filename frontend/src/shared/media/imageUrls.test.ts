@@ -53,3 +53,12 @@ describe("movie image URL helpers", () => {
     );
   });
 });
+
+ it("uses an explicitly migrated bucket without changing media object paths", () => {
+  vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS", "https://media.popcornsociety.app");
+  vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_BUCKET", "popcorn-society");
+  expect(getMoviePosterImageUrl("poster-token", MoviePosterImageSize.Small)).toBe(
+    "https://media.popcornsociety.app/popcorn-society/movies/posters/poster-token_size_120x180.webp",
+  );
+  vi.unstubAllEnvs();
+});

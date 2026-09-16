@@ -4,7 +4,14 @@ set -euo pipefail
 
 readonly CLUSTER_SSH_TARGET="${CLUSTER_SSH_TARGET:-robotnik@um560}"
 readonly CLUSTER_ACCESS_TMP_ROOT="${TMPDIR:-/tmp}"
-readonly CLUSTER_ACCESS_STATE_DIR="${CLUSTER_ACCESS_TMP_ROOT%/}/imdb-clone-cluster-access-${UID}"
+readonly CLUSTER_ACCESS_LEGACY_STATE_DIR="${CLUSTER_ACCESS_TMP_ROOT%/}/imdb-clone-cluster-access-${UID}"
+if compgen -G "${CLUSTER_ACCESS_LEGACY_STATE_DIR}/*.pid" >/dev/null; then
+  # Keep tracking existing tunnels until stop removes their PID files.
+  CLUSTER_ACCESS_STATE_DIR="${CLUSTER_ACCESS_LEGACY_STATE_DIR}"
+else
+  CLUSTER_ACCESS_STATE_DIR="${CLUSTER_ACCESS_TMP_ROOT%/}/popcorn-society-cluster-access-${UID}"
+fi
+readonly CLUSTER_ACCESS_STATE_DIR
 
 usage() {
   cat <<'EOF'

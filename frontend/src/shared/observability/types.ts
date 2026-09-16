@@ -8,7 +8,7 @@ export type PerformanceEventType =
   | "web_vital";
 
 export type PerformanceEventContext = {
-  appName: "imdb-clone-frontend";
+  appName: "popcorn-society-frontend";
   appVersion: string;
   environment: string;
   route?: string;

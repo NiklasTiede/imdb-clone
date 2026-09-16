@@ -13,6 +13,8 @@ class McpSecurityMetrics {
   }
 
   void recordAuthentication(String outcome) {
-    meterRegistry.counter("imdb.assistant.mcp.authentication", "outcome", outcome).increment();
+    meterRegistry
+        .counter("popcorn_society.assistant.mcp.authentication", "outcome", outcome)
+        .increment();
   }
 }

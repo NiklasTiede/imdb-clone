@@ -4,7 +4,7 @@ metadata:
   name: observability-dashboard-operations
   namespace: observability
   annotations:
-    grafana_folder: IMDB Clone
+    grafana_folder: Popcorn Society
   labels:
     grafana_dashboard: "1"
 data:
@@ -971,7 +971,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "(100 * sum(increase(imdb_agent_runs_total{outcome=\"success\"}[$__range])) / clamp_min(sum(increase(imdb_agent_runs_total[$__range])), 1) and on() (sum(increase(imdb_agent_runs_total[$__range])) > 0)) or vector(-1)",
+              "expr": "(100 * sum((increase(popcorn_society_agent_runs_total{outcome=\"success\"}[$__range]) or increase(imdb_agent_runs_total{outcome=\"success\"}[$__range]))) / clamp_min(sum((increase(popcorn_society_agent_runs_total[$__range]) or increase(imdb_agent_runs_total[$__range]))), 1) and on() (sum((increase(popcorn_society_agent_runs_total[$__range]) or increase(imdb_agent_runs_total[$__range]))) > 0)) or vector(-1)",
               "legendFormat": "Value",
               "range": true,
               "refId": "A"
@@ -1047,7 +1047,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "(histogram_quantile(0.95, sum by (le) (increase(imdb_agent_first_event_duration_seconds_bucket[$__range]))) and on() (sum(increase(imdb_agent_first_event_duration_seconds_count[$__range])) > 0)) or vector(0)",
+              "expr": "(histogram_quantile(0.95, sum by (le) ((increase(popcorn_society_agent_first_event_duration_seconds_bucket[$__range]) or increase(imdb_agent_first_event_duration_seconds_bucket[$__range])))) and on() (sum((increase(popcorn_society_agent_first_event_duration_seconds_count[$__range]) or increase(imdb_agent_first_event_duration_seconds_count[$__range]))) > 0)) or vector(0)",
               "legendFormat": "Value",
               "range": true,
               "refId": "A"
@@ -1123,7 +1123,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "(histogram_quantile(0.95, sum by (le) (increase(imdb_agent_run_duration_seconds_bucket[$__range]))) and on() (sum(increase(imdb_agent_runs_total[$__range])) > 0)) or vector(0)",
+              "expr": "(histogram_quantile(0.95, sum by (le) ((increase(popcorn_society_agent_run_duration_seconds_bucket[$__range]) or increase(imdb_agent_run_duration_seconds_bucket[$__range])))) and on() (sum((increase(popcorn_society_agent_runs_total[$__range]) or increase(imdb_agent_runs_total[$__range]))) > 0)) or vector(0)",
               "legendFormat": "Value",
               "range": true,
               "refId": "A"
@@ -1147,7 +1147,7 @@ data:
           "gridPos": { "h": 4, "w": 4, "x": 0, "y": 11 },
           "id": 26,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
-          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(imdb_frontend_events_accepted_total) or vector(0)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum((popcorn_society_frontend_events_accepted_total or imdb_frontend_events_accepted_total)) or vector(0)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
           "title": "Frontend Signals",
           "type": "stat"
         },
@@ -1158,7 +1158,7 @@ data:
           "gridPos": { "h": 4, "w": 4, "x": 4, "y": 11 },
           "id": 27,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
-          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum(imdb_frontend_browser_errors_total) or vector(0)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "sum((popcorn_society_frontend_browser_errors_total or imdb_frontend_browser_errors_total)) or vector(0)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
           "title": "Browser Errors",
           "type": "stat"
         },
@@ -1169,7 +1169,7 @@ data:
           "gridPos": { "h": 4, "w": 4, "x": 8, "y": 11 },
           "id": 28,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
-          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.75, sum by (le) (imdb_frontend_web_vital_duration_seconds_bucket{metric=\"lcp\"})) and on() (sum(imdb_frontend_web_vital_duration_seconds_count{metric=\"lcp\"}) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.75, sum by (le) ((popcorn_society_frontend_web_vital_duration_seconds_bucket{metric=\"lcp\"} or imdb_frontend_web_vital_duration_seconds_bucket{metric=\"lcp\"}))) and on() (sum((popcorn_society_frontend_web_vital_duration_seconds_count{metric=\"lcp\"} or imdb_frontend_web_vital_duration_seconds_count{metric=\"lcp\"})) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
           "title": "LCP p75",
           "type": "stat"
         },
@@ -1180,7 +1180,7 @@ data:
           "gridPos": { "h": 4, "w": 4, "x": 12, "y": 11 },
           "id": 29,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
-          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.75, sum by (le) (imdb_frontend_web_vital_duration_seconds_bucket{metric=\"inp\"})) and on() (sum(imdb_frontend_web_vital_duration_seconds_count{metric=\"inp\"}) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.75, sum by (le) ((popcorn_society_frontend_web_vital_duration_seconds_bucket{metric=\"inp\"} or imdb_frontend_web_vital_duration_seconds_bucket{metric=\"inp\"}))) and on() (sum((popcorn_society_frontend_web_vital_duration_seconds_count{metric=\"inp\"} or imdb_frontend_web_vital_duration_seconds_count{metric=\"inp\"})) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
           "title": "INP p75",
           "type": "stat"
         },
@@ -1191,7 +1191,7 @@ data:
           "gridPos": { "h": 4, "w": 4, "x": 16, "y": 11 },
           "id": 30,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
-          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.75, sum by (le) (imdb_frontend_web_vital_cls_score_bucket)) and on() (sum(imdb_frontend_web_vital_cls_score_count) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(histogram_quantile(0.75, sum by (le) ((popcorn_society_frontend_web_vital_cls_score_bucket or imdb_frontend_web_vital_cls_score_bucket))) and on() (sum((popcorn_society_frontend_web_vital_cls_score_count or imdb_frontend_web_vital_cls_score_count)) > 0)) or vector(-1)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
           "title": "CLS p75",
           "type": "stat"
         },
@@ -1202,7 +1202,7 @@ data:
           "gridPos": { "h": 4, "w": 4, "x": 20, "y": 11 },
           "id": 31,
           "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
-          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(100 * sum(imdb_frontend_api_request_duration_seconds_count{outcome!=\"success\"}) / clamp_min(sum(imdb_frontend_api_request_duration_seconds_count), 1)) or vector(0)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "editorMode": "code", "expr": "(100 * sum((popcorn_society_frontend_api_request_duration_seconds_count{outcome!=\"success\"} or imdb_frontend_api_request_duration_seconds_count{outcome!=\"success\"})) / clamp_min(sum((popcorn_society_frontend_api_request_duration_seconds_count or imdb_frontend_api_request_duration_seconds_count)), 1)) or vector(0)", "instant": true, "legendFormat": "Value", "range": false, "refId": "A" }],
           "title": "Browser API Failures",
           "type": "stat"
         },
@@ -1280,7 +1280,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(increase(imdb_agent_runs_total[$__range])) or vector(0)",
+              "expr": "sum((increase(popcorn_society_agent_runs_total[$__range]) or increase(imdb_agent_runs_total[$__range]))) or vector(0)",
               "legendFormat": "Value",
               "range": true,
               "refId": "A"
@@ -1356,7 +1356,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(imdb_agent_runs_active) or vector(0)",
+              "expr": "sum((popcorn_society_agent_runs_active or imdb_agent_runs_active)) or vector(0)",
               "legendFormat": "Value",
               "range": true,
               "refId": "A"
@@ -1432,7 +1432,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "sum(increase(imdb_agent_model_estimated_cost_usd_total[24h])) or vector(0)",
+              "expr": "sum((increase(popcorn_society_agent_model_estimated_cost_usd_total[24h]) or increase(imdb_agent_model_estimated_cost_usd_total[24h]))) or vector(0)",
               "legendFormat": "Value",
               "range": true,
               "refId": "A"
@@ -1510,7 +1510,7 @@ data:
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "100 * max(imdb_agent_process_budget_committed_usd) / clamp_min(max(imdb_agent_guardrail_limit{limit=\"project_cost_usd\"}), 0.01)",
+              "expr": "100 * max((popcorn_society_agent_process_budget_committed_usd or imdb_agent_process_budget_committed_usd)) / clamp_min(max((popcorn_society_agent_guardrail_limit{limit=\"project_cost_usd\"} or imdb_agent_guardrail_limit{limit=\"project_cost_usd\"})), 0.01)",
               "legendFormat": "Value",
               "range": true,
               "refId": "A"

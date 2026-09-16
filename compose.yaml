@@ -1,8 +1,10 @@
+name: popcorn-society
+
 services:
 
   ### ----------------------- PostgreSQL ----------------------- ###
-  imdb-clone-postgresql:
-    container_name: imdb-clone-postgresql
+  popcorn-society-postgresql:
+    container_name: popcorn-society-postgresql
     image: postgres:18
     restart: unless-stopped
     environment:
@@ -12,13 +14,13 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - imdb-clone-postgresql-data:/var/lib/postgresql
+      - popcorn-society-postgresql-data:/var/lib/postgresql
     networks:
-      - imdb-clone-network
+      - popcorn-society-network
 
   ### ----------------------- OpenSearch --------------------- ###
-  imdb-clone-opensearch:
-    container_name: imdb-clone-opensearch
+  popcorn-society-opensearch:
+    container_name: popcorn-society-opensearch
     image: opensearchproject/opensearch:3.6.0
     restart: unless-stopped
     environment:
@@ -29,13 +31,13 @@ services:
     ports:
       - "9200:9200"
     volumes:
-      - imdb-clone-opensearch-data:/usr/share/opensearch/data
+      - popcorn-society-opensearch-data:/usr/share/opensearch/data
     networks:
-      - imdb-clone-network
+      - popcorn-society-network
 
   ### ----------------------- RustFS ----------------------- ###
-  imdb-clone-rustfs:
-    container_name: imdb-clone-rustfs
+  popcorn-society-rustfs:
+    container_name: popcorn-society-rustfs
     image: rustfs/rustfs:1.0.0-beta.2
     restart: unless-stopped
     user: root
@@ -47,20 +49,20 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - imdb-clone-rustfs-data:/data
+      - popcorn-society-rustfs-data:/data
     networks:
-      - imdb-clone-network
+      - popcorn-society-network
     command: /data
 
-  imdb-clone-rustfs-init:
+  popcorn-society-rustfs-init:
     image: minio/mc:latest
     depends_on:
-      - imdb-clone-rustfs
+      - popcorn-society-rustfs
     restart: "no"
     entrypoint: ["/bin/sh", "-c"]
     command: |
       set -eu
-      until mc alias set rustfs http://imdb-clone-rustfs:9000 "$$ACCESS_KEY" "$$SECRET_KEY"; do
+      until mc alias set rustfs http://popcorn-society-rustfs:9000 "$$ACCESS_KEY" "$$SECRET_KEY"; do
         sleep 2
       done
       mc mb --ignore-existing rustfs/imdb-clone
@@ -70,11 +72,11 @@ services:
       - ACCESS_KEY=ROOTNAME
       - SECRET_KEY=CHANGEME123
     networks:
-      - imdb-clone-network
+      - popcorn-society-network
 
   ### ----------------------- llama.cpp ----------------------- ###
-  imdb-clone-llama-cpp:
-    container_name: imdb-clone-llama-cpp
+  popcorn-society-llama-cpp:
+    container_name: popcorn-society-llama-cpp
     image: ghcr.io/ggml-org/llama.cpp:server
     restart: unless-stopped
     environment:
@@ -82,9 +84,9 @@ services:
     ports:
       - "8082:8080"
     volumes:
-      - imdb-clone-llama-cpp-cache:/root/.cache
+      - popcorn-society-llama-cpp-cache:/root/.cache
     networks:
-      - imdb-clone-network
+      - popcorn-society-network
     command:
       - -hf
       - ggml-org/embeddinggemma-300M-GGUF
@@ -94,59 +96,60 @@ services:
       - --port
       - "8080"
 
-  imdb-clone-seed-light:
-    image: ${IMDB_CLONE_SEED_LIGHT_IMAGE:-niklastiede/imdb-clone-seed:light-local}
+  popcorn-society-seed-light:
+    image: ${POPCORN_SOCIETY_SEED_LIGHT_IMAGE:-niklastiede/imdb-clone-seed:light-local}
     profiles:
       - seed-light
     depends_on:
-      - imdb-clone-postgresql
-      - imdb-clone-rustfs
+      - popcorn-society-postgresql
+      - popcorn-society-rustfs
     environment:
-      - POSTGRES_HOST=imdb-clone-postgresql
+      - POSTGRES_HOST=popcorn-society-postgresql
       - POSTGRES_DB=movie_db
       - POSTGRES_USER=myroot
       - POSTGRES_PASSWORD=secret
-      - RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000
+      - RUSTFS_ENDPOINT=http://popcorn-society-rustfs:9000
       - RUSTFS_ACCESS_KEY=ROOTNAME
       - RUSTFS_SECRET_KEY=CHANGEME123
       - RUSTFS_BUCKET=imdb-clone
       - SEED_NAME=light
       - SEED_VERSION=${SEED_VERSION:-local}
     networks:
-      - imdb-clone-network
+      - popcorn-society-network
 
-  imdb-clone-seed-full:
-    image: ${IMDB_CLONE_SEED_FULL_IMAGE:-niklastiede/imdb-clone-seed:full-local}
+  popcorn-society-seed-full:
+    image: ${POPCORN_SOCIETY_SEED_FULL_IMAGE:-niklastiede/imdb-clone-seed:full-local}
     profiles:
       - seed-full
     depends_on:
-      - imdb-clone-postgresql
-      - imdb-clone-rustfs
+      - popcorn-society-postgresql
+      - popcorn-society-rustfs
     environment:
-      - POSTGRES_HOST=imdb-clone-postgresql
+      - POSTGRES_HOST=popcorn-society-postgresql
       - POSTGRES_DB=movie_db
       - POSTGRES_USER=myroot
       - POSTGRES_PASSWORD=secret
-      - RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000
+      - RUSTFS_ENDPOINT=http://popcorn-society-rustfs:9000
       - RUSTFS_ACCESS_KEY=ROOTNAME
       - RUSTFS_SECRET_KEY=CHANGEME123
       - RUSTFS_BUCKET=imdb-clone
       - SEED_NAME=full
       - SEED_VERSION=${SEED_VERSION:-local}
     networks:
-      - imdb-clone-network
+      - popcorn-society-network
 
+# Physical names intentionally retain existing local data; do not use down --volumes.
 volumes:
-  imdb-clone-postgresql-data:
+  popcorn-society-postgresql-data:
     name: imdb-clone-postgresql-data
-  imdb-clone-opensearch-data:
+  popcorn-society-opensearch-data:
     name: imdb-clone-opensearch-data
-  imdb-clone-rustfs-data:
+  popcorn-society-rustfs-data:
     name: imdb-clone-rustfs-data
-  imdb-clone-llama-cpp-cache:
+  popcorn-society-llama-cpp-cache:
     name: imdb-clone-llama-cpp-cache
 
 networks:
-  imdb-clone-network:
-    name: imdb-clone-network
+  popcorn-society-network:
+    name: popcorn-society-network
     driver: bridge

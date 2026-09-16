@@ -132,7 +132,7 @@ def target_paths(
 def download_original(tmdb_path: str) -> bytes:
     request = Request(
         f"{BASE_IMAGE_URL}{tmdb_path}",
-        headers={"User-Agent": "imdb-clone-movie-seed/1.0"},
+        headers={"User-Agent": "popcorn-society-movie-seed/1.0"},
     )
     with urlopen(request, timeout=30) as response:
         return response.read()

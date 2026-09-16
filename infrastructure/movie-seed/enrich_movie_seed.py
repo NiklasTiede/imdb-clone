@@ -258,7 +258,7 @@ class TmdbClient:
         return self.fetch_json(url, f"TMDB movie ID {movie_id}")
 
     def fetch_json(self, url: str, resource_name: str) -> dict:
-        request = Request(url, headers={"User-Agent": "imdb-clone-movie-seed/1.0"})
+        request = Request(url, headers={"User-Agent": "popcorn-society-movie-seed/1.0"})
 
         last_error = None
         for _ in range(self.retries):

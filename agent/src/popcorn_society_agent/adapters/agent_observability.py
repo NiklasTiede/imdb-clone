@@ -102,7 +102,7 @@ class AgentMetrics:
 
 def create_agent_metrics(registry: CollectorRegistry, settings: Settings) -> AgentMetrics:
     guardrail_limit = Gauge(
-        "imdb_agent_guardrail_limit",
+        "popcorn_society_agent_guardrail_limit",
         "Configured process guardrail limits by bounded kind.",
         ("limit",),
         registry=registry,
@@ -117,7 +117,7 @@ def create_agent_metrics(registry: CollectorRegistry, settings: Settings) -> Age
         guardrail_limit.labels(limit=limit).set(value)
 
     process_budget_committed = Gauge(
-        "imdb_agent_process_budget_committed_usd",
+        "popcorn_society_agent_process_budget_committed_usd",
         "Pessimistic cost committed by the process-local inference budget ledger.",
         registry=registry,
     )
@@ -125,54 +125,54 @@ def create_agent_metrics(registry: CollectorRegistry, settings: Settings) -> Age
 
     return AgentMetrics(
         runs=Counter(
-            "imdb_agent_runs",
+            "popcorn_society_agent_runs",
             "Completed Movie Concierge runs.",
             ("outcome",),
             registry=registry,
         ),
         duration=Histogram(
-            "imdb_agent_run_duration_seconds",
+            "popcorn_society_agent_run_duration_seconds",
             "Movie Concierge run duration.",
             ("outcome",),
             registry=registry,
         ),
         first_event_duration=Histogram(
-            "imdb_agent_first_event_duration_seconds",
+            "popcorn_society_agent_first_event_duration_seconds",
             "Time from accepted run to the first model or tool event.",
             registry=registry,
         ),
         process_budget_committed=process_budget_committed,
         active=Gauge(
-            "imdb_agent_runs_active",
+            "popcorn_society_agent_runs_active",
             "Movie Concierge runs currently active.",
             registry=registry,
         ),
         tool_calls=Counter(
-            "imdb_agent_tool_calls",
+            "popcorn_society_agent_tool_calls",
             "Observed Movie Concierge tool calls.",
             ("tool",),
             registry=registry,
         ),
         ui_actions=Counter(
-            "imdb_agent_ui_actions",
+            "popcorn_society_agent_ui_actions",
             "Grounded Movie Concierge UI action decisions.",
             ("action", "outcome"),
             registry=registry,
         ),
         tokens=Counter(
-            "imdb_agent_model_tokens",
+            "popcorn_society_agent_model_tokens",
             "Provider-reported Movie Concierge tokens.",
             ("model", "direction"),
             registry=registry,
         ),
         estimated_cost=Counter(
-            "imdb_agent_model_estimated_cost_usd",
+            "popcorn_society_agent_model_estimated_cost_usd",
             "Best-effort Movie Concierge inference cost in USD.",
             ("model",),
             registry=registry,
         ),
         disconnects=Counter(
-            "imdb_agent_sse_disconnects",
+            "popcorn_society_agent_sse_disconnects",
             "Movie Concierge SSE streams cancelled by clients.",
             registry=registry,
         ),

@@ -69,7 +69,8 @@ class SecurityHardeningTest extends BaseContainers {
         .andExpect(status().isTooManyRequests())
         .andExpect(header().exists("Retry-After"));
 
-    assertThat(meterRegistry.counter("imdb_clone.rate_limit.rejections", "rule", "login").count())
+    assertThat(
+            meterRegistry.counter("popcorn_society.rate_limit.rejections", "rule", "login").count())
         .isEqualTo(1.0d);
     assertThat(auditRows())
         .anySatisfy(

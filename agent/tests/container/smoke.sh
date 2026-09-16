@@ -40,8 +40,8 @@ fi
 
 curl --fail --silent "http://127.0.0.1:${PORT}/healthz" >/dev/null
 metrics="$(curl --fail --silent "http://127.0.0.1:${PORT}/metrics")"
-if [[ "${metrics}" != *"imdb_agent_build_info"* ]]; then
-  echo "agent metrics do not contain imdb_agent_build_info" >&2
+if [[ "${metrics}" != *"popcorn_society_agent_build_info"* ]]; then
+  echo "agent metrics do not contain popcorn_society_agent_build_info" >&2
   exit 1
 fi
 

@@ -36,9 +36,9 @@ expected = {"/api" => "imdb-clone-backend", "/oauth2" => "imdb-clone-backend", "
 check(paths.to_h { |p| [p["path"], p.dig("backend", "service", "name")] } == expected, "New domain must route API, OAuth and WebAuthn to the backend")
 
 agent_env = env(preview, "imdb-clone-agent", "agent")
-origins = JSON.parse(agent_env.fetch("IMDB_AGENT_VOICE_ALLOWED_ORIGINS"))
+origins = JSON.parse(agent_env.fetch("POPCORN_SOCIETY_AGENT_VOICE_ALLOWED_ORIGINS"))
 check(origins.sort == ["https://imdb-clone.the-coding-lab.com", "https://popcornsociety.app"], "Voice must accept exactly the migration origins")
-check(JSON.parse(agent_env.fetch("IMDB_AGENT_ALLOWED_HOSTS")).include?("popcornsociety.app"), "Agent must trust the new hostname")
+check(JSON.parse(agent_env.fetch("POPCORN_SOCIETY_AGENT_ALLOWED_HOSTS")).include?("popcornsociety.app"), "Agent must trust the new hostname")
 check(env(preview, "imdb-clone-backend", "backend")["SPRING_PROFILES_ACTIVE"] == "prod,popcorn", "New RP/email origin profile must be activated")
 voice = find(preview, "Ingress", "popcorn-society-concierge-public")
 check(voice.dig("spec", "rules", 0, "host") == "popcornsociety.app", "Voice ingress host drifted")

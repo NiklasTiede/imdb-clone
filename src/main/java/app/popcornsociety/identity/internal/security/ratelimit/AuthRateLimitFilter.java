@@ -156,7 +156,7 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
       String principal,
       ConsumptionProbe probe)
       throws IOException {
-    meterRegistry.counter("imdb_clone.rate_limit.rejections", "rule", rule).increment();
+    meterRegistry.counter("popcorn_society.rate_limit.rejections", "rule", rule).increment();
     auditEvents.recordAuthenticationEvent(
         SecurityAuditEventType.RATE_LIMIT_REJECTED,
         principal,

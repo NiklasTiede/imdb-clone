@@ -36,3 +36,14 @@ it("ignores corrupt storage and tolerates unavailable storage", () => {
   get.mockRestore();
   set.mockRestore();
 });
+
+it("migrates legacy preferences separately for guest and accounts, with new values winning", () => {
+  localStorage.setItem("imdb-clone:streaming-country:guest", "DE");
+  localStorage.setItem("imdb-clone:streaming-country:account-7", "AT");
+  expect(readStreamingCountry(null)).toBe("DE");
+  expect(readStreamingCountry(7)).toBe("AT");
+  expect(readStreamingCountry(8)).toBe("CH");
+  expect(localStorage.getItem("popcorn-society:streaming-country:account-7")).toBe("AT");
+  saveStreamingCountry(7, "US");
+  expect(readStreamingCountry(7)).toBe("US");
+});

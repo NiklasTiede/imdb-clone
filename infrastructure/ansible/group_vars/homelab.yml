@@ -20,4 +20,4 @@ gitops_repo_revision: "master"
 gitops_root_path: "infrastructure/clusters/home/apps"
 
 homelab_domain: "the-coding-lab.com"
-imdb_clone_domain: "imdb-clone.the-coding-lab.com"
+popcorn_society_domain: "imdb-clone.the-coding-lab.com"

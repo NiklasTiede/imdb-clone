@@ -56,7 +56,7 @@ describe("registerWebVitals", () => {
     expect(events).toEqual([
       expect.objectContaining({
         context: expect.objectContaining({
-          appName: "imdb-clone-frontend",
+          appName: "popcorn-society-frontend",
           route: window.location.pathname,
         }),
         id: "CLS-id",

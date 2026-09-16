@@ -196,7 +196,7 @@ Implementation checklist:
 Verification options:
 
 ```bash
-kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
+kubectl kustomize infrastructure/clusters/home/apps >/tmp/popcorn-society-home-apps.yaml
 docker build --platform linux/amd64 -t popcorn-society-backend:local .
 cd frontend && docker build --platform linux/amd64 -t popcorn-society-frontend:local .
 kubectl get applications -n argocd

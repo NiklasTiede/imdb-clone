@@ -70,7 +70,7 @@ def target_image_paths(output_dir: Path, image_url_token: str) -> dict[str, Path
 def download_poster(movie: MovieImageSeed) -> bytes:
     request = Request(
         f"{BASE_POSTER_URL}{movie.poster_path}",
-        headers={"User-Agent": "imdb-clone-dev-seed/1.0"},
+        headers={"User-Agent": "popcorn-society-dev-seed/1.0"},
     )
     with urlopen(request, timeout=30) as response:
         return response.read()

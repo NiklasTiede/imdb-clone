@@ -40,7 +40,7 @@ class McpBearerAuthenticationFilterTest {
         .doesNotContain("incorrect-token");
     assertThat(
             meterRegistry
-                .get("imdb.assistant.mcp.authentication")
+                .get("popcorn_society.assistant.mcp.authentication")
                 .tag("outcome", "rejected")
                 .counter()
                 .count())
@@ -70,7 +70,7 @@ class McpBearerAuthenticationFilterTest {
         .containsExactly("ROLE_MCP_CLIENT");
     assertThat(
             meterRegistry
-                .get("imdb.assistant.mcp.authentication")
+                .get("popcorn_society.assistant.mcp.authentication")
                 .tag("outcome", "accepted")
                 .counter()
                 .count())

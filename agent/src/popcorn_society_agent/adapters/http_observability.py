@@ -36,7 +36,7 @@ class HttpMetrics:
 def create_http_metrics(settings: Settings) -> HttpMetrics:
     registry = CollectorRegistry(auto_describe=True)
     build_info = Gauge(
-        "imdb_agent_build_info",
+        "popcorn_society_agent_build_info",
         "Build and deployment identity for the Movie Concierge.",
         ("service", "environment", "version"),
         registry=registry,
@@ -50,19 +50,19 @@ def create_http_metrics(settings: Settings) -> HttpMetrics:
     return HttpMetrics(
         registry=registry,
         requests=Counter(
-            "imdb_agent_http_requests",
+            "popcorn_society_agent_http_requests",
             "Completed Movie Concierge HTTP requests.",
             ("method", "route", "status"),
             registry=registry,
         ),
         duration=Histogram(
-            "imdb_agent_http_request_duration_seconds",
+            "popcorn_society_agent_http_request_duration_seconds",
             "Movie Concierge HTTP request duration.",
             ("method", "route", "status"),
             registry=registry,
         ),
         in_progress=Gauge(
-            "imdb_agent_http_requests_in_progress",
+            "popcorn_society_agent_http_requests_in_progress",
             "Movie Concierge HTTP requests currently in progress.",
             ("method",),
             registry=registry,

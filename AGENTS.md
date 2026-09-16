@@ -140,7 +140,7 @@ cd frontend && yarn build
 make verify-agent
 make verify-observability-charts
 make verify-kubernetes-schema
-kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
+kubectl kustomize infrastructure/clusters/home/apps >/tmp/popcorn-society-home-apps.yaml
 ```
 
 If backend API contracts change:

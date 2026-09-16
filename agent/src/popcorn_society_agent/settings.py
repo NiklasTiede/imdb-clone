@@ -70,7 +70,7 @@ class Settings(BaseSettings):
         strict=True,
     )
 
-    service_name: str = "imdb-movie-concierge"
+    service_name: str = "popcorn-society-agent"
     environment: DeploymentEnvironment = DeploymentEnvironment.LOCAL
     version: str = __version__
     host: str = "0.0.0.0"

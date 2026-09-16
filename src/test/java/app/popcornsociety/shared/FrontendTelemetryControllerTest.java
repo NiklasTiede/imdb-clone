@@ -20,7 +20,9 @@ class FrontendTelemetryControllerTest extends BaseControllerIntegrationTest {
   @Test
   void acceptsAnonymousTelemetryWithoutCsrfAndRecordsOnlyBoundedLabels() throws Exception {
     double before =
-        meterRegistry.counter("imdb.frontend.events.accepted", "type", "web_vital").count();
+        meterRegistry
+            .counter("popcorn_society.frontend.events.accepted", "type", "web_vital")
+            .count();
 
     mockMvc
         .perform(
@@ -53,14 +55,16 @@ class FrontendTelemetryControllerTest extends BaseControllerIntegrationTest {
         .andExpect(status().isNoContent());
 
     org.assertj.core.api.Assertions.assertThat(
-            meterRegistry.counter("imdb.frontend.events.accepted", "type", "web_vital").count())
+            meterRegistry
+                .counter("popcorn_society.frontend.events.accepted", "type", "web_vital")
+                .count())
         .isEqualTo(before + 2.0d);
     org.assertj.core.api.Assertions.assertThat(prometheusMeterRegistry.scrape())
         .contains(
-            "imdb_frontend_events_accepted_total",
-            "imdb_frontend_ui_actions_total",
-            "imdb_frontend_web_vital_cls_score_bucket",
-            "imdb_frontend_web_vital_duration_seconds_bucket");
+            "popcorn_society_frontend_events_accepted_total",
+            "popcorn_society_frontend_ui_actions_total",
+            "popcorn_society_frontend_web_vital_cls_score_bucket",
+            "popcorn_society_frontend_web_vital_duration_seconds_bucket");
   }
 
   @Test

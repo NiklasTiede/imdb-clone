@@ -10,11 +10,11 @@ APP_DOCKER_PLATFORM ?= linux/amd64
 APP_DOCKER_BUILD_PLATFORM_FLAG ?= --platform $(APP_DOCKER_PLATFORM)
 SEED_DOCKER_BUILD_PLATFORM_FLAG ?=
 SEED_PUBLISH_PLATFORMS ?= linux/amd64,linux/arm64
-K8S_RENDER_OUTPUT ?= /tmp/imdb-clone-home-apps.yaml
-K8S_SEED_RENDER_OUTPUT ?= /tmp/imdb-clone-movie-seed.yaml
-K8S_SCHEMA_OUTPUT ?= /tmp/imdb-clone-home-apps-schema.yaml
+K8S_RENDER_OUTPUT ?= /tmp/popcorn-society-home-apps.yaml
+K8S_SEED_RENDER_OUTPUT ?= /tmp/popcorn-society-movie-seed.yaml
+K8S_SCHEMA_OUTPUT ?= /tmp/popcorn-society-home-apps-schema.yaml
 KUBECONFORM_IMAGE ?= ghcr.io/yannh/kubeconform:v0.6.7
-OPENAPI_CHECK_DIR ?= /tmp/imdb-clone-openapi-check
+OPENAPI_CHECK_DIR ?= /tmp/popcorn-society-openapi-check
 POPCORN_SOCIETY_OPENAPI_BASE_URL ?= http://localhost:8080
 AGENT_DIR = agent
 AGENT_IMAGE ?= popcorn-society-agent:local
@@ -119,15 +119,15 @@ docker-compose-dev-down: ## stop local Docker Compose services
 	docker compose down
 
 seed-local-users: ## create local roles and demo accounts without touching movie data
-	docker exec -i imdb-clone-postgresql psql -U myroot -d movie_db < $(LOCAL_USERS_SQL)
+	docker exec -i popcorn-society-postgresql psql -U myroot -d movie_db < $(LOCAL_USERS_SQL)
 
 seed-light: ## run lightweight seed against local Docker Compose services
-	docker run --rm --network imdb-clone-network \
-		-e POSTGRES_HOST=imdb-clone-postgresql \
+	docker run --rm --network popcorn-society-network \
+		-e POSTGRES_HOST=popcorn-society-postgresql \
 		-e POSTGRES_DB=movie_db \
 		-e POSTGRES_USER=myroot \
 		-e POSTGRES_PASSWORD=secret \
-		-e RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000 \
+		-e RUSTFS_ENDPOINT=http://popcorn-society-rustfs:9000 \
 		-e RUSTFS_ACCESS_KEY=ROOTNAME \
 		-e RUSTFS_SECRET_KEY=CHANGEME123 \
 		-e RUSTFS_BUCKET=imdb-clone \
@@ -136,12 +136,12 @@ seed-light: ## run lightweight seed against local Docker Compose services
 		$(SEED_LIGHT_TAG) all
 
 seed-full: ## run full seed against local Docker Compose services
-	docker run --rm --network imdb-clone-network \
-		-e POSTGRES_HOST=imdb-clone-postgresql \
+	docker run --rm --network popcorn-society-network \
+		-e POSTGRES_HOST=popcorn-society-postgresql \
 		-e POSTGRES_DB=movie_db \
 		-e POSTGRES_USER=myroot \
 		-e POSTGRES_PASSWORD=secret \
-		-e RUSTFS_ENDPOINT=http://imdb-clone-rustfs:9000 \
+		-e RUSTFS_ENDPOINT=http://popcorn-society-rustfs:9000 \
 		-e RUSTFS_ACCESS_KEY=ROOTNAME \
 		-e RUSTFS_SECRET_KEY=CHANGEME123 \
 		-e RUSTFS_BUCKET=imdb-clone \
@@ -332,6 +332,7 @@ verify-popcorn-migration: ## validate the staged Popcorn Society domain migratio
 
 verify-release-workflows: ## verify protected-branch CI and release PR contracts
 	ruby infrastructure/clusters/home/tests/verify_release_workflows.rb
+	python3 -m unittest discover -s scripts/tests -p 'test_release_manifests.py'
 
 verify-kubernetes-render: check-kubernetes-verification-tools ## render home-cluster Kubernetes manifests
 	kubectl kustomize infrastructure/clusters/home/apps > $(K8S_RENDER_OUTPUT)
@@ -341,7 +342,7 @@ verify-seed-release: verify-kubernetes-render ## verify normal releases cannot r
 	ruby infrastructure/clusters/home/tests/verify_seed_release.rb \
 		$(K8S_RENDER_OUTPUT) $(K8S_SEED_RENDER_OUTPUT)
 
-verify-kubernetes-schema: verify-release-workflows verify-seed-release verify-runtime-hardening verify-movie-concierge-production verify-observability-production ## validate rendered Kubernetes manifests with pinned kubeconform
+verify-kubernetes-schema: verify-metric-branding verify-release-workflows verify-seed-release verify-runtime-hardening verify-movie-concierge-production verify-observability-production ## validate rendered Kubernetes manifests with pinned kubeconform
 	ruby -ryaml -e 'ARGV.each { |path| YAML.load_stream(File.read(path)).each { |doc| next if doc.nil?; doc.delete("sops") if doc.is_a?(Hash); puts YAML.dump(doc) } }' \
 		$(K8S_RENDER_OUTPUT) $(K8S_SEED_RENDER_OUTPUT) > $(K8S_SCHEMA_OUTPUT)
 	docker run --rm -i $(KUBECONFORM_IMAGE) \
@@ -401,3 +402,10 @@ test-voice-stress-live: ## paid, bounded real-browser Grok/GPT-Live comparison; 
 
 summarize-voice-stress: ## summarize retained live runs, including failures and incomplete sessions
 	python3 scripts/summarize-voice-stress.py
+
+.PHONY: verify-metric-branding audit-project-names
+verify-metric-branding: ## validate dashboard PromQL and old/new metric transition
+	ruby infrastructure/clusters/home/tests/verify_metric_branding.rb
+
+audit-project-names: ## inventory remaining project-name references without printing file contents
+	python3 scripts/audit-project-names.py

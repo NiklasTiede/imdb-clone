@@ -29,9 +29,11 @@ class MovieSearchMetrics {
   void record(Mode mode, long totalElements, long startedAt) {
     String modeTag = mode.name().toLowerCase(Locale.ROOT);
     String resultTag = totalElements == 0 ? "empty" : "non_empty";
-    meterRegistry.counter("imdb.search.requests", "mode", modeTag, "result", resultTag).increment();
     meterRegistry
-        .timer("imdb.search.duration", "mode", modeTag)
+        .counter("popcorn_society.search.requests", "mode", modeTag, "result", resultTag)
+        .increment();
+    meterRegistry
+        .timer("popcorn_society.search.duration", "mode", modeTag)
         .record(System.nanoTime() - startedAt, TimeUnit.NANOSECONDS);
   }
 }

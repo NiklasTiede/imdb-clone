@@ -30,7 +30,7 @@ class MovieWatchProvidersMcpToolTest {
     verify(providers).get(6, "CH");
     assertThat(
             registry
-                .get("imdb.assistant.mcp.tool.calls")
+                .get("popcorn_society.assistant.mcp.tool.calls")
                 .tag("tool", "get_movie_watch_providers")
                 .tag("outcome", "disabled")
                 .counter()

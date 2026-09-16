@@ -36,8 +36,21 @@ describe("recordDiscoveryEvent", () => {
     const secondPayload = post.mock.calls[1]?.[1] as { eventId: string; sessionId: string };
     expect(firstPayload.eventId).not.toBe(secondPayload.eventId);
     expect(firstPayload.sessionId).toBe(secondPayload.sessionId);
-    expect(window.sessionStorage.getItem("imdb-clone.discovery-session-id")).toBe(
+    expect(window.sessionStorage.getItem("popcorn-society.discovery-session-id")).toBe(
       firstPayload.sessionId,
     );
   });
+});
+
+test("preserves an existing discovery session during rebranding", () => {
+  window.sessionStorage.clear();
+  window.sessionStorage.setItem("imdb-clone.discovery-session-id", "existing-session");
+  const post = vi.spyOn(apiHttpClient, "post").mockResolvedValue({} as never);
+  recordDiscoveryEvent({
+    eventType: "MOVIE_OPEN", feedInstanceId: "feed-123", movieId: 7,
+    sectionId: "new-and-noteworthy", strategyVersion: "home-structured-v1",
+  });
+  expect(post).toHaveBeenLastCalledWith(expect.any(String), expect.objectContaining({ sessionId: "existing-session" }));
+  expect(window.sessionStorage.getItem("popcorn-society.discovery-session-id")).toBe("existing-session");
+  vi.restoreAllMocks();
 });

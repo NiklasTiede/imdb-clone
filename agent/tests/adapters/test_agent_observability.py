@@ -22,7 +22,7 @@ def test_ui_action_decisions_use_bounded_metrics_and_trace_attributes() -> None:
 
     assert (
         registry.get_sample_value(
-            "imdb_agent_ui_actions_total",
+            "popcorn_society_agent_ui_actions_total",
             {"action": "open_movie", "outcome": "emitted"},
         )
         == 1

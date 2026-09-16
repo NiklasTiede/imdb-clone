@@ -2,7 +2,7 @@
 
 require "yaml"
 
-rendered_path = ARGV.fetch(0, "/tmp/imdb-clone-home-apps.yaml")
+rendered_path = ARGV.fetch(0, "/tmp/popcorn-society-home-apps.yaml")
 documents = YAML.load_stream(File.read(rendered_path)).compact
 
 def assert_contract(condition, message)

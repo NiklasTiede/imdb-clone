@@ -63,26 +63,34 @@ IDE Java source roots remain `src/main/java` and `src/test/java`.
   Java image after new tasks have been queued. Domain-component rollback alone is unaffected.
 - Passkey credentials still use the current RP ID until the separate domain activation below.
 
-### Deliberately stable operational identifiers
+### Operational rename and retained external identities
 
-Docker Hub repositories, Kubernetes namespaces/resources, database objects, storage bucket
-`imdb-clone`, telemetry identifiers and browser storage keys retain their existing names.
-These are live addresses or persistent identifiers, not source package names. In particular,
-voice browser IDs and quota storage must stay stable across the rename. Local image build tags
-use `popcorn-society-{backend,frontend,agent}:local`; CD still publishes to the existing Docker Hub
-repositories. A registry/resource migration needs its own coordinated deployment change.
+The full inventory and remaining data/resource migration sequence are in
+[`popcorn-society-name-audit.md`](popcorn-society-name-audit.md).
 
-The GitHub repository and badges still use the actual existing repository URL. Historical
-releases and genuine IMDb identifiers, ratings, dataset imports and source attribution remain
-accurate. The seven current Grafana dashboards use `Popcorn Society / ...` display titles.
-Dashboard UIDs, navigation links, metric queries, resource names and the existing `IMDB Clone`
-/ `IMDB Clone Data` folder assignments remain stable. Folder reorganization and telemetry names
-belong to the later operational migration; the historical Compose dashboards remain unchanged.
+Application metrics, frontend/agent telemetry identities, Grafana display folders, local Compose
+services and browser storage keys now use Popcorn Society names. Browser IDs/preferences migrate
+on read; dashboards and alerts support both old and new metrics during the rollout. Stable Grafana
+UIDs/navigation links remain valid. Existing Grafana viewer accounts are not renamed automatically;
+the bootstrap display name applies when creating an account.
 
-The dashboard ConfigMaps are active GitOps resources: once these changes are merged into the
-tracked production branch, Argo CD can reconcile them without an application version bump or CD
-image build. This is independent of the staged domain cutover. Local validation does not deploy
-anything; confirm the new titles in Grafana after that merge and reconciliation.
+CD now publishes `popcorn-society-{backend,frontend,agent}` images. Its tested manifest updater
+switches image references, backend Spring/Pyroscope identities and runtime environment keys in the
+same deployment PR, after publication. Current base manifests still point at the actual published
+1.6.1 images and therefore retain their compatible runtime keys. Do not manually replace those
+image repository strings before the new images exist. Ensure Docker Hub repository creation/push
+permissions are ready before the first renamed release.
+
+Kubernetes resource names, stateful Helm releases, physical volume names, the existing media bucket
+and actual hostnames remain explicit migration dependencies. The configurable frontend bucket
+setting is `VITE_POPCORN_SOCIETY_OBJECT_STORAGE_BUCKET`; its default still reads existing media.
+GitHub URLs still point at the actual existing repository. Genuine IMDb source identifiers and
+historical records remain accurate. No persistent data is moved by this preparation.
+
+The dashboard and alert ConfigMaps/PrometheusRules are active GitOps resources: once merged into
+the production branch, Argo CD can reconcile them independently of an application release.
+Their dual-name queries deliberately work before and after that release. Domain components remain
+inactive until separately enabled. See the audit for the local Compose stop-before-recreate step.
 
 Current screenshot and PlantUML source filenames use `popcorn-society-*`; screenshot content is
 unchanged. The unreferenced legacy logo and static data-model PNG were removed. The old flow-schema
@@ -100,7 +108,8 @@ not the blog at `the-coding-lab.com`.
   `popcorn` Spring profile before those new backend images exist.
 - Keep `VITE_SITE_URL=https://imdb-clone.the-coding-lab.com` for this initial release.
 - Verify navigation, password login, OAuth, passkeys, image loading, ratings, watchlists and voice.
-- The base GitOps manifests and legacy production RP ID are unchanged by this preparation.
+- Namespace, persistent resource identities and the legacy production RP ID remain unchanged.
+  Active dashboard/alert display and query updates can sync on merge.
 
 ## 2. Prepare DNS and provider settings
 

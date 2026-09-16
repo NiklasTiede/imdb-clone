@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly VITE_POPCORN_SOCIETY_OBJECT_STORAGE_BUCKET?: string;
   /** Compatibility for existing developer .env.local files during the rename. */
   readonly VITE_IMDB_CLONE_BACKEND_ADDRESS?: string;
   readonly VITE_IMDB_CLONE_CONCIERGE_ADDRESS?: string;

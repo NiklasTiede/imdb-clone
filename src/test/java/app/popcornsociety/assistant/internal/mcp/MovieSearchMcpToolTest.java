@@ -64,7 +64,7 @@ class MovieSearchMcpToolTest {
             });
     assertThat(
             meterRegistry
-                .get("imdb.assistant.mcp.tool.calls")
+                .get("popcorn_society.assistant.mcp.tool.calls")
                 .tag("tool", "search_movies")
                 .tag("outcome", "success")
                 .counter()

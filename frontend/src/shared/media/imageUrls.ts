@@ -25,8 +25,12 @@ export type MovieImageSize =
   | ObjectStorageImageSize.Large
   | MoviePosterImageSize;
 
+// Existing media stays in this bucket until the separate data-copy cutover.
+const getObjectStorageBucket = () =>
+  import.meta.env.VITE_POPCORN_SOCIETY_OBJECT_STORAGE_BUCKET || "imdb-clone";
+
 const buildObjectUrl = (path: string): string =>
-  `${getObjectStorageHost()}/imdb-clone/${path}`;
+  `${getObjectStorageHost()}/${getObjectStorageBucket()}/${path}`;
 
 export const getMoviePosterImageUrl = (
   token: string,

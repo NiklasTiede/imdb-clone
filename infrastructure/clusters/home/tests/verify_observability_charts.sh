@@ -3,7 +3,7 @@
 set -euo pipefail
 
 readonly repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-readonly verification_dir="$(mktemp -d /tmp/imdb-clone-observability-charts.XXXXXX)"
+readonly verification_dir="$(mktemp -d /tmp/popcorn-society-observability-charts.XXXXXX)"
 readonly helm_image="alpine/helm:3.20.0"
 readonly kubeconform_image="ghcr.io/yannh/kubeconform:v0.6.7"
 

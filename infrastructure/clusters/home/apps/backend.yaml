@@ -54,6 +54,9 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
+            # Preserve the deployed log/trace identity until the observability migration.
+            - name: SPRING_APPLICATION_NAME
+              value: imdb-clone-backend
             - name: NOTIFICATION_OUTBOX_KEY
               valueFrom:
                 secretKeyRef:

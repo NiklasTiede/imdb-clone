@@ -64,7 +64,7 @@ The Compose setup creates these local services:
 | RustFS API | `http://localhost:9000` | S3-compatible object storage. |
 | RustFS console | `http://localhost:9001` | Local console for object storage. |
 
-The `imdb-clone-rustfs-init` container creates the `imdb-clone` bucket and makes
+The `popcorn-society-rustfs-init` container creates the `imdb-clone` bucket and makes
 `imdb-clone/movies/*` publicly readable for local media.
 
 ## Run Backend
@@ -380,7 +380,7 @@ Smoke checks:
 
 ```bash
 curl -fsS http://localhost:8081/actuator/health
-curl -fsS http://localhost:8080/v3/api-docs.yaml >/tmp/imdb-clone-openapi.yaml
+curl -fsS http://localhost:8080/v3/api-docs.yaml >/tmp/popcorn-society-openapi.yaml
 curl -fsS http://localhost:9200/_cluster/health
 ```
 
@@ -601,7 +601,7 @@ ordinary `home-root` application release.
 Render without applying:
 
 ```bash
-kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
+kubectl kustomize infrastructure/clusters/home/apps >/tmp/popcorn-society-home-apps.yaml
 make verify-seed-release
 make verify-movie-concierge-production
 make verify-observability-production
@@ -816,7 +816,7 @@ Movie Concierge environment or dependency setup fails:
 | Frontend image | `cd frontend && docker build --platform linux/amd64 -t popcorn-society-frontend:local .` |
 | Agent image | `make docker-build-agent` |
 | Agent image smoke | `make container-smoke-agent` |
-| k3s manifest render | `kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml` |
+| k3s manifest render | `kubectl kustomize infrastructure/clusters/home/apps >/tmp/popcorn-society-home-apps.yaml` |
 | k3s namespace status | `kubectl -n imdb-clone get deploy,svc,ingress` |
 | k3s rollout status | `kubectl -n imdb-clone rollout status deploy/imdb-clone-backend` and frontend equivalent |
 | API smoke | `curl -fsS http://localhost:8081/actuator/health` and `curl -fsS http://localhost:8080/v3/api-docs.yaml` |

@@ -158,7 +158,7 @@ Expected local URLs:
 
 | Task | Command |
 | --- | --- |
-| Render home app manifests | `kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml` |
+| Render home app manifests | `kubectl kustomize infrastructure/clusters/home/apps >/tmp/popcorn-society-home-apps.yaml` |
 | Render home app manifests via Make | `make verify-kubernetes-render` |
 | Validate rendered manifests with pinned kubeconform | `make verify-kubernetes-schema` |
 | Verify Movie Concierge production contracts | `make verify-movie-concierge-production` |

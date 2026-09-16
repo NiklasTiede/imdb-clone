@@ -19,10 +19,10 @@ class MovieSearchToolMetrics {
 
   void record(String toolName, String outcome, long startedAt) {
     meterRegistry
-        .counter("imdb.assistant.mcp.tool.calls", "tool", toolName, "outcome", outcome)
+        .counter("popcorn_society.assistant.mcp.tool.calls", "tool", toolName, "outcome", outcome)
         .increment();
     meterRegistry
-        .timer("imdb.assistant.mcp.tool.duration", "tool", toolName, "outcome", outcome)
+        .timer("popcorn_society.assistant.mcp.tool.duration", "tool", toolName, "outcome", outcome)
         .record(System.nanoTime() - startedAt, TimeUnit.NANOSECONDS);
   }
 }

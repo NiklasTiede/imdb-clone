@@ -140,7 +140,7 @@ Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views 
   transport, and runtime metrics.
 
 Grounded Concierge navigation exposes two complementary low-cardinality counters:
-`imdb_agent_ui_actions_total{action="open_movie",outcome="emitted|rejected"}` records the server
+`popcorn_society_agent_ui_actions_total{action="open_movie",outcome="emitted|rejected"}` records the server
 policy decision, while
 `imdb_frontend_ui_actions_total{action="open_movie",outcome="executed|rejected"}` records browser
 handling. The corresponding trace events carry only the same action and outcome; movie IDs,

@@ -279,7 +279,7 @@ spec:
                             create_status="$(curl -sS -o /tmp/create.json -w "%{http_code}" \
                               -u "${auth}" \
                               -H "Content-Type: application/json" \
-                              -d "{\"name\":\"IMDB Clone Viewer\",\"email\":\"${VIEWER_EMAIL}\",\"login\":\"${VIEWER_LOGIN}\",\"password\":\"${VIEWER_PASSWORD}\",\"OrgId\":1}" \
+                              -d "{\"name\":\"Popcorn Society Viewer\",\"email\":\"${VIEWER_EMAIL}\",\"login\":\"${VIEWER_LOGIN}\",\"password\":\"${VIEWER_PASSWORD}\",\"OrgId\":1}" \
                               "${grafana_url}/api/admin/users")"
                             if [ "${create_status}" != "200" ] && [ "${create_status}" != "201" ] && [ "${create_status}" != "412" ]; then
                               cat /tmp/create.json >&2

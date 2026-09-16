@@ -1,6 +1,6 @@
 import type { PerformanceEventContext } from "./types";
 
-export const OBSERVABILITY_APP_NAME = "imdb-clone-frontend" as const;
+export const OBSERVABILITY_APP_NAME = "popcorn-society-frontend" as const;
 
 export const createPerformanceEventContext = (
   route?: string,
