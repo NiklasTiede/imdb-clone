@@ -4,7 +4,7 @@ metadata:
   name: observability-dashboard-postgresql
   namespace: observability
   annotations:
-    grafana_folder: IMDB Clone Data
+    grafana_folder: Popcorn Society Data
   labels:
     grafana_dashboard: "1"
 data:
@@ -1294,7 +1294,7 @@ data:
       "timepicker": {
       },
       "timezone": "browser",
-      "title": "PostgreSQL",
+      "title": "Popcorn Society / PostgreSQL",
       "uid": "imdb-postgresql-overview",
       "version": 1,
       "weekStart": ""

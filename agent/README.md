@@ -1,6 +1,6 @@
-# IMDb Clone Movie Concierge
+# Popcorn Society Movie Concierge
 
-Production read-only pilot for conversational discovery in the IMDb Clone. It uses Pydantic AI
+Production read-only pilot for conversational discovery in Popcorn Society. It uses Pydantic AI
 2.42.0 with `gpt-5.6-luna`, calls the Java domain through protected MCP tools, and streams an
 application-owned event contract to React.
 
@@ -249,7 +249,7 @@ arguments are never part of the browser SSE contract, logs, traces, or Prometheu
 Live evals require two deliberate controls and are never part of CI:
 
 ```bash
-IMDB_AGENT_LIVE_EVALS_ENABLED=true \
+POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true \
   make eval-agent-live AGENT_EVAL_CASE=exact-title-search
 ```
 
@@ -301,7 +301,7 @@ across three model requests; the 24,000-token allowance supports that normal too
 
 Prometheus collects bounded HTTP, run, outcome, first-event latency, tool, UI-action decision,
 token, provider-estimated cost, process-budget, saturation, and disconnect metrics. The
-`IMDb Clone / Movie Concierge` Grafana dashboard visualizes those signals. PrometheusRules cover
+`Popcorn Society / Movie Concierge` Grafana dashboard visualizes those signals. PrometheusRules cover
 availability, errors, latency,
 MCP/provider failures, capacity, and cost. Alertmanager is deliberately not installed yet, so rules
 are visible in Prometheus/Grafana but do not send notifications.
@@ -332,7 +332,7 @@ or tool content. `pyroscope-otel` associates root OpenTelemetry spans with profi
 Grafana can move from a trace to the relevant CPU profile. Profiling is disabled by default outside
 production and initialization/export failures do not break concierge requests. Production defaults
 to the cluster-local endpoint so the manifest stays compatible with the previously published agent
-image during the two-step image release; `IMDB_AGENT_PROFILING_ENABLED=false` is the kill switch.
+image during the two-step image release; `POPCORN_SOCIETY_AGENT_PROFILING_ENABLED=false` is the kill switch.
 
 Allocation profiles show which stacks allocate memory; they are not a retained-heap measurement.
 Use Prometheus process metrics to answer how much memory the pod currently consumes.
@@ -401,14 +401,14 @@ On macOS, allow the browser under **System Settings → Privacy & Security → M
 as in the browser's site permissions. Use localhost or HTTPS. If access is denied, the UI offers
 retry and retains the existing text conversation. No audio is acquired merely by opening the panel.
 
-Voice is off unless `IMDB_AGENT_VOICE_ENABLED=true` (Grok) or
-`IMDB_AGENT_VOICE_LIVE_ENABLED=true` (GPT-Live). Local defaults allow two concurrent connections,
+Voice is off unless `POPCORN_SOCIETY_AGENT_VOICE_ENABLED=true` (Grok) or
+`POPCORN_SOCIETY_AGENT_VOICE_LIVE_ENABLED=true` (GPT-Live). Local defaults allow two concurrent connections,
 300 seconds per session, 1500 connected seconds per browser and 6000 connected seconds shared
 across both providers in a rolling 24-hour window. Production uses a 900-second session lifetime
-and the same time budgets. The limits are `IMDB_AGENT_VOICE_BROWSER_SECONDS` and
-`IMDB_AGENT_VOICE_SHARED_SECONDS`; restarts do not consume a separate start allowance.
+and the same time budgets. The limits are `POPCORN_SOCIETY_AGENT_VOICE_BROWSER_SECONDS` and
+`POPCORN_SOCIETY_AGENT_VOICE_SHARED_SECONDS`; restarts do not consume a separate start allowance.
 Production requires mounted provider credentials, explicit trusted HTTPS origins, and an absolute
-`IMDB_AGENT_VOICE_QUOTA_DATABASE` path on persistent storage.
+`POPCORN_SOCIETY_AGENT_VOICE_QUOTA_DATABASE` path on persistent storage.
 See the [rollout runbook](../docs/operations.md#public-voice-rollout).
 The SQLite ledger stores browser IDs, reservation IDs, timestamps and seconds, never conversation
 content or IP addresses. Five-second atomic reservations prevent simultaneous tabs/providers from
@@ -447,8 +447,8 @@ Opt-in synthetic application replay (one billable session per invocation, at mos
 
 ```bash
 cd agent
-IMDB_AGENT_LIVE_EVALS_ENABLED=true uv run python evals/voice/replay_session.py --live
-IMDB_AGENT_LIVE_EVALS_ENABLED=true uv run python evals/voice/replay_session.py --live --scenario context
+POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true uv run python evals/voice/replay_session.py --live
+POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true uv run python evals/voice/replay_session.py --live --scenario context
 ```
 
 This checks real Java-backed Forrest Gump results, audio and grounded navigation. Unlike the
@@ -475,8 +475,8 @@ From the repository root:
 
 ```bash
 make agent-sync
-IMDB_AGENT_LIVE_EVALS_ENABLED=true make probe-agent-voice-live
-IMDB_AGENT_LIVE_EVALS_ENABLED=true make probe-agent-voice-interrupt-live
+POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true make probe-agent-voice-live
+POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true make probe-agent-voice-interrupt-live
 ```
 
 Each command permits **one billable provider session**, with no automatic retry/reconnect:
@@ -511,7 +511,7 @@ See [ADR 0003](../docs/adr/0003-movie-concierge-voice-probe.md) for the channel 
 ## Package map
 
 ```text
-src/imdb_agent/
+src/popcorn_society_agent/
 ├── concierge/    provider-independent policy, tools, events, eval contract, ports, orchestration
 ├── web/          FastAPI and typed SSE inbound adapter
 ├── adapters/     Pydantic AI/OpenAI/MCP, memory, eval, logging, metrics, and fakes

@@ -7,7 +7,7 @@ import type { PerformanceEvent, PerformanceReporter } from "./types";
 
 const createEvent = (): PerformanceEvent => ({
   context: {
-    appName: "imdb-clone-frontend",
+    appName: "popcorn-society-frontend",
     appVersion: "test",
     environment: "test",
   },

@@ -3,7 +3,7 @@
 require "json"
 require "yaml"
 
-rendered_path = ARGV.fetch(0, "/tmp/imdb-clone-home-apps.yaml")
+rendered_path = ARGV.fetch(0, "/tmp/popcorn-society-home-apps.yaml")
 repository_root = File.expand_path("../../../..", __dir__)
 documents = YAML.load_stream(File.read(rendered_path)).compact
 
@@ -566,7 +566,7 @@ end
 
 operations = dashboards.fetch("Operations")
 assert_contract(
-  operations.fetch("title") == "IMDB Clone – Operations Overview",
+  operations.fetch("title") == "Popcorn Society / Operations Overview",
   "operations dashboard title drifted"
 )
 %w[
@@ -774,8 +774,8 @@ operations_resource = resource(
   "observability"
 )
 assert_contract(
-  operations_resource.dig("metadata", "annotations", "grafana_folder") == "IMDB Clone",
-  "operations dashboard must stay in the primary IMDB Clone folder"
+  operations_resource.dig("metadata", "annotations", "grafana_folder") == "Popcorn Society",
+  "operations dashboard must stay in the primary Popcorn Society folder"
 )
 primary_dashboard_resources = %w[
   observability-dashboard-agent
@@ -788,8 +788,8 @@ primary_dashboard_resources = %w[
 primary_dashboard_resources.each do |name|
   config_map = resource(documents, "ConfigMap", name, "observability")
   assert_contract(
-    config_map.dig("metadata", "annotations", "grafana_folder") == "IMDB Clone",
-    "#{name} must stay in the primary IMDB Clone folder"
+    config_map.dig("metadata", "annotations", "grafana_folder") == "Popcorn Society",
+    "#{name} must stay in the primary Popcorn Society folder"
   )
 end
 postgres_dashboard_resource = resource(
@@ -800,8 +800,8 @@ postgres_dashboard_resource = resource(
 )
 assert_contract(
   postgres_dashboard_resource.dig("metadata", "annotations", "grafana_folder") ==
-    "IMDB Clone Data",
-  "PostgreSQL dashboard must stay in the IMDB Clone Data folder"
+    "Popcorn Society Data",
+  "PostgreSQL dashboard must stay in the Popcorn Society Data folder"
 )
 
 traefik = resource(documents, "HelmChartConfig", "traefik", "kube-system")

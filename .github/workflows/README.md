@@ -71,3 +71,17 @@ There is one production application namespace plus dedicated `databases`, `obser
 `argocd`, and supporting system namespaces. There is no duplicated canary database environment.
 See the [k3s guide](../../infrastructure/kubernetes/README.md) for GitOps details and the
 [operations runbook](../../docs/operations.md) for URLs, private access, and incident handling.
+
+## Popcorn Society image repositories
+
+New app releases publish `popcorn-society-backend`, `popcorn-society-frontend` and
+`popcorn-society-agent` under the configured Docker Hub account. Prepare public repositories and
+token push permissions before the first renamed release. The checked-in 1.6.1 image references
+remain under their existing repositories until replacement images have been published.
+
+`scripts/update-release-manifests.py` validates all three digests and source references before
+editing manifests. The generated deployment PR pins the new images and switches runtime env keys
+and backend telemetry identities together. It accepts both legacy and renamed source image refs,
+so subsequent releases follow the same path. Namespace, services, PVCs and secrets stay stable.
+`make verify-release-workflows` includes updater tests; strict production verification with
+`EXPECTED_APP_VERSION` requires the new repositories and environment keys.

@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from imdb_agent.concierge.events import GroundedMovie
-from imdb_agent.concierge.personal import PersonalTurn, requests_watchlist
-from imdb_agent.concierge.tools import ToolName
+from popcorn_society_agent.concierge.events import GroundedMovie
+from popcorn_society_agent.concierge.personal import PersonalTurn, requests_watchlist
+from popcorn_society_agent.concierge.tools import ToolName
 
 
 def movie(movie_id: int = 6, title: str = "Amélie") -> GroundedMovie:

@@ -1,5 +1,8 @@
 # Production Operations
 
+The Popcorn Society domain switch is staged separately. Follow the
+[migration runbook](popcorn-society-migration.md) before changing DNS or activating the new ingresses.
+
 This runbook is the operator entry point for the home k3s cluster. Public application traffic uses
 HTTPS ingress. Databases, search, object-storage administration, metrics APIs, logs, traces,
 profiles, and Argo CD remain private and are reached through SSH-backed Kubernetes port-forwards.
@@ -8,7 +11,7 @@ profiles, and Argo CD remain private and are reached through SSH-backed Kubernet
 
 | Surface | URL | Access |
 | --- | --- | --- |
-| IMDb Clone | `https://imdb-clone.the-coding-lab.com` | Public |
+| Popcorn Society | `https://imdb-clone.the-coding-lab.com` | Public |
 | Backend API | `https://backend.imdb-clone.the-coding-lab.com` | Public application API |
 | Public movie media | `https://object-storage.imdb-clone.the-coding-lab.com` | Public objects only |
 | Grafana | `https://grafana.imdb-clone.the-coding-lab.com` | Authenticated read-only viewer |
@@ -120,24 +123,24 @@ Use Grafana Explore and its Metrics, Logs, Traces, and Profiles Drilldown views 
   memory still retained; use Prometheus process/JVM memory metrics for current memory usage.
 - A Tempo trace can open the CPU profile for the same service and time window. Python root spans
   additionally carry Pyroscope profile correlation IDs for span-level analysis.
-- The `IMDB Clone – Operations Overview` dashboard is the operator landing page for availability,
+- The `Popcorn Society / Operations Overview` dashboard is the operator landing page for availability,
   real-user experience, user-facing latency and errors, agent economics, cluster capacity,
   workload readiness, and actionable firing alerts.
 - Dashboard navigation preserves the selected time range across Backend, Frontend, Movie
   Concierge, PostgreSQL, Infrastructure, Cluster Logs, Traces, and Profiles drill-downs.
-- The `IMDB Clone Frontend` dashboard is the real-user view for LCP, INP, CLS, app/route timings,
+- The `Popcorn Society / Frontend` dashboard is the real-user view for LCP, INP, CLS, app/route timings,
   browser-observed API latency and outcomes, and anonymous browser errors. No signal can identify a
   browser or reconstruct the content of an error.
 - The Backend dashboard includes catalog search, local embedding load, Hikari acquisition, GC,
   thread, and file-descriptor drill-downs. PostgreSQL adds session, transaction, lock, temporary
   data, and WAL views; Infrastructure adds throttling, load, network-drop, and inode views.
-- The `IMDb Clone / Cluster Logs` dashboard is the log-focused starting point for workload
+- The `Popcorn Society / Cluster Logs` dashboard is the log-focused starting point for workload
   failures.
-- The `IMDb Clone / Movie Concierge` dashboard is the detailed view for agent cost, latency, tool,
+- The `Popcorn Society / Movie Concierge` dashboard is the detailed view for agent cost, latency, tool,
   transport, and runtime metrics.
 
 Grounded Concierge navigation exposes two complementary low-cardinality counters:
-`imdb_agent_ui_actions_total{action="open_movie",outcome="emitted|rejected"}` records the server
+`popcorn_society_agent_ui_actions_total{action="open_movie",outcome="emitted|rejected"}` records the server
 policy decision, while
 `imdb_frontend_ui_actions_total{action="open_movie",outcome="executed|rejected"}` records browser
 handling. The corresponding trace events carry only the same action and outcome; movie IDs,
@@ -232,19 +235,19 @@ Release in this order to avoid enabling unsupported settings on the v1.4.0 image
    in an infrastructure PR and let Argo CD reconcile it:
 
    ```yaml
-   - name: IMDB_AGENT_VOICE_ENABLED
+   - name: POPCORN_SOCIETY_AGENT_VOICE_ENABLED
      value: "true"
-   - name: IMDB_AGENT_VOICE_LIVE_ENABLED
+   - name: POPCORN_SOCIETY_AGENT_VOICE_LIVE_ENABLED
      value: "true"
-   - name: IMDB_AGENT_VOICE_SESSION_SECONDS
+   - name: POPCORN_SOCIETY_AGENT_VOICE_SESSION_SECONDS
      value: "900"
-   - name: IMDB_AGENT_VOICE_BROWSER_SECONDS
+   - name: POPCORN_SOCIETY_AGENT_VOICE_BROWSER_SECONDS
      value: "1500"
-   - name: IMDB_AGENT_VOICE_SHARED_SECONDS
+   - name: POPCORN_SOCIETY_AGENT_VOICE_SHARED_SECONDS
      value: "6000"
-   - name: IMDB_AGENT_VOICE_QUOTA_DATABASE
+   - name: POPCORN_SOCIETY_AGENT_VOICE_QUOTA_DATABASE
      value: /var/lib/movie-concierge/voice-quota.db
-   - name: IMDB_AGENT_VOICE_ALLOWED_ORIGINS
+   - name: POPCORN_SOCIETY_AGENT_VOICE_ALLOWED_ORIGINS
      value: '["https://imdb-clone.the-coding-lab.com"]'
    ```
 
@@ -270,7 +273,7 @@ when the pod is replaced; there is no automatic cross-pod session recovery.
 
 Voice time quota rollout: publish and deploy new agent and frontend images together. Cached old
 frontends must reload to send the required `browser_id`. The current GitOps manifest temporarily
-keeps `IMDB_AGENT_VOICE_MAX_SESSIONS=8` for the pinned v1.5.0 image until that release is replaced;
+keeps `POPCORN_SOCIETY_AGENT_VOICE_MAX_SESSIONS=8` for the pinned v1.5.0 image until that release is replaced;
 the new agent ignores this legacy variable. Remove it after rollout. No quota database reset is
 needed: `voice_usage` is created alongside the retained legacy `voice_starts` table. Time accounting
 starts fresh because historical starts contain no durations. Never delete the PVC to reset limits.

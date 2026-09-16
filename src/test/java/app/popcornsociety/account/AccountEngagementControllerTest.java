@@ -1,0 +1,175 @@
+package app.popcornsociety.account;
+
+import app.popcornsociety.engagement.internal.persistence.Comment;
+import app.popcornsociety.engagement.internal.persistence.CommentRepository;
+import app.popcornsociety.engagement.internal.persistence.Rating;
+import app.popcornsociety.engagement.internal.persistence.RatingRepository;
+import app.popcornsociety.engagement.internal.persistence.WatchedMovie;
+import app.popcornsociety.engagement.internal.persistence.WatchedMovieRepository;
+import app.popcornsociety.support.BaseControllerIntegrationTest;
+import java.math.BigDecimal;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.client.RestTestClient;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class AccountEngagementControllerTest extends BaseControllerIntegrationTest {
+
+  @Autowired private RestTestClient restTestClient;
+
+  @Autowired private CommentRepository commentRepository;
+
+  @Autowired private WatchedMovieRepository watchedMovieRepository;
+
+  @Autowired private RatingRepository ratingRepository;
+
+  @BeforeAll
+  void setup() {
+    commentRepository.save(new Comment("public profile comment", 2L, 1L));
+    watchedMovieRepository.save(WatchedMovie.create(1L, 2L));
+    ratingRepository.save(Rating.create(new BigDecimal("8.5"), 1L, 2L));
+  }
+
+  @Test
+  void getCommentsByAccount_success() {
+    restTestClient
+        .get()
+        .uri("/api/v1/accounts/test_user_two/comments?page=0&size=10")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.totalElements")
+                    .isEqualTo(1)
+                    .jsonPath("$.content[0].message")
+                    .isEqualTo("public profile comment")
+                    .jsonPath("$.content[0].accountId")
+                    .isEqualTo(2)
+                    .jsonPath("$.content[0].movieId")
+                    .isEqualTo(1));
+  }
+
+  @Test
+  void getWatchlistByAccount_success() {
+    restTestClient
+        .get()
+        .uri("/api/v1/accounts/test_user_two/watchlist?page=0&size=10")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.totalElements")
+                    .isEqualTo(1)
+                    .jsonPath("$.content[0].accountId")
+                    .isEqualTo(2)
+                    .jsonPath("$.content[0].movieId")
+                    .isEqualTo(1)
+                    .jsonPath("$.content[0].movie.id")
+                    .isEqualTo(1));
+  }
+
+  @Test
+  void getRatingsByAccount_success() {
+    restTestClient
+        .get()
+        .uri("/api/v1/accounts/test_user_two/ratings?page=0&size=10")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.totalElements")
+                    .isEqualTo(1)
+                    .jsonPath("$.content[0].rating")
+                    .isEqualTo(8.5)
+                    .jsonPath("$.content[0].accountId")
+                    .isEqualTo(2)
+                    .jsonPath("$.content[0].movieId")
+                    .isEqualTo(1));
+  }
+
+  @Test
+  void getRatingLibrary_success() {
+    restTestClient
+        .get()
+        .uri("/api/v1/accounts/test_user_two/library/ratings?page=0&size=10&sort=SCORE_DESC")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.items.totalElements")
+                    .isEqualTo(1)
+                    .jsonPath("$.items.content[0].rating")
+                    .isEqualTo(8.5)
+                    .jsonPath("$.items.content[0].movie.id")
+                    .isEqualTo(1)
+                    .jsonPath("$.insights.totalRatings")
+                    .isEqualTo(1));
+  }
+
+  @Test
+  void getWatchlistLibrary_success() {
+    restTestClient
+        .get()
+        .uri("/api/v1/accounts/test_user_two/library/watchlist?page=0&size=10&sort=ADDED_AT_DESC")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isOk(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.items.totalElements")
+                    .isEqualTo(1)
+                    .jsonPath("$.items.content[0].movie.id")
+                    .isEqualTo(1)
+                    .jsonPath("$.insights.totalMovies")
+                    .isEqualTo(1));
+  }
+
+  @Test
+  void getAccountEngagement_unknownUsername() {
+    restTestClient
+        .get()
+        .uri("/api/v1/accounts/missing_user/comments")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isNotFound(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.detail")
+                    .isEqualTo("User with username [missing_user] not found in database."));
+  }
+
+  @Test
+  void getAccountEngagement_rejectsInvalidPagination() {
+    restTestClient
+        .get()
+        .uri("/api/v1/accounts/test_user_two/comments?page=0&size=31")
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .expectAll(
+            spec -> spec.expectStatus().isBadRequest(),
+            spec -> spec.expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON),
+            spec ->
+                spec.expectBody()
+                    .jsonPath("$.detail")
+                    .isEqualTo("Page size must not be greater than 30"));
+  }
+}

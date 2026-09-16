@@ -8,14 +8,14 @@ Run aggregate commands from the repository root. Run narrow uv commands from `ag
 
 ## Architecture
 
-- `imdb_agent.concierge` owns product policy, typed events, and orchestration Interfaces. It must not
+- `popcorn_society_agent.concierge` owns product policy, typed events, and orchestration Interfaces. It must not
   import FastAPI, Pydantic AI, web code, or concrete outbound Adapters.
-- `imdb_agent.web` is the FastAPI/SSE inbound Adapter. It may use Concierge Interfaces but must not
+- `popcorn_society_agent.web` is the FastAPI/SSE inbound Adapter. It may use Concierge Interfaces but must not
   assemble outbound Adapters.
-- `imdb_agent.adapters` contains concrete model, MCP, persistence, logging, and telemetry Adapters.
-- `imdb_agent.bootstrap` is the composition root and the only place that assembles web and outbound
+- `popcorn_society_agent.adapters` contains concrete model, MCP, persistence, logging, and telemetry Adapters.
+- `popcorn_society_agent.bootstrap` is the composition root and the only place that assembles web and outbound
   Adapters.
-- `imdb_agent.settings` validates environment configuration. Never pass the settings object through
+- `popcorn_society_agent.settings` validates environment configuration. Never pass the settings object through
   the product Module as a service locator.
 - Translate framework-validated tool calls into the provider-neutral internal `ToolCallEvent`.
   Derive status, metrics, and eval evidence from that event; never expose tool arguments through the
@@ -53,8 +53,8 @@ Narrow feedback:
 ```bash
 uv run pytest tests/web/test_health.py
 uv run pytest tests/concierge/test_eval_dataset.py
-uv run ruff check src/imdb_agent/web tests/web
-uv run pyright src/imdb_agent/web tests/web
+uv run ruff check src/popcorn_society_agent/web tests/web
+uv run pyright src/popcorn_society_agent/web tests/web
 ```
 
 Full gate from the repository root:

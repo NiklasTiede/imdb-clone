@@ -31,7 +31,7 @@ import CheckRounded from "@mui/icons-material/CheckRounded";
 import { appTheme, movieColors } from "../../../theme";
 import AppSurface from "../../../shared/layout/AppSurface";
 import ConciergeMovieCard from "../components/ConciergeMovieCard";
-import catalogScreenshot from "../../../../../docs/assets/imdb-clone-screenshot.webp";
+import catalogScreenshot from "../../../../../docs/assets/popcorn-society-screenshot.webp";
 
 type VoiceState =
   | "ready"

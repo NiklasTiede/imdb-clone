@@ -6,16 +6,16 @@ from typing import TYPE_CHECKING, cast
 from fastapi.testclient import TestClient
 from pytest import fixture
 
-from imdb_agent.adapters.fakes import FakeConciergeRunner
-from imdb_agent.bootstrap import create_app
-from imdb_agent.settings import DeploymentEnvironment, ModelBackend, Settings
+from popcorn_society_agent.adapters.fakes import FakeConciergeRunner
+from popcorn_society_agent.bootstrap import create_app
+from popcorn_society_agent.settings import DeploymentEnvironment, ModelBackend, Settings
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from pydantic import SecretStr
 
-    from imdb_agent.concierge.ports import RunRequest
+    from popcorn_society_agent.concierge.ports import RunRequest
 
 
 @fixture
@@ -161,8 +161,8 @@ def test_delegated_conversations_are_bound_to_verified_session(
 ) -> None:
     from pytest import MonkeyPatch
 
-    from imdb_agent.adapters.personal_tools import McpDelegationVerifier
-    from imdb_agent.concierge.personal import DelegationRejectedError
+    from popcorn_society_agent.adapters.personal_tools import McpDelegationVerifier
+    from popcorn_society_agent.concierge.personal import DelegationRejectedError
 
     assert isinstance(monkeypatch, MonkeyPatch)
 
@@ -186,7 +186,7 @@ def test_delegated_conversations_are_bound_to_verified_session(
 
 
 def test_latest_browser_context_reaches_the_text_runner_without_becoming_user_history() -> None:
-    from imdb_agent.concierge.events import TextEvent
+    from popcorn_society_agent.concierge.events import TextEvent
 
     class CapturingRunner:
         def __init__(self) -> None:

@@ -9,8 +9,8 @@ import structlog
 if TYPE_CHECKING:
     from fastapi import FastAPI
 
-from imdb_agent.adapters.logging import configure_logging
-from imdb_agent.bootstrap import create_app
+from popcorn_society_agent.adapters.logging import configure_logging
+from popcorn_society_agent.bootstrap import create_app
 
 
 def create_stress_app() -> FastAPI:

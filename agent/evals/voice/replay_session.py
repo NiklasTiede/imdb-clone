@@ -12,9 +12,9 @@ from pathlib import Path
 
 from websockets.asyncio.client import connect
 
-from imdb_agent.adapters.voice_probe import load_probe_audio
-from imdb_agent.concierge.voice import PCM_BYTES_PER_SECOND, VoiceEvent
-from imdb_agent.settings import DeploymentEnvironment, load_settings
+from popcorn_society_agent.adapters.voice_probe import load_probe_audio
+from popcorn_society_agent.concierge.voice import PCM_BYTES_PER_SECOND, VoiceEvent
+from popcorn_society_agent.settings import DeploymentEnvironment, load_settings
 
 
 async def replay(port: int, scenario: str) -> dict[str, object]:
@@ -164,7 +164,7 @@ def main() -> int:
         or not settings.live_evals_enabled
         or settings.environment is not DeploymentEnvironment.LOCAL
     ):
-        print("Requires --live and IMDB_AGENT_LIVE_EVALS_ENABLED=true in local mode.")
+        print("Requires --live and POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true in local mode.")
         return 2
     logging.disable(logging.CRITICAL)
     try:

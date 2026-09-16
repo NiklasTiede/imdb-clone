@@ -5,16 +5,16 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from imdb_agent.adapters.evaluation import report_passed, run_eval_suite
-from imdb_agent.concierge.evaluation import load_eval_dataset
-from imdb_agent.concierge.events import TextEvent, ToolCallEvent
-from imdb_agent.concierge.tools import ToolName
+from popcorn_society_agent.adapters.evaluation import report_passed, run_eval_suite
+from popcorn_society_agent.concierge.evaluation import load_eval_dataset
+from popcorn_society_agent.concierge.events import TextEvent, ToolCallEvent
+from popcorn_society_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
-    from imdb_agent.concierge.events import RunnerEvent
-    from imdb_agent.concierge.ports import RunRequest
+    from popcorn_society_agent.concierge.events import RunnerEvent
+    from popcorn_society_agent.concierge.ports import RunRequest
 
 AGENT_ROOT = Path(__file__).resolve().parents[2]
 

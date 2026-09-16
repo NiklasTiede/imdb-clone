@@ -4,13 +4,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MOVIES_DIR="${1:-$SCRIPT_DIR/movies}"
 
-OBJECT_STORAGE_ALIAS="${OBJECT_STORAGE_ALIAS:-imdb-clone-local}"
+OBJECT_STORAGE_ALIAS="${OBJECT_STORAGE_ALIAS:-popcorn-society-local}"
 OBJECT_STORAGE_ENDPOINT="${OBJECT_STORAGE_ENDPOINT:-http://localhost:9000}"
 OBJECT_STORAGE_ACCESS_KEY="${OBJECT_STORAGE_ACCESS_KEY:-ROOTNAME}"
 OBJECT_STORAGE_SECRET_KEY="${OBJECT_STORAGE_SECRET_KEY:-CHANGEME123}"
 OBJECT_STORAGE_BUCKET="${OBJECT_STORAGE_BUCKET:-imdb-clone}"
-DOCKER_NETWORK="${DOCKER_NETWORK:-imdb-clone-network}"
-DOCKER_OBJECT_STORAGE_ENDPOINT="${DOCKER_OBJECT_STORAGE_ENDPOINT:-http://imdb-clone-rustfs:9000}"
+DOCKER_NETWORK="${DOCKER_NETWORK:-popcorn-society-network}"
+DOCKER_OBJECT_STORAGE_ENDPOINT="${DOCKER_OBJECT_STORAGE_ENDPOINT:-http://popcorn-society-rustfs:9000}"
 
 if [[ ! -d "$MOVIES_DIR" ]]; then
   echo "Movie image directory does not exist: $MOVIES_DIR"
@@ -33,7 +33,7 @@ elif command -v docker >/dev/null 2>&1; then
     -e OBJECT_STORAGE_SECRET_KEY="$OBJECT_STORAGE_SECRET_KEY" \
     -e OBJECT_STORAGE_BUCKET="$OBJECT_STORAGE_BUCKET" \
     -e DOCKER_OBJECT_STORAGE_ENDPOINT="$DOCKER_OBJECT_STORAGE_ENDPOINT" \
-    minio/mc \
+    quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 \
     -c 'mc alias set rustfs "$DOCKER_OBJECT_STORAGE_ENDPOINT" "$OBJECT_STORAGE_ACCESS_KEY" "$OBJECT_STORAGE_SECRET_KEY" &&
         mc mb --ignore-existing "rustfs/$OBJECT_STORAGE_BUCKET" &&
         mc anonymous set download "rustfs/$OBJECT_STORAGE_BUCKET/movies" &&

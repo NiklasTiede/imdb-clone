@@ -4,7 +4,7 @@
 
 **Goal:** Replace MinIO runtime storage with RustFS and then replace the MinIO Java SDK with AWS SDK for Java 2.x.
 
-**Architecture:** The first checkpoint swaps local/test object storage to RustFS while keeping the current MinIO Java client. The second checkpoint replaces the Java client with AWS SDK v2 `S3Client` and `S3Presigner`, preserving the existing `imdb-clone.media.storage.*` application properties and object key layout.
+**Architecture:** The first checkpoint swaps local/test object storage to RustFS while keeping the current MinIO Java client. The second checkpoint replaces the Java client with AWS SDK v2 `S3Client` and `S3Presigner`, preserving the existing `popcorn-society.media.storage.*` application properties and object key layout.
 
 **Tech Stack:** Java 25, Spring Boot 4, Gradle, Testcontainers, RustFS, AWS SDK for Java 2.x, React 19, Vite, Vitest, Docker Compose, MinIO Client (`mc`) for seeding.
 
@@ -13,14 +13,14 @@
 ## File Structure
 
 - Modify `compose.yaml`: replace the root local MinIO service with RustFS, keeping S3 on host port `9000`.
-- Modify `src/test/java/com/thecodinglab/imdbclone/support/BaseContainers.java`: use a generic RustFS Testcontainer instead of `MinIOContainer`.
+- Modify `src/test/java/app/popcornsociety/support/BaseContainers.java`: use a generic RustFS Testcontainer instead of `MinIOContainer`.
 - Modify `build.gradle`: remove MinIO Java/Testcontainers MinIO dependencies and add AWS SDK v2 dependencies after the RustFS checkpoint.
 - Modify `gradle.properties`: add `awsSdkVersion=2.44.4`.
-- Rename `src/main/java/com/thecodinglab/imdbclone/media/internal/MinioClientConfig.java` to `ObjectStorageClientConfig.java`: provide `S3Client` and `S3Presigner`.
-- Modify `src/main/java/com/thecodinglab/imdbclone/media/internal/MediaFiles.java`: replace `io.minio` calls with AWS SDK v2 calls.
-- Rename `src/main/java/com/thecodinglab/imdbclone/shared/error/MinioOperationException.java` to `ObjectStorageOperationException.java`.
-- Modify `src/main/java/com/thecodinglab/imdbclone/shared/error/GlobalExceptionHandler.java`: handle the vendor-neutral exception and log object storage failures.
-- Modify `src/test/java/com/thecodinglab/imdbclone/media/MediaServiceIntegrationTest.java`: assert object state through `S3Client`.
+- Rename `src/main/java/app/popcornsociety/media/internal/MinioClientConfig.java` to `ObjectStorageClientConfig.java`: provide `S3Client` and `S3Presigner`.
+- Modify `src/main/java/app/popcornsociety/media/internal/MediaFiles.java`: replace `io.minio` calls with AWS SDK v2 calls.
+- Rename `src/main/java/app/popcornsociety/shared/error/MinioOperationException.java` to `ObjectStorageOperationException.java`.
+- Modify `src/main/java/app/popcornsociety/shared/error/GlobalExceptionHandler.java`: handle the vendor-neutral exception and log object storage failures.
+- Modify `src/test/java/app/popcornsociety/media/MediaServiceIntegrationTest.java`: assert object state through `S3Client`.
 - Modify `src/main/resources/config/minio-policy.json`: rename to `object-storage-public-read-policy.json`.
 - Modify `src/main/resources/META-INF/additional-spring-configuration-metadata.json`: remove MinIO-specific descriptions.
 - Modify `src/main/resources/config/application-dev.properties` and `src/main/resources/config/application-prod.properties`: rename comments from MinIO to object storage.
@@ -40,8 +40,8 @@
 
 **Files:**
 - Modify: `compose.yaml`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/support/BaseContainers.java`
-- Test: `src/test/java/com/thecodinglab/imdbclone/media/MediaServiceIntegrationTest.java`
+- Modify: `src/test/java/app/popcornsociety/support/BaseContainers.java`
+- Test: `src/test/java/app/popcornsociety/media/MediaServiceIntegrationTest.java`
 
 - [ ] **Step 1: Replace root compose MinIO service with RustFS**
 
@@ -84,7 +84,7 @@ with:
 
 - [ ] **Step 2: Replace MinIO Testcontainer with RustFS**
 
-In `src/test/java/com/thecodinglab/imdbclone/support/BaseContainers.java`, replace the MinIO imports with:
+In `src/test/java/app/popcornsociety/support/BaseContainers.java`, replace the MinIO imports with:
 
 ```java
 import java.time.Duration;
@@ -115,13 +115,13 @@ Replace `minioProperties` with:
   @DynamicPropertySource
   static void objectStorageProperties(DynamicPropertyRegistry registry) {
     registry.add(
-        "imdb-clone.media.storage.uri",
+        "popcorn-society.media.storage.uri",
         () ->
             String.format(
                 "http://%s:%d", rustfsContainer.getHost(), rustfsContainer.getMappedPort(9000)));
-    registry.add("imdb-clone.media.storage.access-key", () -> "minioadmin");
-    registry.add("imdb-clone.media.storage.secret-key", () -> "minioadmin");
-    registry.add("imdb-clone.media.storage.bucket-name", () -> "imdb-clone");
+    registry.add("popcorn-society.media.storage.access-key", () -> "minioadmin");
+    registry.add("popcorn-society.media.storage.secret-key", () -> "minioadmin");
+    registry.add("popcorn-society.media.storage.bucket-name", () -> "imdb-clone");
   }
 ```
 
@@ -136,7 +136,7 @@ Replace `minioContainer.start();` with:
 Run:
 
 ```bash
-./gradlew test --tests "com.thecodinglab.imdbclone.media.MediaServiceIntegrationTest"
+./gradlew test --tests "app.popcornsociety.media.MediaServiceIntegrationTest"
 ```
 
 Expected: the test passes, proving RustFS works with the current MinIO Java SDK for the current media behavior.
@@ -144,16 +144,16 @@ Expected: the test passes, proving RustFS works with the current MinIO Java SDK 
 - [ ] **Step 4: Commit the RustFS runtime checkpoint**
 
 ```bash
-git add compose.yaml src/test/java/com/thecodinglab/imdbclone/support/BaseContainers.java
+git add compose.yaml src/test/java/app/popcornsociety/support/BaseContainers.java
 git commit -m "test(storage): run media tests on RustFS"
 ```
 
 ### Task 2: Vendor-Neutral Backend Names
 
 **Files:**
-- Rename: `src/main/java/com/thecodinglab/imdbclone/shared/error/MinioOperationException.java` to `src/main/java/com/thecodinglab/imdbclone/shared/error/ObjectStorageOperationException.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/media/internal/MediaFiles.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/shared/error/GlobalExceptionHandler.java`
+- Rename: `src/main/java/app/popcornsociety/shared/error/MinioOperationException.java` to `src/main/java/app/popcornsociety/shared/error/ObjectStorageOperationException.java`
+- Modify: `src/main/java/app/popcornsociety/media/internal/MediaFiles.java`
+- Modify: `src/main/java/app/popcornsociety/shared/error/GlobalExceptionHandler.java`
 - Rename: `src/main/resources/config/minio-policy.json` to `src/main/resources/config/object-storage-public-read-policy.json`
 - Modify: `src/main/resources/META-INF/additional-spring-configuration-metadata.json`
 - Modify: `src/main/resources/config/application-dev.properties`
@@ -164,7 +164,7 @@ git commit -m "test(storage): run media tests on RustFS"
 Move the file and replace its contents with:
 
 ```java
-package com.thecodinglab.imdbclone.shared.error;
+package app.popcornsociety.shared.error;
 
 public class ObjectStorageOperationException extends RuntimeException {
 
@@ -192,13 +192,13 @@ public class ObjectStorageOperationException extends RuntimeException {
 Replace the import:
 
 ```java
-import com.thecodinglab.imdbclone.shared.error.MinioOperationException;
+import app.popcornsociety.shared.error.MinioOperationException;
 ```
 
 with:
 
 ```java
-import com.thecodinglab.imdbclone.shared.error.ObjectStorageOperationException;
+import app.popcornsociety.shared.error.ObjectStorageOperationException;
 ```
 
 Replace every `MinioOperationException` reference with `ObjectStorageOperationException`.
@@ -297,7 +297,7 @@ Run:
 
 ```bash
 ./gradlew spotlessApply
-./gradlew test --tests "com.thecodinglab.imdbclone.media.MediaServiceIntegrationTest"
+./gradlew test --tests "app.popcornsociety.media.MediaServiceIntegrationTest"
 ```
 
 Expected: formatting completes and the media integration test passes.
@@ -305,7 +305,7 @@ Expected: formatting completes and the media integration test passes.
 - [ ] **Step 8: Commit vendor-neutral backend names**
 
 ```bash
-git add src/main/java/com/thecodinglab/imdbclone/media/internal/MediaFiles.java src/main/java/com/thecodinglab/imdbclone/shared/error src/main/resources/config src/main/resources/META-INF/additional-spring-configuration-metadata.json
+git add src/main/java/app/popcornsociety/media/internal/MediaFiles.java src/main/java/app/popcornsociety/shared/error src/main/resources/config src/main/resources/META-INF/additional-spring-configuration-metadata.json
 git commit -m "refactor(storage): remove MinIO error naming"
 ```
 
@@ -314,10 +314,10 @@ git commit -m "refactor(storage): remove MinIO error naming"
 **Files:**
 - Modify: `gradle.properties`
 - Modify: `build.gradle`
-- Rename: `src/main/java/com/thecodinglab/imdbclone/media/internal/MinioClientConfig.java` to `src/main/java/com/thecodinglab/imdbclone/media/internal/ObjectStorageClientConfig.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/media/internal/MediaFiles.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/media/MediaServiceIntegrationTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/support/BaseContainers.java`
+- Rename: `src/main/java/app/popcornsociety/media/internal/MinioClientConfig.java` to `src/main/java/app/popcornsociety/media/internal/ObjectStorageClientConfig.java`
+- Modify: `src/main/java/app/popcornsociety/media/internal/MediaFiles.java`
+- Modify: `src/test/java/app/popcornsociety/media/MediaServiceIntegrationTest.java`
+- Modify: `src/test/java/app/popcornsociety/support/BaseContainers.java`
 
 - [ ] **Step 1: Write the failing integration test changes**
 
@@ -390,7 +390,7 @@ Replace `assertObjectDoesNotExist` with:
 Run:
 
 ```bash
-./gradlew test --tests "com.thecodinglab.imdbclone.media.MediaServiceIntegrationTest"
+./gradlew test --tests "app.popcornsociety.media.MediaServiceIntegrationTest"
 ```
 
 Expected: compile fails because `software.amazon.awssdk` classes are not yet on the classpath.
@@ -440,7 +440,7 @@ Remove the MinIO Testcontainers dependency:
 Rename `MinioClientConfig.java` to `ObjectStorageClientConfig.java` and replace the contents with:
 
 ```java
-package com.thecodinglab.imdbclone.media.internal;
+package app.popcornsociety.media.internal;
 
 import java.net.URI;
 import org.springframework.context.annotation.Bean;
@@ -684,7 +684,7 @@ Run:
 
 ```bash
 ./gradlew spotlessApply
-./gradlew test --tests "com.thecodinglab.imdbclone.media.MediaServiceIntegrationTest"
+./gradlew test --tests "app.popcornsociety.media.MediaServiceIntegrationTest"
 ```
 
 Expected: formatting completes and the media integration test passes against RustFS through AWS SDK v2.
@@ -692,7 +692,7 @@ Expected: formatting completes and the media integration test passes against Rus
 - [ ] **Step 8: Commit the AWS SDK v2 migration**
 
 ```bash
-git add build.gradle gradle.properties src/main/java/com/thecodinglab/imdbclone/media/internal src/main/java/com/thecodinglab/imdbclone/shared/error src/test/java/com/thecodinglab/imdbclone/media/MediaServiceIntegrationTest.java src/test/java/com/thecodinglab/imdbclone/support/BaseContainers.java
+git add build.gradle gradle.properties src/main/java/app/popcornsociety/media/internal src/main/java/app/popcornsociety/shared/error src/test/java/app/popcornsociety/media/MediaServiceIntegrationTest.java src/test/java/app/popcornsociety/support/BaseContainers.java
 git commit -m "refactor(storage): use AWS SDK S3 client"
 ```
 
@@ -725,7 +725,7 @@ describe("getObjectStorageImageUrl", () => {
   });
 
   it("builds a movie image URL from the configured object storage address", () => {
-    vi.stubEnv("VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
+    vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
 
     expect(getObjectStorageImageUrl("poster-token", ObjectStorageImageSize.Small)).toBe(
       "http://localhost:9000/imdb-clone/movies/poster-token_size_120x180.jpg",
@@ -733,7 +733,7 @@ describe("getObjectStorageImageUrl", () => {
   });
 
   it("falls back to the legacy MinIO address during migration", () => {
-    vi.stubEnv("VITE_IMDB_CLONE_MINIO_ADDRESS", "http://legacy-storage:9000");
+    vi.stubEnv("VITE_POPCORN_SOCIETY_MINIO_ADDRESS", "http://legacy-storage:9000");
 
     expect(getMovieImageUrl("poster-token", ObjectStorageImageSize.Large)).toBe(
       "http://legacy-storage:9000/imdb-clone/movies/poster-token_size_600x900.jpg",
@@ -747,7 +747,7 @@ describe("getObjectStorageImageUrl", () => {
   });
 
   it("builds a profile image URL from the configured object storage address", () => {
-    vi.stubEnv("VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
+    vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
 
     expect(getProfileImageUrl("avatar-token")).toBe(
       "http://localhost:9000/imdb-clone/profile-photos/avatar-token_size_800x800.jpg",
@@ -778,8 +778,8 @@ export enum ObjectStorageImageSize {
 }
 
 const getObjectStorageHost = () =>
-  import.meta.env.VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS ??
-  import.meta.env.VITE_IMDB_CLONE_MINIO_ADDRESS ??
+  import.meta.env.VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS ??
+  import.meta.env.VITE_POPCORN_SOCIETY_MINIO_ADDRESS ??
   "http://localhost:9000";
 
 export type MovieImageSize =
@@ -833,21 +833,21 @@ export type { MovieImageSize } from "./imageUrls";
 In `frontend/src/vite-env.d.ts`, add the new env var:
 
 ```ts
-  readonly VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS?: string;
+  readonly VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS?: string;
 ```
 
-Keep `VITE_IMDB_CLONE_MINIO_ADDRESS` during the transition.
+Keep `VITE_POPCORN_SOCIETY_MINIO_ADDRESS` during the transition.
 
 In `frontend/playwright.config.ts`, replace:
 
 ```ts
-      VITE_IMDB_CLONE_MINIO_ADDRESS: "http://localhost:9000",
+      VITE_POPCORN_SOCIETY_MINIO_ADDRESS: "http://localhost:9000",
 ```
 
 with:
 
 ```ts
-      VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS: "http://localhost:9000",
+      VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS: "http://localhost:9000",
 ```
 
 - [ ] **Step 5: Update production build env**
@@ -861,7 +861,7 @@ REACT_APP_IMDB_CLONE_MINIO_ADDRESS=https://minio.imdb-clone.the-coding-lab.com
 with:
 
 ```properties
-VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS=https://rustfs.imdb-clone.the-coding-lab.com
+VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS=https://rustfs.imdb-clone.the-coding-lab.com
 ```
 
 Keep the backend env untouched in this task unless the app already has a separate production env fix in progress.
@@ -973,7 +973,7 @@ Replace:
 with:
 
 ```yaml
-      - VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS=${OBJECT_STORAGE_ADDRESS_ENV_VAR}
+      - VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS=${OBJECT_STORAGE_ADDRESS_ENV_VAR}
 ```
 
 This variable is useful for local compose documentation, but the production Docker image is built from `frontend/.env.production`. Keep both places consistent.
@@ -1073,7 +1073,7 @@ Keep `mc` references as "MinIO Client (`mc`)" because the CLI name remains `mc`.
 Run:
 
 ```bash
-rg -n "MinIO|Minio|MINIO|imdb-clone-minio|VITE_IMDB_CLONE_MINIO_ADDRESS|REACT_APP_IMDB_CLONE_MINIO_ADDRESS|io\\.minio|testcontainers-minio" .
+rg -n "MinIO|Minio|MINIO|imdb-clone-minio|VITE_POPCORN_SOCIETY_MINIO_ADDRESS|REACT_APP_IMDB_CLONE_MINIO_ADDRESS|io\\.minio|testcontainers-minio" .
 ```
 
 Expected remaining references are limited to:
@@ -1095,7 +1095,7 @@ Run:
 
 ```bash
 ./gradlew spotlessApply
-./gradlew test --tests "com.thecodinglab.imdbclone.media.MediaServiceIntegrationTest"
+./gradlew test --tests "app.popcornsociety.media.MediaServiceIntegrationTest"
 ./gradlew test
 ```
 

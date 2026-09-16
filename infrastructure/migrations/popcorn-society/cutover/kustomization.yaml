@@ -1,0 +1,7 @@
+# Render-only preview including permanent redirects; do not apply this whole tree manually.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../preview
+components:
+  - ../../../clusters/home/apps/components/popcorn-society/redirect

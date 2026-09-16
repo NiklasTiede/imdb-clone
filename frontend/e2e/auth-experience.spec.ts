@@ -45,7 +45,7 @@ test("mobile auth forms start below a compact non-overlapping header", async ({
 
   await page.goto("/registration");
   await expect(page.getByTestId("auth-visual-pane")).toBeHidden();
-  await expect(page.getByRole("link", { name: "IMDb Clone" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Popcorn Society" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Create your account" }),
@@ -154,7 +154,7 @@ test("keyboard navigation reaches every authentication method", async ({
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 
   const focusOrder = [
-    page.getByRole("link", { name: "IMDb Clone" }),
+    page.getByRole("link", { name: "Popcorn Society" }),
     page.getByRole("link", { name: "Sign up" }),
     page.getByLabel("Email or username"),
     page.getByRole("link", { name: "Forgot password?" }),

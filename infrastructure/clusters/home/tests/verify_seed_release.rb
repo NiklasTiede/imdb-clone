@@ -2,8 +2,8 @@
 
 require "yaml"
 
-root_rendered_path = ARGV.fetch(0, "/tmp/imdb-clone-home-apps.yaml")
-seed_rendered_path = ARGV.fetch(1, "/tmp/imdb-clone-movie-seed.yaml")
+root_rendered_path = ARGV.fetch(0, "/tmp/popcorn-society-home-apps.yaml")
+seed_rendered_path = ARGV.fetch(1, "/tmp/popcorn-society-movie-seed.yaml")
 root_documents = YAML.load_stream(File.read(root_rendered_path)).compact
 seed_documents = YAML.load_stream(File.read(seed_rendered_path)).compact
 

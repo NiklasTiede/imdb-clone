@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from imdb_agent.concierge.voice import VoiceCommand, VoiceEvent
-from imdb_agent.concierge.voice_budget import VoiceBudget, VoiceTimeLimitError
-from imdb_agent.concierge.voice_quota import MemoryVoiceQuota
+    from popcorn_society_agent.concierge.voice import VoiceCommand, VoiceEvent
+from popcorn_society_agent.concierge.voice_budget import VoiceBudget, VoiceTimeLimitError
+from popcorn_society_agent.concierge.voice_quota import MemoryVoiceQuota
 
 
 class Transport:
@@ -32,8 +32,8 @@ async def test_connected_time_consumes_slices_and_warns_once(
         now += seconds
         await original_sleep(0)
 
-    monkeypatch.setattr("imdb_agent.concierge.voice_budget.monotonic", lambda: now)
-    monkeypatch.setattr("imdb_agent.concierge.voice_budget.asyncio.sleep", sleep)
+    monkeypatch.setattr("popcorn_society_agent.concierge.voice_budget.monotonic", lambda: now)
+    monkeypatch.setattr("popcorn_society_agent.concierge.voice_budget.asyncio.sleep", sleep)
     quota = MemoryVoiceQuota(12, 60)
     budget = VoiceBudget(quota, "a")
     await budget.reserve()
@@ -55,7 +55,7 @@ async def test_disconnect_refunds_unused_time_and_failed_setup_is_free(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     now = 100.0
-    monkeypatch.setattr("imdb_agent.concierge.voice_budget.monotonic", lambda: now)
+    monkeypatch.setattr("popcorn_society_agent.concierge.voice_budget.monotonic", lambda: now)
     quota = MemoryVoiceQuota(1200)
     budget = VoiceBudget(quota, "a")
     await budget.reserve()

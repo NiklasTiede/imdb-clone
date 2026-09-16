@@ -342,7 +342,9 @@ export const useConciergeVoice = (
       await Promise.race([permission, audioStarted]);
       if (!isCurrent()) return;
       const base =
-        import.meta.env.VITE_IMDB_CLONE_CONCIERGE_ADDRESS ?? "/concierge-api";
+        import.meta.env.VITE_POPCORN_SOCIETY_CONCIERGE_ADDRESS ??
+        import.meta.env.VITE_IMDB_CLONE_CONCIERGE_ADDRESS ??
+        "/concierge-api";
       const url = new URL(`${base}/v1/voice`, window.location.href);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
       const browserId = getConciergeBrowserId();

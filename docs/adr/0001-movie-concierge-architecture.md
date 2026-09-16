@@ -30,7 +30,7 @@ Use a modular-monolith package layout with enforced import direction. The initia
 boundaries are:
 
 ```text
-imdb_agent
+popcorn_society_agent
 ├── concierge       product policy, orchestration interfaces, typed events
 ├── web             FastAPI/SSE inbound adapter
 ├── adapters        model, MCP, persistence, and telemetry outbound adapters

@@ -1,10 +1,10 @@
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
-    <img alt="IMDb Clone clapperboard logo" width="104" src="frontend/public/brand-logo.svg" />
+    <img alt="Popcorn Society popcorn logo" width="104" src="frontend/public/brand-logo.svg" />
   </a>
 </p>
 
-<h1 align="center">IMDb Clone</h1>
+<h1 align="center">Popcorn Society</h1>
 
 <p align="center">
   <strong>Discover, rate, remember.</strong><br />
@@ -44,18 +44,21 @@
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
     <img
-      alt="IMDb Clone screenshot"
+      alt="Popcorn Society screenshot"
       width="760"
-      src="docs/assets/imdb-clone-screenshot.webp"
+      src="docs/assets/popcorn-society-screenshot.webp"
     />
   </a>
 </p>
 
 ## Overview
 
-IMDb Clone is a learning project built and operated as a full-stack movie application on a self-hosted
+Popcorn Society is a full-stack movie discovery application built and operated on a self-hosted
 Kubernetes cluster. Browse the catalog yourself or explore it by speaking to the Movie Concierge:
 find something to watch, open movie pages, and manage your personal movie library.
+
+Previously called IMDb Clone. The move to **popcornsociety.app** is being prepared; the live links
+above keep using the current address until cutover. See the [domain migration runbook](docs/popcorn-society-migration.md).
 
 ## Features
 
@@ -107,7 +110,7 @@ flowchart LR
   openai["OpenAI GPT-Live 1<br/>+ reasoning model"]
   tmdb["TMDB facts + watch providers"]
 
-  subgraph app["IMDb Clone"]
+  subgraph app["Popcorn Society"]
     frontend["React Frontend"]
     agent["Python Movie Concierge<br/>FastAPI + Pydantic AI"]
     backend["Spring Boot API"]
@@ -268,7 +271,7 @@ Start PostgreSQL, OpenSearch, and RustFS:
 make docker-compose-dev-up
 ```
 
-The Docker Compose setup includes a one-shot RustFS init container that creates the `imdb-clone` bucket and makes
+The Docker Compose setup includes a health-checked RustFS initialization helper that creates the `imdb-clone` bucket and makes
 `imdb-clone/movies/*` publicly readable.
 
 ### 2. Start The Backend
@@ -392,9 +395,9 @@ request without publishing new application images.
 ## Project Structure
 
 ```text
-src/main/java/com/thecodinglab/imdbclone   Spring Boot backend modules
+src/main/java/app/popcornsociety   Spring Boot backend modules
 frontend/src                               React frontend source
-agent/src/imdb_agent                       Python Movie Concierge modules
+agent/src/popcorn_society_agent                       Python Movie Concierge modules
 compose.yaml                               Local Docker Compose services
 infrastructure/clusters/home               k3s GitOps manifests
 infrastructure/movie-seed                  Movie and media seed pipeline

@@ -1,0 +1,2459 @@
+openapi: 3.1.0
+info:
+  title: Popcorn Society API
+  version: "1"
+servers:
+- url: /
+paths:
+  /api/v1/movies/{movieId}:
+    get:
+      tags:
+      - movie-controller
+      operationId: getMovieById
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MovieRecord"
+    put:
+      tags:
+      - movie-controller
+      operationId: updateMovie
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MovieRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MovieRecord"
+    delete:
+      tags:
+      - movie-controller
+      operationId: deleteMovie
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+  /api/v1/comments/{commentId}:
+    get:
+      tags:
+      - comment-controller
+      operationId: getCommentById
+      parameters:
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CommentRecord"
+    put:
+      tags:
+      - comment-controller
+      operationId: updateComment
+      parameters:
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCommentRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CommentRecord"
+    delete:
+      tags:
+      - comment-controller
+      operationId: deleteComment
+      parameters:
+      - name: commentId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+  /api/v1/accounts/{username}:
+    put:
+      tags:
+      - account-controller
+      operationId: updateAccountProfile
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRecord"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UpdatedAccountProfile"
+    delete:
+      tags:
+      - account-controller
+      operationId: deleteAccount
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+  /api/v1/accounts/{username}/roles/admin:
+    put:
+      tags:
+      - account-controller
+      operationId: giveAdminRole
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    delete:
+      tags:
+      - account-controller
+      operationId: takeAdminRole
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/v1/accounts/me/watchlist/{movieId}:
+    put:
+      tags:
+      - watched-movie-controller
+      operationId: watchMovie
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Existing resource updated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WatchedMovieRecord"
+        "201":
+          description: Resource created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WatchedMovieRecord"
+    delete:
+      tags:
+      - watched-movie-controller
+      operationId: deleteWatchedMovie
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+  /api/v1/accounts/me/ratings/{movieId}:
+    put:
+      tags:
+      - rating-controller
+      operationId: rateMovie
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RatingRequest"
+        required: true
+      responses:
+        "200":
+          description: Existing resource updated
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RatingRecord"
+        "201":
+          description: Resource created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RatingRecord"
+    delete:
+      tags:
+      - rating-controller
+      operationId: deleteRating
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+  /api/v1/search/movies:
+    post:
+      tags:
+      - search-controller
+      operationId: search
+      parameters:
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+          maxLength: 200
+          minLength: 0
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MovieSearchRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseMovieRecord"
+  /api/v1/search/movies/reindex:
+    post:
+      tags:
+      - search-controller
+      operationId: reindexMovies
+      responses:
+        "202":
+          description: Reindex accepted
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MovieSearchReindexJobResponse"
+        "409":
+          description: Reindex already running
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MovieSearchReindexJobResponse"
+  /api/v1/recommendations/watchlist-tonight:
+    post:
+      tags:
+      - recommendation-controller
+      operationId: watchlistTonight
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WatchlistTonightRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WatchlistTonightResponse"
+  /api/v1/recommendations/tonight:
+    post:
+      tags:
+      - recommendation-controller
+      operationId: tonight
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TonightModeRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TonightModeResponse"
+  /api/v1/recommendations/home-feed:
+    post:
+      tags:
+      - recommendation-controller
+      operationId: homeFeed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HomeFeedRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/HomeFeedResponse"
+  /api/v1/recommendations/discovery-events:
+    post:
+      tags:
+      - recommendation-controller
+      operationId: recordDiscoveryEvent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscoveryEventRequest"
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /api/v1/observability/frontend:
+    post:
+      tags:
+      - frontend-telemetry-controller
+      operationId: record
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FrontendTelemetryBatch"
+        required: true
+      responses:
+        "204":
+          description: No Content
+  /api/v1/movies:
+    get:
+      tags:
+      - movie-controller
+      operationId: getMoviesByIds
+      parameters:
+      - name: ids
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int64
+            exclusiveMinimum: 0
+          maxItems: 30
+          minItems: 1
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseMovieRecord"
+    post:
+      tags:
+      - movie-controller
+      operationId: createMovie
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MovieRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MovieRecord"
+  /api/v1/movies/{movieId}/comments:
+    get:
+      tags:
+      - comment-controller
+      operationId: getCommentsByMovieId
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseCommentRecord"
+    post:
+      tags:
+      - comment-controller
+      operationId: createComment
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CommentRecord"
+  /api/v1/media/profile-photo:
+    post:
+      tags:
+      - file-storage-controller
+      operationId: storeUserProfilePhoto
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+              required:
+              - image
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+    delete:
+      tags:
+      - file-storage-controller
+      operationId: deleteUserProfilePhoto
+      responses:
+        "204":
+          description: No Content
+  /api/v1/media/movies/{movieId}:
+    post:
+      tags:
+      - file-storage-controller
+      operationId: storeMovieImage
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+              required:
+              - image
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+    delete:
+      tags:
+      - file-storage-controller
+      operationId: deleteMovieImage
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+  /api/v1/auth/registration:
+    post:
+      tags:
+      - authentication-controller
+      operationId: registerAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistrationRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/v1/auth/password-resets:
+    post:
+      tags:
+      - authentication-controller
+      operationId: saveNewPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/v1/auth/password-reset-requests:
+    post:
+      tags:
+      - authentication-controller
+      operationId: resetPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetEmailRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/v1/auth/login:
+    post:
+      tags:
+      - authentication-controller
+      operationId: authenticateAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountSessionResponse"
+  /api/v1/auth/email-confirmations:
+    post:
+      tags:
+      - authentication-controller
+      operationId: confirmEmailAddress
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailConfirmationRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/v1/auth/concierge-delegation:
+    post:
+      tags:
+      - concierge-delegation-controller
+      operationId: createConciergeDelegation
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ConciergeDelegationResponse"
+  /api/v1/accounts:
+    post:
+      tags:
+      - account-controller
+      operationId: createAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountCreated"
+  /api/v1/search/movies/reindex/{jobId}:
+    get:
+      tags:
+      - search-controller
+      operationId: reindexStatus
+      parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MovieSearchReindexJobResponse"
+  /api/v1/recommendations/movies/{movieId}/similar:
+    get:
+      tags:
+      - recommendation-controller
+      operationId: similarMovies
+      parameters:
+      - name: movieId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          exclusiveMinimum: 0
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 15
+          maximum: 30
+          minimum: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/MovieRecommendationSet"
+  /api/v1/recommendations/discovery-events/summary:
+    get:
+      tags:
+      - recommendation-controller
+      operationId: discoveryEventSummary
+      parameters:
+      - name: days
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 7
+          maximum: 90
+          minimum: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DiscoveryEventSummary"
+  /api/v1/movies/search/{primaryTitle}:
+    get:
+      tags:
+      - movie-controller
+      operationId: searchMoviesByTitle
+      parameters:
+      - name: primaryTitle
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseMovieRecord"
+      deprecated: true
+  /api/v1/auth/me:
+    get:
+      tags:
+      - authentication-controller
+      operationId: currentAccount
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountSessionResponse"
+  /api/v1/auth/check-username-availability:
+    get:
+      tags:
+      - authentication-controller
+      operationId: checkUsernameAvailability
+      parameters:
+      - name: username
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserIdentityAvailability"
+  /api/v1/auth/check-email-availability:
+    get:
+      tags:
+      - authentication-controller
+      operationId: checkEmailAvailability
+      parameters:
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserIdentityAvailability"
+  /api/v1/accounts/{username}/watchlist:
+    get:
+      tags:
+      - account-engagement-controller
+      operationId: getWatchedMoviesByAccount
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseWatchedMovieRecord"
+  /api/v1/accounts/{username}/ratings:
+    get:
+      tags:
+      - account-engagement-controller
+      operationId: getRatingsByAccount
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseRatingRecord"
+  /api/v1/accounts/{username}/profile:
+    get:
+      tags:
+      - account-controller
+      operationId: getAccountProfile
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PublicAccountProfile"
+  /api/v1/accounts/{username}/library/watchlist:
+    get:
+      tags:
+      - account-engagement-controller
+      operationId: getWatchlistLibrary
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ADDED_AT_DESC
+          enum:
+          - ADDED_AT_DESC
+          - ADDED_AT_ASC
+          - IMDB_DESC
+          - IMDB_ASC
+          - RUNTIME_DESC
+          - RUNTIME_ASC
+          - TITLE_ASC
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WatchlistLibraryResponse"
+  /api/v1/accounts/{username}/library/ratings:
+    get:
+      tags:
+      - account-engagement-controller
+      operationId: getRatingLibrary
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          default: SCORE_DESC
+          enum:
+          - SCORE_DESC
+          - SCORE_ASC
+          - RATED_AT_DESC
+          - RATED_AT_ASC
+          - IMDB_DESC
+          - IMDB_ASC
+          - TITLE_ASC
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RatingLibraryResponse"
+  /api/v1/accounts/{username}/comments:
+    get:
+      tags:
+      - account-engagement-controller
+      operationId: getCommentsByAccount
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PagedResponseCommentRecord"
+  /api/v1/accounts/summaries:
+    get:
+      tags:
+      - account-controller
+      operationId: getPublicAccountSummaries
+      parameters:
+      - name: ids
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int64
+            exclusiveMinimum: 0
+          maxItems: 30
+          minItems: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PublicAccountSummary"
+  /api/v1/accounts/me:
+    get:
+      tags:
+      - account-controller
+      operationId: getCurrentAccount
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountSummaryResponse"
+  /api/v1/accounts/me/profile:
+    get:
+      tags:
+      - account-controller
+      operationId: getCurrentAccountProfile
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AccountProfile"
+  /api/v1/accounts/me/passkeys:
+    get:
+      tags:
+      - passkey-management-controller
+      operationId: listPasskeys
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PasskeyCredentialResponse"
+  /api/v1/accounts/me/passkeys/{credentialId}:
+    delete:
+      tags:
+      - passkey-management-controller
+      operationId: deletePasskey
+      parameters:
+      - name: credentialId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+components:
+  schemas:
+    MovieRequest:
+      type: object
+      properties:
+        imdbId:
+          type: string
+          pattern: "^tt\\d{7,}$"
+        tmdbId:
+          type: integer
+          format: int64
+        movieType:
+          type: string
+          enum:
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
+        primaryTitle:
+          type: string
+          maxLength: 200
+          minLength: 0
+        originalTitle:
+          type: string
+          maxLength: 200
+          minLength: 0
+        adult:
+          type: boolean
+        startYear:
+          type: integer
+          format: int32
+          maximum: 2030
+          minimum: 1850
+        endYear:
+          type: integer
+          format: int32
+          maximum: 2030
+          minimum: 1850
+        runtimeMinutes:
+          type: integer
+          format: int32
+        movieGenre:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          uniqueItems: true
+        description:
+          type: string
+          maxLength: 5000
+          minLength: 0
+        posterImageToken:
+          type: string
+          maxLength: 255
+          minLength: 0
+        backdropImageToken:
+          type: string
+          maxLength: 255
+          minLength: 0
+        trailerYoutubeKey:
+          type: string
+          maxLength: 255
+          minLength: 0
+      required:
+      - originalTitle
+    MovieRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        imdbId:
+          type: string
+        tmdbId:
+          type: integer
+          format: int64
+        movieType:
+          type: string
+          enum:
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
+        primaryTitle:
+          type: string
+        originalTitle:
+          type: string
+        adult:
+          type: boolean
+        startYear:
+          type: integer
+          format: int32
+        endYear:
+          type: integer
+          format: int32
+        runtimeMinutes:
+          type: integer
+          format: int32
+        modifiedAtInUtc:
+          type: string
+          format: date-time
+        createdAtInUtc:
+          type: string
+          format: date-time
+        movieGenre:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          uniqueItems: true
+        imdbRating:
+          type: number
+          format: float
+        imdbRatingCount:
+          type: integer
+          format: int32
+        description:
+          type: string
+        posterImageToken:
+          type: string
+        backdropImageToken:
+          type: string
+        trailerYoutubeKey:
+          type: string
+        rating:
+          type: number
+          format: float
+        ratingCount:
+          type: integer
+          format: int32
+    UpdateCommentRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 1000
+          minLength: 0
+      required:
+      - message
+    CommentRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        message:
+          type: string
+        accountId:
+          type: integer
+          format: int64
+        movieId:
+          type: integer
+          format: int64
+        createdAtInUtc:
+          type: string
+          format: date-time
+        modifiedAtInUtc:
+          type: string
+          format: date-time
+    AccountRecord:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 50
+          minLength: 2
+        password:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+          maxLength: 35
+          minLength: 2
+        lastName:
+          type: string
+          maxLength: 35
+          minLength: 2
+        phone:
+          type: string
+        bio:
+          type: string
+        birthday:
+          type: string
+          format: date
+    UpdatedAccountProfile:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        bio:
+          type: string
+        birthday:
+          type: string
+          format: date
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    WatchedMovieRecord:
+      type: object
+      properties:
+        accountId:
+          type: integer
+          format: int64
+        movieId:
+          type: integer
+          format: int64
+        addedAt:
+          type: string
+          format: date-time
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+    RatingRequest:
+      type: object
+      properties:
+        score:
+          type: number
+          maximum: 10
+          minimum: 0
+      required:
+      - score
+    RatingRecord:
+      type: object
+      properties:
+        rating:
+          type: number
+        accountId:
+          type: integer
+          format: int64
+        movieId:
+          type: integer
+          format: int64
+    MovieSearchRequest:
+      type: object
+      properties:
+        minStartYear:
+          type: integer
+          format: int32
+          maximum: 2030
+          minimum: 1850
+        maxStartYear:
+          type: integer
+          format: int32
+          maximum: 2030
+          minimum: 1850
+        minRuntimeMinutes:
+          type: integer
+          format: int32
+          minimum: 0
+        maxRuntimeMinutes:
+          type: integer
+          format: int32
+          maximum: 5000
+        movieGenre:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          uniqueItems: true
+        movieType:
+          type: string
+          enum:
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
+    PagedResponseMovieRecord:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/MovieRecord"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+    MovieSearchReindexJobResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+          - RUNNING
+          - COMPLETED
+          - FAILED
+        indexedMovies:
+          type: integer
+          format: int64
+        totalMovies:
+          type: integer
+          format: int64
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        errorMessage:
+          type: string
+    WatchlistTonightRequest:
+      type: object
+      properties:
+        maxRuntimeMinutes:
+          type: integer
+          format: int32
+          maximum: 360
+          minimum: 10
+        movieGenres:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          maxItems: 8
+          minItems: 0
+          uniqueItems: true
+        mood:
+          type: string
+          enum:
+          - ESCAPIST
+          - LIGHT
+          - ROMANTIC
+          - TENSE
+          - THOUGHT_PROVOKING
+        era:
+          type: string
+          enum:
+          - CLASSIC
+          - EIGHTIES
+          - NINETIES
+          - TWO_THOUSANDS
+          - MODERN
+        excludedMovieIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          maxItems: 500
+          minItems: 0
+        seed:
+          type: string
+          maxLength: 100
+          minLength: 0
+    WatchlistTonightPick:
+      type: object
+      properties:
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+        role:
+          type: string
+          enum:
+          - SAFE_BET
+          - FORGOTTEN_GEM
+          - WILD_CARD
+        explanation:
+          type: string
+    WatchlistTonightResponse:
+      type: object
+      properties:
+        seed:
+          type: string
+        picks:
+          type: array
+          items:
+            $ref: "#/components/schemas/WatchlistTonightPick"
+    TonightModeRequest:
+      type: object
+      properties:
+        maxRuntimeMinutes:
+          type: integer
+          format: int32
+          maximum: 360
+          minimum: 10
+        movieGenres:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          maxItems: 8
+          minItems: 0
+          uniqueItems: true
+        excludedMovieGenres:
+          type: array
+          items:
+            type: string
+            enum:
+            - HORROR
+            - MYSTERY
+            - THRILLER
+            - CRIME
+            - WESTERN
+            - WAR
+            - ACTION
+            - ADVENTURE
+            - FAMILY
+            - COMEDY
+            - ANIMATION
+            - FANTASY
+            - SCI_FI
+            - DRAMA
+            - ROMANCE
+            - SPORT
+            - HISTORY
+            - BIOGRAPHY
+            - MUSIC
+            - MUSICAL
+            - DOCUMENTARY
+            - NEWS
+            - ADULT
+            - REALITY_TV
+            - TALK_SHOW
+            - GAME_SHOW
+            - FILM_NOIR
+            - SHORT
+          maxItems: 8
+          minItems: 0
+          uniqueItems: true
+        mood:
+          type: string
+          enum:
+          - ESCAPIST
+          - LIGHT
+          - ROMANTIC
+          - TENSE
+          - THOUGHT_PROVOKING
+        era:
+          type: string
+          enum:
+          - CLASSIC
+          - EIGHTIES
+          - NINETIES
+          - TWO_THOUSANDS
+          - MODERN
+        movieType:
+          type: string
+          enum:
+          - SHORT
+          - MOVIE
+          - VIDEO
+          - TV_MOVIE
+          - TV_EPISODE
+          - TV_MINI_SERIES
+          - TV_SPECIAL
+          - TV_SERIES
+          - TV_SHORT
+          - TV_PILOT
+          - VIDEO_GAME
+        includeWatched:
+          type: boolean
+        excludedMovieIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          maxItems: 500
+          minItems: 0
+        seed:
+          type: string
+          maxLength: 100
+          minLength: 0
+    TonightModeResponse:
+      type: object
+      properties:
+        seed:
+          type: string
+        picks:
+          type: array
+          items:
+            $ref: "#/components/schemas/TonightPick"
+    TonightPick:
+      type: object
+      properties:
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+        explanation:
+          type: string
+    HomeFeedRequest:
+      type: object
+      properties:
+        feedInstanceId:
+          type: string
+          maxLength: 100
+          minLength: 0
+        seed:
+          type: string
+          maxLength: 100
+          minLength: 0
+        cursor:
+          type: string
+          maxLength: 100
+          minLength: 0
+        excludedMovieIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          maxItems: 500
+          minItems: 0
+    HomeFeedItem:
+      type: object
+      properties:
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+        reason:
+          type: string
+    HomeFeedResponse:
+      type: object
+      properties:
+        seed:
+          type: string
+        strategyVersion:
+          type: string
+        featuredMovie:
+          $ref: "#/components/schemas/MovieRecord"
+        featuredMovies:
+          type: array
+          items:
+            $ref: "#/components/schemas/MovieRecord"
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/HomeFeedSection"
+        nextCursor:
+          type: string
+        exhausted:
+          type: boolean
+    HomeFeedSection:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        family:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/HomeFeedItem"
+    DiscoveryEventRequest:
+      type: object
+      properties:
+        eventId:
+          type: string
+          maxLength: 128
+          minLength: 16
+        eventType:
+          type: string
+          enum:
+          - SECTION_IMPRESSION
+          - MOVIE_OPEN
+          - WATCHLIST_ADDED
+          - RATING_SUBMITTED
+          - MOVIE_DISMISSED
+        sessionId:
+          type: string
+          maxLength: 128
+          minLength: 16
+        feedInstanceId:
+          type: string
+          maxLength: 120
+          minLength: 0
+        sectionId:
+          type: string
+          maxLength: 120
+          minLength: 0
+        position:
+          type: integer
+          format: int32
+        movieId:
+          type: integer
+          format: int64
+        strategyVersion:
+          type: string
+          maxLength: 80
+          minLength: 0
+      required:
+      - eventId
+      - eventType
+      - feedInstanceId
+      - sectionId
+      - sessionId
+      - strategyVersion
+    FrontendTelemetryBatch:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/FrontendTelemetryEvent"
+          maxItems: 20
+          minItems: 1
+      required:
+      - events
+    FrontendTelemetryEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - API_REQUEST
+          - APP_BOOT
+          - BROWSER_ERROR
+          - ROUTE_NAVIGATION
+          - UI_ACTION
+          - WEB_VITAL
+        name:
+          type: string
+          enum:
+          - API_REQUEST
+          - APP_BOOT
+          - BROWSER_ERROR
+          - CLS
+          - FCP
+          - INP
+          - LCP
+          - OPEN_MOVIE
+          - ROUTE_NAVIGATION
+          - TTFB
+          - UNHANDLED_REJECTION
+        value:
+          type: number
+          format: double
+          maximum: 120000.0
+          minimum: 0.0
+        rating:
+          type: string
+          enum:
+          - GOOD
+          - NEEDS_IMPROVEMENT
+          - POOR
+        operation:
+          type: string
+          enum:
+          - ACCOUNT
+          - AUTHENTICATION
+          - CATALOG
+          - CONCIERGE
+          - ENGAGEMENT
+          - MEDIA
+          - OTHER
+          - RECOMMENDATIONS
+          - SEARCH
+          - WEBAUTHN
+        outcome:
+          type: string
+          enum:
+          - HTTP_4XX
+          - HTTP_5XX
+          - NETWORK_ERROR
+          - OTHER_ERROR
+          - SUCCESS
+        uiActionOutcome:
+          type: string
+          enum:
+          - EXECUTED
+          - REJECTED
+      required:
+      - name
+      - type
+    CreateCommentRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 1000
+          minLength: 0
+      required:
+      - message
+    RegistrationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+      - username
+    PasswordResetRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          maxLength: 128
+          minLength: 32
+        newPassword:
+          type: string
+      required:
+      - token
+    PasswordResetEmailRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          minLength: 0
+      required:
+      - email
+    LoginRequest:
+      type: object
+      properties:
+        usernameOrEmail:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - password
+      - usernameOrEmail
+    AccountSessionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+      required:
+      - email
+      - id
+      - roles
+      - username
+    EmailConfirmationRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          maxLength: 512
+          minLength: 0
+      required:
+      - token
+    ConciergeDelegationResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    CreateAccountRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+      - username
+    AccountCreated:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+    MovieRecommendation:
+      type: object
+      properties:
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+        reason:
+          type: string
+          enum:
+          - SHARED_GENRES
+          - SAME_ERA
+          - SIMILAR_THEMES
+        explanation:
+          type: string
+    MovieRecommendationSet:
+      type: object
+      properties:
+        strategy:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MovieRecommendation"
+    DiscoveryEventSummary:
+      type: object
+      properties:
+        days:
+          type: integer
+          format: int32
+        totalEvents:
+          type: integer
+          format: int64
+        eventsByType:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+    PagedResponseCommentRecord:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommentRecord"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+    UserIdentityAvailability:
+      type: object
+      properties:
+        isAvailable:
+          type: boolean
+    PagedResponseWatchedMovieRecord:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/WatchedMovieRecord"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+    PagedResponseRatingRecord:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatingRecord"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+    PublicAccountProfile:
+      type: object
+      properties:
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        bio:
+          type: string
+        imageUrlToken:
+          type: string
+        ratingsCount:
+          type: integer
+          format: int64
+        watchlistCount:
+          type: integer
+          format: int64
+        commentsCount:
+          type: integer
+          format: int64
+    LibraryFacet:
+      type: object
+      properties:
+        label:
+          type: string
+        movieCount:
+          type: integer
+          format: int32
+    WatchlistInsights:
+      type: object
+      properties:
+        totalMovies:
+          type: integer
+          format: int32
+        totalRuntimeMinutes:
+          type: integer
+          format: int64
+        averageImdbRating:
+          type: number
+        topGenres:
+          type: array
+          items:
+            $ref: "#/components/schemas/LibraryFacet"
+        oldestSavedAt:
+          type: string
+          format: date-time
+        quickWatchCount:
+          type: integer
+          format: int32
+    WatchlistLibraryResponse:
+      type: object
+      properties:
+        items:
+          $ref: "#/components/schemas/PagedResponseWatchedMovieRecord"
+        insights:
+          $ref: "#/components/schemas/WatchlistInsights"
+    PagedResponseRatedMovieRecord:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatedMovieRecord"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        last:
+          type: boolean
+    RatedMovieInsight:
+      type: object
+      properties:
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+        userRating:
+          type: number
+        imdbDifference:
+          type: number
+    RatedMovieRecord:
+      type: object
+      properties:
+        accountId:
+          type: integer
+          format: int64
+        movieId:
+          type: integer
+          format: int64
+        rating:
+          type: number
+        ratedAt:
+          type: string
+          format: date-time
+        movie:
+          $ref: "#/components/schemas/MovieRecord"
+    RatingDistributionBucket:
+      type: object
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+          format: int32
+    RatingLibraryResponse:
+      type: object
+      properties:
+        items:
+          $ref: "#/components/schemas/PagedResponseRatedMovieRecord"
+        insights:
+          $ref: "#/components/schemas/RatingTasteInsights"
+    RatingTasteInsights:
+      type: object
+      properties:
+        totalRatings:
+          type: integer
+          format: int32
+        averageUserRating:
+          type: number
+        distribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatingDistributionBucket"
+        favoriteGenres:
+          type: array
+          items:
+            $ref: "#/components/schemas/TasteFacet"
+        favoriteDecades:
+          type: array
+          items:
+            $ref: "#/components/schemas/TasteFacet"
+        averageImdbDifference:
+          type: number
+        definingMovies:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatedMovieInsight"
+        biggestPositiveDifference:
+          $ref: "#/components/schemas/RatedMovieInsight"
+        biggestNegativeDifference:
+          $ref: "#/components/schemas/RatedMovieInsight"
+    TasteFacet:
+      type: object
+      properties:
+        label:
+          type: string
+        movieCount:
+          type: integer
+          format: int32
+        averageUserRating:
+          type: number
+    PublicAccountSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        displayName:
+          type: string
+        imageUrlToken:
+          type: string
+    AccountSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+    AccountProfile:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        bio:
+          type: string
+        birthday:
+          type: string
+          format: date
+        imageUrlToken:
+          type: string
+        ratingsCount:
+          type: integer
+          format: int64
+        watchlistCount:
+          type: integer
+          format: int64
+        commentsCount:
+          type: integer
+          format: int64
+    PasskeyCredentialResponse:
+      type: object
+      properties:
+        credentialId:
+          type: string
+        label:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time

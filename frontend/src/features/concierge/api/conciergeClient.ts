@@ -9,7 +9,9 @@ const conversationResponseSchema = zod.object({
 });
 
 const getBaseAddress = (): string =>
-  import.meta.env.VITE_IMDB_CLONE_CONCIERGE_ADDRESS ?? "/concierge-api";
+  import.meta.env.VITE_POPCORN_SOCIETY_CONCIERGE_ADDRESS ??
+  import.meta.env.VITE_IMDB_CLONE_CONCIERGE_ADDRESS ??
+  "/concierge-api";
 
 export class ConciergeClientError extends Error {
   constructor(

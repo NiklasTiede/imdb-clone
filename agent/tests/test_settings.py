@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from imdb_agent.settings import (
+from popcorn_society_agent.settings import (
     ConfigurationError,
     DeploymentEnvironment,
     Settings,
@@ -15,15 +15,15 @@ from imdb_agent.settings import (
 
 
 def test_settings_load_prefixed_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("IMDB_AGENT_ENVIRONMENT", "production")
-    monkeypatch.setenv("IMDB_AGENT_PORT", "9000")
-    monkeypatch.setenv("IMDB_AGENT_SECRETS_DIRECTORY", "/run/secrets/movie-concierge")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_ENVIRONMENT", "production")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_PORT", "9000")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_SECRETS_DIRECTORY", "/run/secrets/movie-concierge")
     monkeypatch.setenv(
-        "IMDB_AGENT_MCP_URL",
+        "POPCORN_SOCIETY_AGENT_MCP_URL",
         "http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp",
     )
     monkeypatch.setenv(
-        "IMDB_AGENT_ALLOWED_HOSTS",
+        "POPCORN_SOCIETY_AGENT_ALLOWED_HOSTS",
         '["imdb-clone.the-coding-lab.com","imdb-clone-agent.imdb-clone.svc"]',
     )
 
@@ -35,7 +35,7 @@ def test_settings_load_prefixed_environment(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 def test_invalid_environment_value_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("IMDB_AGENT_PORT", "not-a-port")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_PORT", "not-a-port")
 
     with pytest.raises(ConfigurationError, match="invalid Movie Concierge configuration"):
         load_settings()
@@ -44,16 +44,16 @@ def test_invalid_environment_value_is_rejected(monkeypatch: pytest.MonkeyPatch) 
 def test_voice_profile_is_configurable_and_rejects_url_parameters(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("IMDB_AGENT_VOICE_AGENT_ID", "agent_example")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_VOICE_AGENT_ID", "agent_example")
     assert load_settings().voice_agent_id == "agent_example"
-    monkeypatch.setenv("IMDB_AGENT_VOICE_AGENT_ID", "agent_example&model=other")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_VOICE_AGENT_ID", "agent_example&model=other")
     with pytest.raises(ConfigurationError):
         load_settings()
 
 
 def test_unknown_dotenv_field_is_rejected(tmp_path: Path) -> None:
     env_file = tmp_path / ".env"
-    env_file.write_text("IMDB_AGENT_UNKNOWN=value\n", encoding="utf-8")
+    env_file.write_text("POPCORN_SOCIETY_AGENT_UNKNOWN=value\n", encoding="utf-8")
 
     with pytest.raises(ConfigurationError, match="invalid Movie Concierge configuration"):
         load_settings(env_file)
@@ -63,7 +63,7 @@ def test_secret_is_redacted_from_settings_representation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     sensitive_value = "synthetic-sensitive-value"
-    monkeypatch.setenv("IMDB_AGENT_MCP_BEARER_TOKEN", sensitive_value)
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_MCP_BEARER_TOKEN", sensitive_value)
 
     settings = load_settings()
 
@@ -231,20 +231,38 @@ def test_production_profiling_can_be_disabled_explicitly() -> None:
 def test_voice_defaults_to_five_minutes_and_allows_up_to_fifteen(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("IMDB_AGENT_VOICE_SESSION_SECONDS", raising=False)
+    monkeypatch.delenv("POPCORN_SOCIETY_AGENT_VOICE_SESSION_SECONDS", raising=False)
     assert load_settings().voice_session_seconds == 300
-    monkeypatch.setenv("IMDB_AGENT_VOICE_SESSION_SECONDS", "900")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_VOICE_SESSION_SECONDS", "900")
     assert load_settings().voice_session_seconds == 900
-    monkeypatch.setenv("IMDB_AGENT_VOICE_SESSION_SECONDS", "901")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_VOICE_SESSION_SECONDS", "901")
     with pytest.raises(ConfigurationError):
         load_settings()
 
 
 def test_live_voice_requires_explicit_local_opt_in(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("IMDB_AGENT_VOICE_LIVE_ENABLED", raising=False)
+    monkeypatch.delenv("POPCORN_SOCIETY_AGENT_VOICE_LIVE_ENABLED", raising=False)
     assert not load_settings().voice_live_enabled
-    monkeypatch.setenv("IMDB_AGENT_VOICE_LIVE_ENABLED", "true")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_VOICE_LIVE_ENABLED", "true")
     assert load_settings().voice_live_enabled
-    monkeypatch.setenv("IMDB_AGENT_ENVIRONMENT", "production")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_ENVIRONMENT", "production")
     with pytest.raises(ConfigurationError):
         load_settings()
+
+
+def test_legacy_environment_remains_usable(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("IMDB_AGENT_PORT", "9123")
+    assert load_settings().port == 9123
+
+
+def test_new_environment_wins_over_legacy(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("IMDB_AGENT_PORT", "9123")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_PORT", "9456")
+    assert load_settings().port == 9456
+    assert Settings(port=9789).port == 9789
+
+
+def test_legacy_dotenv_remains_usable(tmp_path: Path) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text("IMDB_AGENT_PORT=9123\n", encoding="utf-8")
+    assert load_settings(env_file).port == 9123

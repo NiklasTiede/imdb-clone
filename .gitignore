@@ -113,3 +113,6 @@ screenshots/
 /agent/.env
 /agent/.env.*
 /.uv-cache/
+
+# Python operator/release tooling
+/scripts/**/__pycache__/

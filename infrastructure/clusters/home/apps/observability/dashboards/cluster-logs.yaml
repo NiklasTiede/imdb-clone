@@ -6,7 +6,7 @@ metadata:
   labels:
     grafana_dashboard: "1"
   annotations:
-    grafana_folder: IMDB Clone
+    grafana_folder: Popcorn Society
 data:
   cluster-logs.json: |-
     {
@@ -259,7 +259,7 @@ data:
       },
       "time": {"from": "now-1h", "to": "now"},
       "timezone": "browser",
-      "title": "Cluster Logs",
+      "title": "Popcorn Society / Cluster Logs",
       "uid": "imdb-clone-cluster-logs",
       "version": 1
     }

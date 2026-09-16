@@ -70,8 +70,8 @@ export async function startBackend() {
       detached: true, // Own process group includes uv and its Python child.
       env: {
         ...process.env,
-        IMDB_AGENT_VOICE_ENABLED: "true",
-        IMDB_AGENT_VOICE_LIVE_ENABLED: "true",
+        POPCORN_SOCIETY_AGENT_VOICE_ENABLED: "true",
+        POPCORN_SOCIETY_AGENT_VOICE_LIVE_ENABLED: "true",
       },
       stdio: ["ignore", "pipe", "pipe"],
     },

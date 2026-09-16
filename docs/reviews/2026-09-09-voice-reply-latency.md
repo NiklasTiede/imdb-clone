@@ -75,7 +75,7 @@ mutation was used. These files are local evidence and are not a permanent benchm
   11 passed, including the first-chunk streaming regression.
 - `make verify-agent`: passed formatting, Ruff, strict Pyright, 3 architecture tests, all 206
   application tests and the 27 deterministic eval cases.
-- `cd agent && IMDB_AGENT_LIVE_EVALS_ENABLED=true uv run python evals/voice/replay_session.py --live --scenario open`:
+- `cd agent && POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true uv run python evals/voice/replay_session.py --live --scenario open`:
   passed actual Grok/Java replay; grounded navigation 103 ms and first PCM 1.143 s after provider
   speech end. Runtime logs independently recorded 102 ms tool duration and 1.142 s first audio.
 - `git diff --check`: passed.

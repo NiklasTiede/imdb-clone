@@ -15,7 +15,9 @@ import {
 } from "../../client/movies/generator-output";
 import { apiHttpClient } from "./httpClient";
 
-const backendAddress = import.meta.env.VITE_IMDB_CLONE_BACKEND_ADDRESS;
+const backendAddress =
+  import.meta.env.VITE_POPCORN_SOCIETY_BACKEND_ADDRESS ??
+  import.meta.env.VITE_IMDB_CLONE_BACKEND_ADDRESS;
 const moviesApiClientConfig = new Configuration(
   backendAddress === undefined ? {} : { basePath: backendAddress },
 );

@@ -9,7 +9,7 @@ plugins {
 	id 'net.ltgt.errorprone' version '5.1.0'
 }
 
-group = 'com.thecodinglab'
+group = 'app.popcornsociety'
 version = '1.0.0'
 
 tasks.named('check') {
@@ -202,7 +202,7 @@ tasks.register('liveSearchEvaluation', Test) {
 	group = LifecycleBasePlugin.VERIFICATION_GROUP
 	testClassesDirs = sourceSets.test.output.classesDirs
 	classpath = sourceSets.test.runtimeClasspath
-	environment 'IMDB_CLONE_LIVE_SEARCH_EVALUATION', 'true'
+	environment 'POPCORN_SOCIETY_LIVE_SEARCH_EVALUATION', 'true'
 	useJUnitPlatform {
 		includeTags 'live-search-evaluation'
 	}
@@ -251,9 +251,9 @@ jacocoTestCoverageVerification {
 		rule {
 			element = 'CLASS'
 			includes = [
-				'com.thecodinglab.imdbclone.engagement.api.RatingScore',
-				'com.thecodinglab.imdbclone.catalog.internal.search.query.MovieSearchRankFusion',
-				'com.thecodinglab.imdbclone.recommendation.internal.ContentRecommendationRanker'
+				'app.popcornsociety.engagement.api.RatingScore',
+				'app.popcornsociety.catalog.internal.search.query.MovieSearchRankFusion',
+				'app.popcornsociety.recommendation.internal.ContentRecommendationRanker'
 			]
 			limit {
 				counter = 'BRANCH'

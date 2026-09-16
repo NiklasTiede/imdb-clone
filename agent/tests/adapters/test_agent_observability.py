@@ -3,8 +3,8 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from prometheus_client import CollectorRegistry
 
-from imdb_agent.adapters.agent_observability import create_agent_metrics
-from imdb_agent.settings import DeploymentEnvironment, Settings
+from popcorn_society_agent.adapters.agent_observability import create_agent_metrics
+from popcorn_society_agent.settings import DeploymentEnvironment, Settings
 
 
 def test_ui_action_decisions_use_bounded_metrics_and_trace_attributes() -> None:
@@ -22,7 +22,7 @@ def test_ui_action_decisions_use_bounded_metrics_and_trace_attributes() -> None:
 
     assert (
         registry.get_sample_value(
-            "imdb_agent_ui_actions_total",
+            "popcorn_society_agent_ui_actions_total",
             {"action": "open_movie", "outcome": "emitted"},
         )
         == 1

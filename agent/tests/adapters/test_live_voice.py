@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Literal, cast
 import pytest
 from pydantic import SecretStr
 
-from imdb_agent.adapters.live_voice import LiveEvent, LiveSession, LiveTask
-from imdb_agent.adapters.logging import configure_logging
-from imdb_agent.concierge.events import (
+from popcorn_society_agent.adapters.live_voice import LiveEvent, LiveSession, LiveTask
+from popcorn_society_agent.adapters.logging import configure_logging
+from popcorn_society_agent.concierge.events import (
     GroundedMovie,
     MovieCardEvent,
     OpenMovieAction,
@@ -22,19 +22,19 @@ from imdb_agent.concierge.events import (
     ToolActivityEvent,
     UiActionEvent,
 )
-from imdb_agent.concierge.personal import DelegationRejectedError
-from imdb_agent.concierge.personas import SCOTTY_PERSONA
-from imdb_agent.concierge.service import ConciergeRunError
-from imdb_agent.concierge.tools import ToolName
-from imdb_agent.concierge.voice import VoiceCommand, VoiceEvent
+from popcorn_society_agent.concierge.personal import DelegationRejectedError
+from popcorn_society_agent.concierge.personas import SCOTTY_PERSONA
+from popcorn_society_agent.concierge.service import ConciergeRunError
+from popcorn_society_agent.concierge.tools import ToolName
+from popcorn_society_agent.concierge.voice import VoiceCommand, VoiceEvent
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Mapping
 
     from websockets.asyncio.client import ClientConnection
 
-    from imdb_agent.concierge.events import RunnerEvent
-    from imdb_agent.concierge.ports import RunRequest
+    from popcorn_society_agent.concierge.events import RunnerEvent
+    from popcorn_society_agent.concierge.ports import RunRequest
 
 
 class Browser:
@@ -408,7 +408,7 @@ async def test_failed_backend_is_logged_with_tool_progress_without_payload(
 async def test_provider_finalization_drains_browser_audio_after_session_limit(
     closing_phase: str,
 ) -> None:
-    from imdb_agent.concierge.voice import VoiceSessionLimitError
+    from popcorn_society_agent.concierge.voice import VoiceSessionLimitError
 
     session, socket, browser, _ = session_for()
     browser.input = asyncio.Queue(maxsize=20)
@@ -473,7 +473,7 @@ async def test_provider_finalization_drains_browser_audio_after_session_limit(
 
 
 def test_delegation_context_is_bounded_and_preserves_latest_grounded_movie() -> None:
-    from imdb_agent.concierge.ports import ConversationMessage
+    from popcorn_society_agent.concierge.ports import ConversationMessage
 
     session, _, _, _ = session_for()
     movie = GroundedMovie(movie_id=42, primary_title="Forrest Gump", movie_type="MOVIE")

@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from imdb_agent.adapters.voice_quota import SqliteVoiceQuota
-from imdb_agent.concierge.voice_quota import (
+from popcorn_society_agent.adapters.voice_quota import SqliteVoiceQuota
+from popcorn_society_agent.concierge.voice_quota import (
     MemoryVoiceQuota,
     VoiceGrant,
     VoiceQuota,

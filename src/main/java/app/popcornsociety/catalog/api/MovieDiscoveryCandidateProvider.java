@@ -1,0 +1,13 @@
+package app.popcornsociety.catalog.api;
+
+import java.util.List;
+import org.springframework.modulith.NamedInterface;
+
+@NamedInterface("recommendation")
+public interface MovieDiscoveryCandidateProvider {
+
+  List<MovieRecord> findCandidates(MovieDiscoveryCriteria criteria, int candidateLimit);
+
+  List<MovieRecord> findSemanticCandidates(
+      MovieDiscoveryCriteria criteria, float[] themeEmbedding, int candidateLimit);
+}

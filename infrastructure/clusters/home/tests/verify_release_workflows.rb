@@ -54,7 +54,7 @@ assert_contract(
   release.include?('branch=release/v${version}-deployment'),
   "release must create a version-specific deployment branch"
 )
-%w[make\ verify-agent imdb-clone-agent APP_VERSION agent.yaml].each do |contract|
+%w[make\ verify-agent popcorn-society-agent APP_VERSION agent.yaml].each do |contract|
   assert_contract(
     release.include?(contract.tr("\\", "")),
     "release agent contract is missing #{contract}"
@@ -96,5 +96,12 @@ assert_contract(
   tag_step < pull_request_step,
   "release tag must exist before the deployment pull request is offered"
 )
+
+assert_contract(release.include?("python3 scripts/update-release-manifests.py"),
+  "release must update images and runtime names together")
+%w[backend frontend agent].each do |service|
+  assert_contract(release.include?("/popcorn-society-#{service}:"),
+    "new releases must publish the renamed #{service} repository")
+end
 
 puts "Protected-branch release workflow contracts passed."

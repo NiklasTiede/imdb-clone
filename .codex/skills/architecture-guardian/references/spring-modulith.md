@@ -8,10 +8,10 @@ Primary files:
 
 - `build.gradle`
 - `src/main/resources/config/application.properties`
-- `src/main/java/com/thecodinglab/imdbclone`
+- `src/main/java/app/popcornsociety`
 - module `package-info.java` files with `@ApplicationModule`
 - named interface `package-info.java` files and type-level `@NamedInterface`
-- `src/test/java/com/thecodinglab/imdbclone/ModulithArchitectureTest.java`
+- `src/test/java/app/popcornsociety/ModulithArchitectureTest.java`
 
 ## Current Baseline
 
@@ -98,7 +98,7 @@ For each module:
 Prefer the existing hard check:
 
 ```bash
-./gradlew test --tests "com.thecodinglab.imdbclone.ModulithArchitectureTest"
+./gradlew test --tests "app.popcornsociety.ModulithArchitectureTest"
 ```
 
 It should verify the discovered modules, allowed dependency declarations, named-interface conventions, and selected repo-specific dependency rules.

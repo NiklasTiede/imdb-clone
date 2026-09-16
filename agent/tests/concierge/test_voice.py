@@ -1,7 +1,7 @@
 import pytest
 
-from imdb_agent.concierge.events import GroundedMovie
-from imdb_agent.concierge.voice import VoiceGrounding
+from popcorn_society_agent.concierge.events import GroundedMovie
+from popcorn_society_agent.concierge.voice import VoiceGrounding
 
 MOVIE = GroundedMovie(movie_id=42, primary_title="Forrest Gump", movie_type="MOVIE")
 
@@ -9,7 +9,7 @@ MOVIE = GroundedMovie(movie_id=42, primary_title="Forrest Gump", movie_type="MOV
 def test_login_command_requires_a_bounded_redacted_credential() -> None:
     from pydantic import ValidationError
 
-    from imdb_agent.concierge.voice import VoiceCommand
+    from popcorn_society_agent.concierge.voice import VoiceCommand
 
     command = VoiceCommand.model_validate({"type": "authenticate", "delegation": "test-credential"})
     assert "test-credential" not in repr(command)
@@ -119,7 +119,7 @@ def test_multiple_previous_movies_require_clarification() -> None:
 def test_voice_text_requires_a_bounded_complete_message(text: str) -> None:
     from pydantic import ValidationError
 
-    from imdb_agent.concierge.voice import VoiceCommand
+    from popcorn_society_agent.concierge.voice import VoiceCommand
 
     with pytest.raises(ValidationError):
         VoiceCommand(type="text", text=text)
@@ -128,7 +128,7 @@ def test_voice_text_requires_a_bounded_complete_message(text: str) -> None:
 def test_voice_text_is_only_allowed_on_a_text_command() -> None:
     from pydantic import ValidationError
 
-    from imdb_agent.concierge.voice import VoiceCommand
+    from popcorn_society_agent.concierge.voice import VoiceCommand
 
     assert VoiceCommand(type="text", text="  Open it  ").text == "Open it"
     with pytest.raises(ValidationError):
@@ -138,7 +138,7 @@ def test_voice_text_is_only_allowed_on_a_text_command() -> None:
 
 
 def test_transcript_keeps_all_speech_parts_and_applies_revisions_without_duplicates() -> None:
-    from imdb_agent.concierge.voice import VoiceTranscript
+    from popcorn_society_agent.concierge.voice import VoiceTranscript
 
     transcript = VoiceTranscript()
     assert transcript.update(1, 2, "I'll check your ratings.") == "I'll check your ratings."

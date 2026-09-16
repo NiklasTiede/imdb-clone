@@ -4,7 +4,7 @@ import { createPerformanceEventContext } from "./config";
 import { reportPerformanceEvent } from "./performanceReporter";
 
 type GlobalWebVitalsRegistration = typeof globalThis & {
-  __imdbCloneWebVitalsRegistered?: boolean;
+  __popcornSocietyWebVitalsRegistered?: boolean;
 };
 
 const getGlobalRegistration = (): GlobalWebVitalsRegistration =>
@@ -26,11 +26,11 @@ const reportWebVital = (metric: MetricType): void => {
 export const registerWebVitals = (): void => {
   const registration = getGlobalRegistration();
 
-  if (registration.__imdbCloneWebVitalsRegistered) {
+  if (registration.__popcornSocietyWebVitalsRegistered) {
     return;
   }
 
-  registration.__imdbCloneWebVitalsRegistered = true;
+  registration.__popcornSocietyWebVitalsRegistered = true;
 
   onCLS(reportWebVital);
   onFCP(reportWebVital);
@@ -41,6 +41,6 @@ export const registerWebVitals = (): void => {
 
 export const resetWebVitalsRegistrationForTests = (): void => {
   if (import.meta.env.MODE === "test") {
-    delete getGlobalRegistration().__imdbCloneWebVitalsRegistered;
+    delete getGlobalRegistration().__popcornSocietyWebVitalsRegistered;
   }
 };

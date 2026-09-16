@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from imdb_agent.adapters import profiling as profiling_module
-from imdb_agent.adapters.profiling import ProfilingRuntime, configure_profiling
-from imdb_agent.settings import DeploymentEnvironment, Settings
+from popcorn_society_agent.adapters import profiling as profiling_module
+from popcorn_society_agent.adapters.profiling import ProfilingRuntime, configure_profiling
+from popcorn_society_agent.settings import DeploymentEnvironment, Settings
 
 if TYPE_CHECKING:
     import pytest

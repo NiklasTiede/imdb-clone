@@ -5,7 +5,7 @@ import {
 } from "./backendPerformanceReporter";
 
 const context = {
-  appName: "imdb-clone-frontend" as const,
+  appName: "popcorn-society-frontend" as const,
   appVersion: "test",
   environment: "test",
 };

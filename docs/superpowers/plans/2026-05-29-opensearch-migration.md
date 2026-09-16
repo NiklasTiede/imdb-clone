@@ -24,13 +24,13 @@
 - Modify `gradle.properties` to add pinned OpenSearch dependency versions.
 - Modify `compose.yaml` to replace the Elasticsearch service and volume with OpenSearch.
 - Modify `src/main/resources/config/application*.properties` to use OpenSearch endpoint properties and health naming.
-- Modify `src/main/java/com/thecodinglab/imdbclone/Application.java` to use OpenSearch repository configuration.
-- Rename `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/ElasticsearchMovieSearchService.java` to `OpenSearchMovieSearchService.java`.
-- Rename `src/main/java/com/thecodinglab/imdbclone/shared/error/ElasticsearchOperationException.java` to `OpenSearchOperationException.java`.
-- Modify `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/query/MovieSearchQueryBuilder.java` for OpenSearch request/query imports if the Java client package changes require it.
-- Modify `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieSearchDocumentRepository.java` to extend the OpenSearch repository type.
-- Modify `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieSearchIndexMaintenance.java` to use OpenSearch operations/template types.
-- Modify `src/test/java/com/thecodinglab/imdbclone/support/BaseContainers.java` to use an OpenSearch container.
+- Modify `src/main/java/app/popcornsociety/Application.java` to use OpenSearch repository configuration.
+- Rename `src/main/java/app/popcornsociety/catalog/internal/search/ElasticsearchMovieSearchService.java` to `OpenSearchMovieSearchService.java`.
+- Rename `src/main/java/app/popcornsociety/shared/error/ElasticsearchOperationException.java` to `OpenSearchOperationException.java`.
+- Modify `src/main/java/app/popcornsociety/catalog/internal/search/query/MovieSearchQueryBuilder.java` for OpenSearch request/query imports if the Java client package changes require it.
+- Modify `src/main/java/app/popcornsociety/catalog/internal/search/index/MovieSearchDocumentRepository.java` to extend the OpenSearch repository type.
+- Modify `src/main/java/app/popcornsociety/catalog/internal/search/index/MovieSearchIndexMaintenance.java` to use OpenSearch operations/template types.
+- Modify `src/test/java/app/popcornsociety/support/BaseContainers.java` to use an OpenSearch container.
 - Rename/update search tests that refer to Elasticsearch.
 - Modify `infrastructure/clusters/home/apps/kustomization.yaml`, replace `infrastructure/clusters/home/apps/elasticsearch.yaml` with `opensearch.yaml`, and update backend service URLs.
 - Modify `infrastructure/clusters/home/apps/backend.yaml` and `application-prod.properties` service/secret names.
@@ -192,10 +192,10 @@ git commit -m "chore: run opensearch locally"
 ## Task 3: Spring Boot OpenSearch Wiring
 
 **Files:**
-- Modify: `src/main/java/com/thecodinglab/imdbclone/Application.java`
+- Modify: `src/main/java/app/popcornsociety/Application.java`
 - Modify: `src/main/resources/config/application.properties`
 - Modify: `src/main/resources/config/application-prod.properties`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieSearchDocumentRepository.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/index/MovieSearchDocumentRepository.java`
 
 - [ ] **Step 1: Update application repository imports**
 
@@ -231,7 +231,7 @@ with:
 In `MovieSearchDocumentRepository.java`, replace the content with:
 
 ```java
-package com.thecodinglab.imdbclone.catalog.internal.search.index;
+package app.popcornsociety.catalog.internal.search.index;
 
 import org.opensearch.data.repository.OpenSearchRepository;
 
@@ -286,7 +286,7 @@ Expected: compile fails only on remaining Elasticsearch imports in search adapte
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/main/java/com/thecodinglab/imdbclone/Application.java src/main/resources/config/application.properties src/main/resources/config/application-prod.properties src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieSearchDocumentRepository.java
+git add src/main/java/app/popcornsociety/Application.java src/main/resources/config/application.properties src/main/resources/config/application-prod.properties src/main/java/app/popcornsociety/catalog/internal/search/index/MovieSearchDocumentRepository.java
 git commit -m "refactor: wire opensearch repositories"
 ```
 
@@ -295,17 +295,17 @@ git commit -m "refactor: wire opensearch repositories"
 ## Task 4: Backend Search Adapter Rename
 
 **Files:**
-- Rename: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/ElasticsearchMovieSearchService.java` to `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/OpenSearchMovieSearchService.java`
-- Rename: `src/main/java/com/thecodinglab/imdbclone/shared/error/ElasticsearchOperationException.java` to `src/main/java/com/thecodinglab/imdbclone/shared/error/OpenSearchOperationException.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/query/MovieSearchQueryBuilder.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/MovieSearchService.java`
+- Rename: `src/main/java/app/popcornsociety/catalog/internal/search/ElasticsearchMovieSearchService.java` to `src/main/java/app/popcornsociety/catalog/internal/search/OpenSearchMovieSearchService.java`
+- Rename: `src/main/java/app/popcornsociety/shared/error/ElasticsearchOperationException.java` to `src/main/java/app/popcornsociety/shared/error/OpenSearchOperationException.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/query/MovieSearchQueryBuilder.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/MovieSearchService.java`
 
 - [ ] **Step 1: Rename exception**
 
 Rename the file and replace its class body with:
 
 ```java
-package com.thecodinglab.imdbclone.shared.error;
+package app.popcornsociety.shared.error;
 
 public class OpenSearchOperationException extends RuntimeException {
 
@@ -390,7 +390,7 @@ Expected: main code compiles, or errors identify exact OpenSearch Java client bu
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/main/java/com/thecodinglab/imdbclone/catalog/internal/search src/main/java/com/thecodinglab/imdbclone/shared/error src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/query/MovieSearchQueryBuilder.java src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/MovieSearchService.java
+git add src/main/java/app/popcornsociety/catalog/internal/search src/main/java/app/popcornsociety/shared/error src/main/java/app/popcornsociety/catalog/internal/search/query/MovieSearchQueryBuilder.java src/main/java/app/popcornsociety/catalog/internal/search/MovieSearchService.java
 git commit -m "refactor: migrate search adapter to opensearch"
 ```
 
@@ -399,10 +399,10 @@ git commit -m "refactor: migrate search adapter to opensearch"
 ## Task 5: Index Operations and Mapping Parity
 
 **Files:**
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieSearchIndexMaintenance.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieSearchDocument.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieSearchIndexMaintenanceTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/catalog/SearchControllerTest.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/index/MovieSearchIndexMaintenance.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/index/MovieSearchDocument.java`
+- Modify: `src/test/java/app/popcornsociety/catalog/internal/search/index/MovieSearchIndexMaintenanceTest.java`
+- Modify: `src/test/java/app/popcornsociety/catalog/SearchControllerTest.java`
 
 - [ ] **Step 1: Update OpenSearch operations imports**
 
@@ -470,7 +470,7 @@ Expected: tests pass or fail only because OpenSearch mapping differs; fix mappin
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieSearchIndexMaintenanceTest.java src/test/java/com/thecodinglab/imdbclone/catalog/SearchControllerTest.java
+git add src/main/java/app/popcornsociety/catalog/internal/search/index src/test/java/app/popcornsociety/catalog/internal/search/index/MovieSearchIndexMaintenanceTest.java src/test/java/app/popcornsociety/catalog/SearchControllerTest.java
 git commit -m "test: preserve opensearch index mapping"
 ```
 
@@ -479,10 +479,10 @@ git commit -m "test: preserve opensearch index mapping"
 ## Task 6: Testcontainers Migration
 
 **Files:**
-- Modify: `src/test/java/com/thecodinglab/imdbclone/support/BaseContainers.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/ElasticsearchMovieSearchServiceTest.java`
-- Rename: `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/ElasticsearchMovieSearchServiceTest.java` to `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/OpenSearchMovieSearchServiceTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/query/MovieSearchQueryBuilderTest.java`
+- Modify: `src/test/java/app/popcornsociety/support/BaseContainers.java`
+- Modify: `src/test/java/app/popcornsociety/catalog/internal/search/ElasticsearchMovieSearchServiceTest.java`
+- Rename: `src/test/java/app/popcornsociety/catalog/internal/search/ElasticsearchMovieSearchServiceTest.java` to `src/test/java/app/popcornsociety/catalog/internal/search/OpenSearchMovieSearchServiceTest.java`
+- Modify: `src/test/java/app/popcornsociety/catalog/internal/search/query/MovieSearchQueryBuilderTest.java`
 
 - [ ] **Step 1: Replace Elasticsearch test container**
 
@@ -550,7 +550,7 @@ Expected: OpenSearch Testcontainer starts, index projection works, lexical/hybri
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/test/java/com/thecodinglab/imdbclone/support/BaseContainers.java src/test/java/com/thecodinglab/imdbclone/catalog/internal/search src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/query/MovieSearchQueryBuilderTest.java
+git add src/test/java/app/popcornsociety/support/BaseContainers.java src/test/java/app/popcornsociety/catalog/internal/search src/test/java/app/popcornsociety/catalog/internal/search/query/MovieSearchQueryBuilderTest.java
 git commit -m "test: run search tests on opensearch"
 ```
 
@@ -815,10 +815,10 @@ git commit -m "fix: complete opensearch migration"
 ## Task 10: Native OpenSearch RRF Follow-Up
 
 **Files:**
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/OpenSearchMovieSearchService.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/query/MovieSearchQueryBuilder.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/OpenSearchMovieSearchServiceTest.java`
-- Keep: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/query/MovieSearchRankFusion.java` until native RRF has parity tests.
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/OpenSearchMovieSearchService.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/query/MovieSearchQueryBuilder.java`
+- Modify: `src/test/java/app/popcornsociety/catalog/internal/search/OpenSearchMovieSearchServiceTest.java`
+- Keep: `src/main/java/app/popcornsociety/catalog/internal/search/query/MovieSearchRankFusion.java` until native RRF has parity tests.
 
 - [ ] **Step 1: Add a parity test before native RRF**
 
@@ -906,7 +906,7 @@ Delete `MovieSearchRankFusion.java` and `MovieSearchRankFusionTest.java` only af
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/main/java/com/thecodinglab/imdbclone/catalog/internal/search src/test/java/com/thecodinglab/imdbclone/catalog/internal/search docs/development.md
+git add src/main/java/app/popcornsociety/catalog/internal/search src/test/java/app/popcornsociety/catalog/internal/search docs/development.md
 git commit -m "feat: use opensearch rrf pipeline"
 ```
 

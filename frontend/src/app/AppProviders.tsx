@@ -8,6 +8,7 @@ import { queryClient } from "../shared/api/queryClient";
 import { bootstrapSession } from "../shared/auth/bootstrapSession";
 import { RouteMetrics } from "../shared/observability";
 import { appTheme } from "../theme";
+import SiteMetadata from "../shared/seo/SiteMetadata";
 
 const AppProviders = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
@@ -20,6 +21,7 @@ const AppProviders = ({ children }: { children: ReactNode }) => {
       <QueryClientProvider client={queryClient}>
         <SnackbarProvider maxSnack={3}>
           <BrowserRouter>
+            <SiteMetadata />
             <RouteMetrics />
             {children}
             <ConciergeExperience />

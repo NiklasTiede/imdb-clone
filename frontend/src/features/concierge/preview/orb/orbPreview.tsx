@@ -26,7 +26,7 @@ import { appTheme, movieColors } from "../../../../theme";
 import { STOPS, VoiceOrb, restingStop, type OrbState } from "./VoiceOrb";
 import { ConversationPreview } from "./ConversationPreview";
 import { usePreviewMicrophone } from "./usePreviewMicrophone";
-import catalogScreenshot from "../../../../../../docs/assets/imdb-clone-screenshot.webp";
+import catalogScreenshot from "../../../../../../docs/assets/popcorn-society-screenshot.webp";
 
 const states: { state: OrbState; title: string; description: string }[] = [
   { state: "ready", title: "Ready", description: "Half open, waiting" },

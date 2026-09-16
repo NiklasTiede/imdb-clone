@@ -17,7 +17,7 @@ describe("movie image URL helpers", () => {
   });
 
   it("builds WebP poster URLs from the configured object storage address", () => {
-    vi.stubEnv("VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
+    vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
 
     expect(getMoviePosterImageUrl("poster-token", MoviePosterImageSize.Small)).toBe(
       "http://localhost:9000/imdb-clone/movies/posters/poster-token_size_120x180.webp",
@@ -46,10 +46,19 @@ describe("movie image URL helpers", () => {
   });
 
   it("keeps profile photo URLs as JPG", () => {
-    vi.stubEnv("VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
+    vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
 
     expect(getProfileImageUrl("avatar-token")).toBe(
       "http://localhost:9000/imdb-clone/profile-photos/avatar-token_size_800x800.jpg",
     );
   });
+});
+
+ it("uses an explicitly migrated bucket without changing media object paths", () => {
+  vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS", "https://media.popcornsociety.app");
+  vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_BUCKET", "popcorn-society");
+  expect(getMoviePosterImageUrl("poster-token", MoviePosterImageSize.Small)).toBe(
+    "https://media.popcornsociety.app/popcorn-society/movies/posters/poster-token_size_120x180.webp",
+  );
+  vi.unstubAllEnvs();
 });

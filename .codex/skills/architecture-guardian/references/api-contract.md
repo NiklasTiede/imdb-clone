@@ -8,15 +8,15 @@ direction and run safety, also load `movie-concierge-agent.md`.
 
 Primary files:
 
-- `src/main/java/com/thecodinglab/imdbclone/*/web`
-- `src/main/java/com/thecodinglab/imdbclone/*/api`
-- `src/main/java/com/thecodinglab/imdbclone/shared/api`
-- `src/main/java/com/thecodinglab/imdbclone/shared/error`
-- `src/main/java/com/thecodinglab/imdbclone/assistant/internal/mcp`
-- `agent/src/imdb_agent/concierge/events.py`
-- `agent/src/imdb_agent/web`
+- `src/main/java/app/popcornsociety/*/web`
+- `src/main/java/app/popcornsociety/*/api`
+- `src/main/java/app/popcornsociety/shared/api`
+- `src/main/java/app/popcornsociety/shared/error`
+- `src/main/java/app/popcornsociety/assistant/internal/mcp`
+- `agent/src/popcorn_society_agent/concierge/events.py`
+- `agent/src/popcorn_society_agent/web`
 - `agent/tests/web`
-- `frontend/src/client/imdb-clone-backend.yaml`
+- `frontend/src/client/popcorn-society-backend.yaml`
 - `frontend/src/client/movies/MoviesApi.ts`
 - `frontend/src/client/movies/generator-output/api.ts`
 - `frontend/src/shared/api/moviesApi.ts`
@@ -41,7 +41,7 @@ Primary files:
 
 ### OpenAPI and Generated Client
 
-- backend contract changes are reflected in `frontend/src/client/imdb-clone-backend.yaml`
+- backend contract changes are reflected in `frontend/src/client/popcorn-society-backend.yaml`
 - generated files under `frontend/src/client/movies/generator-output` are not manually edited
 - `shared/api/moviesApi.ts` owns generated Axios API class construction and HTTP client wiring
 - `MoviesApi.ts` remains a compatibility entrypoint over the shared API wrappers

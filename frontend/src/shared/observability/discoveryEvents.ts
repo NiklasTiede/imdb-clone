@@ -1,3 +1,4 @@
+import { readRenamedStorage } from "../storage/readRenamedStorage";
 import { apiHttpClient } from "../api/httpClient";
 
 export type DiscoveryEventType =
@@ -16,7 +17,7 @@ type DiscoveryEvent = {
   strategyVersion: string;
 };
 
-const discoverySessionStorageKey = "imdb-clone.discovery-session-id";
+const discoverySessionStorageKey = "popcorn-society.discovery-session-id";
 let inMemorySessionId: string | undefined;
 
 const createOpaqueId = () => {
@@ -33,7 +34,9 @@ const getDiscoverySessionId = () => {
   }
 
   try {
-    const stored = window.sessionStorage.getItem(discoverySessionStorageKey);
+    const stored = readRenamedStorage(
+      window.sessionStorage, discoverySessionStorageKey, "imdb-clone.discovery-session-id",
+    );
     if (stored) {
       return stored;
     }

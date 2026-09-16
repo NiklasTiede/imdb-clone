@@ -1,6 +1,6 @@
 export const i18n = {
   general: {
-    appName: "IMDb Clone",
+    appName: "Popcorn Society",
     tagline: "Discover, rate, remember",
   },
   regex: {

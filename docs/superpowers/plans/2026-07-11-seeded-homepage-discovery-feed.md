@@ -225,13 +225,13 @@ lengths, and cursor integrity at the web boundary.
 ### Task 1: Lock The Feed Contract And Pure Seed Semantics
 
 **Files:**
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/api/HomeFeedRequest.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/api/HomeFeedResponse.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/api/HomeFeedSection.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/api/HomeFeedItem.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/api/HomeFeedService.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/internal/HomeFeedSeed.java`
-- Create: `src/test/java/com/thecodinglab/imdbclone/recommendation/internal/HomeFeedSeedTest.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/api/HomeFeedRequest.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/api/HomeFeedResponse.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/api/HomeFeedSection.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/api/HomeFeedItem.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/api/HomeFeedService.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/internal/HomeFeedSeed.java`
+- Create: `src/test/java/app/popcornsociety/recommendation/internal/HomeFeedSeedTest.java`
 
 - [ ] Model immutable request/response records and keep OpenSearch-specific types out of the API.
 - [ ] Define constants for strategy version, sections per page, maximum sections, candidate limits,
@@ -245,11 +245,11 @@ lengths, and cursor integrity at the web boundary.
 ### Task 2: Build The Versioned Section Definition Catalog
 
 **Files:**
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeSectionDefinition.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeSectionCatalog.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeSectionFamily.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeSectionKind.java`
-- Create: `src/test/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeSectionCatalogTest.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/internal/home/HomeSectionDefinition.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/internal/home/HomeSectionCatalog.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/internal/home/HomeSectionFamily.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/internal/home/HomeSectionKind.java`
+- Create: `src/test/java/app/popcornsociety/recommendation/internal/home/HomeSectionCatalogTest.java`
 
 - [ ] Encode 40–60 initial definitions with stable IDs and reviewed user-facing titles/subtitles.
 - [ ] Add validation for duplicate IDs, missing prompts, invalid ranges, weak candidate limits,
@@ -261,16 +261,16 @@ lengths, and cursor integrity at the web boundary.
 ### Task 3: Extend The Catalog Recommendation Candidate Seam
 
 **Files:**
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/api/MovieDiscoveryCriteria.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/api/MovieDiscoveryCandidate.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/api/MovieDiscoveryCandidateProvider.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/api/MovieDiscoveryTopic.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/api/MovieDiscoveryTopicProjector.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/OpenSearchMovieDiscoveryCandidates.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/query/MovieSearchQueryBuilder.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieSearchDocument.java`
-- Create: `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/OpenSearchMovieDiscoveryCandidatesTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/query/MovieSearchQueryBuilderTest.java`
+- Create: `src/main/java/app/popcornsociety/catalog/api/MovieDiscoveryCriteria.java`
+- Create: `src/main/java/app/popcornsociety/catalog/api/MovieDiscoveryCandidate.java`
+- Create: `src/main/java/app/popcornsociety/catalog/api/MovieDiscoveryCandidateProvider.java`
+- Create: `src/main/java/app/popcornsociety/catalog/api/MovieDiscoveryTopic.java`
+- Create: `src/main/java/app/popcornsociety/catalog/api/MovieDiscoveryTopicProjector.java`
+- Create: `src/main/java/app/popcornsociety/catalog/internal/search/OpenSearchMovieDiscoveryCandidates.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/query/MovieSearchQueryBuilder.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/index/MovieSearchDocument.java`
+- Create: `src/test/java/app/popcornsociety/catalog/internal/search/OpenSearchMovieDiscoveryCandidatesTest.java`
+- Modify: `src/test/java/app/popcornsociety/catalog/internal/search/query/MovieSearchQueryBuilderTest.java`
 
 - [ ] Define typed discovery criteria for genres, type, year/runtime range, rating/vote confidence,
   semantic section reference, and candidate limit. Do not accept raw OpenSearch JSON or query DSL.
@@ -286,12 +286,12 @@ lengths, and cursor integrity at the web boundary.
 ### Task 4: Precompute And Version Semantic Section Embeddings
 
 **Files:**
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieDiscoveryTopicDocument.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieDiscoveryTopicEmbeddingStore.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieDiscoveryTopicProjector.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeSectionEmbeddingCoordinator.java`
-- Create: `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search/index/MovieDiscoveryTopicProjectorTest.java`
-- Create: `src/test/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeSectionEmbeddingCoordinatorTest.java`
+- Create: `src/main/java/app/popcornsociety/catalog/internal/search/index/MovieDiscoveryTopicDocument.java`
+- Create: `src/main/java/app/popcornsociety/catalog/internal/search/index/MovieDiscoveryTopicEmbeddingStore.java`
+- Create: `src/main/java/app/popcornsociety/catalog/internal/search/index/MovieDiscoveryTopicProjector.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/internal/home/HomeSectionEmbeddingCoordinator.java`
+- Create: `src/test/java/app/popcornsociety/catalog/internal/search/index/MovieDiscoveryTopicProjectorTest.java`
+- Create: `src/test/java/app/popcornsociety/recommendation/internal/home/HomeSectionEmbeddingCoordinatorTest.java`
 - Modify: `src/main/resources/config/application.yml`
 - Modify: `docs/development.md`
 
@@ -308,12 +308,12 @@ lengths, and cursor integrity at the web boundary.
 ### Task 5: Implement Seeded Composition, Ranking, And Deduplication
 
 **Files:**
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeSectionComposer.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeDiscoveryRanker.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/recommendation/internal/home/SeededHomeFeedService.java`
-- Create: `src/test/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeSectionComposerTest.java`
-- Create: `src/test/java/com/thecodinglab/imdbclone/recommendation/internal/home/HomeDiscoveryRankerTest.java`
-- Create: `src/test/java/com/thecodinglab/imdbclone/recommendation/internal/home/SeededHomeFeedServiceTest.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/internal/home/HomeSectionComposer.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/internal/home/HomeDiscoveryRanker.java`
+- Create: `src/main/java/app/popcornsociety/recommendation/internal/home/SeededHomeFeedService.java`
+- Create: `src/test/java/app/popcornsociety/recommendation/internal/home/HomeSectionComposerTest.java`
+- Create: `src/test/java/app/popcornsociety/recommendation/internal/home/HomeDiscoveryRankerTest.java`
+- Create: `src/test/java/app/popcornsociety/recommendation/internal/home/SeededHomeFeedServiceTest.java`
 
 - [ ] Implement weighted family selection, first-page guarantees, adjacent-family cooldowns, stable
   replay, and no repeated section IDs.
@@ -329,9 +329,9 @@ lengths, and cursor integrity at the web boundary.
 ### Task 6: Expose The Feed Endpoint And Regenerate The Client
 
 **Files:**
-- Modify: `src/main/java/com/thecodinglab/imdbclone/recommendation/web/RecommendationController.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/recommendation/RecommendationControllerTest.java`
-- Modify generated contract via: `frontend/src/client/imdb-clone-backend.yaml`
+- Modify: `src/main/java/app/popcornsociety/recommendation/web/RecommendationController.java`
+- Modify: `src/test/java/app/popcornsociety/recommendation/RecommendationControllerTest.java`
+- Modify generated contract via: `frontend/src/client/popcorn-society-backend.yaml`
 - Regenerate: `frontend/src/client/movies/generator-output/`
 - Verify: `frontend/src/shared/api/moviesApi.ts`
 

@@ -28,8 +28,8 @@ Modify:
 - `frontend/src/shared/media/imageUrls.test.ts` - Assert WebP poster/backdrop URLs and JPG profile URLs.
 - `frontend/src/shared/media/PosterImage.tsx` - Retry JPG poster URL on WebP load failure.
 - `frontend/src/shared/media/index.ts` - Export new helpers/types.
-- `src/main/java/com/thecodinglab/imdbclone/media/internal/images/MovieImageConstants.java` - Move manual movie uploads under `movies/posters/`.
-- `src/test/java/com/thecodinglab/imdbclone/media/MediaServiceIntegrationTest.java` - Update expected movie object paths.
+- `src/main/java/app/popcornsociety/media/internal/images/MovieImageConstants.java` - Move manual movie uploads under `movies/posters/`.
+- `src/test/java/app/popcornsociety/media/MediaServiceIntegrationTest.java` - Update expected movie object paths.
 - `Makefile` - Add build/push/run seed targets.
 - `compose.yaml` - Add optional light/full one-shot seed services.
 - `infrastructure/deployment/development/docker-compose.yaml` - Replace old object loader with seed services.
@@ -69,7 +69,7 @@ describe("movie image URL helpers", () => {
   });
 
   it("builds WebP poster URLs from the configured object storage address", () => {
-    vi.stubEnv("VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
+    vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
 
     expect(getMoviePosterImageUrl("poster-token", MoviePosterImageSize.Small)).toBe(
       "http://localhost:9000/imdb-clone/movies/posters/poster-token_size_120x180.webp",
@@ -98,7 +98,7 @@ describe("movie image URL helpers", () => {
   });
 
   it("keeps profile photo URLs as JPG", () => {
-    vi.stubEnv("VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
+    vi.stubEnv("VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS", "http://localhost:9000");
 
     expect(getProfileImageUrl("avatar-token")).toBe(
       "http://localhost:9000/imdb-clone/profile-photos/avatar-token_size_800x800.jpg",
@@ -140,7 +140,7 @@ export enum MovieBackdropImageSize {
 }
 
 const getObjectStorageHost = () =>
-  import.meta.env.VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS ??
+  import.meta.env.VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS ??
   "http://localhost:9000";
 
 export type MovieImageSize =
@@ -332,8 +332,8 @@ git commit -m "fix(media): fallback to JPG movie posters"
 ### Task 3: Backend Movie Object Paths
 
 **Files:**
-- Modify: `src/main/java/com/thecodinglab/imdbclone/media/internal/images/MovieImageConstants.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/media/MediaServiceIntegrationTest.java`
+- Modify: `src/main/java/app/popcornsociety/media/internal/images/MovieImageConstants.java`
+- Modify: `src/test/java/app/popcornsociety/media/MediaServiceIntegrationTest.java`
 
 - [ ] **Step 1: Update expected movie object paths in integration tests**
 
@@ -358,14 +358,14 @@ assertThat(thumbnailImageName).endsWith("_size_120x180.jpg");
 Run:
 
 ```bash
-./gradlew test --tests "com.thecodinglab.imdbclone.media.MediaServiceIntegrationTest"
+./gradlew test --tests "app.popcornsociety.media.MediaServiceIntegrationTest"
 ```
 
 Expected: FAIL because `MovieImageConstants.BUCKET_DIRECTORY_NAME` is still `movies/`.
 
 - [ ] **Step 3: Move manual movie uploads under poster prefix**
 
-Modify `src/main/java/com/thecodinglab/imdbclone/media/internal/images/MovieImageConstants.java`:
+Modify `src/main/java/app/popcornsociety/media/internal/images/MovieImageConstants.java`:
 
 ```java
 public static final String FORMAT = "jpg";
@@ -381,7 +381,7 @@ WebP first and falls back to JPG for manually uploaded posters.
 Run:
 
 ```bash
-./gradlew test --tests "com.thecodinglab.imdbclone.media.MediaServiceIntegrationTest"
+./gradlew test --tests "app.popcornsociety.media.MediaServiceIntegrationTest"
 ```
 
 Expected: PASS.
@@ -389,7 +389,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/main/java/com/thecodinglab/imdbclone/media/internal/images/MovieImageConstants.java src/test/java/com/thecodinglab/imdbclone/media/MediaServiceIntegrationTest.java
+git add src/main/java/app/popcornsociety/media/internal/images/MovieImageConstants.java src/test/java/app/popcornsociety/media/MediaServiceIntegrationTest.java
 git commit -m "fix(media): store manual posters under poster path"
 ```
 
@@ -1504,7 +1504,7 @@ Expected: PASS and build exit 0.
 Run:
 
 ```bash
-./gradlew test --tests "com.thecodinglab.imdbclone.media.MediaServiceIntegrationTest"
+./gradlew test --tests "app.popcornsociety.media.MediaServiceIntegrationTest"
 ```
 
 Expected: PASS.

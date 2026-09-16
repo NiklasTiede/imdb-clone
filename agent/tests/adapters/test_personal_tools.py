@@ -7,10 +7,10 @@ import pytest
 from pydantic import SecretStr
 from pydantic_ai.exceptions import ToolFailed
 
-from imdb_agent.adapters.logging import configure_logging
-from imdb_agent.adapters.personal_tools import PersonalToolGate
-from imdb_agent.concierge.events import GroundedMovie
-from imdb_agent.concierge.personal import PersonalTurn
+from popcorn_society_agent.adapters.logging import configure_logging
+from popcorn_society_agent.adapters.personal_tools import PersonalToolGate
+from popcorn_society_agent.concierge.events import GroundedMovie
+from popcorn_society_agent.concierge.personal import PersonalTurn
 
 if TYPE_CHECKING:
     from pydantic_ai import RunContext
@@ -47,7 +47,7 @@ class Backend:
 
 @pytest.mark.asyncio
 async def test_verified_login_unlocks_gate_once_and_cannot_switch_account() -> None:
-    from imdb_agent.concierge.personal import DelegationRejectedError
+    from popcorn_society_agent.concierge.personal import DelegationRejectedError
 
     state = turn()
     gate = PersonalToolGate(None, state)
@@ -141,7 +141,7 @@ async def test_committed_changes_emit_the_correct_page_and_previous_state(
     kind: str,
     score: float | None,
 ) -> None:
-    from imdb_agent.concierge.personal import receipt_action
+    from popcorn_society_agent.concierge.personal import receipt_action
 
     state = turn()
     state.finalize(message)
@@ -233,7 +233,7 @@ async def test_write_rejection_reason_survives_real_logging_filter_without_priva
 ) -> None:
     import json
 
-    from imdb_agent.adapters.logging import configure_logging
+    from popcorn_society_agent.adapters.logging import configure_logging
 
     configure_logging(json_output=True)
     state = turn()
@@ -258,7 +258,7 @@ async def test_write_rejection_reason_survives_real_logging_filter_without_priva
 async def test_lost_mcp_reply_is_not_retried_or_reported_as_success() -> None:
     import httpx
 
-    from imdb_agent.concierge.service import ConciergeRunError
+    from popcorn_society_agent.concierge.service import ConciergeRunError
 
     class Disconnected(Backend):
         attempts = 0
@@ -290,7 +290,7 @@ async def test_lost_mcp_reply_is_not_retried_or_reported_as_success() -> None:
 def test_transport_failure_detection_handles_wrapping_without_matching_business_errors() -> None:
     import httpx
 
-    from imdb_agent.adapters.personal_tools import is_catalog_transport_failure
+    from popcorn_society_agent.adapters.personal_tools import is_catalog_transport_failure
 
     wrapped = RuntimeError("private outer details")
     wrapped.__cause__ = httpx.ConnectError("private inner details")

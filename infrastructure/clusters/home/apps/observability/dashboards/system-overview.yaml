@@ -4,7 +4,7 @@ metadata:
   name: observability-dashboard-system
   namespace: observability
   annotations:
-    grafana_folder: IMDB Clone
+    grafana_folder: Popcorn Society
   labels:
     grafana_dashboard: "1"
 data:
@@ -1317,7 +1317,7 @@ data:
       "timepicker": {
       },
       "timezone": "browser",
-      "title": "IMDB Clone System",
+      "title": "Popcorn Society / Infrastructure",
       "uid": "imdb-system-overview",
       "version": 1,
       "weekStart": ""

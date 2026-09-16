@@ -8,11 +8,11 @@ from pydantic_ai import Agent
 from pydantic_ai.exceptions import ToolFailed
 from pydantic_ai.models.function import AgentInfo, DeltaToolCall, FunctionModel
 
-from imdb_agent.adapters.pydantic_ai_runner import (
+from popcorn_society_agent.adapters.pydantic_ai_runner import (
     PydanticAIConciergeRunner,
     resolve_model_cost,
 )
-from imdb_agent.concierge.events import (
+from popcorn_society_agent.concierge.events import (
     MovieCardEvent,
     TextEvent,
     ToolActivityEvent,
@@ -20,9 +20,9 @@ from imdb_agent.concierge.events import (
     UiActionEvent,
     UsageEvent,
 )
-from imdb_agent.concierge.policy import SYSTEM_POLICY
-from imdb_agent.concierge.ports import RunRequest
-from imdb_agent.concierge.tools import ToolName
+from popcorn_society_agent.concierge.policy import SYSTEM_POLICY
+from popcorn_society_agent.concierge.ports import RunRequest
+from popcorn_society_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -299,8 +299,8 @@ async def test_model_interpreted_navigation_is_emitted_without_command_regex(
 ) -> None:
     from pydantic import SecretStr
 
-    from imdb_agent.concierge.events import GroundedMovie
-    from imdb_agent.concierge.ports import ConversationMessage
+    from popcorn_society_agent.concierge.events import GroundedMovie
+    from popcorn_society_agent.concierge.ports import ConversationMessage
 
     movie_page = tool != "navigate_app"
 
@@ -355,8 +355,8 @@ async def test_model_interpreted_navigation_is_emitted_without_command_regex(
 
 @pytest.mark.asyncio
 async def test_external_facts_complete_text_turn_without_replacing_catalog_identity() -> None:
-    from imdb_agent.concierge.events import GroundedMovie
-    from imdb_agent.concierge.ports import ConversationMessage
+    from popcorn_society_agent.concierge.events import GroundedMovie
+    from popcorn_society_agent.concierge.ports import ConversationMessage
 
     requests = 0
 
@@ -413,8 +413,8 @@ async def test_external_facts_complete_text_turn_without_replacing_catalog_ident
 
 @pytest.mark.asyncio
 async def test_watch_providers_complete_text_turn_without_replacing_catalog_identity() -> None:
-    from imdb_agent.concierge.events import GroundedMovie
-    from imdb_agent.concierge.ports import ConversationMessage
+    from popcorn_society_agent.concierge.events import GroundedMovie
+    from popcorn_society_agent.concierge.ports import ConversationMessage
 
     requests = 0
 
@@ -482,8 +482,8 @@ async def test_usage_failure_logs_specific_budget_without_request_payload(
 
     from pydantic_ai import UsageLimits
 
-    from imdb_agent.adapters.logging import configure_logging
-    from imdb_agent.concierge.service import ConciergeRunError
+    from popcorn_society_agent.adapters.logging import configure_logging
+    from popcorn_society_agent.concierge.service import ConciergeRunError
 
     async def respond(messages: list[ModelMessage], info: AgentInfo) -> AsyncIterator[str]:
         yield "Not reached"

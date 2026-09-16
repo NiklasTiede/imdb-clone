@@ -22,7 +22,7 @@ Use Pydantic AI 2.31.0's xAI realtime Adapter with `grok-voice-think-fast-2.0`, 
 one synthetic tool and fixture; it imports no web code and accesses no application domain state.
 The current fixture names Forrest Gump and returns a fixed test record; using a real film title
 does not turn the simulated tool into a lookup in the user's library.
-Provider types stay under `imdb_agent.adapters`; assembly is in the standalone probe CLI.
+Provider types stay under `popcorn_society_agent.adapters`; assembly is in the standalone probe CLI.
 The existing text service does not load the xAI credential or start a voice connection.
 
 Use a separate, explicit local xAI secret file. Keep instrumentation and provider logging off in

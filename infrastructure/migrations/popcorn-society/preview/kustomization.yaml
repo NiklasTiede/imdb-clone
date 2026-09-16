@@ -1,0 +1,7 @@
+# Render-only preview. Argo CD continues to watch clusters/home/apps.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../clusters/home/apps
+components:
+  - ../../../clusters/home/apps/components/popcorn-society/serve

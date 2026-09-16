@@ -103,9 +103,9 @@ The first adopted improvement establishes these commands:
 
 | Purpose | Command |
 | --- | --- |
-| One fast backend test | `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"` |
+| One fast backend test | `./gradlew test --tests "app.popcornsociety.SomeTest"` |
 | All fast backend tests | `./gradlew test` |
-| One integration test | `./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"` |
+| One integration test | `./gradlew integrationTest --tests "app.popcornsociety.SomeIntegrationTest"` |
 | All integration tests | `./gradlew integrationTest` |
 | Full backend verification | `./gradlew check` |
 | CI-equivalent build and combined coverage | `./gradlew build jacocoTestReport` |
@@ -447,7 +447,7 @@ Client generation must precede checks because generated output is intentionally 
 stored in Git.
 
 The backend integration lane compares the complete runtime OpenAPI document with
-`frontend/src/client/imdb-clone-backend.yaml` as parsed data. It ignores only the top-level `servers`
+`frontend/src/client/popcorn-society-backend.yaml` as parsed data. It ignores only the top-level `servers`
 entry because that URL depends on the machine used to generate the document. Endpoint, request,
 response, schema, required-field, and nullable changes fail the build until the frontend contract is
 refreshed and its client can be regenerated. The test inherits the shared controller fixture, so the

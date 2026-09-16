@@ -4,11 +4,11 @@ import pytest
 from pydantic import ValidationError
 from pydantic_ai.exceptions import ToolFailed
 
-from imdb_agent.adapters.application_tools import ApplicationTools
-from imdb_agent.concierge.page_context import PageContext
-from imdb_agent.concierge.personal import PersonalTurn
-from imdb_agent.concierge.voice import VoiceCommand
-from imdb_agent.web.concierge import MessageRequest
+from popcorn_society_agent.adapters.application_tools import ApplicationTools
+from popcorn_society_agent.concierge.page_context import PageContext
+from popcorn_society_agent.concierge.personal import PersonalTurn
+from popcorn_society_agent.concierge.voice import VoiceCommand
+from popcorn_society_agent.web.concierge import MessageRequest
 
 
 @pytest.mark.parametrize(

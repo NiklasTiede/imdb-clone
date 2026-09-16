@@ -223,7 +223,7 @@ search, German title lookup or automatic catalog updates.
 Local activation: add `TMDB_READ_ACCESS_TOKEN=...` to the ignored root `.env.local` and restart the
 Spring backend. The default `dev,local-secrets` profiles load it. The Python agent and browser never
 receive this token. Production can supply the same environment variable or the Spring property
-`imdb-clone.catalog.tmdb.read-access-token` through existing secret management; no deployment or
+`popcorn-society.catalog.tmdb.read-access-token` through existing secret management; no deployment or
 production secret is created by this feature. See [development setup](development.md#tmdb-movie-enrichment).
 
 ### Regional streaming availability

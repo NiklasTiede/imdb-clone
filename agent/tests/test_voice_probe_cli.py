@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from imdb_agent.settings import ConfigurationError, load_local_voice_secrets
-from imdb_agent.voice_probe_cli import main
+from popcorn_society_agent.settings import ConfigurationError, load_local_voice_secrets
+from popcorn_society_agent.voice_probe_cli import main
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -43,5 +43,5 @@ def test_probe_requires_explicit_live_flag() -> None:
 
 
 def test_probe_requires_environment_opt_in(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("IMDB_AGENT_LIVE_EVALS_ENABLED", "false")
+    monkeypatch.setenv("POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED", "false")
     assert main(["--live"]) == 2

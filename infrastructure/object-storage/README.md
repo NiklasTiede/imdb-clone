@@ -104,12 +104,12 @@ mc alias set rustfs http://localhost:9000 ROOTNAME CHANGEME123
 Lastly we copy our images into the buckets `movies`-folder
 
 ```bash
-mc cp --recursive ~/PathToProject/IMDB-Clone/infrastructure/fileStorage/movie_images_processed/ rustfs/imdb-clone/movies/
+mc cp --recursive ./infrastructure/object-storage/movie_images_processed/ rustfs/imdb-clone/movies/
 ```
 
 Now we can access our image with GET requests like `http://localhost:9000/imdb-clone/movies/{imageUrlToken}_size_600x900.jpg`
 
-## How we work with our Imdb-clone Bucket
+## Working with the movie-media bucket
 
 Each time a new image is stored in our bucket we generate a imageUrlToken and save this in the movies db entry. This 
 token is then contained in our response object if we ask our backend for movie data. We use the token to parse the URL

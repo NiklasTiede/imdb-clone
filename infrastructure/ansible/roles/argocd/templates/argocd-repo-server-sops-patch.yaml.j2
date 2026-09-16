@@ -6,8 +6,8 @@ spec:
   template:
     metadata:
       annotations:
-        imdb-clone.the-coding-lab.com/sops-age-key-checksum: "{{ lookup('ansible.builtin.file', sops_age_key_file) | hash('sha256') }}"
-        imdb-clone.the-coding-lab.com/sops-plugin-checksum: "{{ lookup('ansible.builtin.template', 'sops-kustomize-plugin.yaml.j2') | hash('sha256') }}"
+        popcornsociety.app/sops-age-key-checksum: "{{ lookup('ansible.builtin.file', sops_age_key_file) | hash('sha256') }}"
+        popcornsociety.app/sops-plugin-checksum: "{{ lookup('ansible.builtin.template', 'sops-kustomize-plugin.yaml.j2') | hash('sha256') }}"
     spec:
       containers:
         - name: {{ sops_kustomize_plugin_name }}

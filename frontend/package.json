@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "popcorn-society-frontend",
   "version": "0.1.0",
   "private": true,
   "packageManager": "yarn@1.22.22",
@@ -20,8 +20,8 @@
     "lint": "eslint .",
     "format": "yarn prettier --write .",
     "checkUpdates": "ncu",
-    "updateOpenApiSpec": "curl ${IMDB_CLONE_OPENAPI_BASE_URL:-http://localhost:8080}/v3/api-docs.yaml > ./src/client/imdb-clone-backend.yaml",
-    "build:moviesGen": "openapi-generator-cli generate -i ./src/client/imdb-clone-backend.yaml -g typescript-axios -t ./openapi-templates/typescript-axios -o ./src/client/movies/generator-output/"
+    "updateOpenApiSpec": "curl ${POPCORN_SOCIETY_OPENAPI_BASE_URL:-http://localhost:8080}/v3/api-docs.yaml > ./src/client/popcorn-society-backend.yaml",
+    "build:moviesGen": "openapi-generator-cli generate -i ./src/client/popcorn-society-backend.yaml -g typescript-axios -t ./openapi-templates/typescript-axios -o ./src/client/movies/generator-output/"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

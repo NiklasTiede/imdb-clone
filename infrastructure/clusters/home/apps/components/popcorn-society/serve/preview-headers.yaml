@@ -1,0 +1,9 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: popcorn-society-preview
+  namespace: imdb-clone
+spec:
+  headers:
+    customResponseHeaders:
+      X-Robots-Tag: noindex

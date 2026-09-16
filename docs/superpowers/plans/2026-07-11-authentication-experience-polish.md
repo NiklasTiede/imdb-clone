@@ -72,10 +72,10 @@ Spring Boot/Jakarta Validation, Vitest, Testing Library, and Playwright 1.59.
 ### Task 1: Lock Down The Credential Validation Contract
 
 **Files:**
-- Create: `src/test/java/com/thecodinglab/imdbclone/shared/validation/CredentialValidationTest.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/shared/validation/ValidUsername.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/shared/validation/ValidUsernameImpl.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/shared/validation/ValidPasswordImpl.java`
+- Create: `src/test/java/app/popcornsociety/shared/validation/CredentialValidationTest.java`
+- Modify: `src/main/java/app/popcornsociety/shared/validation/ValidUsername.java`
+- Modify: `src/main/java/app/popcornsociety/shared/validation/ValidUsernameImpl.java`
+- Modify: `src/main/java/app/popcornsociety/shared/validation/ValidPasswordImpl.java`
 - Create: `frontend/src/features/identity/model/registrationValidation.ts`
 - Create: `frontend/src/features/identity/model/registrationValidation.test.ts`
 - Modify: `frontend/src/features/identity/pages/RegistrationPage.tsx`
@@ -173,9 +173,9 @@ Spring Boot/Jakarta Validation, Vitest, Testing Library, and Playwright 1.59.
 ### Task 5: Improve Registration Availability And Completion Feedback
 
 **Files:**
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/IdentityAccess.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/identity/AuthenticationControllerTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/identity/AuthenticationTokenFlowTest.java`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/IdentityAccess.java`
+- Modify: `src/test/java/app/popcornsociety/identity/AuthenticationControllerTest.java`
+- Modify: `src/test/java/app/popcornsociety/identity/AuthenticationTokenFlowTest.java`
 - Modify: `frontend/src/features/identity/hooks/useAvailability.test.tsx`
 - Modify: `frontend/src/features/identity/pages/RegistrationPage.tsx`
 - Modify: `frontend/src/features/identity/pages/RegistrationPage.test.tsx`

@@ -30,8 +30,8 @@ SSH tunnels, DBeaver access, credentials, and incident handling are centralized 
 | [`deployment`](deployment/README.md) | Historical Compose/Swarm deployments | Legacy only |
 
 The PostgreSQL schema is owned by Flyway migrations under `src/main/resources/db/migration`. The
-PlantUML data-model sources are [`imdb-clone-data-model.puml`](imdb-clone-data-model.puml) and
-[`imdb-clone-physical-schema.puml`](imdb-clone-physical-schema.puml).
+PlantUML data-model sources are [`popcorn-society-data-model.puml`](popcorn-society-data-model.puml) and
+[`popcorn-society-physical-schema.puml`](popcorn-society-physical-schema.puml).
 
 ## Verification
 

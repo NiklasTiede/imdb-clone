@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - redirect.yaml
+patches:
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: Ingress
+      name: imdb-clone-public
+      namespace: imdb-clone
+    patch: |-
+      - op: test
+        path: /spec/rules/0/host
+        value: imdb-clone.the-coding-lab.com
+      - op: test
+        path: /spec/rules/0/http/paths/5/path
+        value: /
+      - op: remove
+        path: /spec/rules/0/http/paths/5
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: Ingress
+      name: popcorn-society-public
+      namespace: imdb-clone
+    patch: |-
+      - op: replace
+        path: /metadata/annotations/traefik.ingress.kubernetes.io~1router.middlewares
+        value: imdb-clone-imdb-clone-public-rate-limit@kubernetescrd,imdb-clone-imdb-clone-security-headers@kubernetescrd

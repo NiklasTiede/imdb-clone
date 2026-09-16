@@ -114,8 +114,8 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64 \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:${{ steps.version.outputs.tag }}" \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:latest" \
+            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-backend:${{ steps.version.outputs.tag }}" \
+            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-backend:latest" \
             --push \
             .
 
@@ -124,8 +124,8 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64 \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:${{ steps.version.outputs.tag }}" \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:latest" \
+            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-frontend:${{ steps.version.outputs.tag }}" \
+            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-frontend:latest" \
             --push \
             .
 
@@ -135,17 +135,17 @@ jobs:
           docker buildx build \
             --platform linux/amd64 \
             --build-arg "APP_VERSION=${{ steps.version.outputs.value }}" \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-agent:${{ steps.version.outputs.tag }}" \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-agent:latest" \
+            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-agent:${{ steps.version.outputs.tag }}" \
+            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-agent:latest" \
             --push \
             .
 
       - name: Resolve image digests
         id: digests
         run: |
-          backend_image="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:${{ steps.version.outputs.tag }}"
-          frontend_image="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:${{ steps.version.outputs.tag }}"
-          agent_image="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-agent:${{ steps.version.outputs.tag }}"
+          backend_image="${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-backend:${{ steps.version.outputs.tag }}"
+          frontend_image="${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-frontend:${{ steps.version.outputs.tag }}"
+          agent_image="${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-agent:${{ steps.version.outputs.tag }}"
           backend_digest="$(docker buildx imagetools inspect "$backend_image" --format '{{.Manifest.Digest}}')"
           frontend_digest="$(docker buildx imagetools inspect "$frontend_image" --format '{{.Manifest.Digest}}')"
           agent_digest="$(docker buildx imagetools inspect "$agent_image" --format '{{.Manifest.Digest}}')"
@@ -157,12 +157,12 @@ jobs:
 
       - name: Update home-cluster app image manifests
         run: |
-          backend_ref="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-backend:${{ steps.version.outputs.tag }}@${{ steps.digests.outputs.backend }}"
-          frontend_ref="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-frontend:${{ steps.version.outputs.tag }}@${{ steps.digests.outputs.frontend }}"
-          agent_ref="${{ secrets.DOCKERHUB_USERNAME }}/imdb-clone-agent:${{ steps.version.outputs.tag }}@${{ steps.digests.outputs.agent }}"
-          sed -i "s|image: .*imdb-clone-backend:.*|image: ${backend_ref}|" infrastructure/clusters/home/apps/backend.yaml
-          sed -i "s|image: .*imdb-clone-frontend:.*|image: ${frontend_ref}|" infrastructure/clusters/home/apps/frontend.yaml
-          sed -i "s|image: .*imdb-clone-agent:.*|image: ${agent_ref}|" infrastructure/clusters/home/apps/agent.yaml
+          python3 scripts/update-release-manifests.py \
+            --registry "${{ secrets.DOCKERHUB_USERNAME }}" \
+            --version "${{ steps.version.outputs.value }}" \
+            --backend-digest "${{ steps.digests.outputs.backend }}" \
+            --frontend-digest "${{ steps.digests.outputs.frontend }}" \
+            --agent-digest "${{ steps.digests.outputs.agent }}"
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v4

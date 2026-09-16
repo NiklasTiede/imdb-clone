@@ -84,11 +84,11 @@ them out of this foundation makes the first dependency and container baseline ho
 - Create: `agent/uv.lock`
 - Create: `agent/README.md`
 - Create: `agent/AGENTS.md`
-- Create: `agent/src/imdb_agent/__init__.py`
-- Create: `agent/src/imdb_agent/py.typed`
-- Create: `agent/src/imdb_agent/concierge/__init__.py`
-- Create: `agent/src/imdb_agent/web/__init__.py`
-- Create: `agent/src/imdb_agent/adapters/__init__.py`
+- Create: `agent/src/popcorn_society_agent/__init__.py`
+- Create: `agent/src/popcorn_society_agent/py.typed`
+- Create: `agent/src/popcorn_society_agent/concierge/__init__.py`
+- Create: `agent/src/popcorn_society_agent/web/__init__.py`
+- Create: `agent/src/popcorn_society_agent/adapters/__init__.py`
 - Modify: `.gitignore`
 
 ### Step 1: Prove the runtime before configuring the project
@@ -119,7 +119,7 @@ In `pyproject.toml`:
 - configure Pyright with `typeCheckingMode = "strict"`, the `src` include path, and no blanket
   unknown-type suppressions;
 - configure pytest for strict asyncio behavior, concise output, and test discovery under `tests`;
-- configure coverage for `imdb_agent` without imposing an arbitrary percentage before behavior
+- configure coverage for `popcorn_society_agent` without imposing an arbitrary percentage before behavior
   exists;
 - define Import Linter contracts for the package dependency direction.
 
@@ -160,8 +160,8 @@ change.
 
 **Files:**
 
-- Create: `agent/src/imdb_agent/concierge/models.py`
-- Create: `agent/src/imdb_agent/concierge/evaluation.py`
+- Create: `agent/src/popcorn_society_agent/concierge/models.py`
+- Create: `agent/src/popcorn_society_agent/concierge/evaluation.py`
 - Create: `agent/evals/read_only_v1.json`
 - Create: `agent/tests/concierge/test_eval_dataset.py`
 - Create: `agent/tests/test_architecture.py`
@@ -247,11 +247,11 @@ uv run lint-imports
 
 **Files:**
 
-- Create: `agent/src/imdb_agent/settings.py`
-- Create: `agent/src/imdb_agent/bootstrap.py`
-- Create: `agent/src/imdb_agent/web/app.py`
-- Create: `agent/src/imdb_agent/web/health.py`
-- Create: `agent/src/imdb_agent/adapters/logging.py`
+- Create: `agent/src/popcorn_society_agent/settings.py`
+- Create: `agent/src/popcorn_society_agent/bootstrap.py`
+- Create: `agent/src/popcorn_society_agent/web/app.py`
+- Create: `agent/src/popcorn_society_agent/web/health.py`
+- Create: `agent/src/popcorn_society_agent/adapters/logging.py`
 - Create: `agent/tests/web/test_health.py`
 - Create: `agent/tests/test_settings.py`
 - Create: `agent/tests/test_logging.py`

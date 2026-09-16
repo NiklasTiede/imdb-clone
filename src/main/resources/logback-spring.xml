@@ -17,7 +17,7 @@
 
     <springProfile name="prod">
         <springProperty scope="context" name="serviceName" source="spring.application.name"
-                        defaultValue="imdb-clone-backend"/>
+                        defaultValue="popcorn-society-backend"/>
         <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
                 <customFields>{"service":"${serviceName}","environment":"production"}</customFields>

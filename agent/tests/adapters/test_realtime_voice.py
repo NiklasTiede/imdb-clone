@@ -29,8 +29,8 @@ from pydantic_ai.realtime.codec import (
 from pydantic_ai.realtime.profiles import RealtimeModelProfile
 from structlog.testing import capture_logs
 
-from imdb_agent.adapters.realtime_voice import relay_voice
-from imdb_agent.concierge.voice import VoiceCommand, VoiceEvent
+from popcorn_society_agent.adapters.realtime_voice import relay_voice
+from popcorn_society_agent.concierge.voice import VoiceCommand, VoiceEvent
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Sequence
@@ -40,8 +40,8 @@ if TYPE_CHECKING:
 
 @pytest.mark.asyncio
 async def test_rapid_movie_navigation_can_supersede_a_target_in_one_speech_turn() -> None:
-    from imdb_agent.concierge.events import GroundedMovie, OpenMovieAction
-    from imdb_agent.concierge.personal import PersonalTurn
+    from popcorn_society_agent.concierge.events import GroundedMovie, OpenMovieAction
+    from popcorn_society_agent.concierge.personal import PersonalTurn
 
     class RapidConnection(CatalogConnection):
         completed = 0
@@ -442,7 +442,7 @@ class SequentialBrowser(Browser):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("turns", [10, 17])
 async def test_multi_movie_session_and_explicit_usage_limit(turns: int) -> None:
-    from imdb_agent.concierge.voice import VoiceSessionLimitError
+    from popcorn_society_agent.concierge.voice import VoiceSessionLimitError
 
     model = CatalogModel()
     model.connection = SequentialConnection()
@@ -491,9 +491,9 @@ async def test_model_interpreted_rating_uses_grounded_id_and_committed_receipt(
     from pydantic import SecretStr
     from pydantic_ai import RunContext
 
-    from imdb_agent.adapters.personal_tools import PersonalToolGate
-    from imdb_agent.concierge.events import GroundedMovie
-    from imdb_agent.concierge.personal import PersonalTurn
+    from popcorn_society_agent.adapters.personal_tools import PersonalToolGate
+    from popcorn_society_agent.concierge.events import GroundedMovie
+    from popcorn_society_agent.concierge.personal import PersonalTurn
 
     class RejectedConnection(CatalogConnection):
         async def send(self, content: RealtimeInput) -> None:
@@ -690,8 +690,8 @@ async def test_voice_search_waits_for_final_discovery_result(
 async def test_semantic_navigation_tools_reach_browser(
     late_transcript: bool, tool: str, action_type: str
 ) -> None:
-    from imdb_agent.concierge.events import GroundedMovie
-    from imdb_agent.concierge.personal import PersonalTurn
+    from popcorn_society_agent.concierge.events import GroundedMovie
+    from popcorn_society_agent.concierge.personal import PersonalTurn
 
     movie_page = tool != "navigate_app"
 
@@ -760,7 +760,7 @@ async def test_semantic_navigation_tools_reach_browser(
 
 @pytest.mark.asyncio
 async def test_voice_context_tool_reads_the_latest_browser_snapshot_without_navigation() -> None:
-    from imdb_agent.concierge.page_context import PageContext
+    from popcorn_society_agent.concierge.page_context import PageContext
 
     class ContextConnection(CatalogConnection):
         output: str | None = None
@@ -786,7 +786,7 @@ async def test_voice_context_tool_reads_the_latest_browser_snapshot_without_navi
                 await self.events.put(ResponseDone())
 
     browser = Browser(end_on_completion=True)
-    from imdb_agent.concierge.streaming import StreamingRegion
+    from popcorn_society_agent.concierge.streaming import StreamingRegion
 
     region = StreamingRegion()
     for movie_id in (6, 7):
@@ -812,8 +812,8 @@ async def test_voice_context_tool_reads_the_latest_browser_snapshot_without_navi
 
 @pytest.mark.asyncio
 async def test_voice_external_facts_keep_movie_context_and_do_not_navigate() -> None:
-    from imdb_agent.concierge.events import GroundedMovie
-    from imdb_agent.concierge.personal import PersonalTurn
+    from popcorn_society_agent.concierge.events import GroundedMovie
+    from popcorn_society_agent.concierge.personal import PersonalTurn
 
     class EnrichmentConnection(CatalogConnection):
         async def send(self, content: RealtimeInput) -> None:
@@ -863,8 +863,8 @@ async def test_voice_external_facts_keep_movie_context_and_do_not_navigate() -> 
 
 @pytest.mark.asyncio
 async def test_voice_watch_providers_keep_movie_context_and_do_not_navigate() -> None:
-    from imdb_agent.concierge.events import GroundedMovie
-    from imdb_agent.concierge.personal import PersonalTurn
+    from popcorn_society_agent.concierge.events import GroundedMovie
+    from popcorn_society_agent.concierge.personal import PersonalTurn
 
     class EnrichmentConnection(CatalogConnection):
         async def send(self, content: RealtimeInput) -> None:
@@ -923,9 +923,9 @@ async def test_rejected_write_loop_stops_and_next_spoken_removal_still_works() -
     from pydantic_ai import RunContext
     from pydantic_ai.realtime.codec import CancelResponse
 
-    from imdb_agent.adapters.personal_tools import PersonalToolGate
-    from imdb_agent.concierge.events import GroundedMovie
-    from imdb_agent.concierge.personal import PersonalTurn
+    from popcorn_society_agent.adapters.personal_tools import PersonalToolGate
+    from popcorn_society_agent.concierge.events import GroundedMovie
+    from popcorn_society_agent.concierge.personal import PersonalTurn
 
     class LoopConnection(CatalogConnection):
         turn = 0
@@ -1126,7 +1126,7 @@ async def test_login_promotes_live_session_without_blocking_audio(verified: bool
     from pydantic import SecretStr
     from pydantic_ai.realtime.codec import TextContext
 
-    from imdb_agent.concierge.personal import DelegationRejectedError
+    from popcorn_society_agent.concierge.personal import DelegationRejectedError
 
     audio_during_verification = asyncio.Event()
     contexts: list[str] = []
@@ -1355,7 +1355,7 @@ async def test_typed_input_interrupts_a_spoken_reply_without_unmuting(server_can
 async def test_idle_deadline_raises_a_distinct_session_reason(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from imdb_agent.concierge.voice import VoiceIdleTimeoutError
+    from popcorn_society_agent.concierge.voice import VoiceIdleTimeoutError
 
     real_timeout = asyncio.timeout
 
