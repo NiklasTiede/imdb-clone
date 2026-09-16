@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frontend
-          image: niklastiede/imdb-clone-frontend:v1.5.0@sha256:d8400308464ca9ee0e55f7a9f55c1ad33bbcf5af8746216d002b9073e7089e83
+          image: niklastiede/imdb-clone-frontend:v1.6.0@sha256:cbf3e6ec96a934b7c8c927b82941e8d724b047d4197745371085d476e78233e2
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
