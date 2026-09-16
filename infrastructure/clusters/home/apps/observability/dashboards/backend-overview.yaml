@@ -1552,7 +1552,7 @@ data:
       "timepicker": {
       },
       "timezone": "browser",
-      "title": "IMDB Clone Backend",
+      "title": "Popcorn Society / Backend",
       "uid": "imdb-backend-overview",
       "version": 1,
       "weekStart": ""

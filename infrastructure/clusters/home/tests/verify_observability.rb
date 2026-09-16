@@ -566,7 +566,7 @@ end
 
 operations = dashboards.fetch("Operations")
 assert_contract(
-  operations.fetch("title") == "IMDB Clone – Operations Overview",
+  operations.fetch("title") == "Popcorn Society / Operations Overview",
   "operations dashboard title drifted"
 )
 %w[

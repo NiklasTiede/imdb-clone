@@ -74,7 +74,15 @@ repositories. A registry/resource migration needs its own coordinated deployment
 
 The GitHub repository and badges still use the actual existing repository URL. Historical
 releases and genuine IMDb identifiers, ratings, dataset imports and source attribution remain
-accurate. Operational dashboards retain their current names until separately updated.
+accurate. The seven current Grafana dashboards use `Popcorn Society / ...` display titles.
+Dashboard UIDs, navigation links, metric queries, resource names and the existing `IMDB Clone`
+/ `IMDB Clone Data` folder assignments remain stable. Folder reorganization and telemetry names
+belong to the later operational migration; the historical Compose dashboards remain unchanged.
+
+The dashboard ConfigMaps are active GitOps resources: once these changes are merged into the
+tracked production branch, Argo CD can reconcile them without an application version bump or CD
+image build. This is independent of the staged domain cutover. Local validation does not deploy
+anything; confirm the new titles in Grafana after that merge and reconciliation.
 
 Current screenshot and PlantUML source filenames use `popcorn-society-*`; screenshot content is
 unchanged. The unreferenced legacy logo and static data-model PNG were removed. The old flow-schema

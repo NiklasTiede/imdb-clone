@@ -1644,7 +1644,7 @@ data:
       "timepicker": {
       },
       "timezone": "browser",
-      "title": "IMDb Clone / Movie Concierge",
+      "title": "Popcorn Society / Movie Concierge",
       "uid": "imdb-agent-overview",
       "version": 1,
       "weekStart": ""

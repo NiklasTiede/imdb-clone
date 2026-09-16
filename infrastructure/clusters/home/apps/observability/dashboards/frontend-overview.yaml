@@ -295,7 +295,7 @@ data:
       "time": { "from": "now-6h", "to": "now" },
       "timepicker": {},
       "timezone": "browser",
-      "title": "IMDB Clone Frontend",
+      "title": "Popcorn Society / Frontend",
       "uid": "imdb-frontend-overview",
       "version": 1,
       "weekStart": ""

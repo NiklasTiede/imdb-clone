@@ -301,7 +301,7 @@ across three model requests; the 24,000-token allowance supports that normal too
 
 Prometheus collects bounded HTTP, run, outcome, first-event latency, tool, UI-action decision,
 token, provider-estimated cost, process-budget, saturation, and disconnect metrics. The
-`IMDb Clone / Movie Concierge` Grafana dashboard visualizes those signals. PrometheusRules cover
+`Popcorn Society / Movie Concierge` Grafana dashboard visualizes those signals. PrometheusRules cover
 availability, errors, latency,
 MCP/provider failures, capacity, and cost. Alertmanager is deliberately not installed yet, so rules
 are visible in Prometheus/Grafana but do not send notifications.

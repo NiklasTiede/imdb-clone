@@ -1294,7 +1294,7 @@ data:
       "timepicker": {
       },
       "timezone": "browser",
-      "title": "PostgreSQL",
+      "title": "Popcorn Society / PostgreSQL",
       "uid": "imdb-postgresql-overview",
       "version": 1,
       "weekStart": ""
