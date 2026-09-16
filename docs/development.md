@@ -292,7 +292,7 @@ the session. Social login still navigates away from the app and does not preserv
 
 Local voice currently has a hard 300-second (five-minute) lifetime, including connection setup.
 This deadline does not reset when the user speaks or types. `IMDB_AGENT_VOICE_SESSION_SECONDS`
-configures it (15-600 seconds). The UI names the configured time limit when reached. A separate
+configures it (15-900 seconds). The UI names the configured time limit when reached. A separate
 45-second inactivity deadline and model/tool usage limits can also end a session. Inactivity sends
 `standby`: the browser releases the microphone and closes the lens without opening history. Click
 it to start again. Automatic local speech wake-up is not enabled.

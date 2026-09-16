@@ -26,8 +26,8 @@ def production_settings(path: Path) -> Settings:
         voice_enabled=True,
         voice_live_enabled=True,
         voice_quota_database=path / "quota.db",
-        voice_session_seconds=600,
-        voice_browser_seconds=1200,
+        voice_session_seconds=900,
+        voice_browser_seconds=1500,
         voice_shared_seconds=6000,
         profiling_enabled=False,
     )

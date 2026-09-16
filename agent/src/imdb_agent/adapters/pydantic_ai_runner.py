@@ -97,7 +97,7 @@ class PydanticAIConciergeRunner:
         provider = OpenAIProvider(openai_client=openai_client)
         model = OpenAIResponsesModel(settings.model_name, provider=provider)
         model_settings = OpenAIResponsesModelSettings(
-            openai_reasoning_effort="low",
+            openai_reasoning_effort="none",
             openai_reasoning_context="all_turns",
             max_tokens=settings.max_output_tokens,
             timeout=settings.provider_timeout_seconds,

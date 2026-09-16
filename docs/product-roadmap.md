@@ -91,8 +91,8 @@ than a separate carousel implementation in each feature.
 
 ### Account and administration destinations
 
-- The edit icon is visible only to administrators and `/editing` is role-protected, but the page is
-  currently a placeholder.
+- The `/editing` route is role-protected and currently a placeholder. Its navigation entry is
+  hidden for all users, including administrators, until movie editing is implemented.
 - The misleading messages/notification placeholder has been removed. Authenticated users can browse
   and manage their authored comments through `/your-comments`.
 - Actual notifications still need an event, delivery, and unread-state model before returning to the

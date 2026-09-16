@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 import structlog
@@ -91,6 +92,7 @@ class RealtimeVoiceRunner:
             provider=XaiProvider(api_key=secrets.xai_api_key.get_secret_value()),
             agent_id=settings.voice_agent_id,
             settings=XaiRealtimeModelSettings(
+                xai_voice="zenith",
                 handshake_timeout=10.0,
                 max_tokens=512,
                 parallel_tool_calls=False,
@@ -324,6 +326,8 @@ async def _relay_voice(
                         await session.interrupt()
                     response_active = False
                     await transport.send(VoiceEvent(type="interrupt", turn=grounding.turn))
+                    with suppress(Exception):
+                        structlog.get_logger().info("voice_playback_interrupt_sent")
                     await transport.send(
                         VoiceEvent(type="status", status="listening", turn=grounding.turn)
                     )

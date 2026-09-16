@@ -306,6 +306,15 @@ availability, errors, latency,
 MCP/provider failures, capacity, and cost. Alertmanager is deliberately not installed yet, so rules
 are visible in Prometheus/Grafana but do not send notifications.
 
+For voice startup diagnosis, enable Debug/Verbose in the browser console and filter for
+`[Voice startup]` or `[Voice startup signal]`. Durations start at the VoiceLens click and separate
+microphone permission, audio-device readiness, identity, socket/provider readiness, first PCM,
+and the first output-analyser signal. GPT-Live can send silent PCM before greeting; first PCM
+does not mean audible speech. Server logs add `voice_profile_loaded` and
+`voice_provider_configured` for hosted Grok handshakes, plus `voice_session_ready` and
+`voice_first_audio_packet_sent` for both models. These contain timings/counts, not audio or text.
+Browser and server timings have different start points and must not be subtracted directly.
+
 Production also exports one OpenTelemetry trace per sampled HTTP/agent run through the internal
 Alloy OTLP endpoint to Tempo. Pydantic AI contributes child spans for model requests and tool calls;
 HTTPX propagates W3C trace context across the protected MCP request, and Spring Boot continues the
@@ -350,6 +359,30 @@ images, pins their Docker digests, and updates the existing GitOps tree after an
 
 ## Local application voice
 
+### Voices and personality
+
+GPT-Live uses **Beacon** (`audio.output.voice` in `adapters/live_voice.py`). Its
+Scotty-inspired movie-night character lives in `concierge/personas.py`; the live adapter
+combines it with delegation and conversation rules. Backend tool policy stays independent.
+`SCOTTY_GREETING` in that same file requests a single, interruptible English welcome after
+the session starts, without backend delegation. `live_greeting_accepted` records provider
+acknowledgment, not completed playback; listen to the opening when checking audio quality.
+Grok explicitly selects **Zenith** (`xai_voice` in `adapters/realtime_voice.py`), including
+when using the hosted xAI agent profile. Its existing instructions are unchanged.
+Restart the Python service and start a new voice session after changing these settings.
+
+Personality listening checks (manual; these are not automated quality assertions):
+
+- Start with small talk and indecision: warm, short replies with occasional original movie humour.
+- Open a movie, save it, and ask a follow-up: accurate results, no joke delaying an action.
+- Interrupt mid-joke and express frustration: listen immediately and switch to plain helpfulness.
+- Continue for several turns: no repeated catchphrases, forced dialect, or invented movie facts.
+
+Voice IDs follow the [OpenAI Live session guide](https://developers.openai.com/api/docs/guides/live-conversations)
+and [xAI voice roster](https://docs.x.ai/developers/model-capabilities/audio/text-to-speech#voices).
+
+### Running locally
+
 Start the Java backend and frontend as usual, then run `make run-agent-voice` from the
 repository root instead of `make run-agent`. The separate
 `.secrets/movie-concierge-voice.local.env` must contain `XAI_API_KEY`; the existing text
@@ -370,8 +403,8 @@ retry and retains the existing text conversation. No audio is acquired merely by
 
 Voice is off unless `IMDB_AGENT_VOICE_ENABLED=true` (Grok) or
 `IMDB_AGENT_VOICE_LIVE_ENABLED=true` (GPT-Live). Local defaults allow two concurrent connections,
-300 seconds per session, 1200 connected seconds per browser and 6000 connected seconds shared
-across both providers in a rolling 24-hour window. Production uses a 600-second session lifetime
+300 seconds per session, 1500 connected seconds per browser and 6000 connected seconds shared
+across both providers in a rolling 24-hour window. Production uses a 900-second session lifetime
 and the same time budgets. The limits are `IMDB_AGENT_VOICE_BROWSER_SECONDS` and
 `IMDB_AGENT_VOICE_SHARED_SECONDS`; restarts do not consume a separate start allowance.
 Production requires mounted provider credentials, explicit trusted HTTPS origins, and an absolute

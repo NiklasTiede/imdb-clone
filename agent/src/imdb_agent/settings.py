@@ -87,8 +87,8 @@ class Settings(BaseSettings):
     voice_agent_id: str = Field(
         default="agent_ur8m5egTlRE3E8zu", pattern=r"^agent_[A-Za-z0-9_-]+$", max_length=100
     )
-    voice_session_seconds: float = Field(default=300.0, ge=15, le=600)
-    voice_browser_seconds: int = Field(default=1200, ge=1, le=86400)
+    voice_session_seconds: float = Field(default=300.0, ge=15, le=900)
+    voice_browser_seconds: int = Field(default=1500, ge=1, le=86400)
     voice_shared_seconds: int = Field(default=6000, ge=1, le=86400)
     voice_quota_database: Path | None = None
     voice_allowed_origins: list[str] = Field(

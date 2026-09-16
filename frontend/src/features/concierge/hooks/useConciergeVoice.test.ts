@@ -559,6 +559,33 @@ describe("voice session lifecycle", () => {
   );
 });
 
+it("loads identity during microphone startup without connecting before permission", async () => {
+  let grant!: () => void;
+  let finish!: () => void;
+  audio.start.mockImplementationOnce((_send, _ended, granted) => {
+    grant = granted;
+    return new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+  });
+  const { result } = renderHook(() => useConciergeVoice(vi.fn()));
+  let starting!: Promise<void>;
+  await act(async () => {
+    starting = result.current.start();
+  });
+  expect(getConciergeIdentity).toHaveBeenCalledOnce();
+  expect(Socket.instances).toHaveLength(0);
+  await act(async () => {
+    grant();
+  });
+  expect(Socket.instances).toHaveLength(1);
+  await act(async () => {
+    finish();
+    await starting;
+  });
+  act(() => result.current.end());
+});
+
 it("connects after microphone permission while audio initializes, but waits for both before listening", async () => {
   let finishAudio: (() => void) | undefined;
   let sendAudio: ((chunk: ArrayBuffer) => void) | undefined;
