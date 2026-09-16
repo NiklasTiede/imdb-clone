@@ -38,8 +38,12 @@ end
 rules = expressions.each_with_index.map { |expr, index| {"record" => "brand_query_#{index}", "expr" => expr} }
 alerts = YAML.load_file(File.join(root, "infrastructure/clusters/home/apps/observability/agent-alerts.yaml"))
 Dir.mktmpdir("popcorn-metric-branding-") do |dir|
-  File.write(File.join(dir, "rules.yaml"), YAML.dump({"groups" => [{"name" => "dashboard-syntax", "rules" => rules}] + alerts.dig("spec", "groups")}))
-  File.write(File.join(dir, "tests.yaml"), YAML.dump({"rule_files" => ["rules.yaml"], "evaluation_interval" => "1m", "tests" => tests}))
+  rules_path = File.join(dir, "rules.yaml")
+  tests_path = File.join(dir, "tests.yaml")
+  File.write(rules_path, YAML.dump({"groups" => [{"name" => "dashboard-syntax", "rules" => rules}] + alerts.dig("spec", "groups")}))
+  File.write(tests_path, YAML.dump({"rule_files" => ["rules.yaml"], "evaluation_interval" => "1m", "tests" => tests}))
+  File.chmod(0o755, dir)
+  File.chmod(0o644, rules_path, tests_path)
   image = "prom/prometheus:v3.5.0"
   base = ["docker", "run", "--rm", "--entrypoint", "/bin/promtool", "-v", "#{dir}:/work:ro", "-w", "/work", image]
   abort "PromQL syntax check failed" unless system(*base, "check", "rules", "rules.yaml")

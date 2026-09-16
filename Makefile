@@ -405,6 +405,7 @@ summarize-voice-stress: ## summarize retained live runs, including failures and 
 
 .PHONY: verify-metric-branding audit-project-names
 verify-metric-branding: ## validate dashboard PromQL and old/new metric transition
+	ruby infrastructure/clusters/home/tests/verify_metric_branding_permissions_test.rb
 	ruby infrastructure/clusters/home/tests/verify_metric_branding.rb
 
 audit-project-names: ## inventory remaining project-name references without printing file contents
