@@ -7,11 +7,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { movieColors } from "../../../theme";
 import { accountQueries } from "../../api/accountProfileQueries";
-import { logoutSession, RoleNameEnum } from "../../auth";
+import { logoutSession } from "../../auth";
 import { authSession } from "../../auth/authSession";
 import { useAuthSession } from "../../auth/useAuthSession";
 import BrandLogo from "../BrandLogo";
-import AdminEditButton from "./AdminEditButton";
 import LoginButton from "./LoginButton";
 import MovieSearchInput from "./MovieSearchInput";
 import UserActions from "./UserActions";
@@ -29,7 +28,6 @@ function AppBarTop() {
   const isMenuOpen = Boolean(anchorEl);
 
   const isLoggedIn = useAuthSession();
-  const isAdmin = authSession.hasRole(RoleNameEnum.Admin);
   const username = authSession.getUsername();
   const { data: currentProfile } = useQuery({
     ...accountQueries.currentProfile(),
@@ -197,7 +195,6 @@ function AppBarTop() {
               justifySelf: "end",
             }}
           >
-            {isAdmin && <AdminEditButton />}
             {isLoggedIn ? (
               <UserActions
                 imageUrlToken={currentProfile?.imageUrlToken}
