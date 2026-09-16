@@ -1228,6 +1228,9 @@ async def test_repeated_barge_in_cancels_only_when_provider_needs_it(server_canc
                 item = f"user-{self.requests}"
                 await self.events.put(RealtimeInputSpeechStartEvent(item_id=item))
                 if self.requests > 1:
+                    # Frames already in flight must not refill the browser's flushed buffer.
+                    await self.events.put(OutputTranscript("Old answer still arriving"))
+                    await self.events.put(AudioDelta(b"\x7f\x00" * 2400))
                     await self.events.put(ResponseDone(interrupted=True))
                 await self.events.put(InputTranscript("Tell me more", is_final=True, item_id=item))
                 await self.events.put(RealtimeInputSpeechEndEvent(item_id=item))
@@ -1256,9 +1259,22 @@ async def test_repeated_barge_in_cancels_only_when_provider_needs_it(server_canc
     model.connection = connection
     browser = BargeInBrowser()
     agent: Agent[None, str] = Agent()
-    async with asyncio.timeout(3):
-        await relay_voice(agent, model, browser)
+    with capture_logs() as logs:
+        async with asyncio.timeout(3):
+            await relay_voice(agent, model, browser)
     assert connection.cancelled == (0 if server_cancels else 3)
+    assert b"\x7f\x00" * 2400 not in browser.events
+    assert not any(
+        isinstance(event, VoiceEvent) and "Old answer" in (event.text or "")
+        for event in browser.events
+    )
+    assert sum(event["event"] == "voice_speech_started" for event in logs) == 4
+    assert sum(event["event"] == "voice_playback_interrupt_sent" for event in logs) == 4
+    assert [
+        event["dropped_audio_chunks"]
+        for event in logs
+        if event["event"] == "voice_interrupted_output_drained"
+    ] == [1, 1, 1]
     assert browser.answers == 4
     assert [
         event.turn

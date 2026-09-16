@@ -1,17 +1,25 @@
-"""Preserve input item IDs absent from Pydantic AI's public SpeechPart events.
+"""Preserve turn boundaries absent from Pydantic AI's public SpeechPart events.
 
 The codec still exposes IDs. Correlate finalized transcript parts without changing
 provider payloads or using SDK private state, so delayed old commands fail closed.
+Discard interrupted response tails before the SDK turns them into new speech parts.
 """
 
 from __future__ import annotations
 
 from collections import deque
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import TYPE_CHECKING
 
-from pydantic_ai.realtime import RealtimeModel
-from pydantic_ai.realtime.codec import InputTranscript, RealtimeConnection
+import structlog
+from pydantic_ai.realtime import RealtimeInputSpeechStartEvent, RealtimeModel
+from pydantic_ai.realtime.codec import (
+    AudioDelta,
+    InputTranscript,
+    OutputTranscript,
+    RealtimeConnection,
+    ResponseDone,
+)
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Callable, Sequence
@@ -69,7 +77,34 @@ class CorrelatedConnection(RealtimeConnection):
 
     async def __aiter__(self) -> AsyncIterator[RealtimeCodecEvent]:
         seen: set[str] = set()
+        output_active = False
+        discard_output = False
+        dropped_audio_chunks = 0
         async for event in self.delegate:
+            if isinstance(event, RealtimeInputSpeechStartEvent):
+                discard_output = discard_output or output_active
+                with suppress(Exception):
+                    structlog.get_logger().info(
+                        "voice_speech_started",
+                        output_active=output_active,
+                        provider_cancels=self.interrupts_response_on_speech,
+                    )
+            elif isinstance(event, ResponseDone):
+                if discard_output:
+                    with suppress(Exception):
+                        structlog.get_logger().info(
+                            "voice_interrupted_output_drained",
+                            dropped_audio_chunks=dropped_audio_chunks,
+                        )
+                # Keep the terminal event: the SDK must close the old response before
+                # accepting the next one. Do not issue a second provider cancellation.
+                output_active = discard_output = False
+                dropped_audio_chunks = 0
+            elif isinstance(event, (AudioDelta, OutputTranscript)):
+                if discard_output:
+                    dropped_audio_chunks += isinstance(event, AudioDelta)
+                    continue
+                output_active = True
             if (
                 isinstance(event, InputTranscript)
                 and event.is_final
