@@ -378,7 +378,7 @@ docker-show: ## show all images and containers
 	docker image ls -a
 	docker container ls -a
 
-docker-clean: ## remove imdb-clone docker images and containers
+docker-clean: ## remove local app docker images and containers
 	docker rmi -f $(DOCKER_IMG_FRONTEND) $(DOCKER_IMG_BACKEND)
 	docker rm -f $(DOCKER_IMG_FRONTEND) $(DOCKER_IMG_BACKEND)
 

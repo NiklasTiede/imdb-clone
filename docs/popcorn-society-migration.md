@@ -73,9 +73,12 @@ use `popcorn-society-{backend,frontend,agent}:local`; CD still publishes to the 
 repositories. A registry/resource migration needs its own coordinated deployment change.
 
 The GitHub repository and badges still use the actual existing repository URL. Historical
-releases, screenshot filenames and genuine IMDb identifiers, ratings, dataset imports and source
-attribution remain accurate. Operational dashboards retain their current names until separately
-updated.
+releases and genuine IMDb identifiers, ratings, dataset imports and source attribution remain
+accurate. Operational dashboards retain their current names until separately updated.
+
+Current screenshot and PlantUML source filenames use `popcorn-society-*`; screenshot content is
+unchanged. The unreferenced legacy logo and static data-model PNG were removed. The old flow-schema
+SVG remains as a historical artifact referenced by an archived implementation plan.
 
 The existing media hostname continues to serve posters. Operator hostnames (Grafana and Argo CD)
 and the legacy backend hostname also remain valid. This migration moves the public application,

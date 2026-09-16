@@ -46,7 +46,7 @@
     <img
       alt="Popcorn Society screenshot"
       width="760"
-      src="docs/assets/imdb-clone-screenshot.webp"
+      src="docs/assets/popcorn-society-screenshot.webp"
     />
   </a>
 </p>

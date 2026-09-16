@@ -2,7 +2,7 @@
 
 !pragma layout smetana
 
-title IMDB Clone Conceptual Data Model
+title Popcorn Society Conceptual Data Model
 
 left to right direction
 skinparam shadowing false

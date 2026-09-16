@@ -197,8 +197,8 @@ Verification options:
 
 ```bash
 kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml
-docker build --platform linux/amd64 -t imdb-clone-backend .
-cd frontend && docker build --platform linux/amd64 -t imdb-clone-frontend .
+docker build --platform linux/amd64 -t popcorn-society-backend:local .
+cd frontend && docker build --platform linux/amd64 -t popcorn-society-frontend:local .
 kubectl get applications -n argocd
 kubectl -n imdb-clone rollout status deploy/imdb-clone-backend
 kubectl -n imdb-clone rollout status deploy/imdb-clone-frontend

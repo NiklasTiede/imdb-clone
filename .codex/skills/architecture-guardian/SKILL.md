@@ -1,6 +1,6 @@
 ---
 name: architecture-guardian
-description: Review this IMDB clone for architectural drift across Spring Modulith, the Python Movie Concierge, React feature modules, application contracts, persistence/search/storage, Kubernetes/GitOps, observability, and AI search. Use for read-only architecture audits, not implementation work.
+description: Review Popcorn Society for architectural drift across Spring Modulith, the Python Movie Concierge, React feature modules, application contracts, persistence/search/storage, Kubernetes/GitOps, observability, and AI search. Use for read-only architecture audits, not implementation work.
 ---
 
 # Architecture Guardian

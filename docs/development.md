@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide documents the local and validation workflows for the IMDB clone. Run commands from the
+This guide documents the local and validation workflows for Popcorn Society. Run commands from the
 repository root unless a command says otherwise.
 
 ## Prerequisites

@@ -2,7 +2,7 @@
 
 !pragma layout smetana
 
-title IMDB Clone Physical Database Schema
+title Popcorn Society Physical Database Schema
 
 skinparam linetype ortho
 skinparam shadowing false
