@@ -65,7 +65,11 @@ The Compose setup creates these local services:
 | RustFS console | `http://localhost:9001` | Local console for object storage. |
 
 The `popcorn-society-rustfs-init` container creates the `imdb-clone` bucket and makes
-`imdb-clone/movies/*` publicly readable for local media.
+`imdb-clone/movies/*` and `imdb-clone/profile-photos/*` publicly readable for local media.
+It uses a version/digest-pinned MinIO client from Quay; the former Docker Hub image is unavailable.
+The shell script is passed as one argument and the helper stays alive after initialization.
+Its healthcheck succeeds only after the bucket and policies are ready, so Spring Boot's
+`docker compose up --wait` also succeeds on repeated starts.
 
 ## Run Backend
 

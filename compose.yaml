@@ -55,19 +55,29 @@ services:
     command: /data
 
   popcorn-society-rustfs-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
     depends_on:
       - popcorn-society-rustfs
     restart: "no"
     entrypoint: ["/bin/sh", "-c"]
-    command: |
-      set -eu
-      until mc alias set rustfs http://popcorn-society-rustfs:9000 "$$ACCESS_KEY" "$$SECRET_KEY"; do
-        sleep 2
-      done
-      mc mb --ignore-existing rustfs/imdb-clone
-      mc anonymous set download rustfs/imdb-clone/movies
-      mc anonymous set download rustfs/imdb-clone/profile-photos
+    command:
+      - |
+        set -eu
+        rm -f /tmp/bucket-ready
+        until mc alias set rustfs http://popcorn-society-rustfs:9000 "$$ACCESS_KEY" "$$SECRET_KEY"; do
+          sleep 2
+        done
+        mc mb --ignore-existing rustfs/imdb-clone
+        mc anonymous set download rustfs/imdb-clone/movies
+        mc anonymous set download rustfs/imdb-clone/profile-photos
+        touch /tmp/bucket-ready
+        # Spring Boot uses compose up --wait, which rejects an exited init service.
+        exec sleep infinity
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/bucket-ready"]
+      interval: 2s
+      timeout: 1s
+      retries: 60
     environment:
       - ACCESS_KEY=ROOTNAME
       - SECRET_KEY=CHANGEME123

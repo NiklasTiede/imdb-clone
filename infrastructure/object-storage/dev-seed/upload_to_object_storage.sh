@@ -33,7 +33,7 @@ elif command -v docker >/dev/null 2>&1; then
     -e OBJECT_STORAGE_SECRET_KEY="$OBJECT_STORAGE_SECRET_KEY" \
     -e OBJECT_STORAGE_BUCKET="$OBJECT_STORAGE_BUCKET" \
     -e DOCKER_OBJECT_STORAGE_ENDPOINT="$DOCKER_OBJECT_STORAGE_ENDPOINT" \
-    minio/mc \
+    quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 \
     -c 'mc alias set rustfs "$DOCKER_OBJECT_STORAGE_ENDPOINT" "$OBJECT_STORAGE_ACCESS_KEY" "$OBJECT_STORAGE_SECRET_KEY" &&
         mc mb --ignore-existing "rustfs/$OBJECT_STORAGE_BUCKET" &&
         mc anonymous set download "rustfs/$OBJECT_STORAGE_BUCKET/movies" &&

@@ -271,7 +271,7 @@ Start PostgreSQL, OpenSearch, and RustFS:
 make docker-compose-dev-up
 ```
 
-The Docker Compose setup includes a one-shot RustFS init container that creates the `imdb-clone` bucket and makes
+The Docker Compose setup includes a health-checked RustFS initialization helper that creates the `imdb-clone` bucket and makes
 `imdb-clone/movies/*` publicly readable.
 
 ### 2. Start The Backend
