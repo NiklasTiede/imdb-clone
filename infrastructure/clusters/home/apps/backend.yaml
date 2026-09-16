@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: backend
-          image: niklastiede/imdb-clone-backend:v1.6.0@sha256:385701b4fc55dc528c73cd86afd2739954574d0bbfd190c53f590b96d2624fbc
+          image: niklastiede/imdb-clone-backend:v1.6.1@sha256:b97de7c351c0c931904e19590f4ad9b55da561098bf20b798bbd5a0a5de5a384
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
