@@ -13,7 +13,9 @@ export const useVoiceModels = () =>
     queryKey: ["concierge", "voice-models"],
     queryFn: async ({ signal }): Promise<VoiceModel[]> => {
       const base =
-        import.meta.env.VITE_IMDB_CLONE_CONCIERGE_ADDRESS ?? "/concierge-api";
+        import.meta.env.VITE_POPCORN_SOCIETY_CONCIERGE_ADDRESS ??
+        import.meta.env.VITE_IMDB_CLONE_CONCIERGE_ADDRESS ??
+        "/concierge-api";
       const response = await fetch(`${base}/v1/voice/models`, { signal });
       if (!response.ok) throw new Error("Voice models are unavailable");
       return z

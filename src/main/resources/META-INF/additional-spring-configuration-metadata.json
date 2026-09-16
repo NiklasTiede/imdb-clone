@@ -1,62 +1,62 @@
 {
   "properties": [
     {
-      "name": "imdb-clone.identity.backend-host",
+      "name": "popcorn-society.identity.backend-host",
       "type": "java.lang.String",
       "description": "Public backend host used to build identity links such as email confirmation URLs."
     },
     {
-      "name": "imdb-clone.identity.frontend-host",
+      "name": "popcorn-society.identity.frontend-host",
       "type": "java.lang.String",
       "description": "Public frontend host used to build user-facing identity links such as password reset URLs."
     },
     {
-      "name": "imdb-clone.identity.email-verification-enabled",
+      "name": "popcorn-society.identity.email-verification-enabled",
       "type": "java.lang.Boolean",
       "description": "Whether new accounts must confirm their email address before they are enabled."
     },
     {
-      "name": "imdb-clone.identity.rate-limit.enabled",
+      "name": "popcorn-society.identity.rate-limit.enabled",
       "type": "java.lang.Boolean",
       "description": "Whether Spring auth endpoint rate limiting is enabled."
     },
     {
-      "name": "imdb-clone.identity.rate-limit.*.capacity",
+      "name": "popcorn-society.identity.rate-limit.*.capacity",
       "type": "java.lang.Long",
       "description": "Token capacity for one identity rate-limit rule."
     },
     {
-      "name": "imdb-clone.identity.rate-limit.*.refill-period",
+      "name": "popcorn-society.identity.rate-limit.*.refill-period",
       "type": "java.time.Duration",
       "description": "Refill interval for one identity rate-limit rule."
     },
     {
-      "name": "imdb-clone.media.storage.uri",
+      "name": "popcorn-society.media.storage.uri",
       "type": "java.lang.String",
       "description": "S3-compatible object storage endpoint URI used by the media module."
     },
     {
-      "name": "imdb-clone.media.storage.access-key",
+      "name": "popcorn-society.media.storage.access-key",
       "type": "java.lang.String",
       "description": "S3-compatible object storage access key used by the media module."
     },
     {
-      "name": "imdb-clone.media.storage.secret-key",
+      "name": "popcorn-society.media.storage.secret-key",
       "type": "java.lang.String",
       "description": "S3-compatible object storage secret key used by the media module."
     },
     {
-      "name": "imdb-clone.media.storage.bucket-name",
+      "name": "popcorn-society.media.storage.bucket-name",
       "type": "java.lang.String",
       "description": "S3-compatible object storage bucket containing movie images and profile photos."
     },
     {
-      "name": "imdb-clone.notification.email.sender",
+      "name": "popcorn-society.notification.email.sender",
       "type": "java.lang.String",
       "description": "Email address used as the sender for notification emails."
     },
     {
-      "name": "imdb-clone.recommendation.open-trivia.base-url",
+      "name": "popcorn-society.recommendation.open-trivia.base-url",
       "type": "java.lang.String",
       "description": "Base URL for the Open Trivia recommendation support client."
     }

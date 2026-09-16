@@ -819,69 +819,6 @@ wheels = [
 ]
 
 [[package]]
-name = "imdb-movie-concierge"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "fastapi" },
-    { name = "httpx" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
-    { name = "opentelemetry-instrumentation-fastapi" },
-    { name = "opentelemetry-instrumentation-httpx" },
-    { name = "opentelemetry-sdk" },
-    { name = "prometheus-client" },
-    { name = "pydantic" },
-    { name = "pydantic-ai", extra = ["openai-realtime", "xai-realtime"] },
-    { name = "pydantic-settings" },
-    { name = "pyroscope-io" },
-    { name = "pyroscope-otel" },
-    { name = "structlog" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "httpx2" },
-    { name = "import-linter" },
-    { name = "pyright" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "fastapi", specifier = ">=0.128,<1" },
-    { name = "httpx", specifier = ">=0.28,<1" },
-    { name = "opentelemetry-api", specifier = ">=1.39,<2" },
-    { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.39,<2" },
-    { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.60b0,<1" },
-    { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.60b0,<1" },
-    { name = "opentelemetry-sdk", specifier = ">=1.39,<2" },
-    { name = "prometheus-client", specifier = ">=0.23,<1" },
-    { name = "pydantic", specifier = ">=2.12,<3" },
-    { name = "pydantic-ai", extras = ["openai-realtime", "xai-realtime"], specifier = "==2.42.0" },
-    { name = "pydantic-settings", specifier = ">=2.12,<3" },
-    { name = "pyroscope-io", specifier = "==1.2.1" },
-    { name = "pyroscope-otel", specifier = "==1.1.0" },
-    { name = "structlog", specifier = ">=25.5,<26" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.40,<1" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "httpx2", specifier = ">=2,<3" },
-    { name = "import-linter", specifier = ">=2.7,<3" },
-    { name = "pyright", specifier = ">=1.1.408,<2" },
-    { name = "pytest", specifier = ">=9,<10" },
-    { name = "pytest-asyncio", specifier = ">=1.3,<2" },
-    { name = "pytest-cov", specifier = ">=7,<8" },
-    { name = "ruff", specifier = ">=0.14,<1" },
-]
-
-[[package]]
 name = "import-linter"
 version = "2.13"
 source = { registry = "https://pypi.org/simple" }
@@ -1375,6 +1312,69 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
+]
+
+[[package]]
+name = "popcorn-society-agent"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-exporter-otlp-proto-http" },
+    { name = "opentelemetry-instrumentation-fastapi" },
+    { name = "opentelemetry-instrumentation-httpx" },
+    { name = "opentelemetry-sdk" },
+    { name = "prometheus-client" },
+    { name = "pydantic" },
+    { name = "pydantic-ai", extra = ["openai-realtime", "xai-realtime"] },
+    { name = "pydantic-settings" },
+    { name = "pyroscope-io" },
+    { name = "pyroscope-otel" },
+    { name = "structlog" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "httpx2" },
+    { name = "import-linter" },
+    { name = "pyright" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.128,<1" },
+    { name = "httpx", specifier = ">=0.28,<1" },
+    { name = "opentelemetry-api", specifier = ">=1.39,<2" },
+    { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.39,<2" },
+    { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.60b0,<1" },
+    { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.60b0,<1" },
+    { name = "opentelemetry-sdk", specifier = ">=1.39,<2" },
+    { name = "prometheus-client", specifier = ">=0.23,<1" },
+    { name = "pydantic", specifier = ">=2.12,<3" },
+    { name = "pydantic-ai", extras = ["openai-realtime", "xai-realtime"], specifier = "==2.42.0" },
+    { name = "pydantic-settings", specifier = ">=2.12,<3" },
+    { name = "pyroscope-io", specifier = "==1.2.1" },
+    { name = "pyroscope-otel", specifier = "==1.1.0" },
+    { name = "structlog", specifier = ">=25.5,<26" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.40,<1" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "httpx2", specifier = ">=2,<3" },
+    { name = "import-linter", specifier = ">=2.7,<3" },
+    { name = "pyright", specifier = ">=1.1.408,<2" },
+    { name = "pytest", specifier = ">=9,<10" },
+    { name = "pytest-asyncio", specifier = ">=1.3,<2" },
+    { name = "pytest-cov", specifier = ">=7,<8" },
+    { name = "ruff", specifier = ">=0.14,<1" },
 ]
 
 [[package]]

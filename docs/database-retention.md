@@ -5,11 +5,11 @@ tables. Durations are operational defaults, not a claim about statutory retentio
 
 | Data | Default | Eligibility / configuration key |
 | --- | --- | --- |
-| Discovery telemetry (`discovery_event`) | 90 days after creation | `imdb-clone.recommendation.discovery.retention-days` |
-| Security audit (`security_audit_event`) | 90 days after occurrence | `imdb-clone.identity.audit.retention-days` |
-| Verification/reset tokens (`verification_token`) | 30 days after expiry | `imdb-clone.identity.tokens.retention-days` |
-| Reindex history (`movie_search_reindex_job`) | 30 days after completion | Only COMPLETED/FAILED with `finished_at`; `imdb-clone.catalog.reindex.retention-days` |
-| Mail deduplication metadata (`notification_delivery`) | 30 days after the later of completion and link expiry | Only SENT/EXPIRED with `completed_at`; `imdb-clone.notification.delivery.retention-days` |
+| Discovery telemetry (`discovery_event`) | 90 days after creation | `popcorn-society.recommendation.discovery.retention-days` |
+| Security audit (`security_audit_event`) | 90 days after occurrence | `popcorn-society.identity.audit.retention-days` |
+| Verification/reset tokens (`verification_token`) | 30 days after expiry | `popcorn-society.identity.tokens.retention-days` |
+| Reindex history (`movie_search_reindex_job`) | 30 days after completion | Only COMPLETED/FAILED with `finished_at`; `popcorn-society.catalog.reindex.retention-days` |
+| Mail deduplication metadata (`notification_delivery`) | 30 days after the later of completion and link expiry | Only SENT/EXPIRED with `completed_at`; `popcorn-society.notification.delivery.retention-days` |
 | Login sessions | Existing session expiry | Spring Session owns cleanup; the configured inactivity timeout remains 14 days |
 
 Cutoffs are exclusive: an entry exactly at the retention boundary is retained. PostgreSQL
@@ -24,9 +24,9 @@ Each owning module has a transactional Spring scheduled cleanup. Runs start one 
 backend startup and repeat 15 minutes after the previous invocation completes. Missed runs
 need no separate ledger: the next run finds overdue rows directly in PostgreSQL.
 
-- `imdb-clone.retention.interval=PT15M`
-- `imdb-clone.retention.initial-delay=PT1M`
-- `imdb-clone.retention.batch-size=1000` (valid range 1–10000)
+- `popcorn-society.retention.interval=PT15M`
+- `popcorn-society.retention.initial-delay=PT1M`
+- `popcorn-society.retention.batch-size=1000` (valid range 1–10000)
 - Each retention-days setting must be positive; invalid values fail startup.
 
 Each invocation deletes at most one batch per table in a transaction with a 30-second timeout.

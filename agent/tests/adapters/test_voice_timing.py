@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 import structlog
 from structlog.testing import capture_logs
 
-from imdb_agent.adapters.voice_timing import VoiceTiming
-from imdb_agent.concierge.tools import ToolName
+from popcorn_society_agent.adapters.voice_timing import VoiceTiming
+from popcorn_society_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
     import pytest

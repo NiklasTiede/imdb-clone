@@ -15,9 +15,9 @@ K8S_SEED_RENDER_OUTPUT ?= /tmp/imdb-clone-movie-seed.yaml
 K8S_SCHEMA_OUTPUT ?= /tmp/imdb-clone-home-apps-schema.yaml
 KUBECONFORM_IMAGE ?= ghcr.io/yannh/kubeconform:v0.6.7
 OPENAPI_CHECK_DIR ?= /tmp/imdb-clone-openapi-check
-IMDB_CLONE_OPENAPI_BASE_URL ?= http://localhost:8080
+POPCORN_SOCIETY_OPENAPI_BASE_URL ?= http://localhost:8080
 AGENT_DIR = agent
-AGENT_IMAGE ?= imdb-clone-agent:local
+AGENT_IMAGE ?= popcorn-society-agent:local
 AGENT_SMOKE_PORT ?= 18090
 BACKEND_SMOKE_PORT ?= 18081
 FRONTEND_SMOKE_PORT ?= 18080
@@ -222,13 +222,13 @@ generate-jar: ## clean and build jar file (for building docker image)
 	./gradlew clean
 	./gradlew bootJar
 
-DOCKER_IMG_BACKEND ?= imdb-clone-backend:local
+DOCKER_IMG_BACKEND ?= popcorn-society-backend:local
 
 docker-build-backend: ## build backend docker image from Dockerfile
 	docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(DOCKER_IMG_BACKEND) .
 
 docker-run-backend: ## run backend docker container
-	docker run --name imdb-clone-backend -p 8080:8080 $(DOCKER_IMG_BACKEND)
+	docker run --name popcorn-society-backend -p 8080:8080 $(DOCKER_IMG_BACKEND)
 
 container-smoke-backend: ## smoke-test backend health probes and non-root read-only runtime
 	BACKEND_IMAGE=$(DOCKER_IMG_BACKEND) BACKEND_DOCKER_PLATFORM=$(APP_DOCKER_PLATFORM) BACKEND_SMOKE_PORT=$(BACKEND_SMOKE_PORT) bash src/test/container/smoke.sh
@@ -249,13 +249,13 @@ npm-lint: ## lint frontend code
 run-frontend: ## run frontend
 	cd ./frontend; yarn run start
 
-DOCKER_IMG_FRONTEND ?= imdb-clone-frontend:local
+DOCKER_IMG_FRONTEND ?= popcorn-society-frontend:local
 
 docker-build-frontend: ## build frontend docker image from Dockerfile
 	cd ./frontend; docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(DOCKER_IMG_FRONTEND) .
 
 docker-run-frontend: ## run frontend docker container
-	docker run --name imdb-clone-frontend -p 3000:8080 $(DOCKER_IMG_FRONTEND)
+	docker run --name popcorn-society-frontend -p 3000:8080 $(DOCKER_IMG_FRONTEND)
 
 container-smoke-frontend: ## smoke-test frontend SPA and non-root read-only runtime
 	FRONTEND_IMAGE=$(DOCKER_IMG_FRONTEND) FRONTEND_DOCKER_PLATFORM=$(APP_DOCKER_PLATFORM) FRONTEND_SMOKE_PORT=$(FRONTEND_SMOKE_PORT) bash frontend/tests/container/smoke.sh
@@ -271,32 +271,32 @@ AGENT_EVAL_CASE_FLAG = $(if $(AGENT_EVAL_CASE),--case $(AGENT_EVAL_CASE),)
 
 .PHONY: run-agent-voice
 run-agent-voice: ## run local Movie Concierge with bounded English microphone sessions
-	IMDB_AGENT_VOICE_ENABLED=true $(MAKE) run-agent
+	POPCORN_SOCIETY_AGENT_VOICE_ENABLED=true $(MAKE) run-agent
 
 .PHONY: run-agent-voice-compare
 run-agent-voice-compare: ## enable Grok and GPT-Live 1 for local microphone comparison
-	IMDB_AGENT_VOICE_LIVE_ENABLED=true $(MAKE) run-agent-voice
+	POPCORN_SOCIETY_AGENT_VOICE_LIVE_ENABLED=true $(MAKE) run-agent-voice
 
-probe-agent-voice-live: ## replay synthetic English audio; requires IMDB_AGENT_LIVE_EVALS_ENABLED=true
-	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --locked imdb-agent-voice-probe --live
+probe-agent-voice-live: ## replay synthetic English audio; requires POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --locked popcorn-agent-voice-probe --live
 
 probe-agent-voice-interrupt-live: ## verify cancellation after fixture lookup and 200 ms of audio
-	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --locked imdb-agent-voice-probe --live --interrupt-after-audio-ms 200
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run --locked popcorn-agent-voice-probe --live --interrupt-after-audio-ms 200
 
 agent-sync: ## sync the locked Python agent development environment
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv sync --locked --all-groups
 
 run-agent: ## run the local Luna-powered Movie Concierge on port 8090
-	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run uvicorn imdb_agent.bootstrap:create_app --factory --host 127.0.0.1 --port 8090 --no-access-log
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run uvicorn popcorn_society_agent.bootstrap:create_app --factory --host 127.0.0.1 --port 8090 --no-access-log
 
 run-agent-fake: ## run the deterministic Movie Concierge without a model key or Java
-	cd $(AGENT_DIR) && IMDB_AGENT_MODEL_BACKEND=fake UV_CACHE_DIR=$(UV_CACHE_DIR) uv run uvicorn imdb_agent.bootstrap:create_app --factory --host 127.0.0.1 --port 8090 --no-access-log
+	cd $(AGENT_DIR) && POPCORN_SOCIETY_AGENT_MODEL_BACKEND=fake UV_CACHE_DIR=$(UV_CACHE_DIR) uv run uvicorn popcorn_society_agent.bootstrap:create_app --factory --host 127.0.0.1 --port 8090 --no-access-log
 
 eval-agent: ## run the complete deterministic Movie Concierge eval set
-	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run imdb-agent-eval $(AGENT_EVAL_CASE_FLAG)
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run popcorn-agent-eval $(AGENT_EVAL_CASE_FLAG)
 
-eval-agent-live: ## run opt-in Luna evals; also requires IMDB_AGENT_LIVE_EVALS_ENABLED=true
-	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run imdb-agent-eval --live $(AGENT_EVAL_CASE_FLAG)
+eval-agent-live: ## run opt-in Luna evals; also requires POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run popcorn-agent-eval --live $(AGENT_EVAL_CASE_FLAG)
 
 verify-agent-format: ## check Python agent formatting
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run ruff format --check .
@@ -313,7 +313,7 @@ verify-agent-architecture: ## verify Python agent import contracts and architect
 
 verify-agent-tests: ## run deterministic Python agent tests
 	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run pytest
-	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run imdb-agent-eval
+	cd $(AGENT_DIR) && UV_CACHE_DIR=$(UV_CACHE_DIR) uv run popcorn-agent-eval
 
 verify-agent: verify-agent-format verify-agent-lint verify-agent-types verify-agent-architecture verify-agent-tests ## run the complete Python agent gate
 
@@ -365,9 +365,9 @@ verify-observability-charts: check-kubernetes-verification-tools ## render pinne
 verify-openapi-drift: ## compare checked-in OpenAPI/client output with a running backend
 	rm -rf $(OPENAPI_CHECK_DIR)
 	mkdir -p $(OPENAPI_CHECK_DIR)
-	curl -fsS $(IMDB_CLONE_OPENAPI_BASE_URL)/v3/api-docs.yaml > $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml
-	diff -u frontend/src/client/imdb-clone-backend.yaml $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml
-	cd ./frontend; yarn openapi-generator-cli generate -i $(OPENAPI_CHECK_DIR)/imdb-clone-backend.yaml -g typescript-axios -t ./openapi-templates/typescript-axios -o $(OPENAPI_CHECK_DIR)/generator-output
+	curl -fsS $(POPCORN_SOCIETY_OPENAPI_BASE_URL)/v3/api-docs.yaml > $(OPENAPI_CHECK_DIR)/popcorn-society-backend.yaml
+	diff -u frontend/src/client/popcorn-society-backend.yaml $(OPENAPI_CHECK_DIR)/popcorn-society-backend.yaml
+	cd ./frontend; yarn openapi-generator-cli generate -i $(OPENAPI_CHECK_DIR)/popcorn-society-backend.yaml -g typescript-axios -t ./openapi-templates/typescript-axios -o $(OPENAPI_CHECK_DIR)/generator-output
 	diff -qr --exclude=FILES frontend/src/client/movies/generator-output $(OPENAPI_CHECK_DIR)/generator-output
 
 ##@ Docker housekeeping

@@ -68,31 +68,31 @@ The invariant is: login method changes must not create duplicate accounts when a
   - Remove `jwtVersion`.
 - Create: `src/main/resources/db/migration/V2__create_spring_session_tables.sql`
   - Add Spring Session JDBC PostgreSQL schema.
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/WebSecurityConfig.java`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/security/WebSecurityConfig.java`
   - Replace stateless JWT config with session auth, CSRF, logout, and problem response entry point.
-- Create: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/SpaCsrfTokenRequestHandler.java`
+- Create: `src/main/java/app/popcornsociety/identity/internal/security/SpaCsrfTokenRequestHandler.java`
   - Use the Spring Security SPA CSRF pattern.
-- Create: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/CsrfCookieFilter.java`
+- Create: `src/main/java/app/popcornsociety/identity/internal/security/CsrfCookieFilter.java`
   - Force deferred CSRF token loading so the `XSRF-TOKEN` cookie is written.
-- Create: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/ProblemDetailAuthenticationEntryPoint.java`
+- Create: `src/main/java/app/popcornsociety/identity/internal/security/ProblemDetailAuthenticationEntryPoint.java`
   - Return the existing 401 problem shape from the security filter chain.
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/web/AuthenticationController.java`
+- Modify: `src/main/java/app/popcornsociety/identity/web/AuthenticationController.java`
   - Perform credential authentication and save the `SecurityContext` into the HTTP session.
   - Add `GET /api/auth/me`.
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/api/AuthenticationService.java`
+- Modify: `src/main/java/app/popcornsociety/identity/api/AuthenticationService.java`
   - Remove `loginUser`; keep registration, availability, email confirmation, and password reset.
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/IdentityAccess.java`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/IdentityAccess.java`
   - Remove JWT login generation.
-- Delete: `src/main/java/com/thecodinglab/imdbclone/identity/api/LoginResponse.java`
+- Delete: `src/main/java/app/popcornsociety/identity/api/LoginResponse.java`
   - Replace with `AccountSessionResponse`.
-- Create: `src/main/java/com/thecodinglab/imdbclone/identity/api/AccountSessionResponse.java`
+- Create: `src/main/java/app/popcornsociety/identity/api/AccountSessionResponse.java`
   - Return `id`, `username`, `email`, and `roles`.
-- Delete: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/JwtAuthenticationFilter.java`
-- Delete: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/JwtAuthenticationEntryPoint.java`
-- Delete: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/JwtTokenProvider.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/IdentityProperties.java`
+- Delete: `src/main/java/app/popcornsociety/identity/internal/security/JwtAuthenticationFilter.java`
+- Delete: `src/main/java/app/popcornsociety/identity/internal/security/JwtAuthenticationEntryPoint.java`
+- Delete: `src/main/java/app/popcornsociety/identity/internal/security/JwtTokenProvider.java`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/IdentityProperties.java`
   - Remove `jwt` and `cors` nested properties.
-- Delete: `src/main/java/com/thecodinglab/imdbclone/shared/error/JwtValidationException.java`
+- Delete: `src/main/java/app/popcornsociety/shared/error/JwtValidationException.java`
   - Only if no references remain.
 - Modify: `src/main/resources/config/application.properties`
   - Add Spring Session and forwarded header defaults.
@@ -104,12 +104,12 @@ The invariant is: login method changes must not create duplicate accounts when a
   - Set prod cookie secure to true.
 - Modify: `src/main/resources/META-INF/additional-spring-configuration-metadata.json`
   - Remove JWT and CORS metadata entries.
-- Modify: backend tests under `src/test/java/com/thecodinglab/imdbclone/**`
+- Modify: backend tests under `src/test/java/app/popcornsociety/**`
   - Replace Bearer setup with `SecurityMockMvcRequestPostProcessors.user(...)` and `csrf()`.
 - Modify: `frontend/vite.config.ts`
   - Add proxy entries for `/api`.
 - Modify: frontend env files
-  - Use same-origin empty `VITE_IMDB_CLONE_BACKEND_ADDRESS`.
+  - Use same-origin empty `VITE_POPCORN_SOCIETY_BACKEND_ADDRESS`.
 - Modify: `frontend/src/shared/api/httpClient.ts`
   - Remove Bearer interceptor.
   - Configure axios XSRF cookie/header names.
@@ -131,7 +131,7 @@ The invariant is: login method changes must not create duplicate accounts when a
   - Add logout mutation.
 - Modify: `frontend/package.json`
   - Remove `jwt-decode`.
-- Regenerate: `frontend/src/client/imdb-clone-backend.yaml`
+- Regenerate: `frontend/src/client/popcorn-society-backend.yaml`
 - Regenerate: `frontend/src/client/movies/generator-output/**`
 - Modify: `frontend/e2e/protected-routes.spec.ts`
   - Replace localStorage seeding with real API login and cookie storage state.
@@ -147,7 +147,7 @@ The invariant is: login method changes must not create duplicate accounts when a
 ### Task 1: Red Tests For Session Auth
 
 **Files:**
-- Modify: `src/test/java/com/thecodinglab/imdbclone/identity/AuthenticationControllerTest.java`
+- Modify: `src/test/java/app/popcornsociety/identity/AuthenticationControllerTest.java`
 - Modify: `build.gradle`
 
 - [x] **Step 1: Add Spring Security test dependency**
@@ -281,13 +281,13 @@ Expected: schema failure is gone; failures move to JWT response, CSRF, or missin
 ### Task 3: Replace JWT Security With Session And CSRF
 
 **Files:**
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/WebSecurityConfig.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/SpaCsrfTokenRequestHandler.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/CsrfCookieFilter.java`
-- Create: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/ProblemDetailAuthenticationEntryPoint.java`
-- Delete: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/JwtAuthenticationFilter.java`
-- Delete: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/JwtAuthenticationEntryPoint.java`
-- Delete: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/JwtTokenProvider.java`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/security/WebSecurityConfig.java`
+- Create: `src/main/java/app/popcornsociety/identity/internal/security/SpaCsrfTokenRequestHandler.java`
+- Create: `src/main/java/app/popcornsociety/identity/internal/security/CsrfCookieFilter.java`
+- Create: `src/main/java/app/popcornsociety/identity/internal/security/ProblemDetailAuthenticationEntryPoint.java`
+- Delete: `src/main/java/app/popcornsociety/identity/internal/security/JwtAuthenticationFilter.java`
+- Delete: `src/main/java/app/popcornsociety/identity/internal/security/JwtAuthenticationEntryPoint.java`
+- Delete: `src/main/java/app/popcornsociety/identity/internal/security/JwtTokenProvider.java`
 
 - [ ] **Step 1: Add problem detail entry point**
 
@@ -341,11 +341,11 @@ Expected: login and CSRF behavior failures move to controller/session response w
 ### Task 4: Move Login To Server-Side Session
 
 **Files:**
-- Create: `src/main/java/com/thecodinglab/imdbclone/identity/api/AccountSessionResponse.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/web/AuthenticationController.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/api/AuthenticationService.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/IdentityAccess.java`
-- Delete: `src/main/java/com/thecodinglab/imdbclone/identity/api/LoginResponse.java`
+- Create: `src/main/java/app/popcornsociety/identity/api/AccountSessionResponse.java`
+- Modify: `src/main/java/app/popcornsociety/identity/web/AuthenticationController.java`
+- Modify: `src/main/java/app/popcornsociety/identity/api/AuthenticationService.java`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/IdentityAccess.java`
+- Delete: `src/main/java/app/popcornsociety/identity/api/LoginResponse.java`
 
 - [ ] **Step 1: Add `AccountSessionResponse`**
 
@@ -415,12 +415,12 @@ Expected: `AuthenticationControllerTest` passes.
 ### Task 5: Migrate Backend Controller Tests From Bearer To Session Test Auth
 
 **Files:**
-- Modify: `src/test/java/com/thecodinglab/imdbclone/account/AccountControllerTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/catalog/MovieControllerTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/catalog/SearchControllerTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/engagement/CommentControllerTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/engagement/RatingControllerTest.java`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/engagement/WatchedMovieControllerTest.java`
+- Modify: `src/test/java/app/popcornsociety/account/AccountControllerTest.java`
+- Modify: `src/test/java/app/popcornsociety/catalog/MovieControllerTest.java`
+- Modify: `src/test/java/app/popcornsociety/catalog/SearchControllerTest.java`
+- Modify: `src/test/java/app/popcornsociety/engagement/CommentControllerTest.java`
+- Modify: `src/test/java/app/popcornsociety/engagement/RatingControllerTest.java`
+- Modify: `src/test/java/app/popcornsociety/engagement/WatchedMovieControllerTest.java`
 
 - [ ] **Step 1: Remove token setup**
 
@@ -468,11 +468,11 @@ Expected: selected backend web tests pass.
 
 **Files:**
 - Modify: `gradle.properties`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/IdentityProperties.java`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/IdentityProperties.java`
 - Modify: `src/main/resources/config/application-dev.properties`
 - Modify: `src/main/resources/config/application-prod.properties`
 - Modify: `src/main/resources/META-INF/additional-spring-configuration-metadata.json`
-- Delete: `src/main/java/com/thecodinglab/imdbclone/shared/error/JwtValidationException.java`
+- Delete: `src/main/java/app/popcornsociety/shared/error/JwtValidationException.java`
 
 - [ ] **Step 1: Remove JWT and CORS records from `IdentityProperties`**
 
@@ -489,8 +489,8 @@ boolean emailVerificationEnabled
 Remove keys under:
 
 ```properties
-imdb-clone.identity.jwt.*
-imdb-clone.identity.cors.*
+popcorn-society.identity.jwt.*
+popcorn-society.identity.cors.*
 ```
 
 - [ ] **Step 3: Remove metadata entries for JWT and CORS**
@@ -498,9 +498,9 @@ imdb-clone.identity.cors.*
 Delete entries for:
 
 ```text
-imdb-clone.identity.jwt.secret
-imdb-clone.identity.jwt.expiration-in-ms
-imdb-clone.identity.cors.allowed-origins
+popcorn-society.identity.jwt.secret
+popcorn-society.identity.jwt.expiration-in-ms
+popcorn-society.identity.cors.allowed-origins
 ```
 
 - [ ] **Step 4: Verify no backend JWT references remain**
@@ -606,7 +606,7 @@ Expected: frontend unit tests pass.
 ### Task 8: Regenerate OpenAPI Client
 
 **Files:**
-- Regenerate: `frontend/src/client/imdb-clone-backend.yaml`
+- Regenerate: `frontend/src/client/popcorn-society-backend.yaml`
 - Regenerate: `frontend/src/client/movies/generator-output/**`
 
 - [ ] **Step 1: Start backend**
@@ -655,7 +655,7 @@ Keep `backend.imdb-clone.the-coding-lab.com` routing to backend.
 Ensure Vite sees:
 
 ```text
-VITE_IMDB_CLONE_BACKEND_ADDRESS=
+VITE_POPCORN_SOCIETY_BACKEND_ADDRESS=
 ```
 
 - [ ] **Step 4: Remove JWT production secret after deploy verification**
@@ -729,13 +729,13 @@ Verify:
 
 **Files:**
 - Create: `src/main/resources/db/migration/V3__credential_model_and_token_hardening.sql`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/account/api/AccountIdentityService.java`
+- Modify: `src/main/java/app/popcornsociety/account/api/AccountIdentityService.java`
 - Modify account internal implementation files discovered by `rg "implements AccountIdentityService" src/main/java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/account/internal/persistence/Account.java`
-- Create local credential persistence files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/persistence/`
-- Modify verification token persistence and services under `src/main/java/com/thecodinglab/imdbclone/identity/internal/`
-- Create audit foundation files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/audit/`
-- Modify tests under `src/test/java/com/thecodinglab/imdbclone/identity/`
+- Modify: `src/main/java/app/popcornsociety/account/internal/persistence/Account.java`
+- Create local credential persistence files under `src/main/java/app/popcornsociety/identity/internal/persistence/`
+- Modify verification token persistence and services under `src/main/java/app/popcornsociety/identity/internal/`
+- Create audit foundation files under `src/main/java/app/popcornsociety/identity/internal/security/audit/`
+- Modify tests under `src/test/java/app/popcornsociety/identity/`
 
 - [x] **Step 1: Add local credential schema**
 
@@ -857,10 +857,10 @@ Expected: password login, registration, email confirmation, and reset-password f
 **Files:**
 - Modify: `build.gradle`
 - Create: `src/main/resources/db/migration/V4__social_login_identity_providers.sql`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/account/api/AccountIdentityService.java`
+- Modify: `src/main/java/app/popcornsociety/account/api/AccountIdentityService.java`
 - Modify account internal implementation files discovered by `rg "implements AccountIdentityService" src/main/java`
-- Create files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/oauth2/`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/WebSecurityConfig.java`
+- Create files under `src/main/java/app/popcornsociety/identity/internal/security/oauth2/`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/security/WebSecurityConfig.java`
 - Modify: `src/main/resources/config/application-dev.properties`
 - Modify: `src/main/resources/config/application-prod.properties`
 
@@ -988,10 +988,10 @@ Verify:
 **Files:**
 - Modify: `build.gradle`
 - Create: `src/main/resources/db/migration/V5__create_webauthn_tables.sql`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/WebSecurityConfig.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/IdentityProperties.java`
-- Create passkey management controller files under `src/main/java/com/thecodinglab/imdbclone/identity/web/`
-- Create supporting identity security files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/webauthn/`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/security/WebSecurityConfig.java`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/IdentityProperties.java`
+- Create passkey management controller files under `src/main/java/app/popcornsociety/identity/web/`
+- Create supporting identity security files under `src/main/java/app/popcornsociety/identity/internal/security/webauthn/`
 
 - [ ] **Step 0: Add Spring Security WebAuthn dependency**
 
@@ -1129,8 +1129,8 @@ Verify:
 
 **Files:**
 - Modify: `build.gradle`
-- Create files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/ratelimit/`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/WebSecurityConfig.java`
+- Create files under `src/main/java/app/popcornsociety/identity/internal/security/ratelimit/`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/security/WebSecurityConfig.java`
 - Modify: `src/main/resources/config/application.properties`
 - Modify test/e2e properties to disable rate limiting where needed.
 
@@ -1146,7 +1146,7 @@ implementation 'com.github.ben-manes.caffeine:caffeine'
 Prefix:
 
 ```properties
-imdb-clone.identity.rate-limit.enabled=true
+popcorn-society.identity.rate-limit.enabled=true
 ```
 
 - [x] **Step 3: Add auth rate limit filter**
@@ -1183,8 +1183,8 @@ Run a curl loop against login and confirm 429 plus Prometheus counter.
 ### Task 17: Extend Security Audit Events
 
 **Files:**
-- Modify files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/audit/`
-- Modify or create retention scheduler files under `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/audit/`
+- Modify files under `src/main/java/app/popcornsociety/identity/internal/security/audit/`
+- Modify or create retention scheduler files under `src/main/java/app/popcornsociety/identity/internal/security/audit/`
 
 - [x] **Step 1: Verify audit table and event taxonomy**
 
@@ -1260,7 +1260,7 @@ Exercise password, social, passkey, failed login, logout, social linking, passke
 ### Task 18: Security Headers And Traefik Middleware
 
 **Files:**
-- Modify: `src/main/java/com/thecodinglab/imdbclone/identity/internal/security/WebSecurityConfig.java`
+- Modify: `src/main/java/app/popcornsociety/identity/internal/security/WebSecurityConfig.java`
 - Create: `infrastructure/clusters/home/apps/traefik-middlewares.yaml`
 - Modify: `infrastructure/clusters/home/apps/kustomization.yaml`
 - Modify ingress annotations in `infrastructure/clusters/home/apps/ingress.yaml`

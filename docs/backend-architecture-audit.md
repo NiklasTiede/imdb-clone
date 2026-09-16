@@ -46,8 +46,8 @@ Counts read from the completed `build/test-results/{test,architectureTest,integr
 | Total | 394 | 2 | 0 |
 
 The two skips are existing opt-in external-service checks: live search evaluation
-(`IMDB_CLONE_LIVE_SEARCH_EVALUATION=true`) and local llama.cpp embedding
-(`IMDB_CLONE_TEST_LLAMA_CPP=true`). Neither test nor its enablement condition was changed.
+(`POPCORN_SOCIETY_LIVE_SEARCH_EVALUATION=true`) and local llama.cpp embedding
+(`POPCORN_SOCIETY_TEST_LLAMA_CPP=true`). Neither test nor its enablement condition was changed.
 All architecture-goal regression, concurrency, migration, recovery and isolated module tests ran.
 The full run includes 12 Identity consistency, 11 rating consistency, 3 historical migration,
 29 Media lifecycle/recovery/pool, 10 Notification consistency, 7 incremental projection concurrency

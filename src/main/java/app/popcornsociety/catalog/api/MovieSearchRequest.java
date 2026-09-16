@@ -1,0 +1,15 @@
+package app.popcornsociety.catalog.api;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import java.util.Set;
+import org.springframework.modulith.NamedInterface;
+
+@NamedInterface("assistant")
+public record MovieSearchRequest(
+    @Min(1850) @Max(2030) Integer minStartYear,
+    @Min(1850) @Max(2030) Integer maxStartYear,
+    @Min(0) Integer minRuntimeMinutes,
+    @Max(5000) Integer maxRuntimeMinutes,
+    Set<MovieGenre> movieGenre,
+    MovieType movieType) {}

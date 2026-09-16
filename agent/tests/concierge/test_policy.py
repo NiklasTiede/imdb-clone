@@ -1,14 +1,14 @@
 import pytest
 
-from imdb_agent.concierge.events import GroundedMovie
-from imdb_agent.concierge.policy import (
+from popcorn_society_agent.concierge.events import GroundedMovie
+from popcorn_society_agent.concierge.policy import (
     UiActionDecisionOutcome,
     capability_response,
     decide_open_movie_action,
     requests_open_movie,
     select_movies_for_display,
 )
-from imdb_agent.concierge.tools import ToolName
+from popcorn_society_agent.concierge.tools import ToolName
 
 
 @pytest.mark.parametrize(

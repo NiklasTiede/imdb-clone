@@ -9,8 +9,8 @@ RUN gradle bootJar copyPyroscopeAgent --no-daemon --no-watch-fs
 # Keep JDK and JRE versions aligned and run the application as an unprivileged user.
 FROM eclipse-temurin:25-jre-alpine
 ARG JAR_FILE=/home/gradle/app/build/libs/*.jar
-RUN addgroup -S -g 10001 imdb \
-    && adduser -S -D -H -u 10001 -G imdb imdb
+RUN addgroup -S -g 10001 popcorn \
+    && adduser -S -D -H -u 10001 -G popcorn popcorn
 WORKDIR /app
 COPY --from=build --chown=10001:10001 ${JAR_FILE} app.jar
 COPY --from=build --chown=10001:10001 /home/gradle/app/build/pyroscope/pyroscope.jar /opt/pyroscope/pyroscope.jar

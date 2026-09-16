@@ -8,9 +8,9 @@ Primary files:
 
 - `src/main/resources/db/migration/*.sql`
 - `src/test/resources/sql/test-data.sql`
-- `src/main/java/com/thecodinglab/imdbclone/*/internal/persistence`
-- `src/main/java/com/thecodinglab/imdbclone/shared/persistence`
-- `src/test/java/com/thecodinglab/imdbclone/shared/DatabaseSchemaTest.java`
+- `src/main/java/app/popcornsociety/*/internal/persistence`
+- `src/main/java/app/popcornsociety/shared/persistence`
+- `src/test/java/app/popcornsociety/shared/DatabaseSchemaTest.java`
 
 ## Checks
 

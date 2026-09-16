@@ -2,14 +2,14 @@
 
 set -euo pipefail
 
-readonly IMAGE="${BACKEND_IMAGE:-imdb-clone-backend:local}"
+readonly IMAGE="${BACKEND_IMAGE:-popcorn-society-backend:local}"
 readonly PLATFORM="${BACKEND_DOCKER_PLATFORM:-linux/amd64}"
 readonly PORT="${BACKEND_SMOKE_PORT:-18081}"
 readonly POSTGRES_IMAGE="${BACKEND_SMOKE_POSTGRES_IMAGE:-postgres:18}"
 readonly SUFFIX="$$"
-readonly NETWORK="imdb-clone-backend-smoke-${SUFFIX}"
-readonly POSTGRES_CONTAINER="imdb-clone-backend-smoke-postgres-${SUFFIX}"
-readonly BACKEND_CONTAINER="imdb-clone-backend-smoke-${SUFFIX}"
+readonly NETWORK="popcorn-society-backend-smoke-${SUFFIX}"
+readonly POSTGRES_CONTAINER="popcorn-society-backend-smoke-postgres-${SUFFIX}"
+readonly BACKEND_CONTAINER="popcorn-society-backend-smoke-${SUFFIX}"
 
 cleanup() {
   docker rm --force --volumes "${BACKEND_CONTAINER}" >/dev/null 2>&1 || true

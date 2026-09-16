@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from imdb_agent.concierge.evaluation import load_eval_dataset
+from popcorn_society_agent.concierge.evaluation import load_eval_dataset
 
 AGENT_ROOT = Path(__file__).resolve().parents[2]
 DATASET_PATH = AGENT_ROOT / "evals" / "read_only_v1.json"

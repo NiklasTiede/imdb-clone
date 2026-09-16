@@ -13,11 +13,11 @@ LLM orchestration, grounding, tool policy, and agent evals.
 Primary files:
 
 - `compose.yaml`
-- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search`
+- `src/main/java/app/popcornsociety/catalog/internal/search`
 - `src/main/resources/config/*.properties`
 - `src/main/resources/api-calls/llama-cpp`
-- `src/test/java/com/thecodinglab/imdbclone/catalog/internal/search`
-- `src/test/java/com/thecodinglab/imdbclone/catalog/SearchControllerTest.java`
+- `src/test/java/app/popcornsociety/catalog/internal/search`
+- `src/test/java/app/popcornsociety/catalog/SearchControllerTest.java`
 - `infrastructure/clusters/home/apps`
 - `docs/development.md`
 

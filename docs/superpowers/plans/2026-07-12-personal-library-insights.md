@@ -230,10 +230,10 @@ mapping tables.
 
 Modify:
 
-- `src/main/java/com/thecodinglab/imdbclone/catalog/api/MovieReferenceService.java`
-- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/MovieCatalog.java`
-- `src/main/java/com/thecodinglab/imdbclone/engagement/internal/Watchlist.java`
-- `src/main/java/com/thecodinglab/imdbclone/engagement/internal/mapper/WatchedMovieMapper.java`
+- `src/main/java/app/popcornsociety/catalog/api/MovieReferenceService.java`
+- `src/main/java/app/popcornsociety/catalog/internal/MovieCatalog.java`
+- `src/main/java/app/popcornsociety/engagement/internal/Watchlist.java`
+- `src/main/java/app/popcornsociety/engagement/internal/mapper/WatchedMovieMapper.java`
 
 Tests:
 

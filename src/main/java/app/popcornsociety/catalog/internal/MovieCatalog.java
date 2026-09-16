@@ -1,0 +1,242 @@
+package app.popcornsociety.catalog.internal;
+
+import static app.popcornsociety.shared.logging.Log.*;
+import static net.logstash.logback.argument.StructuredArguments.*;
+
+import app.popcornsociety.catalog.api.MovieImageToken;
+import app.popcornsociety.catalog.api.MovieRecord;
+import app.popcornsociety.catalog.api.MovieRequest;
+import app.popcornsociety.catalog.api.MovieService;
+import app.popcornsociety.catalog.api.events.MovieDeleted;
+import app.popcornsociety.catalog.api.events.MovieImageReplaced;
+import app.popcornsociety.catalog.internal.mapper.MovieMapper;
+import app.popcornsociety.catalog.internal.persistence.Movie;
+import app.popcornsociety.catalog.internal.persistence.MovieRepository;
+import app.popcornsociety.catalog.internal.persistence.MovieSearchDao;
+import app.popcornsociety.catalog.internal.search.projection.MovieSearchProjectionTasks;
+import app.popcornsociety.shared.api.MessageResponse;
+import app.popcornsociety.shared.api.PagedResponse;
+import app.popcornsociety.shared.error.NotFoundException;
+import app.popcornsociety.shared.validation.Pagination;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.LockModeType;
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class MovieCatalog implements MovieService {
+
+  private static final Logger logger = LoggerFactory.getLogger(MovieCatalog.class);
+  private static final int MOVIE_REFERENCE_BATCH_SIZE = 250;
+
+  private final MovieRepository movieRepository;
+  private final MovieSearchDao movieSearchDao;
+  private final MovieMapper movieMapper;
+  private final MovieSearchProjectionTasks movieSearchProjectionTasks;
+  private final ApplicationEventPublisher events;
+  private final EntityManager entityManager;
+
+  public MovieCatalog(
+      final MovieRepository movieRepository,
+      MovieSearchDao movieSearchDao,
+      MovieMapper movieMapper,
+      MovieSearchProjectionTasks movieSearchProjectionTasks,
+      ApplicationEventPublisher events,
+      EntityManager entityManager) {
+    this.movieRepository = movieRepository;
+    this.movieSearchDao = movieSearchDao;
+    this.movieMapper = movieMapper;
+    this.movieSearchProjectionTasks = movieSearchProjectionTasks;
+    this.events = events;
+    this.entityManager = entityManager;
+  }
+
+  @Override
+  public MovieRecord findMovieById(Long movieId) {
+    Movie movie = movieRepository.getMovieById(movieId);
+    logger.info("Movie with {} was retrieved", kv(MOVIE_ID, movieId));
+    return movieMapper.entityToDTO(movie);
+  }
+
+  @Override
+  public List<MovieRecord> findMoviesByIds(Collection<Long> movieIds) {
+    if (movieIds == null || movieIds.isEmpty()) {
+      return List.of();
+    }
+
+    List<Long> uniqueMovieIds =
+        movieIds.stream().filter(java.util.Objects::nonNull).distinct().toList();
+    if (uniqueMovieIds.isEmpty()) {
+      return List.of();
+    }
+
+    LinkedHashSet<MovieRecord> movies = new LinkedHashSet<>();
+    for (int start = 0; start < uniqueMovieIds.size(); start += MOVIE_REFERENCE_BATCH_SIZE) {
+      int end = Math.min(start + MOVIE_REFERENCE_BATCH_SIZE, uniqueMovieIds.size());
+      movies.addAll(
+          movieRepository.findByIdIn(uniqueMovieIds.subList(start, end)).stream()
+              .map(movieMapper::entityToDTO)
+              .toList());
+    }
+    return List.copyOf(movies);
+  }
+
+  @Override
+  public PagedResponse<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size) {
+    Pagination.validatePageNumberAndSize(page, size);
+    Pageable pageable = PageRequest.of(page, size);
+    Page<Movie> movies = movieRepository.findByIdIn(movieIds, pageable);
+    logger.info(
+        "[{}] movies with movieIds [{}] were retrieved from database",
+        v(COUNT, movies.getContent().size()),
+        kv(MOVIE_IDS, movies.getContent().stream().map(Movie::getId).toList()));
+    return PagedResponse.from(movies.map(movieMapper::entityToDTO));
+  }
+
+  @Override
+  @Transactional
+  public MovieRecord createMovie(MovieRequest movieRequest) {
+    Movie movie = movieMapper.dtoToEntity(movieRequest);
+    Movie savedMovie = performSave(movie);
+    publishImageChange(savedMovie.getId(), null, savedMovie.getPosterImageToken());
+    return movieMapper.entityToDTO(savedMovie);
+  }
+
+  @Override
+  @Transactional
+  public MovieRecord updateMovie(Long movieId, MovieRequest movieRequest) {
+    Movie movie = lockMovie(movieId);
+    String previousImage = movie.getPosterImageToken();
+    movie.setPrimaryTitle(movieRequest.primaryTitle());
+    movie.setImdbId(movieRequest.imdbId());
+    movie.setTmdbId(movieRequest.tmdbId());
+    movie.setMovieType(movieRequest.movieType());
+    movie.setOriginalTitle(movieRequest.originalTitle());
+    movie.setAdult(movieRequest.adult());
+    movie.setStartYear(movieRequest.startYear());
+    movie.setEndYear(movieRequest.endYear());
+    movie.setRuntimeMinutes(movieRequest.runtimeMinutes());
+    movie.setMovieGenre(movieRequest.movieGenre());
+    movie.setDescription(movieRequest.description());
+    movie.setPosterImageToken(movieRequest.posterImageToken());
+    movie.setBackdropImageToken(movieRequest.backdropImageToken());
+    movie.setTrailerYoutubeKey(movieRequest.trailerYoutubeKey());
+    Movie updatedMovie = performSave(movie);
+    publishImageChange(movieId, previousImage, movie.getPosterImageToken());
+    return movieMapper.entityToDTO(updatedMovie);
+  }
+
+  @Override
+  @Transactional
+  public MessageResponse deleteMovie(Long movieId) {
+    Movie movie = lockMovie(movieId);
+    performDelete(movie);
+    return new MessageResponse(
+        "the movie [%s] was deleted successfully.".formatted(movie.getPrimaryTitle()));
+  }
+
+  @Override
+  public PagedResponse<MovieRecord> searchMoviesByTitle(String title, int page, int size) {
+    Pagination.validatePageNumberAndSize(page, size);
+    PagedResponse<Movie> movies = movieSearchDao.findByPrimaryTitleStartsWith(title, page, size);
+    logger.info(
+        "[{}] movies with movieIds [{}] were retrieved from database",
+        v(COUNT, movies.getContent().size()),
+        kv(MOVIE_IDS, movies.getContent().stream().map(Movie::getId).toList()));
+    return movies.map(movieMapper::entityToDTO);
+  }
+
+  @Override
+  @Transactional
+  public void applyRatingAggregateDelta(
+      Long movieId, BigDecimal ratingSumDelta, int ratingCountDelta) {
+    int updatedMovies =
+        movieRepository.applyRatingAggregateDelta(movieId, ratingSumDelta, ratingCountDelta);
+    if (updatedMovies == 0) {
+      movieRepository.getMovieById(movieId);
+      throw new IllegalStateException(
+          "Movie rating aggregate for movieId [%d] would become inconsistent.".formatted(movieId));
+    }
+    movieSearchProjectionTasks.enqueueUpsert(movieId);
+    logger.info(
+        "the rating aggregate of movie with movieId [{}] was updated", v(MOVIE_ID, movieId));
+  }
+
+  @Override
+  public MovieImageToken getMovieImageToken(Long movieId) {
+    Movie movie = movieRepository.getMovieById(movieId);
+    return new MovieImageToken(movie.getId(), movie.getPosterImageToken());
+  }
+
+  @Override
+  @Transactional
+  public MovieImageToken updateMovieImageToken(Long movieId, String posterImageToken) {
+    Movie movie = lockMovie(movieId);
+    String previous = movie.getPosterImageToken();
+    movie.setPosterImageToken(posterImageToken);
+    Movie savedMovie = performSave(movie);
+    publishImageChange(movieId, previous, posterImageToken);
+    return new MovieImageToken(savedMovie.getId(), savedMovie.getPosterImageToken());
+  }
+
+  @Override
+  @Transactional
+  public void clearMovieImageToken(Long movieId) {
+    updateMovieImageToken(movieId, null);
+  }
+
+  @Override
+  public boolean isMovieImageTokenReferenced(String token) {
+    return movieRepository.existsByPosterImageToken(token);
+  }
+
+  private Movie lockMovie(Long movieId) {
+    Movie movie = movieRepository.getMovieById(movieId);
+    entityManager.flush();
+    try {
+      entityManager.refresh(movie, LockModeType.PESSIMISTIC_WRITE);
+    } catch (EntityNotFoundException exception) {
+      throw new NotFoundException("Movie with id [" + movieId + "] not found in database.");
+    }
+    return movie;
+  }
+
+  private void publishImageChange(Long movieId, String previous, String current) {
+    if (!Objects.equals(previous, current)) {
+      events.publishEvent(new MovieImageReplaced(movieId, previous, current));
+    }
+  }
+
+  private Movie performSave(Movie movie) {
+    Movie updatedMovie = movieRepository.save(movie);
+    movieSearchProjectionTasks.enqueueUpsert(updatedMovie.getId());
+    logger.info(
+        "the movie [{}] with movieId [{}] was created and/or updated in PostgreSQL and scheduled for search projection",
+        updatedMovie.getOriginalTitle(),
+        v(MOVIE_ID, updatedMovie.getId()));
+    return updatedMovie;
+  }
+
+  private void performDelete(Movie movie) {
+    String posterImageToken = movie.getPosterImageToken();
+    movieRepository.delete(movie);
+    movieSearchProjectionTasks.enqueueDelete(movie.getId());
+    events.publishEvent(new MovieDeleted(movie.getId(), posterImageToken));
+    logger.info(
+        "the movie [{}] with [{}] was deleted from PostgreSQL and scheduled for search projection delete",
+        movie.getOriginalTitle(),
+        kv(MOVIE_ID, movie.getId()));
+  }
+}

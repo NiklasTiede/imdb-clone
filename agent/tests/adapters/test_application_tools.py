@@ -5,15 +5,15 @@ import asyncio
 import pytest
 from pydantic_ai.exceptions import ToolFailed
 
-from imdb_agent.adapters.application_tools import ApplicationTools
-from imdb_agent.concierge.events import (
+from popcorn_society_agent.adapters.application_tools import ApplicationTools
+from popcorn_society_agent.concierge.events import (
     GroundedMovie,
     OpenLoginAction,
     OpenMovieAction,
     OpenMovieTrailerAction,
     OpenPageAction,
 )
-from imdb_agent.concierge.personal import PersonalTurn
+from popcorn_society_agent.concierge.personal import PersonalTurn
 
 
 @pytest.mark.asyncio
@@ -79,7 +79,7 @@ async def test_navigation_waits_for_current_final_transcript(interrupted: bool) 
 
 @pytest.mark.asyncio
 async def test_semantic_search_uses_validated_parameters_and_drops_failed_refinement() -> None:
-    from imdb_agent.concierge.tools import ToolName
+    from popcorn_society_agent.concierge.tools import ToolName
 
     turn = PersonalTurn()
     turn.finalize("I feel like a short comedy")

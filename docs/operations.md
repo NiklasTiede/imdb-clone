@@ -235,19 +235,19 @@ Release in this order to avoid enabling unsupported settings on the v1.4.0 image
    in an infrastructure PR and let Argo CD reconcile it:
 
    ```yaml
-   - name: IMDB_AGENT_VOICE_ENABLED
+   - name: POPCORN_SOCIETY_AGENT_VOICE_ENABLED
      value: "true"
-   - name: IMDB_AGENT_VOICE_LIVE_ENABLED
+   - name: POPCORN_SOCIETY_AGENT_VOICE_LIVE_ENABLED
      value: "true"
-   - name: IMDB_AGENT_VOICE_SESSION_SECONDS
+   - name: POPCORN_SOCIETY_AGENT_VOICE_SESSION_SECONDS
      value: "900"
-   - name: IMDB_AGENT_VOICE_BROWSER_SECONDS
+   - name: POPCORN_SOCIETY_AGENT_VOICE_BROWSER_SECONDS
      value: "1500"
-   - name: IMDB_AGENT_VOICE_SHARED_SECONDS
+   - name: POPCORN_SOCIETY_AGENT_VOICE_SHARED_SECONDS
      value: "6000"
-   - name: IMDB_AGENT_VOICE_QUOTA_DATABASE
+   - name: POPCORN_SOCIETY_AGENT_VOICE_QUOTA_DATABASE
      value: /var/lib/movie-concierge/voice-quota.db
-   - name: IMDB_AGENT_VOICE_ALLOWED_ORIGINS
+   - name: POPCORN_SOCIETY_AGENT_VOICE_ALLOWED_ORIGINS
      value: '["https://imdb-clone.the-coding-lab.com"]'
    ```
 
@@ -273,7 +273,7 @@ when the pod is replaced; there is no automatic cross-pod session recovery.
 
 Voice time quota rollout: publish and deploy new agent and frontend images together. Cached old
 frontends must reload to send the required `browser_id`. The current GitOps manifest temporarily
-keeps `IMDB_AGENT_VOICE_MAX_SESSIONS=8` for the pinned v1.5.0 image until that release is replaced;
+keeps `POPCORN_SOCIETY_AGENT_VOICE_MAX_SESSIONS=8` for the pinned v1.5.0 image until that release is replaced;
 the new agent ignores this legacy variable. Remove it after rollout. No quota database reset is
 needed: `voice_usage` is created alongside the retained legacy `voice_starts` table. Time accounting
 starts fresh because historical starts contain no durations. Never delete the PVC to reset limits.

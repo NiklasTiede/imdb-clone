@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from imdb_agent.concierge.navigation import (
+from popcorn_society_agent.concierge.navigation import (
     SearchNavigation,
     page_action,
     requests_search_results,
     search_results_action,
 )
-from imdb_agent.concierge.tools import ToolName
+from popcorn_society_agent.concierge.tools import ToolName
 
 
 @pytest.mark.parametrize(

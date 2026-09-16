@@ -1,0 +1,15 @@
+package app.popcornsociety.catalog.api;
+
+import org.springframework.modulith.NamedInterface;
+
+@NamedInterface("media")
+public interface MovieImageService {
+
+  MovieImageToken getMovieImageToken(Long movieId);
+
+  MovieImageToken updateMovieImageToken(Long movieId, String posterImageToken);
+
+  void clearMovieImageToken(Long movieId);
+
+  boolean isMovieImageTokenReferenced(String token);
+}

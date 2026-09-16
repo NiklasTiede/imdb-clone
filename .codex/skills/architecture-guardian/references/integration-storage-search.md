@@ -8,13 +8,13 @@ durable scheduled tasks, and infrastructure scripts. Use `agent` for Movie Conci
 
 Primary files:
 
-- `src/main/java/com/thecodinglab/imdbclone/*/internal`
-- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/persistence/MovieSearchDao.java`
-- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search`
-- `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/projection`
-- `src/main/java/com/thecodinglab/imdbclone/identity/internal/security`
-- `src/main/java/com/thecodinglab/imdbclone/media/internal`
-- `src/main/java/com/thecodinglab/imdbclone/identity/internal/VerificationTokenCleanupScheduler.java`
+- `src/main/java/app/popcornsociety/*/internal`
+- `src/main/java/app/popcornsociety/catalog/internal/persistence/MovieSearchDao.java`
+- `src/main/java/app/popcornsociety/catalog/internal/search`
+- `src/main/java/app/popcornsociety/catalog/internal/search/projection`
+- `src/main/java/app/popcornsociety/identity/internal/security`
+- `src/main/java/app/popcornsociety/media/internal`
+- `src/main/java/app/popcornsociety/identity/internal/VerificationTokenCleanupScheduler.java`
 - `infrastructure`
 - `compose.yaml`
 

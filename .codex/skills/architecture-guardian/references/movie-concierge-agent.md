@@ -10,10 +10,10 @@ Primary files:
 
 - `agent/AGENTS.md`
 - `agent/pyproject.toml`
-- `agent/src/imdb_agent`
+- `agent/src/popcorn_society_agent`
 - `agent/tests`
 - `agent/evals`
-- `src/main/java/com/thecodinglab/imdbclone/assistant`
+- `src/main/java/app/popcornsociety/assistant`
 - `frontend/src/features/concierge`
 - `docs/adr/0001-movie-concierge-architecture.md`
 - `docs/movie-concierge.md`
@@ -26,10 +26,10 @@ between those documents, executable checks, and implementation as metadata or de
 
 ## Module And Adapter Direction
 
-- `imdb_agent.concierge` owns product policy, orchestration Interfaces, typed events, and errors
+- `popcorn_society_agent.concierge` owns product policy, orchestration Interfaces, typed events, and errors
 - the Concierge Module imports neither FastAPI nor Pydantic AI nor concrete Adapters
-- `imdb_agent.web` is an inbound FastAPI/SSE Adapter and does not assemble outbound Adapters
-- `imdb_agent.adapters` contains model, MCP, persistence, telemetry, logging, profiling, and fake
+- `popcorn_society_agent.web` is an inbound FastAPI/SSE Adapter and does not assemble outbound Adapters
+- `popcorn_society_agent.adapters` contains model, MCP, persistence, telemetry, logging, profiling, and fake
   implementations behind product-owned Interfaces
 - `bootstrap.py` is the only composition root joining inbound and outbound Adapters
 - `settings.py` validates configuration at the process Seam and does not become a service locator

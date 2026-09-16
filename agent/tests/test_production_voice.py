@@ -5,9 +5,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from imdb_agent import bootstrap
-from imdb_agent.adapters.fakes import FakeConciergeRunner
-from imdb_agent.settings import (
+from popcorn_society_agent import bootstrap
+from popcorn_society_agent.adapters.fakes import FakeConciergeRunner
+from popcorn_society_agent.settings import (
     ConfigurationError,
     DeploymentEnvironment,
     Settings,
@@ -98,7 +98,7 @@ def test_all_mcp_adapters_receive_mounted_identity(
     def remember(settings: Settings) -> None:
         identities.append(settings.mcp_bearer_token.get_secret_value())
 
-    from imdb_agent.settings import LocalVoiceSecrets, RuntimeSecrets
+    from popcorn_society_agent.settings import LocalVoiceSecrets, RuntimeSecrets
 
     def grok(*, settings: Settings, secrets: LocalVoiceSecrets) -> bootstrap.RealtimeVoiceRunner:
         remember(settings)

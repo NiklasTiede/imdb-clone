@@ -23,13 +23,13 @@ make check-agent-tools
 
 ## Repository Layout
 
-- Backend source: `src/main/java/com/thecodinglab/imdbclone`
+- Backend source: `src/main/java/app/popcornsociety`
 - Backend config: `src/main/resources/config`
 - Backend migrations: `src/main/resources/db/migration`
-- Backend tests: `src/test/java/com/thecodinglab/imdbclone`
+- Backend tests: `src/test/java/app/popcornsociety`
 - Frontend source: `frontend/src`
 - Frontend e2e tests: `frontend/e2e`
-- Movie Concierge source: `agent/src/imdb_agent`
+- Movie Concierge source: `agent/src/popcorn_society_agent`
 - Movie Concierge tests and evals: `agent/tests` and `agent/evals`
 - Local stateful services: `compose.yaml`
 - k3s GitOps manifests: `infrastructure/clusters/home/apps`
@@ -156,9 +156,9 @@ yarn start
 
 The frontend runs on `http://localhost:3000` and expects:
 
-- `VITE_IMDB_CLONE_BACKEND_ADDRESS`
-- `VITE_IMDB_CLONE_CONCIERGE_ADDRESS` (optional; local Vite uses `/concierge-api`)
-- `VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`
+- `VITE_POPCORN_SOCIETY_BACKEND_ADDRESS`
+- `VITE_POPCORN_SOCIETY_CONCIERGE_ADDRESS` (optional; local Vite uses `/concierge-api`)
+- `VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS`
 
 These are defined in `frontend/.env.development` for local development and in
 `frontend/.env.production` for production builds. Use `.env.local` or `.env.*.local` for private local
@@ -212,10 +212,10 @@ agent process first. Reload the frontend, then select **Grok** or **GPT-Live 1**
 The selection is fixed while connected. End voice before switching; switching clears the local
 conversation display and starts a fresh provider conversation on the next click.
 
-The comparison launcher enables `IMDB_AGENT_VOICE_LIVE_ENABLED=true` in addition to ordinary
+The comparison launcher enables `POPCORN_SOCIETY_AGENT_VOICE_LIVE_ENABLED=true` in addition to ordinary
 voice. GPT-Live reads `OPENAI_API_KEY` from `.secrets/movie-concierge-realtime.local.env`.
 That key needs Live access to **gpt-live-1** and Responses access to the configured text backend
-(`IMDB_AGENT_MODEL_NAME`, currently `gpt-5.6-luna`). Grok still uses its separate key and hosted
+(`POPCORN_SOCIETY_AGENT_MODEL_NAME`, currently `gpt-5.6-luna`). Grok still uses its separate key and hosted
 profile below. Ordinary `make run-agent-voice` remains Grok-only. The browser gets the enabled
 choices from `/v1/voice/models`; it never receives API keys or arbitrary provider URLs.
 
@@ -271,7 +271,7 @@ References: [GPT-Live](https://developers.openai.com/api/docs/guides/live),
 #### Hosted Grok profile
 
 The Movie Concierge connects to the hosted xAI profile `agent_ur8m5egTlRE3E8zu`.
-Override it with `IMDB_AGENT_VOICE_AGENT_ID` and restart the Python agent. The existing
+Override it with `POPCORN_SOCIETY_AGENT_VOICE_AGENT_ID` and restart the Python agent. The existing
 `.secrets/movie-concierge-voice.local.env` still supplies `XAI_API_KEY`.
 
 The profile selects the voice and model. The app supplies its own Movie Concierge instructions,
@@ -291,7 +291,7 @@ anonymous changes are not replayed automatically. Logout or an account switch cl
 the session. Social login still navigates away from the app and does not preserve a live socket.
 
 Local voice currently has a hard 300-second (five-minute) lifetime, including connection setup.
-This deadline does not reset when the user speaks or types. `IMDB_AGENT_VOICE_SESSION_SECONDS`
+This deadline does not reset when the user speaks or types. `POPCORN_SOCIETY_AGENT_VOICE_SESSION_SECONDS`
 configures it (15-900 seconds). The UI names the configured time limit when reached. A separate
 45-second inactivity deadline and model/tool usage limits can also end a session. Inactivity sends
 `standby`: the browser releases the microphone and closes the lens without opening history. Click
@@ -434,9 +434,9 @@ annotations declare them read-only, idempotent, non-destructive, and closed-worl
 Run from the repository root:
 
 ```bash
-./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"
+./gradlew test --tests "app.popcornsociety.SomeTest"
 ./gradlew test
-./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"
+./gradlew integrationTest --tests "app.popcornsociety.SomeIntegrationTest"
 ./gradlew integrationTest
 ./gradlew spotlessApply
 ./gradlew build jacocoTestReport
@@ -493,7 +493,7 @@ Live Luna evals are deliberately absent from CI and need both the environment op
 `--live` path selected by the Make target:
 
 ```bash
-IMDB_AGENT_LIVE_EVALS_ENABLED=true \
+POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true \
   make eval-agent-live AGENT_EVAL_CASE=exact-title-search
 ```
 
@@ -506,8 +506,8 @@ Use narrow checks while developing:
 cd agent
 uv run pytest tests/web/test_health.py
 uv run pytest tests/concierge/test_eval_dataset.py
-uv run ruff check src/imdb_agent/web tests/web
-uv run pyright src/imdb_agent/web tests/web
+uv run ruff check src/popcorn_society_agent/web tests/web
+uv run pyright src/popcorn_society_agent/web tests/web
 uv run lint-imports
 ```
 
@@ -643,7 +643,7 @@ Then run:
 ./gradlew liveSearchEvaluation
 ```
 
-Set `IMDB_CLONE_SEARCH_BASE_URL` when evaluating a backend other than `http://localhost:8080`.
+Set `POPCORN_SOCIETY_SEARCH_BASE_URL` when evaluating a backend other than `http://localhost:8080`.
 The live evaluation is intentionally not part of `check` because it depends on the seeded corpus and
 the local embedding service.
 
@@ -674,19 +674,19 @@ Important backend configuration areas:
 - `spring.datasource.*`
 - `opensearch.*`
 - `spring.mail.*`
-- `imdb-clone.identity.*`
-- `imdb-clone.media.storage.*`
-- `imdb-clone.notification.*`
-- `imdb-clone.recommendation.*`
+- `popcorn-society.identity.*`
+- `popcorn-society.media.storage.*`
+- `popcorn-society.notification.*`
+- `popcorn-society.recommendation.*`
 
 Durable email delivery requires `NOTIFICATION_OUTBOX_KEY`: a cryptographically random, base64-encoded
 32-byte secret, shared by all backend replicas and preserved across restarts. It is bound as
-`imdb-clone.notification.outbox.keys.primary`; `active-key` selects the key for new messages.
+`popcorn-society.notification.outbox.keys.primary`; `active-key` selects the key for new messages.
 The dev profile and automated tests have an explicitly public fixture key. Deployed profiles have
 no default and fail startup when a valid key is missing. Provision the real key through the existing
 secret/configuration mechanism before deploying this version; do not commit or log it.
 
-For rotation, add a new named entry under `imdb-clone.notification.outbox.keys`, retain the previous
+For rotation, add a new named entry under `popcorn-society.notification.outbox.keys`, retain the previous
 entry, and change `active-key` to the new name. Pending rows carry their key ID. Remove an old key
 only after no PENDING rows reference it. Ciphertext cannot be recovered if its key is lost.
 All replicas must receive both keys before any replica begins writing with the new one.
@@ -704,28 +704,28 @@ the same Message-ID, but recipient-side deduplication is not guaranteed.
 
 Frontend build/runtime variables:
 
-- `VITE_IMDB_CLONE_BACKEND_ADDRESS`
-- `VITE_IMDB_CLONE_CONCIERGE_ADDRESS` (optional; Vite proxies `/concierge-api` to port `8090` by
+- `VITE_POPCORN_SOCIETY_BACKEND_ADDRESS`
+- `VITE_POPCORN_SOCIETY_CONCIERGE_ADDRESS` (optional; Vite proxies `/concierge-api` to port `8090` by
   default)
-- `VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`
+- `VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS`
 
 Movie Concierge variables:
 
-- `IMDB_AGENT_ENVIRONMENT` (`local`, `test`, or `production`)
-- `IMDB_AGENT_VERSION`
-- `IMDB_AGENT_HOST`
-- `IMDB_AGENT_PORT`
-- `IMDB_AGENT_MODEL_BACKEND` (`openai` by default; use `fake` only for deterministic development)
-- `IMDB_AGENT_MODEL_NAME` (`gpt-5.6-luna` by default)
-- `IMDB_AGENT_SECRETS_DIRECTORY` (required in production; points to read-only projected files)
-- `IMDB_AGENT_MCP_BEARER_TOKEN` (local/test compatibility only; production ignores it in favor of
+- `POPCORN_SOCIETY_AGENT_ENVIRONMENT` (`local`, `test`, or `production`)
+- `POPCORN_SOCIETY_AGENT_VERSION`
+- `POPCORN_SOCIETY_AGENT_HOST`
+- `POPCORN_SOCIETY_AGENT_PORT`
+- `POPCORN_SOCIETY_AGENT_MODEL_BACKEND` (`openai` by default; use `fake` only for deterministic development)
+- `POPCORN_SOCIETY_AGENT_MODEL_NAME` (`gpt-5.6-luna` by default)
+- `POPCORN_SOCIETY_AGENT_SECRETS_DIRECTORY` (required in production; points to read-only projected files)
+- `POPCORN_SOCIETY_AGENT_MCP_BEARER_TOKEN` (local/test compatibility only; production ignores it in favor of
   the mounted file)
-- `IMDB_AGENT_ALLOWED_HOSTS` (JSON list; production forbids wildcard hosts)
-- `IMDB_AGENT_MAX_CONCURRENT_RUNS`, `IMDB_AGENT_MAX_CONVERSATIONS`, and
-  `IMDB_AGENT_MAX_REQUEST_BODY_BYTES`
-- `IMDB_AGENT_PROJECT_COST_LIMIT_USD` (cannot exceed `$20`)
-- `IMDB_AGENT_RUN_COST_LIMIT_USD`, model/tool/token limits, and timeout settings
-- `IMDB_AGENT_LIVE_EVALS_ENABLED` (defaults to `false` and still requires the `--live` CLI flag)
+- `POPCORN_SOCIETY_AGENT_ALLOWED_HOSTS` (JSON list; production forbids wildcard hosts)
+- `POPCORN_SOCIETY_AGENT_MAX_CONCURRENT_RUNS`, `POPCORN_SOCIETY_AGENT_MAX_CONVERSATIONS`, and
+  `POPCORN_SOCIETY_AGENT_MAX_REQUEST_BODY_BYTES`
+- `POPCORN_SOCIETY_AGENT_PROJECT_COST_LIMIT_USD` (cannot exceed `$20`)
+- `POPCORN_SOCIETY_AGENT_RUN_COST_LIMIT_USD`, model/tool/token limits, and timeout settings
+- `POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED` (defaults to `false` and still requires the `--live` CLI flag)
 
 Java MCP production variables/config-tree entries:
 
@@ -791,7 +791,7 @@ Movie Concierge environment or dependency setup fails:
   Python 3.14.
 - Run `make agent-sync`; do not edit `uv.lock` manually.
 - Invalid settings intentionally fail with a redacted `invalid Movie Concierge configuration`
-  message. Check only the relevant `IMDB_AGENT_*` values without printing secrets.
+  message. Check only the relevant `POPCORN_SOCIETY_AGENT_*` values without printing secrets.
 
 ## Verification Matrix
 
@@ -805,15 +805,15 @@ Movie Concierge environment or dependency setup fails:
 | Agent locked install | `make agent-sync` |
 | Agent format/lint/type/architecture/tests | `make verify-agent` |
 | Agent targeted test | `cd agent && uv run pytest tests/path/test_file.py` |
-| Backend targeted fast test | `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"` |
+| Backend targeted fast test | `./gradlew test --tests "app.popcornsociety.SomeTest"` |
 | Backend fast tests | `./gradlew test` |
-| Backend targeted integration test | `./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"` |
+| Backend targeted integration test | `./gradlew integrationTest --tests "app.popcornsociety.SomeIntegrationTest"` |
 | Backend integration tests | `./gradlew integrationTest` |
 | All backend tests | `./gradlew test integrationTest` |
 | Backend package/check | `./gradlew build jacocoTestReport` |
 | Backend formatting | `./gradlew spotlessApply` |
-| Backend image | `docker build --platform linux/amd64 -t imdb-clone-backend .` |
-| Frontend image | `cd frontend && docker build --platform linux/amd64 -t imdb-clone-frontend .` |
+| Backend image | `docker build --platform linux/amd64 -t popcorn-society-backend:local .` |
+| Frontend image | `cd frontend && docker build --platform linux/amd64 -t popcorn-society-frontend:local .` |
 | Agent image | `make docker-build-agent` |
 | Agent image smoke | `make container-smoke-agent` |
 | k3s manifest render | `kubectl kustomize infrastructure/clusters/home/apps >/tmp/imdb-clone-home-apps.yaml` |

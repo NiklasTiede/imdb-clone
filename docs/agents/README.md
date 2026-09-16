@@ -96,9 +96,9 @@ Implementation checklist:
 Verification options:
 
 ```bash
-./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"
+./gradlew test --tests "app.popcornsociety.SomeTest"
 ./gradlew test
-./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"
+./gradlew integrationTest --tests "app.popcornsociety.SomeIntegrationTest"
 ./gradlew integrationTest
 ./gradlew spotlessApply
 ./gradlew build jacocoTestReport
@@ -158,7 +158,7 @@ Before editing:
 
 Implementation checklist:
 
-- Keep `imdb_agent.concierge` independent of FastAPI, Pydantic AI, and concrete Adapters.
+- Keep `popcorn_society_agent.concierge` independent of FastAPI, Pydantic AI, and concrete Adapters.
 - Keep provider, MCP, persistence, and telemetry types behind their Adapters.
 - Add strict validation at external Seams and keep secret values out of errors, logs, and traces.
 - Add deterministic tests or synthetic eval cases before live-provider checks.
@@ -169,8 +169,8 @@ Verification options:
 
 ```bash
 cd agent && uv run pytest tests/path/test_file.py
-cd agent && uv run ruff check src/imdb_agent/path tests/path
-cd agent && uv run pyright src/imdb_agent/path tests/path
+cd agent && uv run ruff check src/popcorn_society_agent/path tests/path
+cd agent && uv run pyright src/popcorn_society_agent/path tests/path
 make verify-agent
 make docker-build-agent
 make container-smoke-agent

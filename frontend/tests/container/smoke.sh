@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-readonly IMAGE="${FRONTEND_IMAGE:-imdb-clone-frontend:local}"
+readonly IMAGE="${FRONTEND_IMAGE:-popcorn-society-frontend:local}"
 readonly PLATFORM="${FRONTEND_DOCKER_PLATFORM:-linux/amd64}"
 readonly PORT="${FRONTEND_SMOKE_PORT:-18080}"
-readonly CONTAINER_NAME="imdb-clone-frontend-smoke-$$"
+readonly CONTAINER_NAME="popcorn-society-frontend-smoke-$$"
 
 cleanup() {
   docker rm --force --volumes "${CONTAINER_NAME}" >/dev/null 2>&1 || true

@@ -7,7 +7,7 @@ Application replay additionally uses two synthetic Samantha recordings in the sa
 
 `replay_session.py` checks either the direct open command or the original runtime question followed
 by “Open it” through the real application WebSocket and Java catalog. Run it only with `--live`
-and `IMDB_AGENT_LIVE_EVALS_ENABLED=true`; see the agent README for limits and artifact retention.
+and `POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED=true`; see the agent README for limits and artifact retention.
 Reports include `first_audio_after_speech_end_seconds` keyed by turn. This starts at the
 provider's speech-end event and ends at the first received PCM packet; microphone/VAD delay and
 the browser's playback buffer are excluded. Compare first and subsequent turns separately.

@@ -22,9 +22,9 @@ Build outputs from checks are allowed. Source changes are not.
 - Deployment: local Compose plus k3s GitOps manifests under `infrastructure/clusters/home/apps`.
 - Observability: frontend, Java, Python, and platform signals through Prometheus, Grafana, Alloy,
   Loki, Tempo, and Pyroscope.
-- Backend source: `src/main/java/com/thecodinglab/imdbclone`.
+- Backend source: `src/main/java/app/popcornsociety`.
 - Backend modules are Spring Modulith application modules under the root package, with `api`, `web`, and `internal` package roles.
-- Agent source: `agent/src/imdb_agent`; its nested guide and ADR 0001 define the accepted
+- Agent source: `agent/src/popcorn_society_agent`; its nested guide and ADR 0001 define the accepted
   Module/Adapter direction and cross-runtime ownership.
 - Flyway migrations: `src/main/resources/db/migration`.
 - Test data: `src/test/resources/sql/test-data.sql`.
@@ -63,8 +63,8 @@ If the user does not specify a mode, default to `quick`. If they name a concern,
    read `agent/AGENTS.md` and `docs/adr/0001-movie-concierge-architecture.md`. Prefer `rg`, `find`,
    `sed`, build metadata, and existing tests.
 4. Run narrow non-mutating checks when they add confidence. Examples:
-   - `./gradlew test --tests "com.thecodinglab.imdbclone.integration.repository.DatabaseSchemaTest"`
-   - `./gradlew test --tests "com.thecodinglab.imdbclone.ModulithArchitectureTest"`
+   - `./gradlew test --tests "app.popcornsociety.integration.repository.DatabaseSchemaTest"`
+   - `./gradlew test --tests "app.popcornsociety.ModulithArchitectureTest"`
    - `./gradlew test`
    - `cd frontend && yarn run lint`
    - `cd frontend && yarn test frontendArchitecture.test.ts`

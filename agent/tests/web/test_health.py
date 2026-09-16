@@ -6,8 +6,8 @@ import structlog
 from fastapi.testclient import TestClient
 from pytest import fixture
 
-from imdb_agent.bootstrap import create_app
-from imdb_agent.settings import DeploymentEnvironment, ModelBackend, Settings
+from popcorn_society_agent.bootstrap import create_app
+from popcorn_society_agent.settings import DeploymentEnvironment, ModelBackend, Settings
 
 if TYPE_CHECKING:
     from collections.abc import Iterator

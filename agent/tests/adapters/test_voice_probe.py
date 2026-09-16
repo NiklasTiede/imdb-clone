@@ -26,7 +26,7 @@ from pydantic_ai.realtime.codec import (
 )
 from pydantic_ai.realtime.profiles import RealtimeModelProfile
 
-from imdb_agent.adapters.voice_probe import (
+from popcorn_society_agent.adapters.voice_probe import (
     BYTES_PER_SECOND,
     MAX_OUTPUT_SECONDS,
     SAMPLE_RATE,
@@ -35,7 +35,7 @@ from imdb_agent.adapters.voice_probe import (
     load_probe_audio,
     run_voice_probe,
 )
-from imdb_agent.voice_probe_cli import FIXTURE
+from popcorn_society_agent.voice_probe_cli import FIXTURE
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, AsyncIterator, Sequence

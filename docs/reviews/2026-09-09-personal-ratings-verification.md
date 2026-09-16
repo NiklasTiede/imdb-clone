@@ -23,7 +23,7 @@ Main implementation locations:
 - `engagement/api/AssistantRatings.java`, `AssistantActionReceipt.java`, `AssistantWatchlist.java`.
 - `engagement/internal/AssistantActionReceipts.java`, `AssistantRatingActions.java`, `AssistantWatchlists.java`.
 - `assistant/internal/mcp/RatingMcpTools.java`, `PersonalToolAuthorization.java`, `PersonalActionResult.java`.
-- `agent/src/imdb_agent/concierge/personal.py` and `adapters/personal_tools.py`; both runners share these.
+- `agent/src/popcorn_society_agent/concierge/personal.py` and `adapters/personal_tools.py`; both runners share these.
 - `frontend/src/features/concierge/components/ConciergeExperience.tsx` and `model/concierge.ts`.
 
 ## Automated verification

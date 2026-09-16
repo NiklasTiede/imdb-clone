@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import SecretStr
 
-from imdb_agent.adapters.fakes import FakeConciergeRunner, fake_arrival
-from imdb_agent.adapters.memory import InMemoryConversationStore, InMemoryCostLedger
-from imdb_agent.concierge.events import (
+from popcorn_society_agent.adapters.fakes import FakeConciergeRunner, fake_arrival
+from popcorn_society_agent.adapters.memory import InMemoryConversationStore, InMemoryCostLedger
+from popcorn_society_agent.concierge.events import (
     CompletionEvent,
     CompletionOutcome,
     ErrorEvent,
@@ -19,14 +19,14 @@ from imdb_agent.concierge.events import (
     UsageEvent,
     UsageSummary,
 )
-from imdb_agent.concierge.ports import ConversationNotFoundError, RunRequest
-from imdb_agent.concierge.service import ConciergeRunError, ConciergeService
-from imdb_agent.concierge.tools import ToolName
+from popcorn_society_agent.concierge.ports import ConversationNotFoundError, RunRequest
+from popcorn_society_agent.concierge.service import ConciergeRunError, ConciergeService
+from popcorn_society_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
-    from imdb_agent.concierge.events import ConciergeEvent, RunnerEvent
+    from popcorn_society_agent.concierge.events import ConciergeEvent, RunnerEvent
 
 pytestmark = pytest.mark.asyncio
 
@@ -461,7 +461,7 @@ async def test_conversation_store_evicts_oldest_inactive_session_at_bound() -> N
 
 
 async def test_opened_movie_is_the_next_turn_context_even_after_multiple_cards() -> None:
-    from imdb_agent.concierge.events import OpenMovieAction
+    from popcorn_society_agent.concierge.events import OpenMovieAction
 
     class SelectedMovieRunner:
         async def stream(self, request: RunRequest) -> AsyncIterator[RunnerEvent]:

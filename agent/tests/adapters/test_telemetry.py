@@ -10,7 +10,7 @@ from opentelemetry.sdk.trace.export import (
 )
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from imdb_agent.adapters.telemetry import (
+from popcorn_society_agent.adapters.telemetry import (
     AttributeFilteringSpanExporter,
     TelemetryRuntime,
     add_profile_correlation,
@@ -18,7 +18,7 @@ from imdb_agent.adapters.telemetry import (
     privacy_safe_instrumentation_settings,
     privacy_safe_server_request_hook,
 )
-from imdb_agent.settings import DeploymentEnvironment, Settings
+from popcorn_society_agent.settings import DeploymentEnvironment, Settings
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

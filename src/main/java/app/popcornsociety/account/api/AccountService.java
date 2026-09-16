@@ -1,0 +1,23 @@
+package app.popcornsociety.account.api;
+
+import app.popcornsociety.shared.api.MessageResponse;
+import app.popcornsociety.shared.security.UserPrincipal;
+import java.util.List;
+
+public interface AccountService {
+
+  AccountSummaryResponse getCurrentAccount(UserPrincipal currentAccount);
+
+  AccountProfile getCurrentAccountProfile(UserPrincipal currentAccount);
+
+  PublicAccountProfile getAccountProfile(String username);
+
+  List<PublicAccountSummary> getPublicAccountSummaries(List<Long> accountIds);
+
+  AccountCreated createAccount(CreateAccountRequest request, UserPrincipal currentAccount);
+
+  UpdatedAccountProfile updateAccountProfile(
+      String username, AccountRecord accountRecord, UserPrincipal currentAccount);
+
+  MessageResponse deleteAccount(String username, UserPrincipal currentAccount);
+}

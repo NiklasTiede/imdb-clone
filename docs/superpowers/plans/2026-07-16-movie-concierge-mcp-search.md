@@ -51,7 +51,7 @@ Add the WebMVC MCP server starter through the existing Spring AI BOM. Configure:
 ```properties
 spring.ai.mcp.server.protocol=STATELESS
 spring.ai.mcp.server.type=SYNC
-spring.ai.mcp.server.name=imdb-clone-domain-tools
+spring.ai.mcp.server.name=popcorn-society-domain-tools
 spring.ai.mcp.server.capabilities.tool=true
 spring.ai.mcp.server.capabilities.resource=false
 spring.ai.mcp.server.capabilities.prompt=false
@@ -69,11 +69,11 @@ snapshots, or documentation examples intended for production.
 
 **Files:**
 
-- Create: `src/main/java/com/thecodinglab/imdbclone/catalog/api/MovieSearch.java`
+- Create: `src/main/java/app/popcornsociety/catalog/api/MovieSearch.java`
 - Modify: Catalog search request/result types to expose the `assistant` named Interface
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/web/SearchController.java`
-- Modify: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/OpenSearchMovieSearchService.java`
-- Delete: `src/main/java/com/thecodinglab/imdbclone/catalog/internal/search/MovieSearchService.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/web/SearchController.java`
+- Modify: `src/main/java/app/popcornsociety/catalog/internal/search/OpenSearchMovieSearchService.java`
+- Delete: `src/main/java/app/popcornsociety/catalog/internal/search/MovieSearchService.java`
 
 `MovieSearch` exposes only:
 
@@ -89,10 +89,10 @@ documents, query builders, embeddings, and semantic diagnostics remain internal 
 
 **Files:**
 
-- Create: `src/main/java/com/thecodinglab/imdbclone/assistant/package-info.java`
+- Create: `src/main/java/app/popcornsociety/assistant/package-info.java`
 - Create MCP tool, result projection, metrics, and safe exception classes under
   `assistant/internal/mcp`
-- Modify: `src/test/java/com/thecodinglab/imdbclone/ModulithArchitectureTest.java`
+- Modify: `src/test/java/app/popcornsociety/ModulithArchitectureTest.java`
 
 Inputs:
 
@@ -137,7 +137,7 @@ The existing browser/session chain remains unchanged for REST routes.
 
 **Files:**
 
-- Add focused unit tests under `src/test/java/com/thecodinglab/imdbclone/assistant`
+- Add focused unit tests under `src/test/java/app/popcornsociety/assistant`
 - Add MCP JSON-RPC integration coverage using the real Spring WebMVC transport
 - Modify architecture tests for the new Module and named Interface
 

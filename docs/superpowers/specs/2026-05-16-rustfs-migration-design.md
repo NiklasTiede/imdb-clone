@@ -22,7 +22,7 @@ Runtime MinIO references exist in these areas:
   `infrastructure/deployment/production/docker-compose.stateful-apps.yaml`
 - Production backend and frontend storage addresses:
   `infrastructure/deployment/production/docker-compose.stateless-apps.yaml`
-- Backend storage code under `src/main/java/com/thecodinglab/imdbclone/media`
+- Backend storage code under `src/main/java/app/popcornsociety/media`
 - Backend media tests and shared containers under `src/test/java`
 - Frontend public image URL helpers under `frontend/src/shared/media`
 - Seed scripts and docs under `infrastructure/minio`, `Makefile`, `README.md`,
@@ -65,7 +65,7 @@ production compose files:
 - Console enablement: `RUSTFS_CONSOLE_ENABLE=true`
 
 Backend application properties keep the stable prefix
-`imdb-clone.media.storage.*`. These properties describe the application contract,
+`popcorn-society.media.storage.*`. These properties describe the application contract,
 not the product implementation. Metadata and comments should describe the values
 as S3-compatible object storage instead of MinIO-specific storage.
 
@@ -79,8 +79,8 @@ The final backend client implementation should use AWS SDK for Java 2.x:
 - a fixed signing region such as `us-east-1`, because AWS SDK v2 requires a
   region even when using a custom endpoint
 
-The frontend should move from `VITE_IMDB_CLONE_MINIO_ADDRESS` to
-`VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`. During migration, the helper should
+The frontend should move from `VITE_POPCORN_SOCIETY_MINIO_ADDRESS` to
+`VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS`. During migration, the helper should
 accept the new variable first and fall back to the old variable, then to
 `http://localhost:9000`. This keeps local setups and Playwright config from
 breaking while the deployment variables are updated.
@@ -92,7 +92,7 @@ layout.
 
 ## Data Flow
 
-The backend starts with `imdb-clone.media.storage.uri` pointing to RustFS. On
+The backend starts with `popcorn-society.media.storage.uri` pointing to RustFS. On
 media infrastructure setup, it checks for the `imdb-clone` bucket, creates it if
 missing, and applies the existing public read policy for:
 
@@ -135,7 +135,7 @@ Keep existing integration assertions for:
 - Account deletion and movie deletion clean up corresponding media objects
 
 Add or update frontend tests so image URL helpers prefer
-`VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS`, still support the old MinIO env var as
+`VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS`, still support the old MinIO env var as
 a temporary fallback, and fall back to `http://localhost:9000`.
 
 After the AWS SDK v2 client migration, media integration tests should assert

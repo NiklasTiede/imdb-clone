@@ -1,0 +1,16 @@
+package app.popcornsociety.catalog.api;
+
+import app.popcornsociety.shared.api.PagedResponse;
+import java.util.Collection;
+import java.util.List;
+import org.springframework.modulith.NamedInterface;
+
+@NamedInterface({"reference", "assistant"})
+public interface MovieReferenceService {
+
+  MovieRecord findMovieById(Long movieId);
+
+  List<MovieRecord> findMoviesByIds(Collection<Long> movieIds);
+
+  PagedResponse<MovieRecord> findMoviesByIds(List<Long> movieIds, int page, int size);
+}

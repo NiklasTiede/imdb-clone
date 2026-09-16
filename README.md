@@ -395,9 +395,9 @@ request without publishing new application images.
 ## Project Structure
 
 ```text
-src/main/java/com/thecodinglab/imdbclone   Spring Boot backend modules
+src/main/java/app/popcornsociety   Spring Boot backend modules
 frontend/src                               React frontend source
-agent/src/imdb_agent                       Python Movie Concierge modules
+agent/src/popcorn_society_agent                       Python Movie Concierge modules
 compose.yaml                               Local Docker Compose services
 infrastructure/clusters/home               k3s GitOps manifests
 infrastructure/movie-seed                  Movie and media seed pipeline

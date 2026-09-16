@@ -13,12 +13,12 @@ Run from the repository root.
 
 | Task | Command |
 | --- | --- |
-| One fast backend test | `./gradlew test --tests "com.thecodinglab.imdbclone.SomeTest"` |
+| One fast backend test | `./gradlew test --tests "app.popcornsociety.SomeTest"` |
 | Fast backend behavior tests | `./gradlew test` |
 | Semantic architecture rules and negative fixtures | `./gradlew architectureTest` |
 | All fast backend checks | `./gradlew test architectureTest` |
 | Isolated PostgreSQL module tests | `./gradlew integrationTest --tests '*ModuleIntegrationTest'` |
-| One backend integration test | `./gradlew integrationTest --tests "com.thecodinglab.imdbclone.SomeIntegrationTest"` |
+| One backend integration test | `./gradlew integrationTest --tests "app.popcornsociety.SomeIntegrationTest"` |
 | All backend integration tests | `./gradlew integrationTest` |
 | All backend tests | `./gradlew architectureTest test integrationTest` |
 | Format backend code | `./gradlew spotlessApply` |
@@ -149,8 +149,8 @@ Expected local URLs:
 
 | Task | Command |
 | --- | --- |
-| Backend image | `docker build --platform linux/amd64 -t imdb-clone-backend .` |
-| Frontend image | `cd frontend && docker build --platform linux/amd64 -t imdb-clone-frontend .` |
+| Backend image | `docker build --platform linux/amd64 -t popcorn-society-backend:local .` |
+| Frontend image | `cd frontend && docker build --platform linux/amd64 -t popcorn-society-frontend:local .` |
 | Agent image | `make docker-build-agent` |
 | Agent container smoke | `make container-smoke-agent` |
 

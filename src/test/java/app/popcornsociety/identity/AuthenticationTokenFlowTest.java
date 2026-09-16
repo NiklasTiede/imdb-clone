@@ -1,0 +1,224 @@
+package app.popcornsociety.identity;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import app.popcornsociety.account.internal.persistence.Account;
+import app.popcornsociety.account.internal.persistence.AccountRepository;
+import app.popcornsociety.identity.api.AuthenticationService;
+import app.popcornsociety.identity.api.PasswordResetRequest;
+import app.popcornsociety.identity.api.RegistrationRequest;
+import app.popcornsociety.identity.api.events.EmailConfirmationRequested;
+import app.popcornsociety.identity.api.events.PasswordResetRequested;
+import app.popcornsociety.identity.internal.persistence.VerificationToken;
+import app.popcornsociety.identity.internal.persistence.VerificationTokenRepository;
+import app.popcornsociety.identity.internal.persistence.VerificationTypeEnum;
+import app.popcornsociety.notification.internal.EmailNotificationService;
+import app.popcornsociety.shared.api.MessageResponse;
+import app.popcornsociety.support.BaseContainers;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.StreamSupport;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.modulith.test.AssertablePublishedEvents;
+import org.springframework.modulith.test.PublishedEventsExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+@SpringBootTest(properties = "popcorn-society.identity.email-verification-enabled=true")
+@AutoConfigureMockMvc
+@ExtendWith(PublishedEventsExtension.class)
+class AuthenticationTokenFlowTest extends BaseContainers {
+
+  @Autowired private AuthenticationService authenticationService;
+
+  @Autowired private MockMvc mockMvc;
+
+  @Autowired private AccountRepository accountRepository;
+
+  @Autowired private VerificationTokenRepository verificationTokenRepository;
+
+  @Autowired private PasswordEncoder passwordEncoder;
+
+  @Autowired private JdbcTemplate jdbcTemplate;
+
+  @MockitoBean private EmailNotificationService emailNotifications;
+
+  private final ObjectMapper objectMapper = new ObjectMapper();
+
+  @Test
+  void registerUser_withEmailVerificationEnabled_createsDisabledAccountAndConfirmationToken(
+      AssertablePublishedEvents events) {
+    MessageResponse response =
+        authenticationService.registerUser(
+            new RegistrationRequest(
+                "Needs_Confirmation", "Needs.Confirmation@example.com", "Encrypted!Pa55worD"));
+
+    Account account = accountRepository.getAccountByUsername("needs_confirmation");
+    String rawToken =
+        StreamSupport.stream(events.ofType(EmailConfirmationRequested.class).spliterator(), false)
+            .filter(event -> event.emailAddress().equals("needs.confirmation@example.com"))
+            .map(event -> tokenFromLink(event.link()))
+            .findFirst()
+            .orElseThrow();
+    VerificationToken token =
+        onlyTokenForAccount(account.getId(), VerificationTypeEnum.EMAIL_CONFIRMATION);
+
+    assertThat(account.getEnabled()).isFalse();
+    assertThat(response.message()).isEqualTo("Check your email to activate your account.");
+    assertThat(token.getConfirmedAtInUtc()).isNull();
+    assertThat(token.getExpiryDateInUtc()).isNotNull();
+    assertThat(persistedTokenValues()).doesNotContain(rawToken);
+    assertThat(auditEventTypesFor(account.getId()))
+        .contains("LOCAL_CREDENTIAL_CREATED", "VERIFICATION_TOKEN_ISSUED");
+    assertThat(auditDetails()).noneMatch(details -> details.contains(rawToken));
+
+    assertThat(
+            events
+                .ofType(EmailConfirmationRequested.class)
+                .matching(
+                    event ->
+                        event.emailAddress().equals("needs.confirmation@example.com")
+                            && event.username().equals("needs_confirmation")
+                            && event.link().contains(rawToken)))
+        .hasSize(1);
+  }
+
+  @Test
+  void confirmEmailAddress_enablesAccountAndMarksTokenConfirmed(AssertablePublishedEvents events) {
+    authenticationService.registerUser(
+        new RegistrationRequest(
+            "Confirmable_User", "confirmable@example.com", "Encrypted!Pa55worD"));
+    String rawToken =
+        StreamSupport.stream(events.ofType(EmailConfirmationRequested.class).spliterator(), false)
+            .filter(event -> event.emailAddress().equals("confirmable@example.com"))
+            .findFirst()
+            .map(EmailConfirmationRequested::link)
+            .map(AuthenticationTokenFlowTest::tokenFromLink)
+            .orElseThrow();
+
+    authenticationService.confirmEmailAddress(rawToken);
+
+    Account confirmedAccount = accountRepository.getAccountByUsername("confirmable_user");
+    VerificationToken confirmedToken =
+        onlyTokenForAccount(confirmedAccount.getId(), VerificationTypeEnum.EMAIL_CONFIRMATION);
+    assertThat(confirmedAccount.getEnabled()).isTrue();
+    assertThat(confirmedToken.getConfirmedAtInUtc()).isNotNull();
+    assertThat(confirmedToken.getConsumedAtInUtc()).isNotNull();
+    assertThat(confirmedToken.getTokenHash()).isNotEqualTo(rawToken);
+    assertThat(auditEventTypesFor(confirmedAccount.getId()))
+        .contains("VERIFICATION_TOKEN_CONSUMED");
+  }
+
+  @Test
+  void resetAndSaveNewPassword_createsResetTokenAndUpdatesPassword(
+      AssertablePublishedEvents events) {
+    authenticationService.resetPassword("two@web.com");
+
+    VerificationToken token = onlyTokenForAccount(2L, VerificationTypeEnum.PASSWORD_RESET);
+    String rawToken =
+        StreamSupport.stream(events.ofType(PasswordResetRequested.class).spliterator(), false)
+            .filter(event -> event.emailAddress().equals("two@web.com"))
+            .map(event -> tokenFromLink(event.link()))
+            .findFirst()
+            .orElseThrow();
+    assertThat(token.getConfirmedAtInUtc()).isNotNull();
+    assertThat(persistedTokenValues()).doesNotContain(rawToken);
+    assertThat(
+            events
+                .ofType(PasswordResetRequested.class)
+                .matching(
+                    event ->
+                        event.emailAddress().equals("two@web.com")
+                            && event.username().equals("test_user_two")
+                            && event.link().contains(rawToken)))
+        .hasSize(1);
+
+    authenticationService.saveNewPassword(new PasswordResetRequest(rawToken, "Changed!Pa55worD"));
+
+    String localCredentialHash =
+        jdbcTemplate.queryForObject(
+            "select password_hash from local_credential where account_id = 2", String.class);
+    assertThat(passwordEncoder.matches("Changed!Pa55worD", localCredentialHash)).isTrue();
+    assertThat(auditEventTypesFor(2L))
+        .contains(
+            "PASSWORD_RESET_TOKEN_ISSUED",
+            "LOCAL_CREDENTIAL_PASSWORD_CHANGED",
+            "PASSWORD_RESET_TOKEN_CONSUMED");
+    assertThat(auditDetails()).noneMatch(details -> details.contains(rawToken));
+  }
+
+  @Test
+  void saveNewPassword_acceptsGeneratedResetTokenThroughWebValidation(
+      AssertablePublishedEvents events) throws Exception {
+    authenticationService.resetPassword("two@web.com");
+    String rawToken =
+        StreamSupport.stream(events.ofType(PasswordResetRequested.class).spliterator(), false)
+            .filter(event -> event.emailAddress().equals("two@web.com"))
+            .map(event -> tokenFromLink(event.link()))
+            .findFirst()
+            .orElseThrow();
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/password-resets")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    objectMapper.writeValueAsString(
+                        new PasswordResetRequest(rawToken, "Changed!Pa55worD"))))
+        .andExpect(status().isOk());
+  }
+
+  private VerificationToken onlyTokenForAccount(Long accountId, VerificationTypeEnum type) {
+    return verificationTokenRepository.findAll().stream()
+        .filter(token -> token.getAccountId().equals(accountId))
+        .filter(token -> token.getVerificationType() == type)
+        .reduce((first, second) -> second)
+        .orElseThrow();
+  }
+
+  private java.util.List<String> persistedTokenValues() {
+    return jdbcTemplate.queryForList(
+        """
+        select token from verification_token where token is not null
+        union all
+        select token_hash from verification_token where token_hash is not null
+        """,
+        String.class);
+  }
+
+  private java.util.List<String> auditEventTypesFor(Long accountId) {
+    return jdbcTemplate.queryForList(
+        "select event_type from security_audit_event where account_id = ?",
+        String.class,
+        accountId);
+  }
+
+  private java.util.List<String> auditDetails() {
+    return jdbcTemplate.queryForList(
+        "select details::text from security_audit_event", String.class);
+  }
+
+  private static String tokenFromLink(String link) {
+    String query = URI.create(link).getQuery();
+    for (String pair : query.split("&", -1)) {
+      String[] parts = pair.split("=", 2);
+      if (parts.length == 2 && parts[0].equals("token")) {
+        return URLDecoder.decode(parts[1], StandardCharsets.UTF_8);
+      }
+    }
+    throw new IllegalArgumentException("Missing token query parameter in link");
+  }
+}

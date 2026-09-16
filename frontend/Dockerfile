@@ -1,5 +1,5 @@
-# docker build --platform linux/amd64 -t imdb-clone-frontend .
-# docker run --name imdb-clone-frontend -p 3000:80 --restart=always -d imdb-clone-frontend:latest
+# Build from the repository root with make docker-build-frontend.
+# Run locally with make docker-run-frontend (port 3000 -> 8080).
 
 # Stage 1: Install dependencies and build the application
 FROM node:24-alpine AS build

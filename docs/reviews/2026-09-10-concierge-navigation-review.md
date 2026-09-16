@@ -63,7 +63,7 @@ Executed from the repository root unless a command changes directory:
 | Check | Result |
 | --- | --- |
 | `make verify-agent` | Passed: format, lint, strict types, import contracts, 3 architecture tests, 258 tests, 27 deterministic eval cases |
-| `cd agent && uv run pytest tests/concierge/test_navigation.py --cov=imdb_agent.concierge.navigation --cov-branch --cov-report=term-missing` | 34 passed; navigation Module: 53/53 statements and 12/12 branches covered |
+| `cd agent && uv run pytest tests/concierge/test_navigation.py --cov=popcorn_society_agent.concierge.navigation --cov-branch --cov-report=term-missing` | 34 passed; navigation Module: 53/53 statements and 12/12 branches covered |
 | `cd frontend && yarn run lint` | Passed |
 | `cd frontend && yarn test --maxWorkers=2` | 361 passed across 107 files, including architecture tests |
 | `cd frontend && yarn build` | Passed, including application/tooling/E2E typechecks; existing bundle/lazy-import warnings remain |

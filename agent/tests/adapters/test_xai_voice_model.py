@@ -12,7 +12,7 @@ from pydantic_ai.realtime.codec import AudioDelta, CancelResponse
 from pydantic_ai.realtime.xai import XaiRealtimeModelSettings
 from pydantic_ai.tools import ToolDefinition
 
-from imdb_agent.adapters.xai_voice_model import ConciergeXaiVoiceModel
+from popcorn_society_agent.adapters.xai_voice_model import ConciergeXaiVoiceModel
 
 
 @pytest.mark.asyncio

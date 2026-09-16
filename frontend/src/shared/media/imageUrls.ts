@@ -16,6 +16,7 @@ export enum MovieBackdropImageSize {
 }
 
 const getObjectStorageHost = () =>
+  import.meta.env.VITE_POPCORN_SOCIETY_OBJECT_STORAGE_ADDRESS ??
   import.meta.env.VITE_IMDB_CLONE_OBJECT_STORAGE_ADDRESS ??
   "http://localhost:9000";
 

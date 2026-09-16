@@ -55,14 +55,14 @@ convention with the `branch-name` job.
 
 ## Project Map
 
-- `src/main/java/com/thecodinglab/imdbclone/` - backend modules.
+- `src/main/java/app/popcornsociety/` - backend modules.
 - `src/main/resources/config/` - Spring configuration.
 - `src/main/resources/db/migration/` - Flyway migrations.
-- `src/test/java/com/thecodinglab/imdbclone/` - backend tests and Testcontainers support.
+- `src/test/java/app/popcornsociety/` - backend tests and Testcontainers support.
 - `frontend/src/app/` - React providers and routes.
 - `frontend/src/features/` - feature slices.
 - `frontend/src/shared/` - shared API, auth, hooks, layout, media, and UI utilities.
-- `frontend/src/client/imdb-clone-backend.yaml` - checked-in OpenAPI spec.
+- `frontend/src/client/popcorn-society-backend.yaml` - checked-in OpenAPI spec.
 - `frontend/src/client/movies/generator-output/` - generated Axios client; do not edit manually.
 - `frontend/e2e/` - Playwright tests.
 - `agent/` - Python Movie Concierge deployable; read `agent/AGENTS.md` before changing it.
@@ -99,9 +99,9 @@ Frontend:
 Agent:
 
 - Read `agent/AGENTS.md` before editing the Python deployable.
-- Keep product policy and Interfaces in `imdb_agent.concierge`, inbound FastAPI code in
-  `imdb_agent.web`, concrete outbound Adapters in `imdb_agent.adapters`, and assembly in
-  `imdb_agent.bootstrap`.
+- Keep product policy and Interfaces in `popcorn_society_agent.concierge`, inbound FastAPI code in
+  `popcorn_society_agent.web`, concrete outbound Adapters in `popcorn_society_agent.adapters`, and assembly in
+  `popcorn_society_agent.bootstrap`.
 - Access Java-owned domain behavior only through MCP; never query its PostgreSQL database or
   OpenSearch index directly.
 - Keep tests and evals deterministic and provider-independent by default.

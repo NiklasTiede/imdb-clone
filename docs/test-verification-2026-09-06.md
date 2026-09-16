@@ -7,11 +7,11 @@ configuration and container checks. No production deployment was performed.
 
 | Check | Result | Command |
 | --- | --- | --- |
-| Backend full build, formatting and unchanged coverage gate | Passed; 395 tests passed, one opt-in live-search test skipped in this invocation | `IMDB_CLONE_TEST_LLAMA_CPP=true ./gradlew build jacocoTestReport --rerun-tasks` |
+| Backend full build, formatting and unchanged coverage gate | Passed; 395 tests passed, one opt-in live-search test skipped in this invocation | `POPCORN_SOCIETY_TEST_LLAMA_CPP=true ./gradlew build jacocoTestReport --rerun-tasks` |
 | Backend fast behavior tests | 156 passed | Included in the full build |
 | Backend semantic architecture tests | 27 passed | Included in the full build |
 | Backend integration tests, including real local embedding | 212 passed, none skipped | Included in the full build |
-| Live search relevance and latency | Passed; 12 query cases | `./gradlew liveSearchEvaluation --rerun-tasks` with `IMDB_CLONE_SEARCH_BASE_URL` pointing to the isolated test backend |
+| Live search relevance and latency | Passed; 12 query cases | `./gradlew liveSearchEvaluation --rerun-tasks` with `POPCORN_SOCIETY_SEARCH_BASE_URL` pointing to the isolated test backend |
 | Frontend behavior tests | 319 passed across 102 files | `cd frontend && yarn test` |
 | Frontend lint, all TypeScript checks and production build | Passed | `cd frontend && yarn lint && yarn build` |
 | Desktop/mobile Chromium E2E | 59 passed, one platform-specific skip | `PLAYWRIGHT_HTML_OPEN=never yarn e2e --workers=2 --reporter=list,html` from `frontend` |

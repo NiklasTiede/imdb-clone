@@ -9,15 +9,19 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from imdb_agent.adapters.logging import configure_logging
-from imdb_agent.concierge.voice import VoiceCommand, VoiceEvent
-from imdb_agent.concierge.voice_quota import MemoryVoiceQuota, VoiceGrant, VoiceQuotaUnavailable
-from imdb_agent.web.voice import create_voice_router
+from popcorn_society_agent.adapters.logging import configure_logging
+from popcorn_society_agent.concierge.voice import VoiceCommand, VoiceEvent
+from popcorn_society_agent.concierge.voice_quota import (
+    MemoryVoiceQuota,
+    VoiceGrant,
+    VoiceQuotaUnavailable,
+)
+from popcorn_society_agent.web.voice import create_voice_router
 
 if TYPE_CHECKING:
     from pydantic import SecretStr
 
-    from imdb_agent.concierge.voice import VoiceTransport
+    from popcorn_society_agent.concierge.voice import VoiceTransport
 
 
 class EchoVoice:
@@ -446,7 +450,7 @@ def test_provider_value_errors_and_output_limits_are_not_invalid_browser_message
 
 
 def test_usage_limit_is_explained_without_exposing_provider_errors() -> None:
-    from imdb_agent.concierge.voice import VoiceSessionLimitError
+    from popcorn_society_agent.concierge.voice import VoiceSessionLimitError
 
     class LimitedVoice(EchoVoice):
         async def run(self, transport: VoiceTransport, delegation: SecretStr | None = None) -> None:
@@ -584,8 +588,8 @@ def test_idle_expiry_is_reported_and_logged_separately(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from imdb_agent.concierge.voice import VoiceIdleTimeoutError
-    from imdb_agent.web.voice import BrowserVoiceTransport
+    from popcorn_society_agent.concierge.voice import VoiceIdleTimeoutError
+    from popcorn_society_agent.web.voice import BrowserVoiceTransport
 
     original_send = BrowserVoiceTransport.send
 
@@ -681,7 +685,7 @@ async def test_buffered_socket_burst_yields_to_consumer_without_losing_audio() -
 
     from fastapi import WebSocket
 
-    from imdb_agent.web.voice import BrowserVoiceTransport
+    from popcorn_society_agent.web.voice import BrowserVoiceTransport
 
     packets = [bytes([index, 0]) * 480 for index in range(40)]
 

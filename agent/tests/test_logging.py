@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import structlog
 from opentelemetry.trace import NonRecordingSpan, SpanContext, TraceFlags, use_span
 
-from imdb_agent.adapters.logging import configure_logging, error_chain, error_location
+from popcorn_society_agent.adapters.logging import configure_logging, error_chain, error_location
 
 if TYPE_CHECKING:
     import pytest

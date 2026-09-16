@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-readonly IMAGE="${AGENT_IMAGE:-imdb-clone-agent:local}"
+readonly IMAGE="${AGENT_IMAGE:-popcorn-society-agent:local}"
 readonly PLATFORM="${AGENT_DOCKER_PLATFORM:-linux/amd64}"
 readonly PORT="${AGENT_SMOKE_PORT:-18090}"
-readonly CONTAINER_NAME="imdb-clone-agent-smoke-$$"
+readonly CONTAINER_NAME="popcorn-society-agent-smoke-$$"
 
 cleanup() {
   docker rm --force "${CONTAINER_NAME}" >/dev/null 2>&1 || true
@@ -21,7 +21,7 @@ docker run \
   --security-opt no-new-privileges \
   --tmpfs /tmp:rw,noexec,nosuid,size=16m \
   --publish "127.0.0.1:${PORT}:8090" \
-  --env IMDB_AGENT_MODEL_BACKEND=fake \
+  --env POPCORN_SOCIETY_AGENT_MODEL_BACKEND=fake \
   "${IMAGE}" >/dev/null
 
 ready=false

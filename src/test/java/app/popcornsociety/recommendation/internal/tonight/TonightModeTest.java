@@ -1,0 +1,159 @@
+package app.popcornsociety.recommendation.internal.tonight;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import app.popcornsociety.catalog.api.MovieDiscoveryCandidateProvider;
+import app.popcornsociety.catalog.api.MovieGenre;
+import app.popcornsociety.catalog.api.MovieRecord;
+import app.popcornsociety.catalog.api.MovieType;
+import app.popcornsociety.recommendation.api.TonightModeRequest;
+import app.popcornsociety.recommendation.api.TonightMood;
+import java.util.List;
+import java.util.Set;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class TonightModeTest {
+
+  @Mock private MovieDiscoveryCandidateProvider candidateProvider;
+
+  @Test
+  void returnsThreeUniqueChoicesAndCarriesConstraintsIntoTheCandidateQuery() {
+    when(candidateProvider.findCandidates(any(), eq(150)))
+        .thenReturn(
+            List.of(
+                movie(1, MovieGenre.THRILLER),
+                movie(2, MovieGenre.THRILLER),
+                movie(3, MovieGenre.MYSTERY),
+                movie(4, MovieGenre.CRIME)));
+
+    var result =
+        service()
+            .choose(
+                new TonightModeRequest(
+                    120,
+                    Set.of(),
+                    TonightMood.TENSE,
+                    null,
+                    MovieType.MOVIE,
+                    false,
+                    List.of(4L),
+                    "same-seed"));
+
+    assertThat(result.picks())
+        .hasSize(3)
+        .extracting(pick -> pick.movie().id())
+        .doesNotHaveDuplicates()
+        .doesNotContain(4L);
+    assertThat(result.picks())
+        .allSatisfy(pick -> assertThat(pick.explanation()).contains("fits your time tonight"));
+    verify(candidateProvider).findCandidates(any(), eq(150));
+  }
+
+  @Test
+  void fillsAllThreeChoicesWhenGenreDiversityIsNotAvailable() {
+    when(candidateProvider.findCandidates(any(), any(Integer.class)))
+        .thenReturn(
+            List.of(
+                movie(1, MovieGenre.DRAMA),
+                movie(2, MovieGenre.DRAMA),
+                movie(3, MovieGenre.DRAMA)));
+
+    assertThat(
+            service()
+                .choose(
+                    new TonightModeRequest(
+                        null, Set.of(), null, null, null, false, List.of(), "seed"))
+                .picks())
+        .hasSize(3);
+  }
+
+  @Test
+  void enforcesIncludedAndExcludedGenresAgainstTheReturnedCandidatePool() {
+    when(candidateProvider.findCandidates(any(), any(Integer.class)))
+        .thenReturn(
+            List.of(
+                movie(1, MovieGenre.HORROR),
+                movie(2, MovieGenre.COMEDY),
+                movie(3, MovieGenre.COMEDY),
+                movie(4, MovieGenre.DRAMA)));
+
+    var result =
+        service()
+            .choose(
+                new TonightModeRequest(
+                    120,
+                    Set.of(MovieGenre.COMEDY),
+                    Set.of(MovieGenre.HORROR),
+                    TonightMood.LIGHT,
+                    null,
+                    MovieType.MOVIE,
+                    false,
+                    List.of(),
+                    "seed"));
+
+    assertThat(result.picks())
+        .extracting(pick -> pick.movie().id())
+        .containsExactlyInAnyOrder(2L, 3L);
+  }
+
+  @Test
+  void groundsTheExplanationInAGenrePresentOnTheMovie() {
+    when(candidateProvider.findCandidates(any(), any(Integer.class)))
+        .thenReturn(List.of(movie(1, MovieGenre.DRAMA)));
+
+    var result =
+        service()
+            .choose(
+                new TonightModeRequest(
+                    120,
+                    Set.of(MovieGenre.HISTORY, MovieGenre.DRAMA),
+                    Set.of(),
+                    TonightMood.THOUGHT_PROVOKING,
+                    null,
+                    MovieType.MOVIE,
+                    false,
+                    List.of(),
+                    "seed"));
+
+    assertThat(result.picks().getFirst().explanation())
+        .contains("brings drama energy")
+        .doesNotContain("history energy");
+  }
+
+  private TonightMode service() {
+    return new TonightMode(candidateProvider);
+  }
+
+  private MovieRecord movie(long id, MovieGenre genre) {
+    return new MovieRecord(
+        id,
+        null,
+        null,
+        MovieType.MOVIE,
+        "Movie " + id,
+        null,
+        false,
+        2020,
+        null,
+        100,
+        null,
+        null,
+        Set.of(genre),
+        7.5f + id / 10f,
+        10_000,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
+}

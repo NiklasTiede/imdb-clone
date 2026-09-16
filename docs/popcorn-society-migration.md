@@ -23,14 +23,59 @@ Merging this preparation does not activate a new hostname or redirect. `VERSION`
 application changes need a new version and the normal CD deployment PR before production uses them.
 Do not overwrite the existing 1.6.1 images with rebranding changes.
 
-## Deliberately stable identifiers
+## Technical project rename
 
-Keep Java packages, Python imports, configuration prefixes, Docker Hub repositories, Kubernetes
-namespaces and resource names, database objects, storage bucket `imdb-clone`, telemetry identifiers,
-and browser storage keys unchanged. Renaming these would be separate infrastructure/data migrations.
-The GitHub repository and its badges still use the actual existing repository URL.
-Historical releases, design records, screenshot filenames and actual IMDb source attribution remain
-accurate. Operational dashboards retain their current names until separately updated.
+The source rename is separate from the domain cutover:
+
+| Area | New name |
+| --- | --- |
+| Java packages / Gradle group | `app.popcornsociety` |
+| Gradle project | `popcorn-society` |
+| Python import package | `popcorn_society_agent` |
+| Python distribution | `popcorn-society-agent` |
+| Agent CLI commands | `popcorn-agent-eval`, `popcorn-agent-voice-probe` |
+| Frontend package | `popcorn-society-frontend` |
+| Checked-in OpenAPI document | `frontend/src/client/popcorn-society-backend.yaml` |
+| Backend configuration prefix | `popcorn-society.*` / `POPCORN_SOCIETY_*` |
+| Agent environment prefix | `POPCORN_SOCIETY_AGENT_*` |
+| Frontend environment prefix | `VITE_POPCORN_SOCIETY_*` |
+
+Existing backend `IMDB_CLONE_*` / `imdb-clone.*` settings and agent `IMDB_AGENT_*`
+settings remain supported during the infrastructure transition. New settings win within the same
+source; normal source precedence still applies. The frontend accepts legacy `VITE_IMDB_CLONE_*`
+addresses as fallbacks. Checked-in frontend address defaults retain the legacy keys for now so
+existing private `.env.local` files can still override them. New explicit keys take precedence.
+Do not commit or mechanically rewrite private environment files.
+
+After pulling the source rename, run `./gradlew clean`, `make agent-sync` and
+`cd frontend && yarn build:moviesGen`. The Python lockfile includes the renamed distribution.
+IDE Java source roots remain `src/main/java` and `src/test/java`.
+
+### Persisted state
+
+- The session cookie changes from `SESSION` to `POPCORN_SESSION`. Existing test accounts must
+  log in again; old serialized Java principals are not loaded. Old JDBC sessions expire naturally.
+- Scheduled search projection tasks retain their task name and database table. A narrowly scoped
+  serializer reads the two old payload class names and writes the new ones. A binary fixture from
+  the pre-rename classes verifies this path. No Flyway history or stored catalog data is rewritten.
+- A rollback to a pre-rename backend cannot read newly queued projection payloads. Use a forward
+  fix or a rollback build that also understands both payload formats; do not blindly roll back the
+  Java image after new tasks have been queued. Domain-component rollback alone is unaffected.
+- Passkey credentials still use the current RP ID until the separate domain activation below.
+
+### Deliberately stable operational identifiers
+
+Docker Hub repositories, Kubernetes namespaces/resources, database objects, storage bucket
+`imdb-clone`, telemetry identifiers and browser storage keys retain their existing names.
+These are live addresses or persistent identifiers, not source package names. In particular,
+voice browser IDs and quota storage must stay stable across the rename. Local image build tags
+use `popcorn-society-{backend,frontend,agent}:local`; CD still publishes to the existing Docker Hub
+repositories. A registry/resource migration needs its own coordinated deployment change.
+
+The GitHub repository and badges still use the actual existing repository URL. Historical
+releases, screenshot filenames and genuine IMDb identifiers, ratings, dataset imports and source
+attribution remain accurate. Operational dashboards retain their current names until separately
+updated.
 
 The existing media hostname continues to serve posters. Operator hostnames (Grafana and Argo CD)
 and the legacy backend hostname also remain valid. This migration moves the public application,
@@ -214,6 +259,37 @@ Do not roll back to 1.6.1 while enabling a profile that image does not contain.
   the SOPS plugin's copy-and-render layout; no secrets were decrypted for this check.
 
 No DNS/provider changes, live voice calls, production OAuth round trips, release, or deployment
-were performed. Full backend integration and container builds were not rerun: this preparation
-changes branding/configuration and the targeted backend contracts above. Live new-domain checks
+were performed. At this initial branding checkpoint, full backend integration and container builds
+were not rerun; the later technical rename verification is recorded below. Live new-domain checks
 remain mandatory before removing preview noindex and enabling permanent redirects.
+
+## Technical rename verification (2026-09-16)
+
+- `./gradlew test --tests '*MovieSearchProjectionSerializerTest'` reproduced the
+  incompatible legacy payload. The retained pre-rename fixture now passes with the compatibility
+  serializer.
+- `./gradlew spotlessApply build jacocoTestReport`: passed, including 245 fast tests,
+  27 architecture tests and 234 integration tests. The two opt-in live search / local llama.cpp
+  tests remain skipped. Login/logout tests also verify that the old cookie name is ignored.
+- `make verify-agent`: passed, including strict types, import boundaries, 426 deterministic tests
+  and the complete deterministic eval set. New/legacy environment names and precedence are covered.
+- `cd frontend && yarn lint`: passed.
+- `cd frontend && yarn test --maxWorkers=2 && yarn build`: passed, 441 tests and all three TypeScript
+  configurations. The initial high-concurrency run hit two 5-second test timeouts under simultaneous
+  backend/agent load; the complete lower-concurrency rerun passed without increasing timeouts.
+- `cd frontend && yarn e2e auth-experience.spec.ts movie-detail.spec.ts --workers=1 --reporter=line`:
+  32 desktop/mobile tests passed. These use mocked API responses, not production accounts.
+- `cd frontend && yarn build:moviesGen`: passed. The checked-in spec was moved without content changes.
+- `make verify-kubernetes-schema verify-popcorn-migration`: passed; base schema validation reports
+  43 valid resources, 24 skipped custom-resource schemas, zero invalid resources/errors.
+- `make docker-build-backend && make container-smoke-backend`: passed for the final source state,
+  including the session-cookie correction, numeric non-root user and read-only filesystem.
+- `make docker-build-agent && make container-smoke-agent`: passed with the renamed Python package.
+- `make docker-build-frontend && make container-smoke-frontend`: passed after transient dependency
+  download retries.
+- Audited all 508 moved Java files: none missing. Third-party Python dependency versions, existing
+  Flyway migrations and IMDb dataset import sources are unchanged. `git diff --check HEAD` passed.
+
+Paid live-model/voice calls, production OAuth, DNS/provider changes, new-domain browser checks,
+release and deployment were not performed. The remaining operational identifier migration is
+listed above; `VERSION` remains `1.6.1`.

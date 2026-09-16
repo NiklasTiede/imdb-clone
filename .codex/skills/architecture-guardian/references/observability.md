@@ -10,12 +10,12 @@ Primary files:
 
 - `frontend/src/shared/observability`
 - `frontend/src/app`
-- `agent/src/imdb_agent/adapters`
-- `agent/src/imdb_agent/web`
+- `agent/src/popcorn_society_agent/adapters`
+- `agent/src/popcorn_society_agent/web`
 - `agent/tests/adapters`
 - `src/main/resources/config/*.properties`
-- `src/main/java/com/thecodinglab/imdbclone/identity/internal/security`
-- `src/main/java/com/thecodinglab/imdbclone/shared/logging`
+- `src/main/java/app/popcornsociety/identity/internal/security`
+- `src/main/java/app/popcornsociety/shared/logging`
 - `src/main/resources/api-calls/Actuator.http`
 - `src/main/resources/api-calls/llama-cpp/LlamaCpp.http`
 - `infrastructure/clusters/home/apps/observability.yaml`

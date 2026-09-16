@@ -6,12 +6,15 @@ import pytest
 from pydantic import SecretStr, ValidationError
 from pydantic_ai.exceptions import ToolFailed
 
-from imdb_agent.adapters.catalog_contract import WatchProvidersResult, parse_grounded_movies
-from imdb_agent.adapters.personal_tools import PersonalToolGate
-from imdb_agent.concierge.events import GroundedMovie
-from imdb_agent.concierge.personal import PersonalTurn
-from imdb_agent.concierge.streaming import StreamingRegion
-from imdb_agent.concierge.tools import ToolName
+from popcorn_society_agent.adapters.catalog_contract import (
+    WatchProvidersResult,
+    parse_grounded_movies,
+)
+from popcorn_society_agent.adapters.personal_tools import PersonalToolGate
+from popcorn_society_agent.concierge.events import GroundedMovie
+from popcorn_society_agent.concierge.personal import PersonalTurn
+from popcorn_society_agent.concierge.streaming import StreamingRegion
+from popcorn_society_agent.concierge.tools import ToolName
 
 if TYPE_CHECKING:
     from pydantic_ai import RunContext
