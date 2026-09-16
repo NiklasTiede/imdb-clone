@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: backend
-          image: niklastiede/imdb-clone-backend:v1.6.1@sha256:b97de7c351c0c931904e19590f4ad9b55da561098bf20b798bbd5a0a5de5a384
+          image: niklastiede/popcorn-society-backend:v1.7.0@sha256:8b0156e4191d451825be31f4c2fe2e958ecb5f5d6c426c6989a470feb929e5f5
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -54,9 +54,9 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
-            # Preserve the deployed log/trace identity until the observability migration.
+            # Log, trace and profile identity changes with the compatible release image.
             - name: SPRING_APPLICATION_NAME
-              value: imdb-clone-backend
+              value: popcorn-society-backend
             - name: NOTIFICATION_OUTBOX_KEY
               valueFrom:
                 secretKeyRef:
@@ -68,9 +68,9 @@ spec:
               value: jdbc:postgresql://imdb-clone-postgresql.databases.svc.cluster.local:5432/movie_db
             - name: OPENSEARCH_URIS
               value: http://imdb-clone-opensearch.databases.svc.cluster.local:9200
-            - name: IMDB_CLONE_MEDIA_STORAGE_URI
+            - name: POPCORN_SOCIETY_MEDIA_STORAGE_URI
               value: http://imdb-clone-rustfs.databases.svc.cluster.local:9000
-            - name: IMDB_CLONE_CATALOG_SEARCH_EMBEDDING_BASE_URL
+            - name: POPCORN_SOCIETY_CATALOG_SEARCH_EMBEDDING_BASE_URL
               value: http://imdb-clone-llama-cpp.databases.svc.cluster.local:8080
             - name: MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT
               value: http://alloy.observability.svc.cluster.local:4318/v1/traces
@@ -79,7 +79,7 @@ spec:
             - name: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
               value: "0.1"
             - name: PYROSCOPE_APPLICATION_NAME
-              value: imdb-clone-backend
+              value: popcorn-society-backend
             - name: PYROSCOPE_SERVER_ADDRESS
               value: http://pyroscope.observability.svc.cluster.local:4040
             - name: PYROSCOPE_FORMAT
