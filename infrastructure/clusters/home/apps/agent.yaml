@@ -59,7 +59,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: agent
-          image: niklastiede/imdb-clone-agent:v1.6.1@sha256:ec7e49261267c050adefb3d8a9b5364c0bb392bddfcdbd88251ad3cd4dc3d7b6
+          image: niklastiede/popcorn-society-agent:v1.7.0@sha256:4d685aee8961f52a8839ada4eeec22eed3a5b4599a3894f4bc1fc0aa7eb7fcaa
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -72,70 +72,70 @@ spec:
               containerPort: 8090
               protocol: TCP
           env:
-            - name: IMDB_AGENT_ENVIRONMENT
+            - name: POPCORN_SOCIETY_AGENT_ENVIRONMENT
               value: production
-            - name: IMDB_AGENT_MODEL_BACKEND
+            - name: POPCORN_SOCIETY_AGENT_MODEL_BACKEND
               value: openai
-            - name: IMDB_AGENT_MODEL_NAME
+            - name: POPCORN_SOCIETY_AGENT_MODEL_NAME
               value: gpt-5.6-luna
-            - name: IMDB_AGENT_MCP_URL
+            - name: POPCORN_SOCIETY_AGENT_MCP_URL
               value: http://imdb-clone-backend.imdb-clone.svc.cluster.local:8080/mcp
-            - name: IMDB_AGENT_SECRETS_DIRECTORY
+            - name: POPCORN_SOCIETY_AGENT_SECRETS_DIRECTORY
               value: /run/secrets/movie-concierge
-            - name: IMDB_AGENT_VOICE_ENABLED
+            - name: POPCORN_SOCIETY_AGENT_VOICE_ENABLED
               value: "true"
-            - name: IMDB_AGENT_VOICE_LIVE_ENABLED
+            - name: POPCORN_SOCIETY_AGENT_VOICE_LIVE_ENABLED
               value: "true"
-            - name: IMDB_AGENT_VOICE_SESSION_SECONDS
+            - name: POPCORN_SOCIETY_AGENT_VOICE_SESSION_SECONDS
               value: "900"
             # Keep the old cap until the v1.5.0 image has been replaced; new images ignore it.
-            - name: IMDB_AGENT_VOICE_MAX_SESSIONS
+            - name: POPCORN_SOCIETY_AGENT_VOICE_MAX_SESSIONS
               value: "8"
-            - name: IMDB_AGENT_VOICE_BROWSER_SECONDS
+            - name: POPCORN_SOCIETY_AGENT_VOICE_BROWSER_SECONDS
               value: "1500"
-            - name: IMDB_AGENT_VOICE_SHARED_SECONDS
+            - name: POPCORN_SOCIETY_AGENT_VOICE_SHARED_SECONDS
               value: "6000"
-            - name: IMDB_AGENT_VOICE_QUOTA_DATABASE
+            - name: POPCORN_SOCIETY_AGENT_VOICE_QUOTA_DATABASE
               value: /var/lib/movie-concierge/voice-quota.db
-            - name: IMDB_AGENT_VOICE_ALLOWED_ORIGINS
+            - name: POPCORN_SOCIETY_AGENT_VOICE_ALLOWED_ORIGINS
               value: '["https://imdb-clone.the-coding-lab.com"]'
-            - name: IMDB_AGENT_ALLOWED_HOSTS
+            - name: POPCORN_SOCIETY_AGENT_ALLOWED_HOSTS
               value: '["imdb-clone.the-coding-lab.com","imdb-clone-agent","imdb-clone-agent.imdb-clone","imdb-clone-agent.imdb-clone.svc","imdb-clone-agent.imdb-clone.svc.cluster.local"]'
-            - name: IMDB_AGENT_MCP_INIT_TIMEOUT_SECONDS
+            - name: POPCORN_SOCIETY_AGENT_MCP_INIT_TIMEOUT_SECONDS
               value: "5"
-            - name: IMDB_AGENT_MCP_READ_TIMEOUT_SECONDS
+            - name: POPCORN_SOCIETY_AGENT_MCP_READ_TIMEOUT_SECONDS
               value: "12"
-            - name: IMDB_AGENT_PROVIDER_TIMEOUT_SECONDS
+            - name: POPCORN_SOCIETY_AGENT_PROVIDER_TIMEOUT_SECONDS
               value: "20"
-            - name: IMDB_AGENT_RUN_TIMEOUT_SECONDS
+            - name: POPCORN_SOCIETY_AGENT_RUN_TIMEOUT_SECONDS
               value: "30"
-            - name: IMDB_AGENT_MAX_CONCURRENT_RUNS
+            - name: POPCORN_SOCIETY_AGENT_MAX_CONCURRENT_RUNS
               value: "2"
-            - name: IMDB_AGENT_MAX_CONVERSATIONS
+            - name: POPCORN_SOCIETY_AGENT_MAX_CONVERSATIONS
               value: "500"
-            - name: IMDB_AGENT_MAX_REQUEST_BODY_BYTES
+            - name: POPCORN_SOCIETY_AGENT_MAX_REQUEST_BODY_BYTES
               value: "4096"
-            - name: IMDB_AGENT_MAX_MODEL_REQUESTS
+            - name: POPCORN_SOCIETY_AGENT_MAX_MODEL_REQUESTS
               value: "4"
-            - name: IMDB_AGENT_MAX_TOOL_CALLS
+            - name: POPCORN_SOCIETY_AGENT_MAX_TOOL_CALLS
               value: "6"
-            - name: IMDB_AGENT_MAX_INPUT_TOKENS
+            - name: POPCORN_SOCIETY_AGENT_MAX_INPUT_TOKENS
               value: "24000"
-            - name: IMDB_AGENT_MAX_OUTPUT_TOKENS
+            - name: POPCORN_SOCIETY_AGENT_MAX_OUTPUT_TOKENS
               value: "1500"
-            - name: IMDB_AGENT_PROJECT_COST_LIMIT_USD
+            - name: POPCORN_SOCIETY_AGENT_PROJECT_COST_LIMIT_USD
               value: "20.00"
-            - name: IMDB_AGENT_RUN_COST_LIMIT_USD
+            - name: POPCORN_SOCIETY_AGENT_RUN_COST_LIMIT_USD
               value: "0.25"
-            - name: IMDB_AGENT_LIVE_EVALS_ENABLED
+            - name: POPCORN_SOCIETY_AGENT_LIVE_EVALS_ENABLED
               value: "false"
-            - name: IMDB_AGENT_OTEL_TRACING_ENABLED
+            - name: POPCORN_SOCIETY_AGENT_OTEL_TRACING_ENABLED
               value: "true"
-            - name: IMDB_AGENT_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+            - name: POPCORN_SOCIETY_AGENT_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
               value: http://alloy.observability.svc.cluster.local:4318/v1/traces
-            - name: IMDB_AGENT_OTEL_EXPORT_TIMEOUT_SECONDS
+            - name: POPCORN_SOCIETY_AGENT_OTEL_EXPORT_TIMEOUT_SECONDS
               value: "5"
-            - name: IMDB_AGENT_OTEL_TRACE_SAMPLE_RATIO
+            - name: POPCORN_SOCIETY_AGENT_OTEL_TRACE_SAMPLE_RATIO
               value: "1.0"
             - name: TMPDIR
               value: /tmp

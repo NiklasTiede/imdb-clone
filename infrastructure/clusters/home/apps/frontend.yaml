@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frontend
-          image: niklastiede/imdb-clone-frontend:v1.6.1@sha256:62e12699001a7161f64de2217712ccafa114306a4c0b8274722461d5d243f72e
+          image: niklastiede/popcorn-society-frontend:v1.7.0@sha256:5fe3dde208db66e2ad8191f7014d4cba69e12e95b534b6f718740903592fe516
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
