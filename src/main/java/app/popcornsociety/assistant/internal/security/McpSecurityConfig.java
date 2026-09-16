@@ -28,7 +28,7 @@ class McpSecurityConfig {
         new McpBearerAuthenticationFilter(properties, authenticationEntryPoint, metrics);
 
     http.securityMatcher("/mcp", "/mcp/**")
-        .csrf(AbstractHttpConfigurer::disable)
+        .csrf(csrf -> csrf.ignoringRequestMatchers("/mcp", "/mcp/**"))
         .cors(AbstractHttpConfigurer::disable)
         .requestCache(AbstractHttpConfigurer::disable)
         .sessionManagement(

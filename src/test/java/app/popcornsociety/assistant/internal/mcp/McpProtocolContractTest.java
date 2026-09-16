@@ -42,6 +42,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.web.FilterChainProxy;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(
@@ -68,6 +70,7 @@ class McpProtocolContractTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private CapturingMovieSearch movieSearch;
   @Autowired private ApplicationContext applicationContext;
+  @Autowired private FilterChainProxy springSecurityFilterChain;
 
   @org.springframework.test.context.bean.override.mockito.MockitoBean
   private app.popcornsociety.identity.api.ConciergeDelegation delegation;
@@ -114,6 +117,12 @@ class McpProtocolContractTest {
         .andExpect(jsonPath("$.result.protocolVersion").value("2025-11-25"))
         .andExpect(jsonPath("$.result.serverInfo.name").value("popcorn-society-domain-tools"))
         .andExpect(jsonPath("$.result.capabilities.tools").exists());
+  }
+
+  @Test
+  void mcpChainKeepsCsrfProtectionInstalled() {
+    assertThat(springSecurityFilterChain.getFilters("/mcp"))
+        .anyMatch(CsrfFilter.class::isInstance);
   }
 
   @Test
