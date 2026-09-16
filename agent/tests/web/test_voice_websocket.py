@@ -331,6 +331,10 @@ def test_deadline_cancels_runner(
         assert event["type"] == "error"
         expected = f"{int(seconds / 60)}-minute" if seconds >= 60 else "0.05-second"
         assert f"{expected} time limit" in event["text"]
+        # Wait for quota settlement and the final log before TestClient cancels the handler.
+        with pytest.raises(WebSocketDisconnect) as closed:
+            ws.receive_json()
+        assert closed.value.code == 1000
     assert runner.closed
     events = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
     ended = next(event for event in events if event["event"] == "voice_session_ended")
