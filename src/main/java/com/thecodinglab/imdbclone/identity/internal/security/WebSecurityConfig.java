@@ -157,7 +157,7 @@ public class WebSecurityConfig {
         .webAuthn(
             webAuthn ->
                 webAuthn
-                    .rpName("IMDB Clone")
+                    .rpName("Popcorn Society")
                     .rpId(identityProperties.webauthn().rpId())
                     .allowedOrigins(
                         identityProperties.webauthn().allowedOrigins().toArray(String[]::new))

@@ -540,7 +540,7 @@ test("keyboard navigation reaches movie actions", async ({ page }) => {
   ).toBeVisible();
 
   const focusOrder = [
-    page.getByRole("link", { name: "IMDb Clone" }),
+    page.getByRole("link", { name: "Popcorn Society" }),
     page.getByRole("textbox", { name: "search movies" }),
     page.getByRole("link", { name: "Sign in" }),
     page.getByRole("button", { name: "Add to watchlist" }),

@@ -1,6 +1,6 @@
 # Product Roadmap
 
-This document captures the long-term product direction for IMDb Clone. It is a prioritized backlog,
+This document captures the long-term product direction for Popcorn Society. It is a prioritized backlog,
 not a release commitment. Refine each slice into an implementation plan or issue before starting
 work, and keep completed items in the release notes rather than growing this document indefinitely.
 

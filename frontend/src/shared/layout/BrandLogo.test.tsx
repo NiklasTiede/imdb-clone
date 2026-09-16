@@ -3,7 +3,7 @@ import { MemoryRouter } from "react-router";
 import BrandLogo from "./BrandLogo";
 
 describe("BrandLogo", () => {
-  it("renders the shared clapperboard mark and discovery tagline", () => {
+  it("renders the shared popcorn mark and discovery tagline", () => {
     render(
       <MemoryRouter>
         <BrandLogo />
@@ -11,7 +11,7 @@ describe("BrandLogo", () => {
     );
 
     expect(
-      screen.getByRole("link", { name: "IMDb Clone" }).getAttribute("href"),
+      screen.getByRole("link", { name: "Popcorn Society" }).getAttribute("href"),
     ).toBe("/");
     expect(screen.getByTestId("brand-mark").getAttribute("src")).toBe(
       "/brand-logo.svg",
@@ -28,7 +28,7 @@ describe("BrandLogo", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("IMDb Clone").textContent).toBe("IMDb Clone");
+    expect(screen.getByText("Popcorn Society").textContent).toBe("Popcorn Society");
     expect(screen.queryByText("Discover, rate, remember")).toBeNull();
   });
 });

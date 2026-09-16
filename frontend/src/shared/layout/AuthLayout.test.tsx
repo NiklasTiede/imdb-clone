@@ -17,7 +17,7 @@ describe("AuthLayout", () => {
     );
 
     expect(
-      screen.getByRole("link", { name: /IMDb clone/i }).getAttribute("href"),
+      screen.getByRole("link", { name: /Popcorn Society/i }).getAttribute("href"),
     ).toBe("/");
     expect(
       screen.queryByRole("textbox", { name: /search movies/i }),

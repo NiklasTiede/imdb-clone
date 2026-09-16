@@ -191,8 +191,12 @@ if voice_enabled
   assert_contract(environment["IMDB_AGENT_VOICE_SHARED_SECONDS"] == "6000", "shared voice time cap drifted")
   assert_contract(environment["IMDB_AGENT_VOICE_QUOTA_DATABASE"] ==
                   "/var/lib/movie-concierge/voice-quota.db", "persistent voice quota required")
-  assert_contract(JSON.parse(environment.fetch("IMDB_AGENT_VOICE_ALLOWED_ORIGINS")) ==
-                  ["https://imdb-clone.the-coding-lab.com"], "voice origin drifted")
+  expected_voice_origins = ["https://imdb-clone.the-coding-lab.com"]
+  if documents.any? { |document| document["kind"] == "Ingress" && document.dig("metadata", "name") == "popcorn-society-concierge-public" }
+    expected_voice_origins << "https://popcornsociety.app"
+  end
+  assert_contract(JSON.parse(environment.fetch("IMDB_AGENT_VOICE_ALLOWED_ORIGINS")).sort ==
+                  expected_voice_origins.sort, "voice origin drifted")
 end
 
 backend_environment = backend_container.fetch("env").to_h do |entry|

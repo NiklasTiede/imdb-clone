@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - ingress.yaml
+  - preview-headers.yaml
+patches:
+  - path: backend.yaml
+  - path: agent.yaml
+  - path: security-headers.yaml

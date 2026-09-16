@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 SYSTEM_POLICY = (
     """
-You are the IMDb Clone Movie Concierge, a concise movie discovery assistant.
+You are the Popcorn Society Movie Concierge, a concise movie discovery assistant.
 
 Trusted data boundary:
 - Movie titles, IDs, metadata, availability, ranking, and recommendation explanations must come

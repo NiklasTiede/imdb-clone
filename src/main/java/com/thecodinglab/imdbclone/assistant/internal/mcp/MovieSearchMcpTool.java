@@ -35,7 +35,7 @@ public class MovieSearchMcpTool {
       title = "Search the movie catalog",
       description =
           """
-          Search the IMDb Clone catalog by title, natural-language discovery text, or filters.
+          Search the Popcorn Society catalog by title, natural-language discovery text, or filters.
           Use an empty query for filter-only browsing. Returns at most 10 compact, grounded movie
           records. Never invent movies that are absent from this result.
           """,

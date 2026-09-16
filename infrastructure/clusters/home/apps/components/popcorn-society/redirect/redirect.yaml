@@ -1,0 +1,49 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: popcorn-society-canonical
+  namespace: imdb-clone
+spec:
+  redirectRegex:
+    regex: '^https?://(imdb-clone\.the-coding-lab\.com|www\.popcornsociety\.app)/(.*)'
+    replacement: 'https://popcornsociety.app/${2}'
+    permanent: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: popcorn-society-legacy-pages
+  namespace: imdb-clone
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+    traefik.ingress.kubernetes.io/router.middlewares: imdb-clone-popcorn-society-canonical@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - imdb-clone.the-coding-lab.com
+      secretName: imdb-clone-public-tls
+    - hosts:
+        - www.popcornsociety.app
+      secretName: popcorn-society-public-tls
+  rules:
+    - host: imdb-clone.the-coding-lab.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-frontend
+                port:
+                  name: http
+    - host: www.popcornsociety.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: imdb-clone-frontend
+                port:
+                  name: http

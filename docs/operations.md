@@ -1,5 +1,8 @@
 # Production Operations
 
+The Popcorn Society domain switch is staged separately. Follow the
+[migration runbook](popcorn-society-migration.md) before changing DNS or activating the new ingresses.
+
 This runbook is the operator entry point for the home k3s cluster. Public application traffic uses
 HTTPS ingress. Databases, search, object-storage administration, metrics APIs, logs, traces,
 profiles, and Argo CD remain private and are reached through SSH-backed Kubernetes port-forwards.
@@ -8,7 +11,7 @@ profiles, and Argo CD remain private and are reached through SSH-backed Kubernet
 
 | Surface | URL | Access |
 | --- | --- | --- |
-| IMDb Clone | `https://imdb-clone.the-coding-lab.com` | Public |
+| Popcorn Society | `https://imdb-clone.the-coding-lab.com` | Public |
 | Backend API | `https://backend.imdb-clone.the-coding-lab.com` | Public application API |
 | Public movie media | `https://object-storage.imdb-clone.the-coding-lab.com` | Public objects only |
 | Grafana | `https://grafana.imdb-clone.the-coding-lab.com` | Authenticated read-only viewer |

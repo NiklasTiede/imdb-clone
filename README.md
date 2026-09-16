@@ -1,10 +1,10 @@
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
-    <img alt="IMDb Clone clapperboard logo" width="104" src="frontend/public/brand-logo.svg" />
+    <img alt="Popcorn Society popcorn logo" width="104" src="frontend/public/brand-logo.svg" />
   </a>
 </p>
 
-<h1 align="center">IMDb Clone</h1>
+<h1 align="center">Popcorn Society</h1>
 
 <p align="center">
   <strong>Discover, rate, remember.</strong><br />
@@ -44,7 +44,7 @@
 <p align="center">
   <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
     <img
-      alt="IMDb Clone screenshot"
+      alt="Popcorn Society screenshot"
       width="760"
       src="docs/assets/imdb-clone-screenshot.webp"
     />
@@ -53,9 +53,12 @@
 
 ## Overview
 
-IMDb Clone is a learning project built and operated as a full-stack movie application on a self-hosted
+Popcorn Society is a full-stack movie discovery application built and operated on a self-hosted
 Kubernetes cluster. Browse the catalog yourself or explore it by speaking to the Movie Concierge:
 find something to watch, open movie pages, and manage your personal movie library.
+
+Previously called IMDb Clone. The move to **popcornsociety.app** is being prepared; the live links
+above keep using the current address until cutover. See the [domain migration runbook](docs/popcorn-society-migration.md).
 
 ## Features
 
@@ -107,7 +110,7 @@ flowchart LR
   openai["OpenAI GPT-Live 1<br/>+ reasoning model"]
   tmdb["TMDB facts + watch providers"]
 
-  subgraph app["IMDb Clone"]
+  subgraph app["Popcorn Society"]
     frontend["React Frontend"]
     agent["Python Movie Concierge<br/>FastAPI + Pydantic AI"]
     backend["Spring Boot API"]

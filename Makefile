@@ -325,7 +325,10 @@ container-smoke-agent: ## smoke-test the Python agent image, endpoints, and non-
 
 ##@ Verification
 
-.PHONY: verify-release-workflows verify-kubernetes-render verify-seed-release verify-kubernetes-schema verify-runtime-hardening verify-movie-concierge-production verify-observability-production verify-observability-charts verify-openapi-drift
+.PHONY: verify-release-workflows verify-kubernetes-render verify-seed-release verify-kubernetes-schema verify-runtime-hardening verify-movie-concierge-production verify-observability-production verify-observability-charts verify-openapi-drift verify-popcorn-migration
+
+verify-popcorn-migration: ## validate the staged Popcorn Society domain migration without deploying
+	ruby infrastructure/migrations/popcorn-society/verify.rb
 
 verify-release-workflows: ## verify protected-branch CI and release PR contracts
 	ruby infrastructure/clusters/home/tests/verify_release_workflows.rb

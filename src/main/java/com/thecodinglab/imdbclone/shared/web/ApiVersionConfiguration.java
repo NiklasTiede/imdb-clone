@@ -14,7 +14,7 @@ public class ApiVersionConfiguration implements WebMvcConfigurer {
   @Bean
   OpenAPI apiContract() {
     return new OpenAPI()
-        .info(new Info().title("IMDB Clone API").version("1"))
+        .info(new Info().title("Popcorn Society API").version("1"))
         .servers(List.of(new Server().url("/")));
   }
 

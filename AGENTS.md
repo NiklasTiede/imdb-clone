@@ -1,4 +1,4 @@
-# IMDB Clone Agent Guide
+# Popcorn Society Agent Guide
 
 Movie application with a Spring Boot domain backend, React frontend, Python Movie Concierge,
 PostgreSQL, OpenSearch, RustFS/S3-compatible object storage, and k3s GitOps deployment.

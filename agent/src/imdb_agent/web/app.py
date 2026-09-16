@@ -33,7 +33,7 @@ def create_web_app(
     """Create the inbound web Adapter without configuring outbound Adapters."""
 
     app = FastAPI(
-        title="IMDb Clone Movie Concierge",
+        title="Popcorn Society Movie Concierge",
         version=version,
         docs_url=None,
         redoc_url=None,

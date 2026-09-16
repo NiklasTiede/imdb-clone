@@ -1,8 +1,39 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+import { loadEnv } from "vite";
+import { createSeoAssets } from "./src/shared/seo/metadata.js";
 
-export default defineConfig({
-  plugins: [react({})],
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    react({}),
+    {
+      name: "public-crawl-files",
+      apply: "build",
+      transformIndexHtml() {
+        const env = loadEnv(mode, process.cwd(), "VITE_");
+        const origin = env.VITE_SITE_URL || "http://localhost:3000";
+        return [
+          {
+            tag: "meta",
+            attrs: {
+              property: "og:image",
+              content: new URL("/app-icon-512.png", origin).href,
+            },
+            injectTo: "head",
+          },
+        ];
+      },
+      generateBundle() {
+        const env = loadEnv(mode, process.cwd(), "VITE_");
+        const assets = createSeoAssets(
+          env.VITE_SITE_URL || "http://localhost:3000",
+        );
+        for (const [fileName, source] of Object.entries(assets)) {
+          this.emitFile({ type: "asset", fileName, source });
+        }
+      },
+    },
+  ],
   server: {
     port: 3000,
     strictPort: true,
@@ -39,4 +70,4 @@ export default defineConfig({
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["e2e/**"],
   },
-});
+}));

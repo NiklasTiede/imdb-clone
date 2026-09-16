@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: IMDB Clone API
+  title: Popcorn Society API
   version: "1"
 servers:
 - url: /

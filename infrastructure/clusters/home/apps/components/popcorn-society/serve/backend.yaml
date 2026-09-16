@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imdb-clone-backend
+  namespace: imdb-clone
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod,popcorn
