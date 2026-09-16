@@ -306,6 +306,15 @@ availability, errors, latency,
 MCP/provider failures, capacity, and cost. Alertmanager is deliberately not installed yet, so rules
 are visible in Prometheus/Grafana but do not send notifications.
 
+For voice startup diagnosis, enable Debug/Verbose in the browser console and filter for
+`[Voice startup]` or `[Voice startup signal]`. Durations start at the VoiceLens click and separate
+microphone permission, audio-device readiness, identity, socket/provider readiness, first PCM,
+and the first output-analyser signal. GPT-Live can send silent PCM before greeting; first PCM
+does not mean audible speech. Server logs add `voice_profile_loaded` and
+`voice_provider_configured` for hosted Grok handshakes, plus `voice_session_ready` and
+`voice_first_audio_packet_sent` for both models. These contain timings/counts, not audio or text.
+Browser and server timings have different start points and must not be subtracted directly.
+
 Production also exports one OpenTelemetry trace per sampled HTTP/agent run through the internal
 Alloy OTLP endpoint to Tempo. Pydantic AI contributes child spans for model requests and tool calls;
 HTTPX propagates W3C trace context across the protected MCP request, and Spring Boot continues the

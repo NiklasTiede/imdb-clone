@@ -655,9 +655,15 @@ def test_session_logs_correlate_and_count_activity_without_payload(
             "voice_session_started",
             "synthetic_runner_event",
             "voice_session_ready",
+            "voice_first_audio_packet_sent",
             "voice_session_ended",
         }
         ended = next(event for event in matching if event["event"] == "voice_session_ended")
+        first_audio = [
+            event for event in matching if event["event"] == "voice_first_audio_packet_sent"
+        ]
+        assert len(first_audio) == 1
+        assert first_audio[0]["duration_ms"] >= 0
         assert ended["outcome"] == "user_end"
         assert ended["typed_messages"] == 1
         assert ended["control_messages"] == 2

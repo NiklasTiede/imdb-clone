@@ -1,13 +1,19 @@
 """xAI hosted profiles and output speed missing from Pydantic AI 2.42's surface."""
 
-from contextlib import asynccontextmanager
+import json
+from collections import deque
+from contextlib import asynccontextmanager, suppress
+from time import monotonic
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlencode
 
+import structlog
 from pydantic import BaseModel, ConfigDict
 from pydantic_ai._instrumentation import get_instructions
 from pydantic_ai.exceptions import UserError
+from pydantic_ai.realtime import RealtimeSessionErrorEvent
 from pydantic_ai.realtime._openai_protocol import (
+    RealtimeHandshakeError,
     config_interrupts_response_on_speech,
     connect_openai_protocol,
     expect_event,
@@ -15,12 +21,13 @@ from pydantic_ai.realtime._openai_protocol import (
 from pydantic_ai.realtime.xai import XaiRealtimeConnection, XaiRealtimeModel
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
+    from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable, Sequence
 
     from pydantic_ai.messages import ModelMessage
     from pydantic_ai.models import ModelRequestParameters
     from pydantic_ai.providers.xai import XaiProvider
     from pydantic_ai.realtime import RealtimeModelSettings
+    from pydantic_ai.realtime.codec import RealtimeCodecEvent
     from pydantic_ai.realtime.xai import XaiRealtimeModelSettings
     from pydantic_ai.tools import ToolDefinition
     from websockets.asyncio.client import ClientConnection
@@ -34,6 +41,27 @@ class _HostedSession(BaseModel):
 class _HostedSessionCreated(BaseModel):
     model_config = ConfigDict(extra="ignore", strict=True)
     session: _HostedSession
+
+
+class _HostedConnection(XaiRealtimeConnection):
+    """Replay greeting frames through the SDK decoder, including response bookkeeping."""
+
+    startup_frames: deque[str]
+
+    async def __aiter__(self) -> AsyncIterator[RealtimeCodecEvent]:
+        while self.startup_frames:
+            raw = self.startup_frames.popleft()
+            try:
+                events = await self._decode_frame(raw)
+            except ValueError:
+                yield RealtimeSessionErrorEvent(
+                    message="Invalid xAI startup frame", recoverable=True
+                )
+                continue
+            for event in events:
+                yield event
+        async for event in super().__aiter__():
+            yield event
 
 
 class ConciergeXaiVoiceModel(XaiRealtimeModel):
@@ -96,6 +124,17 @@ class ConciergeXaiVoiceModel(XaiRealtimeModel):
             model_settings=settings,
         )
         url = "wss://api.x.ai/v1/realtime?" + urlencode({"agent_id": self._agent_id})
+        started_at = monotonic()
+        startup_frames: deque[str] = deque()
+        startup_bytes = 0
+
+        def capture_startup(data: dict[str, Any]) -> None:
+            nonlocal startup_bytes
+            raw = json.dumps(data)
+            startup_bytes += len(raw.encode())
+            if startup_bytes > 1_024_000 or len(startup_frames) >= 1024:
+                raise RealtimeHandshakeError("xAI startup backlog exceeded its limit")
+            startup_frames.append(raw)
 
         async def headers() -> dict[str, str]:
             return {"Authorization": f"Bearer {self._api_key}"}
@@ -107,8 +146,15 @@ class ConciergeXaiVoiceModel(XaiRealtimeModel):
             # Hosted agents apply their saved config asynchronously after session.created.
             # Wait for that update before sending ours, or it can overwrite our tools/VAD.
             await expect_event(
-                ws, "session.updated", timeout=settings.get("handshake_timeout", 10.0)
+                ws,
+                "session.updated",
+                timeout=settings.get("handshake_timeout", 10.0),
+                on_unexpected=capture_startup,
             )
+            with suppress(Exception):
+                structlog.get_logger().info(
+                    "voice_profile_loaded", duration_ms=round((monotonic() - started_at) * 1000)
+                )
 
         def build_connection(
             ws: ClientConnection,
@@ -116,7 +162,7 @@ class ConciergeXaiVoiceModel(XaiRealtimeModel):
             model_name: str | None,
             model_name_getter: Callable[[], str | None],
         ) -> XaiRealtimeConnection:
-            return XaiRealtimeConnection(
+            connection = _HostedConnection(
                 ws,
                 model_name=model_name,
                 model_name_getter=model_name_getter,
@@ -124,6 +170,8 @@ class ConciergeXaiVoiceModel(XaiRealtimeModel):
                 is not None,
                 interrupts_response_on_speech=config_interrupts_response_on_speech(config),
             )
+            connection.startup_frames = startup_frames
+            return connection
 
         async with connect_openai_protocol(
             model_name=self.model,
@@ -137,5 +185,12 @@ class ConciergeXaiVoiceModel(XaiRealtimeModel):
             session_model=server_model,
             build_connection=build_connection,
             after_session_created=profile_loaded,
+            on_unexpected_during_update=lambda: capture_startup,
         ) as connection:
+            with suppress(Exception):
+                structlog.get_logger().info(
+                    "voice_provider_configured",
+                    duration_ms=round((monotonic() - started_at) * 1000),
+                    buffered_events=len(startup_frames),
+                )
             yield connection

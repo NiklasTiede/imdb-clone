@@ -158,6 +158,11 @@ export const useConciergeVoice = (
 
   const start = useCallback(async () => {
     if (audioRef.current) return;
+    const startedAt = performance.now();
+    const startupTimes: Record<string, number> = {};
+    const startupStage = (stage: string) => {
+      startupTimes[stage] ??= Math.round(performance.now() - startedAt);
+    };
     const current = ++generation.current;
     const isCurrent = () => generation.current === current;
     const turnMetadata = new Map<
@@ -289,6 +294,15 @@ export const useConciergeVoice = (
       }
       const audio = new BrowserAudio(model === "gpt-live-1");
       audioRef.current = audio;
+      // Fetch delegation while the microphone starts, handling rejection immediately
+      // even if permission stays pending or the user ends the session meanwhile.
+      const identityReady = getConciergeIdentity().then(
+        (identity) => {
+          startupStage("identity_ready_ms");
+          return { identity };
+        },
+        (error: unknown) => ({ error }),
+      );
       let microphoneGranted: () => void = () => {};
       const permission = new Promise<void>((resolve) => {
         microphoneGranted = resolve;
@@ -313,11 +327,15 @@ export const useConciergeVoice = (
           fail(
             "The microphone disconnected. Check your input device and reconnect.",
           ),
-        microphoneGranted,
+        () => {
+          startupStage("microphone_granted_ms");
+          microphoneGranted();
+        },
       );
       // Connect as soon as permission is granted while the audio device/worklet still starts.
       // Failure/end closes both branches; no socket is opened while permission is pending.
       void audioStarted.then(() => {
+        startupStage("audio_device_ready_ms");
         captureReady = true;
         becomeReady();
       }, failAudio);
@@ -328,12 +346,15 @@ export const useConciergeVoice = (
       const url = new URL(`${base}/v1/voice`, window.location.href);
       url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
       const browserId = getConciergeBrowserId();
-      const identity = await getConciergeIdentity();
+      const identityResult = await identityReady;
+      if ("error" in identityResult) throw identityResult.error;
+      const { identity } = identityResult;
       if (!isCurrent()) return;
       socketAccountRef.current = identity.accountId;
       const socket = new WebSocket(url);
       socket.onopen = () => {
         if (!isCurrent()) return;
+        startupStage("browser_socket_open_ms");
         socket.send(
           JSON.stringify({
             type: "start",
@@ -376,12 +397,20 @@ export const useConciergeVoice = (
       processMessage = (data: unknown) => {
         if (!isCurrent()) return;
         if (data instanceof ArrayBuffer) {
+          startupStage("first_audio_packet_ms");
           if (!ready) {
             bufferStartup(data);
             return;
           }
           try {
-            if (!blockedAudio.current) audio.play(data);
+            if (!blockedAudio.current) {
+              audio.play(data);
+              if (startupTimes.first_audio_queued_ms === undefined) {
+                startupStage("first_audio_queued_ms");
+                // GPT-Live also streams silence: queued PCM is not proof of audible speech.
+                console.debug("[Voice startup]", { model, ...startupTimes });
+              }
+            }
           } catch {
             fail("Voice audio couldn't play. Please reconnect.");
           }
@@ -392,6 +421,7 @@ export const useConciergeVoice = (
             throw new Error("Invalid event");
           const event = voiceEventSchema.parse(JSON.parse(data));
           if (event.type === "ready") {
+            startupStage("provider_ready_ms");
             providerReady = true;
             becomeReady();
           } else if (event.type === "authenticated") {
@@ -545,6 +575,13 @@ export const useConciergeVoice = (
       const updateLevels = () => {
         if (!isCurrent()) return;
         const next = audio.levels();
+        if (
+          next.output > 0.015 &&
+          startupTimes.first_output_signal_ms === undefined
+        ) {
+          startupStage("first_output_signal_ms");
+          console.debug("[Voice startup signal]", { model, ...startupTimes });
+        }
         if (playingRef.current !== next.playing) {
           playingRef.current = next.playing;
           setLevels(next);

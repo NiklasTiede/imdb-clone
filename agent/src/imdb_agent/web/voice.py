@@ -132,10 +132,17 @@ class BrowserVoiceTransport:
     async def send(self, event: VoiceEvent | bytes) -> None:
         async with asyncio.timeout(5):
             if isinstance(event, bytes):
+                first_packet = self._output_bytes == 0
                 self._output_bytes += len(event)
                 if self._output_bytes > self._max_bytes:
                     raise VoiceTransportError("output_audio_limit")
                 await self._socket.send_bytes(event)
+                if first_packet:
+                    with suppress(Exception):
+                        structlog.get_logger().info(
+                            "voice_first_audio_packet_sent",
+                            duration_ms=round((monotonic() - self._started_at) * 1000),
+                        )
             else:
                 await self._socket.send_text(event.model_dump_json(exclude_none=True))
                 self._turns = max(self._turns, event.turn)
