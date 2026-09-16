@@ -228,14 +228,14 @@ def test_production_profiling_can_be_disabled_explicitly() -> None:
     assert settings.effective_profiling_server_address is None
 
 
-def test_voice_defaults_to_five_minutes_and_allows_up_to_ten(
+def test_voice_defaults_to_five_minutes_and_allows_up_to_fifteen(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("IMDB_AGENT_VOICE_SESSION_SECONDS", raising=False)
     assert load_settings().voice_session_seconds == 300
-    monkeypatch.setenv("IMDB_AGENT_VOICE_SESSION_SECONDS", "600")
-    assert load_settings().voice_session_seconds == 600
-    monkeypatch.setenv("IMDB_AGENT_VOICE_SESSION_SECONDS", "601")
+    monkeypatch.setenv("IMDB_AGENT_VOICE_SESSION_SECONDS", "900")
+    assert load_settings().voice_session_seconds == 900
+    monkeypatch.setenv("IMDB_AGENT_VOICE_SESSION_SECONDS", "901")
     with pytest.raises(ConfigurationError):
         load_settings()
 

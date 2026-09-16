@@ -62,7 +62,7 @@ class VoiceQuota(Protocol):
 class MemoryVoiceQuota:
     def __init__(
         self,
-        browser_seconds: float = 1200,
+        browser_seconds: float = 1500,
         shared_seconds: float = 6000,
         *,
         clock: Callable[[], float] = time,

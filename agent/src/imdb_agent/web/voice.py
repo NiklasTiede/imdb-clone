@@ -167,7 +167,7 @@ def create_voice_router(
     verifier: DelegationVerifier | None = None,
     allowed_origins: tuple[str, ...],
     session_seconds: float,
-    browser_seconds: float = 1200,
+    browser_seconds: float = 1500,
     shared_seconds: float = 6000,
     live_runner: VoiceRunner | None = None,
     quota: VoiceQuota | None = None,

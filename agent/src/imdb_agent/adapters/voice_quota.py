@@ -24,7 +24,7 @@ class SqliteVoiceQuota:
     def __init__(
         self,
         path: Path,
-        browser_seconds: float = 1200,
+        browser_seconds: float = 1500,
         shared_seconds: float = 6000,
         *,
         clock: Callable[[], float] = time,

@@ -237,9 +237,9 @@ Release in this order to avoid enabling unsupported settings on the v1.4.0 image
    - name: IMDB_AGENT_VOICE_LIVE_ENABLED
      value: "true"
    - name: IMDB_AGENT_VOICE_SESSION_SECONDS
-     value: "600"
+     value: "900"
    - name: IMDB_AGENT_VOICE_BROWSER_SECONDS
-     value: "1200"
+     value: "1500"
    - name: IMDB_AGENT_VOICE_SHARED_SECONDS
      value: "6000"
    - name: IMDB_AGENT_VOICE_QUOTA_DATABASE

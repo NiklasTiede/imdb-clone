@@ -403,8 +403,8 @@ retry and retains the existing text conversation. No audio is acquired merely by
 
 Voice is off unless `IMDB_AGENT_VOICE_ENABLED=true` (Grok) or
 `IMDB_AGENT_VOICE_LIVE_ENABLED=true` (GPT-Live). Local defaults allow two concurrent connections,
-300 seconds per session, 1200 connected seconds per browser and 6000 connected seconds shared
-across both providers in a rolling 24-hour window. Production uses a 600-second session lifetime
+300 seconds per session, 1500 connected seconds per browser and 6000 connected seconds shared
+across both providers in a rolling 24-hour window. Production uses a 900-second session lifetime
 and the same time budgets. The limits are `IMDB_AGENT_VOICE_BROWSER_SECONDS` and
 `IMDB_AGENT_VOICE_SHARED_SECONDS`; restarts do not consume a separate start allowance.
 Production requires mounted provider credentials, explicit trusted HTTPS origins, and an absolute
