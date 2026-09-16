@@ -59,7 +59,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: agent
-          image: niklastiede/popcorn-society-agent:v1.7.0@sha256:4d685aee8961f52a8839ada4eeec22eed3a5b4599a3894f4bc1fc0aa7eb7fcaa
+          image: niklastiede/popcorn-society-agent:v1.7.1@sha256:cd890496f3b248e8fd423d9762da3c629a15b54da3c1a427cce27a030075dffc
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
