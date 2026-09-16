@@ -121,8 +121,7 @@ class McpProtocolContractTest {
 
   @Test
   void mcpChainKeepsCsrfProtectionInstalled() {
-    assertThat(springSecurityFilterChain.getFilters("/mcp"))
-        .anyMatch(CsrfFilter.class::isInstance);
+    assertThat(springSecurityFilterChain.getFilters("/mcp")).anyMatch(CsrfFilter.class::isInstance);
   }
 
   @Test
