@@ -350,6 +350,30 @@ images, pins their Docker digests, and updates the existing GitOps tree after an
 
 ## Local application voice
 
+### Voices and personality
+
+GPT-Live uses **Beacon** (`audio.output.voice` in `adapters/live_voice.py`). Its
+Scotty-inspired movie-night character lives in `concierge/personas.py`; the live adapter
+combines it with delegation and conversation rules. Backend tool policy stays independent.
+`SCOTTY_GREETING` in that same file requests a single, interruptible English welcome after
+the session starts, without backend delegation. `live_greeting_accepted` records provider
+acknowledgment, not completed playback; listen to the opening when checking audio quality.
+Grok explicitly selects **Zenith** (`xai_voice` in `adapters/realtime_voice.py`), including
+when using the hosted xAI agent profile. Its existing instructions are unchanged.
+Restart the Python service and start a new voice session after changing these settings.
+
+Personality listening checks (manual; these are not automated quality assertions):
+
+- Start with small talk and indecision: warm, short replies with occasional original movie humour.
+- Open a movie, save it, and ask a follow-up: accurate results, no joke delaying an action.
+- Interrupt mid-joke and express frustration: listen immediately and switch to plain helpfulness.
+- Continue for several turns: no repeated catchphrases, forced dialect, or invented movie facts.
+
+Voice IDs follow the [OpenAI Live session guide](https://developers.openai.com/api/docs/guides/live-conversations)
+and [xAI voice roster](https://docs.x.ai/developers/model-capabilities/audio/text-to-speech#voices).
+
+### Running locally
+
 Start the Java backend and frontend as usual, then run `make run-agent-voice` from the
 repository root instead of `make run-agent`. The separate
 `.secrets/movie-concierge-voice.local.env` must contain `XAI_API_KEY`; the existing text

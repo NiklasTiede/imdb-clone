@@ -23,6 +23,7 @@ from imdb_agent.concierge.events import (
     UiActionEvent,
 )
 from imdb_agent.concierge.personal import DelegationRejectedError
+from imdb_agent.concierge.personas import SCOTTY_PERSONA
 from imdb_agent.concierge.service import ConciergeRunError
 from imdb_agent.concierge.tools import ToolName
 from imdb_agent.concierge.voice import VoiceCommand, VoiceEvent
@@ -78,6 +79,10 @@ class Socket:
         self.sent.append(event)
         if event["type"] == "session.start":
             self.emit({"type": "session.started"})
+        elif event["type"] == "session.instructions.append":
+            self.emit(
+                {"type": "session.instructions.appended", "client_event_id": event["event_id"]}
+            )
         elif event["type"] == "session.input_audio.append":
             self.audio_received.set()
         elif event["type"] == "session.commentary.append":
@@ -121,6 +126,38 @@ def session_for(accepted: bool = True) -> tuple[LiveSession, Socket, Browser, Ba
 
 
 @pytest.mark.asyncio
+async def test_greeting_follows_ready_and_streams_without_backend_work() -> None:
+    session, socket, browser, backend = session_for()
+    pcm = b"\x00" * 960
+
+    async def conversation() -> None:
+        await browser.received.wait()
+        assert isinstance(browser.events[0], VoiceEvent)
+        assert browser.events[0].type == "ready"
+        # Even silence must flow while the opening is generated.
+        await browser.input.put(pcm)
+        await socket.audio_received.wait()
+        socket.emit({"type": "session.output_audio.delta", "delta": base64.b64encode(pcm).decode()})
+        socket.emit({"type": "session.output_transcript.delta", "delta": "I'm Scotty."})
+        while pcm not in browser.events:
+            browser.received.clear()
+            await browser.received.wait()
+        await browser.input.put(VoiceCommand(type="end"))
+
+    async with asyncio.timeout(3):
+        await asyncio.gather(session.run(), conversation())
+    greetings = [event for event in socket.sent if event["type"] == "session.instructions.append"]
+    assert len(greetings) == 1
+    assert greetings[0]["delegation_id"] is None
+    assert "Scotty" in str(greetings[0]["content"])
+    assert "English" in str(greetings[0]["content"])
+    assert len(str(greetings[0]["content"]).encode("utf-8")) <= 480
+    assert socket.sent[0]["type"] == "session.start"
+    assert backend.requests == []
+    assert session.closed.is_set()
+
+
+@pytest.mark.asyncio
 async def test_delegation_keeps_audio_flowing_and_closes_with_usage() -> None:
     session, socket, browser, backend = session_for()
 
@@ -156,6 +193,12 @@ async def test_delegation_keeps_audio_flowing_and_closes_with_usage() -> None:
 
     async with asyncio.timeout(3):
         await asyncio.gather(session.run(), conversation())
+    start = cast("dict[str, object]", socket.sent[0]["session"])
+    assert start["audio"] == {
+        "format": {"type": "audio/pcm", "rate": 24000},
+        "output": {"voice": "beacon"},
+    }
+    assert SCOTTY_PERSONA in str(start["instructions"])
     assert len(backend.requests) == 1
     assert backend.requests[0].message == "Open the homepage."
     assert backend.requests[0].delegation is None

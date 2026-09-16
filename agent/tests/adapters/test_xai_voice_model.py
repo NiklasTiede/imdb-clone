@@ -14,8 +14,10 @@ from imdb_agent.adapters.xai_voice_model import ConciergeXaiVoiceModel
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("agent_id", [None, "agent_test-profile"])
+@pytest.mark.parametrize("voice", [None, "zenith"])
 async def test_handshake_preserves_profile_audio_and_application_tools(
     agent_id: str | None,
+    voice: str | None,
 ) -> None:
     socket = AsyncMock()
     socket.recv.side_effect = [
@@ -37,15 +39,17 @@ async def test_handshake_preserves_profile_audio_and_application_tools(
     connection = MagicMock()
     connection.__aenter__ = AsyncMock(return_value=socket)
     connection.__aexit__ = AsyncMock(return_value=False)
+    settings = XaiRealtimeModelSettings(
+        xai_turn_detection={"type": "server_vad"},
+        parallel_tool_calls=False,
+    )
+    if voice is not None:
+        settings["xai_voice"] = voice
     model = ConciergeXaiVoiceModel(
         "grok-voice-think-fast-2.0",
         provider=XaiProvider(api_key="test-only"),
         agent_id=agent_id,
-        settings=XaiRealtimeModelSettings(
-            xai_voice="eve",
-            xai_turn_detection={"type": "server_vad"},
-            parallel_tool_calls=False,
-        ),
+        settings=settings,
     )
     with patch("websockets.connect", return_value=connection) as connect:
         async with model.connect(
@@ -71,12 +75,13 @@ async def test_handshake_preserves_profile_audio_and_application_tools(
             }
             assert session["audio"]["input"]["format"] == {"type": "audio/pcm", "rate": 24000}
             assert session["instructions"] == "Movie Concierge application policy"
-            if agent_id:
+            if voice is not None:
+                assert session["voice"] == voice
+            else:
                 assert "voice" not in session
+            if agent_id:
                 assert "model" not in session
                 assert "reasoning" not in session
-            else:
-                assert session["voice"] == "eve"
             assert session["turn_detection"]["type"] == "server_vad"
             assert "silence_duration_ms" not in session["turn_detection"]
             assert session["parallel_tool_calls"] is False

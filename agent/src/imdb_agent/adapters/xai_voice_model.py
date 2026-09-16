@@ -40,7 +40,7 @@ class ConciergeXaiVoiceModel(XaiRealtimeModel):
     """Keep compatibility code here until the SDK exposes agent_id and output speed.
 
     Reuse its handshake lifecycle, codec and cancellation handling. Hosted profiles
-    select the model/voice; application instructions, tools and audio remain local.
+    supply defaults; explicit local voice, instructions, tools and audio take precedence.
     """
 
     def __init__(
@@ -64,7 +64,6 @@ class ConciergeXaiVoiceModel(XaiRealtimeModel):
         config = super()._session_config(instructions, tools, model_settings=model_settings)
         config["audio"]["output"]["speed"] = 1.15
         if self._agent_id is not None:
-            config.pop("voice", None)
             # Advertise only tools handled by our local authorization/grounding flow.
             config.setdefault("tools", [])
         return config
