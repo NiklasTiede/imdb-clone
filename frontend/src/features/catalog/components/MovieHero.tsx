@@ -14,14 +14,19 @@ import {
   ObjectStorageImageSize,
   PosterImage,
 } from "../../../shared/media";
-import { movieColors } from "../../../theme";
+import type { Theme } from "@mui/material/styles";
+import { fontFamilies } from "../../../theme";
+
+// Functional scrims only, tinted with the theme scrim colour.
+const scrim = (theme: Theme, opacity: number) =>
+  theme.alpha(theme.palette.scrim, opacity);
 import type { Movie } from "../model/movie";
 import {
   getMovieGenreLabels,
   getMovieMetaItems,
   getOriginalTitle,
 } from "../model/moviePresentation";
-import { COMMUNITY_BLUE, IMDB_GOLD, RatingPill } from "./RatingPill";
+import { RatingPill } from "./RatingPill";
 
 type MovieHeroProps = {
   isBookmarked: boolean;
@@ -55,7 +60,7 @@ export const MovieHero = ({
       component="section"
       data-testid="movie-detail-hero"
       aria-labelledby="movie-detail-title"
-      sx={{ color: "common.white", pb: { xs: 1, md: 2 } }}
+      sx={{ color: "text.primary", pb: { xs: 1, md: 2 } }}
     >
       <Box
         sx={{
@@ -77,10 +82,10 @@ export const MovieHero = ({
         <Box
           aria-hidden
           sx={{
-            background: {
-              xs: `linear-gradient(180deg, rgba(7,11,18,0.08) 0%, rgba(7,11,18,0.5) 46%, ${movieColors.backdrop} 100%)`,
-              md: `linear-gradient(90deg, rgba(7,11,18,0.22) 0%, rgba(7,11,18,0.58) 52%, rgba(7,11,18,0.38) 100%), linear-gradient(180deg, rgba(7,11,18,0.04) 18%, rgba(7,11,18,0.66) 58%, ${movieColors.backdrop} 100%)`,
-            },
+            background: (theme) => ({
+              xs: `linear-gradient(180deg, ${scrim(theme, 0.08)} 0%, ${scrim(theme, 0.5)} 46%, ${theme.palette.surface.page} 100%)`,
+              md: `linear-gradient(90deg, ${scrim(theme, 0.22)} 0%, ${scrim(theme, 0.58)} 52%, ${scrim(theme, 0.38)} 100%), linear-gradient(180deg, ${scrim(theme, 0.04)} 18%, ${scrim(theme, 0.66)} 58%, ${theme.palette.surface.page} 100%)`,
+            }),
             inset: 0,
             position: "absolute",
           }}
@@ -115,10 +120,11 @@ export const MovieHero = ({
             size={ObjectStorageImageSize.Large}
             sx={{
               aspectRatio: "2 / 3",
-              backgroundColor: movieColors.surfaceInset,
-              border: "1px solid rgba(255,255,255,0.12)",
+              backgroundColor: "surface.inset",
+              border: "1px solid",
+              borderColor: "divider",
               borderRadius: 1,
-              boxShadow: "0 18px 42px rgba(0,0,0,0.42)",
+              boxShadow: (theme) => `0 18px 42px ${scrim(theme, 0.42)}`,
               height: "auto",
               width: "100%",
             }}
@@ -149,11 +155,12 @@ export const MovieHero = ({
                 id="movie-detail-title"
                 component="h1"
                 sx={{
+                  fontFamily: fontFamilies.display,
                   fontSize: { xs: 24, sm: 30, md: 38 },
                   fontWeight: 600,
                   lineHeight: 1.12,
                   overflowWrap: "anywhere",
-                  textShadow: "0 2px 16px rgba(0,0,0,0.72)",
+                  textShadow: (theme) => `0 2px 16px ${scrim(theme, 0.72)}`,
                 }}
               >
                 {title}
@@ -161,7 +168,7 @@ export const MovieHero = ({
               {originalTitle && (
                 <Typography
                   sx={{
-                    color: "rgba(255,255,255,0.65)",
+                    color: "text.secondary",
                     fontSize: { xs: 11, sm: 12 },
                     mt: 0.5,
                   }}
@@ -186,8 +193,9 @@ export const MovieHero = ({
                     label={genre}
                     size="small"
                     sx={{
-                      backgroundColor: "rgba(23,33,50,0.88)",
-                      color: "rgba(255,255,255,0.88)",
+                      backgroundColor: (theme) =>
+                        theme.alpha(theme.palette.surface.raised, 0.88),
+                      color: "text.primary",
                       fontSize: 11,
                       height: 24,
                     }}
@@ -214,7 +222,7 @@ export const MovieHero = ({
               onClick={onToggleBookmark}
               disabled={isBookmarkLoading}
               sx={{
-                color: isBookmarked ? "common.white" : movieColors.brandInk,
+                color: isBookmarked ? "text.primary" : "accent.contrastText",
                 fontWeight: 700,
                 height: 40,
                 textTransform: "none",
@@ -232,13 +240,13 @@ export const MovieHero = ({
               onClick={onOpenRating}
               disabled={isRatingLoading}
               sx={{
-                borderColor: "rgba(255,255,255,0.24)",
-                color: "common.white",
+                borderColor: "line.control",
+                color: "text.primary",
                 height: 40,
                 textTransform: "none",
                 "&:hover": {
-                  backgroundColor: "rgba(255,255,255,0.06)",
-                  borderColor: "rgba(255,255,255,0.44)",
+                  backgroundColor: "action.hover",
+                  borderColor: "text.secondary",
                 },
               }}
             >
@@ -253,9 +261,10 @@ export const MovieHero = ({
                   onClick={onShare}
                   disabled={isShareDisabled}
                   sx={{
-                    border: "1px solid rgba(255,255,255,0.24)",
+                    border: "1px solid",
+                    borderColor: "line.control",
                     borderRadius: 1,
-                    color: "common.white",
+                    color: "text.primary",
                     height: 40,
                     width: 40,
                   }}
@@ -281,13 +290,11 @@ export const MovieHero = ({
               label="IMDb rating"
               score={movie.imdbRating}
               count={movie.imdbRatingCount}
-              starColor={IMDB_GOLD}
             />
             <RatingPill
               label="Community"
               score={movie.rating}
               count={movie.ratingCount}
-              starColor={COMMUNITY_BLUE}
             />
           </Box>
         </Box>
@@ -308,7 +315,7 @@ const MetaRow = ({ items }: { items: string[] }) => {
       useFlexGap
       sx={{
         alignItems: "center",
-        color: "rgba(255,255,255,0.76)",
+        color: "text.primary",
         flexWrap: "wrap",
         fontSize: 13,
       }}
@@ -321,7 +328,7 @@ const MetaRow = ({ items }: { items: string[] }) => {
           sx={{ alignItems: "center" }}
         >
           {index > 0 && (
-            <Box component="span" sx={{ color: "rgba(255,255,255,0.35)" }}>
+            <Box component="span" sx={{ color: "text.secondary" }}>
               ·
             </Box>
           )}

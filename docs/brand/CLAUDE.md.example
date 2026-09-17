@@ -1,0 +1,6 @@
+# Save this as CLAUDE.md in the repository root so Claude Code uses the existing agent rules.
+@AGENTS.md
+
+## Brand and design
+- Visual direction, logo and motion rules: @docs/brand/after-dark/brand-direction.md
+- Implemented tokens and primitives: docs/design.md (keep it in sync with the MUI theme)

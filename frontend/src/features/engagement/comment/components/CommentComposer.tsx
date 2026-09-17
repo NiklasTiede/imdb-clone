@@ -8,7 +8,6 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import AppSurface from "../../../../shared/layout/AppSurface";
 import { ProfileAvatar } from "../../../../shared/media";
-import { movieColors } from "../../../../theme";
 import type { CommentAuthor } from "../model/comment";
 
 const MAX_COMMENT_LENGTH = 1000;
@@ -38,7 +37,7 @@ const CommentComposer = ({
   if (!isAuthenticated) {
     return (
       <AppSurface
-        accent="info"
+        accent="brand"
         sx={{
           alignItems: { xs: "flex-start", sm: "center" },
           display: "flex",
@@ -81,9 +80,9 @@ const CommentComposer = ({
 
   return (
     <AppSurface
-      accent="info"
+      accent="brand"
       sx={{
-        backgroundColor: movieColors.surface,
+        backgroundColor: "surface.card",
         p: { xs: 2, sm: 2.5 },
       }}
     >

@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Pagination from "@mui/material/Pagination";
+import { accentTint } from "../../../theme";
 
 type SearchResultsPaginationProps = {
   onPageChange: (page: number) => void;
@@ -34,11 +35,11 @@ const SearchResultsPagination = ({
         siblingCount={1}
         sx={{
           "& .MuiPaginationItem-root": {
-            borderColor: "rgba(255,255,255,0.12)",
+            borderColor: "line.control",
             color: "text.secondary",
           },
           "& .Mui-selected": {
-            backgroundColor: "rgba(245,197,24,0.16)",
+            backgroundColor: accentTint(0.16),
             color: "text.primary",
           },
         }}

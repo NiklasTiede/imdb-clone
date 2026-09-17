@@ -31,13 +31,13 @@ const PasskeyLoginButton = () => {
       onClick={() => loginMutation.mutate()}
       startIcon={<FingerprintIcon />}
       sx={{
-        borderColor: "rgba(255,255,255,0.2)",
-        color: "common.white",
+        borderColor: "line.control",
+        color: "text.primary",
         minHeight: 46,
         textTransform: "none",
         "&:hover": {
-          bgcolor: "rgba(255,255,255,0.06)",
-          borderColor: "rgba(255,255,255,0.34)",
+          bgcolor: "action.hover",
+          borderColor: "text.secondary",
         },
       }}
       type="button"

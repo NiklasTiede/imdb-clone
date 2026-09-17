@@ -2,7 +2,6 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
-import { movieColors } from "../../theme";
 import BrandLogo from "./BrandLogo";
 
 type AuthLayoutProps = {
@@ -31,8 +30,9 @@ const AuthLayout = ({
       sx={{
         alignItems: "center",
         backdropFilter: "blur(18px)",
-        bgcolor: `${movieColors.surface}f0`,
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        bgcolor: (theme) => theme.alpha(theme.palette.surface.card, 0.94),
+        borderBottom: "1px solid",
+        borderColor: "divider",
         display: "flex",
         gap: 2,
         justifyContent: "space-between",
@@ -40,27 +40,24 @@ const AuthLayout = ({
         py: 1.75,
       }}
     >
-      <BrandLogo compact sx={{ color: "common.white" }} />
+      <BrandLogo compact sx={{ color: "text.primary" }} />
 
       {altTo && altLabel && altActionLabel && (
         <Link
           color="inherit"
           component={RouterLink}
           sx={{
-            color: "rgba(255,255,255,0.7)",
+            color: "text.secondary",
             fontSize: 13,
             textDecoration: "none",
-            "&:hover": { color: "common.white" },
+            "&:hover": { color: "text.primary" },
           }}
           to={altTo}
         >
           <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
             {altLabel}{" "}
           </Box>
-          <Box
-            component="span"
-            sx={{ color: movieColors.info, fontWeight: 500 }}
-          >
+          <Box component="span" sx={{ color: "accent.main", fontWeight: 500 }}>
             {altActionLabel}
           </Box>
         </Link>

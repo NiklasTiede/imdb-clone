@@ -8,7 +8,6 @@ import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { movieColors } from "../../../theme";
 import { PosterMovieCard, type Movie } from "../../catalog";
 import {
   movieCarouselCardWidthSx,
@@ -172,7 +171,7 @@ const MovieCarousel = ({
                 backgroundColor: "background.paper",
                 border: "1px solid",
                 borderColor: "divider",
-                "&:hover": { backgroundColor: movieColors.surfaceElevated },
+                "&:hover": { backgroundColor: "surface.raised" },
                 "&.Mui-disabled": { opacity: 0.3 },
               }}
             >
@@ -187,7 +186,7 @@ const MovieCarousel = ({
                 backgroundColor: "background.paper",
                 border: "1px solid",
                 borderColor: "divider",
-                "&:hover": { backgroundColor: movieColors.surfaceElevated },
+                "&:hover": { backgroundColor: "surface.raised" },
                 "&.Mui-disabled": { opacity: 0.3 },
               }}
             >

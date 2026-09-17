@@ -143,12 +143,13 @@ test("public concierge streams a grounded movie into its responsive drawer", asy
   }
 
   const input = page.getByRole("textbox", { name: "Ask the Movie Concierge" });
-  await expect(input).toHaveCSS("color", "rgba(255, 255, 255, 0.92)");
+  // Input and placeholder use the default theme's primary and secondary text tokens.
+  await expect(input).toHaveCSS("color", "rgb(255, 255, 255)");
   expect(
     await input.evaluate((element) =>
       getComputedStyle(element, "::placeholder").getPropertyValue("color"),
     ),
-  ).toBe("rgba(255, 255, 255, 0.62)");
+  ).toBe("rgb(191, 197, 209)");
 
   await input.fill("Find a thoughtful science-fiction movie");
   await page.getByRole("button", { name: "Send concierge message" }).click();
@@ -163,17 +164,18 @@ test("public concierge streams a grounded movie into its responsive drawer", asy
   ).toHaveCount(1);
   await expect(page.getByTestId("concierge-movie-card")).toBeVisible();
   const movieCard = page.getByTestId("concierge-movie-card");
+  // Metadata uses secondary text, the score primary text (default theme tokens).
   await expect(movieCard.getByText("2016")).toHaveCSS(
     "color",
-    "rgba(255, 255, 255, 0.78)",
+    "rgb(191, 197, 209)",
   );
   await expect(movieCard.getByText("116 min")).toHaveCSS(
     "color",
-    "rgba(255, 255, 255, 0.78)",
+    "rgb(191, 197, 209)",
   );
   await expect(movieCard.getByText("IMDb 7.9")).toHaveCSS(
     "color",
-    "rgba(255, 255, 255, 0.92)",
+    "rgb(255, 255, 255)",
   );
   await expect(
     movieCard.getByRole("link", { name: "Arrival" }),

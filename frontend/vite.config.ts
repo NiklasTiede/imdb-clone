@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => ({
             tag: "meta",
             attrs: {
               property: "og:image",
-              content: new URL("/app-icon-512.png", origin).href,
+              content: new URL("/brand/after-dark/og-image.png", origin).href,
             },
             injectTo: "head",
           },
@@ -66,7 +66,10 @@ export default defineConfig(({ mode }) => ({
   test: {
     environment: "jsdom",
     globals: true,
-    setupFiles: ["./src/test/failOnUnexpectedConsole.ts"],
+    setupFiles: [
+      "./src/test/failOnUnexpectedConsole.ts",
+      "./src/test/renderWithAppTheme.tsx",
+    ],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["e2e/**"],
   },

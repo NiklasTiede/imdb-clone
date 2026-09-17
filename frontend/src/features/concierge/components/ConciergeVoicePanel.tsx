@@ -11,10 +11,9 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import { visuallyHidden } from "@mui/utils";
 import { useCallback, type ReactNode } from "react";
-import { movieColors } from "../../../theme";
+import { accentTint } from "../../../theme";
 import type { ConciergeVoice } from "../hooks/useConciergeVoice";
 import { voiceLabels } from "../model/voice";
 import { VoiceLens, type OrbState } from "./VoiceLens";
@@ -64,7 +63,7 @@ export const VoiceControls = ({ voice }: { voice: ConciergeVoice }) => (
         sx={{
           minWidth: 44,
           minHeight: 44,
-          color: voice.muted ? "text.secondary" : movieColors.info,
+          color: voice.muted ? "text.secondary" : "voice.user.mid",
         }}
       >
         {voice.muted ? <MicOffRoundedIcon /> : <MicRoundedIcon />}
@@ -94,7 +93,7 @@ export const ConciergeVoicePanel = ({
       startIcon={<MicRoundedIcon />}
       disabled={disabled}
       onClick={() => void voice.start()}
-      sx={{ minHeight: 44, color: movieColors.brand }}
+      sx={{ minHeight: 44, color: "accent.main" }}
     >
       {voice.status === "error" ? "Reconnect voice" : "Start voice"}
     </Button>
@@ -187,9 +186,11 @@ export const ConciergeVoiceDock = ({
             opacity: 1,
             mb: debug ? -1 : 0,
             "&:disabled": { cursor: "wait", opacity: 0.5 },
-            filter: "drop-shadow(0 8px 28px rgba(0,0,0,.6))",
+            filter: (theme) =>
+              `drop-shadow(0 8px 28px ${theme.alpha(theme.palette.scrim, 0.6)})`,
             "&:focus-visible": {
-              outline: `2px solid ${movieColors.brand}`,
+              outline: "2px solid",
+              outlineColor: "accent.main",
               outlineOffset: 4,
             },
           }}
@@ -214,11 +215,13 @@ export const ConciergeVoiceDock = ({
             alignItems: "center",
             px: 0.75,
             borderRadius: 8,
-            bgcolor: movieColors.surface,
+            bgcolor: "surface.card",
             opacity: 0.85,
             backdropFilter: "blur(16px)",
-            border: `1px solid ${alpha(movieColors.brand, 0.22)}`,
-            boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+            border: "1px solid",
+            borderColor: accentTint(0.22),
+            boxShadow: (theme) =>
+              `0 8px 30px ${theme.alpha(theme.palette.scrim, 0.35)}`,
             pointerEvents: "auto",
             "& .MuiIconButton-root": {
               minWidth: { xs: 40, sm: 36 },

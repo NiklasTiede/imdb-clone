@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { movieColors } from "../../../../theme";
+import { fontFamilies } from "../../../../theme";
 import { PosterMovieCard } from "../../../catalog";
 import type { RatingTasteInsights } from "../model/library";
 
@@ -31,7 +31,7 @@ const RatingsTasteSnapshot = ({ insights }: RatingsTasteSnapshotProps) => {
       component="section"
       variant="outlined"
       sx={{
-        background: `linear-gradient(118deg, ${movieColors.surfaceElevated}, ${movieColors.surfaceInset})`,
+        bgcolor: "surface.card",
         borderColor: "divider",
         borderRadius: 1,
         overflow: "hidden",
@@ -40,10 +40,7 @@ const RatingsTasteSnapshot = ({ insights }: RatingsTasteSnapshotProps) => {
     >
       <Stack spacing={2}>
         <Box>
-          <Typography sx={{ color: "primary.main", fontSize: 11, fontWeight: 800, letterSpacing: 1.1 }}>
-            TASTE SNAPSHOT
-          </Typography>
-          <Typography component="h2" sx={{ fontSize: 20, fontWeight: 800, mt: 0.25 }}>
+          <Typography component="h2" sx={{ fontFamily: fontFamilies.display, fontSize: 20, fontWeight: 800 }}>
             {totalRatings < 3
               ? "Your taste profile is still forming."
               : `Your strongest signal is ${favoriteGenre ?? "still taking shape"}${favoriteDecade ? `, especially ${favoriteDecade} films` : ""}.`}
@@ -61,7 +58,7 @@ const RatingsTasteSnapshot = ({ insights }: RatingsTasteSnapshotProps) => {
           }}
         >
           <Box aria-label="Your rating distribution" sx={{ minWidth: 0 }}>
-            <Typography sx={{ color: "text.secondary", fontSize: 11, fontWeight: 700, mb: 1, textTransform: "uppercase" }}>
+            <Typography sx={sectionLabelSx}>
               Your rating distribution
             </Typography>
             <Stack direction="row" spacing={0.75} sx={{ alignItems: "flex-end", height: 104 }}>
@@ -73,7 +70,7 @@ const RatingsTasteSnapshot = ({ insights }: RatingsTasteSnapshotProps) => {
                       aria-label={`${bucket.label}: ${count} ratings`}
                       role="img"
                       sx={{
-                        backgroundColor: count > 0 ? movieColors.info : "action.disabledBackground",
+                        backgroundColor: count > 0 ? "data.user" : "data.track",
                         borderRadius: "4px 4px 0 0",
                         height: Math.max(4, (count / maxBucketCount) * 76),
                         transition: "height 180ms ease",
@@ -97,7 +94,7 @@ const RatingsTasteSnapshot = ({ insights }: RatingsTasteSnapshotProps) => {
 
         {(insights?.definingMovies?.length ?? 0) > 0 && (
           <Box>
-            <Typography sx={{ color: "text.secondary", fontSize: 11, fontWeight: 700, mb: 1, textTransform: "uppercase" }}>
+            <Typography sx={sectionLabelSx}>
               Defining films
             </Typography>
             <Box sx={{ display: "flex", gap: 1.25, overflowX: "auto", pb: 0.5 }}>
@@ -116,12 +113,12 @@ const RatingsTasteSnapshot = ({ insights }: RatingsTasteSnapshotProps) => {
   );
 };
 
+const sectionLabelSx = { color: "text.secondary", fontSize: 12, fontWeight: 600, mb: 1 };
+
 const SnapshotMetric = ({ label, value }: { label: string; value: string }) => (
-  <Box sx={{ borderLeft: "2px solid", borderColor: "primary.main", pl: 1 }}>
-    <Typography sx={{ color: "text.secondary", fontSize: 10, fontWeight: 700, textTransform: "uppercase" }}>
-      {label}
-    </Typography>
-    <Typography sx={{ fontSize: 16, fontWeight: 800 }}>{value}</Typography>
+  <Box>
+    <Typography sx={{ color: "text.secondary", fontSize: 12 }}>{label}</Typography>
+    <Typography sx={{ fontSize: 16, fontVariantNumeric: "tabular-nums", fontWeight: 800 }}>{value}</Typography>
   </Box>
 );
 

@@ -35,7 +35,7 @@ const SocialLoginButtons = () => {
     <Stack spacing={1.5}>
       <Divider
         sx={{
-          "&::before, &::after": { borderColor: "rgba(255,255,255,0.14)" },
+          "&::before, &::after": { borderColor: "divider" },
         }}
       >
         <Typography
@@ -43,7 +43,6 @@ const SocialLoginButtons = () => {
             color: "text.secondary",
             fontSize: 12,
             px: 1,
-            textTransform: "uppercase",
           }}
         >
           or
@@ -65,13 +64,13 @@ const SocialLoginButtons = () => {
             onClick={() => startSocialLogin(provider.id)}
             startIcon={provider.icon}
             sx={{
-              borderColor: "rgba(255,255,255,0.18)",
-              color: "common.white",
+              borderColor: "line.control",
+              color: "text.primary",
               minHeight: 44,
               textTransform: "none",
               "&:hover": {
-                bgcolor: "rgba(255,255,255,0.06)",
-                borderColor: "rgba(255,255,255,0.32)",
+                bgcolor: "action.hover",
+                borderColor: "text.secondary",
               },
             }}
             type="button"

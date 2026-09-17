@@ -1,14 +1,18 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { CssBaseline, ThemeProvider } from "@mui/material";
 import { SnackbarProvider } from "notistack";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { BrowserRouter } from "react-router";
 import { ConciergeExperience } from "../features/concierge";
 import { queryClient } from "../shared/api/queryClient";
 import { bootstrapSession } from "../shared/auth/bootstrapSession";
 import { RouteMetrics } from "../shared/observability";
-import { appTheme } from "../theme";
+import { AppThemeProvider } from "../theme";
 import SiteMetadata from "../shared/seo/SiteMetadata";
+
+const ThemeSwitcher =
+  import.meta.env.DEV && import.meta.env.MODE !== "test"
+    ? lazy(() => import("./dev/ThemeSwitcher"))
+    : null;
 
 const AppProviders = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
@@ -16,8 +20,7 @@ const AppProviders = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <ThemeProvider theme={appTheme}>
-      <CssBaseline />
+    <AppThemeProvider>
       <QueryClientProvider client={queryClient}>
         <SnackbarProvider maxSnack={3}>
           <BrowserRouter>
@@ -25,10 +28,15 @@ const AppProviders = ({ children }: { children: ReactNode }) => {
             <RouteMetrics />
             {children}
             <ConciergeExperience />
+            {ThemeSwitcher && (
+              <Suspense fallback={null}>
+                <ThemeSwitcher />
+              </Suspense>
+            )}
           </BrowserRouter>
         </SnackbarProvider>
       </QueryClientProvider>
-    </ThemeProvider>
+    </AppThemeProvider>
   );
 };
 

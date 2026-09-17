@@ -1,6 +1,5 @@
 import "@testing-library/jest-dom/vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "@mui/material";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router";
@@ -11,7 +10,6 @@ import {
   resetPerformanceReporterForTests,
 } from "../../../shared/observability/performanceReporter";
 import { installLocalStorageMock } from "../../../test/installLocalStorageMock";
-import { appTheme } from "../../../theme";
 import ConciergeExperience from "./ConciergeExperience";
 
 const conversationId = "1234567890abcdef1234567890abcdef";
@@ -76,12 +74,12 @@ const renderExperience = async () => {
   queryClient.setQueryData(["concierge", "voice-models"], ["grok"]);
   unmountExperience = render(
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={appTheme}>
+      <>
         <MemoryRouter initialEntries={["/?conciergeDebug=1"]}>
           <ConciergeExperience />
           <LocationProbe />
         </MemoryRouter>
-      </ThemeProvider>
+      </>
     </QueryClientProvider>,
   ).unmount;
   await screen.findByRole("textbox", { name: "Ask the Movie Concierge" });

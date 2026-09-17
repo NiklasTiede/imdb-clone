@@ -10,9 +10,7 @@ describe("MovieTrailer", () => {
     );
     expect(screen.queryByTestId("movie-trailer")).toBeNull();
 
-    rerender(
-      <MovieTrailer movieTitle="Arrival" youtubeVideoKey="not a key" />,
-    );
+    rerender(<MovieTrailer movieTitle="Arrival" youtubeVideoKey="not a key" />);
     expect(screen.queryByTestId("movie-trailer")).toBeNull();
   });
 

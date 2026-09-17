@@ -10,8 +10,8 @@ import Typography from "@mui/material/Typography";
 import type { MouseEvent, ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
-import { movieColors } from "../../../theme";
 import { getMoviePosterToken, type Movie } from "../model/movie";
+import type { Theme } from "@mui/material/styles";
 
 type MovieListRating = {
   label?: string;
@@ -53,15 +53,9 @@ const formatMeta = (movie: Movie): string =>
     .filter(Boolean)
     .join(" · ");
 
-const ratingColor = {
-  imdb: movieColors.gold,
-  user: movieColors.info,
-};
-
-const ratingBackground = {
-  imdb: "rgba(255,183,0,0.12)",
-  user: "rgba(122,184,255,0.14)",
-};
+// IMDb scores use the star colour; the user's own score uses the "your data" colour.
+const ratingColor = (theme: Theme, variant: MovieListRating["variant"]) =>
+  variant === "user" ? theme.palette.data.user : theme.palette.star;
 
 const defaultRatingLabel = (variant: MovieListRating["variant"]) =>
   variant === "user" ? "You" : "IMDb";
@@ -83,14 +77,16 @@ const MovieListRatingPill = ({
       component="span"
       sx={{
         alignItems: "center",
-        backgroundColor: ratingBackground[rating.variant],
+        backgroundColor: (theme) =>
+          theme.alpha(ratingColor(theme, rating.variant), 0.12),
         border: "1px solid",
-        borderColor:
-          rating.variant === "user"
-            ? "rgba(122,184,255,0.22)"
-            : "rgba(255,183,0,0.18)",
+        borderColor: (theme) =>
+          theme.alpha(ratingColor(theme, rating.variant), 0.22),
         borderRadius: 1,
-        color: ratingColor[rating.variant],
+        color: (theme) =>
+          rating.variant === "user"
+            ? theme.palette.text.primary
+            : ratingColor(theme, rating.variant),
         display: "inline-flex",
         fontSize: 12,
         fontWeight: 800,
@@ -129,10 +125,11 @@ const GenrePill = ({
   <Box
     component="span"
     sx={{
-      backgroundColor: "rgba(255,255,255,0.06)",
-      border: "1px solid rgba(255,255,255,0.06)",
+      backgroundColor: "action.hover",
+      border: "1px solid",
+      borderColor: "divider",
       borderRadius: 10,
-      color: "rgba(255,255,255,0.7)",
+      color: "text.secondary",
       display: hideOnMobile ? { xs: "none", sm: "inline" } : "inline",
       fontSize: 10,
       lineHeight: "18px",
@@ -184,8 +181,9 @@ const MovieListRow = ({
       component="li"
       sx={{
         alignItems: "center",
-        backgroundColor: "rgba(255,255,255,0.012)",
-        border: "1px solid rgba(255,255,255,0.045)",
+        backgroundColor: "surface.page",
+        border: "1px solid",
+        borderColor: "divider",
         borderRadius: 1,
         display: "grid",
         gap: { xs: 1, sm: 1.5 },
@@ -196,8 +194,8 @@ const MovieListRow = ({
         py: { xs: 1, sm: 1.25 },
         transition: "background-color 140ms ease, border-color 140ms ease",
         "&:hover, &:focus-within": {
-          backgroundColor: "rgba(255,255,255,0.04)",
-          borderColor: "rgba(255,255,255,0.11)",
+          backgroundColor: "surface.card",
+          borderColor: "line.control",
         },
         "&:hover .movie-list-row-action, &:focus-within .movie-list-row-action": {
           opacity: 1,
@@ -220,7 +218,8 @@ const MovieListRow = ({
           outline: "none",
           textDecoration: "none",
           "&:focus-visible": {
-            outline: `2px solid ${movieColors.info}`,
+            outline: "2px solid",
+            outlineColor: "accent.main",
             outlineOffset: 4,
           },
         }}
@@ -230,8 +229,9 @@ const MovieListRow = ({
           size={ObjectStorageImageSize.Small}
           sx={{
             aspectRatio: "2 / 3",
-            backgroundColor: movieColors.surfaceInset,
-            border: "1px solid rgba(255,255,255,0.08)",
+            backgroundColor: "surface.inset",
+            border: "1px solid",
+            borderColor: "divider",
             borderRadius: 0.75,
             height: { xs: 72, sm: 102 },
             objectFit: "cover",
@@ -274,7 +274,7 @@ const MovieListRow = ({
                 </GenrePill>
               ))}
               {timestamp && (
-                <Typography sx={{ color: "rgba(255,255,255,0.52)", fontSize: 11, lineHeight: 1.2 }}>
+                <Typography sx={{ color: "text.secondary", fontSize: 11, lineHeight: 1.2 }}>
                   {timestamp}
                 </Typography>
               )}
@@ -305,8 +305,9 @@ const MovieListRow = ({
               onClick={handleActionClick}
               size="small"
               sx={{
-                backgroundColor: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "action.hover",
+                border: "1px solid",
+                borderColor: "divider",
                 borderRadius: 1,
                 color: "text.secondary",
                 height: 30,
@@ -315,17 +316,19 @@ const MovieListRow = ({
                 width: 30,
                 "&:focus-visible": {
                   opacity: 1,
-                  outline: `2px solid ${movieColors.info}`,
+                  outline: "2px solid",
+                  outlineColor: "accent.main",
                   outlineOffset: 2,
                 },
                 "&:hover":
                   action.color === "danger"
                     ? {
-                        backgroundColor: "rgba(248,113,113,0.15)",
+                        backgroundColor: (theme) =>
+                          theme.alpha(theme.palette.error.main, 0.15),
                         color: "error.light",
                       }
                     : {
-                        backgroundColor: "rgba(255,255,255,0.1)",
+                        backgroundColor: "action.selected",
                       },
               }}
             >

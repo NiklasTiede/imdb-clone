@@ -11,7 +11,6 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import MicRounded from "@mui/icons-material/MicRounded";
 import MicOffRounded from "@mui/icons-material/MicOffRounded";
@@ -26,7 +25,6 @@ import PublicRounded from "@mui/icons-material/PublicRounded";
 import ExploreOutlined from "@mui/icons-material/ExploreOutlined";
 import CheckRounded from "@mui/icons-material/CheckRounded";
 import ErrorOutlineRounded from "@mui/icons-material/ErrorOutlineRounded";
-import { movieColors } from "../../../../theme";
 import { streamingCountries } from "../../model/streamingCountry";
 import { VoiceOrb, type OrbState } from "./VoiceOrb";
 
@@ -83,7 +81,7 @@ function SampleAction({
       sx={{
         mt: 1.2,
         borderLeft: "2px solid",
-        borderColor: failed ? "warning.main" : movieColors.info,
+        borderColor: failed ? "warning.main" : "voice.user.mid",
         pl: 1.5,
       }}
     >
@@ -91,7 +89,7 @@ function SampleAction({
         {failed ? (
           <ErrorOutlineRounded sx={{ fontSize: 15, color: "warning.main" }} />
         ) : (
-          <CheckRounded sx={{ fontSize: 15, color: movieColors.info }} />
+          <CheckRounded sx={{ fontSize: 15, color: "voice.user.mid" }} />
         )}
         <Typography sx={{ fontSize: 12, fontWeight: 700 }}>{title}</Typography>
       </Stack>
@@ -105,7 +103,9 @@ function SampleAction({
             cursor: "pointer",
             py: 0.7,
             width: "fit-content",
-            "&:focus-visible": { outline: `2px solid ${movieColors.info}` },
+            "&:focus-visible": {
+              outline: (t) => `2px solid ${t.palette.voice.user.mid}`,
+            },
           },
         }}
       >
@@ -117,7 +117,7 @@ function SampleAction({
             fontFamily: "monospace",
             fontSize: 10,
             lineHeight: 1.8,
-            bgcolor: movieColors.surfaceInset,
+            bgcolor: "surface.inset",
             p: 1.2,
             borderRadius: 1,
           }}
@@ -141,7 +141,7 @@ function SampleConversation({ country }: { country: string }) {
       <Box>
         <Typography
           sx={{
-            color: movieColors.info,
+            color: "voice.user.mid",
             fontSize: 10,
             letterSpacing: 1,
             mb: 0.8,
@@ -154,7 +154,7 @@ function SampleConversation({ country }: { country: string }) {
         </Typography>
         <Typography
           sx={{
-            color: movieColors.brand,
+            color: "accent.main",
             fontSize: 10,
             letterSpacing: 1,
             mt: 2,
@@ -171,7 +171,7 @@ function SampleConversation({ country }: { country: string }) {
           sx={{
             mt: 1.5,
             p: 1.5,
-            bgcolor: alpha(movieColors.info, 0.04),
+            bgcolor: (t) => t.alpha(t.palette.voice.user.mid, 0.04),
             border: "1px solid",
             borderColor: "divider",
             borderRadius: 1,
@@ -195,7 +195,7 @@ function SampleConversation({ country }: { country: string }) {
             target="_blank"
             rel="noopener noreferrer"
             size="small"
-            sx={{ color: movieColors.info, p: 0, mt: 1, fontSize: 11 }}
+            sx={{ color: "voice.user.mid", p: 0, mt: 1, fontSize: 11 }}
           >
             Source: TMDB ↗
           </Button>
@@ -204,7 +204,7 @@ function SampleConversation({ country }: { country: string }) {
       <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 2.5 }}>
         <Typography
           sx={{
-            color: movieColors.info,
+            color: "voice.user.mid",
             fontSize: 10,
             letterSpacing: 1,
             mb: 0.8,
@@ -215,7 +215,7 @@ function SampleConversation({ country }: { country: string }) {
         <Typography sx={{ fontSize: 13 }}>Add it to my watchlist.</Typography>
         <Typography
           sx={{
-            color: movieColors.brand,
+            color: "accent.main",
             fontSize: 10,
             letterSpacing: 1,
             mt: 2,
@@ -237,7 +237,7 @@ function SampleConversation({ country }: { country: string }) {
       <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 2.5 }}>
         <Typography
           sx={{
-            color: movieColors.info,
+            color: "voice.user.mid",
             fontSize: 10,
             letterSpacing: 1,
             mb: 0.8,
@@ -248,7 +248,7 @@ function SampleConversation({ country }: { country: string }) {
         <Typography sx={{ fontSize: 13 }}>Let me watch its trailer.</Typography>
         <Typography
           sx={{
-            color: movieColors.brand,
+            color: "accent.main",
             fontSize: 10,
             letterSpacing: 1,
             mt: 2,
@@ -327,10 +327,10 @@ export function ConversationPreview({
         maxWidth: "100%",
         display: "flex",
         flexDirection: "column",
-        bgcolor: movieColors.surface,
+        bgcolor: "surface.card",
         borderLeft: "1px solid",
         borderColor: "divider",
-        boxShadow: "-20px 0 80px #0008",
+        boxShadow: (t) => `-20px 0 80px ${t.alpha(t.palette.scrim, 0.03)}`,
         zIndex: 2,
       }}
     >
@@ -356,7 +356,7 @@ export function ConversationPreview({
             role="status"
             sx={{
               fontSize: 10,
-              color: live ? movieColors.info : "text.secondary",
+              color: live ? "voice.user.mid" : "text.secondary",
               mt: 0.3,
             }}
           >
@@ -390,7 +390,7 @@ export function ConversationPreview({
             py: 2,
             borderBottom: "1px solid",
             borderColor: "divider",
-            bgcolor: movieColors.surfaceInset,
+            bgcolor: "surface.inset",
           }}
         >
           <TextField
@@ -520,11 +520,11 @@ export function ConversationPreview({
                   border: "1px solid",
                   borderColor: "divider",
                   borderRadius: 1,
-                  bgcolor: alpha(movieColors.info, 0.025),
+                  bgcolor: (t) => t.alpha(t.palette.voice.user.mid, 0.025),
                   color: "text.primary",
                   "&:hover": {
-                    bgcolor: alpha(movieColors.info, 0.08),
-                    borderColor: alpha(movieColors.info, 0.35),
+                    bgcolor: (t) => t.alpha(t.palette.voice.user.mid, 0.08),
+                    borderColor: (t) => t.alpha(t.palette.voice.user.mid, 0.35),
                   },
                 }}
               >
@@ -534,7 +534,7 @@ export function ConversationPreview({
                   spacing={0.7}
                   sx={{ alignItems: "center", mb: 0.8 }}
                 >
-                  <item.icon sx={{ fontSize: 16, color: movieColors.info }} />
+                  <item.icon sx={{ fontSize: 16, color: "voice.user.mid" }} />
                   <Typography
                     component="span"
                     sx={{
@@ -559,7 +559,7 @@ export function ConversationPreview({
                 {guest && item.personal && (
                   <Typography
                     component="span"
-                    sx={{ fontSize: 9, color: movieColors.brand, mt: 1 }}
+                    sx={{ fontSize: 9, color: "accent.main", mt: 1 }}
                   >
                     Sign in required
                   </Typography>
@@ -579,7 +579,7 @@ export function ConversationPreview({
               borderColor: "divider",
             }}
           >
-            <Typography sx={{ color: movieColors.info, fontSize: 10, mb: 1 }}>
+            <Typography sx={{ color: "voice.user.mid", fontSize: 10, mb: 1 }}>
               YOU · PREVIEW
             </Typography>
             <Typography sx={{ fontSize: 13, whiteSpace: "pre-wrap" }}>
@@ -614,7 +614,7 @@ export function ConversationPreview({
         }}
         sx={{
           p: 1.5,
-          bgcolor: movieColors.surfaceInset,
+          bgcolor: "surface.inset",
           borderTop: "1px solid",
           borderColor: "divider",
           flexShrink: 0,
@@ -644,10 +644,10 @@ export function ConversationPreview({
                 sx={{
                   width: 40,
                   height: 40,
-                  bgcolor: movieColors.brand,
-                  color: movieColors.brandInk,
+                  bgcolor: "accent.main",
+                  color: "accent.contrastText",
                   borderRadius: 1,
-                  "&:hover": { bgcolor: movieColors.gold },
+                  "&:hover": { bgcolor: "voice.agent.mid" },
                 }}
               >
                 <ArrowUpwardRounded fontSize="small" />
@@ -677,7 +677,7 @@ export function ConversationPreview({
                         : "Mute microphone"
                     }
                     onClick={onMute}
-                    sx={{ width: 44, height: 44, color: movieColors.info }}
+                    sx={{ width: 44, height: 44, color: "voice.user.mid" }}
                   >
                     {state === "muted" ? (
                       <MicOffRounded fontSize="small" />

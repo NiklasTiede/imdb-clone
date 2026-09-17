@@ -59,8 +59,9 @@ const SearchHeader = ({
           size="small"
           value={view}
           sx={{
-            backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            backgroundColor: "surface.card",
+            border: "1px solid",
+            borderColor: "divider",
             borderRadius: 1,
             overflow: "hidden",
             "& .MuiToggleButton-root": {
@@ -70,7 +71,7 @@ const SearchHeader = ({
               px: 1.25,
             },
             "& .Mui-selected": {
-              backgroundColor: "rgba(255,255,255,0.1)",
+              backgroundColor: "action.selected",
               color: "text.primary",
             },
           }}

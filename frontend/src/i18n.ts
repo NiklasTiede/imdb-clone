@@ -59,7 +59,7 @@ export const i18n = {
   },
   ratings: {
     empty: "You have not rated any movies yet.",
-    heading: "Your Ratings",
+    heading: "Your ratings",
     loadingError: "Error while attempting to load your ratings",
   },
   editMovie: {

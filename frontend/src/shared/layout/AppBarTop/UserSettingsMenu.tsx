@@ -9,9 +9,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
-import { alpha } from "@mui/material/styles";
-import { Link as RouterLink } from "react-router";
-import { movieColors } from "../../../theme";
+import { Link as RouterLink, useLocation } from "react-router";
 import { ProfileAvatar } from "../../media";
 
 const settings = [
@@ -49,6 +47,7 @@ type UserSettingsMenuProps = {
   open: boolean;
   imageUrlToken?: string | undefined;
   username?: string | null;
+  email?: string | undefined;
 };
 
 const UserSettingsMenu = ({
@@ -59,85 +58,92 @@ const UserSettingsMenu = ({
   open,
   imageUrlToken,
   username,
-}: UserSettingsMenuProps) => (
-  <Menu
-    anchorEl={anchorEl}
-    anchorOrigin={{
-      vertical: "bottom",
-      horizontal: "right",
-    }}
-    id={menuId}
-    keepMounted
-    transformOrigin={{
-      vertical: "top",
-      horizontal: "right",
-    }}
-    open={open}
-    onClose={onClose}
-    slotProps={{
-      paper: {
-        sx: {
-          border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 2,
-          mt: 1,
-          minWidth: 280,
-          overflow: "hidden",
+  email,
+}: UserSettingsMenuProps) => {
+  const { pathname } = useLocation();
+
+  return (
+    <Menu
+      anchorEl={anchorEl}
+      anchorOrigin={{
+        vertical: "bottom",
+        horizontal: "right",
+      }}
+      id={menuId}
+      keepMounted
+      transformOrigin={{
+        vertical: "top",
+        horizontal: "right",
+      }}
+      open={open}
+      onClose={onClose}
+      slotProps={{
+        paper: {
+          sx: {
+            mt: 1,
+            minWidth: 260,
+            overflow: "hidden",
+          },
         },
-      },
-    }}
-  >
-    <Box
-      sx={{
-        alignItems: "center",
-        display: "grid",
-        gap: 1.5,
-        gridTemplateColumns: "40px minmax(0, 1fr)",
-        px: 2,
-        py: 1.5,
       }}
     >
-      <ProfileAvatar
-        alt={username ? `${username} profile` : "Account profile"}
-        fallback={(username?.slice(0, 2) || "IM").toUpperCase()}
-        imageUrlToken={imageUrlToken}
+      <Box
         sx={{
-          bgcolor: alpha(movieColors.brand, 0.18),
-          color: movieColors.brand,
-          fontSize: 13,
-          fontWeight: 800,
-          height: 40,
-          width: 40,
+          alignItems: "center",
+          display: "grid",
+          gap: 1.5,
+          gridTemplateColumns: "40px minmax(0, 1fr)",
+          px: 2,
+          py: 1.5,
         }}
-      />
-      <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ fontSize: 14, fontWeight: 800 }} noWrap>
-          {username || "Your account"}
-        </Typography>
-        <Typography sx={{ color: "text.secondary", fontSize: 12 }} noWrap>
-          Ratings, watchlist, settings
-        </Typography>
-      </Box>
-    </Box>
-    <Divider />
-    {settings.map((setting) => (
-      <MenuItem
-        component={RouterLink}
-        key={setting.name}
-        onClick={onClose}
-        to={setting.to}
       >
-        <ListItemIcon>{setting.icon}</ListItemIcon>
-        <Typography>{setting.text}</Typography>
+        <ProfileAvatar
+          alt={username ? `${username} profile` : "Account profile"}
+          fallback={(username?.slice(0, 2) || "IM").toUpperCase()}
+          imageUrlToken={imageUrlToken}
+          sx={{
+            bgcolor: (theme) => theme.alpha(theme.palette.accent.main, 0.18),
+            color: "accent.core",
+            fontSize: 13,
+            fontWeight: 800,
+            height: 40,
+            width: 40,
+          }}
+        />
+        <Box sx={{ minWidth: 0 }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 600 }} noWrap>
+            {username || "Your account"}
+          </Typography>
+          {email && (
+            <Typography sx={{ color: "text.secondary", fontSize: 12 }} noWrap>
+              {email}
+            </Typography>
+          )}
+        </Box>
+      </Box>
+      <Divider />
+      {settings.map((setting) => (
+        <MenuItem
+          aria-current={pathname === setting.to ? "page" : undefined}
+          component={RouterLink}
+          key={setting.name}
+          onClick={onClose}
+          selected={pathname === setting.to}
+          to={setting.to}
+        >
+          <ListItemIcon>{setting.icon}</ListItemIcon>
+          <Typography>{setting.text}</Typography>
+        </MenuItem>
+      ))}
+      <Divider />
+      <MenuItem key="Logout" onClick={onLogout}>
+        <ListItemIcon>
+          <LogoutIcon fontSize="small" />
+        </ListItemIcon>
+        <Typography>Sign out</Typography>
       </MenuItem>
-    ))}
-    <Divider />
-    <MenuItem key="Logout" onClick={onLogout} sx={{ color: "error.light" }}>
-      <ListItemIcon sx={{ color: "inherit" }}>
-        <LogoutIcon fontSize="small" />
-      </ListItemIcon>
-      <Typography>Sign out</Typography>
-    </MenuItem>
-  </Menu>
-);
+    </Menu>
+  );
+};
 
 export default UserSettingsMenu;

@@ -12,12 +12,11 @@ import {
   IconButton,
   Paper,
   Stack,
-  ThemeProvider,
   TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 import MicRounded from "@mui/icons-material/MicRounded";
 import MicOffRounded from "@mui/icons-material/MicOffRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
@@ -28,7 +27,7 @@ import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRound
 import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
 import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
 import CheckRounded from "@mui/icons-material/CheckRounded";
-import { appTheme, movieColors } from "../../../theme";
+import { AppThemeProvider } from "../../../theme";
 import AppSurface from "../../../shared/layout/AppSurface";
 import ConciergeMovieCard from "../components/ConciergeMovieCard";
 import catalogScreenshot from "../../../../../docs/assets/popcorn-society-screenshot.webp";
@@ -95,8 +94,10 @@ function Control({
           border: "1px solid",
           borderColor: "divider",
           borderRadius: 1,
-          color: active ? movieColors.brand : "text.secondary",
-          bgcolor: active ? alpha(movieColors.brand, 0.08) : "transparent",
+          color: active ? "accent.main" : "text.secondary",
+          bgcolor: active
+            ? (t) => t.alpha(t.palette.accent.main, 0.08)
+            : "transparent",
         }}
       >
         {children}
@@ -112,7 +113,12 @@ function VoiceSignal({
   state: VoiceState;
   compact?: boolean;
 }) {
-  const color = state === "listening" ? movieColors.info : movieColors.brand;
+  const theme = useTheme();
+  const alpha = (value: string, opacity: number) => theme.alpha(value, opacity);
+  const color =
+    state === "listening"
+      ? theme.palette.voice.user.mid
+      : theme.palette.accent.main;
   const animated = state === "listening" || state === "speaking";
   return (
     <Box
@@ -126,7 +132,7 @@ function VoiceSignal({
         borderRadius: "50%",
         position: "relative",
         color,
-        bgcolor: movieColors.surfaceInset,
+        bgcolor: "surface.inset",
         opacity: state === "muted" || state === "error" ? 0.45 : 1,
         border: `1px solid ${alpha(color, 0.3)}`,
         boxShadow: compact
@@ -223,11 +229,11 @@ function VoiceDesignPreview() {
           p: 2,
           borderBottom: "1px solid",
           borderColor: "divider",
-          bgcolor: movieColors.surface,
+          bgcolor: "surface.card",
         }}
       >
         <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
-          <AutoAwesomeRounded sx={{ color: movieColors.brand, fontSize: 18 }} />
+          <AutoAwesomeRounded sx={{ color: "accent.main", fontSize: 18 }} />
           <Typography sx={{ fontWeight: 800, fontSize: 13 }}>
             VOICE DESIGN STUDY
           </Typography>
@@ -307,7 +313,7 @@ function VoiceDesignPreview() {
             <AppSurface accent="brand" sx={{ p: { xs: 2, sm: 3 } }}>
               <Typography
                 sx={{
-                  color: movieColors.brand,
+                  color: "accent.main",
                   fontSize: 11,
                   fontWeight: 750,
                   letterSpacing: 1.5,
@@ -368,7 +374,7 @@ function VoiceDesignPreview() {
               position: "absolute",
               inset: "0 0 0 auto",
               width: { xs: "100%", sm: 440 },
-              bgcolor: movieColors.surfaceInset,
+              bgcolor: "surface.inset",
               borderLeft: "1px solid",
               borderColor: "divider",
               borderRadius: 0,
@@ -376,7 +382,8 @@ function VoiceDesignPreview() {
               flexDirection: "column",
               height: "100%",
               minHeight: 0,
-              boxShadow: "-24px 0 60px rgba(0,0,0,.35)",
+              boxShadow: (t) =>
+                `-24px 0 60px ${t.alpha(t.palette.scrim, 0.35)}`,
             }}
           >
             <Stack
@@ -389,7 +396,7 @@ function VoiceDesignPreview() {
                 borderColor: "divider",
               }}
             >
-              <AutoAwesomeRounded sx={{ color: movieColors.brand }} />
+              <AutoAwesomeRounded sx={{ color: "accent.main" }} />
               <Box sx={{ flex: 1 }}>
                 <Typography sx={{ fontWeight: 750, fontSize: 14 }}>
                   Movie Concierge
@@ -504,7 +511,7 @@ function VoiceDesignPreview() {
                     <>
                       <Typography
                         sx={{
-                          color: movieColors.info,
+                          color: "voice.user.mid",
                           fontSize: 10,
                           fontWeight: 750,
                           mb: 0.7,
@@ -514,8 +521,10 @@ function VoiceDesignPreview() {
                       </Typography>
                       <Box
                         sx={{
-                          bgcolor: alpha(movieColors.info, 0.1),
-                          borderLeft: `2px solid ${movieColors.info}`,
+                          bgcolor: (t) =>
+                            t.alpha(t.palette.voice.user.mid, 0.1),
+                          borderLeft: (t) =>
+                            `2px solid ${t.palette.voice.user.mid}`,
                           p: 1.5,
                           mb: 2,
                           fontSize: 13,
@@ -527,7 +536,7 @@ function VoiceDesignPreview() {
                         <>
                           <Typography
                             sx={{
-                              color: movieColors.brand,
+                              color: "accent.main",
                               fontSize: 10,
                               fontWeight: 750,
                               mb: 0.7,
@@ -583,7 +592,7 @@ function VoiceDesignPreview() {
               sx={{
                 borderTop: "1px solid",
                 borderColor: "divider",
-                bgcolor: movieColors.surface,
+                bgcolor: "surface.card",
                 p: 2,
                 pb: "max(16px, env(safe-area-inset-bottom))",
               }}
@@ -639,7 +648,7 @@ function VoiceDesignPreview() {
                     placeholder="Type a message…"
                     sx={{
                       minWidth: 0,
-                      bgcolor: movieColors.surfaceInset,
+                      bgcolor: "surface.inset",
                     }}
                   />
                   <Button type="submit">Send</Button>
@@ -672,10 +681,10 @@ function VoiceDesignPreview() {
             bottom: "max(18px, env(safe-area-inset-bottom))",
             zIndex: 3,
             width: { xs: "auto", sm: active ? 410 : "auto" },
-            bgcolor: alpha(movieColors.surfaceElevated, 0.97),
-            border: `1px solid ${alpha(movieColors.brand, 0.3)}`,
+            bgcolor: (t) => t.alpha(t.palette.surface.raised, 0.97),
+            border: (t) => `1px solid ${t.alpha(t.palette.accent.main, 0.3)}`,
             borderRadius: 1,
-            boxShadow: "0 12px 36px rgba(0,0,0,.45)",
+            boxShadow: (t) => `0 12px 36px ${t.alpha(t.palette.scrim, 0.45)}`,
             p: 1.25,
           }}
         >
@@ -740,10 +749,10 @@ function VoiceDesignPreview() {
 const root = document.getElementById("root");
 if (root)
   createRoot(root).render(
-    <ThemeProvider theme={appTheme}>
+    <AppThemeProvider>
       <CssBaseline />
       <MemoryRouter>
         <VoiceDesignPreview />
       </MemoryRouter>
-    </ThemeProvider>,
+    </AppThemeProvider>,
   );

@@ -4,9 +4,8 @@ import StarBorderIcon from "@mui/icons-material/StarBorder";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import type { ReactNode } from "react";
-import authCinemaBackdrop from "../../../assets/img/auth-cinema-backdrop.webp";
-import { movieColors } from "../../../theme";
 
 type AuthVisualPaneVariant = "login" | "signup";
 
@@ -46,7 +45,8 @@ const copyByVariant: Record<
   },
   login: {
     title: "Welcome back.",
-    subtitle: "Pick up where you left off - your watchlist and ratings are ready.",
+    subtitle:
+      "Pick up where you left off - your watchlist and ratings are ready.",
     features: [
       {
         description: "The movies you've saved.",
@@ -73,13 +73,14 @@ type AuthVisualPaneProps = {
 
 const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
   const copy = copyByVariant[variant];
+  const { authBackdropSrc } = useTheme().brand;
 
   return (
     <Box
       data-testid="auth-visual-pane"
       sx={{
         alignItems: "center",
-        bgcolor: movieColors.surfaceInset,
+        bgcolor: "surface.inset",
         display: { xs: "none", md: "flex" },
         height: "100%",
         overflow: "hidden",
@@ -92,7 +93,7 @@ const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
         alt=""
         aria-hidden="true"
         component="img"
-        src={authCinemaBackdrop}
+        src={authBackdropSrc}
         sx={{
           height: "100%",
           inset: 0,
@@ -105,8 +106,8 @@ const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
       <Box
         aria-hidden="true"
         sx={{
-          background:
-            "linear-gradient(90deg, rgba(7,11,18,0.92) 0%, rgba(7,11,18,0.78) 58%, rgba(7,11,18,0.48) 100%)",
+          background: (theme) =>
+            `linear-gradient(90deg, ${theme.alpha(theme.palette.scrim, 0.92)} 0%, ${theme.alpha(theme.palette.scrim, 0.78)} 58%, ${theme.alpha(theme.palette.scrim, 0.48)} 100%)`,
           inset: 0,
           position: "absolute",
         }}
@@ -120,7 +121,7 @@ const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
           <Typography
             component="h2"
             sx={{
-              color: "common.white",
+              color: "text.primary",
               fontSize: 30,
               fontWeight: 600,
               mb: 1.5,
@@ -130,7 +131,7 @@ const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
           </Typography>
           <Typography
             sx={{
-              color: "rgba(255,255,255,0.65)",
+              color: "text.secondary",
               fontSize: 14,
               lineHeight: 1.6,
               maxWidth: 340,
@@ -147,14 +148,15 @@ const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
               direction="row"
               key={feature.label}
               spacing={1.5}
-              sx={{ color: "rgba(255,255,255,0.85)", listStyle: "none" }}
+              sx={{ color: "text.primary", listStyle: "none" }}
             >
               <Box
                 sx={{
                   alignItems: "center",
-                  bgcolor: "rgba(122,184,255,0.12)",
+                  bgcolor: (theme) =>
+                    theme.alpha(theme.palette.accent.main, 0.12),
                   borderRadius: 1,
-                  color: movieColors.info,
+                  color: "accent.core",
                   display: "flex",
                   flexShrink: 0,
                   height: 28,
@@ -166,13 +168,11 @@ const AuthVisualPane = ({ variant = "signup" }: AuthVisualPaneProps) => {
               </Box>
               <Box>
                 <Typography
-                  sx={{ color: "common.white", fontSize: 13, fontWeight: 500 }}
+                  sx={{ color: "text.primary", fontSize: 13, fontWeight: 500 }}
                 >
                   {feature.label}
                 </Typography>
-                <Typography
-                  sx={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}
-                >
+                <Typography sx={{ color: "text.secondary", fontSize: 12 }}>
                   {feature.description}
                 </Typography>
               </Box>

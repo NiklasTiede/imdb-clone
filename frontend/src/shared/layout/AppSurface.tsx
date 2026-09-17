@@ -1,9 +1,8 @@
 import Paper from "@mui/material/Paper";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
-import { movieColors } from "../../theme";
 
-type SurfaceAccent = "brand" | "info" | "none";
+type SurfaceAccent = "brand" | "none";
 
 type AppSurfaceProps = {
   accent?: SurfaceAccent;
@@ -12,19 +11,14 @@ type AppSurfaceProps = {
 };
 
 const accentColors: Record<Exclude<SurfaceAccent, "none">, string> = {
-  brand: movieColors.brand,
-  info: movieColors.info,
+  brand: "accent.main",
 };
 
-const AppSurface = ({
-  accent = "none",
-  children,
-  sx,
-}: AppSurfaceProps) => (
+const AppSurface = ({ accent = "none", children, sx }: AppSurfaceProps) => (
   <Paper
     elevation={0}
     sx={{
-      backgroundColor: movieColors.surface,
+      backgroundColor: "surface.card",
       border: "1px solid",
       borderColor: "divider",
       borderRadius: 1,

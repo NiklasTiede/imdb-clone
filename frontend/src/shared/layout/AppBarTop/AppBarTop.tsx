@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import type { MouseEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { movieColors } from "../../../theme";
 import { accountQueries } from "../../api/accountProfileQueries";
 import { logoutSession } from "../../auth";
 import { authSession } from "../../auth/authSession";
@@ -136,9 +135,11 @@ function AppBarTop() {
         position="sticky"
         sx={{
           backdropFilter: "blur(18px)",
-          bgcolor: `${movieColors.surface}eb`,
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          color: "common.white",
+          // Quiet like the page: the bar recedes so posters and the accent stand out.
+          bgcolor: (theme) => theme.alpha(theme.palette.surface.page, 0.9),
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          color: "text.primary",
         }}
       >
         <Toolbar
@@ -198,6 +199,7 @@ function AppBarTop() {
             {isLoggedIn ? (
               <UserActions
                 imageUrlToken={currentProfile?.imageUrlToken}
+                isMenuOpen={isMenuOpen}
                 menuId={menuId}
                 onProfileMenuOpen={handleProfileMenuOpen}
                 username={username}
@@ -210,6 +212,7 @@ function AppBarTop() {
       </AppBar>
       <UserSettingsMenu
         anchorEl={anchorEl}
+        email={currentProfile?.email}
         imageUrlToken={currentProfile?.imageUrlToken}
         menuId={menuId}
         onClose={handleMenuClose}

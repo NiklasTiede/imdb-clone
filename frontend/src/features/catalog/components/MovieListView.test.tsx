@@ -10,9 +10,7 @@ describe("MovieListView", () => {
   test("renders a compact linked movie row", () => {
     render(
       <MemoryRouter>
-        <MovieListView
-          ariaLabel="Rated movies"
-        >
+        <MovieListView ariaLabel="Rated movies">
           <MovieListRow
             movie={{
               id: 2872718,
@@ -47,9 +45,7 @@ describe("MovieListView", () => {
 
     render(
       <MemoryRouter>
-        <MovieListView
-          ariaLabel="Watchlist movies"
-        >
+        <MovieListView ariaLabel="Watchlist movies">
           <MovieListRow
             action={{
               ariaLabel: "Remove from watchlist",

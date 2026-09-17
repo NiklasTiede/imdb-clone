@@ -1,11 +1,10 @@
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { alpha } from "@mui/material/styles";
 import type React from "react";
 import { ProfileAvatar } from "../../media";
-import { movieColors } from "../../../theme";
 
 type UserActionsProps = {
+  isMenuOpen?: boolean;
   menuId: string;
   onProfileMenuOpen: (event: React.MouseEvent<HTMLElement>) => void;
   imageUrlToken?: string | undefined;
@@ -13,6 +12,7 @@ type UserActionsProps = {
 };
 
 const UserActions = ({
+  isMenuOpen = false,
   menuId,
   onProfileMenuOpen,
   imageUrlToken,
@@ -38,6 +38,7 @@ const UserActions = ({
     <IconButton
       aria-label="account of current user"
       aria-controls={menuId}
+      aria-expanded={isMenuOpen}
       aria-haspopup="true"
       color="inherit"
       onClick={onProfileMenuOpen}
@@ -49,9 +50,19 @@ const UserActions = ({
         fallback={(username?.slice(0, 2) || "IM").toUpperCase()}
         imageUrlToken={imageUrlToken}
         sx={{
-          bgcolor: alpha(movieColors.brand, 0.18),
-          border: `1px solid ${alpha(movieColors.brand, 0.36)}`,
-          color: movieColors.brand,
+          bgcolor: (theme) => theme.alpha(theme.palette.accent.main, 0.18),
+          border: "1px solid",
+          borderColor: (theme) =>
+            isMenuOpen
+              ? theme.palette.accent.main
+              : theme.alpha(theme.palette.accent.main, 0.36),
+          boxShadow: (theme) =>
+            isMenuOpen
+              ? `0 0 0 2px ${theme.alpha(theme.palette.accent.main, 0.35)}`
+              : "none",
+          transition: "border-color 150ms ease, box-shadow 150ms ease",
+          // Accent tints can be too dark for accent-coloured text; the core stays readable.
+          color: "accent.core",
           fontSize: 13,
           fontWeight: 800,
           height: 38,

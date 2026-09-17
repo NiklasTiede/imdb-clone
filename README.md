@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://popcornsociety.app/" target="_blank">
-    <img alt="Popcorn Society popcorn logo" width="104" src="frontend/public/brand-logo.svg" />
+    <img alt="Popcorn Society neon popcorn logo" width="104" src="frontend/public/brand/after-dark/favicon.svg" />
   </a>
 </p>
 

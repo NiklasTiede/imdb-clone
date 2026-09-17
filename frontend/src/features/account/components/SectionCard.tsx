@@ -12,7 +12,7 @@ type SectionCardProps = {
 };
 
 const SectionCard = ({ actions, children, subtitle, title }: SectionCardProps) => (
-  <AppSurface accent="info">
+  <AppSurface accent="brand">
     <CardHeader
       title={title}
       subheader={subtitle}

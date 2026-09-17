@@ -1,6 +1,5 @@
 import { Box, Card, Paper, Stack, styled, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
-import { movieColors, tokens } from "../../../theme";
 import { getMoviePosterToken, type Movie } from "../model/movie";
 import React from "react";
 import { Link } from "react-router";
@@ -9,12 +8,12 @@ import { ObjectStorageImageSize, PosterImage } from "../../../shared/media";
 export const MovieLink = styled(Link)`
   text-decoration: none;
   &:hover {
-    color: darkgray;
+    color: ${({ theme }) => theme.palette.text.secondary};
   }
 `;
 
 const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: movieColors.surfaceElevated,
+  backgroundColor: theme.palette.surface.raised,
   ...theme.typography.body2,
   padding: theme.spacing(0.5),
   textAlign: "center",
@@ -47,8 +46,6 @@ export function snakeToPascalCase(str: string): string {
 }
 
 const MovieCard = (movie: Movie) => {
-  const colors = tokens();
-
   return (
     <Card sx={movieCardSx}>
       <PosterImage
@@ -76,7 +73,7 @@ const MovieCard = (movie: Movie) => {
         >
           <MovieLink
             to={`/movie?id=${movie.id}`}
-            sx={{ color: colors.grey[100] }}
+            sx={{ color: "text.primary" }}
           >
             {movie.primaryTitle}
           </MovieLink>
@@ -85,7 +82,7 @@ const MovieCard = (movie: Movie) => {
           sx={{
             marginLeft: 0.6,
             mb: { xs: 0.5, sm: 1.4 },
-            color: colors.grey[400],
+            color: "text.secondary",
             fontSize: 12,
           }}
         >

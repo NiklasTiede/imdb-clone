@@ -101,7 +101,9 @@ test("loads complete ratings insights while browsing additional pages", async ({
 
   await page.goto("/your-ratings");
 
-  await expect(page.getByText("TASTE SNAPSHOT")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Your taste profile|Your strongest signal/ }),
+  ).toBeVisible();
   await expect(page.getByLabel("Your rating distribution")).toBeVisible();
   await expect(
     page.getByRole("link", { name: /First Library Film/ }).first(),

@@ -24,7 +24,6 @@ import {
 import * as zod from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { authSession, useAuthSession } from "../../../shared/auth";
-import { movieColors } from "../../../theme";
 import { authenticateAccount } from "../api/identityMutations";
 import AuthPageFrame from "../components/AuthPageFrame";
 import { authTextFieldSx } from "../components/authFormStyles";
@@ -126,7 +125,7 @@ const LoginPage = () => {
           <Typography
             component="h1"
             sx={{
-              color: "common.white",
+              color: "text.primary",
               fontSize: { xs: 24, sm: 26 },
               fontWeight: 500,
               mb: 0.75,
@@ -187,7 +186,7 @@ const LoginPage = () => {
               <Link
                 component={RouterLink}
                 sx={{
-                  color: movieColors.brand,
+                  color: "accent.main",
                   fontSize: 12,
                   fontWeight: 600,
                   textDecoration: "none",
