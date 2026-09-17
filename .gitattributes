@@ -1,1 +1,8 @@
 infrastructure/movie-seed/data-processing/process_movie_dataset.ipynb linguist-documentation
+
+# Published GitHub Pages documentation is not application source code.
+engineering/site/** linguist-documentation
+
+# Archify output is generated from the checked-in diagram definitions.
+engineering/site/architecture/application/index.html linguist-generated
+engineering/site/architecture/observability/index.html linguist-generated
