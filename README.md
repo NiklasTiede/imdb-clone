@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
+  <a href="https://popcornsociety.app/" target="_blank">
     <img alt="Popcorn Society popcorn logo" width="104" src="frontend/public/brand-logo.svg" />
   </a>
 </p>
@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">Live Demo</a>
+  <a href="https://popcornsociety.app/" target="_blank">Live Demo</a>
   ·
   <a href="./agent/README.md">Movie Concierge</a>
   ·
@@ -42,7 +42,7 @@
 </p>
 
 <p align="center">
-  <a href="https://imdb-clone.the-coding-lab.com/" target="_blank">
+  <a href="https://popcornsociety.app/" target="_blank">
     <img
       alt="Popcorn Society screenshot"
       width="760"
@@ -57,8 +57,9 @@ Popcorn Society is a full-stack movie discovery application built and operated o
 Kubernetes cluster. Browse the catalog yourself or explore it by speaking to the Movie Concierge:
 find something to watch, open movie pages, and manage your personal movie library.
 
-Previously called IMDb Clone. The move to **popcornsociety.app** is being prepared; the live links
-above keep using the current address until cutover. See the [domain migration runbook](docs/popcorn-society-migration.md).
+Previously called IMDb Clone. **[popcornsociety.app](https://popcornsociety.app/)** has been the
+canonical production address since September 2026. The former public page URLs redirect to the
+same paths on the new domain. See the [domain migration record](docs/popcorn-society-migration.md).
 
 ## Features
 
@@ -221,7 +222,7 @@ flowchart LR
 
 ## Live Deployment
 
-[Try the application](https://imdb-clone.the-coding-lab.com/), hosted on a Minisforum UM560 home
+[Try the application](https://popcornsociety.app/), hosted on a Minisforum UM560 home
 server running a single-node k3s cluster. The public app includes both voice models.
 
 Deployment manifests live in [infrastructure/clusters/home](./infrastructure/clusters/home).

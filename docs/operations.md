@@ -1,7 +1,8 @@
 # Production Operations
 
-The Popcorn Society domain switch is staged separately. Follow the
-[migration runbook](popcorn-society-migration.md) before changing DNS or activating the new ingresses.
+The Popcorn Society domain switch was completed in September 2026. The
+[migration record](popcorn-society-migration.md) documents the cutover, retained legacy routes and
+rollback constraints.
 
 This runbook is the operator entry point for the home k3s cluster. Public application traffic uses
 HTTPS ingress. Databases, search, object-storage administration, metrics APIs, logs, traces,
@@ -11,7 +12,8 @@ profiles, and Argo CD remain private and are reached through SSH-backed Kubernet
 
 | Surface | URL | Access |
 | --- | --- | --- |
-| Popcorn Society | `https://imdb-clone.the-coding-lab.com` | Public |
+| Popcorn Society | `https://popcornsociety.app` | Canonical public application |
+| Legacy public pages | `https://imdb-clone.the-coding-lab.com` | Permanent redirect to the canonical domain |
 | Backend API | `https://backend.imdb-clone.the-coding-lab.com` | Public application API |
 | Public movie media | `https://object-storage.imdb-clone.the-coding-lab.com` | Public objects only |
 | Grafana | `https://grafana.imdb-clone.the-coding-lab.com` | Authenticated read-only viewer |
@@ -248,7 +250,7 @@ Release in this order to avoid enabling unsupported settings on the v1.4.0 image
    - name: POPCORN_SOCIETY_AGENT_VOICE_QUOTA_DATABASE
      value: /var/lib/movie-concierge/voice-quota.db
    - name: POPCORN_SOCIETY_AGENT_VOICE_ALLOWED_ORIGINS
-     value: '["https://imdb-clone.the-coding-lab.com"]'
+     value: '["https://popcornsociety.app","https://imdb-clone.the-coding-lab.com"]'
    ```
 
 4. Verify `/concierge-api/v1/voice/models` returns both models. On the public HTTPS site, test
