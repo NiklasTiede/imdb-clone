@@ -1,0 +1,292 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Popcorn Society \u00b7 Observability",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1390,
+      870
+    ],
+    "repository": {
+      "url": "https://github.com/NiklasTiede/popcorn-society",
+      "revision": "8fbf5e1721553f41c17e36f981b9b141d741a675",
+      "provider": "github"
+    }
+  },
+  "components": [
+    {
+      "id": "apps",
+      "type": "backend",
+      "label": "Java + Python",
+      "sublabel": "App telemetry",
+      "pos": [
+        40,
+        180
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/backend.yaml"
+        }
+      ]
+    },
+    {
+      "id": "cluster",
+      "type": "cloud",
+      "label": "k3s workloads",
+      "sublabel": "Pods \u00b7 events \u00b7 journal",
+      "pos": [
+        40,
+        600
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/alloy.yaml"
+        }
+      ]
+    },
+    {
+      "id": "alloy",
+      "type": "backend",
+      "label": "Grafana Alloy",
+      "sublabel": "Collect + batch + forward",
+      "pos": [
+        410,
+        390
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/alloy.yaml"
+        }
+      ]
+    },
+    {
+      "id": "prometheus",
+      "type": "database",
+      "label": "Prometheus",
+      "sublabel": "Scraped metrics",
+      "pos": [
+        790,
+        60
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/observability.yaml"
+        }
+      ]
+    },
+    {
+      "id": "loki",
+      "type": "database",
+      "label": "Loki",
+      "sublabel": "Logs",
+      "pos": [
+        790,
+        280
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/loki.yaml"
+        }
+      ]
+    },
+    {
+      "id": "tempo",
+      "type": "database",
+      "label": "Tempo",
+      "sublabel": "OTLP traces",
+      "pos": [
+        790,
+        500
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/tempo.yaml"
+        }
+      ]
+    },
+    {
+      "id": "pyroscope",
+      "type": "database",
+      "label": "Pyroscope",
+      "sublabel": "Continuous profiles",
+      "pos": [
+        790,
+        720
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/pyroscope.yaml"
+        }
+      ]
+    },
+    {
+      "id": "grafana",
+      "type": "frontend",
+      "label": "Grafana",
+      "sublabel": "Query + correlate",
+      "pos": [
+        1130,
+        390
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/observability.yaml"
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "apps-prometheus",
+      "from": "apps",
+      "to": "prometheus",
+      "label": "Scraped metrics",
+      "variant": "default"
+    },
+    {
+      "id": "apps-alloy",
+      "from": "apps",
+      "to": "alloy",
+      "label": "OTLP traces",
+      "variant": "default"
+    },
+    {
+      "id": "cluster-alloy",
+      "from": "cluster",
+      "to": "alloy",
+      "label": "Logs / events",
+      "variant": "default"
+    },
+    {
+      "id": "alloy-loki",
+      "from": "alloy",
+      "to": "loki",
+      "label": "Log push",
+      "variant": "default"
+    },
+    {
+      "id": "alloy-tempo",
+      "from": "alloy",
+      "to": "tempo",
+      "label": "OTLP",
+      "variant": "default"
+    },
+    {
+      "id": "apps-pyroscope",
+      "from": "apps",
+      "to": "pyroscope",
+      "label": "Profile push",
+      "variant": "default",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "via": [
+        [
+          14,
+          220
+        ],
+        [
+          14,
+          840
+        ],
+        [
+          895,
+          840
+        ]
+      ],
+      "labelAt": [
+        460,
+        823
+      ]
+    },
+    {
+      "id": "prometheus-grafana",
+      "from": "prometheus",
+      "to": "grafana",
+      "label": "Metrics",
+      "variant": "default"
+    },
+    {
+      "id": "loki-grafana",
+      "from": "loki",
+      "to": "grafana",
+      "label": "Logs",
+      "variant": "default",
+      "labelDx": -50
+    },
+    {
+      "id": "tempo-grafana",
+      "from": "tempo",
+      "to": "grafana",
+      "label": "Traces",
+      "variant": "default",
+      "labelDx": -50
+    },
+    {
+      "id": "pyroscope-grafana",
+      "from": "pyroscope",
+      "to": "grafana",
+      "label": "Profiles",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Metrics at the source",
+      "items": [
+        "Prometheus also scrapes exporters and llama.cpp.",
+        "Browser timings become bounded Java metrics."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "From a symptom to a cause",
+      "items": [
+        "Grafana connects metrics, logs, traces and profiles.",
+        "Profiles go directly from Java/Python to Pyroscope."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Operator view",
+      "items": [
+        "This map describes configured telemetry paths.",
+        "Public dashboards are planned, not enabled here."
+      ]
+    }
+  ]
+}

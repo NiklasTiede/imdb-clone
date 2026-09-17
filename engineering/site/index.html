@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inside Popcorn Society — Architecture &amp; Engineering</title>
+  <meta name="description" content="Explore the architecture and observability behind Popcorn Society: a movie discovery app with a voice agent, built and operated by Niklas Tiede.">
+  <meta name="theme-color" content="#0a0c12">
+  <link rel="canonical" href="https://docs.popcornsociety.app/">
+  <meta property="og:title" content="Inside Popcorn Society">
+  <meta property="og:description" content="A closer look at the architecture, voice agent and operations behind a movie discovery app.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://docs.popcornsociety.app/">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="header">
+    <a class="brand" href="./" aria-label="Inside Popcorn Society home"><img src="assets/mark.svg" alt="" width="42" height="42"><span class="brand-lockup"><span class="brand-wordmark">Popcorn <span>Society</span></span><small>watch together, after dark</small></span></a>
+    <nav aria-label="Main navigation"><a href="./" aria-current="page">Overview</a><a href="architecture/">Architecture</a><a href="https://github.com/NiklasTiede/popcorn-society">GitHub ↗</a><a href="https://popcornsociety.app/">Live app ↗</a></nav>
+  </header>
+  <main id="main">
+    <section class="hero" aria-labelledby="intro-title">
+      <p class="eyebrow">Behind the screen / Built by Niklas Tiede</p>
+      <div class="hero-layout">
+        <div>
+          <h1 id="intro-title">Inside<br><em>Popcorn Society.</em></h1>
+          <p class="intro">A movie discovery app, from the first voice request to the infrastructure that keeps it running. Explore how the pieces fit together.</p>
+          <div class="actions"><a class="button" href="architecture/">Explore the architecture <span aria-hidden="true">→</span></a><a class="text-link" href="https://popcornsociety.app/">Try the movie app ↗</a></div>
+        </div>
+        <aside class="project-note" aria-label="About this project">
+          <span class="meta">An independent project</span>
+          <p>I design, build and operate this application as a hands-on exploration of full-stack development, AI agents and DevOps.</p>
+          <dl><div><dt>Application</dt><dd>Movie discovery</dd></div><div><dt>Infrastructure</dt><dd>Self-hosted k3s</dd></div><div><dt>Source</dt><dd>Open on GitHub</dd></div></dl>
+        </aside>
+      </div>
+    </section>
+    <div class="stack" aria-label="Selected technologies"><span>The building blocks</span><span>React</span><span>Spring Boot</span><span>Python</span><span>OpenSearch</span><span>Kubernetes</span><span>Grafana</span></div>
+    <section class="section" aria-labelledby="architecture-title">
+      <div class="section-heading"><div><p class="eyebrow">01 / Explore the system</p><h2 id="architecture-title">Two ways to look inside.</h2></div><p>Interactive maps of the application and the signals that help explain its behaviour.</p></div>
+      <div class="diagrams">
+        <article class="diagram-card">
+          <a class="preview" href="architecture/#application" aria-label="Read about the application architecture"><img src="assets/application.png" alt="Application map connecting the browser, Traefik, Java backend, Python agent and data services." width="1390" height="800" loading="lazy"></a>
+          <div class="card-copy"><span class="number">01 / Application</span><h3>From a request to a movie.</h3><p>Follow web and voice requests through the frontend, the domain backend, the agent and the data layer.</p><a href="architecture/#application">Explore application architecture →</a></div>
+        </article>
+        <article class="diagram-card">
+          <a class="preview" href="architecture/#observability" aria-label="Read about observability and operations"><img src="assets/observability.png" alt="Telemetry map connecting Java and Python, Kubernetes, Alloy, four telemetry stores and Grafana." width="1390" height="870" loading="lazy"></a>
+          <div class="card-copy"><span class="number">02 / Observability</span><h3>From a symptom to a cause.</h3><p>See where metrics, logs, traces and profiles originate, where they go and how Grafana brings them together.</p><a href="architecture/#observability">Explore observability →</a></div>
+        </article>
+      </div>
+    </section>
+    <section class="section split" aria-label="Metrics and engineering writing">
+      <div id="metrics"><span class="tag">Planned / Public dashboards</span><h2>See the system<br>in operation.</h2><p>The next addition will be a curated view of real operating metrics, with context for what each measurement tells us.</p><ul class="signal-list"><li>Search responsiveness <span>Latency</span></li><li>Voice-agent behaviour <span>Timing &amp; outcomes</span></li><li>Cluster resources <span>Capacity</span></li></ul><p class="caption">Public dashboard access is not available yet.</p></div>
+      <div id="notes"><span class="tag">Engineering notes</span><h2>The decisions<br>behind the diagrams.</h2><p>I write about software development and the lessons from building and running projects on The Coding Lab. Future Popcorn Society articles will be collected here.</p><a class="text-link" href="https://the-coding-lab.com/">Visit The Coding Lab ↗</a></div>
+    </section>
+  </main>
+  <footer class="footer"><p>Built and operated by <a href="https://the-coding-lab.com/">Niklas Tiede</a>.</p><div class="footer-links"><a href="https://popcornsociety.app/">Popcorn Society ↗</a><a href="https://github.com/NiklasTiede/popcorn-society">Source code ↗</a><span>Architecture reviewed · September 2026</span></div></footer>
+</div>
+</body>
+</html>

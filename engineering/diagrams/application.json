@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Popcorn Society \u00b7 Application",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1390,
+      800
+    ],
+    "repository": {
+      "url": "https://github.com/NiklasTiede/popcorn-society",
+      "revision": "8fbf5e1721553f41c17e36f981b9b141d741a675",
+      "provider": "github"
+    }
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "frontend",
+      "label": "Browser",
+      "sublabel": "React + TypeScript",
+      "pos": [
+        40,
+        370
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "frontend/src/app/AppProviders.tsx"
+        }
+      ]
+    },
+    {
+      "id": "ingress",
+      "type": "cloud",
+      "label": "Traefik",
+      "sublabel": "HTTPS ingress / routing",
+      "pos": [
+        380,
+        370
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/components/popcorn-society/serve/ingress.yaml"
+        }
+      ]
+    },
+    {
+      "id": "frontend",
+      "type": "backend",
+      "label": "Frontend server",
+      "sublabel": "Nginx \u00b7 static assets",
+      "pos": [
+        380,
+        100
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "frontend/nginx.conf"
+        }
+      ]
+    },
+    {
+      "id": "java",
+      "type": "backend",
+      "label": "Java backend",
+      "sublabel": "Spring Boot \u00b7 domain API",
+      "pos": [
+        770,
+        370
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/backend.yaml"
+        }
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Python Concierge",
+      "sublabel": "FastAPI \u00b7 voice + tools",
+      "pos": [
+        380,
+        640
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/agent.yaml"
+        }
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "Source of truth",
+      "pos": [
+        1140,
+        370
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/postgresql.yaml"
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "type": "database",
+      "label": "OpenSearch",
+      "sublabel": "Hybrid search index",
+      "pos": [
+        1140,
+        100
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/opensearch.yaml"
+        }
+      ]
+    },
+    {
+      "id": "storage",
+      "type": "database",
+      "label": "RustFS",
+      "sublabel": "S3-compatible media",
+      "pos": [
+        1140,
+        640
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/rustfs.yaml"
+        }
+      ]
+    },
+    {
+      "id": "embeddings",
+      "type": "backend",
+      "label": "llama.cpp",
+      "sublabel": "Local text embeddings",
+      "pos": [
+        770,
+        100
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "infrastructure/clusters/home/apps/llama-cpp.yaml"
+        }
+      ]
+    },
+    {
+      "id": "providers",
+      "type": "external",
+      "label": "OpenAI / xAI",
+      "sublabel": "Models + realtime voice",
+      "pos": [
+        770,
+        640
+      ],
+      "size": [
+        210,
+        80
+      ],
+      "sources": [
+        {
+          "path": "agent/README.md"
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "browser-ingress",
+      "from": "browser",
+      "to": "ingress",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ingress-java",
+      "from": "ingress",
+      "to": "java",
+      "label": "REST / auth",
+      "variant": "emphasis"
+    },
+    {
+      "id": "java-postgres",
+      "from": "java",
+      "to": "postgres",
+      "label": "SQL",
+      "variant": "emphasis",
+      "labelAt": [
+        1100,
+        398
+      ]
+    },
+    {
+      "id": "ingress-frontend",
+      "from": "ingress",
+      "to": "frontend",
+      "label": "Web assets",
+      "variant": "default"
+    },
+    {
+      "id": "ingress-agent",
+      "from": "ingress",
+      "to": "agent",
+      "label": "WebSocket",
+      "variant": "default",
+      "labelAt": [
+        485,
+        545
+      ]
+    },
+    {
+      "id": "agent-java",
+      "from": "agent",
+      "to": "java",
+      "label": "Protected MCP",
+      "variant": "default"
+    },
+    {
+      "id": "agent-providers",
+      "from": "agent",
+      "to": "providers",
+      "label": "Voice / model API",
+      "variant": "default",
+      "labelDy": 30
+    },
+    {
+      "id": "java-embeddings",
+      "from": "java",
+      "to": "embeddings",
+      "label": "Embeddings",
+      "variant": "default"
+    },
+    {
+      "id": "java-search",
+      "from": "java",
+      "to": "search",
+      "label": "Search / index",
+      "variant": "default"
+    },
+    {
+      "id": "java-storage",
+      "from": "java",
+      "to": "storage",
+      "label": "S3 API",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "One home cluster",
+      "items": [
+        "Single-node k3s; Traefik routes public traffic.",
+        "React runs in the browser; Nginx serves its build."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Domain ownership",
+      "items": [
+        "Java owns catalog, accounts and personal actions.",
+        "Python calls MCP tools, never the data stores."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Selected paths",
+      "items": [
+        "Search is rebuilt from PostgreSQL through Java.",
+        "Public media, OAuth and TMDB paths are omitted."
+      ]
+    }
+  ]
+}

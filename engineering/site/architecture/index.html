@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architecture — Inside Popcorn Society</title>
+  <meta name="description" content="Two interactive architecture maps: the Popcorn Society application runtime and its metrics, logs, traces and continuous profiling pipeline.">
+  <meta name="theme-color" content="#0a0c12">
+  <link rel="canonical" href="https://docs.popcornsociety.app/architecture/">
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="wrap">
+  <header class="header">
+    <a class="brand" href="../" aria-label="Inside Popcorn Society home"><img src="../assets/mark.svg" alt="" width="42" height="42"><span class="brand-lockup"><span class="brand-wordmark">Popcorn <span>Society</span></span><small>watch together, after dark</small></span></a>
+    <nav aria-label="Main navigation"><a href="../">Overview</a><a href="./" aria-current="page">Architecture</a><a href="https://github.com/NiklasTiede/popcorn-society">GitHub ↗</a><a href="https://popcornsociety.app/">Live app ↗</a></nav>
+  </header>
+  <main id="main">
+    <div class="page-hero"><p class="eyebrow">Inside the system / Architecture</p><h1>The big picture.<br><em>The important connections.</em></h1><p class="intro">Two focused maps of a single-node k3s deployment. Open a diagram to explore the components, follow relationships and inspect the source behind each part.</p></div>
+    <nav class="chapter-nav" aria-label="Architecture chapters"><a href="#application">01 Application</a><a href="#observability">02 Observability</a></nav>
+    <section class="chapter" id="application" aria-labelledby="application-title">
+      <div class="chapter-header"><div><span class="number">01 / Application architecture</span><h2 id="application-title">A request, end to end.</h2></div><p>React provides the experience. Java owns the application domain. Python connects voice and model calls to the same protected domain capabilities.</p></div>
+      <div class="chapter-preview">
+        <a href="application/" target="_blank" rel="noopener" aria-label="Open interactive application diagram in a new tab"><img src="../assets/application.png" alt="Browser requests enter Traefik and reach the static frontend, Java backend or Python agent. Java owns PostgreSQL, OpenSearch, embeddings and media access." width="1390" height="800"></a>
+        <div class="chapter-detail"><h3>Follow the main paths</h3><ol><li>Browser → Traefik → Java → PostgreSQL</li><li>Voice → Python → protected Java MCP tools</li><li>Java → search index, embeddings and media</li></ol><a class="button" href="application/" target="_blank" rel="noopener">Open interactive map <span aria-hidden="true">↗</span><span class="sr-only"> in a new tab</span></a></div>
+      </div>
+      <p class="caption">The interactive map opens in a new tab. Pan, zoom, switch themes or export a static image.</p>
+      <div class="notes"><div><h3>One owner for domain behaviour</h3><p>The Spring Boot backend owns movies, accounts, ratings, watchlists and recommendations. The agent calls protected MCP tools; it does not query PostgreSQL or OpenSearch directly.</p></div><div><h3>A deliberate overview</h3><p>PostgreSQL is the source of truth; Java builds the derived search index. Public media delivery, OAuth providers, TMDB enrichment and certificate issuance are omitted to keep the main paths readable.</p></div></div>
+    </section>
+    <section class="chapter" id="observability" aria-labelledby="observability-title">
+      <div class="chapter-header"><div><span class="number">02 / Observability &amp; operations</span><h2 id="observability-title">Four signals.<br>One investigation.</h2></div><p>Metrics reveal a change. Logs and traces help locate it. Continuous profiles show where execution time and allocations are spent.</p></div>
+      <div class="chapter-preview">
+        <a href="observability/" target="_blank" rel="noopener" aria-label="Open interactive observability diagram in a new tab"><img src="../assets/observability.png" alt="Java and Python supply metrics to Prometheus, traces through Alloy to Tempo and profiles directly to Pyroscope. Alloy sends Kubernetes logs and events to Loki. Grafana queries all four stores." width="1390" height="870" loading="lazy"></a>
+        <div class="chapter-detail"><h3>Follow each signal</h3><ol><li>Metrics: application endpoints → Prometheus</li><li>Logs and traces: Alloy → Loki and Tempo</li><li>Profiles: Java / Python → Pyroscope</li></ol><a class="button" href="observability/" target="_blank" rel="noopener">Open interactive map <span aria-hidden="true">↗</span><span class="sr-only"> in a new tab</span></a></div>
+      </div>
+      <p class="caption">Arrows show the flow of telemetry and query results. Prometheus initiates metric scrapes; Grafana initiates queries.</p>
+      <div class="notes"><div><h3>Browser and infrastructure signals</h3><p>The browser sends bounded timing and outcome batches to Java, which exposes the resulting metrics. Prometheus also scrapes cluster exporters, PostgreSQL and llama.cpp. Workload logs include the application containers and Traefik.</p></div><div><h3>What this map does not claim</h3><p>This is a view of the checked-in configuration, not a live health report. OpenSearch and RustFS currently have workload-readiness visibility, not native service metrics. Public dashboards are a future addition.</p></div></div>
+    </section>
+    <p class="source">Reviewed September 17, 2026 · Repository baseline <a href="https://github.com/NiklasTiede/popcorn-society/tree/8fbf5e17">8fbf5e17</a> · Diagrams generated with <a href="https://github.com/tt-a1i/archify">Archify</a>. Each component links to its source evidence.</p>
+  </main>
+  <footer class="footer"><p><a href="../">← Back to overview</a></p><div class="footer-links"><a href="https://the-coding-lab.com/">The Coding Lab ↗</a><a href="https://github.com/NiklasTiede/popcorn-society">Source code ↗</a></div></footer>
+</div>
+</body>
+</html>
