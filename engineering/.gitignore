@@ -1,0 +1,3 @@
+site/**/*.visual-check.*
+verification/
+dist/

@@ -1,0 +1,24 @@
+{
+  "application": {
+    "specification_sha256": "d016ea1c109e012425dfb342321fa6a824d7cc3a565f9e663c10d2a3ce9c7ca6",
+    "artifact_sha256": "596f357d3d7c3a5e3633ae4889b7a51ae33fed028a0603ccc1027d01d2422d26",
+    "validation": "9/9 showcase, 0 errors, 0 warnings",
+    "browser_evidence": "passed",
+    "visual_review": "passed",
+    "correction_rounds": 0,
+    "reviewed_on": "2026-09-17",
+    "archify_version": "2.17.0-dev.1",
+    "archify_source_revision": "72c750bb070d95171dbb2244e5b62b1b7da69c12"
+  },
+  "observability": {
+    "specification_sha256": "cfedf95a15f64b29b3d4dca1221b2cfc78fb8d7aecd074d4c9e3e0fcf436efdd",
+    "artifact_sha256": "260f9f9b7c37f599a739f7874093db8bde0bd80ddf2439721be3772bee02757e",
+    "validation": "9/9 showcase, 0 errors, 0 warnings",
+    "browser_evidence": "passed",
+    "visual_review": "passed",
+    "correction_rounds": 1,
+    "reviewed_on": "2026-09-17",
+    "archify_version": "2.17.0-dev.1",
+    "archify_source_revision": "72c750bb070d95171dbb2244e5b62b1b7da69c12"
+  }
+}

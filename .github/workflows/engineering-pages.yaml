@@ -1,0 +1,53 @@
+name: Engineering documentation
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'engineering/**'
+      - 'scripts/build-engineering-site.py'
+      - '.github/workflows/engineering-pages.yaml'
+  push:
+    branches: [master]
+    paths:
+      - 'engineering/**'
+      - 'scripts/build-engineering-site.py'
+      - '.github/workflows/engineering-pages.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: engineering-pages-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Check links and verified diagrams; package public files
+        run: python scripts/build-engineering-site.py
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: engineering/dist
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Publish documentation
+        id: deployment
+        uses: actions/deploy-pages@v4

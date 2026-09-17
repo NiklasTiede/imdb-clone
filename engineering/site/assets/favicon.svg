@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-labelledby="t">
+  <title id="t">Popcorn Society app icon</title>
+  <rect width="200" height="200" rx="45" fill="#0A0C12"/>
+  <g transform="translate(100 100) scale(1.75) translate(-100 -54.5)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#FF2D3F" stroke-opacity="0.25" stroke-width="8"><path d="M70 47C67.5 34.5 80 27 87.5 34.5C90 22 110 22 112.5 34.5C120 27 132.5 34.5 130 47"/><path d="M70 47H130L122.5 87H77.5Z"/><path d="M85 47L88.75 87M100 47V87M115 47L111.25 87M66 47H134"/></g>
+    <g stroke="#FF2D3F" stroke-width="4.2"><path d="M70 47C67.5 34.5 80 27 87.5 34.5C90 22 110 22 112.5 34.5C120 27 132.5 34.5 130 47"/><path d="M70 47H130L122.5 87H77.5Z"/><path d="M85 47L88.75 87M100 47V87M115 47L111.25 87M66 47H134"/></g>
+    <g stroke="#FFD6DB" stroke-width="1.5"><path d="M70 47C67.5 34.5 80 27 87.5 34.5C90 22 110 22 112.5 34.5C120 27 132.5 34.5 130 47"/><path d="M70 47H130L122.5 87H77.5Z"/><path d="M85 47L88.75 87M100 47V87M115 47L111.25 87M66 47H134"/></g>
+  </g>
+</svg>
