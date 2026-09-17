@@ -2,9 +2,12 @@
 
 ## Scope and current state
 
-The product name is **Popcorn Society**. The intended primary URL is
-**https://popcornsociety.app**, purchased at Namecheap. The current address remains
-`https://imdb-clone.the-coding-lab.com` until the explicit domain cutover.
+The product name is **Popcorn Society** and the canonical production URL is
+**https://popcornsociety.app**. The domain cutover completed on 2026-09-16 with release 1.7.1.
+Public page requests to `https://imdb-clone.the-coding-lab.com` and
+`https://www.popcornsociety.app` permanently redirect to the same path and query on the canonical
+domain. Legacy API, OAuth and WebAuthn routes remain available where cross-origin redirects would
+be unsafe. The existing backend, media, Grafana and Argo CD hostnames remain technical identities.
 
 This preparation changes the app's visible branding and provides an SVG popcorn placeholder,
 browser icons, Apple touch icon, and installable app icons. Replace the master at
@@ -15,13 +18,10 @@ The owner confirmed that the app has practically no usage and that only test acc
 passkeys. Existing account, rating, watchlist, media, and agent quota data will be retained.
 Test passkeys will be registered again on the new domain; there is no cross-domain passkey bridge.
 
-**The migration components are not referenced by the active Argo CD kustomization.**
-They live in `infrastructure/clusters/home/apps/components/popcorn-society` so the existing SOPS
-plugin includes them when copying the apps directory. Render-only previews and verification live
-in `infrastructure/migrations/popcorn-society`.
-Merging this preparation does not activate a new hostname or redirect. `VERSION` remains 1.6.1;
-application changes need a new version and the normal CD deployment PR before production uses them.
-Do not overwrite the existing 1.6.1 images with rebranding changes.
+The active Argo CD kustomization references both migration components under
+`infrastructure/clusters/home/apps/components/popcorn-society`: `serve` owns the canonical ingress,
+identity profile and allowed origins; `redirect` owns the permanent public-page redirects and
+removes the temporary preview `noindex`. The temporary render previews were retired after cutover.
 
 ## Technical project rename
 
@@ -74,12 +74,10 @@ on read; dashboards and alerts support both old and new metrics during the rollo
 UIDs/navigation links remain valid. Existing Grafana viewer accounts are not renamed automatically;
 the bootstrap display name applies when creating an account.
 
-CD now publishes `popcorn-society-{backend,frontend,agent}` images. Its tested manifest updater
-switches image references, backend Spring/Pyroscope identities and runtime environment keys in the
-same deployment PR, after publication. Current base manifests still point at the actual published
-1.6.1 images and therefore retain their compatible runtime keys. Do not manually replace those
-image repository strings before the new images exist. Ensure Docker Hub repository creation/push
-permissions are ready before the first renamed release.
+CD publishes `popcorn-society-{backend,frontend,agent}` images. Its tested manifest updater switches
+image references, backend Spring/Pyroscope identities and runtime environment keys in the same
+deployment PR after publication. Production currently runs the published 1.7.1 images with
+immutable digests.
 
 Kubernetes resource names, stateful Helm releases, physical volume names, the existing media bucket
 and actual hostnames remain explicit migration dependencies. The configurable frontend bucket
@@ -87,10 +85,10 @@ setting is `VITE_POPCORN_SOCIETY_OBJECT_STORAGE_BUCKET`; its default still reads
 GitHub URLs still point at the actual existing repository. Genuine IMDb source identifiers and
 historical records remain accurate. No persistent data is moved by this preparation.
 
-The dashboard and alert ConfigMaps/PrometheusRules are active GitOps resources: once merged into
-the production branch, Argo CD can reconcile them independently of an application release.
-Their dual-name queries deliberately work before and after that release. Domain components remain
-inactive until separately enabled. See the audit for the local Compose stop-before-recreate step.
+The dashboard and alert ConfigMaps/PrometheusRules are active GitOps resources that Argo CD can
+reconcile independently of an application release. Their dual-name queries deliberately support
+the transition period. Both domain components are active. See the audit for the local Compose
+stop-before-recreate step.
 
 Current screenshot and PlantUML source filenames use `popcorn-society-*`; screenshot content is
 unchanged. The unreferenced legacy logo and static data-model PNG were removed. The old flow-schema
@@ -100,18 +98,19 @@ The existing media hostname continues to serve posters. Operator hostnames (Graf
 and the legacy backend hostname also remain valid. This migration moves the public application,
 not the blog at `the-coding-lab.com`.
 
-## 1. Release the preparation on the current domain
+## Completed migration sequence
 
-- Review and merge the rebranding changes.
-- For the release, increment `VERSION` (suggested next feature release: `1.7.0`), run CD, review and
-  merge the generated deployment PR with all three immutable image digests. Do not activate the
-  `popcorn` Spring profile before those new backend images exist.
-- Keep `VITE_SITE_URL=https://imdb-clone.the-coding-lab.com` for this initial release.
-- Verify navigation, password login, OAuth, passkeys, image loading, ratings, watchlists and voice.
-- Namespace, persistent resource identities and the legacy production RP ID remain unchanged.
-  Active dashboard/alert display and query updates can sync on merge.
+The following sequence is retained as an operational record and rollback reference.
 
-## 2. Prepare DNS and provider settings
+## 1. Release the preparation on the legacy domain (completed)
+
+- The rebranding changes were reviewed and released before the new identity profile was activated.
+- CD published all three renamed images and merged their immutable digests through deployment PRs.
+- The initial rebranding build kept `VITE_SITE_URL=https://imdb-clone.the-coding-lab.com` while the
+  new domain was verified.
+- Namespace and persistent resource identities remained unchanged throughout the migration.
+
+## 2. Prepare DNS and provider settings (completed)
 
 At the authoritative DNS provider (Namecheap if its nameservers are being used):
 
@@ -144,18 +143,18 @@ create a mail service.
 Verify Search Console ownership for the old app subdomain and new domain, preferably through DNS.
 Record currently indexed URLs and a baseline of clicks/impressions before changing redirects.
 
-## 3. Serve and test the new domain
+## 3. Serve and test the new domain (completed)
 
-Local previews (read-only; the output contains encrypted Secret manifests, so do not publish it):
+During staging, temporary render previews covered the serve-only and redirect states. They were
+removed after cutover. Ongoing verification renders the active production tree (the output contains
+encrypted Secret manifests, so do not publish it):
 
 ```bash
-kubectl kustomize infrastructure/migrations/popcorn-society/preview > /tmp/popcorn-preview.yaml
-kubectl kustomize infrastructure/migrations/popcorn-society/cutover > /tmp/popcorn-cutover.yaml
-make verify-popcorn-migration
+kubectl kustomize infrastructure/clusters/home/apps > /tmp/popcorn-society-home-apps.yaml
+make verify-kubernetes-schema
 ```
 
-After DNS/provider preparation and deployment of the compatible application images, activate
-serving through a separate reviewed GitOps change. Add this to
+The reviewed GitOps cutover activated serving by adding this component to
 `infrastructure/clusters/home/apps/kustomization.yaml`:
 
 ```yaml
@@ -163,10 +162,8 @@ components:
   - components/popcorn-society/serve
 ```
 
-The previews and `verify-popcorn-migration` describe the pre-activation state. When adding `serve`
-to the active tree, remove its duplicate `components` entry from `preview/kustomization.yaml`.
-After activating `redirect`, remove the render-only preview folders, `verify.rb` and the temporary
-Make target; use the production render and contract checks for ongoing verification.
+The previews, their verifier and the temporary Make target were retired after `redirect` was
+activated. The production render and permanent domain contract checks now cover ongoing changes.
 
 Do not point Argo CD at the preview folders or manually apply a full preview containing encrypted
 Secrets. Its existing SOPS plugin and apps path stay in use.
@@ -194,14 +191,14 @@ Verify:
 - Both voice providers, microphone permission, WebSocket upgrade and returned movie navigation.
 - Backend and agent health; no credential, prompt or email token leakage in logs.
 
-## 4. Activate redirects and indexing
+## 4. Activate redirects and indexing (completed)
 
-Build and deploy a fresh release with `VITE_SITE_URL=https://popcornsociety.app` in
-`frontend/.env.production`. This updates the build-generated robots file, homepage sitemap and
-social preview image URL. It is a build-time setting, not a frontend container environment setting.
-Until redirects are active, the old site remains accessible for verification.
+Release 1.7.1 was built with `VITE_SITE_URL=https://popcornsociety.app` in
+`frontend/.env.production`. This updated the build-generated robots file, homepage sitemap and
+social preview image URL. It remains a build-time setting, not a frontend container environment
+setting.
 
-Once the new-domain checks pass, keep `serve` and add the second component in the active apps tree:
+After the new-domain checks passed, the second component was added to the active apps tree:
 
 ```yaml
 components:
@@ -251,14 +248,26 @@ References: [Google's site-move guide](https://developers.google.com/search/docs
 [site names](https://developers.google.com/search/docs/appearance/site-names),
 [Traefik RedirectRegex](https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/redirectregex).
 
+## Production cutover verification (2026-09-16 to 2026-09-17)
+
+- Release 1.7.1 deployed immutable backend, frontend and agent image digests. Argo CD reported the
+  production application `Synced` and `Healthy` on the merged cutover revision.
+- `https://popcornsociety.app/` returned HTTP 200 without the temporary `X-Robots-Tag: noindex`.
+  Its generated `robots.txt` and `sitemap.xml` reference the canonical domain.
+- The former public page host and `www.popcornsociety.app` returned permanent redirects that
+  preserve paths and query strings. Legacy API and authentication routes remained available.
+- Google and GitHub OAuth callbacks completed on the canonical domain. Both configured voice
+  models were exposed successfully through the production Concierge endpoint.
+- Search Console ownership for both sites was verified through DNS. The Change of Address from
+  `imdb-clone.the-coding-lab.com` to `popcornsociety.app` and the new sitemap were submitted on
+  2026-09-17. Keep the verification records and old-domain redirects in place.
+
 ## Rollback
 
-Before permanent redirects, remove the serving component to return to the legacy-only configuration;
-new-domain test passkeys will then be unusable until its RP ID is restored. User data stays intact.
-After permanent redirects, keep the new domain and HTTPS operational: browsers/search engines may
-cache the redirects. Roll back application behavior to a compatible rebranding release while
-retaining new-domain configuration, rather than redirecting the new domain back to the old one.
-Do not roll back to 1.6.1 while enabling a profile that image does not contain.
+Permanent redirects are active, so keep the new domain and HTTPS operational: browsers and search
+engines may cache those redirects. Roll back application behavior only to a compatible rebranding
+release while retaining the canonical-domain configuration. Do not redirect the new domain back to
+the old one, and do not roll back to 1.6.1 while the `popcorn` profile is enabled.
 
 ## Preparation verification (2026-09-16)
 
@@ -278,10 +287,9 @@ Do not roll back to 1.6.1 while enabling a profile that image does not contain.
 - Activation was rendered from an isolated copy of the apps folder to verify compatibility with
   the SOPS plugin's copy-and-render layout; no secrets were decrypted for this check.
 
-No DNS/provider changes, live voice calls, production OAuth round trips, release, or deployment
-were performed. At this initial branding checkpoint, full backend integration and container builds
-were not rerun; the later technical rename verification is recorded below. Live new-domain checks
-remain mandatory before removing preview noindex and enabling permanent redirects.
+At this initial branding checkpoint, DNS/provider changes, live voice calls, production OAuth round
+trips, release and deployment had not yet been performed. The later verification records above and
+below cover the technical rename and completed production cutover.
 
 ## Technical rename verification (2026-09-16)
 
@@ -310,6 +318,7 @@ remain mandatory before removing preview noindex and enabling permanent redirect
 - Audited all 508 moved Java files: none missing. Third-party Python dependency versions, existing
   Flyway migrations and IMDb dataset import sources are unchanged. `git diff --check HEAD` passed.
 
-Paid live-model/voice calls, production OAuth, DNS/provider changes, new-domain browser checks,
-release and deployment were not performed. The remaining operational identifier migration is
-listed above; `VERSION` remains `1.6.1`.
+At this technical-rename checkpoint, paid live-model/voice calls, production OAuth, DNS/provider
+changes, new-domain browser checks, release and deployment had not yet been performed. These checks
+were subsequently completed during the production cutover recorded above; retained infrastructure
+identifiers remain documented in the name audit.
