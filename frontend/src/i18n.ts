@@ -1,7 +1,7 @@
 export const i18n = {
   general: {
     appName: "Popcorn Society",
-    tagline: "Discover, rate, remember",
+    tagline: "watch together, after dark",
   },
   regex: {
     username: {

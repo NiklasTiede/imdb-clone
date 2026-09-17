@@ -7,7 +7,7 @@
 <h1 align="center">Popcorn Society</h1>
 
 <p align="center">
-  <strong>Discover, rate, remember.</strong><br />
+  <strong>Watch together, after dark.</strong><br />
   A production-style React + Spring Boot movie application with explainable discovery,
   a voice-controlled Movie Concierge, OpenSearch, full-stack observability, and k3s GitOps.
 </p>

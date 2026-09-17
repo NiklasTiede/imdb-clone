@@ -59,7 +59,7 @@ export const classicTheme: AppThemeDefinition = {
       uppercase: false,
     },
     tagline: {
-      text: "Discover, rate, remember",
+      text: "watch together, after dark",
       align: "start",
       color: "rgba(255,255,255,0.75)",
       fontSize: 11,

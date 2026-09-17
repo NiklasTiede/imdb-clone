@@ -176,7 +176,7 @@ try {
           ${svgImage(icon, 280)}
           <div>
             <div style="color:${theme.og.text};font-size:84px;font-weight:800;line-height:1;letter-spacing:-1px">Popcorn Society</div>
-            <div style="color:${theme.og.secondary};font-size:36px;font-weight:500;margin-top:22px">Discover, rate, remember</div>
+            <div style="color:${theme.og.secondary};font-size:36px;font-weight:500;margin-top:22px">watch together, after dark</div>
             <div style="width:96px;height:6px;border-radius:3px;background:${theme.og.accent};margin-top:36px"></div>
           </div>
         </div>`,

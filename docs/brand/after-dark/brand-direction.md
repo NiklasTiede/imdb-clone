@@ -31,8 +31,7 @@ chains in the rain and mirrored in a puddle) sets the mood. The whole interface 
 same world: midnight backgrounds, asphalt surfaces, paper-coloured text, and neon used sparingly
 for the moments that matter.
 
-Brand line options (English, as all brand copy): "watch together, after dark", "Discover, rate,
-remember" (existing, keep as product tagline).
+The public brand line is "watch together, after dark" (English, as all brand copy).
 
 ## 3. Principles
 
@@ -229,9 +228,7 @@ Still open: `reflections-mark-mono.svg` has no web use yet (light backgrounds, p
 
 1. Final display and body typeface (compare candidates in the real app).
 2. Final values for `fog`, `sodium-amber`, `rain-blue` and `signal` after contrast checks.
-3. Does "watch together, after dark" become the public brand line, or stay secondary to
-   "Discover, rate, remember"?
-4. Scope of the first rollout: theme and logo only, or also layout changes on home and ratings?
+3. Scope of the first rollout: theme and logo only, or also layout changes on home and ratings?
 
 ## 15. Exploration history (for context)
 
