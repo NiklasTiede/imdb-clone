@@ -94,6 +94,14 @@ describe("frontend feature architecture", () => {
     expect(internalAuthImports()).toEqual([]);
   });
 
+  test("UI code reads colours from theme tokens instead of hard-coding them", () => {
+    expect(hardCodedColours()).toEqual([]);
+  });
+
+  test("UI code never branches on the active theme", () => {
+    expect(themeIdentityChecks()).toEqual([]);
+  });
+
   test("watchlist cache keys are not hard-coded outside watchlist api modules", () => {
     expect(hardCodedWatchlistQueryKeys()).toEqual([]);
   });
@@ -196,6 +204,48 @@ const hardCodedWatchlistQueryKeys = (): string[] =>
     )
     .filter((sourceFile) =>
       readFileSync(sourceFile, "utf8").includes('queryKey: ["watchlist"]'),
+    )
+    .map((sourceFile) => path.relative(srcRoot, sourceFile))
+    .sort();
+
+// Themes live in src/theme. Everything else styles through tokens, so adding a
+// theme never means touching components.
+const themeRoot = path.join(srcRoot, "theme");
+const colourLiteral = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
+/** Theme-independent physical material, documented in place. */
+const colourLiteralAllowlist = new Set([
+  path.join("features", "concierge", "components", "VoiceLens.tsx"),
+]);
+
+const hardCodedColours = (): string[] =>
+  sourceFiles(srcRoot)
+    .filter((sourceFile) => !sourceFile.startsWith(themeRoot + path.sep))
+    .filter(
+      (sourceFile) =>
+        !colourLiteralAllowlist.has(path.relative(srcRoot, sourceFile)),
+    )
+    .flatMap((sourceFile) =>
+      readFileSync(sourceFile, "utf8")
+        .split("\n")
+        .flatMap((line, index) =>
+          colourLiteral.test(line) && !line.trim().startsWith("//")
+            ? [`${path.relative(srcRoot, sourceFile)}:${index + 1}`]
+            : [],
+        ),
+    )
+    .sort();
+
+const themeIdentityChecks = (): string[] =>
+  sourceFiles(srcRoot)
+    .filter((sourceFile) => !sourceFile.startsWith(themeRoot + path.sep))
+    .filter(
+      (sourceFile) =>
+        !sourceFile.includes(`${path.sep}app${path.sep}dev${path.sep}`),
+    )
+    .filter((sourceFile) =>
+      /themeId\s*[!=]==|["'](after-dark|classic)["']/.test(
+        readFileSync(sourceFile, "utf8"),
+      ),
     )
     .map((sourceFile) => path.relative(srcRoot, sourceFile))
     .sort();

@@ -1,9 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ThemeProvider } from "@mui/material";
 import { expect, it, vi } from "vitest";
-import { appTheme } from "../../../../theme";
 import { ConversationPreview } from "./ConversationPreview";
 
 vi.mock("./VoiceOrb", () => ({ VoiceOrb: () => null }));
@@ -20,9 +18,9 @@ const props = {
   onStart: vi.fn(),
 };
 const view = (open = true) => (
-  <ThemeProvider theme={appTheme}>
+  <>
     <ConversationPreview {...props} open={open} />
-  </ThemeProvider>
+  </>
 );
 
 it("fills the draft without sending and preserves it across closing", async () => {

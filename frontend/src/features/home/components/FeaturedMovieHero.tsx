@@ -12,11 +12,15 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useRef } from "react";
 import {
   formatRatingCount,
-  IMDB_GOLD,
   type Movie,
 } from "../../catalog";
 import { BackdropImage } from "../../../shared/media";
-import { movieColors } from "../../../theme";
+import type { Theme } from "@mui/material/styles";
+import { fontFamilies } from "../../../theme";
+
+// Functional scrims only, tinted with the theme scrim colour.
+const scrim = (theme: Theme, opacity: number) =>
+  theme.alpha(theme.palette.scrim, opacity);
 
 type FeaturedMovieHeroProps = {
   movies: Movie[];
@@ -94,19 +98,6 @@ const FeaturedMovieHero = ({
         }}
       >
         <Box>
-          <Typography
-            component="p"
-            sx={{
-              color: "primary.main",
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: "0.16em",
-              mb: 0.5,
-              textTransform: "uppercase",
-            }}
-          >
-            Curated daily
-          </Typography>
           <Typography component="h1" variant="h4" sx={{ fontWeight: 700 }}>
             Featured today
           </Typography>
@@ -197,10 +188,7 @@ const FeaturedMovieCard = ({
         overflow: "hidden",
         position: "relative",
         transition: "border-color 180ms ease, transform 180ms ease",
-        "&:hover": {
-          borderColor: "rgba(245,197,24,0.5)",
-          transform: "translateY(-2px)",
-        },
+        "&:hover": (theme) => theme.effects.cardHover,
         "&:hover [data-testid='movie-backdrop'] img": {
           transform: "scale(1.035)",
         },
@@ -219,28 +207,31 @@ const FeaturedMovieCard = ({
       <Box
         aria-hidden
         sx={{
-          background: primary
-            ? `linear-gradient(90deg, rgba(7,11,18,0.94) 0%, rgba(7,11,18,0.7) 42%, rgba(7,11,18,0.12) 72%), linear-gradient(0deg, rgba(7,11,18,0.9) 0%, transparent 58%)`
-            : "linear-gradient(0deg, rgba(7,11,18,0.96) 0%, rgba(7,11,18,0.2) 78%)",
+          background: (theme) =>
+            primary
+              ? `linear-gradient(90deg, ${scrim(theme, 0.94)} 0%, ${scrim(theme, 0.7)} 42%, ${scrim(theme, 0.12)} 72%), linear-gradient(0deg, ${scrim(theme, 0.9)} 0%, transparent 58%)`
+              : `linear-gradient(0deg, ${scrim(theme, 0.96)} 0%, ${scrim(theme, 0.2)} 78%)`,
           inset: 0,
           position: "absolute",
         }}
       />
 
       <Chip
+        icon={<AccentDot />}
         label={editorialLabel(movie, position)}
         size="small"
         sx={{
           backdropFilter: "blur(10px)",
-          backgroundColor: primary ? "rgba(245,197,24,0.92)" : "rgba(7,11,18,0.72)",
-          color: primary ? movieColors.brandInk : "common.white",
+          // Dark translucent pill, thin accent border, accent dot, highlight text.
+          backgroundColor: (theme) => scrim(theme, 0.72),
+          border: "1px solid",
+          borderColor: (theme) => theme.alpha(theme.palette.accent.main, 0.85),
+          color: "accent.core",
           fontSize: 9,
           fontWeight: 800,
           height: 23,
           left: { xs: 16, md: primary ? 24 : 16 },
-          letterSpacing: "0.08em",
           position: "absolute",
-          textTransform: "uppercase",
           top: { xs: 16, md: primary ? 24 : 16 },
         }}
       />
@@ -251,14 +242,20 @@ const FeaturedMovieCard = ({
         onClick={onToggleBookmark}
         sx={{
           backdropFilter: "blur(10px)",
-          backgroundColor: bookmarked ? "primary.main" : "rgba(7,11,18,0.7)",
-          color: bookmarked ? movieColors.brandInk : "common.white",
+          backgroundColor: bookmarked
+            ? "primary.main"
+            : (theme) => scrim(theme, 0.7),
+          color: bookmarked ? "accent.contrastText" : "text.primary",
           height: 36,
           position: "absolute",
           right: { xs: 12, md: primary ? 20 : 12 },
           top: { xs: 12, md: primary ? 20 : 12 },
           width: 36,
-          "&:hover": { backgroundColor: bookmarked ? "primary.dark" : "rgba(23,33,50,0.94)" },
+          "&:hover": {
+            backgroundColor: bookmarked
+              ? "primary.dark"
+              : (theme) => theme.alpha(theme.palette.surface.raised, 0.94),
+          },
         }}
       >
         {bookmarked ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
@@ -277,27 +274,28 @@ const FeaturedMovieCard = ({
         <Typography
           component={primary ? "h2" : "h3"}
           sx={{
+            fontFamily: fontFamilies.display,
             fontSize: primary ? { xs: 25, md: 38 } : { xs: 18, md: 20 },
             fontWeight: 750,
             lineHeight: 1.08,
             mb: 0.75,
-            textShadow: "0 2px 18px rgba(0,0,0,0.6)",
+            textShadow: (theme) => `0 2px 18px ${scrim(theme, 0.6)}`,
           }}
         >
           {movie.primaryTitle ?? "Featured movie"}
         </Typography>
 
-        <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", color: "rgba(255,255,255,0.78)", flexWrap: "wrap", fontSize: 12 }}>
+        <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: "center", color: "text.primary", flexWrap: "wrap", fontSize: 12 }}>
           {meta.map((item) => <Box component="span" key={item}>{item}</Box>)}
           {genre && <Box component="span">{humanize(genre)}</Box>}
           {movie.imdbRating !== undefined && (
             <Stack component="span" direction="row" spacing={0.4} sx={{ alignItems: "center" }}>
-              <StarIcon sx={{ color: IMDB_GOLD, fontSize: 15 }} />
-              <Box component="span" sx={{ color: "common.white", fontWeight: 700 }}>
+              <StarIcon sx={{ color: "star", fontSize: 15 }} />
+              <Box component="span" sx={{ color: "text.primary", fontWeight: 700 }}>
                 {movie.imdbRating.toFixed(1)}
               </Box>
               {primary && movie.imdbRatingCount !== undefined && (
-                <Box component="span" sx={{ color: "rgba(255,255,255,0.58)" }}>
+                <Box component="span" sx={{ color: "text.secondary", fontVariantNumeric: "tabular-nums" }}>
                   ({formatRatingCount(movie.imdbRatingCount)})
                 </Box>
               )}
@@ -308,7 +306,7 @@ const FeaturedMovieCard = ({
         {primary && movie.description && (
           <Typography
             sx={{
-              color: "rgba(255,255,255,0.78)",
+              color: "text.primary",
               display: { xs: "none", sm: "-webkit-box" },
               fontSize: 13,
               lineHeight: 1.5,
@@ -331,7 +329,7 @@ const FeaturedMovieCard = ({
           startIcon={<PlayArrowIcon />}
           variant={primary ? "contained" : "text"}
           sx={{
-            color: primary ? movieColors.brandInk : "common.white",
+            color: primary ? "accent.contrastText" : "text.primary",
             fontWeight: 700,
             ml: primary ? 0 : -1,
             mt: primary ? 2 : 0.75,
@@ -344,6 +342,23 @@ const FeaturedMovieCard = ({
     </Box>
   );
 };
+
+const AccentDot = () => (
+  <Box
+    aria-hidden
+    component="span"
+    sx={{
+      bgcolor: "accent.main",
+      borderRadius: "50%",
+      boxShadow: (theme) => `0 0 6px ${theme.alpha(theme.palette.accent.main, 0.9)}`,
+      flexShrink: 0,
+      height: 6,
+      ml: "9px !important",
+      mr: "-2px !important",
+      width: 6,
+    }}
+  />
+);
 
 const editorialLabel = (movie: Movie, position: number) => {
   if ((movie.rating ?? 0) >= 8 && (movie.ratingCount ?? 0) >= 5) {
@@ -404,7 +419,7 @@ const FeaturedMovieFallback = () => (
   <Box
     component="section"
     sx={{
-      backgroundColor: movieColors.surface,
+      backgroundColor: "surface.card",
       border: "1px solid",
       borderColor: "divider",
       borderRadius: 1,

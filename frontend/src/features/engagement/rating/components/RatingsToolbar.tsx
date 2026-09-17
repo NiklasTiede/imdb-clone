@@ -60,6 +60,7 @@ const RatingsToolbar = ({
             key={range.label}
             onClick={() => onScoreRangeChange(range)}
             size="small"
+            sx={{ borderRadius: 999, px: 1.5 }}
             variant={
               range.label === scoreRange.label ? "contained" : "outlined"
             }

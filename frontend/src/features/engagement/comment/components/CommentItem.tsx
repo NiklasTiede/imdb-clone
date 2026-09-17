@@ -195,7 +195,7 @@ const CommentItem = ({
         ) : (
           <Typography
             sx={{
-              color: "rgba(255,255,255,0.88)",
+              color: "text.primary",
               fontSize: { xs: 14, sm: 15 },
               lineHeight: 1.7,
               overflowWrap: "anywhere",

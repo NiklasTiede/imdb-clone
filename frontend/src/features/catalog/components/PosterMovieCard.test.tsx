@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
+import { defaultThemeId, getAppTheme } from "../../../theme";
 import PosterMovieCard from "./PosterMovieCard";
 
 const movie = {
@@ -26,5 +27,21 @@ describe("PosterMovieCard", () => {
       }),
     ).toBeTruthy();
     expect(screen.getByText("2024 · 112 min")).toBeTruthy();
+  });
+
+  test("applies the theme's poster hover effect", () => {
+    render(
+      <MemoryRouter>
+        <PosterMovieCard movie={movie} />
+      </MemoryRouter>,
+    );
+
+    const css = Array.from(document.styleSheets)
+      .flatMap((sheet) => Array.from(sheet.cssRules))
+      .map((rule) => rule.cssText)
+      .join(" ");
+    expect(css).toContain(
+      String(getAppTheme(defaultThemeId).effects.posterHover.transform),
+    );
   });
 });

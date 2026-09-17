@@ -1,11 +1,11 @@
-import { movieColors } from "../../../theme";
+import type { SxProps, Theme } from "@mui/material/styles";
 
-export const authTextFieldSx = {
+export const authTextFieldSx: SxProps<Theme> = {
   "& .MuiOutlinedInput-root": {
-    bgcolor: movieColors.surface,
-    "& fieldset": { borderColor: "rgba(255,255,255,0.12)" },
-    "&:hover fieldset": { borderColor: "rgba(255,255,255,0.24)" },
-    "&.Mui-focused fieldset": { borderColor: movieColors.brand },
-    "&.Mui-error fieldset": { borderColor: "#f87171" },
+    bgcolor: "surface.page",
+    "& fieldset": { borderColor: "line.control" },
+    "&:hover fieldset": { borderColor: "text.secondary" },
+    "&.Mui-focused fieldset": { borderColor: "accent.main" },
+    "&.Mui-error fieldset": { borderColor: "error.main" },
   },
 };

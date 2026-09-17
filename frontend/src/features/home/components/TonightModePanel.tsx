@@ -10,7 +10,6 @@ import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
 import { useMutation } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { movieColors } from "../../../theme";
 import { PosterMovieCard } from "../../catalog";
 import {
   getTonightPicks,
@@ -108,7 +107,7 @@ const TonightModePanel = ({
       component="section"
       aria-labelledby="tonight-mode-title"
       sx={{
-        background: `linear-gradient(118deg, ${movieColors.surfaceElevated}, ${movieColors.surfaceInset})`,
+        bgcolor: "surface.card",
         border: "1px solid",
         borderColor: "divider",
         borderRadius: 2,
@@ -118,16 +117,6 @@ const TonightModePanel = ({
         position: "relative",
       }}
     >
-      <Box
-        aria-hidden
-        sx={{
-          background:
-            "radial-gradient(circle at 94% 8%, rgba(245,197,24,.18), transparent 26%)",
-          inset: 0,
-          pointerEvents: "none",
-          position: "absolute",
-        }}
-      />
       <Stack spacing={2.25} sx={{ position: "relative" }}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
@@ -142,14 +131,9 @@ const TonightModePanel = ({
             >
               <AutoAwesomeIcon color="primary" fontSize="small" />
               <Typography
-                sx={{
-                  color: "primary.main",
-                  fontSize: 11,
-                  fontWeight: 800,
-                  letterSpacing: 1.25,
-                }}
+                sx={{ color: "text.secondary", fontSize: 12, fontWeight: 600 }}
               >
-                TONIGHT MODE
+                Tonight mode
               </Typography>
             </Stack>
             <Typography
@@ -361,7 +345,8 @@ const TonightChoices = ({
             px: { xs: 1.5, sm: 0 },
             scrollPaddingInline: { xs: 12, sm: 0 },
             scrollSnapType: { xs: "x mandatory", sm: "none" },
-            scrollbarColor: `${movieColors.brand} transparent`,
+            scrollbarColor: (theme) =>
+              `${theme.palette.accent.main} transparent`,
             scrollbarWidth: "thin",
             WebkitOverflowScrolling: "touch",
           }}

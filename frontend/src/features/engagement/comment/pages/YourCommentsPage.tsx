@@ -18,6 +18,7 @@ import type { Movie } from "../../../catalog";
 import { deleteCommentMutationOptions, updateCommentMutationOptions } from "../api/commentMutations";
 import { commentQueryKeys } from "../api/commentQueries";
 import CommentItem from "../components/CommentItem";
+import { accentTint } from "../../../../theme";
 
 const PAGE_SIZE = 20;
 
@@ -137,8 +138,8 @@ const YourCommentsPage = () => {
               shape="rounded"
               siblingCount={1}
               sx={{
-                "& .MuiPaginationItem-root": { borderColor: "rgba(255,255,255,0.12)", color: "text.secondary" },
-                "& .Mui-selected": { backgroundColor: "rgba(245,197,24,0.16)", color: "text.primary" },
+                "& .MuiPaginationItem-root": { borderColor: "line.control", color: "text.secondary" },
+                "& .Mui-selected": { backgroundColor: accentTint(0.16), color: "text.primary" },
               }}
               variant="outlined"
             />
@@ -190,7 +191,7 @@ const CommentMovieContext = ({
         sx={{ borderRadius: 0.75, flex: "0 0 auto", height: 52, objectFit: "cover", width: 35 }}
       />
       <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ color: "text.secondary", fontSize: 11, fontWeight: 700, letterSpacing: 0.55, textTransform: "uppercase" }}>
+        <Typography sx={{ color: "text.secondary", fontSize: 12, fontWeight: 600 }}>
           Your comment on
         </Typography>
         <Typography noWrap sx={{ fontSize: 15, fontWeight: 800, lineHeight: 1.35 }}>

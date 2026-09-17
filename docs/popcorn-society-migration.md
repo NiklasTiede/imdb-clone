@@ -10,8 +10,8 @@ domain. Legacy API, OAuth and WebAuthn routes remain available where cross-origi
 be unsafe. The existing backend, media, Grafana and Argo CD hostnames remain technical identities.
 
 This preparation changes the app's visible branding and provides an SVG popcorn placeholder,
-browser icons, Apple touch icon, and installable app icons. Replace the master at
-`frontend/public/brand-logo.svg` and regenerate the PNG exports when the final logo is ready.
+browser icons, Apple touch icon, and installable app icons. Logo sources now live per theme in
+`docs/brand/<theme>/logo/`; `yarn brand:assets` regenerates `frontend/public/brand/<theme>/`.
 The header wordmark remains accessible text, so replacing the symbol does not require layout code.
 
 The owner confirmed that the app has practically no usage and that only test accounts use

@@ -10,7 +10,7 @@ export {
   posterHoverTargetClassName,
   posterHoverTargetSx,
 } from "./components/posterHover";
-export { IMDB_GOLD, RatingPill } from "./components/RatingPill";
+export { RatingPill } from "./components/RatingPill";
 export {
   getMoviePosterToken,
   MovieGenre,

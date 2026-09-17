@@ -13,7 +13,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Rating from "@mui/material/Rating";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
-import { movieColors } from "../../../theme";
 
 type MovieRatingDialogProps = {
   currentRating: number | null;
@@ -114,9 +113,9 @@ const MovieRatingDialog = ({
             icon={<StarIcon fontSize="inherit" />}
             emptyIcon={<StarBorderIcon fontSize="inherit" />}
             sx={{
-              color: movieColors.rating,
+              color: "star",
               fontSize: { xs: 25, sm: 29 },
-              "& .MuiRating-iconEmpty": { color: "rgba(255,255,255,0.3)" },
+              "& .MuiRating-iconEmpty": { color: "line.control" },
             }}
           />
         </Box>

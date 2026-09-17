@@ -6,6 +6,7 @@ import {
   voiceModelLabels,
   type VoiceModel,
 } from "../api/voiceModels";
+import { scrimTint } from "../../../theme";
 
 export function VoiceModelPicker({
   model,
@@ -40,8 +41,13 @@ export function VoiceModelPicker({
             sx={{
               minHeight: 44,
               px: 1.5,
-              color: "text.secondary",
+              color: "text.primary",
               fontSize: 12,
+              // It floats over posters and backdrops, so it carries its own scrim.
+              backdropFilter: "blur(8px)",
+              bgcolor: scrimTint(0.72),
+              borderRadius: 999,
+              "&:hover": { bgcolor: scrimTint(0.86) },
             }}
           >
             {voiceModelLabels[model]}

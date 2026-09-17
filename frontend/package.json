@@ -19,6 +19,7 @@
     "e2e:ui": "yarn typecheck:e2e && playwright test --ui",
     "lint": "eslint .",
     "format": "yarn prettier --write .",
+    "brand:assets": "node scripts/generate-brand-assets.ts",
     "checkUpdates": "ncu",
     "updateOpenApiSpec": "curl ${POPCORN_SOCIETY_OPENAPI_BASE_URL:-http://localhost:8080}/v3/api-docs.yaml > ./src/client/popcorn-society-backend.yaml",
     "build:moviesGen": "openapi-generator-cli generate -i ./src/client/popcorn-society-backend.yaml -g typescript-axios -t ./openapi-templates/typescript-axios -o ./src/client/movies/generator-output/"
@@ -27,6 +28,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource-variable/manrope": "^5.2.8",
+    "@fontsource/bebas-neue": "^5",
     "@github/webauthn-json": "^2.1.1",
     "@hookform/resolvers": "5.2.2",
     "@mui/icons-material": "9.0.1",
@@ -44,6 +46,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "10.0.1",
     "@openapitools/openapi-generator-cli": "2.41.0",
     "@playwright/test": "^1.59.1",

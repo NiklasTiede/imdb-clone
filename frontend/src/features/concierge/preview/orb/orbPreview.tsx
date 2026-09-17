@@ -10,11 +10,9 @@ import {
   Divider,
   IconButton,
   Stack,
-  ThemeProvider,
   Tooltip,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import MicRounded from "@mui/icons-material/MicRounded";
 import MicOffRounded from "@mui/icons-material/MicOffRounded";
 import StopRounded from "@mui/icons-material/StopRounded";
@@ -22,11 +20,22 @@ import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
 import ChatBubbleOutlineRounded from "@mui/icons-material/ChatBubbleOutlineRounded";
 import ArrowOutwardRounded from "@mui/icons-material/ArrowOutwardRounded";
 import SearchRounded from "@mui/icons-material/SearchRounded";
-import { appTheme, movieColors } from "../../../../theme";
+import { useTheme } from "@mui/material/styles";
+import { AppThemeProvider } from "../../../../theme";
 import { STOPS, VoiceOrb, restingStop, type OrbState } from "./VoiceOrb";
 import { ConversationPreview } from "./ConversationPreview";
 import { usePreviewMicrophone } from "./usePreviewMicrophone";
 import catalogScreenshot from "../../../../../../docs/assets/popcorn-society-screenshot.webp";
+
+/** The active theme's header mark. */
+const ThemeMark = ({ size }: { size: number }) => (
+  <Box
+    component="img"
+    src={useTheme().brand.markSrc}
+    alt=""
+    sx={{ width: size, height: size }}
+  />
+);
 
 const states: { state: OrbState; title: string; description: string }[] = [
   { state: "ready", title: "Ready", description: "Half open, waiting" },
@@ -89,7 +98,7 @@ function OrbPreview() {
     <Box
       sx={{
         minHeight: "100dvh",
-        bgcolor: movieColors.backdrop,
+        bgcolor: "surface.page",
         "& button": { textTransform: "none" },
       }}
     >
@@ -106,12 +115,7 @@ function OrbPreview() {
         }}
       >
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-          <Box
-            component="img"
-            src="/brand-logo.svg"
-            alt=""
-            sx={{ width: 30, height: 30 }}
-          />
+          <ThemeMark size={30} />
           <Typography sx={{ fontWeight: 800, fontSize: 13 }}>
             MOVIE CONCIERGE{" "}
             <Box
@@ -149,7 +153,7 @@ function OrbPreview() {
         <Box component="aside" aria-label="Design controls">
           <Typography
             sx={{
-              color: movieColors.brand,
+              color: "accent.main",
               fontSize: 10,
               letterSpacing: 2,
               fontWeight: 800,
@@ -226,11 +230,11 @@ function OrbPreview() {
                     border: "1px solid",
                     borderColor:
                       visualState === item.state
-                        ? alpha(movieColors.info, 0.3)
+                        ? (t) => t.alpha(t.palette.voice.user.mid, 0.3)
                         : "transparent",
                     bgcolor:
                       visualState === item.state
-                        ? alpha(movieColors.info, 0.06)
+                        ? (t) => t.alpha(t.palette.voice.user.mid, 0.06)
                         : "transparent",
                   }}
                 >
@@ -239,7 +243,7 @@ function OrbPreview() {
                     sx={{
                       color:
                         visualState === item.state
-                          ? movieColors.brand
+                          ? "accent.main"
                           : "text.secondary",
                       fontSize: 11,
                       fontVariantNumeric: "tabular-nums",
@@ -297,8 +301,8 @@ function OrbPreview() {
             onClick={live ? mic.stop : start}
             sx={{
               minHeight: 44,
-              borderColor: alpha(movieColors.info, 0.4),
-              color: movieColors.info,
+              borderColor: (t) => t.alpha(t.palette.voice.user.mid, 0.4),
+              color: "voice.user.mid",
             }}
           >
             {live
@@ -321,7 +325,7 @@ function OrbPreview() {
             role="status"
             sx={{
               fontSize: 11,
-              color: live ? movieColors.info : "text.secondary",
+              color: live ? "voice.user.mid" : "text.secondary",
               mt: 1.5,
             }}
           >
@@ -358,7 +362,7 @@ function OrbPreview() {
               borderRadius: 1,
               border: "1px solid",
               borderColor: "divider",
-              bgcolor: movieColors.surfaceInset,
+              bgcolor: "surface.inset",
             }}
           >
             <Box
@@ -371,15 +375,10 @@ function OrbPreview() {
                 gap: 2,
                 borderBottom: "1px solid",
                 borderColor: "divider",
-                bgcolor: movieColors.surface,
+                bgcolor: "surface.card",
               }}
             >
-              <Box
-                component="img"
-                src="/brand-logo.svg"
-                alt=""
-                sx={{ width: 28, height: 28 }}
-              />
+              <ThemeMark size={28} />
               <Typography
                 sx={{
                   fontSize: 12,
@@ -398,7 +397,7 @@ function OrbPreview() {
                   mx: { sm: 3 },
                   px: 1.5,
                   py: 1,
-                  bgcolor: movieColors.backdrop,
+                  bgcolor: "surface.page",
                   borderRadius: 1,
                   color: "text.secondary",
                   fontSize: 11,
@@ -412,7 +411,7 @@ function OrbPreview() {
                   width: 29,
                   height: 29,
                   borderRadius: "50%",
-                  bgcolor: movieColors.surfaceElevated,
+                  bgcolor: "surface.raised",
                   display: "grid",
                   placeItems: "center",
                   fontSize: 10,
@@ -441,7 +440,8 @@ function OrbPreview() {
               sx={{
                 position: "absolute",
                 inset: "64px 0 0",
-                background: `linear-gradient(180deg, ${alpha(movieColors.surfaceInset, 0.25)}, ${alpha(movieColors.surfaceInset, 0.9)})`,
+                background: (t) =>
+                  `linear-gradient(180deg, ${t.alpha(t.palette.surface.inset, 0.25)}, ${t.alpha(t.palette.surface.inset, 0.9)})`,
                 zIndex: -1,
               }}
             />
@@ -458,11 +458,12 @@ function OrbPreview() {
                   minHeight: 40,
                   px: 2,
                   borderRadius: 8,
-                  borderColor: alpha(movieColors.info, 0.32),
-                  bgcolor: movieColors.surface,
+                  borderColor: (t) => t.alpha(t.palette.voice.user.mid, 0.32),
+                  bgcolor: "surface.card",
                   color: "text.primary",
                   fontSize: 11,
-                  boxShadow: "0 4px 20px #0004",
+                  boxShadow: (t) =>
+                    `0 4px 20px ${t.alpha(t.palette.scrim, 0.02)}`,
                 }}
               >
                 {live ? "Voice is on" : "Start voice"}
@@ -472,7 +473,7 @@ function OrbPreview() {
                     width: 5,
                     height: 5,
                     borderRadius: "50%",
-                    bgcolor: live ? movieColors.info : "text.secondary",
+                    bgcolor: live ? "voice.user.mid" : "text.secondary",
                     ml: 1.5,
                   }}
                 />
@@ -486,10 +487,12 @@ function OrbPreview() {
                     maxWidth: 380,
                     mt: 1.5,
                     border: "1px solid",
-                    borderColor: alpha(movieColors.info, 0.17),
+                    borderColor: (t) => t.alpha(t.palette.voice.user.mid, 0.17),
                     borderRadius: 1,
-                    background: `linear-gradient(150deg, ${alpha(movieColors.surfaceElevated, 0.97)}, ${alpha(movieColors.surfaceInset, 0.98)} 70%)`,
-                    boxShadow: "0 24px 80px #0009",
+                    background: (t) =>
+                      `linear-gradient(150deg, ${t.alpha(t.palette.surface.raised, 0.97)}, ${t.alpha(t.palette.surface.inset, 0.98)} 70%)`,
+                    boxShadow: (t) =>
+                      `0 24px 80px ${t.alpha(t.palette.scrim, 0.04)}`,
                     overflow: "hidden",
                   }}
                 >
@@ -564,7 +567,7 @@ function OrbPreview() {
                         transform: "translateX(-50%)",
                         width: "1px",
                         height: 9,
-                        bgcolor: movieColors.brand,
+                        bgcolor: "accent.main",
                         transition: "left 110ms linear",
                         "@media (prefers-reduced-motion: reduce)": {
                           transition: "none",
@@ -575,7 +578,7 @@ function OrbPreview() {
                           bottom: 11,
                           left: "50%",
                           transform: "translateX(-50%)",
-                          color: movieColors.brand,
+                          color: "accent.main",
                           fontSize: 12,
                           fontWeight: 700,
                           fontVariantNumeric: "tabular-nums",
@@ -588,7 +591,8 @@ function OrbPreview() {
                         display: "grid",
                         gridTemplateColumns: `repeat(${STOPS.length}, 1fr)`,
                         borderTop: "1px solid",
-                        borderColor: alpha("#ffffff", 0.1),
+                        borderColor: (t) =>
+                          t.alpha(t.palette.text.primary, 0.1),
                         pt: 0.7,
                       }}
                     >
@@ -658,11 +662,12 @@ function OrbPreview() {
                             height: 48,
                             border: "1px solid",
                             borderColor: "divider",
-                            bgcolor: alpha(movieColors.info, 0.06),
+                            bgcolor: (t) =>
+                              t.alpha(t.palette.voice.user.mid, 0.06),
                             color:
                               visualState === "muted"
                                 ? "text.secondary"
-                                : movieColors.info,
+                                : "voice.user.mid",
                           }}
                         >
                           {visualState === "muted" ? (
@@ -681,7 +686,8 @@ function OrbPreview() {
                             height: 48,
                             border: "1px solid",
                             borderColor: "divider",
-                            bgcolor: alpha("#ffffff", 0.05),
+                            bgcolor: (t) =>
+                              t.alpha(t.palette.text.primary, 0.05),
                           }}
                         >
                           <StopRounded fontSize="small" />
@@ -737,7 +743,7 @@ function OrbPreview() {
                 position: "absolute",
                 bottom: 18,
                 right: 18,
-                bgcolor: movieColors.surfaceElevated,
+                bgcolor: "surface.raised",
                 border: "1px solid",
                 borderColor: "divider",
                 color: "text.primary",
@@ -775,7 +781,7 @@ function OrbPreview() {
                 flex: 1,
               }}
             >
-              <Box component="span" sx={{ color: movieColors.info, mr: 1 }}>
+              <Box component="span" sx={{ color: "voice.user.mid", mr: 1 }}>
                 ●
               </Box>
               <strong>Your voice</strong> widens the blades and prints the ring.
@@ -789,7 +795,7 @@ function OrbPreview() {
                 flex: 1,
               }}
             >
-              <Box component="span" sx={{ color: movieColors.brand, mr: 1 }}>
+              <Box component="span" sx={{ color: "accent.main", mr: 1 }}>
                 ●
               </Box>
               <strong>The Concierge</strong> floods the gate and prints its
@@ -844,8 +850,8 @@ function OrbPreview() {
 const root = document.getElementById("root");
 if (root && import.meta.env.DEV)
   createRoot(root).render(
-    <ThemeProvider theme={appTheme}>
+    <AppThemeProvider>
       <CssBaseline />
       <OrbPreview />
-    </ThemeProvider>,
+    </AppThemeProvider>,
   );

@@ -4,19 +4,25 @@
   "name": "Popcorn Society - Discover, rate, remember",
   "icons": [
     {
-      "src": "/app-icon-192.png",
+      "src": "/brand/after-dark/app-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/app-icon-512.png",
+      "src": "/brand/after-dark/app-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/brand-logo.svg",
+      "src": "/brand/after-dark/app-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/brand/after-dark/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
@@ -24,6 +30,6 @@
   ],
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#0e1626",
-  "background_color": "#0b111d"
+  "theme_color": "#0A0C12",
+  "background_color": "#0A0C12"
 }

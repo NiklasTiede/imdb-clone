@@ -10,7 +10,7 @@ import Typography from "@mui/material/Typography";
 import { useMutation } from "@tanstack/react-query";
 import { Link as RouterLink } from "react-router";
 import { useState } from "react";
-import { movieColors } from "../../../../theme";
+import { fontFamilies } from "../../../../theme";
 import { recommendationApi } from "../../../../shared/api/moviesApi";
 import { PosterMovieCard } from "../../../catalog";
 import type {
@@ -84,7 +84,7 @@ const WatchlistDecisionPanel = ({ insights }: WatchlistDecisionPanelProps) => {
       component="section"
       variant="outlined"
       sx={{
-        background: `linear-gradient(118deg, ${movieColors.surfaceElevated}, ${movieColors.surfaceInset})`,
+        bgcolor: "surface.card",
         borderColor: "divider",
         borderRadius: 1,
         p: { xs: 2, sm: 2.5 },
@@ -98,18 +98,18 @@ const WatchlistDecisionPanel = ({ insights }: WatchlistDecisionPanelProps) => {
         >
           <Box>
             <Typography
-              sx={{
-                color: "primary.main",
-                fontSize: 11,
-                fontWeight: 800,
-                letterSpacing: 1.1,
-              }}
+              sx={{ color: "text.secondary", fontSize: 12, fontWeight: 600 }}
             >
-              WATCHLIST TONIGHT
+              Watchlist tonight
             </Typography>
             <Typography
               component="h2"
-              sx={{ fontSize: 20, fontWeight: 800, mt: 0.25 }}
+              sx={{
+                fontFamily: fontFamilies.display,
+                fontSize: 20,
+                fontWeight: 800,
+                mt: 0.25,
+              }}
             >
               Find something new from your saved taste.
             </Typography>
@@ -243,11 +243,10 @@ const WatchlistTonightChoices = ({
               <Box key={pick.movie.id} sx={{ minWidth: 0, width: "100%" }}>
                 <Typography
                   sx={{
-                    color: "primary.main",
-                    fontSize: 11,
-                    fontWeight: 800,
+                    color: "text.secondary",
+                    fontSize: 12,
+                    fontWeight: 600,
                     mb: 0.5,
-                    textTransform: "uppercase",
                   }}
                 >
                   {pick.role ? roleLabels[pick.role] : "Tonight's pick"}

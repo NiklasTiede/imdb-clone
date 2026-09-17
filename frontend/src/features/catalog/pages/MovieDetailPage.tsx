@@ -27,6 +27,7 @@ import MovieTrailer from "../components/MovieTrailer";
 import Synopsis from "../components/Synopsis";
 import { shareMovie } from "../utils/shareMovie";
 import { getValidYouTubeVideoKey } from "../utils/youtubeTrailer";
+import { fontFamilies } from "../../../theme";
 
 type PageFeedback = {
   message: string;
@@ -315,7 +316,12 @@ const MovieDetailPage = () => {
             <Typography
               component="h2"
               id="movie-trailer-title"
-              sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}
+              sx={{
+                fontFamily: fontFamilies.display,
+                fontSize: 18,
+                fontWeight: 700,
+                mb: 1.5,
+              }}
             >
               Trailer
             </Typography>

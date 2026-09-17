@@ -1,7 +1,6 @@
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { movieColors } from "../../theme";
 import AppSurface from "./AppSurface";
 
 type StatusStateProps = {
@@ -28,10 +27,13 @@ const StatusState = ({ action, children, icon, title }: StatusStateProps) => (
           aria-hidden
           sx={{
             alignItems: "center",
-            backgroundColor: "rgba(77,171,247,0.12)",
-            border: "1px solid rgba(77,171,247,0.22)",
+            backgroundColor: (theme) =>
+              theme.alpha(theme.palette.data.comparison, 0.12),
+            border: "1px solid",
+            borderColor: (theme) =>
+              theme.alpha(theme.palette.data.comparison, 0.22),
             borderRadius: "50%",
-            color: movieColors.info,
+            color: "data.comparison",
             height: 56,
             justifyContent: "center",
             width: 56,

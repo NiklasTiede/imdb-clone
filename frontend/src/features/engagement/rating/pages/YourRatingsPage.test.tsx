@@ -110,7 +110,7 @@ describe("YourRatingsPage", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByRole("heading", { name: "Your Ratings" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Your ratings" })).toBeTruthy();
     expect(screen.getByRole("grid", { name: "Rated movies" })).toBeTruthy();
     expect(screen.getByText("Your average")).toBeTruthy();
     expect(screen.getByText("8.0")).toBeTruthy();

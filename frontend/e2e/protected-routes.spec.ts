@@ -169,7 +169,7 @@ test("renders protected ratings for authenticated users", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/your-ratings$/);
   await expect(
-    page.getByRole("heading", { name: "Your Ratings" }),
+    page.getByRole("heading", { name: "Your ratings" }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "It Follows" })).toBeVisible();
   await expect(page.getByLabel("Your rating 8 out of 10")).toBeVisible();

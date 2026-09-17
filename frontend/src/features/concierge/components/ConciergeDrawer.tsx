@@ -17,13 +17,12 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import RefreshRounded from "@mui/icons-material/RefreshRounded";
 import TuneRounded from "@mui/icons-material/TuneRounded";
 import ArrowUpwardRounded from "@mui/icons-material/ArrowUpwardRounded";
 import Markdown from "react-markdown";
-import { movieColors } from "../../../theme";
+import { accentTint } from "../../../theme";
 import type { useConciergeChat } from "../hooks/useConciergeChat";
 import type { ConciergeVoice } from "../hooks/useConciergeVoice";
 import type { ChatTurn, ApplicationAction } from "../model/concierge";
@@ -133,11 +132,12 @@ const ConciergeDrawer = ({
               md: "100dvh",
             },
             maxWidth: "100vw",
-            bgcolor: movieColors.surface,
+            bgcolor: "surface.card",
             backgroundImage: "none",
             borderLeft: "1px solid",
             borderColor: "divider",
-            boxShadow: "-24px 0 70px #0007",
+            boxShadow: (theme) =>
+              `-24px 0 70px ${theme.alpha(theme.palette.scrim, 0.44)}`,
           },
         },
       }}
@@ -169,7 +169,7 @@ const ConciergeDrawer = ({
             <Typography
               sx={{
                 fontSize: 10,
-                color: voice.active ? movieColors.info : "text.secondary",
+                color: voice.active ? "voice.user.mid" : "text.secondary",
                 mt: 0.3,
               }}
             >
@@ -311,7 +311,7 @@ const ConciergeDrawer = ({
           sx={{
             p: 1.5,
             pb: "max(12px, env(safe-area-inset-bottom))",
-            bgcolor: movieColors.surfaceInset,
+            bgcolor: "surface.inset",
             borderTop: "1px solid",
             borderColor: "divider",
             flexShrink: 0,
@@ -346,10 +346,10 @@ const ConciergeDrawer = ({
               sx={{
                 "& .MuiInputBase-root": {
                   fontSize: 12,
-                  color: "rgba(255,255,255,0.92)",
+                  color: "text.primary",
                 },
                 "& .MuiInputBase-input::placeholder": {
-                  color: "rgba(255,255,255,0.62)",
+                  color: "text.secondary",
                   opacity: 1,
                 },
               }}
@@ -366,9 +366,9 @@ const ConciergeDrawer = ({
                 width: 40,
                 height: 40,
                 borderRadius: 1,
-                bgcolor: movieColors.brand,
-                color: movieColors.brandInk,
-                "&:hover": { bgcolor: movieColors.gold },
+                bgcolor: "accent.main",
+                color: "accent.contrastText",
+                "&:hover": { bgcolor: "primary.dark" },
               }}
             >
               <ArrowUpwardRounded fontSize="small" />
@@ -434,8 +434,7 @@ const ChatMessage = ({ turn }: { turn: ChatTurn }) => (
       <Typography
         sx={{
           fontSize: 10,
-          color: turn.role === "user" ? movieColors.info : movieColors.brand,
-          letterSpacing: 0.8,
+          color: turn.role === "user" ? "voice.user.mid" : "voice.agent.mid",
         }}
       >
         {turn.role === "user" ? "YOU" : "CONCIERGE"} ·{" "}
@@ -471,7 +470,7 @@ const ChatMessage = ({ turn }: { turn: ChatTurn }) => (
           mt: 1.5,
           borderLeft: "2px solid",
           borderColor:
-            entry.outcome === "rejected" ? "warning.main" : movieColors.info,
+            entry.outcome === "rejected" ? "warning.main" : "data.comparison",
         }}
       >
         {mutationLabel(entry.action) && (
@@ -537,12 +536,12 @@ const ChatMessage = ({ turn }: { turn: ChatTurn }) => (
   </Box>
 );
 const messageTextSx = {
-  color: "rgba(255,255,255,0.84)",
+  color: "text.primary",
   fontSize: 12.5,
   lineHeight: 1.65,
   "& p": { m: 0 },
   "& p + p": { mt: 1 },
-  "& strong": { color: "rgba(255,255,255,0.96)", fontWeight: 750 },
+  "& strong": { color: "text.primary", fontWeight: 750 },
   "& ul, & ol": { my: 0.75, pl: 2.5 },
   "& li + li": { mt: 0.35 },
 } as const;
@@ -566,10 +565,11 @@ const MessageText = ({ isUser, text }: { isUser: boolean; text: string }) => {
   return (
     <Typography
       sx={{
-        bgcolor: alpha(movieColors.info, 0.14),
-        border: `1px solid ${alpha(movieColors.info, 0.2)}`,
+        bgcolor: accentTint(0.14),
+        border: "1px solid",
+        borderColor: accentTint(0.24),
         borderRadius: "16px 16px 4px 16px",
-        color: "rgba(255,255,255,0.92)",
+        color: "text.primary",
         fontSize: 12.5,
         lineHeight: 1.65,
         px: 1.6,

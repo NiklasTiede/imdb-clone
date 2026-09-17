@@ -103,9 +103,9 @@ describe("AppBarTop", () => {
     renderAppBar("/movie-search", { imageUrlToken: "avatar-token" });
 
     expect(
-      (
-        await screen.findByRole("img", { name: "niklas profile" })
-      ).getAttribute("src"),
+      (await screen.findByRole("img", { name: "niklas profile" })).getAttribute(
+        "src",
+      ),
     ).toContain("profile-photos/avatar-token_size_800x800.jpg");
   });
 

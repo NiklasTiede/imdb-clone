@@ -26,6 +26,7 @@ import { commentQueries } from "../api/commentQueries";
 import type { CommentAuthor } from "../model/comment";
 import CommentComposer from "./CommentComposer";
 import CommentItem from "./CommentItem";
+import { fontFamilies } from "../../../../theme";
 
 type MovieCommentsSectionProps = {
   movieId: number;
@@ -102,7 +103,11 @@ const MovieCommentsSection = ({
           <Typography
             component="h2"
             id="movie-comments-title"
-            sx={{ fontSize: { xs: 21, sm: 24 }, fontWeight: 700 }}
+            sx={{
+              fontFamily: fontFamilies.display,
+              fontSize: { xs: 21, sm: 24 },
+              fontWeight: 700,
+            }}
           >
             Community
           </Typography>

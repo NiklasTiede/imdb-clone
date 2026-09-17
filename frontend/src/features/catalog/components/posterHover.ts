@@ -2,21 +2,20 @@ import type { SxProps, Theme } from "@mui/material/styles";
 
 export const posterHoverTargetClassName = "movie-poster-hover-target";
 
-export const posterHoverContainerSx = {
+// The hover and focus treatment comes from the theme's effect tokens, so each
+// theme decides how a poster reacts (scale and outline, or lift and light edge).
+export const posterHoverContainerSx = (theme: Theme) => ({
   overflow: "visible",
-  [`&:is(:hover, :focus-visible) .${posterHoverTargetClassName}`]: {
-    outlineColor: "rgba(255,255,255,0.96)",
-    outlineOffset: 2,
-    transform: "scale(1.03)",
-  },
-} satisfies SxProps<Theme>;
+  [`&:is(:hover, :focus-visible) .${posterHoverTargetClassName}`]:
+    theme.effects.posterHover,
+  [`&:focus-visible .${posterHoverTargetClassName}`]: theme.effects.posterFocus,
+});
 
 export const posterHoverTargetSx = {
   outline: "2px solid transparent",
   outlineOffset: 0,
-  transform: "scale(1)",
   transformOrigin: "center",
   transition:
-    "transform 180ms ease, outline-color 180ms ease, outline-offset 180ms ease",
+    "transform 180ms ease, outline-color 180ms ease, outline-offset 180ms ease, box-shadow 180ms ease",
   willChange: "transform",
 } satisfies SxProps<Theme>;

@@ -3,6 +3,7 @@ import IconButton from "@mui/material/IconButton";
 import { PosterMovieCard, type Movie } from "../../../catalog";
 import type { WatchlistItem } from "../model/watchlist";
 import { formatRelativeDate } from "../utils/watchlistFormat";
+import { scrimTint } from "../../../../theme";
 
 type WatchlistMovieCardProps = {
   item: WatchlistItem;
@@ -29,8 +30,8 @@ const WatchlistMovieCard = ({ item, onRemove }: WatchlistMovieCardProps) => {
             onClick={() => onRemove(movieId)}
             size="small"
             sx={{
-              backgroundColor: "rgba(0,0,0,0.7)",
-              color: "common.white",
+              backgroundColor: scrimTint(0.72),
+              color: "text.primary",
               opacity: { xs: 0.75, md: 0 },
               position: "absolute",
               right: 6,

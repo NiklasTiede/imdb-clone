@@ -139,7 +139,7 @@ const RegistrationPage = () => {
           <Typography
             component="h1"
             sx={{
-              color: "common.white",
+              color: "text.primary",
               fontSize: { xs: 24, sm: 26 },
               fontWeight: 500,
               mb: 0.75,
@@ -355,9 +355,9 @@ const PasswordRules = ({ password }: { password: string }) => (
               alignItems: "center",
               bgcolor: met ? "success.main" : "transparent",
               border: "1px solid",
-              borderColor: met ? "success.main" : "rgba(255,255,255,0.3)",
+              borderColor: met ? "success.main" : "line.control",
               borderRadius: "50%",
-              color: "common.white",
+              color: "text.primary",
               display: "inline-flex",
               height: 12,
               justifyContent: "center",
@@ -370,7 +370,7 @@ const PasswordRules = ({ password }: { password: string }) => (
             component="span"
             data-met={met ? "true" : "false"}
             sx={{
-              color: met ? "success.main" : "rgba(255,255,255,0.5)",
+              color: met ? "success.main" : "text.secondary",
               fontSize: 11,
             }}
           >

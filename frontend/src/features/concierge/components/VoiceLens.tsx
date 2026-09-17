@@ -1,6 +1,17 @@
 import { useEffect, useRef } from "react";
-import { alpha } from "@mui/material/styles";
-import { movieColors } from "../../../theme";
+import { useTheme } from "@mui/material/styles";
+
+/** Physical lens material (metal, glass, shadow). It is the same object in
+ *  every theme; only the light passing through it comes from theme tokens. */
+const lensMaterial = {
+  highlight: "#ffffff",
+  shadow: "#000000",
+  bladeLit: ["#3f444d", "#1e222a", "#0e1116"],
+  bladeRest: ["#31353d", "#181b22", "#0a0d11"],
+  engraving: "#c6cad2",
+  barrelRim: "#8f959e",
+  filament: "#dfeaff",
+} as const;
 
 export type OrbState =
   | "ready"
@@ -69,6 +80,7 @@ export function VoiceLens({
    *  directly, only when the stop changes, so React never re-renders. */
   readoutRef?: { current: HTMLElement | null };
 }) {
+  const theme = useTheme();
   const canvas = useRef<HTMLCanvasElement>(null);
   const openingRef = useRef(closed ? 0.005 : REST[state]);
   /** Recorded level per slot, plus who was speaking, survives state switches. */
@@ -85,6 +97,9 @@ export function VoiceLens({
     const ctx = node?.getContext("2d");
     if (!node || !ctx) return;
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const { voice } = theme.palette;
+    const alpha = (color: string, opacity: number) =>
+      theme.alpha(color, opacity);
     const tape = track.current;
     let frame = 0;
     let last = 0;
@@ -194,20 +209,14 @@ export function VoiceLens({
 
       // Identity colour: blue is the user, gold is the Concierge. It labels the
       // halo, the housing and the engraved ring, and never changes meaning.
-      const warm = speaking ? movieColors.brand : movieColors.info;
+      const warm = speaking ? voice.agent.mid : voice.user.mid;
       // The gate is a light source, so it is separated the way a cinematographer
       // separates two lamps: by colour temperature. The user's voice is daylight
       // arriving at the lens, the reply is tungsten leaving it. Each ramp runs
       // from a near-white core out to a deep rim, which is where the contrast
       // comes from — not from more light, since the area and luminance are the
       // same either way.
-      const gate5600 = { core: "#ffffff", mid: "#8ec8ff", rim: "#1d5ba6" };
-      const gate3200 = {
-        core: "#fff6e0",
-        mid: movieColors.gold,
-        rim: "#a86500",
-      };
-      const temperature = speaking ? gate3200 : gate5600;
+      const temperature = speaking ? voice.agent : voice.user;
       const core = temperature.mid;
       const breath = state === "ready" ? Math.sin(t * 0.8) * 0.09 : 0;
       const glow = quiet ? 0.06 : 0.42 + breath + level * 0.6;
@@ -241,7 +250,7 @@ export function VoiceLens({
       ctx.clip();
 
       // 2. The gate light, painted full width. The blades will mask it to shape.
-      ctx.fillStyle = movieColors.surfaceInset;
+      ctx.fillStyle = theme.palette.surface.inset;
       ctx.fillRect(cx - barrel, cy - barrel, barrel * 2, barrel * 2);
       const gateLight = ctx.createRadialGradient(
         cx,
@@ -332,7 +341,7 @@ export function VoiceLens({
         i === 0 ? ctx.moveTo(point.x, point.y) : ctx.lineTo(point.x, point.y),
       );
       ctx.closePath();
-      ctx.fillStyle = "#0a1220";
+      ctx.fillStyle = theme.palette.surface.inset;
       ctx.fill("evenodd");
 
       // Each leaf overlaps only its immediate neighbour, and that neighbour is
@@ -363,16 +372,25 @@ export function VoiceLens({
         );
         // Alternating tones keep the six-fold overlap readable when wide open.
         const lit = blade % 2 === 0;
-        face.addColorStop(0, lit ? "#3f444d" : "#31353d");
-        face.addColorStop(0.45, lit ? "#1e222a" : "#181b22");
-        face.addColorStop(1, lit ? "#0e1116" : "#0a0d11");
+        face.addColorStop(
+          0,
+          (lit ? lensMaterial.bladeLit : lensMaterial.bladeRest)[0],
+        );
+        face.addColorStop(
+          0.45,
+          (lit ? lensMaterial.bladeLit : lensMaterial.bladeRest)[1],
+        );
+        face.addColorStop(
+          1,
+          (lit ? lensMaterial.bladeLit : lensMaterial.bladeRest)[2],
+        );
         ctx.fillStyle = face;
         ctx.fill();
 
         // The chamfered leading edge, catching light along its whole sweep.
         ctx.beginPath();
         ctx.arc(cx + leaf.x, cy + leaf.y, edgeArc, 0, Math.PI * 2);
-        ctx.strokeStyle = alpha("#c6cad2", compact ? 0.32 : 0.42);
+        ctx.strokeStyle = alpha(lensMaterial.engraving, compact ? 0.32 : 0.42);
         ctx.lineWidth = compact ? 0.6 : 1;
         ctx.stroke();
         ctx.restore();
@@ -403,7 +421,10 @@ export function VoiceLens({
       ctx.strokeStyle = alpha(core, Math.min(0.26, gateLuma * 0.32));
       ctx.lineWidth = 5 + level * 4;
       ctx.stroke();
-      ctx.strokeStyle = alpha("#ffffff", Math.min(0.6, gateLuma * 0.9));
+      ctx.strokeStyle = alpha(
+        lensMaterial.highlight,
+        Math.min(0.6, gateLuma * 0.9),
+      );
       ctx.lineWidth = 0.8 + level * 0.4;
       ctx.stroke();
 
@@ -417,8 +438,8 @@ export function VoiceLens({
         cy,
         barrel,
       );
-      housing.addColorStop(0, alpha("#000000", 0));
-      housing.addColorStop(1, alpha("#000000", 0.72));
+      housing.addColorStop(0, alpha(lensMaterial.shadow, 0));
+      housing.addColorStop(1, alpha(lensMaterial.shadow, 0.72));
       ctx.fillStyle = housing;
       ctx.fillRect(cx - barrel, cy - barrel, barrel * 2, barrel * 2);
 
@@ -430,13 +451,13 @@ export function VoiceLens({
         cy - barrel * 0.35,
         barrel * 1.1,
       );
-      sheen.addColorStop(0, alpha("#ffffff", 0.07));
-      sheen.addColorStop(1, alpha("#ffffff", 0));
+      sheen.addColorStop(0, alpha(lensMaterial.highlight, 0.07));
+      sheen.addColorStop(1, alpha(lensMaterial.highlight, 0));
       ctx.fillStyle = sheen;
       ctx.fillRect(cx - barrel, cy - barrel, barrel * 2, barrel * 2);
       ctx.restore();
 
-      ctx.strokeStyle = alpha("#8f959e", 0.5);
+      ctx.strokeStyle = alpha(lensMaterial.barrelRim, 0.5);
       ctx.lineWidth = compact ? 1 : 1.6;
       ctx.beginPath();
       ctx.arc(cx, cy, barrel - 0.8, 0, Math.PI * 2);
@@ -456,9 +477,9 @@ export function VoiceLens({
         ctx.globalCompositeOperation = "lighter";
         const reach = barrel * 1.6;
         const bloom = ctx.createLinearGradient(cx - reach, cy, cx + reach, cy);
-        bloom.addColorStop(0, alpha(movieColors.communityBlue, 0));
-        bloom.addColorStop(0.5, alpha(movieColors.communityBlue, 0.17 * spark));
-        bloom.addColorStop(1, alpha(movieColors.communityBlue, 0));
+        bloom.addColorStop(0, alpha(voice.flare, 0));
+        bloom.addColorStop(0.5, alpha(voice.flare, 0.17 * spark));
+        bloom.addColorStop(1, alpha(voice.flare, 0));
         ctx.fillStyle = bloom;
         const spread = Math.max(2, gate * 0.2);
         ctx.fillRect(cx - reach, cy - spread, reach * 2, spread * 2);
@@ -469,9 +490,9 @@ export function VoiceLens({
           cx + reach,
           cy,
         );
-        filament.addColorStop(0, alpha("#dfeaff", 0));
-        filament.addColorStop(0.5, alpha("#dfeaff", 0.55 * spark));
-        filament.addColorStop(1, alpha("#dfeaff", 0));
+        filament.addColorStop(0, alpha(lensMaterial.filament, 0));
+        filament.addColorStop(0.5, alpha(lensMaterial.filament, 0.55 * spark));
+        filament.addColorStop(1, alpha(lensMaterial.filament, 0));
         ctx.fillStyle = filament;
         ctx.fillRect(cx - reach, cy - 0.9, reach * 2, 1.8);
 
@@ -484,12 +505,9 @@ export function VoiceLens({
             cx,
             cy + barrel * 0.55,
           );
-          cross.addColorStop(0, alpha(movieColors.communityBlue, 0));
-          cross.addColorStop(
-            0.5,
-            alpha(movieColors.communityBlue, 0.2 * spark),
-          );
-          cross.addColorStop(1, alpha(movieColors.communityBlue, 0));
+          cross.addColorStop(0, alpha(voice.flare, 0));
+          cross.addColorStop(0.5, alpha(voice.flare, 0.2 * spark));
+          cross.addColorStop(1, alpha(voice.flare, 0));
           ctx.fillStyle = cross;
           ctx.fillRect(cx - 0.8, cy - barrel * 0.55, 1.6, barrel * 1.1);
         }
@@ -503,7 +521,7 @@ export function VoiceLens({
       const tickStep = compact ? 3 : 1;
       ctx.beginPath();
       ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = alpha("#ffffff", 0.07);
+      ctx.strokeStyle = alpha(lensMaterial.highlight, 0.07);
       ctx.lineWidth = 1;
       ctx.stroke();
       for (let age = 0; age < HISTORY; age += tickStep) {
@@ -521,7 +539,7 @@ export function VoiceLens({
           cy + uy * (ringRadius + length),
         );
         ctx.strokeStyle = alpha(
-          tape.agent[slot] ? movieColors.brand : movieColors.info,
+          tape.agent[slot] ? voice.agent.mid : voice.user.mid,
           sample > 0.02 ? fade : fade * 0.3,
         );
         ctx.lineWidth = compact ? 1.2 : 1.6;
@@ -531,7 +549,7 @@ export function VoiceLens({
       ctx.beginPath();
       ctx.moveTo(cx, cy - ringRadius + tickBase * 0.5);
       ctx.lineTo(cx, cy - ringRadius - tickMax - tickBase * 2);
-      ctx.strokeStyle = alpha("#ffffff", 0.5);
+      ctx.strokeStyle = alpha(lensMaterial.highlight, 0.5);
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -544,7 +562,7 @@ export function VoiceLens({
           -Math.PI / 2,
           -Math.PI / 2 + Math.PI * 2 * Math.min(1, input),
         );
-        ctx.strokeStyle = alpha(movieColors.info, 0.8);
+        ctx.strokeStyle = alpha(voice.user.mid, 0.8);
         ctx.lineWidth = 2;
         ctx.stroke();
       }
@@ -573,7 +591,7 @@ export function VoiceLens({
       document.removeEventListener("visibilitychange", wake);
       motion.removeEventListener("change", wake);
     };
-  }, [state, live, readLevel, readoutRef, readAudio, closed]);
+  }, [state, live, readLevel, readoutRef, readAudio, closed, theme]);
 
   return (
     <canvas

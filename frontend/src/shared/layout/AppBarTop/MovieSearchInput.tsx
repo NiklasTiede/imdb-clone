@@ -3,10 +3,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import InputBase from "@mui/material/InputBase";
-import { alpha, styled } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import type React from "react";
 import { useEffect, useRef } from "react";
-import { movieColors } from "../../../theme";
 
 type MovieSearchInputProps = {
   onClear: () => void;
@@ -18,18 +17,19 @@ type MovieSearchInputProps = {
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   alignItems: "center",
-  border: `1px solid ${alpha(theme.palette.common.white, 0.16)}`,
-  borderRadius: 7,
-  backgroundColor: alpha(theme.palette.common.white, 0.08),
+  border: `1px solid ${theme.palette.line.divider}`,
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: theme.palette.surface.card,
+  transition: "border-color 150ms ease, box-shadow 150ms ease",
   display: "grid",
   gridTemplateColumns: "42px minmax(0, 1fr) auto",
   minHeight: 42,
   "&:hover": {
-    backgroundColor: alpha(theme.palette.common.white, 0.12),
+    borderColor: theme.palette.line.control,
   },
   "&:focus-within": {
-    borderColor: alpha(movieColors.brand, 0.78),
-    boxShadow: `0 0 0 3px ${alpha(movieColors.brand, 0.14)}`,
+    borderColor: theme.alpha(theme.palette.accent.main, 0.78),
+    boxShadow: `0 0 0 3px ${theme.alpha(theme.palette.accent.main, 0.14)}`,
   },
   margin: 0,
   width: "100%",
@@ -45,7 +45,7 @@ const SearchIconWrapper = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  color: alpha(theme.palette.common.white, 0.72),
+  color: theme.palette.text.secondary,
 }));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
@@ -55,11 +55,15 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     padding: theme.spacing(1.1, 1, 1.1, 0),
     width: "100%",
     "&::placeholder": {
-      color: alpha(theme.palette.common.white, 0.72),
+      color: theme.palette.text.secondary,
       opacity: 1,
     },
   },
 }));
+
+const isApplePlatform = () =>
+  typeof navigator !== "undefined" &&
+  /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent);
 
 const MovieSearchInput = ({
   onClear,
@@ -68,6 +72,7 @@ const MovieSearchInput = ({
   query,
 }: MovieSearchInputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const shortcutLabel = isApplePlatform() ? "⌘K" : "Ctrl K";
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -107,9 +112,10 @@ const MovieSearchInput = ({
       <Box
         aria-hidden="true"
         sx={{
-          border: "1px solid rgba(255,255,255,0.16)",
+          border: "1px solid",
+          borderColor: "divider",
           borderRadius: 1,
-          color: "rgba(255,255,255,0.58)",
+          color: "text.secondary",
           display: { xs: "none", sm: query.length > 0 ? "none" : "block" },
           fontSize: 11,
           fontWeight: 700,
@@ -118,7 +124,7 @@ const MovieSearchInput = ({
           py: 0.25,
         }}
       >
-        Ctrl K
+        {shortcutLabel}
       </Box>
       {query.length > 0 && (
         <IconButton

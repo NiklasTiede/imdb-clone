@@ -1,12 +1,11 @@
 import { Box, Button, Stack, Typography } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
 import PlayCircleOutlineRounded from "@mui/icons-material/PlayCircleOutlineRounded";
 import BookmarkBorderRounded from "@mui/icons-material/BookmarkBorderRounded";
 import StarOutlineRounded from "@mui/icons-material/StarOutlineRounded";
 import PublicRounded from "@mui/icons-material/PublicRounded";
 import ExploreOutlined from "@mui/icons-material/ExploreOutlined";
-import { movieColors } from "../../../theme";
+import { accentTint } from "../../../theme";
 import { streamingCountries } from "../model/streamingCountry";
 
 const ConciergeEmptyState = ({
@@ -100,8 +99,8 @@ const ConciergeEmptyState = ({
               border: "1px solid",
               borderColor: "divider",
               borderRadius: 1,
-              bgcolor: alpha(movieColors.info, 0.025),
-              "&:hover": { bgcolor: alpha(movieColors.info, 0.08) },
+              bgcolor: accentTint(0.025),
+              "&:hover": { bgcolor: accentTint(0.08) },
             }}
           >
             <Stack
@@ -110,7 +109,7 @@ const ConciergeEmptyState = ({
               spacing={0.7}
               sx={{ alignItems: "center", mb: 0.8 }}
             >
-              <item.icon sx={{ fontSize: 16, color: movieColors.info }} />
+              <item.icon sx={{ fontSize: 16, color: "accent.core" }} />
               <Typography
                 component="span"
                 sx={{ fontSize: 12, fontWeight: 750, lineHeight: 1.4 }}
@@ -127,7 +126,7 @@ const ConciergeEmptyState = ({
             {!signedIn && item.personal && (
               <Typography
                 component="span"
-                sx={{ fontSize: 9, color: movieColors.brand, mt: 1 }}
+                sx={{ fontSize: 9, color: "accent.main", mt: 1 }}
               >
                 Sign in required
               </Typography>

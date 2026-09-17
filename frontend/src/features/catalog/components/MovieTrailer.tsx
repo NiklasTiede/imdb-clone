@@ -4,7 +4,6 @@ import Button from "@mui/material/Button";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useState } from "react";
 import { BackdropImage } from "../../../shared/media";
-import { movieColors } from "../../../theme";
 import { getYouTubeNoCookieEmbedUrl } from "../utils/youtubeTrailer";
 
 type MovieTrailerProps = {
@@ -34,10 +33,12 @@ const MovieTrailer = ({
       data-testid="movie-trailer"
       sx={{
         aspectRatio: "16 / 9",
-        backgroundColor: movieColors.surfaceInset,
-        border: "1px solid rgba(255,255,255,0.12)",
+        backgroundColor: "surface.inset",
+        border: "1px solid",
+        borderColor: "divider",
         borderRadius: 1,
-        boxShadow: "0 18px 42px rgba(0,0,0,0.32)",
+        boxShadow: (theme) =>
+          `0 18px 42px ${theme.alpha(theme.palette.scrim, 0.32)}`,
         minHeight: 0,
         overflow: "hidden",
         position: "relative",
@@ -71,8 +72,8 @@ const MovieTrailer = ({
           <Box
             aria-hidden
             sx={{
-              background:
-                "linear-gradient(180deg, rgba(7,11,18,0.2), rgba(7,11,18,0.72))",
+              background: (theme) =>
+                `linear-gradient(180deg, ${theme.alpha(theme.palette.scrim, 0.2)}, ${theme.alpha(theme.palette.scrim, 0.72)})`,
               inset: 0,
               position: "absolute",
             }}

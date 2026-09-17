@@ -9,7 +9,6 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { getMoviePosterToken, type Movie } from "../model/movie";
-import { IMDB_GOLD } from "./RatingPill";
 import {
   posterHoverContainerSx,
   posterHoverTargetClassName,
@@ -62,14 +61,17 @@ const MovieCard = ({
           }
         }}
         to={detailUrl}
-        sx={{
-          color: "text.primary",
-          display: "block",
-          textAlign: "left",
-          textDecoration: "none",
-          ...posterHoverContainerSx,
-          "& .MuiCardActionArea-focusHighlight": { display: "none" },
-        }}
+        sx={[
+          {
+            color: "text.primary",
+            display: "block",
+            textAlign: "left",
+            textDecoration: "none",
+            "& .MuiCardActionArea-focusHighlight": { display: "none" },
+          },
+          // A theme callback: pass it as its own sx entry, never spread it.
+          posterHoverContainerSx,
+        ]}
         title={title}
       >
         <Box
@@ -99,10 +101,11 @@ const MovieCard = ({
             <Box
               sx={{
                 alignItems: "center",
-                backgroundColor: "rgba(0,0,0,0.75)",
+                backgroundColor: (theme) =>
+                  theme.alpha(theme.palette.scrim, 0.78),
                 borderRadius: 0.75,
                 bottom: 6,
-                color: "common.white",
+                color: "text.primary",
                 display: "inline-flex",
                 fontSize: 12,
                 fontWeight: 600,
@@ -113,7 +116,7 @@ const MovieCard = ({
                 position: "absolute",
               }}
             >
-              <StarIcon sx={{ color: IMDB_GOLD, fontSize: 14 }} />
+              <StarIcon sx={{ color: "star", fontSize: 14 }} />
               {movie.imdbRating.toFixed(1)}
             </Box>
           )}
@@ -125,7 +128,6 @@ const MovieCard = ({
             color: "text.disabled",
             fontSize: 11,
             fontWeight: 600,
-            letterSpacing: "0.035em",
             minHeight: 18,
             mt: 0.45,
             px: 0.5,
@@ -149,13 +151,17 @@ const MovieCard = ({
       </CardActionArea>
       {showBookmark && (
         <IconButton
-          aria-label={isBookmarked ? "Remove from watchlist" : "Add to watchlist"}
+          aria-label={
+            isBookmarked ? "Remove from watchlist" : "Add to watchlist"
+          }
           className="movie-card-action"
           size="small"
           onClick={() => onToggleBookmark(movie.id as number)}
           sx={{
-            backgroundColor: isBookmarked ? "success.main" : "rgba(0,0,0,0.65)",
-            color: "common.white",
+            backgroundColor: isBookmarked
+              ? "success.main"
+              : (theme) => theme.alpha(theme.palette.scrim, 0.68),
+            color: "text.primary",
             opacity: isBookmarked ? 1 : 0,
             position: "absolute",
             right: 0.75,
@@ -163,11 +169,17 @@ const MovieCard = ({
             transition: "opacity 150ms ease, background-color 150ms ease",
             "@media (hover: none)": { opacity: isBookmarked ? 1 : 0.75 },
             "&:hover": {
-              backgroundColor: isBookmarked ? "success.dark" : "rgba(0,0,0,0.78)",
+              backgroundColor: isBookmarked
+                ? "success.dark"
+                : (theme) => theme.alpha(theme.palette.scrim, 0.82),
             },
           }}
         >
-          {isBookmarked ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
+          {isBookmarked ? (
+            <BookmarkIcon fontSize="small" />
+          ) : (
+            <BookmarkBorderIcon fontSize="small" />
+          )}
         </IconButton>
       )}
       {action}

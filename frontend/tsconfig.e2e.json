@@ -10,6 +10,8 @@
   "include": [
     "playwright.config.ts",
     "playwright.voice-stress.config.ts",
-    "e2e/**/*.ts"
+    "playwright.brand-review.config.ts",
+    "e2e/**/*.ts",
+    "scripts/**/*.ts"
   ]
 }

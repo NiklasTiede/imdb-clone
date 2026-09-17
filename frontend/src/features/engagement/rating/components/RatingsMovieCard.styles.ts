@@ -1,40 +1,44 @@
-import { movieColors } from "../../../../theme";
+import type { SxProps, Theme } from "@mui/material/styles";
+import { accentTint, scrimTint } from "../../../../theme";
 
 const ratingBadgeSizeSx = {
   borderRadius: 0.75,
   bottom: 6,
   display: "inline-flex",
   fontSize: 11,
+  fontVariantNumeric: "tabular-nums",
   fontWeight: 600,
   gap: 0.25,
   px: 0.75,
   py: 0.25,
   position: "absolute",
-};
+} satisfies SxProps<Theme>;
 
+// "Your" rating carries the accent border; stars always use the star colour.
 export const yourRatingBadgeSx = {
   alignItems: "center",
-  backgroundColor: "rgba(5,10,20,0.72)",
-  border: "1px solid rgba(77,171,247,0.32)",
-  color: "rgba(255,255,255,0.86)",
+  backgroundColor: scrimTint(0.78),
+  border: "1px solid",
+  borderColor: accentTint(0.85),
+  color: "text.primary",
   left: 6,
   ...ratingBadgeSizeSx,
-};
+} satisfies SxProps<Theme>;
 
 export const yourRatingStarSx = {
-  color: "rgba(77,171,247,0.9)",
+  color: "star",
   fontSize: 13,
-};
+} satisfies SxProps<Theme>;
 
 export const imdbRatingBadgeSx = {
   alignItems: "center",
-  backgroundColor: "rgba(0,0,0,0.75)",
-  color: "rgba(255,255,255,0.82)",
+  backgroundColor: scrimTint(0.78),
+  color: "text.primary",
   right: 6,
   ...ratingBadgeSizeSx,
-};
+} satisfies SxProps<Theme>;
 
 export const imdbRatingStarSx = {
-  color: movieColors.gold,
+  color: "star",
   fontSize: 13,
-};
+} satisfies SxProps<Theme>;

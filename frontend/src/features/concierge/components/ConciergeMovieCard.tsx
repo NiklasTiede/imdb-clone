@@ -1,11 +1,10 @@
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import { alpha } from "@mui/material/styles";
 import { Box, Card, Chip, Stack, Typography } from "@mui/material";
 import { Link } from "react-router";
 import { MoviePosterImageSize, PosterImage } from "../../../shared/media";
 import { movieDetailPath } from "../../../shared/navigation/appRoutes";
-import { movieColors } from "../../../theme";
+import { accentTint } from "../../../theme";
 import type { GroundedMovie } from "../model/concierge";
 
 const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
@@ -13,8 +12,8 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
     data-testid="concierge-movie-card"
     variant="outlined"
     sx={{
-      bgcolor: alpha(movieColors.surfaceElevated, 0.9),
-      borderColor: alpha(movieColors.brand, 0.18),
+      bgcolor: (theme) => theme.alpha(theme.palette.surface.raised, 0.9),
+      borderColor: accentTint(0.18),
       borderRadius: 2,
       display: "grid",
       gridTemplateColumns: "82px minmax(0, 1fr)",
@@ -33,14 +32,14 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
         component={Link}
         to={movieDetailPath(movie.movieId)}
         sx={{
-          color: "common.white",
+          color: "text.primary",
           display: "block",
           fontSize: 15,
           fontWeight: 700,
           lineHeight: 1.25,
           mb: 0.6,
           textDecoration: "none",
-          "&:hover": { color: movieColors.brand },
+          "&:hover": { color: "accent.main" },
         }}
       >
         {movie.primaryTitle}
@@ -52,7 +51,7 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
         sx={{ alignItems: "center", flexWrap: "wrap", mb: 1 }}
       >
         {movie.startYear != null && (
-          <Typography sx={{ color: "rgba(255,255,255,0.78)", fontSize: 11 }}>
+          <Typography sx={{ color: "text.secondary", fontSize: 11 }}>
             {movie.startYear}
           </Typography>
         )}
@@ -60,7 +59,7 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
           <Stack
             direction="row"
             spacing={0.35}
-            sx={{ alignItems: "center", color: "rgba(255,255,255,0.78)" }}
+            sx={{ alignItems: "center", color: "text.secondary" }}
           >
             <AccessTimeRoundedIcon sx={{ color: "inherit", fontSize: 13 }} />
             <Typography sx={{ color: "inherit", fontSize: 11 }}>
@@ -70,8 +69,8 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
         )}
         {movie.imdbRating != null && (
           <Stack direction="row" spacing={0.25} sx={{ alignItems: "center" }}>
-            <StarRoundedIcon sx={{ color: movieColors.rating, fontSize: 15 }} />
-            <Typography sx={{ color: "rgba(255,255,255,0.92)", fontSize: 11 }}>
+            <StarRoundedIcon sx={{ color: "star", fontSize: 15 }} />
+            <Typography sx={{ color: "text.primary", fontSize: 11 }}>
               IMDb {movie.imdbRating.toFixed(1)}
             </Typography>
           </Stack>
@@ -79,7 +78,7 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
       </Stack>
       {movie.userScore != null && (
         <Typography
-          sx={{ color: movieColors.info, fontSize: 12, fontWeight: 700, mb: 1 }}
+          sx={{ color: "accent.core", fontSize: 12, fontWeight: 700, mb: 1 }}
         >
           Your rating: {movie.userScore}/10
         </Typography>
@@ -87,7 +86,7 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
       {movie.explanation && (
         <Typography
           sx={{
-            color: "rgba(255,255,255,0.78)",
+            color: "text.secondary",
             fontSize: 11.5,
             lineHeight: 1.45,
           }}
@@ -98,7 +97,7 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
       {!movie.explanation && movie.description && (
         <Typography
           sx={{
-            color: "rgba(255,255,255,0.68)",
+            color: "text.secondary",
             display: "-webkit-box",
             fontSize: 11.5,
             lineHeight: 1.45,
@@ -123,8 +122,9 @@ const ConciergeMovieCard = ({ movie }: { movie: GroundedMovie }) => (
               label={genre.replaceAll("_", " ").toLowerCase()}
               size="small"
               sx={{
-                bgcolor: alpha(movieColors.info, 0.1),
-                color: "rgba(255,255,255,0.72)",
+                bgcolor: (theme) =>
+                  theme.alpha(theme.palette.data.comparison, 0.1),
+                color: "text.secondary",
                 fontSize: 9,
                 height: 20,
                 textTransform: "capitalize",

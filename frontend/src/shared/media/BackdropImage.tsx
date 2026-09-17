@@ -1,7 +1,6 @@
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useState } from "react";
-import { movieColors } from "../../theme";
 import { getMovieBackdropImageUrl, MovieBackdropImageSize } from "./imageUrls";
 
 type BackdropImageProps = {
@@ -20,8 +19,9 @@ const BackdropImage = ({ backdropImageToken, sx }: BackdropImageProps) => {
       data-has-image={hasImage ? "true" : "false"}
       data-testid="movie-backdrop"
       sx={{
-        backgroundColor: movieColors.surfaceInset,
-        backgroundImage: `linear-gradient(135deg, rgba(245,197,24,0.09), rgba(122,184,255,0.05) 42%, ${movieColors.backdrop} 82%)`,
+        backgroundColor: "surface.inset",
+        backgroundImage: (theme) =>
+          `linear-gradient(135deg, ${theme.alpha(theme.palette.accent.main, 0.09)}, ${theme.alpha(theme.palette.data.comparison, 0.05)} 42%, ${theme.palette.surface.page} 82%)`,
         overflow: "hidden",
         position: "relative",
         ...sx,

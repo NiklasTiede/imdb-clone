@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { fontFamilies } from "../../../theme";
 
 type SynopsisProps = {
   text?: string | null | undefined;
@@ -23,7 +24,12 @@ const Synopsis = ({ text }: SynopsisProps) => {
         <Typography
           id="movie-synopsis-title"
           component="h2"
-          sx={{ fontSize: 18, mb: 1.25, fontWeight: 700 }}
+          sx={{
+            fontFamily: fontFamilies.display,
+            fontSize: 18,
+            fontWeight: 700,
+            mb: 1.25,
+          }}
         >
           Synopsis
         </Typography>

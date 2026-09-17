@@ -12,7 +12,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { movieColors } from "../../../theme";
 import type { PasskeyCredential } from "../../identity";
 import SectionCard from "./SectionCard";
 
@@ -83,8 +82,9 @@ const PasskeySectionCard = ({
                 key={passkey.credentialId}
                 sx={{
                   alignItems: "center",
-                  bgcolor: "rgba(255,255,255,0.035)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  bgcolor: "surface.raised",
+                  border: "1px solid",
+                  borderColor: "divider",
                   borderRadius: 1,
                   display: "grid",
                   gap: 1.5,
@@ -93,7 +93,7 @@ const PasskeySectionCard = ({
                   py: 1.25,
                 }}
               >
-                <FingerprintIcon sx={{ color: movieColors.brand }} />
+                <FingerprintIcon sx={{ color: "accent.main" }} />
                 <Box sx={{ minWidth: 0 }}>
                   <Typography noWrap sx={{ fontWeight: 600 }} variant="body2">
                     {passkey.label}

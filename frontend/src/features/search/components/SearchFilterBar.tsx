@@ -16,7 +16,7 @@ import Typography from "@mui/material/Typography";
 import type { SvgIconComponent } from "@mui/icons-material";
 import { useState, type MouseEvent } from "react";
 import type { MovieSearchGenre, MovieType } from "../../catalog";
-import { movieColors } from "../../../theme";
+import { accentTint } from "../../../theme";
 import type { SearchUrlPatch } from "../utils/searchUrlState";
 import {
   findRangePreset,
@@ -54,28 +54,28 @@ type MobileFilterDraft = {
 };
 
 const activeSx = {
-  backgroundColor: "rgba(122,184,255,0.14)",
-  borderColor: "rgba(122,184,255,0.48)",
+  backgroundColor: accentTint(0.14),
+  borderColor: accentTint(0.6),
   color: "text.primary",
   "&:hover": {
-    backgroundColor: "rgba(122,184,255,0.22)",
+    backgroundColor: accentTint(0.22),
   },
 };
 
 const baseButtonSx = {
-  borderColor: "rgba(255,255,255,0.14)",
+  borderColor: "line.control",
   color: "text.secondary",
   minHeight: 34,
   px: 1.4,
   textTransform: "none",
   "&:hover": {
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderColor: "rgba(255,255,255,0.24)",
+    backgroundColor: "action.hover",
+    borderColor: "text.secondary",
   },
 };
 
 const drawerChoiceSx = {
-  borderColor: "rgba(255,255,255,0.12)",
+  borderColor: "line.control",
   color: "text.secondary",
   justifyContent: "flex-start",
   minHeight: 38,
@@ -83,8 +83,8 @@ const drawerChoiceSx = {
   textAlign: "left",
   textTransform: "none",
   "&[aria-pressed='true']": {
-    backgroundColor: "rgba(245,197,24,0.14)",
-    borderColor: "rgba(245,197,24,0.48)",
+    backgroundColor: accentTint(0.14),
+    borderColor: accentTint(0.6),
     color: "text.primary",
   },
 };
@@ -348,7 +348,7 @@ const SearchFilterBar = ({
           <Button
             onClick={onClear}
             size="small"
-            startIcon={<TuneIcon sx={{ color: movieColors.brand }} />}
+            startIcon={<TuneIcon sx={{ color: "accent.main" }} />}
             sx={{ color: "text.secondary", minHeight: 34, textTransform: "none" }}
           >
             Clear all
@@ -376,7 +376,7 @@ const SearchFilterBar = ({
               label={`Title type: ${humanizeSearchValue(filters.movieType)}`}
               onDelete={() => onChange({ movieType: null })}
               size="small"
-              sx={{ backgroundColor: "rgba(122,184,255,0.12)", color: "text.primary" }}
+              sx={{ backgroundColor: accentTint(0.12), color: "text.primary" }}
             />
           )}
           {selectedGenre && (
@@ -384,7 +384,7 @@ const SearchFilterBar = ({
               label={selectedGenreLabel}
               onDelete={() => onChange({ genre: null })}
               size="small"
-              sx={{ backgroundColor: "rgba(122,184,255,0.12)", color: "text.primary" }}
+              sx={{ backgroundColor: accentTint(0.12), color: "text.primary" }}
             />
           )}
           {hasRange(filters.minStartYear, filters.maxStartYear) && (
@@ -392,7 +392,7 @@ const SearchFilterBar = ({
               label={yearLabel(filters)}
               onDelete={() => onChange({ maxYear: null, minYear: null })}
               size="small"
-              sx={{ backgroundColor: "rgba(122,184,255,0.12)", color: "text.primary" }}
+              sx={{ backgroundColor: accentTint(0.12), color: "text.primary" }}
             />
           )}
           {hasRange(filters.minRuntimeMinutes, filters.maxRuntimeMinutes) && (
@@ -402,7 +402,7 @@ const SearchFilterBar = ({
                 onChange({ maxRuntime: null, minRuntime: null })
               }
               size="small"
-              sx={{ backgroundColor: "rgba(122,184,255,0.12)", color: "text.primary" }}
+              sx={{ backgroundColor: accentTint(0.12), color: "text.primary" }}
             />
           )}
         </Stack>
@@ -451,7 +451,8 @@ const SearchFilterBar = ({
         slotProps={{
           paper: {
             sx: {
-              borderTop: "1px solid rgba(255,255,255,0.12)",
+              borderTop: "1px solid",
+              borderColor: "divider",
               borderTopLeftRadius: 16,
               borderTopRightRadius: 16,
               maxHeight: "85dvh",
