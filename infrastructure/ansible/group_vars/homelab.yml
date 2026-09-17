@@ -15,7 +15,7 @@ sops_age_key_file: "{{ playbook_dir }}/../../.secrets/sops/age/keys.txt"
 sops_kustomize_plugin_config_name: "sops-kustomize-plugin"
 sops_kustomize_plugin_name: "sops-kustomize"
 
-gitops_repo_url: "https://github.com/NiklasTiede/imdb-clone"
+gitops_repo_url: "https://github.com/NiklasTiede/popcorn-society"
 gitops_repo_revision: "master"
 gitops_root_path: "infrastructure/clusters/home/apps"
 
