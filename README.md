@@ -1,19 +1,17 @@
 <p align="center">
   <a href="https://popcornsociety.app/" target="_blank">
-    <img alt="Popcorn Society neon popcorn logo" width="104" src="frontend/public/brand/after-dark/favicon.svg" />
+    <img alt="Popcorn Society - animated neon sign in the rain" width="500" src="docs/assets/popcorn-society-header.svg" />
   </a>
 </p>
 
-<h1 align="center">Popcorn Society</h1>
-
 <p align="center">
-  <strong>Watch together, after dark.</strong><br />
-  A production-style React + Spring Boot movie application with explainable discovery,
-  a voice-controlled Movie Concierge, OpenSearch, full-stack observability, and k3s GitOps.
+  A voice-powered progressive web app for movie discovery.
 </p>
 
 <p align="center">
   <a href="https://popcornsociety.app/" target="_blank">Live Demo</a>
+  ·
+  <a href="https://docs.popcornsociety.app/architecture/">Interactive Architecture</a>
   ·
   <a href="./agent/README.md">Movie Concierge</a>
   ·
@@ -44,9 +42,9 @@
 <p align="center">
   <a href="https://popcornsociety.app/" target="_blank">
     <img
-      alt="Popcorn Society screenshot"
-      width="760"
-      src="docs/assets/popcorn-society-screenshot.webp"
+      alt="Popcorn Society After Dark homepage with featured movies and the Voice Lens"
+      width="680"
+      src="docs/assets/popcorn-society-after-dark-screenshot.jpg"
     />
   </a>
 </p>
@@ -101,6 +99,10 @@ through the optional debug view; they are not the normal way to interact with th
   metrics, logs, traces, browser performance signals, and continuous profiles for diagnosis.
 
 ## Architecture
+
+Explore the [interactive architecture diagrams](https://docs.popcornsociety.app/architecture/)
+for the application and observability stack, or visit the
+[engineering documentation](https://docs.popcornsociety.app/) for an overview.
 
 Application runtime:
 
