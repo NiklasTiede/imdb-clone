@@ -4,12 +4,8 @@
   </a>
 </p>
 
-<h1 align="center">Popcorn Society</h1>
-
 <p align="center">
-  <strong>Watch together, after dark.</strong><br />
-  A production-style React + Spring Boot movie application with explainable discovery,
-  a voice-controlled Movie Concierge, OpenSearch, full-stack observability, and k3s GitOps.
+  A voice-powered progressive web app for movie discovery.
 </p>
 
 <p align="center">
