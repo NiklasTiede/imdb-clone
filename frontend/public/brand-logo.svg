@@ -1,14 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
   <title id="title">Popcorn Society popcorn logo</title>
+  <defs>
+    <clipPath id="carton">
+      <path d="M24 58h80l-11 51H35z"/>
+    </clipPath>
+  </defs>
+
   <rect width="128" height="128" rx="28" fill="#0e1626"/>
-  <g fill="#fff4cf">
-    <circle cx="39" cy="43" r="15"/>
-    <circle cx="57" cy="30" r="16"/>
-    <circle cx="78" cy="34" r="15"/>
-    <circle cx="91" cy="49" r="13"/>
-    <circle cx="63" cy="48" r="21"/>
+
+  <g fill="#fff4cf" stroke="#f2c94c" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M25 50c-5-4-5-12 0-16 3-3 7-3 10-1 0-6 5-11 11-10 5 0 8 4 8 9 6-2 12 2 12 8 0 7-6 12-13 12H36c-4 1-8 0-11-2z"/>
+    <path d="M47 36c-3-6 1-13 7-14 2-6 10-8 15-3 6-2 12 3 11 9 6 2 8 9 4 14-3 5-9 7-15 5l-13 2c-7 0-12-7-9-13z"/>
+    <path d="M73 43c-1-6 4-11 10-11 4-5 12-4 15 2 7 0 11 6 9 12 5 5 2 13-5 15-5 2-10 0-13-3l-9 1c-7-1-10-10-7-16z"/>
   </g>
-  <path d="M30 58h68l-9 49H39z" fill="#f5c518"/>
-  <path d="m46 62 5 39m13-39v39m18-39-5 39" stroke="#0e1626" stroke-width="7"/>
-  <path d="M30 58h68" stroke="#fff4cf" stroke-width="5" stroke-linecap="round"/>
+
+  <g fill="none" stroke="#0e1626" stroke-width="2.4" stroke-linecap="round">
+    <path d="M35 34c4 2 6 6 5 11M54 31c5 2 7 7 6 12M67 24c-1 5 1 9 5 12"/>
+    <path d="M85 39c4 2 6 6 5 11M98 36c-4 3-5 8-3 12"/>
+  </g>
+
+  <path d="M24 58h80l-11 51H35z" fill="#fff4cf" stroke="#f2c94c" stroke-width="3" stroke-linejoin="round"/>
+  <g clip-path="url(#carton)" fill="#c7443e">
+    <path d="M24 58h14l6 51H35z"/>
+    <path d="M48 58h13l-2 51H51z"/>
+    <path d="M72 58h13l-10 51h-8z"/>
+    <path d="M96 58h10l-11 51H83z"/>
+  </g>
+  <path d="M26 59q38 7 76 0" fill="none" stroke="#fff4cf" stroke-width="6" stroke-linecap="round"/>
+  <path d="M27 58q37 6 74 0" fill="none" stroke="#f2c94c" stroke-width="2" stroke-linecap="round"/>
 </svg>
