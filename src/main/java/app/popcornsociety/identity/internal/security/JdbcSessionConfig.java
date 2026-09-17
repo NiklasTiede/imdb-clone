@@ -17,6 +17,7 @@ public class JdbcSessionConfig {
     // A new cookie name makes the test accounts reauthenticate without loading them.
     var serializer = new DefaultCookieSerializer();
     serializer.setCookieName(SESSION_COOKIE_NAME);
+    serializer.setCookieMaxAge(1_209_600);
     return serializer;
   }
 }

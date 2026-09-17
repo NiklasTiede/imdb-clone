@@ -144,6 +144,21 @@ class AuthenticationControllerTest extends BaseControllerIntegrationTest {
   }
 
   @Test
+  void login_sessionCookiePersistsAcrossBrowserRestarts() throws Exception {
+    var request = new LoginRequest("test_user_one", "Encrypted!Pa55worD");
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(cookie().maxAge("POPCORN_SESSION", 1_209_600));
+  }
+
+  @Test
   void login_usesLocalCredentialInsteadOfLegacyAccountPassword() throws Exception {
     String passwordHash = passwordEncoder.encode("Encrypted!Pa55worD");
     jdbcTemplate.update("update account set password = null where username = 'test_user_two'");
