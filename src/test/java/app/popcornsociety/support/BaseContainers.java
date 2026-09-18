@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Tag;
 import org.opensearch.testcontainers.OpenSearchContainer;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,6 +21,7 @@ import org.springframework.test.context.jdbc.Sql;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.AbstractWaitStrategy;
+import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -176,10 +178,7 @@ public class BaseContainers {
   }
 
   static {
-    postgreSQLContainer.start();
-
-    openSearchContainer.start();
-
+    Startables.deepStart(Stream.of(postgreSQLContainer, openSearchContainer)).join();
     rustfsContainer.start();
     createRustfsBucket();
   }
