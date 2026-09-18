@@ -65,6 +65,7 @@ export default defineConfig(({ mode }) => ({
   },
   test: {
     environment: "jsdom",
+    fsModuleCache: true,
     globals: true,
     setupFiles: [
       "./src/test/failOnUnexpectedConsole.ts",
