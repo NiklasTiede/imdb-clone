@@ -29,7 +29,7 @@ Notes:
 - `test` excludes the JUnit `integration` and `architecture` tags and does not start Testcontainers.
 - `architectureTest` runs Spring Modulith verification, compiled dependency/annotation rules and
   deliberately invalid fixtures. It needs no external infrastructure. Both `check`/`build` and CI
-  require it; CI executes it before the broader backend build for early feedback.
+  require it; CI includes it in the same Gradle invocation as the full backend build.
 - `integrationTest` selects the `integration` tag and uses Testcontainers where PostgreSQL,
   OpenSearch, or RustFS are needed.
 - `@ApplicationModuleTest` tests for Engagement and Notification run in STANDALONE mode through

@@ -52,11 +52,11 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+          # Internal PRs can reuse their own cache; fork PRs and merge groups only read.
+          cache-read-only: ${{ !(github.ref == 'refs/heads/master' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)) }}
 
-      - name: Verify backend module boundaries and architecture rules
-        run: ./gradlew architectureTest
-
-      - name: Build and Test Spring Boot Application
+      - name: Build and test Spring Boot application
         run: ./gradlew build jacocoTestReport copyPyroscopeAgent
 
       - name: Build backend runtime image

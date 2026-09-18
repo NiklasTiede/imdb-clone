@@ -32,6 +32,13 @@ assert_contract(
 %w[branch-name backend-build-test frontend-build-test agent-build-test infrastructure-validate].each do |job|
   assert_contract(ci.match?(/^  #{Regexp.escape(job)}:$/), "CI is missing required job #{job}")
 end
+backend_job = ci[/^  backend-build-test:\n(.*?)(?=^  [a-z][a-z0-9-]*:\n)/m, 1]
+assert_contract(!backend_job.nil?, "CI backend job could not be parsed")
+assert_contract(
+  backend_job.scan(/run: \.\/gradlew/).length == 1 &&
+    backend_job.include?("./gradlew build jacocoTestReport copyPyroscopeAgent"),
+  "CI backend verification must use one complete Gradle build invocation"
+)
 %w[
   docker-build-backend-prebuilt
   container-smoke-backend
