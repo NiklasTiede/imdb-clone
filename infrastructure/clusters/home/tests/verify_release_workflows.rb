@@ -21,6 +21,10 @@ assert_contract(
   "CI must verify the exact VERSION commit before release"
 )
 assert_contract(
+  !ci.match?(/^  workflow_dispatch:/),
+  "the artifact-producing CI workflow must not accept manually selected source revisions"
+)
+assert_contract(
   ci.include?('group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}') &&
     ci.include?("cancel-in-progress: true"),
   "CI must cancel superseded pull-request runs"
@@ -77,10 +81,17 @@ assert_contract(
 %w[backend frontend agent].each do |service|
   assert_contract(
     release.include?("name: release-#{service}-${{ github.event.workflow_run.head_sha }}") &&
-      release.include?("gzip -dc release-images/#{service}-image.tar.gz | docker load"),
+      release.include?("path: ${{ runner.temp }}/release-images/#{service}") &&
+      release.include?("gzip -dc \"$RUNNER_TEMP/release-images/#{service}/#{service}-image.tar.gz\" | docker load"),
     "release must load the verified #{service} image artifact"
   )
 end
+assert_contract(
+  release.include?('test -f "$archive"') &&
+    release.include?('test ! -L "$archive"') &&
+    release.include?('gzip -t "$archive"'),
+  "release image archives must be regular, non-linked, valid gzip files before loading"
+)
 assert_contract(
   release.scan("uses: actions/download-artifact@v8").length == 3 &&
     release.scan("run-id: ${{ github.event.workflow_run.id }}").length == 3,

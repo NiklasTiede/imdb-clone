@@ -148,7 +148,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: release-backend-${{ github.event.workflow_run.head_sha }}
-          path: release-images
+          path: ${{ runner.temp }}/release-images/backend
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -158,7 +158,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: release-frontend-${{ github.event.workflow_run.head_sha }}
-          path: release-images
+          path: ${{ runner.temp }}/release-images/frontend
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -168,17 +168,23 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: release-agent-${{ github.event.workflow_run.head_sha }}
-          path: release-images
+          path: ${{ runner.temp }}/release-images/agent
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Load verified release images
+      - name: Validate and load verified release images
         if: github.event_name == 'workflow_run'
         run: |
-          gzip -dc release-images/backend-image.tar.gz | docker load
-          gzip -dc release-images/frontend-image.tar.gz | docker load
-          gzip -dc release-images/agent-image.tar.gz | docker load
+          for service in backend frontend agent; do
+            archive="$RUNNER_TEMP/release-images/${service}/${service}-image.tar.gz"
+            test -f "$archive"
+            test ! -L "$archive"
+            gzip -t "$archive"
+          done
+          gzip -dc "$RUNNER_TEMP/release-images/backend/backend-image.tar.gz" | docker load
+          gzip -dc "$RUNNER_TEMP/release-images/frontend/frontend-image.tar.gz" | docker load
+          gzip -dc "$RUNNER_TEMP/release-images/agent/agent-image.tar.gz" | docker load
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
