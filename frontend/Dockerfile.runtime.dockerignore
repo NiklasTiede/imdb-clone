@@ -1,0 +1,5 @@
+**
+!Dockerfile.runtime
+!build
+!build/**
+!nginx.conf

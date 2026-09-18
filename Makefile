@@ -213,7 +213,7 @@ push-seed-full: publish-seed-full ## build and push multi-arch full seed image
 
 ##@ Backend
 
-.PHONY: run-backend generate-jar docker-build-backend docker-run-backend container-smoke-backend
+.PHONY: run-backend generate-jar docker-build-backend docker-build-backend-prebuilt docker-run-backend container-smoke-backend
 
 run-backend: ## bootRun java backend
 	./gradlew bootRun
@@ -227,6 +227,9 @@ DOCKER_IMG_BACKEND ?= popcorn-society-backend:local
 docker-build-backend: ## build backend docker image from Dockerfile
 	docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(DOCKER_IMG_BACKEND) .
 
+docker-build-backend-prebuilt: ## package the existing backend build as a runtime image
+	docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -f Dockerfile.runtime -t $(DOCKER_IMG_BACKEND) .
+
 docker-run-backend: ## run backend docker container
 	docker run --name popcorn-society-backend -p 8080:8080 $(DOCKER_IMG_BACKEND)
 
@@ -235,7 +238,7 @@ container-smoke-backend: ## smoke-test backend health probes and non-root read-o
 
 ##@ Frontend
 
-.PHONY: npm-install generate-client npm-lint run-frontend docker-build-frontend docker-run-frontend container-smoke-frontend
+.PHONY: npm-install generate-client npm-lint run-frontend docker-build-frontend docker-build-frontend-prebuilt docker-run-frontend container-smoke-frontend
 
 npm-install: ## install NPM dependencies
 	cd ./frontend; yarn install
@@ -253,6 +256,9 @@ DOCKER_IMG_FRONTEND ?= popcorn-society-frontend:local
 
 docker-build-frontend: ## build frontend docker image from Dockerfile
 	cd ./frontend; docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(DOCKER_IMG_FRONTEND) .
+
+docker-build-frontend-prebuilt: ## package the existing frontend build as a runtime image
+	cd ./frontend; docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -f Dockerfile.runtime -t $(DOCKER_IMG_FRONTEND) .
 
 docker-run-frontend: ## run frontend docker container
 	docker run --name popcorn-society-frontend -p 3000:8080 $(DOCKER_IMG_FRONTEND)
