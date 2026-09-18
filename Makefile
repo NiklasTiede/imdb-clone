@@ -18,6 +18,7 @@ OPENAPI_CHECK_DIR ?= /tmp/popcorn-society-openapi-check
 POPCORN_SOCIETY_OPENAPI_BASE_URL ?= http://localhost:8080
 AGENT_DIR = agent
 AGENT_IMAGE ?= popcorn-society-agent:local
+AGENT_APP_VERSION ?= 0.1.0
 AGENT_SMOKE_PORT ?= 18090
 BACKEND_SMOKE_PORT ?= 18081
 FRONTEND_SMOKE_PORT ?= 18080
@@ -324,7 +325,7 @@ verify-agent-tests: ## run deterministic Python agent tests
 verify-agent: verify-agent-format verify-agent-lint verify-agent-types verify-agent-architecture verify-agent-tests ## run the complete Python agent gate
 
 docker-build-agent: ## build the Python agent image
-	docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) -t $(AGENT_IMAGE) $(AGENT_DIR)
+	docker build $(APP_DOCKER_BUILD_PLATFORM_FLAG) --build-arg APP_VERSION=$(AGENT_APP_VERSION) -t $(AGENT_IMAGE) $(AGENT_DIR)
 
 container-smoke-agent: ## smoke-test the Python agent image, endpoints, and non-root user
 	AGENT_IMAGE=$(AGENT_IMAGE) AGENT_DOCKER_PLATFORM=$(APP_DOCKER_PLATFORM) AGENT_SMOKE_PORT=$(AGENT_SMOKE_PORT) ./$(AGENT_DIR)/tests/container/smoke.sh
