@@ -21,11 +21,12 @@ const discoverySessionStorageKey = "popcorn-society.discovery-session-id";
 let inMemorySessionId: string | undefined;
 
 const createOpaqueId = () => {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+  if (typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
 
-  return `discovery-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return `discovery-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 };
 
 const getDiscoverySessionId = () => {
@@ -50,13 +51,17 @@ const getDiscoverySessionId = () => {
 
 /** Sends only product interaction metadata; the backend hashes the opaque session and feed ids. */
 export const recordDiscoveryEvent = (event: DiscoveryEvent): void => {
-  void apiHttpClient
-    .post("/api/v1/recommendations/discovery-events", {
-      ...event,
-      eventId: createOpaqueId(),
-      sessionId: getDiscoverySessionId(),
-    })
-    .catch(() => undefined);
+  try {
+    void apiHttpClient
+      .post("/api/v1/recommendations/discovery-events", {
+        ...event,
+        eventId: createOpaqueId(),
+        sessionId: getDiscoverySessionId(),
+      })
+      .catch(() => undefined);
+  } catch {
+    // Telemetry must not interrupt user actions when secure randomness is unavailable.
+  }
 };
 
 export const resetDiscoveryEventSessionForTests = () => {
