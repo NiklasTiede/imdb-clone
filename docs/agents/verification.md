@@ -50,8 +50,9 @@ Run from `frontend`.
 | Task | Command |
 | --- | --- |
 | Install dependencies | `yarn install --frozen-lockfile` |
+| Fast native lint and type feedback | `yarn lint:fast` |
 | Type-check app, tooling, and e2e | `yarn typecheck` |
-| Lint | `yarn run lint` |
+| Full Oxlint and ESLint gate | `yarn run lint` |
 | Tests once | `yarn test` |
 | Production build | `yarn build` |
 | Theme token test | `yarn test src/theme.test.ts` |
@@ -60,6 +61,8 @@ Run from `frontend`.
 Notes:
 
 - The frontend is a Vite app on `http://localhost:3000`.
+- `yarn lint:fast` uses native Oxlint and TypeScript 7 for the tight local feedback loop. Run the
+  full `yarn lint` gate before completion while ESLint still covers rules without native parity.
 - `yarn typecheck` checks browser source, Node-side Vite configuration, and Playwright configuration
   and specs with their respective TypeScript environments.
 - Vitest includes `frontend/src/**/*.{test,spec}.{ts,tsx}`.

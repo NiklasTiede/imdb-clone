@@ -1,0 +1,9 @@
+**
+!Dockerfile.runtime
+!build
+!build/libs
+!build/libs/*.jar
+!build/pyroscope
+!build/pyroscope/pyroscope.jar
+!scripts
+!scripts/backend-entrypoint

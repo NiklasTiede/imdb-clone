@@ -65,8 +65,11 @@ export default defineConfig(({ mode }) => ({
   },
   test: {
     environment: "jsdom",
+    fsModuleCache: true,
     globals: true,
+    pool: "vmThreads",
     setupFiles: [
+      "./src/test/installWebStreamGlobals.ts",
       "./src/test/failOnUnexpectedConsole.ts",
       "./src/test/renderWithAppTheme.tsx",
     ],

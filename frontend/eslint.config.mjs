@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
+import oxlint from "eslint-plugin-oxlint";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import testingLibrary from "eslint-plugin-testing-library";
@@ -71,4 +72,5 @@ export default defineConfig(
       "testing-library/prefer-screen-queries": "off",
     },
   },
+  ...oxlint.configs["flat/recommended"],
 );

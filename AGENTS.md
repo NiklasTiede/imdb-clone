@@ -134,6 +134,7 @@ Verification:
 ./gradlew test
 ./gradlew integrationTest
 ./gradlew build jacocoTestReport
+cd frontend && yarn lint:fast
 cd frontend && yarn run lint
 cd frontend && yarn test
 cd frontend && yarn build
