@@ -187,6 +187,10 @@ tasks.named('test') {
 	}
 }
 
+def ciIntegrationTestForks = providers.gradleProperty('ciIntegrationTestForks')
+	.map { Integer.parseInt(it) }
+	.orElse(1)
+
 tasks.register('architectureTest', Test) {
 	description = 'Verifies module boundaries and semantic architecture rules, including negative fixtures.'
 	group = LifecycleBasePlugin.VERIFICATION_GROUP
@@ -213,6 +217,7 @@ def integrationTest = tasks.register('integrationTest', Test) {
 	group = LifecycleBasePlugin.VERIFICATION_GROUP
 	testClassesDirs = sourceSets.test.output.classesDirs
 	classpath = sourceSets.test.runtimeClasspath
+	maxParallelForks = ciIntegrationTestForks.get()
 	useJUnitPlatform {
 		includeTags 'integration'
 	}

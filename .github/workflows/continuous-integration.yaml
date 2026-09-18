@@ -53,11 +53,8 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Verify backend module boundaries and architecture rules
-        run: ./gradlew architectureTest
-
-      - name: Build and Test Spring Boot Application
-        run: ./gradlew build jacocoTestReport copyPyroscopeAgent
+      - name: Build and test Spring Boot application
+        run: ./gradlew build jacocoTestReport copyPyroscopeAgent -PciIntegrationTestForks=2
 
       - name: Build backend runtime image
         run: make docker-build-backend-prebuilt

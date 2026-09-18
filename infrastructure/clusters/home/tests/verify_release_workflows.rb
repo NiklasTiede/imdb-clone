@@ -3,6 +3,7 @@
 repository_root = File.expand_path("../../../..", __dir__)
 ci = File.read(File.join(repository_root, ".github/workflows/continuous-integration.yaml"))
 release = File.read(File.join(repository_root, ".github/workflows/continuous-deployment.yaml"))
+backend_build = File.read(File.join(repository_root, "build.gradle"))
 
 def assert_contract(condition, message)
   raise message unless condition
@@ -32,6 +33,18 @@ assert_contract(
 %w[branch-name backend-build-test frontend-build-test agent-build-test infrastructure-validate].each do |job|
   assert_contract(ci.match?(/^  #{Regexp.escape(job)}:$/), "CI is missing required job #{job}")
 end
+backend_job = ci[/^  backend-build-test:\n(.*?)(?=^  [a-z][a-z0-9-]*:\n)/m, 1]
+assert_contract(!backend_job.nil?, "CI backend job could not be parsed")
+assert_contract(
+  backend_job.scan(/run: \.\/gradlew/).length == 1 &&
+    backend_job.include?("./gradlew build jacocoTestReport copyPyroscopeAgent -PciIntegrationTestForks=2"),
+  "CI backend verification must use one Gradle invocation with two integration-test forks"
+)
+assert_contract(
+  backend_build.include?("providers.gradleProperty('ciIntegrationTestForks')") &&
+    backend_build.include?("maxParallelForks = ciIntegrationTestForks.get()"),
+  "the integration-test task must default safely while allowing CI to select its fork count"
+)
 %w[
   docker-build-backend-prebuilt
   container-smoke-backend
