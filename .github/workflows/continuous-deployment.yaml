@@ -1,14 +1,17 @@
 name: CD - Versioned app release
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CI - Build / Test Deployables
     branches:
       - master
-    paths:
-      - VERSION
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: write
   pull-requests: write
 
@@ -18,14 +21,23 @@ concurrency:
 
 jobs:
   release-app:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Record release source
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Read version
         id: version
@@ -54,18 +66,22 @@ jobs:
           fi
 
       - name: Set up JDK
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/setup-java@v5
         with:
           java-version: "25"
           distribution: temurin
 
       - name: Set up Gradle
+        if: github.event_name == 'workflow_dispatch'
         uses: gradle/actions/setup-gradle@v6
 
       - name: Build and test backend
+        if: github.event_name == 'workflow_dispatch'
         run: ./gradlew build jacocoTestReport copyPyroscopeAgent
 
       - name: Set up Node.js
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/setup-node@v6
         with:
           node-version: "24"
@@ -73,18 +89,32 @@ jobs:
           cache-dependency-path: frontend/yarn.lock
 
       - name: Install frontend dependencies
+        if: github.event_name == 'workflow_dispatch'
         working-directory: frontend
         run: yarn install --frozen-lockfile
 
       - name: Generate frontend API client
+        if: github.event_name == 'workflow_dispatch'
         working-directory: frontend
         run: yarn run build:moviesGen
 
+      - name: Lint frontend
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: frontend
+        run: yarn lint
+
+      - name: Test frontend
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: frontend
+        run: yarn test
+
       - name: Build frontend
+        if: github.event_name == 'workflow_dispatch'
         working-directory: frontend
         run: yarn build
 
       - name: Install uv and Python 3.14
+        if: github.event_name == 'workflow_dispatch'
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           python-version: "3.14"
@@ -92,10 +122,63 @@ jobs:
           cache-dependency-glob: agent/uv.lock
 
       - name: Install locked agent dependencies
+        if: github.event_name == 'workflow_dispatch'
         run: make agent-sync
 
       - name: Verify agent
+        if: github.event_name == 'workflow_dispatch'
         run: make verify-agent
+
+      - name: Build manual release images
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          make docker-build-backend-prebuilt
+          make docker-build-frontend-prebuilt
+          make docker-build-agent AGENT_APP_VERSION="${{ steps.version.outputs.value }}"
+
+      - name: Smoke-test manual release images
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          make container-smoke-backend
+          make container-smoke-frontend
+          make container-smoke-agent
+
+      - name: Download verified backend image
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v8
+        with:
+          name: release-backend-${{ github.event.workflow_run.head_sha }}
+          path: release-images
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Download verified frontend image
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v8
+        with:
+          name: release-frontend-${{ github.event.workflow_run.head_sha }}
+          path: release-images
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Download verified agent image
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v8
+        with:
+          name: release-agent-${{ github.event.workflow_run.head_sha }}
+          path: release-images
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Load verified release images
+        if: github.event_name == 'workflow_run'
+        run: |
+          gzip -dc release-images/backend-image.tar.gz | docker load
+          gzip -dc release-images/frontend-image.tar.gz | docker load
+          gzip -dc release-images/agent-image.tar.gz | docker load
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -106,37 +189,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push backend image
+      - name: Publish verified release images
         run: |
-          docker buildx build \
-            --platform linux/amd64 \
-            --file Dockerfile.runtime \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-backend:${{ steps.version.outputs.tag }}" \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-backend:latest" \
-            --push \
-            .
-
-      - name: Build and push frontend image
-        working-directory: frontend
-        run: |
-          docker buildx build \
-            --platform linux/amd64 \
-            --file Dockerfile.runtime \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-frontend:${{ steps.version.outputs.tag }}" \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-frontend:latest" \
-            --push \
-            .
-
-      - name: Build and push agent image
-        working-directory: agent
-        run: |
-          docker buildx build \
-            --platform linux/amd64 \
-            --build-arg "APP_VERSION=${{ steps.version.outputs.value }}" \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-agent:${{ steps.version.outputs.tag }}" \
-            -t "${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-agent:latest" \
-            --push \
-            .
+          for service in backend frontend agent; do
+            local_image="popcorn-society-${service}:local"
+            release_image="${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-${service}:${{ steps.version.outputs.tag }}"
+            latest_image="${{ secrets.DOCKERHUB_USERNAME }}/popcorn-society-${service}:latest"
+            docker tag "$local_image" "$release_image"
+            docker tag "$local_image" "$latest_image"
+            docker push "$release_image"
+            docker push "$latest_image"
+          done
 
       - name: Resolve image digests
         id: digests
@@ -195,7 +258,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.version.outputs.tag }}" "${{ github.sha }}" \
+          git tag -a "${{ steps.version.outputs.tag }}" "${{ steps.source.outputs.sha }}" \
             -m "Release ${{ steps.version.outputs.tag }}"
           git push origin "${{ steps.version.outputs.tag }}"
 

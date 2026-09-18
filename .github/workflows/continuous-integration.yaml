@@ -4,6 +4,11 @@ on:
   pull_request:
     branches:
       - master
+  push:
+    branches:
+      - master
+    paths:
+      - VERSION
   merge_group:
     types:
       - checks_requested
@@ -60,6 +65,20 @@ jobs:
 
       - name: Smoke-test backend runtime image
         run: make container-smoke-backend
+
+      - name: Export verified backend image
+        if: github.event_name == 'push'
+        run: docker save popcorn-society-backend:local | gzip -1 > /tmp/backend-image.tar.gz
+
+      - name: Upload verified backend image
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-backend-${{ github.sha }}
+          path: /tmp/backend-image.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v6
@@ -119,6 +138,21 @@ jobs:
         working-directory: .
         run: make container-smoke-frontend
 
+      - name: Export verified frontend image
+        if: github.event_name == 'push'
+        working-directory: .
+        run: docker save popcorn-society-frontend:local | gzip -1 > /tmp/frontend-image.tar.gz
+
+      - name: Upload verified frontend image
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-frontend-${{ github.sha }}
+          path: /tmp/frontend-image.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
   agent-build-test:
     runs-on: ubuntu-latest
 
@@ -140,10 +174,24 @@ jobs:
         run: make verify-agent
 
       - name: Build agent image
-        run: make docker-build-agent
+        run: make docker-build-agent AGENT_APP_VERSION="$(tr -d '[:space:]' < VERSION)"
 
       - name: Smoke-test agent image
         run: make container-smoke-agent
+
+      - name: Export verified agent image
+        if: github.event_name == 'push'
+        run: docker save popcorn-society-agent:local | gzip -1 > /tmp/agent-image.tar.gz
+
+      - name: Upload verified agent image
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-agent-${{ github.sha }}
+          path: /tmp/agent-image.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
 
   infrastructure-validate:
     runs-on: ubuntu-latest

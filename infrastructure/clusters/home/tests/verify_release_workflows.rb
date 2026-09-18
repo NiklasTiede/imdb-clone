@@ -17,8 +17,8 @@ assert_contract(
   "CI must verify merge queue candidates"
 )
 assert_contract(
-  !ci.match?(/^  push:\n    branches:\n      - master$/),
-  "CI must not repeat the full suite after merging to master"
+  ci.match?(/  push:\n    branches:\n      - master\n    paths:\n      - VERSION\n/),
+  "CI must verify the exact VERSION commit before release"
 )
 assert_contract(
   ci.include?('group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}') &&
@@ -29,21 +29,87 @@ assert_contract(
   assert_contract(ci.match?(/^  #{Regexp.escape(job)}:$/), "CI is missing required job #{job}")
 end
 %w[
-  docker-build-backend
+  docker-build-backend-prebuilt
   container-smoke-backend
-  docker-build-frontend
+  docker-build-frontend-prebuilt
   container-smoke-frontend
 ].each do |target|
   assert_contract(
-    ci.include?("run: make #{target}"),
+    ci.match?(/^\s+run: make #{Regexp.escape(target)}$/),
     "CI must run the #{target} runtime image gate"
   )
 end
+
+%w[backend frontend agent].each do |service|
+  assert_contract(
+    ci.include?("name: release-#{service}-${{ github.sha }}") &&
+      ci.include?("path: /tmp/#{service}-image.tar.gz"),
+    "CI must export the verified #{service} image for its exact commit"
+  )
+end
+assert_contract(
+  ci.scan("uses: actions/upload-artifact@v7").length == 3 &&
+    ci.scan("if: github.event_name == 'push'").length == 6 &&
+    ci.scan("retention-days: 1").length == 3 &&
+    ci.scan("compression-level: 0").length == 3,
+  "release images must use short-lived uncompressed artifact uploads"
+)
 
 assert_contract(release.include?("contents: write"), "release requires contents write permission")
 assert_contract(
   release.include?("pull-requests: write"),
   "release requires pull-request write permission"
+)
+assert_contract(release.include?("actions: read"), "release requires artifact read permission")
+assert_contract(
+  release.match?(/workflow_run:\n    workflows:\n      - CI - Build \/ Test Deployables\n    branches:\n      - master\n    types:\n      - completed/),
+  "release must start only after the master CI workflow completes"
+)
+assert_contract(
+  release.include?("github.event.workflow_run.conclusion == 'success'") &&
+    release.include?("github.event.workflow_run.event == 'push'"),
+  "automatic release must require a successful push CI run"
+)
+assert_contract(
+  release.include?("ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}"),
+  "release must check out the exact CI commit"
+)
+%w[backend frontend agent].each do |service|
+  assert_contract(
+    release.include?("name: release-#{service}-${{ github.event.workflow_run.head_sha }}") &&
+      release.include?("gzip -dc release-images/#{service}-image.tar.gz | docker load"),
+    "release must load the verified #{service} image artifact"
+  )
+end
+assert_contract(
+  release.scan("uses: actions/download-artifact@v8").length == 3 &&
+    release.scan("run-id: ${{ github.event.workflow_run.id }}").length == 3,
+  "release must download all images from the triggering CI run"
+)
+%w[
+  Set\ up\ JDK
+  Build\ and\ test\ backend
+  Set\ up\ Node.js
+  Install\ frontend\ dependencies
+  Generate\ frontend\ API\ client
+  Lint\ frontend
+  Test\ frontend
+  Build\ frontend
+  Install\ uv\ and\ Python\ 3.14
+  Install\ locked\ agent\ dependencies
+  Verify\ agent
+  Build\ manual\ release\ images
+  Smoke-test\ manual\ release\ images
+].each do |escaped_name|
+  step_name = escaped_name.tr("\\", "")
+  assert_contract(
+    release.match?(/- name: #{escaped_name}\n\s+if: github\.event_name == 'workflow_dispatch'/),
+    "#{step_name} must run only for manual releases"
+  )
+end
+assert_contract(
+  !release.include?("docker buildx build"),
+  "automatic releases must promote images instead of rebuilding them"
 )
 assert_contract(
   release.include?("group: versioned-app-release") &&
@@ -61,7 +127,7 @@ assert_contract(
   )
 end
 assert_contract(
-  release.include?("APP_VERSION=${{ steps.version.outputs.value }}"),
+  release.include?("AGENT_APP_VERSION=\"${{ steps.version.outputs.value }}\""),
   "agent build metadata must use the unprefixed release version"
 )
 assert_contract(
@@ -88,6 +154,10 @@ assert_contract(
   "release may push only its deployment branch and annotated tag"
 )
 assert_contract(!release.include?("[skip ci]"), "deployment commits must run pull-request CI")
+assert_contract(
+  release.include?('git tag -a "${{ steps.version.outputs.tag }}" "${{ steps.source.outputs.sha }}"'),
+  "release tag must point to the exact CI source commit"
+)
 
 tag_step = release.index("- name: Create release tag")
 pull_request_step = release.index("- name: Create deployment pull request")
@@ -104,4 +174,4 @@ assert_contract(release.include?("python3 scripts/update-release-manifests.py"),
     "new releases must publish the renamed #{service} repository")
 end
 
-puts "Protected-branch release workflow contracts passed."
+puts "Release workflow contracts passed."
