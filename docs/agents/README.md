@@ -140,6 +140,7 @@ Verification options:
 ```bash
 cd frontend
 yarn test src/theme.test.ts
+yarn lint:fast
 yarn run lint
 yarn test
 yarn build

@@ -357,7 +357,8 @@ make help                            # list grouped workflow targets
 ./gradlew build jacocoTestReport       # backend CI-equivalent check
 ./gradlew spotlessApply                # format backend code
 cd frontend && yarn typecheck          # browser, Vite, and Playwright TypeScript checks
-cd frontend && yarn lint               # type-aware frontend linting
+cd frontend && yarn lint:fast           # native lint and type feedback during development
+cd frontend && yarn lint                # full Oxlint and ESLint gate
 cd frontend && yarn test               # frontend unit and component tests
 cd frontend && yarn build              # frontend production build
 make verify-agent                      # Python formatting, types, architecture, tests, and deterministic evals
