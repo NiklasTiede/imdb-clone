@@ -84,6 +84,8 @@ jobs:
           compression-level: 0
 
       - name: Upload coverage to Codecov
+        # Dependabot PRs have no Actions secrets; Gradle still enforces coverage thresholds.
+        if: github.event_name != 'pull_request' || github.event.pull_request.user.login != 'dependabot[bot]'
         uses: codecov/codecov-action@v7
         with:
           files: ./build/reports/jacoco/test/jacocoTestReport.xml
