@@ -16,7 +16,10 @@ from popcorn_society_agent.adapters.xai_voice_model import ConciergeXaiVoiceMode
 
 
 @pytest.mark.asyncio
-async def test_hosted_greeting_preserves_audio_across_both_handshake_updates() -> None:
+@pytest.mark.parametrize("lifecycle", [False, True])
+async def test_hosted_greeting_preserves_audio_across_both_handshake_updates(
+    lifecycle: bool,
+) -> None:
     def audio(value: bytes) -> str:
         return json.dumps(
             {
@@ -54,7 +57,13 @@ async def test_hosted_greeting_preserves_audio_across_both_handshake_updates() -
         async with model.connect(
             messages=[], model_settings=None, model_request_parameters=ModelRequestParameters()
         ) as live:
-            chunks = [event.data async for event in live if isinstance(event, AudioDelta)]
+            # Exercise the pinned SDK's internal stream consumed by RealtimeSession.
+            events = (
+                live._lifecycle_events()  # pyright: ignore[reportPrivateUsage]
+                if lifecycle
+                else live.__aiter__()
+            )
+            chunks = [event.data async for event in events if isinstance(event, AudioDelta)]
             assert chunks == [b"\x01\x00", b"\x02\x00", b"\x03\x00"]
             await live.send(CancelResponse())
             assert json.loads(socket.send.call_args.args[0])["type"] == "response.cancel"

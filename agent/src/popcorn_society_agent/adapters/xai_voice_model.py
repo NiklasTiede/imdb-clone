@@ -1,4 +1,4 @@
-"""xAI hosted profiles and output speed missing from Pydantic AI 2.42's surface."""
+"""xAI hosted profiles and output speed missing from the SDK's surface."""
 
 import json
 from collections import deque
@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from pydantic_ai.models import ModelRequestParameters
     from pydantic_ai.providers.xai import XaiProvider
     from pydantic_ai.realtime import RealtimeModelSettings
+    from pydantic_ai.realtime._lifecycle import LifecycleEvent
     from pydantic_ai.realtime.codec import RealtimeCodecEvent
     from pydantic_ai.realtime.xai import XaiRealtimeModelSettings
     from pydantic_ai.tools import ToolDefinition
@@ -48,20 +49,26 @@ class _HostedConnection(XaiRealtimeConnection):
 
     startup_frames: deque[str]
 
-    async def __aiter__(self) -> AsyncIterator[RealtimeCodecEvent]:
+    async def _all_events(self) -> AsyncIterator[tuple[RealtimeCodecEvent | LifecycleEvent, bool]]:
+        # The SDK consumes this shared stream for both codec and lifecycle iteration.
         while self.startup_frames:
             raw = self.startup_frames.popleft()
             try:
-                events = await self._decode_frame(raw)
+                frame = await self._decode_frame(raw)
             except ValueError:
-                yield RealtimeSessionErrorEvent(
-                    message="Invalid xAI startup frame", recoverable=True
+                for event in [*self._lifecycle.take_leading(), *self._take_pending_lifecycle()]:
+                    yield event, False
+                yield (
+                    RealtimeSessionErrorEvent(
+                        message="Invalid xAI startup frame", recoverable=True
+                    ),
+                    False,
                 )
                 continue
-            for event in events:
-                yield event
-        async for event in super().__aiter__():
-            yield event
+            for tagged in frame.tagged():
+                yield tagged
+        async for tagged in super()._all_events():
+            yield tagged
 
 
 class ConciergeXaiVoiceModel(XaiRealtimeModel):

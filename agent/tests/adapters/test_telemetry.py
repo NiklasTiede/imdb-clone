@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
 from opentelemetry.sdk.trace import ReadableSpan, TracerProvider
 from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
@@ -9,6 +10,11 @@ from opentelemetry.sdk.trace.export import (
     SpanExportResult,
 )
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from pydantic_ai import Agent, ModelRetry
+from pydantic_ai.capabilities import Instrumentation
+from pydantic_ai.exceptions import UnexpectedModelBehavior
+from pydantic_ai.messages import ModelResponse, ToolCallPart
+from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from popcorn_society_agent.adapters.telemetry import (
     AttributeFilteringSpanExporter,
@@ -22,6 +28,8 @@ from popcorn_society_agent.settings import DeploymentEnvironment, Settings
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from pydantic_ai.messages import ModelMessage
 
 
 class _RecordingSpanExporter(SpanExporter):
@@ -63,6 +71,51 @@ def test_pydantic_ai_instrumentation_excludes_user_and_tool_content() -> None:
     assert settings.include_binary_content is False
     assert settings.include_model_request_parameters is False
     provider.shutdown()
+
+
+@pytest.mark.parametrize(
+    ("failure", "run_error"), [(ValueError, ValueError), (ModelRetry, UnexpectedModelBehavior)]
+)
+def test_tool_error_traces_exclude_sensitive_content(
+    failure: type[Exception], run_error: type[Exception]
+) -> None:
+    marker = "synthetic-private-tool-result"
+    exporter = InMemorySpanExporter()
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(exporter))
+
+    def call_tool(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        return ModelResponse(parts=[ToolCallPart("sensitive_tool", {})])
+
+    agent: Agent[None, str] = Agent(
+        FunctionModel(call_tool),
+        retries=0,
+        capabilities=[Instrumentation(settings=privacy_safe_instrumentation_settings(provider))],
+    )
+
+    def sensitive_tool() -> str:
+        raise failure(marker)
+
+    agent.tool_plain(sensitive_tool)
+
+    try:
+        with pytest.raises(run_error):
+            agent.run_sync("Run the synthetic tool.")
+
+        spans = exporter.get_finished_spans()
+        assert spans
+        exception_events = [
+            event for span in spans for event in span.events if event.name == "exception"
+        ]
+        assert exception_events
+        assert any("exception.type" in (event.attributes or {}) for event in exception_events)
+        for span in spans:
+            assert marker not in repr(span.attributes)
+            assert marker not in repr(span.status.description)
+            for event in span.events:
+                assert marker not in repr(event.attributes)
+    finally:
+        provider.shutdown()
 
 
 def test_trace_export_removes_conversation_id_without_mutating_other_processors() -> None:
