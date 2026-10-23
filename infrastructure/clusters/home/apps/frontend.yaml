@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frontend
-          image: niklastiede/popcorn-society-frontend:v1.7.6@sha256:3bf9ad500ce9944091b2c65067eb3a5e72a178536d07ce1a9779f98432f83dc7
+          image: niklastiede/popcorn-society-frontend:v1.7.7@sha256:f80f3528a6475d105ce4ece43fde2e5a93e2c5caeadf0f335b1bf168f7aeeea3
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
